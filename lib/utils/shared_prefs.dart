@@ -1,0 +1,142 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+
+class SharedPreferencesModel {
+  ///
+  /// Instantiation of the SharedPreferences library
+  ///
+  final String _kApiKey = "pda_apiKey";
+  final String _kOwnId = "pda_ownId";
+  final String _kTargetsList = "pda_targetsList";
+  final String _kTargetsSort = "pda_targetsSort";
+  final String _kAttacksSort = "pda_attacksSort";
+  final String _kTheme = "pda_theme";
+  final String _kDefaultSection = "pda_defaultSection";
+  final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
+  final String _kTravelNotificationBody = "pda_travelNotificationBody";
+  
+  /// ----------------------------
+  /// Methods for identification
+  /// ----------------------------
+  Future<String> getApiKey() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kApiKey) ?? "";
+  }
+
+  Future<bool> setApiKey(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kApiKey, value);
+  }
+
+  //*****************
+  Future<String> getOwnId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kOwnId) ?? "";
+  }
+
+  Future<bool> setOwnId(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kOwnId, value);
+  }
+
+  /// ----------------------------
+  /// Methods for targets
+  /// ----------------------------
+  Future<List<String>> getTargetsList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kTargetsList) ?? List<String>();
+  }
+
+  Future<bool> setTargetLists(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kTargetsList, value);
+  }
+
+  //**************
+  Future<String> getTargetSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTargetsSort) ?? '';
+  }
+
+  Future<bool> setTargetSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTargetsSort, value);
+  }
+
+  /// ----------------------------
+  /// Methods for attacks
+  /// ----------------------------
+  Future<String> getAttackSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAttacksSort) ?? '';
+  }
+
+  Future<bool> setAttackSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAttacksSort, value);
+  }
+
+  /// ----------------------------
+  /// Methods for theme
+  /// ----------------------------
+  Future<String> getAppTheme() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTheme) ?? 'light';
+  }
+
+  Future<bool> setAppTheme(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTheme, value);
+  }
+
+  /// ----------------------------
+  /// Methods for default launch section
+  /// ----------------------------
+  Future<String> getDefaultSection() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDefaultSection) ?? '0';
+  }
+
+  Future<bool> setDefaultSection(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDefaultSection, value);
+  }
+
+  /// ----------------------------
+  /// Methods for default browser
+  /// ----------------------------
+  Future<String> getDefaultBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDefaultBrowser) ?? 'app';
+  }
+
+  Future<bool> setDefaultBrowser(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDefaultBrowser, value);
+  }
+
+  /// ----------------------------
+  /// Methods for travel options
+  /// ----------------------------
+  Future<String> getTravelNotificationTitle() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelNotificationTitle) ?? 'TORN TRAVEL';
+  }
+
+  Future<bool> setTravelNotificationTitle(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelNotificationTitle, value);
+  }
+
+  Future<String> getTravelNotificationBody() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
+  }
+
+  Future<bool> setTravelNotificationBody(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelNotificationBody, value);
+  }
+
+}
