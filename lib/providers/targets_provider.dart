@@ -52,7 +52,6 @@ class TargetsProvider extends ChangeNotifier {
   /// chars and of an acceptable color (green, blue, red).
   Future<AddTargetResult> addTarget(String targetId,
       {String notes = '', String notesColor = ''}) async {
-
     for (var tar in _targets) {
       if (tar.playerId.toString() == targetId) {
         return AddTargetResult(
@@ -102,18 +101,40 @@ class TargetsProvider extends ChangeNotifier {
   void _getTargetRespect(attacksFull, TargetModel myNewTargetModel) {
     if (attacksFull is AttackFullModel) {
       List<double> respectFromThisTarget = List<double>();
+      List<bool> userWonOrDefended = List<bool>();
       attacksFull.attacks.forEach((key, value) {
-        if (myNewTargetModel.playerId == value.defenderId) {
+        // We look for the our target in the the attacksFull list
+        if (myNewTargetModel.playerId == value.defenderId ||
+            myNewTargetModel.playerId == value.attackerId) {
           if (value.respectGain is String) {
             respectFromThisTarget.add(double.parse(value.respectGain));
           } else {
             // This is either int or double, so we convert just in case
             respectFromThisTarget.add(value.respectGain.toDouble());
           }
+
+          // Find out if this was won or successfully defended by the user
+          if (myNewTargetModel.playerId == value.defenderId) {
+            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+              // If we attacked and lost
+              userWonOrDefended.add(false);
+            } else {
+              userWonOrDefended.add(true);
+            }
+          } else if (myNewTargetModel.playerId == value.attackerId) {
+            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+              // If we were attacked and the attacker lost
+              userWonOrDefended.add(true);
+            } else {
+              userWonOrDefended.add(false);
+            }
+          }
         }
       });
+
       if (respectFromThisTarget.isNotEmpty) {
         myNewTargetModel.respectGain = respectFromThisTarget.first;
+        myNewTargetModel.userWonOrDefended = userWonOrDefended.first;
       }
     }
   }
@@ -134,10 +155,11 @@ class TargetsProvider extends ChangeNotifier {
 
     try {
       dynamic myUpdatedTargetModel =
-      await TornApiCaller.target(userKey, oldTarget.playerId.toString())
-          .getTarget;
+          await TornApiCaller.target(userKey, oldTarget.playerId.toString())
+              .getTarget;
       if (myUpdatedTargetModel is TargetModel) {
-        dynamic attacksFull = await TornApiCaller.attacks(userKey).getAttacksFull;
+        dynamic attacksFull =
+            await TornApiCaller.attacks(userKey).getAttacksFull;
         _getTargetRespect(attacksFull, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(oldTarget)] = myUpdatedTargetModel;
@@ -159,8 +181,6 @@ class TargetsProvider extends ChangeNotifier {
       _updateResultAnimation(oldTarget, false);
       return false;
     }
-
-
   }
 
   Future<UpdateTargetsResult> updateAllTargets() async {
@@ -177,8 +197,8 @@ class TargetsProvider extends ChangeNotifier {
     for (var i = 0; i < _targets.length; i++) {
       try {
         dynamic myUpdatedTargetModel =
-        await TornApiCaller.target(userKey, _targets[i].playerId.toString())
-            .getTarget;
+            await TornApiCaller.target(userKey, _targets[i].playerId.toString())
+                .getTarget;
         if (myUpdatedTargetModel is TargetModel) {
           _getTargetRespect(attacksFull, myUpdatedTargetModel);
           _getTargetFaction(myUpdatedTargetModel);

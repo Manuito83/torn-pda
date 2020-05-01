@@ -339,60 +339,56 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _returnRespect(double respect) {
-    if (respect == -1) {
-      return RichText(
-        text: TextSpan(
-          children: <TextSpan>[
-            TextSpan(
-              text: 'Respect: ?',
-              style: TextStyle(
-                color: _themeProvider.mainText,
-              ),
-            ),
-          ],
+    TextSpan respectResult;
+
+    if (respect == null) {
+      respectResult = TextSpan(
+        text: '?',
+        style: TextStyle(
+          color: _themeProvider.mainText,
         ),
       );
     } else if (respect == 0) {
-      return RichText(
-        text: TextSpan(
-          children: <TextSpan>[
-            TextSpan(
-              text: 'Respect: ',
-              style: TextStyle(
-                color: _themeProvider.mainText,
-              ),
-            ),
-            TextSpan(
-              text: 'Lost',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      );
+      if (_target.userWonOrDefended) {
+        respectResult = TextSpan(
+          text: '0 (def)',
+          style: TextStyle(
+            color: _themeProvider.mainText,
+          ),
+          );
+      } else {
+        respectResult = TextSpan(
+          text: 'Lost',
+          style: TextStyle(
+            color: Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      }
     } else {
-      return RichText(
-        text: TextSpan(
-          children: <TextSpan>[
-            TextSpan(
-              text: 'Respect: ',
-              style: TextStyle(
-                color: _themeProvider.mainText,
-              ),
-            ),
-            TextSpan(
-              text: respect.toStringAsFixed(2),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _themeProvider.mainText,
-              ),
-            ),
-          ],
+      respectResult =             TextSpan(
+        text: respect.toStringAsFixed(2),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _themeProvider.mainText,
         ),
       );
     }
+
+
+    return RichText(
+      text: TextSpan(
+        children: <TextSpan>[
+          TextSpan(
+            text: 'Respect: ',
+            style: TextStyle(
+              color: _themeProvider.mainText,
+            ),
+          ),
+          respectResult,
+        ],
+      ),
+    );
   }
 
   Widget _returnHealth(TargetModel target) {
