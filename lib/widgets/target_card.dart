@@ -139,7 +139,7 @@ class _TargetCardState extends State<TargetCard> {
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
                         SizedBox(
-                          width: 100,
+                          width: 95,
                           child: Text(
                             '${_target.name}',
                             overflow: TextOverflow.ellipsis,
