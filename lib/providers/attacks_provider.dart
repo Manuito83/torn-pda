@@ -34,18 +34,17 @@ class AttacksProvider extends ChangeNotifier {
       attacksResult.attacks.forEach((key, thisAttack) {
         // If someone attacked in stealth, it is of no use to us
         if (thisAttack.attackerName != null) {
-          // Determine if attack was won or lost
-          _determineAttackWonLost(thisAttack);
           // Determine who's the actual target
           _determineTargetNameId(thisAttack);
+          // Determine if attack was won or lost
+          _determineAttackWonLost(thisAttack);
           // Approximate target level
           _determineTargetLevel(thisAttack);
-
           // We are going to loop all the attacks currently available in
           // _attacks and compare it with thisAttack. If the target is the same,
           // we just add the result to the existing one, but do not add a new
           // record. Otherwise, we add the new target.
-          _addToNewOrExisting(thisAttack);
+          _addToAttackSeries(thisAttack);
         }
       });
     }
@@ -53,10 +52,16 @@ class AttacksProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _addToNewOrExisting(Attack thisAttack) {
+  void _addToAttackSeries(Attack thisAttack) {
+    bool green = false;
+    if ((thisAttack.attackInitiated && thisAttack.attackWon) ||
+        (!thisAttack.attackInitiated && !thisAttack.attackWon)) {
+      green = true;
+    }
+
     if (_attacks.length == 0) {
       // At the beginning the list is empty, so we just add a new target
-      thisAttack.attackSeriesWon.add(thisAttack.attackWon);
+      thisAttack.attackSeriesGreen.add(green);
       _attacks.add(thisAttack);
     } else {
       bool sameTargetFound = false;
@@ -66,20 +71,20 @@ class AttacksProvider extends ChangeNotifier {
           // add won/lost to the series list, but then do nothing more
           // (sameTargetFound will avoid that we add a new target)
           sameTargetFound = true;
-          _attacks[i].attackSeriesWon.add(thisAttack.attackWon);
+          _attacks[i].attackSeriesGreen.add(green);
           break;
         }
       }
       if (!sameTargetFound) {
         // Only add a new target if we could find a repetition
-        thisAttack.attackSeriesWon.add(thisAttack.attackWon);
+        thisAttack.attackSeriesGreen.add(green);
         _attacks.add(thisAttack);
       }
     }
   }
 
   void _determineAttackWonLost(Attack thisAttack) {
-    if (thisAttack.respectGain.toString() == '0') {
+    if (thisAttack.result == 'Lost' || thisAttack.result == 'Stalemate') {
       thisAttack.attackWon = false;
     } else {
       thisAttack.attackWon = true;
@@ -92,30 +97,36 @@ class AttacksProvider extends ChangeNotifier {
     // Base respect is level dependent. Very simply, the higher the level
     // of your target, the more respect you will earn.
     // Base respect = Respect gain / modifiers
-    dynamic respectGain = thisAttack.respectGain;
-    if (respectGain is String) {
-      respectGain = double.parse(respectGain);
-      // Also, standardize respect as double
-      thisAttack.respectGain = respectGain;
+    if (thisAttack.attackInitiated && thisAttack.attackWon) {
+      dynamic respectGain = thisAttack.respectGain;
+      if (respectGain is String) {
+        respectGain = double.parse(respectGain);
+        // Also, standardize respect as double
+        thisAttack.respectGain = respectGain;
+      }
+      double modifiers = thisAttack.modifiers.getTotalModifier;
+      if (thisAttack.result == 'Mugged') {
+        modifiers *= 0.75;
+      }
+      double baseRespect = respectGain / modifiers;
+      // Base respect = (Ln(level) + 1.0)/4.0
+      // From the second formula: Level = e^(Base Respect / 4 - 1)
+      double levelD = exp(4 * baseRespect - 1);
+      thisAttack.targetLevel = levelD.round();
+    } else {
+      thisAttack.targetLevel = -1;
     }
-    double modifiers = thisAttack.modifiers.getTotalModifier;
-    if (thisAttack.result == 'Mugged') {
-      modifiers *= 0.75;
-    }
-    double baseRespect = respectGain / modifiers;
-    // Base respect = (Ln(level) + 1.0)/4.0
-    // From the second formula: Level = e^(Base Respect / 4 - 1)
-    double levelD = exp(4 * baseRespect - 1);
-    thisAttack.targetLevel = levelD.round();
   }
 
   void _determineTargetNameId(Attack thisAttack) {
     if (thisAttack.attackerId.toString() == _ownId) {
       thisAttack.targetName = thisAttack.defenderName;
       thisAttack.targetId = thisAttack.defenderId.toString();
+      thisAttack.attackInitiated = true;
     } else {
       thisAttack.targetName = thisAttack.attackerName;
       thisAttack.targetId = thisAttack.attackerId.toString();
+      thisAttack.attackInitiated = false;
     }
   }
 

@@ -109,16 +109,7 @@ class _AttackCardState extends State<AttackCard> {
                             ),
                           ),
                         ),
-                        Text(
-                          _attack.attackWon
-                              ? 'Level ${_attack.targetLevel}'
-                              : '(attacked)',
-                          style: TextStyle(
-                            color: _attack.attackWon
-                                ? _themeProvider.mainText
-                                : Colors.red,
-                          ),
-                        ),
+                        _returnTargetLevel(),
                         SizedBox(
                           height: 20,
                           width: 20,
@@ -236,6 +227,33 @@ class _AttackCardState extends State<AttackCard> {
     }
   }
 
+  Widget _returnTargetLevel() {
+    if (_attack.attackInitiated) {
+      if (_attack.attackWon) {
+        return Text('Level ${_attack.targetLevel}');
+      } else {
+        return Text('[lost]',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.red,
+            ));
+      }
+    } else {
+      if (_attack.attackWon) {
+        return Text('[lost]',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.red,
+            ));
+      } else {
+        return Text(
+          '[defended]',
+          style: TextStyle(fontSize: 13),
+        );
+      }
+    }
+  }
+
   String _returnDateFormatted() {
     var date =
         new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
@@ -248,47 +266,52 @@ class _AttackCardState extends State<AttackCard> {
     if (respect is String) {
       respect = double.parse(respect);
     }
-    if (respect == 0) {
-      return RichText(
-        text: TextSpan(
-          children: <TextSpan>[
-            TextSpan(
-              text: 'Respect (last): ',
-              style: TextStyle(
-                color: _themeProvider.mainText,
-              ),
-            ),
-            TextSpan(
-              text: 'Lost',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+
+    TextSpan respectSpan;
+    if ((_attack.attackInitiated && !_attack.attackWon) ||
+        (!_attack.attackInitiated && _attack.attackWon)) {
+      // If we attacked and lost, or someone attacked us and won
+      // we just show '0' but in red to indicate that we lost
+      respectSpan = TextSpan(
+        text: '0',
+        style: TextStyle(
+          color: Colors.red,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    } else if (_attack.attackInitiated && _attack.attackWon) {
+      // If we attacked and won, we show the actual respect
+      respectSpan = TextSpan(
+        text: respect.toStringAsFixed(2),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: _themeProvider.mainText,
         ),
       );
     } else {
-      return RichText(
-        text: TextSpan(
-          children: <TextSpan>[
-            TextSpan(
-              text: 'Respect (last): ',
-              style: TextStyle(
-                color: _themeProvider.mainText,
-              ),
-            ),
-            TextSpan(
-              text: respect.toStringAsFixed(2),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _themeProvider.mainText,
-              ),
-            ),
-          ],
+      // Else (if someone attacked and lost (we defended successfully), we
+      // don't gain any respect at all
+      respectSpan = TextSpan(
+        text: '0',
+        style: TextStyle(
+          color: _themeProvider.mainText,
         ),
       );
     }
+
+    return RichText(
+      text: TextSpan(
+        children: <TextSpan>[
+          TextSpan(
+            text: 'Respect: ',
+            style: TextStyle(
+              color: _themeProvider.mainText,
+            ),
+          ),
+          respectSpan,
+        ],
+      ),
+    );
   }
 
   Widget _returnLastResults() {
@@ -300,7 +323,7 @@ class _AttackCardState extends State<AttackCard> {
         width: 13,
         height: 13,
         decoration: BoxDecoration(
-            color: _attack.attackWon ? Colors.green : Colors.red,
+            color: _attack.attackSeriesGreen[0] ? Colors.green : Colors.red,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.black)),
       ),
@@ -308,8 +331,8 @@ class _AttackCardState extends State<AttackCard> {
 
     results.add(firstResult);
 
-    if (_attack.attackSeriesWon.length > 1) {
-      for (var i = 1; i < _attack.attackSeriesWon.length; i++) {
+    if (_attack.attackSeriesGreen.length > 1) {
+      for (var i = 1; i < _attack.attackSeriesGreen.length; i++) {
         if (i == 10) {
           break;
         }
@@ -320,7 +343,7 @@ class _AttackCardState extends State<AttackCard> {
             width: 11,
             height: 11,
             decoration: BoxDecoration(
-                color: _attack.attackSeriesWon[i] ? Colors.green : Colors.red,
+                color: _attack.attackSeriesGreen[i] ? Colors.green : Colors.red,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.black)),
           ),

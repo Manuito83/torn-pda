@@ -39,7 +39,8 @@ class Attack {
   String targetId;
   int targetLevel;
   bool attackWon;
-  var attackSeriesWon = List<bool>();
+  bool attackInitiated;
+  var attackSeriesGreen = List<bool>();
 
   // From Torn API
   String code;
