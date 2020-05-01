@@ -238,6 +238,7 @@ class _TargetsPageState extends State<TargetsPage> {
                               maxLength: 10,
                               minLines: 1,
                               maxLines: 2,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 counterText: "",
                                 border: OutlineInputBorder(),
@@ -246,6 +247,10 @@ class _TargetsPageState extends State<TargetsPage> {
                               validator: (value) {
                                 if (value.isEmpty) {
                                   return "Cannot be empty!";
+                                }
+                                final n = num.tryParse(value);
+                                if(n == null) {
+                                  return '$value is not a valid ID!';
                                 }
                                 _addIdController.text = value.trim();
                                 return null;

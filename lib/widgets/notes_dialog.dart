@@ -18,7 +18,18 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
 
+  String _myTempChosenColor;
+
   final _personalNotesController = new TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _target = widget.targetModel;
+    _personalNotesController.text = _target.personalNote;
+    _myTempChosenColor = _target.personalNoteColor;
+  }
+
 
   @override
   void dispose() {
@@ -28,8 +39,6 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _target = widget.targetModel;
-    _personalNotesController.text = _target.personalNote;
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return SingleChildScrollView(
@@ -66,15 +75,14 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
                       children: <Widget>[
                         RawChip(
                           showCheckmark: true,
-                          selected:
-                              _target.personalNoteColor == 'red' ? true : false,
+                          selected: _myTempChosenColor == 'red' ? true : false,
                           label: Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
-                                _target.personalNoteColor = 'red';
+                                _myTempChosenColor = 'red';
                               } else {
-                                _target.personalNoteColor = '';
+                                _myTempChosenColor = '';
                               }
                             });
                           },
@@ -92,16 +100,14 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
                         ),
                         RawChip(
                           showCheckmark: true,
-                          selected: _target.personalNoteColor == 'blue'
-                              ? true
-                              : false,
+                          selected: _myTempChosenColor == 'blue' ? true : false,
                           label: Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
-                                _target.personalNoteColor = 'blue';
+                                _myTempChosenColor = 'blue';
                               } else {
-                                _target.personalNoteColor = '';
+                                _myTempChosenColor = '';
                               }
                             });
                           },
@@ -119,16 +125,15 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
                         ),
                         RawChip(
                           showCheckmark: true,
-                          selected: _target.personalNoteColor == 'green'
-                              ? true
-                              : false,
+                          selected:
+                              _myTempChosenColor == 'green' ? true : false,
                           label: Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
-                                _target.personalNoteColor = 'green';
+                                _myTempChosenColor = 'green';
                               } else {
-                                _target.personalNoteColor = '';
+                                _myTempChosenColor = '';
                               }
                             });
                           },
@@ -180,7 +185,9 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
                             // be pressed twice
                             Navigator.of(context).pop();
                             _targetsProvider.setTargetNote(
-                                _target, _personalNotesController.text);
+                                _target,
+                                _personalNotesController.text,
+                                _myTempChosenColor);
                           },
                         ),
                         FlatButton(

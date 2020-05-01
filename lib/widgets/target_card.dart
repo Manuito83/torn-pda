@@ -332,7 +332,7 @@ class _TargetCardState extends State<TargetCard> {
   Widget _returnRespect(double respect) {
     TextSpan respectResult;
 
-    if (respect == null) {
+    if (respect == -1) {
       respectResult = TextSpan(
         text: 'unknown',
         style: TextStyle(

@@ -23,7 +23,7 @@ class TargetModel {
   String personalNote;
   String personalNoteColor;
   // Update time
-  DateTime lastUpdated = DateTime.now();
+  DateTime lastUpdated;
   // Faction information
   bool hasFaction = false;
 
@@ -54,6 +54,14 @@ class TargetModel {
   LastAction lastAction;
 
   TargetModel({
+    // This first batch is here to export/import from SharedPreferences,
+    // so we also have to initialize them below
+    this.respectGain,
+    this.personalNote,
+    this.personalNoteColor,
+    this.lastUpdated,
+    /////////////////
+
     this.rank,
     this.level,
     this.gender,
@@ -80,6 +88,13 @@ class TargetModel {
   });
 
   factory TargetModel.fromJson(Map<String, dynamic> json) => TargetModel(
+    // respectGain can't be null to allow sorting targets, so if it stays
+    // at -1, it's because the target has unknown respect (new target)
+    respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
+    personalNote: json["personalNote"] == null ? '' : json["personalNote"],
+    personalNoteColor: json["personalNoteColor"] == null ? '' : json["personalNoteColor"],
+    lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
+
     rank: json["rank"],
     level: json["level"],
     gender: json["gender"],
@@ -106,6 +121,11 @@ class TargetModel {
   );
 
   Map<String, dynamic> toJson() => {
+    "respectGain": respectGain,
+    "personalNote": personalNote,
+    "personalNoteColor": personalNoteColor,
+    "lastUpdated": lastUpdated.toIso8601String(),
+
     "rank": rank,
     "level": level,
     "gender": gender,

@@ -139,13 +139,10 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void setTargetNote(TargetModel target, String note) {
+  void setTargetNote(TargetModel target, String note, String color) {
     target.personalNote = note;
-    notifyListeners();
-  }
-
-  void setTargetNoteColor(TargetModel target, String color) {
     target.personalNoteColor = color;
+    _saveTargetsSharedPrefs();
     notifyListeners();
   }
 
