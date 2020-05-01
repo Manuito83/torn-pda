@@ -14,18 +14,13 @@ class TargetModel {
   bool justUpdatedWithError = false;
   bool justUpdatedWithSuccess = false;
 
-  // External
-  // From AttacksFull
+  // External, exported/imported to Shared Preferences!
   double respectGain;
-  // Successfully won or defended
-  bool userWonOrDefended = false;
-  // Personal notes
+  bool userWonOrDefended;
   String personalNote;
   String personalNoteColor;
-  // Update time
   DateTime lastUpdated;
-  // Faction information
-  bool hasFaction = false;
+  bool hasFaction;
 
 
   // Internal from API profiles
@@ -57,9 +52,11 @@ class TargetModel {
     // This first batch is here to export/import from SharedPreferences,
     // so we also have to initialize them below
     this.respectGain,
+    this.userWonOrDefended,
     this.personalNote,
     this.personalNoteColor,
     this.lastUpdated,
+    this.hasFaction,
     /////////////////
 
     this.rank,
@@ -91,9 +88,11 @@ class TargetModel {
     // respectGain can't be null to allow sorting targets, so if it stays
     // at -1, it's because the target has unknown respect (new target)
     respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
+    userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
     personalNote: json["personalNote"] == null ? '' : json["personalNote"],
     personalNoteColor: json["personalNoteColor"] == null ? '' : json["personalNoteColor"],
     lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
+    hasFaction: json["hasFaction"] == null ? false : json["hasFaction"],
 
     rank: json["rank"],
     level: json["level"],
@@ -122,9 +121,11 @@ class TargetModel {
 
   Map<String, dynamic> toJson() => {
     "respectGain": respectGain,
+    "userWonOrDefended": userWonOrDefended,
     "personalNote": personalNote,
     "personalNoteColor": personalNoteColor,
     "lastUpdated": lastUpdated.toIso8601String(),
+    "hasFaction": hasFaction,
 
     "rank": rank,
     "level": level,
