@@ -156,16 +156,23 @@ class _TargetCardState extends State<TargetCard> {
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
                           SizedBox(
-                            width: 85,
-                            child: Text(
-                              ' [${_target.playerId}]',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
+                              width: 100,
+                              child: Row(
+                                children: <Widget>[
+                                  Text(
+                                    ' [${_target.playerId}]',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 5),
+                                    child: _factionIcon(),
+                                  ),
+                                ],
+                              )),
                           Text(
-                            'Level ${_target.level}',
+                            'Lvl ${_target.level}',
                           ),
                           SizedBox(
                             height: 20,
@@ -182,27 +189,11 @@ class _TargetCardState extends State<TargetCard> {
               Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
                   children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        SizedBox(
-                          width: 132,
-                          child: _returnRespect(_target.respectGain),
-                        ),
-                        _returnHealth(_target),
-                      ],
-                    ),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          _factionIcon(),
-                        ],
-                      ),
-                    ),
+                    _returnRespect(_target.respectGain),
+                    _returnHealth(_target),
                   ],
                 ),
               ),
@@ -240,7 +231,7 @@ class _TargetCardState extends State<TargetCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
-                          Text('Updated: $_lastUpdated'),
+                          Text('Updated $_lastUpdated'),
                         ],
                       ),
                     ),
@@ -343,7 +334,7 @@ class _TargetCardState extends State<TargetCard> {
 
     if (respect == null) {
       respectResult = TextSpan(
-        text: '?',
+        text: 'unknown',
         style: TextStyle(
           color: _themeProvider.mainText,
         ),
@@ -351,11 +342,11 @@ class _TargetCardState extends State<TargetCard> {
     } else if (respect == 0) {
       if (_target.userWonOrDefended) {
         respectResult = TextSpan(
-          text: '0 (def)',
+          text: '0 (defended)',
           style: TextStyle(
             color: _themeProvider.mainText,
           ),
-          );
+        );
       } else {
         respectResult = TextSpan(
           text: 'Lost',
@@ -366,7 +357,7 @@ class _TargetCardState extends State<TargetCard> {
         );
       }
     } else {
-      respectResult =             TextSpan(
+      respectResult = TextSpan(
         text: respect.toStringAsFixed(2),
         style: TextStyle(
           fontWeight: FontWeight.bold,
@@ -374,7 +365,6 @@ class _TargetCardState extends State<TargetCard> {
         ),
       );
     }
-
 
     return RichText(
       text: TextSpan(
@@ -406,7 +396,7 @@ class _TargetCardState extends State<TargetCard> {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Text(
-          'Life: ',
+          'Life ',
         ),
         LinearPercentIndicator(
           width: 100,
