@@ -59,7 +59,7 @@ class _ChainTimerState extends State<ChainTimer> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
       child: Column(
         children: <Widget>[
           FutureBuilder(

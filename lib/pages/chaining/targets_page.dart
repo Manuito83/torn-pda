@@ -149,6 +149,7 @@ class _TargetsPageState extends State<TargetsPage> {
                             child: TextField(
                               controller: _searchController,
                               decoration: InputDecoration(
+                                isDense: true,
                                 labelText: "Search",
                                 prefixIcon: Icon(
                                   Icons.search,

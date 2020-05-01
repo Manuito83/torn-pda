@@ -144,6 +144,7 @@ class _AttacksPageState extends State<AttacksPage> {
                             child: TextField(
                               controller: _searchController,
                               decoration: InputDecoration(
+                                isDense: true,
                                 labelText: "Search",
                                 prefixIcon: Icon(Icons.search),
                                 border: OutlineInputBorder(
