@@ -113,6 +113,8 @@ class AttacksProvider extends ChangeNotifier {
       // From the second formula: Level = e^(Base Respect / 4 - 1)
       double levelD = exp(4 * baseRespect - 1);
       thisAttack.targetLevel = levelD.round();
+    } else {
+      thisAttack.targetLevel = -1;
     }
   }
 
