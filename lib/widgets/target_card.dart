@@ -156,7 +156,7 @@ class _TargetCardState extends State<TargetCard> {
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
                           SizedBox(
-                              width: 100,
+                              width: 120,
                               child: Row(
                                 children: <Widget>[
                                   Text(
