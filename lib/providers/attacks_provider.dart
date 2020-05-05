@@ -15,6 +15,12 @@ class AttacksProvider extends ChangeNotifier {
   List<Attack> _attacks = [];
   UnmodifiableListView<Attack> get allAttacks => UnmodifiableListView(_attacks);
 
+  bool _apiError = false;
+  bool get getApiError => _apiError;
+
+  String _apiErrorMessage = '';
+  String get getApiErrorMessage => _apiErrorMessage;
+
   String _currentWordFilter = '';
   String get currentFilter => _currentWordFilter;
 
@@ -30,6 +36,7 @@ class AttacksProvider extends ChangeNotifier {
     await restoreSharedPreferences();
     dynamic attacksResult = await TornApiCaller.attacks(_userKey).getAttacks;
     if (attacksResult is AttackModel) {
+      _apiError = false;
       _attacks.clear();
       attacksResult.attacks.forEach((key, thisAttack) {
         // If someone attacked in stealth, it is of no use to us
@@ -47,6 +54,9 @@ class AttacksProvider extends ChangeNotifier {
           _addToAttackSeries(thisAttack);
         }
       });
+    } else if (attacksResult is ApiError) {
+      _apiError = true;
+      _apiErrorMessage = attacksResult.errorReason;
     }
     sortAttacks(_currentSort);
     notifyListeners();

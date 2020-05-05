@@ -152,7 +152,7 @@ class _TravelPageState extends State<TravelPage> {
     if (_apiError) {
       return <Widget>[
         Padding(
-          padding: const EdgeInsets.only(top: 30),
+          padding: const EdgeInsets.all(30),
           child: Column(
             children: <Widget>[
               Padding(

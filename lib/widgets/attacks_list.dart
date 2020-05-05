@@ -20,6 +20,7 @@ class AttacksList extends StatelessWidget {
             child: CircularProgressIndicator(),
           ),
           Text('It\'s taking longer than expected...'),
+          _apiErrorWarning(context),
         ],
       );
     } else {
@@ -56,7 +57,9 @@ class AttacksList extends StatelessWidget {
         }
       }
       // Filter by search text and discard if it does not match
-      if (!thisAttack.targetName.toUpperCase().contains(wordFilter.toUpperCase())) {
+      if (!thisAttack.targetName
+          .toUpperCase()
+          .contains(wordFilter.toUpperCase())) {
         addThisAttack = false;
       }
       // Finally, add to list if it qualifies
@@ -67,5 +70,37 @@ class AttacksList extends StatelessWidget {
     // Avoid collisions with SnackBar
     filteredCards.add(SizedBox(height: 50));
     return filteredCards;
+  }
+
+  Widget _apiErrorWarning(BuildContext _) {
+    var attacksProvider = Provider.of<AttacksProvider>(_, listen: false);
+    if (attacksProvider.getApiError) {
+      return Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              'API ERROR: ',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 10),
+            ),
+            Text(
+              attacksProvider.getApiErrorMessage,
+              style: TextStyle(
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 }
