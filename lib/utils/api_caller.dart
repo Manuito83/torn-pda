@@ -28,12 +28,47 @@ class ApiError {
   int errorId;
   String errorReason;
   ApiError({int errorId}) {
-    if (errorId == 0) {
-      errorReason = 'Server cannot be contacted (timeout)!';
-    } else if (errorId == 1) {
-      errorReason = 'Invalid Torn API Key!';
-    } else {
-      errorReason = 'Unknown error!';
+    switch (errorId) {
+      case 0:
+        errorReason = 'Unknown error';
+        break;
+      case 1:
+        errorReason = 'Key is empty';
+        break;
+      case 2:
+        errorReason = 'Incorrect Key';
+        break;
+      case 3:
+        errorReason = 'Wrong type';
+        break;
+      case 4:
+        errorReason = 'Wrong fields';
+        break;
+      case 5:
+        errorReason = 'Too many requests';
+        break;
+      case 6:
+        errorReason = 'Incorrect ID';
+        break;
+      case 7:
+        errorReason = 'Incorrect ID-entity relation';
+        break;
+      case 8:
+        errorReason = 'IP block';
+        break;
+      case 9:
+        errorReason = 'API disabled';
+        break;
+      case 10:
+        errorReason = 'Key owner is in federal jail';
+        break;
+      case 11:
+        errorReason = 'Key change error: You can only '
+            'change your API key once every 60 seconds';
+        break;
+      case 12:
+        errorReason = 'Key read error: Error reading key from Database';
+        break;
     }
   }
 }
@@ -194,11 +229,7 @@ class TornApiCaller {
         // Check if json is responding with errors
         var jsonResponse = json.decode(response.body);
         if (jsonResponse['error'] != null) {
-          if (jsonResponse['error']['code'] == 2) {
-            return ApiError(errorId: 1);
-          } else {
-            return ApiError(errorId: 99);
-          }
+          return ApiError(errorId: jsonResponse['error']['code']);
         }
         // Otherwise, return a good json response
         return response;
