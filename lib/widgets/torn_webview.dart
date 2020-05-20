@@ -7,6 +7,7 @@ enum WebViewType {
   profile,
   travelAgency,
   docTorn,
+  arsonWarehouse,
 }
 
 class TornWebView extends StatefulWidget {
@@ -61,7 +62,11 @@ class _TornWebViewState extends State<TornWebView> {
         break;
       case WebViewType.docTorn:
         _initialUrl = 'https://doctorn.rocks/travel-hub/';
-        _pageTitle = 'Travel Hub';
+        _pageTitle = 'DoctorN';
+        break;
+      case WebViewType.arsonWarehouse:
+        _initialUrl = 'https://arsonwarehouse.com/foreign-stock';
+        _pageTitle = 'Arson Warehouse';
         break;
     }
   }

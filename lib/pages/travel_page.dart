@@ -375,7 +375,35 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ),
             RaisedButton(
-              child: Text("DOCTORN"),
+              child: Text("Travel Agency"),
+              onPressed: () async {
+                var browserType = _settingsProvider.currentBrowser;
+                switch (browserType) {
+                  case BrowserSetting.app:
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => TornWebView(
+                          webViewType: WebViewType.travelAgency,
+                          tornCallback: _updateInformation,
+                        ),
+                      ),
+                    );
+                    break;
+                  case BrowserSetting.external:
+                    var url = 'https://www.torn.com/travelagency.php';
+                    if (await canLaunch(url)) {
+                      await launch(url, forceSafariVC: false);
+                    }
+                    break;
+                }
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Divider(),
+            ),
+            RaisedButton(
+              child: Text("DoctorN"),
               onPressed: () async {
                 var browserType = _settingsProvider.currentBrowser;
                 switch (browserType) {
@@ -398,7 +426,7 @@ class _TravelPageState extends State<TravelPage> {
               },
             ),
             RaisedButton(
-              child: Text("Travel Agency"),
+              child: Text("Arson Warehouse"),
               onPressed: () async {
                 var browserType = _settingsProvider.currentBrowser;
                 switch (browserType) {
@@ -406,14 +434,13 @@ class _TravelPageState extends State<TravelPage> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (BuildContext context) => TornWebView(
-                          webViewType: WebViewType.travelAgency,
-                          tornCallback: _updateInformation,
+                          webViewType: WebViewType.arsonWarehouse,
                         ),
                       ),
                     );
                     break;
                   case BrowserSetting.external:
-                    var url = 'https://www.torn.com/travelagency.php';
+                    var url = 'https://arsonwarehouse.com/foreign-stock';
                     if (await canLaunch(url)) {
                       await launch(url, forceSafariVC: false);
                     }
