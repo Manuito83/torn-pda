@@ -101,24 +101,25 @@ class _SettingsPageState extends State<SettingsPage> {
                             onPressed: () {
                               showDialog(
                                   context: context,
-                                  builder: (BuildContext context){
+                                  builder: (BuildContext context) {
                                     return AlertDialog(
                                       title: Text("Browser type"),
-                                      content: Text("Choosing the in-app browser "
-                                          "offers a better experience, but you "
-                                          "can also use your normal (external) "
-                                          "browser if you think if you prefer!"),
-                                      actions:[
+                                      content: Text(
+                                          "Choosing the in-app browser "
+                                          "offers a better experience and additional "
+                                          "features, but you can also use your "
+                                          "normal (external) "
+                                          "browser if you prefer!"),
+                                      actions: [
                                         FlatButton(
                                           child: Text("Close"),
-                                          onPressed: (){
+                                          onPressed: () {
                                             Navigator.of(context).pop();
                                           },
                                         )
                                       ],
                                     );
-                                  }
-                              );
+                                  });
                             },
                           ),
                         ],
