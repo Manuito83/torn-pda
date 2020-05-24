@@ -233,6 +233,62 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
+  Future<void> updateTargetsAfterAttacks(List<String> targetsIds) async {
+    // Local function for the update of several targets after attacking
+    void updatePass (bool showUpdateAnimation) async {
+      for (var tar in _targets) {
+        for (var i = 0; i < targetsIds.length; i++) {
+          if (tar.playerId.toString() == targetsIds[i]) {
+            if (showUpdateAnimation) {
+              tar.isUpdating = true;
+              notifyListeners();
+            }
+            try {
+              dynamic myUpdatedTargetModel =
+              await TornApiCaller.target(userKey, tar.playerId.toString()).getTarget;
+              if (myUpdatedTargetModel is TargetModel) {
+                dynamic attacksFull =
+                await TornApiCaller.attacks(userKey).getAttacksFull;
+                _getTargetRespect(attacksFull, myUpdatedTargetModel);
+                _getTargetFaction(myUpdatedTargetModel);
+                _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
+                var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
+                if (showUpdateAnimation) {
+                  _updateResultAnimation(newTarget, true);
+                }
+                newTarget.personalNote = tar.personalNote;
+                newTarget.personalNoteColor = tar.personalNoteColor;
+                newTarget.lastUpdated = DateTime.now();
+                _saveTargetsSharedPrefs();
+              } else {
+                if (showUpdateAnimation) {
+                  tar.isUpdating = false;
+                  _updateResultAnimation(tar, false);
+                }
+              }
+            } catch (e) {
+              if (showUpdateAnimation) {
+                tar.isUpdating = false;
+                _updateResultAnimation(tar, false);
+              }
+            }
+            if (targetsIds.length > 75) {
+              await Future.delayed(const Duration(milliseconds: 750), () {});
+            }
+          }
+        }
+      }
+    }
+
+    // We want to update twice after attacking, so that we ensure data is
+    // refreshed as soon as possible and effectively. We will only show the
+    // animation the first time
+    await Future.delayed(Duration(seconds: 5));
+    updatePass(true);
+    await Future.delayed(Duration(seconds: 10));
+    updatePass(false);
+  }
+
   Future<void> _updateResultAnimation(TargetModel target, bool success) async {
     if (success) {
       target.justUpdatedWithSuccess = true;

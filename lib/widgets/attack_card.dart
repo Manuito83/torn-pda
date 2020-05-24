@@ -7,7 +7,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'torn_webview.dart';
+import 'webview_generic.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
@@ -62,9 +62,9 @@ class _AttackCardState extends State<AttackCard> {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
                                       builder: (BuildContext context) =>
-                                          TornWebView(
-                                            targetId: '${_attack.targetId}',
-                                            targetName: _attack.targetName,
+                                          TornWebViewGeneric(
+                                            profileId: '${_attack.targetId}',
+                                            profileName: _attack.targetName,
                                             webViewType: WebViewType.profile,
                                           )),
                                 );

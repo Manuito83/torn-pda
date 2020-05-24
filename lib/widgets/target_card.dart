@@ -8,7 +8,8 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/torn_webview.dart';
+import 'package:torn_pda/widgets/webview_attack.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'notes_dialog.dart';
 
@@ -94,47 +95,7 @@ class _TargetCardState extends State<TargetCard> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: IconButton(
-                            padding: EdgeInsets.all(0.0),
-                            iconSize: 20,
-                            icon: Image.asset(
-                              'images/icons/ic_target_account_black_48dp.png',
-                              color: Colors.red,
-                            ),
-                            onPressed: () async {
-                              var browserType =
-                                  _settingsProvider.currentBrowser;
-                              switch (browserType) {
-                                case BrowserSetting.app:
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          TornWebView(
-                                        targetId: '${_target.playerId}',
-                                        targetName: _target.name,
-                                        webViewType: WebViewType.attack,
-                                        tornCallback: () {
-                                          _updateTarget(afterAttack: true);
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                  break;
-                                case BrowserSetting.external:
-                                  var url =
-                                      'https://www.torn.com/loader.php?sid='
-                                      'attack&user2ID=${_target.playerId}';
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                  break;
-                              }
-                            },
-                          ),
-                        ),
+                        _attackIcon(),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
@@ -284,6 +245,60 @@ class _TargetCardState extends State<TargetCard> {
     );
   }
 
+  Widget _attackIcon() {
+    return SizedBox(
+      height: 20,
+      width: 20,
+      child: IconButton(
+        padding: EdgeInsets.all(0.0),
+        iconSize: 20,
+        icon: Image.asset(
+          'images/icons/ic_target_account_black_48dp.png',
+          color: Colors.red,
+        ),
+        onPressed: () async {
+          var browserType = _settingsProvider.currentBrowser;
+          switch (browserType) {
+            case BrowserSetting.app:
+              // For app browser, we are going to pass a list of attacks
+              // so that we can move to the next one
+              var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
+              // First, find out where we are in the list
+              for (var i = 0; i < myTargetList.length; i++) {
+                if (_target.playerId == myTargetList[i].playerId) {
+                  myTargetList.removeRange(0, i);
+                  break;
+                }
+              }
+              List<String> attacksIds = List<String>();
+              List<String> attacksNames = List<String>();
+              for (var tar in myTargetList) {
+                attacksIds.add(tar.playerId.toString());
+                attacksNames.add(tar.name);
+              }
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => TornWebViewAttack(
+                    attackIdList: attacksIds,
+                    attackNameList: attacksNames,
+                    attacksCallback: _updateSeveralTargets,
+                  ),
+                ),
+              );
+              break;
+            case BrowserSetting.external:
+              var url = 'https://www.torn.com/loader.php?sid='
+                  'attack&user2ID=${_target.playerId}';
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+              break;
+          }
+        },
+      ),
+    );
+  }
+
   Widget _refreshIcon() {
     if (_target.isUpdating) {
       return Padding(
@@ -296,7 +311,7 @@ class _TargetCardState extends State<TargetCard> {
         iconSize: 20,
         icon: Icon(Icons.refresh),
         onPressed: () async {
-          _updateTarget();
+          _updateThisTarget();
         },
       );
     }
@@ -482,10 +497,7 @@ class _TargetCardState extends State<TargetCard> {
         });
   }
 
-  void _updateTarget({bool afterAttack = false}) async {
-    if (afterAttack) {
-      await Future.delayed(Duration(seconds: 15));
-    }
+  void _updateThisTarget() async {
     bool updateWorked = await _targetsProvider.updateTarget(_target);
     if (updateWorked) {
     } else {
@@ -499,6 +511,25 @@ class _TargetCardState extends State<TargetCard> {
       );
     }
   }
+
+  void _updateSeveralTargets(List<String> attackedIds) async {
+    await _targetsProvider.updateTargetsAfterAttacks(attackedIds);
+
+
+    /*    bool updateWorked = await _targetsProvider.updateTarget(_target);
+    if (updateWorked) {
+    } else {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            'Error updating ${_target.name}!',
+          ),
+        ),
+      );
+    }*/
+  }
+
 
   void _timerUpdateInformation() {
     setState(() {
