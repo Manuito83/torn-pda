@@ -9,7 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/torn_webview.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
 import 'package:android_intent/android_intent.dart';
@@ -199,10 +199,10 @@ class _TravelPageState extends State<TravelPage> {
                 case BrowserSetting.app:
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => TornWebView(
+                      builder: (BuildContext context) => TornWebViewGeneric(
                         webViewType: WebViewType.generic,
                         genericTitle: '${_travelModel.destination}',
-                        tornCallback: _updateInformation,
+                        genericCallBack: _updateInformation,
                       ),
                     ),
                   );
@@ -248,10 +248,10 @@ class _TravelPageState extends State<TravelPage> {
                 case BrowserSetting.app:
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => TornWebView(
+                      builder: (BuildContext context) => TornWebViewGeneric(
                         webViewType: WebViewType.generic,
                         genericTitle: '${_travelModel.destination}',
-                        tornCallback: _updateInformation,
+                        genericCallBack: _updateInformation,
                       ),
                     ),
                   );
@@ -382,9 +382,9 @@ class _TravelPageState extends State<TravelPage> {
                   case BrowserSetting.app:
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebView(
+                        builder: (BuildContext context) => TornWebViewGeneric(
                           webViewType: WebViewType.travelAgency,
-                          tornCallback: _updateInformation,
+                          genericCallBack: _updateInformation,
                         ),
                       ),
                     );
@@ -410,7 +410,7 @@ class _TravelPageState extends State<TravelPage> {
                   case BrowserSetting.app:
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebView(
+                        builder: (BuildContext context) => TornWebViewGeneric(
                           webViewType: WebViewType.docTorn,
                         ),
                       ),
@@ -433,7 +433,7 @@ class _TravelPageState extends State<TravelPage> {
                   case BrowserSetting.app:
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebView(
+                        builder: (BuildContext context) => TornWebViewGeneric(
                           webViewType: WebViewType.arsonWarehouse,
                         ),
                       ),

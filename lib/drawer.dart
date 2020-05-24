@@ -6,7 +6,7 @@ import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/torn_webview.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
 
@@ -52,7 +52,7 @@ class _DrawerPageState extends State<DrawerPage> {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (BuildContext context) =>
-                    TornWebView(
+                    TornWebViewGeneric(
                       webViewType: WebViewType.generic,
                       genericTitle: 'Torn',
                     ),

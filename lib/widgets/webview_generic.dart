@@ -3,36 +3,35 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 enum WebViewType {
   generic,
-  attack,
   profile,
   travelAgency,
   docTorn,
   arsonWarehouse,
 }
 
-class TornWebView extends StatefulWidget {
-  final String targetId;
-  final String targetName;
+class TornWebViewGeneric extends StatefulWidget {
+  final String profileId;
+  final String profileName;
   final String genericTitle;
   final WebViewType webViewType;
-  final Function tornCallback;
+  final Function genericCallBack;
 
-  /// [targetId] and [targetName] make sense for targets and attacks.
-  /// [tornCallback] is used to update the target card when we go back
+  /// [profileId] and [profileName] make sense for targets and attacks.
+  /// [genericCallBack] is used to update the target card when we go back
   /// [webViewType] determines the actual URL and logic
-  TornWebView({
-    this.targetId = '',
-    this.targetName = '',
+  TornWebViewGeneric({
+    this.profileId = '',
+    this.profileName = '',
     this.genericTitle,
-    this.tornCallback,
+    this.genericCallBack,
     this.webViewType = WebViewType.profile,
   });
 
   @override
-  _TornWebViewState createState() => _TornWebViewState();
+  _TornWebViewGenericState createState() => _TornWebViewGenericState();
 }
 
-class _TornWebViewState extends State<TornWebView> {
+class _TornWebViewGenericState extends State<TornWebViewGeneric> {
   WebViewController _controller;
 
   String _initialUrl = "";
@@ -46,15 +45,10 @@ class _TornWebViewState extends State<TornWebView> {
         _initialUrl = 'https://www.torn.com/';
         _pageTitle = '${widget.genericTitle}';
         break;
-      case WebViewType.attack:
-        _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2'
-            'ID=${widget.targetId}';
-        _pageTitle = 'Attack ${widget.targetName}';
-        break;
       case WebViewType.profile:
         _initialUrl =
-            'https://www.torn.com/profiles.php?XID=${widget.targetId}';
-        _pageTitle = '${widget.targetName}\'s profile';
+        'https://www.torn.com/profiles.php?XID=${widget.profileId}';
+        _pageTitle = '${widget.profileName}\'s profile';
         break;
       case WebViewType.travelAgency:
         _initialUrl = 'https://www.torn.com/travelagency.php';
@@ -78,8 +72,8 @@ class _TornWebViewState extends State<TornWebView> {
         leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              if (widget.tornCallback != null) {
-                widget.tornCallback();
+              if (widget.genericCallBack != null) {
+                widget.genericCallBack();
               }
               Navigator.pop(context);
             }),
