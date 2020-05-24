@@ -10,6 +10,10 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
+// TODO: CONFIGURE FOR APP RELEASE
+final String appVersion = '1.0.4';
+final bool appNeedsChangelog = true;
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 

@@ -5,6 +5,7 @@ class SharedPreferencesModel {
   ///
   /// Instantiation of the SharedPreferences library
   ///
+  final String _kAppVersion = "pda_appVersion";
   final String _kApiKey = "pda_apiKey";
   final String _kOwnId = "pda_ownId";
   final String _kTargetsList = "pda_targetsList";
@@ -15,7 +16,20 @@ class SharedPreferencesModel {
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
-  
+
+  /// ----------------------------
+  /// Methods for app version
+  /// ----------------------------
+  Future<String> getAppVersion() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAppVersion) ?? "";
+  }
+
+  Future<bool> setAppVersion(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAppVersion, value);
+  }
+
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------

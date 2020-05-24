@@ -5,6 +5,7 @@ import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -32,6 +33,7 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   void initState() {
     super.initState();
+    _handleChangelog();
     _finishedWithPreferences = _restoreSharedPreferences();
     _configureSelectNotificationSubject();
   }
@@ -51,11 +53,10 @@ class _DrawerPageState extends State<DrawerPage> {
           case 'app':
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) =>
-                    TornWebViewGeneric(
-                      webViewType: WebViewType.generic,
-                      genericTitle: 'Torn',
-                    ),
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  webViewType: WebViewType.generic,
+                  genericTitle: 'Torn',
+                ),
               ),
             );
             break;
@@ -250,5 +251,25 @@ class _DrawerPageState extends State<DrawerPage> {
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
     }
+  }
+
+  void _handleChangelog() async {
+    String savedVersion = await SharedPreferencesModel().getAppVersion();
+    if (savedVersion != appVersion) {
+      SharedPreferencesModel().setAppVersion(appVersion);
+      if (appNeedsChangelog) {
+        _showChangeLogDialog(context);
+      }
+    }
+  }
+
+  void _showChangeLogDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (context) {
+        return ChangeLog();
+      },
+    );
   }
 }
