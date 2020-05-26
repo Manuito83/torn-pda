@@ -7,7 +7,7 @@ import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
 
@@ -46,16 +46,16 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Future<void> _configureSelectNotificationSubject() async {
     selectNotificationSubject.stream.listen((String payload) async {
-      if (payload == 'torn') {
+      if (payload == 'travel') {
         // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
           case 'app':
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => TornWebViewGeneric(
-                  webViewType: WebViewType.generic,
-                  genericTitle: 'Torn',
+                builder: (BuildContext context) => TornWebViewTravel(
+                  webViewType: WebViewTypeTravel.generic,
+                  genericTitle: 'Travel',
                 ),
               ),
             );

@@ -107,9 +107,13 @@ class _SettingsPageState extends State<SettingsPage> {
                                       content: Text(
                                           "Choosing the in-app browser "
                                           "offers a better experience and additional "
-                                          "features, but you can also use your "
-                                          "normal (external) "
-                                          "browser if you prefer!"),
+                                          "features, such as foreign stock uploading "
+                                          "to a common database in YATA that everyone "
+                                          "benefits from."
+                                          "\n\n"
+                                          "Please consider using it, unless you "
+                                          "have issues, in which case you can select "
+                                          "you mobile phone's default browser (external)."),
                                       actions: [
                                         FlatButton(
                                           child: Text("Close"),

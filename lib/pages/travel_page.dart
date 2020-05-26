@@ -9,7 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
 import 'package:android_intent/android_intent.dart';
@@ -199,8 +199,8 @@ class _TravelPageState extends State<TravelPage> {
                 case BrowserSetting.app:
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => TornWebViewGeneric(
-                        webViewType: WebViewType.generic,
+                      builder: (BuildContext context) => TornWebViewTravel(
+                        webViewType: WebViewTypeTravel.generic,
                         genericTitle: '${_travelModel.destination}',
                         genericCallBack: _updateInformation,
                       ),
@@ -248,8 +248,8 @@ class _TravelPageState extends State<TravelPage> {
                 case BrowserSetting.app:
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => TornWebViewGeneric(
-                        webViewType: WebViewType.generic,
+                      builder: (BuildContext context) => TornWebViewTravel(
+                        webViewType: WebViewTypeTravel.generic,
                         genericTitle: '${_travelModel.destination}',
                         genericCallBack: _updateInformation,
                       ),
@@ -382,8 +382,8 @@ class _TravelPageState extends State<TravelPage> {
                   case BrowserSetting.app:
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewGeneric(
-                          webViewType: WebViewType.travelAgency,
+                        builder: (BuildContext context) => TornWebViewTravel(
+                          webViewType: WebViewTypeTravel.travelAgency,
                           genericCallBack: _updateInformation,
                         ),
                       ),
@@ -410,8 +410,8 @@ class _TravelPageState extends State<TravelPage> {
                   case BrowserSetting.app:
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewGeneric(
-                          webViewType: WebViewType.docTorn,
+                        builder: (BuildContext context) => TornWebViewTravel(
+                          webViewType: WebViewTypeTravel.docTorn,
                         ),
                       ),
                     );
@@ -433,8 +433,8 @@ class _TravelPageState extends State<TravelPage> {
                   case BrowserSetting.app:
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewGeneric(
-                          webViewType: WebViewType.arsonWarehouse,
+                        builder: (BuildContext context) => TornWebViewTravel(
+                          webViewType: WebViewTypeTravel.arsonWarehouse,
                         ),
                       ),
                     );
@@ -855,7 +855,7 @@ class _TravelPageState extends State<TravelPage> {
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
       scheduledNotificationDateTime, // ^instead of this
       platformChannelSpecifics,
-      payload: 'torn',
+      payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time
     );
 
