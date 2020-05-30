@@ -1,4 +1,5 @@
 ![Torn PDA](https://img.shields.io/github/v/tag/Manuito83/torn-pda.svg?color=green&label=Torn%20PDA&logo=github&style=for-the-badge)
+[![Discord](https://img.shields.io/discord/715785867519721534?style=for-the-badge&color=%23447e9b&label=Discord&logo=discord&logoColor=FFF)](https://discord.gg/ujUquW)
 
 # TORN PDA 
 
