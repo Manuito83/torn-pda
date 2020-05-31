@@ -97,17 +97,16 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getProfile async {
+  Future<ProfileModel> get getProfile async {
     dynamic apiResult;
     await _apiCall(ApiType.user, apiSelection: ApiSelection.profile)
         .then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is http.Response)
       return ProfileModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
-      return apiResult;
-    }
+
+    throw Exception(apiResult.errorReason);
   }
 
   Future<dynamic> get getTarget async {
@@ -169,8 +168,7 @@ class TornApiCaller {
 
   Future<dynamic> get getBars async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.bars)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.bars).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {

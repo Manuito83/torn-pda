@@ -8,8 +8,15 @@ class ProfileModel {
   String status;
   String lastAction;
 
-
-  ProfileModel({this.name, this.gender, this.lastAction, this.level, this.life, this.playerId, this.rank, this.status});
+  ProfileModel(
+      {this.name,
+      this.gender,
+      this.lastAction,
+      this.level,
+      this.life,
+      this.playerId,
+      this.rank,
+      this.status});
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     var name = json['name'];
@@ -20,16 +27,16 @@ class ProfileModel {
     var life = json['life']['current'];
     var status = json['status']['description'];
     var lastAction = json['last_action']['relative'];
-    
+
     return ProfileModel(
       name: name,
       level: level,
       gender: gender,
-      rank : rank,
-      playerId : playerId,
-      life : life,
-      status : status,
-      lastAction : lastAction,
+      rank: rank,
+      playerId: playerId,
+      life: life,
+      status: status,
+      lastAction: lastAction,
     );
   }
 }

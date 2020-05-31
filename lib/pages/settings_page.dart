@@ -226,6 +226,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         _explanatoryApiText(),
                         _userDetails(),
+                        _showNotificationToggle(),
                       ],
                     ),
                   ),
@@ -332,6 +333,19 @@ class _SettingsPageState extends State<SettingsPage> {
     return SizedBox.shrink();
   }
 
+  Widget _showNotificationToggle() {
+    return Column(
+      children: [
+        Divider(),
+        CheckboxListTile(
+          value: false,
+          title: Text("Energy Full Reminder"),
+          onChanged: (value) {},
+        ),
+      ],
+    );
+  }
+
   DropdownButton _openSectionDropdown() {
     return DropdownButton<String>(
       value: _openSectionValue,
@@ -429,7 +443,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _restoreSharedPreferences() async {
-    await SharedPreferencesModel().getApiKey().then((onValue) {
+    await SharedPreferencesModel().getApiKey().then((onValue) async {
       if (onValue != '') {
         setState(() {
           _apiKeyInputController.text = onValue;

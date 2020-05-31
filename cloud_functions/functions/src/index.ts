@@ -6,10 +6,7 @@ export const runEveryMinute = functions.pubsub
   .schedule("every minute")
   .onRun(async () => {
     // get the list of subscribers
-    const subscribers = await admin
-      .firestore()
-      .collection("subscriptions")
-      .get();
+    const subscribers = await admin.firestore().collection("players").get();
 
     await Promise.all(
       subscribers.docs

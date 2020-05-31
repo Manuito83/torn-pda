@@ -145,12 +145,12 @@ class SharedPreferencesModel {
 
   Future<String> getTravelNotificationBody() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
+    return prefs.getString(_kTravelNotificationBody) ??
+        'Arriving at your destination!';
   }
 
   Future<bool> setTravelNotificationBody(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTravelNotificationBody, value);
   }
-
 }

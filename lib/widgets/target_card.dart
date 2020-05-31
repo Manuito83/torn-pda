@@ -9,7 +9,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webview_attack.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'notes_dialog.dart';
 
@@ -262,7 +261,8 @@ class _TargetCardState extends State<TargetCard> {
             case BrowserSetting.app:
               // For app browser, we are going to pass a list of attacks
               // so that we can move to the next one
-              var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
+              var myTargetList =
+                  List<TargetModel>.from(_targetsProvider.allTargets);
               // First, find out where we are in the list
               for (var i = 0; i < myTargetList.length; i++) {
                 if (_target.playerId == myTargetList[i].playerId) {
@@ -515,7 +515,6 @@ class _TargetCardState extends State<TargetCard> {
   void _updateSeveralTargets(List<String> attackedIds) async {
     await _targetsProvider.updateTargetsAfterAttacks(attackedIds);
 
-
     /*    bool updateWorked = await _targetsProvider.updateTarget(_target);
     if (updateWorked) {
     } else {
@@ -529,7 +528,6 @@ class _TargetCardState extends State<TargetCard> {
       );
     }*/
   }
-
 
   void _timerUpdateInformation() {
     setState(() {
