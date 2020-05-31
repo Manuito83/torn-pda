@@ -27,6 +27,8 @@ dependencies:
   android_intent: ^0.3.7+1
   shared_preferences: ^0.5.7
   flutter_slidable: ^0.5.4
+  firebase_messaging:
+  cloud_firestore:
   provider: ^4.0.5
   percent_indicator: ^2.1.3
   webview_flutter: ^0.3.22+1
@@ -48,13 +50,11 @@ flutter_icons:
   image_path: "images/icons/torn_pda.png"
   image_path_ios: "images/icons/torn_pda_ios.jpg"
 
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -64,13 +64,10 @@ flutter:
   assets:
     - images/flags/
     - images/icons/
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
-
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages
-
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a

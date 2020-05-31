@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "713899602970",
+    "firebase_url": "https://torn-pda.firebaseio.com",
+    "project_id": "torn-pda",
+    "storage_bucket": "torn-pda.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713899602970:android:a5667b048e9494e3fd8da3",
+        "android_client_info": {
+          "package_name": "com.manuito.tornpda"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "713899602970-1a28ifkjp7s3rhpknj3kp2ec6tnm2k3r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_sH_EwFdCx8T-svaXUqkc2jqLGMnQrP4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "713899602970-1a28ifkjp7s3rhpknj3kp2ec6tnm2k3r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
