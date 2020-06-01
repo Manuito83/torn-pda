@@ -5,7 +5,8 @@ var rp = require("request-promise");
 admin.initializeApp();
 
 export const runEveryMinute = functions.pubsub
-  .schedule("* * * * *")
+  // This is something called cron expression check https://crontab.guru/ for more details
+  .schedule("15 * * * *")
   .onRun(async () => {
     // get the list of subscribers
     /// HERE: If we have 2000+ users, it will fetch 2000K users every minute and loop over them, causing high change of
@@ -68,6 +69,9 @@ async function sendNotificaionToUser(
   title: string,
   body: string
 ) {
+  // This will send notificiaon to the registered user, notificaion will only be shown if the app is on background or terminated, when the app is on screen
+  // Notification will come as a callback, letting you do whatever we want with noticaion.
+  // If you still wanna send notificion when app is open use localNotificaion to do so. More details on https://pub.dev/packages/firebase_messaging
   return admin.messaging().send({
     token: token,
     notification: {
