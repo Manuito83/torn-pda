@@ -12,15 +12,12 @@ export const runEveryMinute = functions.pubsub
     /// resource usage. We must filter out users using some flags. Like not pulling users who have been updated 5 mins ago etc.
     const response = await admin.firestore().collection("players").get();
     const subscribers = response.docs.map((d) => d.data());
-    console.log(subscribers);
 
     await Promise.all(subscribers.map(checkAndSendNotification));
     console.log("send notificaions for energy");
   });
 
 async function checkAndSendNotification(subscriber: any): Promise<any> {
-  console.log(subscriber);
-
   const promises: Promise<any>[] = [];
   const userStats = await getUsersStat(subscriber.apiKey);
 
@@ -33,8 +30,6 @@ async function checkAndSendNotification(subscriber: any): Promise<any> {
 
 async function sendEnergyNotificaion(userStats: any, subscriber: any) {
   const energy = userStats.energy;
-  console.log(userStats);
-  console.log(userStats.energy);
   const promises: Promise<any>[] = [];
 
   if (
