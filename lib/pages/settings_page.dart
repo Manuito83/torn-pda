@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/models/profile_model.dart';
+import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -44,7 +45,6 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
-      drawer: new Drawer(),
       appBar: AppBar(
         title: Text('Settings'),
         leading: new IconButton(
@@ -226,7 +226,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         _explanatoryApiText(),
                         _userDetails(),
-                        _showNotificationToggle(),
                       ],
                     ),
                   ),
@@ -333,19 +332,6 @@ class _SettingsPageState extends State<SettingsPage> {
     return SizedBox.shrink();
   }
 
-  Widget _showNotificationToggle() {
-    return Column(
-      children: [
-        Divider(),
-        CheckboxListTile(
-          value: false,
-          title: Text("Energy Full Reminder"),
-          onChanged: (value) {},
-        ),
-      ],
-    );
-  }
-
   DropdownButton _openSectionDropdown() {
     return DropdownButton<String>(
       value: _openSectionValue,
@@ -430,6 +416,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiError = false;
         _userProfile = myProfile;
       });
+      firestore.uploadUsersProfileDetail(_myCurrentKey, myProfile);
       SharedPreferencesModel().setApiKey(_myCurrentKey);
       SharedPreferencesModel().setOwnId(myProfile.playerId.toString());
     } else if (myProfile is ApiError) {

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
@@ -21,6 +22,7 @@ class _DrawerPageState extends State<DrawerPage> {
     "Travel",
     "Chaining",
     "Settings",
+    "Alerts",
   ];
 
   ThemeProvider _themeProvider;
@@ -172,7 +174,7 @@ class _DrawerPageState extends State<DrawerPage> {
     var drawerOptions = <Widget>[];
     for (var i = 0; i < _drawerItemsList.length; i++) {
       // Adding divider just before SETTINGS
-      if (i == _drawerItemsList.length - 1) {
+      if (i == _drawerItemsList.length - 2) {
         drawerOptions.add(Divider());
       }
       drawerOptions.add(
@@ -211,6 +213,9 @@ class _DrawerPageState extends State<DrawerPage> {
       case 2:
         return SettingsPage();
         break;
+      case 3:
+        return AlertsSettings();
+        break;
       default:
         return new Text("Error");
     }
@@ -223,6 +228,9 @@ class _DrawerPageState extends State<DrawerPage> {
         break;
       case 1:
         return Icon(Icons.link);
+        break;
+      case 2:
+        return Icon(Icons.settings);
         break;
       case 2:
         return Icon(Icons.settings);

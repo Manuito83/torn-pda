@@ -3,6 +3,9 @@ import 'package:torn_pda/models/profile_model.dart';
 class FirebaseUserModel extends ProfileModel {
   String token;
   bool energyFullReminder = false;
+
+  FirebaseUserModel();
+
   FirebaseUserModel.fromProfileModel(ProfileModel model) {
     playerId = model.playerId;
     lastAction = model.lastAction;
@@ -26,5 +29,18 @@ class FirebaseUserModel extends ProfileModel {
       "lastAction": lastAction,
       "energyFullReminder": energyFullReminder,
     };
+  }
+
+  static FirebaseUserModel fromMap(Map data) {
+    return FirebaseUserModel()
+      ..energyFullReminder = data["energyFullReminder"]
+      ..lastAction = data["lastAction"]
+      ..playerId = data["playerId"]
+      ..status = data["status"]
+      ..gender = data["gender"]
+      ..level = data["level"]
+      ..rank = data["rank"]
+      ..name = data["name"]
+      ..life = data["life"];
   }
 }
