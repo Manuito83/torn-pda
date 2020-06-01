@@ -33,20 +33,22 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           },
         ),
       ),
-      body: Column(
-        children: [
-          CheckboxListTile(
-            value: firebaseUserModel.energyFullReminder ?? false,
-            title: Text("Energy Full Notification"),
-            onChanged: (value) {
-              setState(() {
-                firebaseUserModel?.energyFullReminder = value;
-              });
-              firestore.subscribeToEnergyNotificaion(value);
-            },
-          ),
-        ],
-      ),
+      body: firebaseUserModel == null
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                CheckboxListTile(
+                  value: firebaseUserModel.energyNotification ?? false,
+                  title: Text("Energy Full Notification"),
+                  onChanged: (value) {
+                    setState(() {
+                      firebaseUserModel?.energyNotification = value;
+                    });
+                    firestore.subscribeToEnergyNotificaion(value);
+                  },
+                ),
+              ],
+            ),
     );
   }
 }
