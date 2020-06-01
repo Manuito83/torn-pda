@@ -8,7 +8,8 @@ export const runEveryMinute = functions.pubsub
   .schedule("* * * * *")
   .onRun(async () => {
     // get the list of subscribers
-    //HERE: If we have 2000+ users, it will fetch 2000K users
+    /// HERE: If we have 2000+ users, it will fetch 2000K users every minute and loop over them, causing high change of
+    /// resource usage. We must filter out users using some flags. Like not pulling users who have been updated 5 mins ago etc.
     const response = await admin.firestore().collection("players").get();
     const subscribers = response.docs.map((d) => d.data());
     console.log(subscribers);
