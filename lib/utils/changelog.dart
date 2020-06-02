@@ -45,8 +45,10 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "Added serial attacks. You can now advance from one "
-                            "target to the next without returning to the main list!",
+                        "Foreign stocks are now automatically uploaded to "
+                        "YATA's shared database when you visit a country. Please "
+                        "note: in order for this to work and contribute, you "
+                        "need to use the in-app browser!",
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
@@ -64,8 +66,10 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "You can access you medical items from the attack page "
-                            "or in between two attacks.",
+                        "New interface implemented so that you can have a look "
+                        "at foreign stocks directly in the Travel section. "
+                        "Filter and sort items at your convenience, including "
+                        "profit based on item capacity.",
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
@@ -107,5 +111,4 @@ class ChangeLog extends StatelessWidget {
       ),
     );
   }
-
 }
