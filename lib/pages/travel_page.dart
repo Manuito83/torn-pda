@@ -133,23 +133,22 @@ class _TravelPageState extends State<TravelPage> {
               },
             )),
           ),
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: !_travelModel.travelling
-              ? RectGetter(
-                  key: rectGetterKey,
-                  child: FloatingActionButton(
-                    backgroundColor: Colors.orange,
-                    child: Image.asset(
-                      'images/icons/box.png',
-                      width: 24,
-                    ),
-                    onPressed: () {
-                      _navigateToForeignStock();
-                    },
-                  ),
-                )
-              : SizedBox.shrink(),
+          floatingActionButtonLocation: _travelModel.travelling
+              ? FloatingActionButtonLocation.endFloat
+              : FloatingActionButtonLocation.centerFloat,
+          floatingActionButton: RectGetter(
+            key: rectGetterKey,
+            child: FloatingActionButton(
+              backgroundColor: Colors.orange,
+              child: Image.asset(
+                'images/icons/box.png',
+                width: 24,
+              ),
+              onPressed: () {
+                _navigateToForeignStock();
+              },
+            ),
+          ),
         ),
         _rippleTransitionToForeignStock(),
       ],
@@ -371,7 +370,7 @@ class _TravelPageState extends State<TravelPage> {
           ),
           _conditionalAlarm(),
           _conditionalTimer(),
-          SizedBox(height: 50),
+          SizedBox(height: 90),
         ];
       }
     } else {
