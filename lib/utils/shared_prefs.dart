@@ -16,6 +16,10 @@ class SharedPreferencesModel {
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
+  final String _kStockCountryFilter = "pda_stockCountryFilter";
+  final String _kStockTypeFilter = "pda_stockTypeFilter";
+  final String _kStockSort = "pda_stockSort";
+  final String _kStockCapacity = "pda_stockCapacity";
 
   /// ----------------------------
   /// Methods for app version
@@ -145,12 +149,58 @@ class SharedPreferencesModel {
 
   Future<String> getTravelNotificationBody() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
+    return prefs.getString(_kTravelNotificationBody) ??
+        'Arriving at your destination!';
   }
 
   Future<bool> setTravelNotificationBody(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTravelNotificationBody, value);
+  }
+
+  /// ----------------------------
+  /// Methods for foreign stocks
+  /// ----------------------------
+  Future<List<String>> getStockCountryFilter() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kStockCountryFilter) ??
+        List<String>.filled(12, '1', growable: false);
+  }
+
+  Future<bool> setStockCountryFilter(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kStockCountryFilter, value);
+  }
+
+  Future<List<String>> getStockTypeFilter() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kStockTypeFilter) ??
+        List<String>.filled(4, '1', growable: false);
+  }
+
+  Future<bool> setStockTypeFilter(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kStockTypeFilter, value);
+  }
+
+  Future<String> getStockSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kStockSort) ?? 'profit';
+  }
+
+  Future<bool> setStockSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kStockSort, value);
+  }
+
+  Future<int> getStockCapacity() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kStockCapacity) ?? 1;
+  }
+
+  Future<bool> setStockCapacity(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kStockCapacity, value);
   }
 
 }

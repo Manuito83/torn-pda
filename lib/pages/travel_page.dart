@@ -7,8 +7,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/fade_route.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
@@ -16,6 +18,7 @@ import 'package:android_intent/android_intent.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:rect_getter/rect_getter.dart';
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);
@@ -48,6 +51,10 @@ class _TravelPageState extends State<TravelPage> {
 
   Future _finishedLoadingPreferences;
 
+  final Duration _rippleAnimationDuration = Duration(milliseconds: 500);
+  GlobalKey rectGetterKey = RectGetter.createGlobalKey();
+  Rect rect;
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +79,6 @@ class _TravelPageState extends State<TravelPage> {
         );
   }
 
-
   @override
   void dispose() {
     _ticker?.cancel();
@@ -83,47 +89,70 @@ class _TravelPageState extends State<TravelPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    return Scaffold(
-      drawer: Drawer(),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.dehaze),
-          onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        title: Text('Travel'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.textsms),
-            onPressed: () {
-              _notificationTitleController.text = _notificationTitle;
-              _notificationBodyController.text = _notificationBody;
-              _showNotificationTextDialog(context);
-            },
+    return Stack(
+      // Stack for FAB ripple
+      children: <Widget>[
+        Scaffold(
+          drawer: Drawer(),
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.dehaze),
+              onPressed: () {
+                final ScaffoldState scaffoldState =
+                    context.findRootAncestorStateOfType();
+                scaffoldState.openDrawer();
+              },
+            ),
+            title: Text('Travel'),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.textsms),
+                onPressed: () {
+                  _notificationTitleController.text = _notificationTitle;
+                  _notificationBodyController.text = _notificationBody;
+                  _showNotificationTextDialog(context);
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-            child: FutureBuilder(
-          future: _finishedLoadingPreferences,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return Column(
-                children: _travelMain(),
-              );
-            } else {
-              return Padding(
-                padding: EdgeInsets.all(10),
-                child: CircularProgressIndicator(),
-              );
-            }
-          },
-        )),
-      ),
+          body: Center(
+            child: SingleChildScrollView(
+                child: FutureBuilder(
+              future: _finishedLoadingPreferences,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Column(
+                    children: _travelMain(),
+                  );
+                } else {
+                  return Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
+            )),
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+          floatingActionButton: !_travelModel.travelling
+              ? RectGetter(
+                  key: rectGetterKey,
+                  child: FloatingActionButton(
+                    backgroundColor: Colors.orange,
+                    child: Image.asset(
+                      'images/icons/box.png',
+                      width: 24,
+                    ),
+                    onPressed: () {
+                      _navigateToForeignStock();
+                    },
+                  ),
+                )
+              : SizedBox.shrink(),
+        ),
+        _rippleTransitionToForeignStock(),
+      ],
     );
   }
 
@@ -402,6 +431,7 @@ class _TravelPageState extends State<TravelPage> {
               padding: const EdgeInsets.all(8.0),
               child: Divider(),
             ),
+            /*
             RaisedButton(
               child: Text("DoctorN"),
               onPressed: () async {
@@ -448,6 +478,8 @@ class _TravelPageState extends State<TravelPage> {
                 }
               },
             ),
+            SizedBox(height: 0),
+            */
           ],
         )
       ];
@@ -574,40 +606,40 @@ class _TravelPageState extends State<TravelPage> {
     String flagFile;
     switch (_travelModel.destination) {
       case "Torn":
-        flagFile = 'images/flags/torn.png';
+        flagFile = 'images/flags/travel/torn.png';
         break;
       case "Argentina":
-        flagFile = 'images/flags/argentina.png';
+        flagFile = 'images/flags/travel/argentina.png';
         break;
       case "Canada":
-        flagFile = 'images/flags/canada.png';
+        flagFile = 'images/flags/travel/canada.png';
         break;
       case "Cayman Islands":
-        flagFile = 'images/flags/cayman_islands.png';
+        flagFile = 'images/flags/travel/cayman_islands.png';
         break;
       case "China":
-        flagFile = 'images/flags/china.png';
+        flagFile = 'images/flags/travel/china.png';
         break;
       case "Hawaii":
-        flagFile = 'images/flags/hawaii.png';
+        flagFile = 'images/flags/travel/hawaii.png';
         break;
       case "Japan":
-        flagFile = 'images/flags/japan.png';
+        flagFile = 'images/flags/travel/japan.png';
         break;
       case "Mexico":
-        flagFile = 'images/flags/mexico.png';
+        flagFile = 'images/flags/travel/mexico.png';
         break;
       case "South Africa":
-        flagFile = 'images/flags/south_africa.png';
+        flagFile = 'images/flags/travel/south_africa.png';
         break;
       case "Switzerland":
-        flagFile = 'images/flags/switzerland.png';
+        flagFile = 'images/flags/travel/switzerland.png';
         break;
       case "UAE":
-        flagFile = 'images/flags/uae.png';
+        flagFile = 'images/flags/travel/uae.png';
         break;
       case "United Kingdom":
-        flagFile = 'images/flags/uk.png';
+        flagFile = 'images/flags/travel/uk.png';
         break;
       default:
         return SizedBox.shrink();
@@ -633,6 +665,25 @@ class _TravelPageState extends State<TravelPage> {
         ),
       );
     }
+  }
+
+  Widget _rippleTransitionToForeignStock() {
+    if (rect == null) {
+      return Container();
+    }
+    return AnimatedPositioned(
+      duration: _rippleAnimationDuration,
+      left: rect.left,
+      right: MediaQuery.of(context).size.width - rect.right,
+      top: rect.top,
+      bottom: MediaQuery.of(context).size.height - rect.bottom,
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.brown[500],
+        ),
+      ),
+    );
   }
 
   Future<void> _showNotificationTextDialog(BuildContext _) {
@@ -796,7 +847,17 @@ class _TravelPageState extends State<TravelPage> {
     );
   }
 
-  Future<void> _fetchTravelTime() async {
+  void _updateInformation() {
+    DateTime now = DateTime.now();
+    // We avoid calling the API unnecessarily
+    if (now
+        .isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
+      _fetchTornApi();
+    }
+    _retrievePendingNotifications();
+  }
+
+  Future<void> _fetchTornApi() async {
     var myTravel = await TornApiCaller.travel(_myCurrentKey).getTravel;
     if (myTravel is TravelModel) {
       setState(() {
@@ -914,7 +975,7 @@ class _TravelPageState extends State<TravelPage> {
     String key = await SharedPreferencesModel().getApiKey();
     if (key != '') {
       _myCurrentKey = key;
-      await _fetchTravelTime();
+      await _fetchTornApi();
     }
     _notificationTitle =
         await SharedPreferencesModel().getTravelNotificationTitle();
@@ -922,18 +983,14 @@ class _TravelPageState extends State<TravelPage> {
         await SharedPreferencesModel().getTravelNotificationBody();
   }
 
-  void _updateInformation() {
-    DateTime now = DateTime.now();
-    // We avoid calling the API unnecessarily
-    if (now.isAfter(
-      _travelModel.timeArrival.subtract(
-        Duration(
-          seconds: 120,
-        ),
-      ),
-    )) {
-      _fetchTravelTime();
-    }
-    _retrievePendingNotifications();
+  void _navigateToForeignStock() {
+    setState(() => rect = RectGetter.getRectFromKey(rectGetterKey));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() =>
+          rect = rect.inflate(1.3 * MediaQuery.of(context).size.longestSide));
+      Navigator.of(context)
+          .push(FadeRouteBuilder(page: ForeignStockPage(apiKey: _myCurrentKey)))
+          .then((_) => setState(() => rect = null));
+    });
   }
 }

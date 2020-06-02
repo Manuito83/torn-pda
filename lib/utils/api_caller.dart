@@ -6,12 +6,14 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel_model.dart';
 import 'package:torn_pda/models/profile_model.dart';
 
 enum ApiType {
   user,
   faction,
+  torn,
 }
 
 enum ApiSelection {
@@ -22,6 +24,7 @@ enum ApiSelection {
   attacksFull,
   chainStatus,
   bars,
+  items,
 }
 
 class ApiError {
@@ -83,6 +86,7 @@ class TornApiCaller {
   TornApiCaller.attacks(this.apiKey);
   TornApiCaller.chain(this.apiKey);
   TornApiCaller.bars(this.apiKey);
+  TornApiCaller.items(this.apiKey);
 
   Future<dynamic> get getTravel async {
     dynamic apiResult;
@@ -184,6 +188,23 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getItems async {
+    dynamic apiResult;
+    await _apiCall(ApiType.torn, apiSelection: ApiSelection.items)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return ItemsModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _apiCall(ApiType apiType,
       {String prefix, ApiSelection apiSelection}) async {
     String url = 'https://api.torn.com/';
@@ -193,6 +214,9 @@ class TornApiCaller {
         break;
       case ApiType.faction:
         url += 'faction/';
+        break;
+      case ApiType.torn:
+        url += 'torn/';
         break;
     }
 
@@ -217,6 +241,9 @@ class TornApiCaller {
         break;
       case ApiSelection.bars:
         url += '?selections=bars';
+        break;
+      case ApiSelection.items:
+        url += '?selections=items';
         break;
     }
     url += '&key=$apiKey';
