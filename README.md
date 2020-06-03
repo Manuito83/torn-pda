@@ -11,6 +11,8 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Check your travel status and configure notifications just before you arrive. No more forgetting and being mugged abroad. Also, configure the notification shown so that it is safe to use even at work or in other public environments.
 
+* Have a look at foreign stocks directly in the Travel section. Filter and sort items at your convenience, including profit based on item capacity. Also, by using the in-app browser, you are contributing by sending stock data automatically to the shared database!
+
 * Follow your faction's chain live from the app, with instant energy updates.
 
 * Create your own target list, adding your own comments and many other details. Chaining has never been easier.
