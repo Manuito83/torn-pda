@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
+import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -18,6 +19,7 @@ class DrawerPage extends StatefulWidget {
 
 class _DrawerPageState extends State<DrawerPage> {
   final _drawerItemsList = [
+    "Profile",
     "Travel",
     "Chaining",
     "Settings",
@@ -203,12 +205,15 @@ class _DrawerPageState extends State<DrawerPage> {
   Widget _getPages() {
     switch (_activeDrawerIndex) {
       case 0:
-        return TravelPage();
+        return ProfilePage();
         break;
       case 1:
-        return ChainingPage();
+        return TravelPage();
         break;
       case 2:
+        return ChainingPage();
+        break;
+      case 3:
         return SettingsPage();
         break;
       default:
@@ -219,12 +224,15 @@ class _DrawerPageState extends State<DrawerPage> {
   Widget _returnDrawerIcons({int drawerPosition}) {
     switch (drawerPosition) {
       case 0:
-        return Icon(Icons.local_airport);
+        return Icon(Icons.person);
         break;
       case 1:
-        return Icon(Icons.link);
+        return Icon(Icons.local_airport);
         break;
       case 2:
+        return Icon(Icons.link);
+        break;
+      case 3:
         return Icon(Icons.settings);
         break;
       default:
