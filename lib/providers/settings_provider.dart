@@ -6,16 +6,11 @@ enum BrowserSetting {
   external
 }
 
-
 class SettingsProvider extends ChangeNotifier {
   Color background;
   Color mainText;
   Color buttonText;
   Color navSelected;
-
-  SettingsProvider() {
-    _restoreSharedPreferences();
-  }
 
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
@@ -38,7 +33,7 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setDefaultBrowser(browserSave);
   }
 
-  Future<void> _restoreSharedPreferences() async {
+  Future<void> loadPreferences() async {
     String restoredBrowser = await SharedPreferencesModel().getDefaultBrowser();
     switch (restoredBrowser) {
       case 'app':
