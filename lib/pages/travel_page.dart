@@ -426,11 +426,14 @@ class _TravelPageState extends State<TravelPage> {
                 }
               },
             ),
+
+            // Old buttons going to database apps. Keeping here in case
+            // something goes bad with shared database
+            /*
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Divider(),
             ),
-            /*
             RaisedButton(
               child: Text("DoctorN"),
               onPressed: () async {
@@ -479,6 +482,7 @@ class _TravelPageState extends State<TravelPage> {
             ),
             SizedBox(height: 0),
             */
+
           ],
         )
       ];
