@@ -7,6 +7,7 @@ import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/travel_model.dart';
 import 'package:torn_pda/models/profile_model.dart';
 
@@ -19,6 +20,7 @@ enum ApiType {
 enum ApiSelection {
   travel,
   profile,
+  ownProfile,
   target,
   attacks,
   attacksFull,
@@ -82,6 +84,7 @@ class TornApiCaller {
 
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.profile(this.apiKey);
+  TornApiCaller.ownProfile(this.apiKey);
   TornApiCaller.target(this.apiKey, this.targetID);
   TornApiCaller.attacks(this.apiKey);
   TornApiCaller.chain(this.apiKey);
@@ -109,6 +112,19 @@ class TornApiCaller {
     });
     if (apiResult is http.Response) {
       return ProfileModel.fromJson(json.decode(apiResult.body));
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getOwnProfile async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownProfile)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      return OwnProfileModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -173,8 +189,7 @@ class TornApiCaller {
 
   Future<dynamic> get getBars async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.bars)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.bars).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -226,6 +241,9 @@ class TornApiCaller {
         break;
       case ApiSelection.profile:
         url += '?selections=profile';
+        break;
+      case ApiSelection.ownProfile:
+        url += '?selections=profile,bars,networth,cooldowns';
         break;
       case ApiSelection.target:
         url += '$prefix?selections=';
