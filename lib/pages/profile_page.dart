@@ -1,6 +1,9 @@
 import 'dart:async';
-
+import 'package:google_fonts/google_fonts.dart';
+import 'package:expandable/expandable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +22,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   OwnProfileModel _user;
 
-  DateTime _now;
+  DateTime _serverTime;
 
   Timer _tickerCallChainApi;
 
@@ -29,7 +32,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _apiFetched = _fetchApi();
 
     _tickerCallChainApi =
-        new Timer.periodic(Duration(seconds: 60), (Timer t) => _fetchApi());
+        new Timer.periodic(Duration(seconds: 10), (Timer t) => _fetchApi());
   }
 
   @override
@@ -56,7 +59,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (_apiGoodData) {
                   return Column(
                     children: <Widget>[
-                      _basicBars(),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 5),
+                        child: _basicBars(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
+                        child: _netWorth(),
+                      ),
                     ],
                   );
                 } else {
@@ -88,7 +98,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: <Widget>[
                       Text('Fetching data...'),
                       SizedBox(height: 30),
-                      CircularProgressIndicator(),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
                     ],
                   ),
                 );
@@ -100,142 +113,287 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _basicBars() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 30),
-      child: Column(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              Row(
+  Card _basicBars() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Text(
+                'BARS',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
                 children: <Widget>[
-                  SizedBox(
-                    width: 50,
-                    child: Text('Energy'),
+                  Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 50,
+                        child: Text('Energy'),
+                      ),
+                      SizedBox(width: 10),
+                      LinearPercentIndicator(
+                        width: 150,
+                        lineHeight: 20,
+                        progressColor: Colors.green,
+                        backgroundColor: Colors.grey,
+                        center: Text(
+                          '${_user.energy.current}',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        percent:
+                            _user.energy.current / _user.energy.maximum > 1.0
+                                ? 1.0
+                                : _user.energy.current / _user.energy.maximum,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 10),
-                  LinearPercentIndicator(
-                    width: 150,
-                    lineHeight: 20,
-                    progressColor: Colors.green,
-                    backgroundColor: Colors.grey,
-                    center: Text(
-                      '${_user.energy.current}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    percent: _user.energy.current / _user.energy.maximum > 1.0
-                        ? 1.0
-                        : _user.energy.current / _user.energy.maximum,
-                  ),
+                  _user.energy.fulltime == 0 ||
+                          _user.energy.current > _user.energy.maximum
+                      ? SizedBox.shrink()
+                      : _barTime('energy'),
                 ],
               ),
-              _user.energy.fulltime == 0 ||
-                      _user.energy.current > _user.energy.maximum
-                  ? SizedBox.shrink()
-                  : _barTime('energy'),
-            ],
-          ),
-          SizedBox(height: 10),
-          Column(
-            children: <Widget>[
-              Row(
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
                 children: <Widget>[
-                  SizedBox(
-                    width: 50,
-                    child: Text('Nerve'),
+                  Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 50,
+                        child: Text('Nerve'),
+                      ),
+                      SizedBox(width: 10),
+                      LinearPercentIndicator(
+                        width: 150,
+                        lineHeight: 20,
+                        progressColor: Colors.redAccent,
+                        backgroundColor: Colors.grey,
+                        center: Text(
+                          '${_user.nerve.current}',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        percent: _user.nerve.current / _user.nerve.maximum > 1.0
+                            ? 1.0
+                            : _user.nerve.current / _user.nerve.maximum,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 10),
-                  LinearPercentIndicator(
-                    width: 150,
-                    lineHeight: 20,
-                    progressColor: Colors.redAccent,
-                    backgroundColor: Colors.grey,
-                    center: Text(
-                      '${_user.nerve.current}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    percent: _user.nerve.current / _user.nerve.maximum > 1.0
-                        ? 1.0
-                        : _user.nerve.current / _user.nerve.maximum,
-                  ),
+                  _user.nerve.fulltime == 0 ||
+                          _user.nerve.current >= _user.nerve.maximum
+                      ? SizedBox.shrink()
+                      : _barTime('nerve'),
                 ],
               ),
-              _user.nerve.fulltime == 0 ||
-                      _user.nerve.current >= _user.nerve.maximum
-                  ? SizedBox.shrink()
-                  : _barTime('nerve'),
-            ],
-          ),
-          SizedBox(height: 10),
-          Column(
-            children: <Widget>[
-              Row(
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
                 children: <Widget>[
-                  SizedBox(
-                    width: 50,
-                    child: Text('Happy'),
+                  Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 50,
+                        child: Text('Happy'),
+                      ),
+                      SizedBox(width: 10),
+                      LinearPercentIndicator(
+                        width: 150,
+                        lineHeight: 20,
+                        progressColor: Colors.amber,
+                        backgroundColor: Colors.grey,
+                        center: Text(
+                          '${_user.happy.current}',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        percent: _user.happy.current / _user.happy.maximum > 1.0
+                            ? 1.0
+                            : _user.happy.current / _user.happy.maximum,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 10),
-                  LinearPercentIndicator(
-                    width: 150,
-                    lineHeight: 20,
-                    progressColor: Colors.amber,
-                    backgroundColor: Colors.grey,
-                    center: Text(
-                      '${_user.happy.current}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    percent: _user.happy.current / _user.happy.maximum > 1.0
-                        ? 1.0
-                        : _user.happy.current / _user.happy.maximum,
-                  ),
+                  _user.happy.fulltime == 0 ||
+                          _user.happy.current > _user.happy.maximum
+                      ? SizedBox.shrink()
+                      : _barTime('happy'),
                 ],
               ),
-              _user.happy.fulltime == 0 ||
-                      _user.happy.current > _user.happy.maximum
-                  ? SizedBox.shrink()
-                  : _barTime('happy'),
-            ],
-          ),
-          SizedBox(height: 10),
-          Column(
-            children: <Widget>[
-              Row(
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
                 children: <Widget>[
-                  SizedBox(
-                    width: 50,
-                    child: Text('Life'),
+                  Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 50,
+                        child: Text('Life'),
+                      ),
+                      SizedBox(width: 10),
+                      LinearPercentIndicator(
+                        width: 150,
+                        lineHeight: 20,
+                        progressColor: Colors.blue,
+                        backgroundColor: Colors.grey,
+                        center: Text(
+                          '${_user.life.current}',
+                          style: TextStyle(color: Colors.black),
+                        ),
+                        percent: _user.life.current / _user.life.maximum > 1.0
+                            ? 1.0
+                            : _user.life.current / _user.life.maximum,
+                      ),
+                      _user.status.state == "Hospital"
+                          ? Icon(
+                              Icons.local_hospital,
+                              size: 20,
+                              color: Colors.red,
+                            )
+                          : SizedBox.shrink(),
+                    ],
                   ),
-                  SizedBox(width: 10),
-                  LinearPercentIndicator(
-                    width: 150,
-                    lineHeight: 20,
-                    progressColor: Colors.blue,
-                    backgroundColor: Colors.grey,
-                    center: Text(
-                      '${_user.life.current}',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                    percent: _user.life.current / _user.life.maximum > 1.0
-                        ? 1.0
-                        : _user.life.current / _user.life.maximum,
-                  ),
-                  _user.status.state == "Hospital"
-                      ? Icon(
-                    Icons.local_hospital,
-                    size: 20,
-                    color: Colors.red,
-                  )
-                      : SizedBox.shrink(),
+                  _user.life.fulltime == 0 ||
+                          _user.life.current > _user.life.maximum
+                      ? SizedBox.shrink()
+                      : _barTime('life'),
                 ],
               ),
-              _user.life.fulltime == 0 ||
-                      _user.life.current > _user.life.maximum
-                  ? SizedBox.shrink()
-                  : _barTime('life'),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Card _netWorth() {
+    // Currency configuration
+    final moneyFormat = new NumberFormat("#,##0", "en_US");
+
+    // Total when folded
+    int total;
+    for (var v in _user.networth.entries) {
+      if (v.key == 'total') {
+        total = v.value.round();
+      }
+    }
+
+    // List for all sources in column
+    var moneySources = List<Widget>();
+
+    // Total Expanded
+    moneySources.add(
+      Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 10),
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              width: 110,
+              child: Text(
+                'Total: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Text(
+              '\$${moneyFormat.format(total)}',
+              style: TextStyle(
+                color: total < 0 ? Colors.red : Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Loop all other sources
+    for (var v in _user.networth.entries) {
+      String source;
+      if (v.key == 'total' || v.key == 'parsetime') {
+        continue;
+      } else if (v.key == 'piggybank') {
+        source = 'Piggy Bank';
+      } else if (v.key == 'displaycase') {
+        source = 'Display Case';
+      } else if (v.key == 'stockmarket') {
+        source = 'Stock Market';
+      } else if (v.key == 'auctionhouse') {
+        source = 'Auction House';
+      } else if (v.key == 'unpaidfees') {
+        source = 'Unpaid Fees';
+      } else {
+        source = "${v.key[0].toUpperCase()}${v.key.substring(1)}";
+      }
+
+      moneySources.add(
+        Row(
+          children: <Widget>[
+            SizedBox(
+              height: 20,
+              width: 110,
+              child: Text('$source: '),
+            ),
+            Text(
+              '\$${moneyFormat.format(v.value.round())}',
+              style: TextStyle(
+                color: v.value < 0 ? Colors.red : Colors.green,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Card(
+      child: ExpandablePanel(
+        header: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Text(
+            'NETWORTH',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ],
+        ),
+        collapsed: Padding(
+          padding: const EdgeInsets.fromLTRB(30, 5, 20, 20),
+          child: Text(
+            '\$${moneyFormat.format(total)}',
+            softWrap: true,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.droidSerif(
+              textStyle: TextStyle(
+                fontSize: 16,
+                color: total <= 0 ? Colors.red : Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        expanded: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: moneySources,
+          ),
+        ),
       ),
     );
   }
@@ -244,20 +402,20 @@ class _ProfilePageState extends State<ProfilePage> {
     var time;
     switch (type) {
       case "energy":
-        time = _now.add(Duration(seconds: _user.energy.fulltime));
+        time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
         break;
       case "nerve":
-        time = _now.add(Duration(seconds: _user.nerve.fulltime));
+        time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
         break;
       case "happy":
-        time = _now.add(Duration(seconds: _user.happy.fulltime));
+        time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
         break;
       case "life":
-        time = _now.add(Duration(seconds: _user.life.fulltime));
+        time = _serverTime.add(Duration(seconds: _user.life.fulltime));
         break;
     }
 
-    var formatter = new DateFormat('HH:ss');
+    var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(time);
 
     return Row(
@@ -275,8 +433,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
     setState(() {
       if (apiResponse is OwnProfileModel) {
-        _now = DateTime.now();
         _user = apiResponse;
+        _serverTime =
+            DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
       } else {
         _apiGoodData = false;
