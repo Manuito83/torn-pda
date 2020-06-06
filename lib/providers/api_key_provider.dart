@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-
 // TODO: with this new provider, we can remove the call to SharedPreferences in chains and travel
 
 class ApiKeyProvider extends ChangeNotifier {
