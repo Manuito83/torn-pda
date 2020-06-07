@@ -35,20 +35,20 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
 }
 
 //
-function getEstimatedPrice(estimatedWeeklyActiveUsers: number) {
-  const numberOfExecutionsPerDay = 1440; //  Minutes in a day
-  const totalDocumentReadsPerDay =
-    estimatedWeeklyActiveUsers * numberOfExecutionsPerDay;
+// function getEstimatedPrice(estimatedWeeklyActiveUsers: number) {
+//   const numberOfExecutionsPerDay = 1440; //  Minutes in a day
+//   const totalDocumentReadsPerDay =
+//     estimatedWeeklyActiveUsers * numberOfExecutionsPerDay;
 
-  const paidDocumentReadsPerDay = totalDocumentReadsPerDay - 50000; // 50k per day is free
-  const pricePer100KRead = 0.06;
-  const paidDocumentKReadsPerDay = paidDocumentReadsPerDay / 100000;
-  const priceOfNotificationSender = paidDocumentKReadsPerDay * pricePer100KRead;
-  const estimatedBillForCloudFunction = 5; // 5$ per month as of my estimation, can be optimized;
-  return {
-    estimatedWeeklyActiveUsers,
-    estimatedDailyBill: priceOfNotificationSender,
-    estimatedMonthlyBill: priceOfNotificationSender * 30,
-    estimatedBillForCloudFunction,
-  };
-}
+//   const paidDocumentReadsPerDay = totalDocumentReadsPerDay - 50000; // 50k per day is free
+//   const pricePer100KRead = 0.06;
+//   const paidDocumentKReadsPerDay = paidDocumentReadsPerDay / 100000;
+//   const priceOfNotificationSender = paidDocumentKReadsPerDay * pricePer100KRead;
+//   const estimatedBillForCloudFunction = 5; // 5$ per month as of my estimation, can be optimized;
+//   return {
+//     estimatedWeeklyActiveUsers,
+//     estimatedDailyBill: priceOfNotificationSender,
+//     estimatedMonthlyBill: priceOfNotificationSender * 30,
+//     estimatedBillForCloudFunction,
+//   };
+// }
