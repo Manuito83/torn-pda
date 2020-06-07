@@ -19,8 +19,9 @@ export const staleGroup = {
       promises.push(
         sendNotificaionToUser(
           user.token,
+          user.playerId,
           "Please come back",
-          "You have not been active recently, please come back or we wont send notifications from tommorow."
+          "You have not been active recently, please come back to continue your notification subscription."
         )
       )
     );
@@ -39,6 +40,7 @@ export const staleGroup = {
       promises.push(
         sendNotificaionToUser(
           user.token,
+          user.playerId,
           "We are sorry!!!",
           "Your notification has been turned off, please open the app back again to get notification."
         )
