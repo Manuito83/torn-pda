@@ -32,7 +32,13 @@ class _ProfilePageState extends State<ProfilePage> {
     _apiFetched = _fetchApi();
 
     _tickerCallChainApi =
-        new Timer.periodic(Duration(seconds: 10), (Timer t) => _fetchApi());
+        new Timer.periodic(Duration(seconds: 60), (Timer t) => _fetchApi());
+  }
+
+  @override
+  void dispose() {
+    _tickerCallChainApi.cancel();
+    super.dispose();
   }
 
   @override
@@ -62,6 +68,10 @@ class _ProfilePageState extends State<ProfilePage> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 30, 20, 5),
                         child: _basicBars(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
+                        child: _coolDowns(),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
@@ -279,6 +289,124 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _barTime(String type) {
+    var time;
+    switch (type) {
+      case "energy":
+        time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
+        break;
+      case "nerve":
+        time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
+        break;
+      case "happy":
+        time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
+        break;
+      case "life":
+        time = _serverTime.add(Duration(seconds: _user.life.fulltime));
+        break;
+    }
+
+    var formatter = new DateFormat('HH:mm');
+    String timeFormatted = formatter.format(time);
+
+    return Row(
+      children: <Widget>[
+        SizedBox(width: 65),
+        Text('Full at $timeFormatted LT'),
+      ],
+    );
+  }
+
+  Card _coolDowns() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Text(
+                'COOLDOWNS',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.poll),
+                      SizedBox(width: 10),
+                      _drugCounter(),
+                    ],
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.poll),
+                      SizedBox(width: 10),
+                      Text('quacki'),
+                    ],
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.poll),
+                      SizedBox(width: 10),
+                      Text('quacki'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _drugCounter() {
+    // TODO:debug delete
+    _user.cooldowns.drug = 76;
+
+    if (_user.cooldowns.drug == 0) {
+      return Text(
+        '0',
+        style: TextStyle(color: Colors.green),
+      );
+    } else {
+      var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.drug));
+      var formatter = new DateFormat('HH:mm');
+      String timeFormatted = formatter.format(timeEnd);
+      String diff = _timeDifferenceFormatted(timeEnd);
+
+      return Text('@ $timeFormatted LT, $diff');
+    }
+  }
+
+  String _timeDifferenceFormatted(DateTime timeEnd) {
+    String diff;
+    var timeDifference = timeEnd.difference(_serverTime);
+    if (timeDifference.inMinutes < 1) {
+      diff = 'seconds away';
+    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
+      diff = 'in 1 minute';
+    } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
+      diff = 'in ${timeDifference.inMinutes} minutes';
+    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+      diff = 'in 1 hour';
+    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+      diff = 'in ${timeDifference.inHours} hours';
+    } else {
+      diff = 'tomorrow';
+    }
+    return diff;
+  }
+
   Card _netWorth() {
     // Currency configuration
     final moneyFormat = new NumberFormat("#,##0", "en_US");
@@ -395,34 +523,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _barTime(String type) {
-    var time;
-    switch (type) {
-      case "energy":
-        time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
-        break;
-      case "nerve":
-        time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
-        break;
-      case "happy":
-        time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
-        break;
-      case "life":
-        time = _serverTime.add(Duration(seconds: _user.life.fulltime));
-        break;
-    }
-
-    var formatter = new DateFormat('HH:mm');
-    String timeFormatted = formatter.format(time);
-
-    return Row(
-      children: <Widget>[
-        SizedBox(width: 65),
-        Text('Full at $timeFormatted LT'),
-      ],
     );
   }
 
