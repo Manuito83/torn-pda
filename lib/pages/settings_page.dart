@@ -342,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "0",
           child: Text(
-            "Travel",
+            "Profile",
             style: TextStyle(
               fontSize: 14,
             ),
@@ -350,6 +350,15 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         DropdownMenuItem(
           value: "1",
+          child: Text(
+            "Travel",
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
           child: Text(
             "Chaining",
             style: TextStyle(
