@@ -67,6 +67,10 @@ class _ProfilePageState extends State<ProfilePage> {
                     children: <Widget>[
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 30, 20, 5),
+                        child: _playerStatus(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 5),
                         child: _basicBars(),
                       ),
                       Padding(
@@ -118,6 +122,93 @@ class _ProfilePageState extends State<ProfilePage> {
               }
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  Card _playerStatus() {
+    Widget description;
+    if (_user.status.state != 'Okay') {
+      String des = _user.status.description;
+      if (_user.status.details != '') {
+        des += '- ${_user.status.details}';
+      }
+      description = Text(des);
+    } else {
+      description = SizedBox.shrink();
+    }
+
+    Color stateColor;
+    if (_user.status.color == 'red') {
+      stateColor = Colors.red;
+    } else if (_user.status.color == 'green') {
+      stateColor = Colors.green;
+    } else if (_user.status.color == 'blue') {
+      stateColor = Colors.blue;
+    }
+
+    Widget stateBall = Padding(
+      padding: EdgeInsets.only(left: 8),
+      child: Container(
+        width: 13,
+        height: 13,
+        decoration: BoxDecoration(
+            color: stateColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black)),
+      ),
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Text(
+                'STATUS',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      SizedBox(
+                        width: 60,
+                        child: Text('Status: '),
+                      ),
+                      Text(_user.status.state),
+                      stateBall,
+                    ],
+                  ),
+                  _user.status.details == ''
+                      ? SizedBox.shrink()
+                      : Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                            children: <Widget>[
+                              SizedBox(
+                                width: 60,
+                                child: Text('Details: '),
+                              ),
+                              Flexible(child: description),
+                            ],
+                          ),
+                      ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+          ],
         ),
       ),
     );
@@ -318,6 +409,70 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Card _coolDowns() {
+    Widget cooldownItems;
+    if (_user.cooldowns.drug > 0 ||
+        _user.cooldowns.booster > 0 ||
+        _user.cooldowns.medical > 0) {
+      cooldownItems = Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Column(
+          children: <Widget>[
+            _user.cooldowns.drug > 0
+                ? Column(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          _drugIcon(),
+                          SizedBox(width: 10),
+                          _drugCounter(),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                    ],
+                  )
+                : SizedBox.shrink(),
+            _user.cooldowns.medical > 0
+                ? Column(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          _medicalIcon(),
+                          SizedBox(width: 10),
+                          _medicalCounter(),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                    ],
+                  )
+                : SizedBox.shrink(),
+            _user.cooldowns.booster > 0
+                ? Column(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          _boosterIcon(),
+                          SizedBox(width: 10),
+                          _boosterCounter(),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                    ],
+                  )
+                : SizedBox.shrink(),
+          ],
+        ),
+      );
+    } else {
+      cooldownItems = Row(
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Text("Nothing to report, well done!"),
+          ),
+        ],
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -334,34 +489,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Icon(Icons.poll),
-                      SizedBox(width: 10),
-                      _drugCounter(),
-                    ],
-                  ),
-                  Row(
-                    children: <Widget>[
-                      Icon(Icons.poll),
-                      SizedBox(width: 10),
-                      Text('quacki'),
-                    ],
-                  ),
-                  Row(
-                    children: <Widget>[
-                      Icon(Icons.poll),
-                      SizedBox(width: 10),
-                      Text('quacki'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            cooldownItems,
             SizedBox(height: 10),
           ],
         ),
@@ -369,23 +497,91 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _drugCounter() {
-    // TODO:debug delete
-    _user.cooldowns.drug = 76;
-
-    if (_user.cooldowns.drug == 0) {
-      return Text(
-        '0',
-        style: TextStyle(color: Colors.green),
-      );
-    } else {
-      var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.drug));
-      var formatter = new DateFormat('HH:mm');
-      String timeFormatted = formatter.format(timeEnd);
-      String diff = _timeDifferenceFormatted(timeEnd);
-
-      return Text('@ $timeFormatted LT, $diff');
+  Image _drugIcon() {
+    // 0-10 minutes
+    if (_user.cooldowns.drug > 0 && _user.cooldowns.drug < 600) {
+      return Image.asset('images/icons/cooldowns/drug1.png', width: 20);
+    } // 10-60 minutes
+    else if (_user.cooldowns.drug >= 600 && _user.cooldowns.drug < 3600) {
+      return Image.asset('images/icons/cooldowns/drug2.png', width: 20);
+    } // 1-2 hours
+    else if (_user.cooldowns.drug >= 3600 && _user.cooldowns.drug < 7200) {
+      return Image.asset('images/icons/cooldowns/drug3.png', width: 20);
+    } // 2-5 hours
+    else if (_user.cooldowns.drug >= 7200 && _user.cooldowns.drug < 18000) {
+      return Image.asset('images/icons/cooldowns/drug4.png', width: 20);
+    } // 5+ hours
+    else {
+      return Image.asset('images/icons/cooldowns/drug5.png', width: 20);
     }
+  }
+
+  Image _medicalIcon() {
+    // 0-6 hours
+    if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 21600) {
+      return Image.asset('images/icons/cooldowns/medical1.png', width: 20);
+    } // 6-12 hours
+    else if (_user.cooldowns.medical >= 21600 &&
+        _user.cooldowns.medical < 43200) {
+      return Image.asset('images/icons/cooldowns/medical2.png', width: 20);
+    } // 12-18 hours
+    else if (_user.cooldowns.medical >= 43200 &&
+        _user.cooldowns.medical < 64800) {
+      return Image.asset('images/icons/cooldowns/medical3.png', width: 20);
+    } // 18-24 hours
+    else if (_user.cooldowns.medical >= 64800 &&
+        _user.cooldowns.medical < 86400) {
+      return Image.asset('images/icons/cooldowns/medical4.png', width: 20);
+    } // 24+ hours
+    else {
+      return Image.asset('images/icons/cooldowns/medical5.png', width: 20);
+    }
+  }
+
+  Image _boosterIcon() {
+    // 0-6 hours
+    if (_user.cooldowns.booster > 0 && _user.cooldowns.booster < 21600) {
+      return Image.asset('images/icons/cooldowns/booster1.png', width: 20);
+    } // 6-12 hours
+    else if (_user.cooldowns.booster >= 21600 &&
+        _user.cooldowns.booster < 43200) {
+      return Image.asset('images/icons/cooldowns/booster2.png', width: 20);
+    } // 12-18 hours
+    else if (_user.cooldowns.booster >= 43200 &&
+        _user.cooldowns.booster < 64800) {
+      return Image.asset('images/icons/cooldowns/booster3.png', width: 20);
+    } // 18-24 hours
+    else if (_user.cooldowns.booster >= 64800 &&
+        _user.cooldowns.booster < 86400) {
+      return Image.asset('images/icons/cooldowns/booster4.png', width: 20);
+    } // 24+ hours
+    else {
+      return Image.asset('images/icons/cooldowns/booster5.png', width: 20);
+    }
+  }
+
+  Widget _drugCounter() {
+    var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.drug));
+    var formatter = new DateFormat('HH:mm');
+    String timeFormatted = formatter.format(timeEnd);
+    String diff = _timeDifferenceFormatted(timeEnd);
+    return Flexible(child: Text('@ $timeFormatted LT, $diff'));
+  }
+
+  Widget _medicalCounter() {
+    var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.medical));
+    var formatter = new DateFormat('HH:mm');
+    String timeFormatted = formatter.format(timeEnd);
+    String diff = _timeDifferenceFormatted(timeEnd);
+    return Flexible(child: Text('@ $timeFormatted LT, $diff'));
+  }
+
+  Widget _boosterCounter() {
+    var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.booster));
+    var formatter = new DateFormat('HH:mm');
+    String timeFormatted = formatter.format(timeEnd);
+    String diff = _timeDifferenceFormatted(timeEnd);
+    return Flexible(child: Text('@ $timeFormatted LT, $diff'));
   }
 
   String _timeDifferenceFormatted(DateTime timeEnd) {
@@ -402,7 +598,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
       diff = 'in ${timeDifference.inHours} hours';
     } else {
-      diff = 'tomorrow';
+      diff = 'in ${timeDifference.inHours} hours (tomorrow)';
     }
     return diff;
   }
@@ -537,6 +733,11 @@ class _ProfilePageState extends State<ProfilePage> {
         _serverTime =
             DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
+
+        // TODO:debug delete
+
+        //_user.cooldowns.drug = 17000;
+        //_user.cooldowns.booster = 98000;
       } else {
         _apiGoodData = false;
       }
