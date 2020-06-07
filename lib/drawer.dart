@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -27,6 +29,7 @@ class _DrawerPageState extends State<DrawerPage> {
   ];
 
   ThemeProvider _themeProvider;
+  FirebaseMessaging _messaging = FirebaseMessaging();
 
   Future _finishedWithPreferences;
 
@@ -40,6 +43,16 @@ class _DrawerPageState extends State<DrawerPage> {
     _finishedWithPreferences = _restoreSharedPreferences();
     _configureSelectNotificationSubject();
     firestore.uploadLastActiveTime();
+    _messaging.requestNotificationPermissions(IosNotificationSettings(
+      sound: true,
+      badge: true,
+      alert: true,
+    ));
+    _messaging.configure(onMessage: (message) {
+      /// This is where notifications will come if the user has the app turned on.
+      /// In case of background, it will go to system tray automatically
+      return showNotification(message);
+    });
   }
 
   @override
