@@ -247,8 +247,8 @@ class _DrawerPageState extends State<DrawerPage> {
       case 2:
         return Icon(Icons.settings);
         break;
-      case 2:
-        return Icon(Icons.settings);
+      case 3:
+        return Icon(Icons.notifications_active);
         break;
       default:
         return SizedBox.shrink();

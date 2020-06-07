@@ -37,6 +37,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           ? Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                SizedBox(height: 20),
                 CheckboxListTile(
                   value: firebaseUserModel.travelNotification ?? false,
                   title: Text("Travel Arrival Notification"),
@@ -60,6 +61,16 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                     firestore.subscribeToEnergyNotificaion(value);
                   },
                 ),
+                Padding(
+                  padding: EdgeInsets.all(15),
+                  child: Text(
+                    "Note: If you dont open the app for more than 7 days, all notifications will be turned off automatically. This is to prevent the over usage of our resources. Please make sure you return back to the app once a week to get uninterrupted notification service.",
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyText2
+                        .copyWith(height: 1.8, fontStyle: FontStyle.italic),
+                  ),
+                )
               ],
             ),
     );
