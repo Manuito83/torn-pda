@@ -34,7 +34,7 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
   await Promise.all(promises);
 }
 
-//
+// Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy
 // function getEstimatedPrice(estimatedWeeklyActiveUsers: number) {
 //   const numberOfExecutionsPerDay = 1440; //  Minutes in a day
 //   const totalDocumentReadsPerDay =
