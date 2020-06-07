@@ -31,15 +31,32 @@ export async function sendEnergyNotificaion(userStats: any, subscriber: any) {
 
 export async function sendTravelNotification(userStats: any, subscriber: any) {
   const travel = userStats.travel;
-
-  if (travel.time_left > 0 && travel.time_left <= 60) {
-    return sendNotificaionToUser(
-      subscriber.token,
-      subscriber.playerId,
-      "Your travel is about to complete",
-      `You will arrive at ${travel.destination} in ${travel.time_left} seconds.`
+  const promises: Promise<any>[] = [];
+  const lastTravelNotificaionSent = subscriber.lastTravelNotified || 0;
+  if (
+    travel.time_left > 0 &&
+    travel.time_left <= 90 &&
+    Date.now() - lastTravelNotificaionSent > 90
+  ) {
+    promises.push(
+      sendNotificaionToUser(
+        subscriber.token,
+        subscriber.playerId,
+        "Your travel is about to complete",
+        `You will arrive at ${travel.destination} in ${travel.time_left} seconds.`
+      )
+    );
+    promises.push(
+      admin
+        .firestore()
+        .collection("players")
+        .doc(subscriber.playerId.toString())
+        .update({
+          lastTravelNotified: Date.now(),
+        })
     );
   }
+  return Promise.all(promises);
 }
 
 export async function sendNotificaionToUser(
