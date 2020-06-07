@@ -10,6 +10,11 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/api_key_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -25,6 +30,9 @@ class _ProfilePageState extends State<ProfilePage> {
   DateTime _serverTime;
 
   Timer _tickerCallChainApi;
+
+  SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -43,6 +51,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
       drawer: new Drawer(),
       appBar: AppBar(
@@ -70,15 +80,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: _playerStatus(),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 5),
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                         child: _basicBars(),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                         child: _coolDowns(),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
                         child: _netWorth(),
                       ),
                     ],
@@ -128,15 +138,86 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Card _playerStatus() {
-    Widget description;
+    Widget descriptionWidget;
     if (_user.status.state != 'Okay') {
-      String des = _user.status.description;
+      // Main short description
+      String descriptionText = _user.status.description;
+
+      // Is there a detailed description?
       if (_user.status.details != '') {
-        des += '- ${_user.status.details}';
+        descriptionText += '- ${_user.status.details}';
       }
-      description = Text(des);
+
+      // Removing the ugly HTML in the API... oh God, why?
+      RegExp expHtml = RegExp(r"<[^>]*>");
+      var matches = expHtml.allMatches(descriptionText).map((m) => m[0]);
+      for (var m in matches) {
+        descriptionText = descriptionText.replaceAll(m, '');
+      }
+
+      // Causing player ID (jailed of hospitlised the user)
+      String causingId = '';
+      if (matches.length > 0) {
+        RegExp expId = RegExp(r"(?!XID=)([0-9])+");
+        var id = expId.allMatches(_user.status.details).map((m) => m[0]);
+        causingId = id.first;
+      }
+
+      // If there is a causing it, add a span to click and go to the
+      // profile, otherwise return just the description text
+      if (causingId != '') {
+        descriptionWidget = RichText(
+          text: new TextSpan(
+            children: [
+              new TextSpan(
+                text: descriptionText,
+                style: new TextStyle(color: _themeProvider.mainText),
+              ),
+              new TextSpan(
+                text: ' (',
+                style: new TextStyle(color: _themeProvider.mainText),
+              ),
+              new TextSpan(
+                text: 'profile',
+                style: new TextStyle(color: Colors.blue),
+                recognizer: new TapGestureRecognizer()
+                  ..onTap = () async {
+                    var browserType = _settingsProvider.currentBrowser;
+                    switch (browserType) {
+                      case BrowserSetting.app:
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                TornWebViewGeneric(
+                              profileId: causingId,
+                              profileName: causingId,
+                              webViewType: WebViewType.profile,
+                            ),
+                          ),
+                        );
+                        break;
+                      case BrowserSetting.external:
+                        var url = 'https://www.torn.com/profiles.php?'
+                            'XID=$causingId';
+                        if (await canLaunch(url)) {
+                          await launch(url, forceSafariVC: false);
+                        }
+                        break;
+                    }
+                  },
+              ),
+              new TextSpan(
+                text: ')',
+                style: new TextStyle(color: _themeProvider.mainText),
+              ),
+            ],
+          ),
+        );
+      } else {
+        descriptionWidget = Text(descriptionText);
+      }
     } else {
-      description = SizedBox.shrink();
+      descriptionWidget = SizedBox.shrink();
     }
 
     Color stateColor;
@@ -193,17 +274,19 @@ class _ProfilePageState extends State<ProfilePage> {
                   _user.status.details == ''
                       ? SizedBox.shrink()
                       : Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
                             children: <Widget>[
                               SizedBox(
                                 width: 60,
                                 child: Text('Details: '),
                               ),
-                              Flexible(child: description),
+                              Flexible(
+                                child: descriptionWidget,
+                              ),
                             ],
                           ),
-                      ),
+                        ),
                 ],
               ),
             ),
