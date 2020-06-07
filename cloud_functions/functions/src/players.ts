@@ -15,22 +15,22 @@ export const playersGroup = {
       const beforeStat = snap.before.data();
       const afterStat = snap.after.data();
 
-      if (beforeStat.active != afterStat.active)
+      if (beforeStat.active !== afterStat.active)
         promises.push(manageStats("activeUsers", afterStat.active ? 1 : -1));
 
-      if (beforeStat.alertsEnabled != afterStat.alertsEnabled)
+      if (beforeStat.alertsEnabled !== afterStat.alertsEnabled)
         promises.push(
           manageStats("alertsEnabled", afterStat.alertsEnabled ? 1 : -1)
         );
 
-      if (beforeStat.energyNotification != afterStat.energyNotification)
+      if (beforeStat.energyNotification !== afterStat.energyNotification)
         promises.push(
           manageStats(
             "energyNotification",
             afterStat.energyNotification ? 1 : -1
           )
         );
-      if (beforeStat.travelNotification != afterStat.travelNotification)
+      if (beforeStat.travelNotification !== afterStat.travelNotification)
         promises.push(
           manageStats(
             "travelNotification",

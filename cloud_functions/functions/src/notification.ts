@@ -5,8 +5,8 @@ export async function sendEnergyNotificaion(userStats: any, subscriber: any) {
   const promises: Promise<any>[] = [];
 
   if (
-    energy.maximum == energy.current &&
-    subscriber.lastEnergyValue != energy.current
+    energy.maximum === energy.current &&
+    subscriber.lastEnergyValue !== energy.current
   ) {
     promises.push(
       sendNotificaionToUser(
@@ -61,8 +61,12 @@ export async function sendNotificaionToUser(
       },
     })
     .catch((error) => {
-      admin.firestore().collection("players").doc(playerId.toString()).update({
-        active: false,
-      });
+      return admin
+        .firestore()
+        .collection("players")
+        .doc(playerId.toString())
+        .update({
+          active: false,
+        });
     });
 }

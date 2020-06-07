@@ -38,7 +38,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           : Column(
               children: [
                 CheckboxListTile(
-                  value: firebaseUserModel.energyNotification ?? false,
+                  value: firebaseUserModel.travelNotification ?? false,
                   title: Text("Travel Arrival Notification"),
                   subtitle: Text(
                       "Get notified 60 seconds before you reach your destination"),

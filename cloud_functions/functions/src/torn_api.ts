@@ -1,4 +1,4 @@
-var rp = require("request-promise");
+const rp = require("request-promise");
 
 export async function getUsersStat(apiKey: string) {
   return rp({
