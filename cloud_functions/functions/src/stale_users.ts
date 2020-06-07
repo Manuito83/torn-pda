@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendNotificaionToUser } from "./notification";
+import { currentDateInMillis, aDayInMiliseconds } from "./constants";
 
 export const staleGroup = {
   runEveryDay: functions.pubsub.schedule("0 0 * * *").onRun(async () => {

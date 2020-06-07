@@ -1,2 +1,2 @@
-const currentDateInMillis = Date.now();
-const aDayInMiliseconds = 86400000;
+export const currentDateInMillis = Date.now();
+export const aDayInMiliseconds = 86400000;
