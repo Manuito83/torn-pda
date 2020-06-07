@@ -7,6 +7,7 @@ import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
+import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,6 +39,7 @@ class _DrawerPageState extends State<DrawerPage> {
     _handleChangelog();
     _finishedWithPreferences = _restoreSharedPreferences();
     _configureSelectNotificationSubject();
+    firestore.uploadLastActiveTime();
   }
 
   @override

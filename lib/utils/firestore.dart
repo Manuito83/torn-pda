@@ -44,6 +44,15 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> uploadLastActiveTime() async {
+    String playerId = await SharedPreferencesModel().getOwnId();
+    if (playerId == null) return;
+    await _firestore.collection("players").document(playerId).updateData({
+      "lastActive": DateTime.now().millisecondsSinceEpoch,
+      "active": true,
+    });
+  }
+
   Future<FirebaseUserModel> getUserProfile() async {
     if (_firebaseUserModel != null) return _firebaseUserModel;
     String playerId = await SharedPreferencesModel().getOwnId();

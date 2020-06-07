@@ -47,7 +47,7 @@ class _TornWebViewGenericState extends State<TornWebViewGeneric> {
         break;
       case WebViewType.profile:
         _initialUrl =
-        'https://www.torn.com/profiles.php?XID=${widget.profileId}';
+            'https://www.torn.com/profiles.php?XID=${widget.profileId}';
         _pageTitle = '${widget.profileName}\'s profile';
         break;
       case WebViewType.travelAgency:
