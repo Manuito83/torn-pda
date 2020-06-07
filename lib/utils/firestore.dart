@@ -44,6 +44,13 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToTravelNotificaion(bool subscribe) async {
+    String playerId = await SharedPreferencesModel().getOwnId();
+    await _firestore.collection("players").document(playerId).updateData({
+      "travelNotification": subscribe,
+    });
+  }
+
   Future<void> uploadLastActiveTime() async {
     String playerId = await SharedPreferencesModel().getOwnId();
     if (playerId == null) return;

@@ -39,7 +39,20 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               children: [
                 CheckboxListTile(
                   value: firebaseUserModel.energyNotification ?? false,
+                  title: Text("Travel Arrival Notification"),
+                  subtitle: Text(
+                      "Get notified 60 seconds before you reach your destination"),
+                  onChanged: (value) {
+                    setState(() {
+                      firebaseUserModel?.travelNotification = value;
+                    });
+                    firestore.subscribeToTravelNotificaion(value);
+                  },
+                ),
+                CheckboxListTile(
+                  value: firebaseUserModel.energyNotification ?? false,
                   title: Text("Energy Full Notification"),
+                  subtitle: Text("Get notified once you reach full energy"),
                   onChanged: (value) {
                     setState(() {
                       firebaseUserModel?.energyNotification = value;

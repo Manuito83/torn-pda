@@ -2,7 +2,7 @@ import 'package:torn_pda/models/profile_model.dart';
 
 class FirebaseUserModel extends ProfileModel {
   String token;
-  bool energyNotification = false;
+  bool energyNotification = false, travelNotification = false;
 
   FirebaseUserModel();
 
@@ -27,13 +27,15 @@ class FirebaseUserModel extends ProfileModel {
       "gender": gender,
       "status": status,
       "lastAction": lastAction,
+      "travelNotificaion": travelNotification,
       "energyNotification": energyNotification,
     };
   }
 
   static FirebaseUserModel fromMap(Map data) {
     return FirebaseUserModel()
-      ..energyNotification = data["energyNotification"]
+      ..energyNotification = data["energyNotification"] ?? false
+      ..travelNotification = data["travelNotificaion"] ?? false
       ..lastAction = data["lastAction"]
       ..playerId = data["playerId"]
       ..status = data["status"]
