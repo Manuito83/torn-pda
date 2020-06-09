@@ -66,72 +66,91 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: FutureBuilder(
-            future: _apiFetched,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiGoodData) {
-                  return Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 5),
-                        child: _playerStatus(),
+      body: SingleChildScrollView(
+        child: FutureBuilder(
+          future: _apiFetched,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_apiGoodData) {
+                return Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 30, 20, 15),
+                      child: Column(
+                        children: <Widget>[
+                          Text(
+                            '${_user.name} [${_user.playerId}]',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            'Level ${_user.level}',
+                          ),
+                          Text(
+                            'Online ${_user.lastAction.relative}',
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                        child: _basicBars(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                        child: _coolDowns(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
-                        child: _netWorth(),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(
-                        'OPS!',
-                        style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 20),
-                        child: Text(
-                          'There was an error getting the information, please '
-                          'try again later!',
-                        ),
-                      ),
-                    ],
-                  );
-                }
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 15, 20, 5),
+                      child: _playerStatus(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                      child: _basicBars(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                      child: _coolDowns(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
+                      child: _netWorth(),
+                    ),
+                  ],
+                );
               } else {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Fetching data...'),
-                      SizedBox(height: 30),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      'OPS!',
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 20),
+                      child: Text(
+                        'There was an error getting the information, please '
+                        'try again later!',
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               }
-            },
-          ),
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text('Fetching data...'),
+                    SizedBox(height: 30),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ],
+                ),
+              );
+            }
+          },
         ),
       ),
     );
