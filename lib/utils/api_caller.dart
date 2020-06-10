@@ -243,7 +243,7 @@ class TornApiCaller {
         url += '?selections=profile';
         break;
       case ApiSelection.ownProfile:
-        url += '?selections=profile,bars,networth,cooldowns';
+        url += '?selections=profile,bars,networth,cooldowns,events';
         break;
       case ApiSelection.target:
         url += '$prefix?selections=';

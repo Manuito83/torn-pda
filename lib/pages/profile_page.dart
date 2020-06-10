@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:timeline_tile/timeline_tile.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/api_key_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -66,75 +67,83 @@ class _ProfilePageState extends State<ProfilePage> {
           },
         ),
       ),
-      body: SingleChildScrollView(
+      body: Container(
         child: FutureBuilder(
           future: _apiFetched,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (_apiGoodData) {
-                return Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 30, 20, 15),
-                      child: Column(
-                        children: <Widget>[
-                          Text(
-                            '${_user.name} [${_user.playerId}]',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                return SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 15),
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              '${_user.name} [${_user.playerId}]',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 5),
-                          Text(
-                            'Level ${_user.level}',
-                          ),
-                          Text(
-                            _user.lastAction.relative[0] == '0'
-                                ? 'Online now'
-                                : 'Online ${_user.lastAction.relative}',
-                          ),
-                        ],
+                            SizedBox(height: 5),
+                            Text(
+                              'Level ${_user.level}',
+                            ),
+                            Text(
+                              _user.lastAction.relative[0] == '0'
+                                  ? 'Online now'
+                                  : 'Online ${_user.lastAction.relative}',
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 15, 20, 5),
-                      child: _playerStatus(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                      child: _basicBars(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                      child: _coolDowns(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
-                      child: _netWorth(),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 15, 20, 5),
+                        child: _playerStatus(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                        child: _basicBars(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                        child: _coolDowns(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                        child: _eventsTimeline(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
+                        child: _netWorth(),
+                      ),
+                    ],
+                  ),
                 );
               } else {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'OPS!',
-                      style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 20),
-                      child: Text(
-                        'There was an error getting the information, please '
-                        'try again later!',
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        'OPS!',
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 50, vertical: 20),
+                        child: Text(
+                          'There was an error getting the information, please '
+                          'try again later!',
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }
             } else {
@@ -668,7 +677,7 @@ class _ProfilePageState extends State<ProfilePage> {
     var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.drug));
     var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(timeEnd);
-    String diff = _timeDifferenceFormatted(timeEnd);
+    String diff = _cooldownTimeFormatted(timeEnd);
     return Flexible(child: Text('@ $timeFormatted $diff'));
   }
 
@@ -676,7 +685,7 @@ class _ProfilePageState extends State<ProfilePage> {
     var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.medical));
     var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(timeEnd);
-    String diff = _timeDifferenceFormatted(timeEnd);
+    String diff = _cooldownTimeFormatted(timeEnd);
     return Flexible(child: Text('@ $timeFormatted $diff'));
   }
 
@@ -684,11 +693,11 @@ class _ProfilePageState extends State<ProfilePage> {
     var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.booster));
     var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(timeEnd);
-    String diff = _timeDifferenceFormatted(timeEnd);
+    String diff = _cooldownTimeFormatted(timeEnd);
     return Flexible(child: Text('@ $timeFormatted $diff'));
   }
 
-  String _timeDifferenceFormatted(DateTime timeEnd) {
+  String _cooldownTimeFormatted(DateTime timeEnd) {
     String diff;
     var timeDifference = timeEnd.difference(_serverTime);
     if (timeDifference.inMinutes < 1) {
@@ -703,6 +712,258 @@ class _ProfilePageState extends State<ProfilePage> {
       diff = 'LT , in ${timeDifference.inHours} hours';
     } else {
       diff = 'LT tomorrow, in ${timeDifference.inHours} hours';
+    }
+    return diff;
+  }
+
+  Card _eventsTimeline() {
+    var timeline = List<Widget>();
+
+    int unreadCount = 0;
+    int loopCount = 1;
+    int maxCount;
+
+    if (_user.events.length > 20) {
+      maxCount = 20;
+    } else {
+      maxCount = _user.events.length;
+    }
+
+    for (var e in _user.events.values) {
+      if (e.seen == 0) {
+        unreadCount++;
+      }
+
+      String message = e.event;
+      RegExp expHtml = RegExp(r"<[^>]*>");
+      var matches = expHtml.allMatches(message).map((m) => m[0]);
+      for (var m in matches) {
+        message = message.replaceAll(m, '');
+      }
+      message = message.replaceAll('View the details here!', '');
+      message = message.replaceAll(' [view]', '.');
+
+      Widget insideIcon;
+      if (message.contains('revive')) {
+        insideIcon = Icon(
+          Icons.local_hospital,
+          color: Colors.green,
+          size: 20,
+        );
+      } else if (message.contains('the director of')) {
+        insideIcon = Icon(
+          Icons.work,
+          color: Colors.brown[300],
+          size: 20,
+        );
+      } else if (message.contains('jail')) {
+        insideIcon = Icon(
+          Icons.grid_on,
+          color: Colors.grey,
+          size: 20,
+        );
+      } else if (message.contains('trade')) {
+        insideIcon = Icon(
+          Icons.switch_camera,
+          color: Colors.purple,
+          size: 20,
+        );
+      } else if (message.contains('has given you') ||
+          message.contains('You were sent') ||
+          message.contains('You have been credited with') ||
+          message.contains('on your doorstep')) {
+        insideIcon = Icon(
+          Icons.card_giftcard,
+          color: Colors.green,
+          size: 20,
+        );
+      } else if (message.contains('Get out of my education') ||
+          message.contains('You must have overdosed')) {
+        insideIcon = Icon(
+          Icons.warning,
+          color: Colors.red,
+          size: 20,
+        );
+      } else if (message.contains('purchased membership')) {
+        insideIcon = Icon(
+          Icons.fitness_center,
+          color: Colors.black54,
+          size: 20,
+        );
+      } else if (message.contains('You upgraded your level')) {
+        insideIcon = Icon(
+          Icons.file_upload,
+          color: Colors.green,
+          size: 20,
+        );
+      } else if (message.contains('won') ||
+          message.contains('lottery') ||
+          message.contains('check has been credited to your') ||
+          message.contains('withdraw your check from the bank')) {
+        insideIcon = Icon(
+          Icons.monetization_on,
+          color: Colors.green,
+          size: 20,
+        );
+      } else if (message.contains('attacked you') ||
+          message.contains('mugged you and stole') ||
+          message.contains('attacked and hospitalized')) {
+        insideIcon = Container(
+          child: Center(
+            child: Image.asset(
+              'images/icons/ic_target_account_black_48dp.png',
+              width: 20,
+              height: 20,
+              color: Colors.red,
+            ),
+          ),
+        );
+      } else if (message.contains('You and your team') ||
+          message.contains('You have been selected') ||
+          message.contains('canceled the')) {
+        insideIcon = Container(
+          child: Center(
+            child: Image.asset(
+              'images/icons/ic_pistol_black_48dp.png',
+              width: 20,
+              height: 20,
+              color: Colors.blue,
+            ),
+          ),
+        );
+      } else if (message.contains('You left your faction') ||
+          message.contains('Your application to') ||
+          message.contains('canceled the')) {
+        insideIcon = Container(
+          child: Center(
+            child: Image.asset(
+              'images/icons/faction.png',
+              width: 20,
+              height: 20,
+              color: Colors.black,
+            ),
+          ),
+        );
+      } else {
+        insideIcon = Container(
+          child: Center(
+            child: Text(
+              'T',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
+          ),
+        );
+      }
+
+      IndicatorStyle iconBubble;
+      iconBubble = IndicatorStyle(
+        width: 30,
+        height: 30,
+        drawGap: true,
+        indicator: Container(
+          decoration: const BoxDecoration(
+            border: Border.fromBorderSide(
+              BorderSide(
+                color: Colors.grey,
+              ),
+            ),
+            shape: BoxShape.rectangle,
+          ),
+          child: insideIcon,
+        ),
+      );
+
+      var eventTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp * 1000);
+
+      var event = TimelineTile(
+        isFirst: loopCount == 1 ? true : false,
+        isLast: loopCount == maxCount ? true : false,
+        alignment: TimelineAlign.manual,
+        indicatorStyle: iconBubble,
+        lineX: 0.25,
+        rightChild: Container(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: e.seen == 0 ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+        leftChild: Container(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 5.0),
+            child: Text(
+              _eventsTimeFormatted(eventTime),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: e.seen == 0 ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      timeline.add(event);
+
+      if (loopCount == maxCount) {
+        break;
+      }
+      loopCount++;
+    }
+
+    return Card(
+      child: ExpandablePanel(
+        header: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Text(
+            'EVENTS',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        collapsed: Padding(
+          padding: const EdgeInsets.fromLTRB(30, 5, 20, 20),
+          child: Text(
+            '$unreadCount unread events',
+            style: TextStyle(
+              color: unreadCount == 0 ? Colors.green : Colors.red,
+              fontWeight:
+                  unreadCount == 0 ? FontWeight.normal : FontWeight.bold,
+            ),
+          ),
+        ),
+        expanded: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: timeline,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _eventsTimeFormatted(DateTime eventTime) {
+    String diff;
+    var timeDifference = _serverTime.difference(eventTime);
+    if (timeDifference.inMinutes < 1) {
+      diff = 'Seconds ago';
+    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
+      diff = '1 min ago';
+    } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
+      diff = '${timeDifference.inMinutes} mins ago';
+    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+      diff = '1 hr ago';
+    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+      diff = '${timeDifference.inHours} hrs ago';
+    } else {
+      diff = '${timeDifference.inDays} days ago';
     }
     return diff;
   }
@@ -838,10 +1099,11 @@ class _ProfilePageState extends State<ProfilePage> {
             DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
 
-        // TODO:debug delete
-
+        // TODO: debug delete
         //_user.cooldowns.drug = 17000;
         //_user.cooldowns.booster = 98000;
+        // TODO: debug delete
+
       } else {
         _apiGoodData = false;
       }
