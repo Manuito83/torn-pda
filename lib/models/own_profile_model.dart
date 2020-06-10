@@ -26,6 +26,7 @@ class OwnProfileModel {
     this.playerId,
     this.name,
     this.propertyId,
+    this.serverTime,
     this.life,
     this.status,
     this.job,
@@ -34,13 +35,13 @@ class OwnProfileModel {
     this.basicicons,
     this.states,
     this.lastAction,
-    this.serverTime,
     this.happy,
     this.energy,
     this.nerve,
     this.chain,
     this.networth,
     this.cooldowns,
+    this.events,
   });
 
   String rank;
@@ -59,6 +60,7 @@ class OwnProfileModel {
   int playerId;
   String name;
   int propertyId;
+  int serverTime;
   Energy life;
   Status status;
   Job job;
@@ -67,13 +69,13 @@ class OwnProfileModel {
   Basicicons basicicons;
   States states;
   LastAction lastAction;
-  int serverTime;
   Energy happy;
   Energy energy;
   Energy nerve;
   Chain chain;
   Map<String, double> networth;
   Cooldowns cooldowns;
+  Map<String, Event> events;
 
   factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
     rank: json["rank"] == null ? null : json["rank"],
@@ -92,6 +94,7 @@ class OwnProfileModel {
     playerId: json["player_id"] == null ? null : json["player_id"],
     name: json["name"] == null ? null : json["name"],
     propertyId: json["property_id"] == null ? null : json["property_id"],
+    serverTime: json["server_time"] == null ? null : json["server_time"],
     life: json["life"] == null ? null : Energy.fromJson(json["life"]),
     status: json["status"] == null ? null : Status.fromJson(json["status"]),
     job: json["job"] == null ? null : Job.fromJson(json["job"]),
@@ -100,13 +103,13 @@ class OwnProfileModel {
     basicicons: json["basicicons"] == null ? null : Basicicons.fromJson(json["basicicons"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
-    serverTime: json["server_time"] == null ? null : json["server_time"],
     happy: json["happy"] == null ? null : Energy.fromJson(json["happy"]),
     energy: json["energy"] == null ? null : Energy.fromJson(json["energy"]),
     nerve: json["nerve"] == null ? null : Energy.fromJson(json["nerve"]),
     chain: json["chain"] == null ? null : Chain.fromJson(json["chain"]),
     networth: json["networth"] == null ? null : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
     cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
+    events: json["events"] == null ? null : Map.from(json["events"]).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -126,6 +129,7 @@ class OwnProfileModel {
     "player_id": playerId == null ? null : playerId,
     "name": name == null ? null : name,
     "property_id": propertyId == null ? null : propertyId,
+    "server_time": serverTime == null ? null : serverTime,
     "life": life == null ? null : life.toJson(),
     "status": status == null ? null : status.toJson(),
     "job": job == null ? null : job.toJson(),
@@ -134,13 +138,13 @@ class OwnProfileModel {
     "basicicons": basicicons == null ? null : basicicons.toJson(),
     "states": states == null ? null : states.toJson(),
     "last_action": lastAction == null ? null : lastAction.toJson(),
-    "server_time": serverTime == null ? null : serverTime,
     "happy": happy == null ? null : happy.toJson(),
     "energy": energy == null ? null : energy.toJson(),
     "nerve": nerve == null ? null : nerve.toJson(),
     "chain": chain == null ? null : chain.toJson(),
     "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
     "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
+    "events": events == null ? null : Map.from(events).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
   };
 }
 
@@ -151,12 +155,6 @@ class Basicicons {
     this.icon8,
     this.icon27,
     this.icon9,
-    this.icon15,
-    this.icon7,
-    this.icon3,
-    this.icon35,
-    this.icon16,
-    this.icon71,
   });
 
   String icon6;
@@ -164,12 +162,6 @@ class Basicicons {
   String icon8;
   String icon27;
   String icon9;
-  String icon15;
-  String icon7;
-  String icon3;
-  String icon35;
-  String icon16;
-  String icon71;
 
   factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
     icon6: json["icon6"] == null ? null : json["icon6"],
@@ -177,12 +169,6 @@ class Basicicons {
     icon8: json["icon8"] == null ? null : json["icon8"],
     icon27: json["icon27"] == null ? null : json["icon27"],
     icon9: json["icon9"] == null ? null : json["icon9"],
-    icon15: json["icon15"] == null ? null : json["icon15"],
-    icon7: json["icon7"] == null ? null : json["icon7"],
-    icon3: json["icon3"] == null ? null : json["icon3"],
-    icon35: json["icon35"] == null ? null : json["icon35"],
-    icon16: json["icon16"] == null ? null : json["icon16"],
-    icon71: json["icon71"] == null ? null : json["icon71"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -191,12 +177,6 @@ class Basicicons {
     "icon8": icon8 == null ? null : icon8,
     "icon27": icon27 == null ? null : icon27,
     "icon9": icon9 == null ? null : icon9,
-    "icon15": icon15 == null ? null : icon15,
-    "icon7": icon7 == null ? null : icon7,
-    "icon3": icon3 == null ? null : icon3,
-    "icon35": icon35 == null ? null : icon35,
-    "icon16": icon16 == null ? null : icon16,
-    "icon71": icon71 == null ? null : icon71,
   };
 }
 
@@ -289,6 +269,30 @@ class Energy {
     "interval": interval == null ? null : interval,
     "ticktime": ticktime == null ? null : ticktime,
     "fulltime": fulltime == null ? null : fulltime,
+  };
+}
+
+class Event {
+  Event({
+    this.timestamp,
+    this.event,
+    this.seen,
+  });
+
+  int timestamp;
+  String event;
+  int seen;
+
+  factory Event.fromJson(Map<String, dynamic> json) => Event(
+    timestamp: json["timestamp"] == null ? null : json["timestamp"],
+    event: json["event"] == null ? null : json["event"],
+    seen: json["seen"] == null ? null : json["seen"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "timestamp": timestamp == null ? null : timestamp,
+    "event": event == null ? null : event,
+    "seen": seen == null ? null : seen,
   };
 }
 
