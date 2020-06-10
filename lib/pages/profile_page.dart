@@ -90,7 +90,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             'Level ${_user.level}',
                           ),
                           Text(
-                            'Online ${_user.lastAction.relative}',
+                            _user.lastAction.relative[0] == '0'
+                                ? 'Online now'
+                                : 'Online ${_user.lastAction.relative}',
                           ),
                         ],
                       ),
@@ -667,7 +669,7 @@ class _ProfilePageState extends State<ProfilePage> {
     var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(timeEnd);
     String diff = _timeDifferenceFormatted(timeEnd);
-    return Flexible(child: Text('@ $timeFormatted LT, $diff'));
+    return Flexible(child: Text('@ $timeFormatted $diff'));
   }
 
   Widget _medicalCounter() {
@@ -675,7 +677,7 @@ class _ProfilePageState extends State<ProfilePage> {
     var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(timeEnd);
     String diff = _timeDifferenceFormatted(timeEnd);
-    return Flexible(child: Text('@ $timeFormatted LT, $diff'));
+    return Flexible(child: Text('@ $timeFormatted $diff'));
   }
 
   Widget _boosterCounter() {
@@ -683,24 +685,24 @@ class _ProfilePageState extends State<ProfilePage> {
     var formatter = new DateFormat('HH:mm');
     String timeFormatted = formatter.format(timeEnd);
     String diff = _timeDifferenceFormatted(timeEnd);
-    return Flexible(child: Text('@ $timeFormatted LT, $diff'));
+    return Flexible(child: Text('@ $timeFormatted $diff'));
   }
 
   String _timeDifferenceFormatted(DateTime timeEnd) {
     String diff;
     var timeDifference = timeEnd.difference(_serverTime);
     if (timeDifference.inMinutes < 1) {
-      diff = 'seconds away';
+      diff = 'LT , seconds away';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      diff = 'in 1 minute';
+      diff = 'LT , in 1 minute';
     } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-      diff = 'in ${timeDifference.inMinutes} minutes';
+      diff = 'LT , in ${timeDifference.inMinutes} minutes';
     } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      diff = 'in 1 hour';
+      diff = 'LT , in 1 hour';
     } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      diff = 'in ${timeDifference.inHours} hours';
+      diff = 'LT , in ${timeDifference.inHours} hours';
     } else {
-      diff = 'in ${timeDifference.inHours} hours (tomorrow)';
+      diff = 'LT tomorrow, in ${timeDifference.inHours} hours';
     }
     return diff;
   }
