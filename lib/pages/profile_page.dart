@@ -22,7 +22,7 @@ class ProfilePage extends StatefulWidget {
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _apiFetched;
   bool _apiGoodData;
 
@@ -38,6 +38,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _apiFetched = _fetchApi();
 
     _tickerCallChainApi =
@@ -47,7 +49,15 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     _tickerCallChainApi.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state == AppLifecycleState.resumed){
+      _fetchApi();
+    }
   }
 
   @override
