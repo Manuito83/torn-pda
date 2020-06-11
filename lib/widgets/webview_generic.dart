@@ -25,7 +25,7 @@ class TornWebViewGeneric extends StatefulWidget {
   TornWebViewGeneric({
     this.profileId = '',
     this.profileName = '',
-    this.genericTitle,
+    this.genericTitle = '',
     this.genericCallBack,
     this.customUrl,
     this.webViewType = WebViewType.profile,
@@ -52,7 +52,11 @@ class _TornWebViewGenericState extends State<TornWebViewGeneric> {
       case WebViewType.profile:
         _initialUrl =
         'https://www.torn.com/profiles.php?XID=${widget.profileId}';
-        _pageTitle = '${widget.profileName}\'s profile';
+        if (widget.genericTitle == '') {
+          _pageTitle = '${widget.profileName}\'s profile';
+        } else {
+          _pageTitle = widget.genericTitle;
+        }
         break;
       case WebViewType.travelAgency:
         _initialUrl = 'https://www.torn.com/travelagency.php';
