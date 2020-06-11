@@ -7,23 +7,27 @@ enum WebViewType {
   travelAgency,
   docTorn,
   arsonWarehouse,
+  custom,
 }
 
 class TornWebViewGeneric extends StatefulWidget {
   final String profileId;
   final String profileName;
   final String genericTitle;
+  final String customUrl;
   final WebViewType webViewType;
   final Function genericCallBack;
 
   /// [profileId] and [profileName] make sense for targets and attacks.
   /// [genericCallBack] is used to update the target card when we go back
   /// [webViewType] determines the actual URL and logic
+  /// [url] and [title] needs to be entered for custom WebViewType
   TornWebViewGeneric({
     this.profileId = '',
     this.profileName = '',
     this.genericTitle,
     this.genericCallBack,
+    this.customUrl,
     this.webViewType = WebViewType.profile,
   });
 
@@ -61,6 +65,10 @@ class _TornWebViewGenericState extends State<TornWebViewGeneric> {
       case WebViewType.arsonWarehouse:
         _initialUrl = 'https://arsonwarehouse.com/foreign-stock';
         _pageTitle = 'Arson Warehouse';
+        break;
+      case WebViewType.custom:
+        _initialUrl = widget.customUrl;
+        _pageTitle = widget.genericTitle;
         break;
     }
   }
