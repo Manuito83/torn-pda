@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/fade_route.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
@@ -18,7 +17,7 @@ import 'package:android_intent/android_intent.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:rect_getter/rect_getter.dart';
+import 'package:animations/animations.dart';
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);
@@ -50,10 +49,6 @@ class _TravelPageState extends State<TravelPage> {
   final _notificationBodyController = new TextEditingController();
 
   Future _finishedLoadingPreferences;
-
-  final Duration _rippleAnimationDuration = Duration(milliseconds: 500);
-  GlobalKey rectGetterKey = RectGetter.createGlobalKey();
-  Rect rect;
 
   @override
   void initState() {
@@ -136,21 +131,33 @@ class _TravelPageState extends State<TravelPage> {
           floatingActionButtonLocation: _travelModel.travelling
               ? FloatingActionButtonLocation.endFloat
               : FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: RectGetter(
-            key: rectGetterKey,
-            child: FloatingActionButton(
-              backgroundColor: Colors.orange,
-              child: Image.asset(
-                'images/icons/box.png',
-                width: 24,
+          floatingActionButton: OpenContainer(
+            transitionDuration: Duration(seconds: 1),
+            transitionType: ContainerTransitionType.fadeThrough,
+            openBuilder: (BuildContext context, VoidCallback _) {
+              return ForeignStockPage(apiKey: _myCurrentKey);
+            },
+            closedElevation: 6.0,
+            closedShape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(56 / 2),
               ),
-              onPressed: () {
-                _navigateToForeignStock();
-              },
             ),
+            closedColor: Colors.orange,
+            closedBuilder: (BuildContext context, VoidCallback openContainer) {
+              return SizedBox(
+                height: 56,
+                width: 56,
+                child: Center(
+                  child: Image.asset(
+                    'images/icons/box.png',
+                    width: 24,
+                  ),
+                ),
+              );
+            },
           ),
         ),
-        _rippleTransitionToForeignStock(),
       ],
     );
   }
@@ -482,7 +489,6 @@ class _TravelPageState extends State<TravelPage> {
             ),
             SizedBox(height: 0),
             */
-
           ],
         )
       ];
@@ -668,25 +674,6 @@ class _TravelPageState extends State<TravelPage> {
         ),
       );
     }
-  }
-
-  Widget _rippleTransitionToForeignStock() {
-    if (rect == null) {
-      return Container();
-    }
-    return AnimatedPositioned(
-      duration: _rippleAnimationDuration,
-      left: rect.left,
-      right: MediaQuery.of(context).size.width - rect.right,
-      top: rect.top,
-      bottom: MediaQuery.of(context).size.height - rect.bottom,
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.brown[500],
-        ),
-      ),
-    );
   }
 
   Future<void> _showNotificationTextDialog(BuildContext _) {
@@ -986,14 +973,4 @@ class _TravelPageState extends State<TravelPage> {
         await SharedPreferencesModel().getTravelNotificationBody();
   }
 
-  void _navigateToForeignStock() {
-    setState(() => rect = RectGetter.getRectFromKey(rectGetterKey));
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() =>
-          rect = rect.inflate(1.3 * MediaQuery.of(context).size.longestSide));
-      Navigator.of(context)
-          .push(FadeRouteBuilder(page: ForeignStockPage(apiKey: _myCurrentKey)))
-          .then((_) => setState(() => rect = null));
-    });
-  }
 }
