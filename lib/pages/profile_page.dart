@@ -16,6 +16,8 @@ import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:flutter/rendering.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -35,10 +37,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
 
+  // For dial FAB
+  ScrollController scrollController;
+  bool dialVisible = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    scrollController = ScrollController()
+      ..addListener(() {
+        setDialVisible(scrollController.position.userScrollDirection ==
+            ScrollDirection.forward);
+      });
 
     _apiFetched = _fetchApi();
 
@@ -55,7 +67,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if(state == AppLifecycleState.resumed){
+    if (state == AppLifecycleState.resumed) {
       _fetchApi();
     }
   }
@@ -77,6 +89,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           },
         ),
       ),
+      floatingActionButton: buildSpeedDial(),
       body: Container(
         child: FutureBuilder(
           future: _apiFetched,
@@ -129,6 +142,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
                         child: _netWorth(),
                       ),
+                      SizedBox(height: 50),
                     ],
                   ),
                 );
@@ -230,7 +244,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             builder: (BuildContext context) =>
                                 TornWebViewGeneric(
                               profileId: causingId,
-                              profileName: causingId,
+                              //profileName: causingId,
+                              genericTitle: 'Event Profile',
                               webViewType: WebViewType.profile,
                             ),
                           ),
@@ -753,117 +768,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll(' [view]', '.');
 
-      Widget insideIcon;
-      if (message.contains('revive')) {
-        insideIcon = Icon(
-          Icons.local_hospital,
-          color: Colors.green,
-          size: 20,
-        );
-      } else if (message.contains('the director of')) {
-        insideIcon = Icon(
-          Icons.work,
-          color: Colors.brown[300],
-          size: 20,
-        );
-      } else if (message.contains('jail')) {
-        insideIcon = Icon(
-          Icons.grid_on,
-          color: Colors.grey,
-          size: 20,
-        );
-      } else if (message.contains('trade')) {
-        insideIcon = Icon(
-          Icons.switch_camera,
-          color: Colors.purple,
-          size: 20,
-        );
-      } else if (message.contains('has given you') ||
-          message.contains('You were sent') ||
-          message.contains('You have been credited with') ||
-          message.contains('on your doorstep')) {
-        insideIcon = Icon(
-          Icons.card_giftcard,
-          color: Colors.green,
-          size: 20,
-        );
-      } else if (message.contains('Get out of my education') ||
-          message.contains('You must have overdosed')) {
-        insideIcon = Icon(
-          Icons.warning,
-          color: Colors.red,
-          size: 20,
-        );
-      } else if (message.contains('purchased membership')) {
-        insideIcon = Icon(
-          Icons.fitness_center,
-          color: Colors.black54,
-          size: 20,
-        );
-      } else if (message.contains('You upgraded your level')) {
-        insideIcon = Icon(
-          Icons.file_upload,
-          color: Colors.green,
-          size: 20,
-        );
-      } else if (message.contains('won') ||
-          message.contains('lottery') ||
-          message.contains('check has been credited to your') ||
-          message.contains('withdraw your check from the bank')) {
-        insideIcon = Icon(
-          Icons.monetization_on,
-          color: Colors.green,
-          size: 20,
-        );
-      } else if (message.contains('attacked you') ||
-          message.contains('mugged you and stole') ||
-          message.contains('attacked and hospitalized')) {
-        insideIcon = Container(
-          child: Center(
-            child: Image.asset(
-              'images/icons/ic_target_account_black_48dp.png',
-              width: 20,
-              height: 20,
-              color: Colors.red,
-            ),
-          ),
-        );
-      } else if (message.contains('You and your team') ||
-          message.contains('You have been selected') ||
-          message.contains('canceled the')) {
-        insideIcon = Container(
-          child: Center(
-            child: Image.asset(
-              'images/icons/ic_pistol_black_48dp.png',
-              width: 20,
-              height: 20,
-              color: Colors.blue,
-            ),
-          ),
-        );
-      } else if (message.contains('You left your faction') ||
-          message.contains('Your application to') ||
-          message.contains('canceled the')) {
-        insideIcon = Container(
-          child: Center(
-            child: Image.asset(
-              'images/icons/faction.png',
-              width: 20,
-              height: 20,
-              color: Colors.black,
-            ),
-          ),
-        );
-      } else {
-        insideIcon = Container(
-          child: Center(
-            child: Text(
-              'T',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-          ),
-        );
-      }
+      Widget insideIcon = _eventsInsideIconCases(message);
 
       IndicatorStyle iconBubble;
       iconBubble = IndicatorStyle(
@@ -925,6 +830,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       loopCount++;
     }
 
+    var unreadString = '';
+    if (unreadCount == 0) {
+      unreadString = 'No unread events';
+    } else if (unreadCount == 1) {
+      unreadString = "1 unread event";
+    } else {
+      unreadString = '$unreadCount unread events';
+    }
+
     return Card(
       child: ExpandablePanel(
         header: Padding(
@@ -940,7 +854,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         collapsed: Padding(
           padding: const EdgeInsets.fromLTRB(30, 5, 20, 20),
           child: Text(
-            '$unreadCount unread events',
+            unreadString,
             style: TextStyle(
               color: unreadCount == 0 ? Colors.green : Colors.red,
               fontWeight:
@@ -957,6 +871,123 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  Widget _eventsInsideIconCases(String message) {
+    Widget insideIcon;
+    if (message.contains('revive')) {
+      insideIcon = Icon(
+        Icons.local_hospital,
+        color: Colors.green,
+        size: 20,
+      );
+    } else if (message.contains('the director of')) {
+      insideIcon = Icon(
+        Icons.work,
+        color: Colors.brown[300],
+        size: 20,
+      );
+    } else if (message.contains('jail')) {
+      insideIcon = Center(
+        child: Image.asset(
+          'images/icons/jail.png',
+          width: 20,
+          height: 20,
+        ),
+      );
+    } else if (message.contains('trade')) {
+      insideIcon = Icon(
+        Icons.switch_camera,
+        color: Colors.purple,
+        size: 20,
+      );
+    } else if (message.contains('has given you') ||
+        message.contains('You were sent') ||
+        message.contains('You have been credited with') ||
+        message.contains('on your doorstep')) {
+      insideIcon = Icon(
+        Icons.card_giftcard,
+        color: Colors.green,
+        size: 20,
+      );
+    } else if (message.contains('Get out of my education') ||
+        message.contains('You must have overdosed')) {
+      insideIcon = Icon(
+        Icons.warning,
+        color: Colors.red,
+        size: 20,
+      );
+    } else if (message.contains('purchased membership')) {
+      insideIcon = Icon(
+        Icons.fitness_center,
+        color: Colors.black54,
+        size: 20,
+      );
+    } else if (message.contains('You upgraded your level')) {
+      insideIcon = Icon(
+        Icons.file_upload,
+        color: Colors.green,
+        size: 20,
+      );
+    } else if (message.contains('won') ||
+        message.contains('lottery') ||
+        message.contains('check has been credited to your') ||
+        message.contains('withdraw your check from the bank')) {
+      insideIcon = Icon(
+        Icons.monetization_on,
+        color: Colors.green,
+        size: 20,
+      );
+    } else if (message.contains('attacked you') ||
+        message.contains('mugged you and stole') ||
+        message.contains('attacked and hospitalized')) {
+      insideIcon = Container(
+        child: Center(
+          child: Image.asset(
+            'images/icons/ic_target_account_black_48dp.png',
+            width: 20,
+            height: 20,
+            color: Colors.red,
+          ),
+        ),
+      );
+    } else if (message.contains('You and your team') ||
+        message.contains('You have been selected') ||
+        message.contains('canceled the')) {
+      insideIcon = Container(
+        child: Center(
+          child: Image.asset(
+            'images/icons/ic_pistol_black_48dp.png',
+            width: 20,
+            height: 20,
+            color: Colors.blue,
+          ),
+        ),
+      );
+    } else if (message.contains('You left your faction') ||
+        message.contains('Your application to') ||
+        message.contains('canceled the')) {
+      insideIcon = Container(
+        child: Center(
+          child: Image.asset(
+            'images/icons/faction.png',
+            width: 20,
+            height: 20,
+            color: Colors.black,
+          ),
+        ),
+      );
+    } else {
+      insideIcon = Container(
+        child: Center(
+          child: Text(
+            'T',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+          ),
+        ),
+      );
+    }
+    return insideIcon;
   }
 
   String _eventsTimeFormatted(DateTime eventTime) {
@@ -1108,15 +1139,143 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _serverTime =
             DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
-
-        // TODO: debug delete
-        //_user.cooldowns.drug = 17000;
-        //_user.cooldowns.booster = 98000;
-        // TODO: debug delete
-
       } else {
         _apiGoodData = false;
       }
+    });
+  }
+
+  SpeedDial buildSpeedDial() {
+    return SpeedDial(
+      //animatedIcon: AnimatedIcons.menu_close,
+      //animatedIconTheme: IconThemeData(size: 22.0),
+      backgroundColor: Colors.orange,
+      overlayColor: Colors.transparent,
+      child: Text(
+        'T',
+        style: TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 28,
+          color: Colors.black,
+        ),
+      ),
+      visible: dialVisible,
+      curve: Curves.bounceIn,
+      children: [
+        SpeedDialChild(
+          child: Icon(
+            Icons.comment,
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.grey[400],
+          onTap: () async {
+            _openTornBrowser('events');
+          },
+          label: 'EVENTS',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.grey[400],
+        ),
+        SpeedDialChild(
+          child: Icon(
+            Icons.card_giftcard,
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.blue[400],
+          onTap: () async {
+            _openTornBrowser('items');
+          },
+          label: 'ITEMS',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.blue[400],
+        ),
+        SpeedDialChild(
+          child: Center(
+            child: Image.asset(
+              'images/icons/ic_pistol_black_48dp.png',
+              width: 25,
+              height: 25,
+              color: Colors.black,
+            ),
+          ),
+          backgroundColor: Colors.green[400],
+          onTap: () async {
+            _openTornBrowser('crimes');
+          },
+          label: 'CRIMES',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.green[400],
+        ),
+        SpeedDialChild(
+          child: Icon(
+            Icons.fitness_center,
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.deepOrange[400],
+          onTap: () async {
+            _openTornBrowser('gym');
+          },
+          label: 'GYM',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.deepOrange[400],
+        ),
+      ],
+    );
+  }
+
+  Future _openTornBrowser(String page) async {
+    var tornPage = '';
+    switch (page) {
+      case 'gym':
+        tornPage = 'https://www.torn.com/gym.php';
+        break;
+      case 'crimes':
+        tornPage = 'https://www.torn.com/crimes.php#/step=main';
+        break;
+      case 'items':
+        tornPage = 'https://www.torn.com/item.php';
+        break;
+      case 'events':
+        tornPage = 'https://www.torn.com/events.php#/step=all';
+        break;
+    }
+
+    var browserType = _settingsProvider.currentBrowser;
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => TornWebViewGeneric(
+              webViewType: WebViewType.custom,
+              customUrl: tornPage,
+              genericTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = tornPage;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  void setDialVisible(bool value) {
+    setState(() {
+      dialVisible = value;
     });
   }
 }
