@@ -45,10 +45,8 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "Foreign stocks are now automatically uploaded to "
-                        "YATA's shared database when you visit a country. Please "
-                        "note: in order for this to work and contribute, you "
-                        "need to use the in-app browser!",
+                        "New profile page with access to basic status data, "
+                        "recent events, cooldowns and networth calculation."
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
@@ -66,10 +64,7 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "New interface implemented so that you can have a look "
-                        "at foreign stocks directly in the Travel section. "
-                        "Filter and sort items at your convenience, including "
-                        "profit based on item capacity.",
+                        "General bug fixes.",
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
