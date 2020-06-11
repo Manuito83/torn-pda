@@ -5,6 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/providers/api_key_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -64,6 +65,8 @@ Future<void> main() async {
             create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
+        ChangeNotifierProvider<ApiKeyProvider>(
+            create: (context) => ApiKeyProvider()),
       ],
       child: MyApp(),
     ),

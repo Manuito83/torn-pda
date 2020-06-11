@@ -2,8 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
+import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/pages/travel_page.dart';
+import 'package:torn_pda/providers/api_key_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -17,13 +20,17 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
+  int _settingsPosition = 3;
+
   final _drawerItemsList = [
+    "Profile",
     "Travel",
     "Chaining",
     "Settings",
   ];
 
   ThemeProvider _themeProvider;
+  ApiKeyProvider _apiKeyProvider;
 
   Future _finishedWithPreferences;
 
@@ -34,7 +41,7 @@ class _DrawerPageState extends State<DrawerPage> {
   void initState() {
     super.initState();
     _handleChangelog();
-    _finishedWithPreferences = _restoreSharedPreferences();
+    _finishedWithPreferences = _getKeyStatus();
     _configureSelectNotificationSubject();
   }
 
@@ -74,6 +81,7 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: true);
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -170,45 +178,77 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Widget _getDrawerItems() {
     var drawerOptions = <Widget>[];
-    for (var i = 0; i < _drawerItemsList.length; i++) {
-      // Adding divider just before SETTINGS
-      if (i == _drawerItemsList.length - 1) {
-        drawerOptions.add(Divider());
-      }
+    // If API key is not valid, we just show the Settings page (just don't
+    // add the other sections to the list
+    if (!_apiKeyProvider.apiKeyValid) {
       drawerOptions.add(
         ListTileTheme(
           selectedColor: Colors.red,
           iconColor: _themeProvider.mainText,
           child: Ink(
-            color: i == _selected ? Colors.grey[300] : Colors.transparent,
+            color: Colors.grey[300],
             child: ListTile(
-              leading: _returnDrawerIcons(drawerPosition: i),
+              leading: _returnDrawerIcons(drawerPosition: _settingsPosition),
               title: Text(
-                _drawerItemsList[i],
+                _drawerItemsList[_settingsPosition],
                 style: TextStyle(
                   fontWeight:
-                      i == _selected ? FontWeight.bold : FontWeight.normal,
+                  FontWeight.bold,
                 ),
               ),
-              selected: i == _selected,
-              onTap: () => _onSelectItem(i),
+              selected: true,
             ),
           ),
         ),
       );
+    } else {
+      // Otherwise, if the key is valid, we loop all the sections
+      for (var i = 0; i < _drawerItemsList.length; i++) {
+        // Adding divider just before SETTINGS
+        if (i == _settingsPosition) {
+          drawerOptions.add(Divider());
+        }
+        drawerOptions.add(
+          ListTileTheme(
+            selectedColor: Colors.red,
+            iconColor: _themeProvider.mainText,
+            child: Ink(
+              color: i == _selected ? Colors.grey[300] : Colors.transparent,
+              child: ListTile(
+                leading: _returnDrawerIcons(drawerPosition: i),
+                title: Text(
+                  _drawerItemsList[i],
+                  style: TextStyle(
+                    fontWeight:
+                    i == _selected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                selected: i == _selected,
+                onTap: () => _onSelectItem(i),
+              ),
+            ),
+          ),
+        );
+      }
     }
+
+
+
     return Column(children: drawerOptions);
   }
 
   Widget _getPages() {
     switch (_activeDrawerIndex) {
       case 0:
-        return TravelPage();
+        return ProfilePage();
         break;
       case 1:
-        return ChainingPage();
+        return TravelPage();
         break;
       case 2:
+        return ChainingPage();
+        break;
+      case 3:
         return SettingsPage();
         break;
       default:
@@ -219,12 +259,15 @@ class _DrawerPageState extends State<DrawerPage> {
   Widget _returnDrawerIcons({int drawerPosition}) {
     switch (drawerPosition) {
       case 0:
-        return Icon(Icons.local_airport);
+        return Icon(Icons.person);
         break;
       case 1:
-        return Icon(Icons.link);
+        return Icon(Icons.local_airport);
         break;
       case 2:
+        return Icon(Icons.link);
+        break;
+      case 3:
         return Icon(Icons.settings);
         break;
       default:
@@ -240,12 +283,15 @@ class _DrawerPageState extends State<DrawerPage> {
     });
   }
 
-  Future<void> _restoreSharedPreferences() async {
-    String key = await SharedPreferencesModel().getApiKey();
-    if (key == '') {
-      // If key is empty, redirect to the Settings page
-      _selected = 2;
-      _activeDrawerIndex = 2;
+  Future<void> _getKeyStatus() async {
+    // Set up provider
+    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
+    await _apiKeyProvider.loadPreferences();
+
+    // If key is empty, redirect to the Settings page. Else, open the default
+    if (_apiKeyProvider.apiKey == '') {
+      _selected = _settingsPosition;
+      _activeDrawerIndex = _settingsPosition;
     } else {
       var defaultSection = await SharedPreferencesModel().getDefaultSection();
       _selected = int.parse(defaultSection);

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/api_key_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/models/profile_model.dart';
@@ -29,20 +30,22 @@ class _SettingsPageState extends State<SettingsPage> {
   String _openBrowserValue;
 
   SettingsProvider _settingsProvider;
+  ApiKeyProvider _apiKeyProvider;
 
   var _apiKeyInputController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _restoreSharedPreferences();
+    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _restorePreferences();
     _ticker = new Timer.periodic(
         Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
   Widget build(BuildContext context) {
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
       drawer: new Drawer(),
       appBar: AppBar(
@@ -214,8 +217,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 _formKey.currentState.reset();
                                 _apiKeyInputController.clear();
                                 _myCurrentKey = '';
-                                SharedPreferencesModel().setApiKey('');
                                 SharedPreferencesModel().setOwnId('');
+                                _apiKeyProvider.setApiKey(newApiKey: '');
                                 setState(() {
                                   _userToLoad = false;
                                   _apiError = false;
@@ -339,7 +342,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "0",
           child: Text(
-            "Travel",
+            "Profile",
             style: TextStyle(
               fontSize: 14,
             ),
@@ -347,6 +350,15 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         DropdownMenuItem(
           value: "1",
+          child: Text(
+            "Travel",
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
           child: Text(
             "Chaining",
             style: TextStyle(
@@ -416,8 +428,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiError = false;
         _userProfile = myProfile;
       });
-      SharedPreferencesModel().setApiKey(_myCurrentKey);
       SharedPreferencesModel().setOwnId(myProfile.playerId.toString());
+      _apiKeyProvider.setApiKey(newApiKey: _myCurrentKey);
     } else if (myProfile is ApiError) {
       setState(() {
         _apiIsLoading = false;
@@ -425,26 +437,21 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiError = true;
         _errorReason = myProfile.errorReason;
       });
+      SharedPreferencesModel().setOwnId('');
+      _apiKeyProvider.setApiKey(newApiKey: '');
     }
   }
 
-  void _restoreSharedPreferences() async {
-    await SharedPreferencesModel().getApiKey().then((onValue) {
-      if (onValue != '') {
-        setState(() {
-          _apiKeyInputController.text = onValue;
-          _myCurrentKey = onValue;
-        });
-        _getApiDetails();
-      }
-    });
-
-    await SharedPreferencesModel().getDefaultSection().then((onValue) {
+  void _restorePreferences() async {
+    if (_apiKeyProvider.apiKeyValid) {
       setState(() {
-        _openSectionValue = onValue;
+        _apiKeyInputController.text = _apiKeyProvider.apiKey;
+        _myCurrentKey = _apiKeyProvider.apiKey;
       });
-    });
+      _getApiDetails();
+    }
 
+    await _settingsProvider.loadPreferences();
     var browser = _settingsProvider.currentBrowser;
     setState(() {
       switch (browser) {
@@ -455,6 +462,12 @@ class _SettingsPageState extends State<SettingsPage> {
           _openBrowserValue = '1';
           break;
       }
+    });
+
+    await SharedPreferencesModel().getDefaultSection().then((onValue) {
+      setState(() {
+        _openSectionValue = onValue;
+      });
     });
   }
 
