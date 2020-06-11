@@ -1151,12 +1151,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       //animatedIconTheme: IconThemeData(size: 22.0),
       backgroundColor: Colors.orange,
       overlayColor: Colors.transparent,
-      child: Text(
-        'T',
-        style: TextStyle(
-          fontWeight: FontWeight.w800,
-          fontSize: 28,
-          color: Colors.black,
+      child: Container(
+        width: 58,
+        height: 58,
+        decoration: new BoxDecoration(
+          border: Border.all(
+            color: Colors.grey[800],
+            width: 2,
+          ),
+          shape: BoxShape.circle,
+          image: new DecorationImage(
+            fit: BoxFit.fill,
+            image: AssetImage("images/icons/torn_t_logo.png"),
+          ),
         ),
       ),
       visible: dialVisible,
