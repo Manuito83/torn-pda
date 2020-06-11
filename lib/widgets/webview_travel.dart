@@ -74,26 +74,35 @@ class _TornWebViewTravelState extends State<TornWebViewTravel> {
             }),
         title: Text(_pageTitle),
       ),
-      body: Builder(
-        builder: (BuildContext context) {
-          return WebView(
-            initialUrl: _initialUrl,
-            javascriptMode: JavascriptMode.unrestricted,
-            javascriptChannels: <JavascriptChannel>[
-              JavascriptChannel(
-                name: 'Source',
-                onMessageReceived: (JavascriptMessage msg) {
-                  _sendStockInformation(msg.message);
+      body: Container(
+        color: Colors.black,
+        child: SafeArea(
+          top: false,
+          right: false,
+          left: false,
+          bottom: true,
+          child: Builder(
+            builder: (BuildContext context) {
+              return WebView(
+                initialUrl: _initialUrl,
+                javascriptMode: JavascriptMode.unrestricted,
+                javascriptChannels: <JavascriptChannel>[
+                  JavascriptChannel(
+                    name: 'Source',
+                    onMessageReceived: (JavascriptMessage msg) {
+                      _sendStockInformation(msg.message);
+                    },
+                  ),
+                ].toSet(),
+                onWebViewCreated: (WebViewController c) {
+                  _controller = c;
                 },
-              ),
-            ].toSet(),
-            onWebViewCreated: (WebViewController c) {
-              _controller = c;
+                onPageFinished: (value) => _loadSourceCode(),
+                gestureNavigationEnabled: true,
+              );
             },
-            onPageFinished: (value) => _loadSourceCode(),
-            gestureNavigationEnabled: true,
-          );
-        },
+          ),
+        ),
       ),
     );
   }

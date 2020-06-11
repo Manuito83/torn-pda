@@ -69,17 +69,26 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         title: Text(_currentPageTitle),
         actions: _actionButton(),
       ),
-      body: Builder(
-        builder: (BuildContext context) {
-          return WebView(
-            initialUrl: _initialUrl,
-            javascriptMode: JavascriptMode.unrestricted,
-            onWebViewCreated: (WebViewController c) {
-              _webViewController = c;
+      body: Container(
+        color: Colors.black,
+        child: SafeArea(
+          top: false,
+          right: false,
+          left: false,
+          bottom: true,
+          child: Builder(
+            builder: (BuildContext context) {
+              return WebView(
+                initialUrl: _initialUrl,
+                javascriptMode: JavascriptMode.unrestricted,
+                onWebViewCreated: (WebViewController c) {
+                  _webViewController = c;
+                },
+                gestureNavigationEnabled: true,
+              );
             },
-            gestureNavigationEnabled: true,
-          );
-        },
+          ),
+        ),
       ),
     );
   }

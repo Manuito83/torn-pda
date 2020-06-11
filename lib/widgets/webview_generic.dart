@@ -91,18 +91,27 @@ class _TornWebViewGenericState extends State<TornWebViewGeneric> {
             }),
         title: Text(_pageTitle),
       ),
-      body: Builder(
-        builder: (BuildContext context) {
-          return WebView(
-            initialUrl: _initialUrl,
-            javascriptMode: JavascriptMode.unrestricted,
-            onWebViewCreated: (WebViewController c) {
-              _controller = c;
+       body: Container(
+         color: Colors.black,
+         child: SafeArea(
+          top: false,
+          right: false,
+          left: false,
+          bottom: true,
+          child: Builder(
+            builder: (BuildContext context) {
+              return WebView(
+                initialUrl: _initialUrl,
+                javascriptMode: JavascriptMode.unrestricted,
+                onWebViewCreated: (WebViewController c) {
+                  _controller = c;
+                },
+                gestureNavigationEnabled: true,
+              );
             },
-            gestureNavigationEnabled: true,
-          );
-        },
+          ),
       ),
+       ),
     );
   }
 }
