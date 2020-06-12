@@ -55,7 +55,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _apiFetched = _fetchApi();
 
     _tickerCallChainApi =
-        new Timer.periodic(Duration(seconds: 60), (Timer t) => _fetchApi());
+        new Timer.periodic(Duration(seconds: 30), (Timer t) => _fetchApi());
   }
 
   @override
@@ -209,7 +209,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         descriptionText = descriptionText.replaceAll(m, '');
       }
 
-      // Causing player ID (jailed of hospitlised the user)
+      // Causing player ID (jailed of hospitalised the user)
       String causingId = '';
       if (matches.length > 0) {
         RegExp expId = RegExp(r"(?!XID=)([0-9])+");
@@ -247,6 +247,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               //profileName: causingId,
                               genericTitle: 'Event Profile',
                               webViewType: WebViewType.profile,
+                              genericCallBack: _updateCallback,
                             ),
                           ),
                         );
@@ -1149,7 +1150,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return SpeedDial(
       //animatedIcon: AnimatedIcons.menu_close,
       //animatedIconTheme: IconThemeData(size: 22.0),
-      backgroundColor: Colors.orange,
+      backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
         width: 58,
@@ -1267,6 +1268,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               webViewType: WebViewType.custom,
               customUrl: tornPage,
               genericTitle: 'Torn',
+              genericCallBack: _updateCallback,
             ),
           ),
         );
@@ -1285,4 +1287,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       dialVisible = value;
     });
   }
+
+  Future _updateCallback() async {
+    await Future.delayed(Duration(seconds: 10));
+    _fetchApi();
+  }
+
 }
