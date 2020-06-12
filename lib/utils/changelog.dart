@@ -46,7 +46,7 @@ class ChangeLog extends StatelessWidget {
                     Flexible(
                       child: Text(
                         "New profile page with access to basic status data, "
-                        "recent events, cooldowns and networth calculation."
+                        "recent events, cooldowns and networth calculation"
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
@@ -64,7 +64,7 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "General bug fixes.",
+                        "General bug fixes",
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
