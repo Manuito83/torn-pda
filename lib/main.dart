@@ -7,6 +7,7 @@ import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/providers/api_key_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
+import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -67,6 +68,8 @@ Future<void> main() async {
             create: (context) => SettingsProvider()),
         ChangeNotifierProvider<ApiKeyProvider>(
             create: (context) => ApiKeyProvider()),
+        ChangeNotifierProvider<FriendsProvider>(
+            create: (context) => FriendsProvider()),
       ],
       child: MyApp(),
     ),

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
+import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/main.dart';
@@ -20,12 +21,13 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
-  int _settingsPosition = 3;
+  int _settingsPosition = 4;
 
   final _drawerItemsList = [
     "Profile",
     "Travel",
     "Chaining",
+    "Friends",
     "Settings",
   ];
 
@@ -249,6 +251,9 @@ class _DrawerPageState extends State<DrawerPage> {
         return ChainingPage();
         break;
       case 3:
+        return FriendsPage();
+        break;
+      case 4:
         return SettingsPage();
         break;
       default:
@@ -268,6 +273,9 @@ class _DrawerPageState extends State<DrawerPage> {
         return Icon(Icons.link);
         break;
       case 3:
+        return Icon(Icons.people);
+        break;
+      case 4:
         return Icon(Icons.settings);
         break;
       default:

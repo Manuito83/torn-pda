@@ -366,6 +366,15 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "3",
+          child: Text(
+            "Friends",
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         SharedPreferencesModel().setDefaultSection(value);
