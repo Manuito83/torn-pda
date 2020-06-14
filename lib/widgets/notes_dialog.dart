@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/friend_model.dart';
+import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
-class TargetNotesDialog extends StatefulWidget {
-  final TargetModel targetModel;
-
-  TargetNotesDialog({@required this.targetModel});
-
-  @override
-  _TargetNotesDialogState createState() => _TargetNotesDialogState();
+enum PersonalNoteType {
+  target,
+  friend,
 }
 
-class _TargetNotesDialogState extends State<TargetNotesDialog> {
+
+class PersonalNotesDialog extends StatefulWidget {
+  final TargetModel targetModel;
+  final FriendModel friendModel;
+  final PersonalNoteType noteType;
+
+  /// Specify the model type in [noteType] and pass accordingly
+  PersonalNotesDialog({@required this.noteType, this.targetModel, this.friendModel});
+
+  @override
+  _PersonalNotesDialogState createState() => _PersonalNotesDialogState();
+}
+
+class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
   TargetModel _target;
+  FriendModel _friend;
   TargetsProvider _targetsProvider;
+  FriendsProvider _friendsProvider;
   ThemeProvider _themeProvider;
 
   String _myTempChosenColor;
@@ -25,9 +38,16 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
   @override
   void initState() {
     super.initState();
-    _target = widget.targetModel;
-    _personalNotesController.text = _target.personalNote;
-    _myTempChosenColor = _target.personalNoteColor;
+    if (widget.noteType == PersonalNoteType.target) {
+      _target = widget.targetModel;
+      _personalNotesController.text = _target.personalNote;
+      _myTempChosenColor = _target.personalNoteColor;
+    } else if (widget.noteType == PersonalNoteType.friend) {
+      _friend = widget.friendModel;
+      _personalNotesController.text = _friend.personalNote;
+      _myTempChosenColor = _friend.personalNoteColor;
+    }
+
   }
 
 
@@ -40,6 +60,7 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
   @override
   Widget build(BuildContext context) {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return SingleChildScrollView(
       child: Stack(
@@ -184,10 +205,18 @@ class _TargetNotesDialogState extends State<TargetNotesDialog> {
                             // Get rid of dialog first, so that it can't
                             // be pressed twice
                             Navigator.of(context).pop();
-                            _targetsProvider.setTargetNote(
-                                _target,
-                                _personalNotesController.text,
-                                _myTempChosenColor);
+
+                            if (widget.noteType == PersonalNoteType.target) {
+                              _targetsProvider.setTargetNote(
+                                  _target,
+                                  _personalNotesController.text,
+                                  _myTempChosenColor);
+                            } else if (widget.noteType == PersonalNoteType.friend) {
+                              _friendsProvider.setFriendNote(
+                                  _friend,
+                                  _personalNotesController.text,
+                                  _myTempChosenColor);
+                            }
                           },
                         ),
                         FlatButton(

@@ -488,7 +488,7 @@ class _TargetCardState extends State<TargetCard> {
             elevation: 0.0,
             backgroundColor: Colors.transparent,
             content: SingleChildScrollView(
-              child: TargetNotesDialog(
+              child: PersonalNotesDialog(
                 targetModel: _target,
               ),
             ),
