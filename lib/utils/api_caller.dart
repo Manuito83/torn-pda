@@ -6,6 +6,7 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/travel_model.dart';
@@ -19,7 +20,7 @@ enum ApiType {
 
 enum ApiSelection {
   travel,
-  profile,
+  profile, // TODO: we can get rid of this with ApiKeyProvider
   ownProfile,
   target,
   attacks,
@@ -27,6 +28,7 @@ enum ApiSelection {
   chainStatus,
   bars,
   items,
+  friends,
 }
 
 class ApiError {
@@ -80,16 +82,17 @@ class ApiError {
 
 class TornApiCaller {
   String apiKey;
-  String targetID;
+  String queryId;
 
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.profile(this.apiKey);
   TornApiCaller.ownProfile(this.apiKey);
-  TornApiCaller.target(this.apiKey, this.targetID);
+  TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
   TornApiCaller.chain(this.apiKey);
   TornApiCaller.bars(this.apiKey);
   TornApiCaller.items(this.apiKey);
+  TornApiCaller.friends(this.apiKey, this.queryId);
 
   Future<dynamic> get getTravel async {
     dynamic apiResult;
@@ -133,7 +136,7 @@ class TornApiCaller {
   Future<dynamic> get getTarget async {
     dynamic apiResult;
     await _apiCall(ApiType.user,
-            prefix: this.targetID, apiSelection: ApiSelection.target)
+            prefix: this.queryId, apiSelection: ApiSelection.target)
         .then((value) {
       apiResult = value;
     });
@@ -220,6 +223,24 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getFriends async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user,
+            prefix: this.queryId, apiSelection: ApiSelection.friends)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return FriendModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _apiCall(ApiType apiType,
       {String prefix, ApiSelection apiSelection}) async {
     String url = 'https://api.torn.com/';
@@ -262,6 +283,9 @@ class TornApiCaller {
         break;
       case ApiSelection.items:
         url += '?selections=items';
+        break;
+      case ApiSelection.friends:
+        url += '$prefix?selections=';
         break;
     }
     url += '&key=$apiKey';

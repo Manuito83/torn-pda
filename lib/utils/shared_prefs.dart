@@ -11,6 +11,8 @@ class SharedPreferencesModel {
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kAttacksSort = "pda_attacksSort";
+  final String _kFriendsList = "pda_friendsList";
+  final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
@@ -66,18 +68,18 @@ class SharedPreferencesModel {
     return prefs.getStringList(_kTargetsList) ?? List<String>();
   }
 
-  Future<bool> setTargetLists(List<String> value) async {
+  Future<bool> setTargetsList(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kTargetsList, value);
   }
 
   //**************
-  Future<String> getTargetSort() async {
+  Future<String> getTargetsSort() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kTargetsSort) ?? '';
   }
 
-  Future<bool> setTargetSort(String value) async {
+  Future<bool> setTargetsSort(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTargetsSort, value);
   }
@@ -93,6 +95,30 @@ class SharedPreferencesModel {
   Future<bool> setAttackSort(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAttacksSort, value);
+  }
+
+  /// ----------------------------
+  /// Methods for friends
+  /// ----------------------------
+  Future<List<String>> getFriendsList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kFriendsList) ?? List<String>();
+  }
+
+  Future<bool> setFriendsList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kFriendsList, value);
+  }
+
+  //**************
+  Future<String> getFriendsSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFriendsSort) ?? '';
+  }
+
+  Future<bool> setFriendsSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFriendsSort, value);
   }
 
   /// ----------------------------

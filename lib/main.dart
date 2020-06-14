@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
@@ -68,8 +69,12 @@ Future<void> main() async {
             create: (context) => SettingsProvider()),
         ChangeNotifierProvider<ApiKeyProvider>(
             create: (context) => ApiKeyProvider()),
-        ChangeNotifierProvider<FriendsProvider>(
-            create: (context) => FriendsProvider()),
+        ChangeNotifierProxyProvider<ApiKeyProvider, FriendsProvider>(
+          create: (context) => FriendsProvider(''),
+          update: (BuildContext context, ApiKeyProvider apiKeyProvider,
+              FriendsProvider friendsProvider) =>
+              FriendsProvider(apiKeyProvider.apiKey),
+        ),
       ],
       child: MyApp(),
     ),

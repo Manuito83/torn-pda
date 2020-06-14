@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/widgets/friend_card.dart';
 
 class FriendsList extends StatelessWidget {
   final List<FriendModel> friends;
@@ -20,9 +21,9 @@ class FriendsList extends StatelessWidget {
     String filter = friendsProvider.currentFilter;
     List<Widget> filteredCards = List<Widget>();
     for (var thisFriend in friends) {
-/*      if (thisFriend.name.toUpperCase().contains(filter.toUpperCase())) {
+      if (thisFriend.name.toUpperCase().contains(filter.toUpperCase())) {
         filteredCards.add(FriendCard(friendModel: thisFriend));
-      }*/
+      }
     }
     // Avoid collisions with SnackBar
     filteredCards.add(SizedBox(height: 50));
