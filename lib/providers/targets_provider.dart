@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/models/chaining/target_sort_popup.dart';
+import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -41,7 +41,7 @@ class TargetsProvider extends ChangeNotifier {
   String _currentFilter = '';
   String get currentFilter => _currentFilter;
 
-  TargetSort _currentSort;
+  TargetSortType _currentSort;
 
   String userKey = '';
   TargetsProvider() {
@@ -340,26 +340,26 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortTargets(TargetSort sortType) {
+  void sortTargets(TargetSortType sortType) {
     _currentSort = sortType;
     switch (sortType) {
-      case TargetSort.levelDes:
+      case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level.compareTo(a.level));
         break;
-      case TargetSort.levelAsc:
+      case TargetSortType.levelAsc:
         _targets.sort((a, b) => a.level.compareTo(b.level));
         break;
-      case TargetSort.respectDes:
+      case TargetSortType.respectDes:
         _targets.sort((a, b) => b.respectGain.compareTo(a.respectGain));
         break;
-      case TargetSort.respectAsc:
+      case TargetSortType.respectAsc:
         _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
-      case TargetSort.nameDes:
+      case TargetSortType.nameDes:
         _targets.sort(
             (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
-      case TargetSort.nameAsc:
+      case TargetSortType.nameAsc:
         _targets.sort(
             (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
@@ -390,32 +390,32 @@ class TargetsProvider extends ChangeNotifier {
     for (var tar in _targets) {
       newPrefs.add(targetModelToJson(tar));
     }
-    SharedPreferencesModel().setTargetLists(newPrefs);
+    SharedPreferencesModel().setTargetsList(newPrefs);
   }
 
   void _saveSortSharedPrefs() {
     String sortToSave;
     switch (_currentSort) {
-      case TargetSort.levelDes:
+      case TargetSortType.levelDes:
         sortToSave = 'levelDes';
         break;
-      case TargetSort.levelAsc:
+      case TargetSortType.levelAsc:
         sortToSave = 'levelAsc';
         break;
-      case TargetSort.respectDes:
+      case TargetSortType.respectDes:
         sortToSave = 'respectDes';
         break;
-      case TargetSort.respectAsc:
+      case TargetSortType.respectAsc:
         sortToSave = 'respectDes';
         break;
-      case TargetSort.nameDes:
+      case TargetSortType.nameDes:
         sortToSave = 'nameDes';
         break;
-      case TargetSort.nameAsc:
+      case TargetSortType.nameAsc:
         sortToSave = 'nameDes';
         break;
     }
-    SharedPreferencesModel().setTargetSort(sortToSave);
+    SharedPreferencesModel().setTargetsSort(sortToSave);
   }
 
   Future<void> restoreSharedPreferences() async {
@@ -430,28 +430,28 @@ class TargetsProvider extends ChangeNotifier {
       _targets.add(targetModelFromJson(jTar));
     }
     // Target sort
-    String targetSort = await SharedPreferencesModel().getTargetSort();
+    String targetSort = await SharedPreferencesModel().getTargetsSort();
     switch (targetSort) {
       case '':
-        _currentSort = TargetSort.levelDes;
+        _currentSort = TargetSortType.levelDes;
         break;
       case 'levelDes':
-        _currentSort = TargetSort.levelDes;
+        _currentSort = TargetSortType.levelDes;
         break;
       case 'levelAsc':
-        _currentSort = TargetSort.levelAsc;
+        _currentSort = TargetSortType.levelAsc;
         break;
       case 'respectDes':
-        _currentSort = TargetSort.respectDes;
+        _currentSort = TargetSortType.respectDes;
         break;
       case 'respectAsc':
-        _currentSort = TargetSort.respectAsc;
+        _currentSort = TargetSortType.respectAsc;
         break;
       case 'nameDes':
-        _currentSort = TargetSort.nameDes;
+        _currentSort = TargetSortType.nameDes;
         break;
       case 'nameAsc':
-        _currentSort = TargetSort.nameAsc;
+        _currentSort = TargetSortType.nameAsc;
         break;
     }
     // Notification

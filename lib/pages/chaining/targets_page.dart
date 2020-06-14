@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/target_sort_popup.dart';
+import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -27,13 +27,13 @@ class _TargetsPageState extends State<TargetsPage> {
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
 
-  final _popupChoices = <TargetSortPopup>[
-    TargetSortPopup(type: TargetSort.levelDes),
-    TargetSortPopup(type: TargetSort.levelAsc),
-    TargetSortPopup(type: TargetSort.respectDes),
-    TargetSortPopup(type: TargetSort.respectAsc),
-    TargetSortPopup(type: TargetSort.nameDes),
-    TargetSortPopup(type: TargetSort.nameAsc),
+  final _popupChoices = <TargetSort>[
+    TargetSort(type: TargetSortType.levelDes),
+    TargetSort(type: TargetSortType.levelAsc),
+    TargetSort(type: TargetSortType.respectDes),
+    TargetSort(type: TargetSortType.respectAsc),
+    TargetSort(type: TargetSortType.nameDes),
+    TargetSort(type: TargetSortType.nameAsc),
   ];
 
   @override
@@ -103,14 +103,14 @@ class _TargetsPageState extends State<TargetsPage> {
               }
             },
           ),
-          PopupMenuButton<TargetSortPopup>(
+          PopupMenuButton<TargetSort>(
             icon: Icon(
               Icons.sort,
             ),
             onSelected: _selectSortPopup,
             itemBuilder: (BuildContext context) {
-              return _popupChoices.map((TargetSortPopup choice) {
-                return PopupMenuItem<TargetSortPopup>(
+              return _popupChoices.map((TargetSort choice) {
+                return PopupMenuItem<TargetSort>(
                   value: choice,
                   child: Text(choice.description),
                 );
@@ -344,25 +344,25 @@ class _TargetsPageState extends State<TargetsPage> {
         .setFilterText(_searchController.text);
   }
 
-  void _selectSortPopup(TargetSortPopup choice) {
+  void _selectSortPopup(TargetSort choice) {
     switch (choice.type) {
-      case TargetSort.levelDes:
-        _targetsProvider.sortTargets(TargetSort.levelDes);
+      case TargetSortType.levelDes:
+        _targetsProvider.sortTargets(TargetSortType.levelDes);
         break;
-      case TargetSort.levelAsc:
-        _targetsProvider.sortTargets(TargetSort.levelAsc);
+      case TargetSortType.levelAsc:
+        _targetsProvider.sortTargets(TargetSortType.levelAsc);
         break;
-      case TargetSort.respectDes:
-        _targetsProvider.sortTargets(TargetSort.respectDes);
+      case TargetSortType.respectDes:
+        _targetsProvider.sortTargets(TargetSortType.respectDes);
         break;
-      case TargetSort.respectAsc:
-        _targetsProvider.sortTargets(TargetSort.respectAsc);
+      case TargetSortType.respectAsc:
+        _targetsProvider.sortTargets(TargetSortType.respectAsc);
         break;
-      case TargetSort.nameDes:
-        _targetsProvider.sortTargets(TargetSort.nameDes);
+      case TargetSortType.nameDes:
+        _targetsProvider.sortTargets(TargetSortType.nameDes);
         break;
-      case TargetSort.nameAsc:
-        _targetsProvider.sortTargets(TargetSort.nameAsc);
+      case TargetSortType.nameAsc:
+        _targetsProvider.sortTargets(TargetSortType.nameAsc);
         break;
     }
   }

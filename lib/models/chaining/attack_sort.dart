@@ -1,4 +1,4 @@
-enum AttackSort {
+enum AttackSortType {
   levelDes,
   levelAsc,
   respectDes,
@@ -7,28 +7,28 @@ enum AttackSort {
   dateAsc
 }
 
-class AttackSortPopup {
-  AttackSort type;
+class AttackSort {
+  AttackSortType type;
   String description;
 
-  AttackSortPopup({this.type}) {
+  AttackSort({this.type}) {
     switch (type) {
-      case AttackSort.levelDes:
+      case AttackSortType.levelDes:
         description = 'Sort by level (des)';
         break;
-      case AttackSort.levelAsc:
+      case AttackSortType.levelAsc:
         description = 'Sort by level (asc)';
         break;
-      case AttackSort.respectDes:
+      case AttackSortType.respectDes:
         description = 'Sort by respect (des)';
         break;
-      case AttackSort.respectAsc:
+      case AttackSortType.respectAsc:
         description = 'Sort by respect (asc)';
         break;
-      case AttackSort.dateDes:
+      case AttackSortType.dateDes:
         description = 'Date (des)';
         break;
-      case AttackSort.dateAsc:
+      case AttackSortType.dateAsc:
         description = 'Date (asc)';
         break;
     }

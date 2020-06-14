@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/attack_sort_popup.dart';
+import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/attacks_list.dart';
@@ -25,13 +25,13 @@ class _AttacksPageState extends State<AttacksPage> {
   Color _filterTypeColor;
   Text _filterText = Text('');
 
-  final _popupChoices = <AttackSortPopup>[
-    AttackSortPopup(type: AttackSort.levelDes),
-    AttackSortPopup(type: AttackSort.levelAsc),
-    AttackSortPopup(type: AttackSort.respectDes),
-    AttackSortPopup(type: AttackSort.respectAsc),
-    AttackSortPopup(type: AttackSort.dateDes),
-    AttackSortPopup(type: AttackSort.dateAsc),
+  final _popupChoices = <AttackSort>[
+    AttackSort(type: AttackSortType.levelDes),
+    AttackSort(type: AttackSortType.levelAsc),
+    AttackSort(type: AttackSortType.respectDes),
+    AttackSort(type: AttackSortType.respectAsc),
+    AttackSort(type: AttackSortType.dateDes),
+    AttackSort(type: AttackSortType.dateAsc),
   ];
 
   @override
@@ -106,7 +106,7 @@ class _AttacksPageState extends State<AttacksPage> {
               }
             },
           ),
-          PopupMenuButton<AttackSortPopup>(
+          PopupMenuButton<AttackSort>(
             icon: Icon(
               Icons.sort,
             ),
@@ -115,8 +115,8 @@ class _AttacksPageState extends State<AttacksPage> {
             // https://github.com/flutter/flutter/issues/19954
             // initialValue: _popupChoices[0],
             itemBuilder: (BuildContext context) {
-              return _popupChoices.map((AttackSortPopup choice) {
-                return PopupMenuItem<AttackSortPopup>(
+              return _popupChoices.map((AttackSort choice) {
+                return PopupMenuItem<AttackSort>(
                   value: choice,
                   child: Text(choice.description),
                 );
@@ -190,25 +190,25 @@ class _AttacksPageState extends State<AttacksPage> {
         .setFilterText(_searchController.text);
   }
 
-  void _selectSortPopup(AttackSortPopup choice) {
+  void _selectSortPopup(AttackSort choice) {
     switch (choice.type) {
-      case AttackSort.levelDes:
-        _attacksProvider.sortAttacks(AttackSort.levelDes);
+      case AttackSortType.levelDes:
+        _attacksProvider.sortAttacks(AttackSortType.levelDes);
         break;
-      case AttackSort.levelAsc:
-        _attacksProvider.sortAttacks(AttackSort.levelAsc);
+      case AttackSortType.levelAsc:
+        _attacksProvider.sortAttacks(AttackSortType.levelAsc);
         break;
-      case AttackSort.respectDes:
-        _attacksProvider.sortAttacks(AttackSort.respectDes);
+      case AttackSortType.respectDes:
+        _attacksProvider.sortAttacks(AttackSortType.respectDes);
         break;
-      case AttackSort.respectAsc:
-        _attacksProvider.sortAttacks(AttackSort.respectAsc);
+      case AttackSortType.respectAsc:
+        _attacksProvider.sortAttacks(AttackSortType.respectAsc);
         break;
-      case AttackSort.dateDes:
-        _attacksProvider.sortAttacks(AttackSort.dateDes);
+      case AttackSortType.dateDes:
+        _attacksProvider.sortAttacks(AttackSortType.dateDes);
         break;
-      case AttackSort.dateAsc:
-        _attacksProvider.sortAttacks(AttackSort.dateAsc);
+      case AttackSortType.dateAsc:
+        _attacksProvider.sortAttacks(AttackSortType.dateAsc);
         break;
     }
   }
