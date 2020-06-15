@@ -9,7 +9,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
@@ -1130,9 +1130,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchApi() async {
-    var apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
+    var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     var apiResponse =
-        await TornApiCaller.ownProfile(apiKeyProvider.apiKey).getOwnProfile;
+        await TornApiCaller.ownProfile(userProvider.myUser.userApiKey).getOwnProfile;
 
     setState(() {
       if (apiResponse is OwnProfileModel) {

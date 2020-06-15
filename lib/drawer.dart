@@ -7,7 +7,7 @@ import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/pages/travel_page.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -19,6 +19,8 @@ class DrawerPage extends StatefulWidget {
   @override
   _DrawerPageState createState() => _DrawerPageState();
 }
+
+// TODO: we need to refresh the UserDetailsProvider upon first connection
 
 class _DrawerPageState extends State<DrawerPage> {
   int _settingsPosition = 4;
@@ -32,7 +34,7 @@ class _DrawerPageState extends State<DrawerPage> {
   ];
 
   ThemeProvider _themeProvider;
-  ApiKeyProvider _apiKeyProvider;
+  UserDetailsProvider _userDetails;
 
   Future _finishedWithPreferences;
 
@@ -83,7 +85,7 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: true);
+    _userDetails = Provider.of<UserDetailsProvider>(context, listen: true);
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -182,7 +184,7 @@ class _DrawerPageState extends State<DrawerPage> {
     var drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings page (just don't
     // add the other sections to the list
-    if (!_apiKeyProvider.apiKeyValid) {
+    if (!_userDetails.myUser.userApiKeyValid) {
       drawerOptions.add(
         ListTileTheme(
           selectedColor: Colors.red,
@@ -293,11 +295,11 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Future<void> _getKeyStatus() async {
     // Set up provider
-    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
-    await _apiKeyProvider.loadPreferences();
+    _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    await _userDetails.loadPreferences();
 
     // If key is empty, redirect to the Settings page. Else, open the default
-    if (_apiKeyProvider.apiKey == '') {
+    if (!_userDetails.myUser.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {

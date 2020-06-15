@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/models/profile_model.dart';
@@ -30,14 +30,14 @@ class _SettingsPageState extends State<SettingsPage> {
   String _openBrowserValue;
 
   SettingsProvider _settingsProvider;
-  ApiKeyProvider _apiKeyProvider;
+  UserDetailsProvider _userProvider;
 
   var _apiKeyInputController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _restorePreferences();
     _ticker = new Timer.periodic(
@@ -218,7 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 _apiKeyInputController.clear();
                                 _myCurrentKey = '';
                                 SharedPreferencesModel().setOwnId('');
-                                _apiKeyProvider.setApiKey(newApiKey: '');
+                                _userProvider.removeUser();
                                 setState(() {
                                   _userToLoad = false;
                                   _apiError = false;
@@ -438,7 +438,16 @@ class _SettingsPageState extends State<SettingsPage> {
         _userProfile = myProfile;
       });
       SharedPreferencesModel().setOwnId(myProfile.playerId.toString());
-      _apiKeyProvider.setApiKey(newApiKey: _myCurrentKey);
+
+      var newDetails = UserDetails();
+      newDetails
+        ..userApiKey = _myCurrentKey
+        ..userApiKeyValid = true
+        ..userId = myProfile.playerId.toString()
+        ..userName = myProfile.name
+        ..userFactionId = myProfile.factionId.toString();
+      _userProvider.setUserDetails(userDetails: newDetails);
+
     } else if (myProfile is ApiError) {
       setState(() {
         _apiIsLoading = false;
@@ -447,15 +456,15 @@ class _SettingsPageState extends State<SettingsPage> {
         _errorReason = myProfile.errorReason;
       });
       SharedPreferencesModel().setOwnId('');
-      _apiKeyProvider.setApiKey(newApiKey: '');
+      _userProvider.removeUser();
     }
   }
 
   void _restorePreferences() async {
-    if (_apiKeyProvider.apiKeyValid) {
+    if (_userProvider.myUser.userApiKeyValid) {
       setState(() {
-        _apiKeyInputController.text = _apiKeyProvider.apiKey;
-        _myCurrentKey = _apiKeyProvider.apiKey;
+        _apiKeyInputController.text = _userProvider.myUser.userApiKey;
+        _myCurrentKey = _userProvider.myUser.userApiKey;
       });
       _getApiDetails();
     }

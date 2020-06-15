@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -67,13 +67,13 @@ Future<void> main() async {
             create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
-        ChangeNotifierProvider<ApiKeyProvider>(
-            create: (context) => ApiKeyProvider()),
-        ChangeNotifierProxyProvider<ApiKeyProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(''),
-          update: (BuildContext context, ApiKeyProvider apiKeyProvider,
+        ChangeNotifierProvider<UserDetailsProvider>(
+            create: (context) => UserDetailsProvider()),
+        ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
+          create: (context) => FriendsProvider(UserDetails()),
+          update: (BuildContext context, UserDetailsProvider userProvider,
               FriendsProvider friendsProvider) =>
-              FriendsProvider(apiKeyProvider.apiKey),
+              FriendsProvider(userProvider.myUser),
         ),
       ],
       child: MyApp(),
