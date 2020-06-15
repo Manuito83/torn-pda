@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'notes_dialog.dart';
 
@@ -25,6 +26,7 @@ class _FriendCardState extends State<FriendCard> {
   FriendsProvider _friendsProvider;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  UserDetailsProvider _userProvider;
 
   Timer _ticker;
 
@@ -50,6 +52,7 @@ class _FriendCardState extends State<FriendCard> {
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
       actionPane: SlidableDrawerActionPane(),
       actionExtentRatio: 0.25,
@@ -90,6 +93,41 @@ class _FriendCardState extends State<FriendCard> {
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
                   children: <Widget>[
+                    SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: IconButton(
+                        padding: EdgeInsets.all(0.0),
+                        iconSize: 20,
+                        icon: Icon(
+                          Icons.remove_red_eye,
+                        ),
+                        onPressed: () async {
+                          var browserType = _settingsProvider.currentBrowser;
+                          switch (browserType) {
+                            case BrowserSetting.app:
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      TornWebViewGeneric(
+                                    profileId: '${_friend.playerId}',
+                                    profileName: _friend.name,
+                                    webViewType: WebViewType.profile,
+                                  ),
+                                ),
+                              );
+                              break;
+                            case BrowserSetting.external:
+                              var url = 'https://www.torn.com/profiles.php?'
+                                  'XID=${_friend.playerId}';
+                              if (await canLaunch(url)) {
+                                await launch(url, forceSafariVC: false);
+                              }
+                              break;
+                          }
+                        },
+                      ),
+                    ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
@@ -115,29 +153,19 @@ class _FriendCardState extends State<FriendCard> {
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
                           SizedBox(
-                              width: 120,
-                              child: Row(
-                                children: <Widget>[
-                                  Text(
-                                    ' [${_friend.playerId}]',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            width: 120,
+                            child: Row(
+                              children: <Widget>[
+                                Text(
+                                  ' [${_friend.playerId}]',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 5),
-                                    child: _factionIcon(),
-                                  ),
-                                ],
-                              )),
-                          Text(
-                            'Lvl ${_friend.level}',
+                                ),
+                              ],
+                            ),
                           ),
-                          SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: _refreshIcon(),
-                          ),
+
                         ],
                       ),
                     ),
@@ -148,10 +176,19 @@ class _FriendCardState extends State<FriendCard> {
               Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
                   children: <Widget>[
-                    _returnHealth(_friend),
+                    Text(
+                      'Lvl ${_friend.level}',
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(left: 15),
+                          child: _factionIcon(),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -167,7 +204,7 @@ class _FriendCardState extends State<FriendCard> {
                           height: 14,
                           decoration: BoxDecoration(
                             color:
-                            _returnStatusColor(_friend.lastAction.status),
+                                _returnStatusColor(_friend.lastAction.status),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -181,7 +218,7 @@ class _FriendCardState extends State<FriendCard> {
                           _friend.lastAction.relative == "0 minutes ago"
                               ? 'now'
                               : _friend.lastAction.relative
-                              .replaceAll(' ago', ''),
+                                  .replaceAll(' ago', ''),
                         ),
                       ],
                     ),
@@ -189,7 +226,13 @@ class _FriendCardState extends State<FriendCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
-                          Text('Updated $_lastUpdated'),
+                          Text('$_lastUpdated'),
+                          SizedBox(width: 8),
+                          SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: _refreshIcon(),
+                          ),
                         ],
                       ),
                     ),
@@ -267,6 +310,12 @@ class _FriendCardState extends State<FriendCard> {
 
   Widget _factionIcon() {
     if (_friend.hasFaction) {
+      Color iconColor;
+
+      print('${_userProvider.myUser.userFactionId}');
+
+
+
       return Padding(
         padding: const EdgeInsets.only(right: 4),
         child: SizedBox(
@@ -290,38 +339,6 @@ class _FriendCardState extends State<FriendCard> {
     } else {
       return Colors.transparent;
     }
-  }
-
-  Widget _returnHealth(FriendModel friend) {
-    Color lifeBarColor = Colors.green;
-    Widget hospitalWarning = SizedBox.shrink();
-    if (friend.status.state == "Hospital") {
-      lifeBarColor = Colors.red[300];
-      hospitalWarning = Icon(
-        Icons.local_hospital,
-        size: 20,
-        color: Colors.red,
-      );
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text(
-          'Life ',
-        ),
-        LinearPercentIndicator(
-          width: 100,
-          lineHeight: 16,
-          progressColor: lifeBarColor,
-          center: Text(
-            '${_friend.life.current}',
-            style: TextStyle(color: Colors.black),
-          ),
-          percent: (_friend.life.current / _friend.life.maximum),
-        ),
-        hospitalWarning,
-      ],
-    );
   }
 
   Color _returnStatusColor(String status) {

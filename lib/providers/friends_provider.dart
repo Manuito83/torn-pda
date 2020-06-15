@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/models/friends_sort.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -31,11 +31,13 @@ class FriendsProvider extends ChangeNotifier {
 
   FriendSort _currentSort;
 
-  ApiKeyProvider _apiKeyProvider;
+  UserDetailsProvider _apiKeyProvider;
 
-  String _userKey;
-  FriendsProvider(this._userKey) {
-    print('Initialising FriendsProvider with key: $_userKey'); // TODO: DELETE
+  UserDetails _userDetails;
+  FriendsProvider(this._userDetails) {
+    // TODO: DELETE
+    print('Initialising FriendsProvider with key: ${_userDetails.userApiKey}');
+
     restorePreferences();
   }
 
@@ -53,7 +55,8 @@ class FriendsProvider extends ChangeNotifier {
     }
 
     dynamic myNewFriendModel =
-        await TornApiCaller.friends(_userKey, friendId).getFriends;
+        await TornApiCaller.friends(_userDetails.userApiKey, friendId)
+            .getFriends;
 
     if (myNewFriendModel is FriendModel) {
       _getFriendFaction(myNewFriendModel);
@@ -91,8 +94,8 @@ class FriendsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedFriendModel =
-      await TornApiCaller.friends(_userKey, oldFriend.playerId.toString())
+      dynamic myUpdatedFriendModel = await TornApiCaller.friends(
+              _userDetails.userApiKey, oldFriend.playerId.toString())
           .getFriends;
       if (myUpdatedFriendModel is FriendModel) {
         _getFriendFaction(myUpdatedFriendModel);
