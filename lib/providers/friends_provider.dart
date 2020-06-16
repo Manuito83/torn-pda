@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/models/friends_sort.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -33,11 +34,8 @@ class FriendsProvider extends ChangeNotifier {
 
   UserDetailsProvider _apiKeyProvider;
 
-  UserDetails _userDetails;
+  OwnProfileModel _userDetails;
   FriendsProvider(this._userDetails) {
-    // TODO: DELETE
-    print('Initialising FriendsProvider with key: ${_userDetails.userApiKey}');
-
     restorePreferences();
   }
 

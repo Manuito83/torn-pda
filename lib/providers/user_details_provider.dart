@@ -1,43 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-// TODO: with this can remove the call to SharedPreferences in chains and travel
-
-class UserDetails {
-  String userApiKey = '';
-  bool userApiKeyValid = false;
-
-  String userId = '';
-  String userName = '';
-  String userFactionId = '';
-}
-
 class UserDetailsProvider extends ChangeNotifier {
-  var myUser = UserDetails();
+  var myUser = OwnProfileModel();
 
-  void setUserDetails({@required UserDetails userDetails}) {
+  void setUserDetails({@required OwnProfileModel userDetails}) {
     myUser = userDetails;
-
-    // TODO: save whole object
-    SharedPreferencesModel().setApiKey(myUser.userApiKey);
-
+    SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
     notifyListeners();
   }
 
   void removeUser() {
-    myUser = UserDetails();
-
-    // TODO: save whole object
-    SharedPreferencesModel().setApiKey('');
-
+    myUser = OwnProfileModel();
+    SharedPreferencesModel().setOwnDetails('');
     notifyListeners();
   }
 
   Future<void> loadPreferences() async {
-    myUser.userApiKey = await SharedPreferencesModel().getApiKey();
-    myUser.userApiKey == ''
-        ? myUser.userApiKeyValid = false
-        : myUser.userApiKeyValid = true;
+    var savedUser = await SharedPreferencesModel().getOwnDetails();
+    if (savedUser != '') {
+      myUser = ownProfileModelFromJson(savedUser);
+      myUser.userApiKey == ''
+          ? myUser.userApiKeyValid = false
+          : myUser.userApiKeyValid = true;
+    }
     notifyListeners();
+
+    // TODO: put here a async call without awaiting
+
   }
 }

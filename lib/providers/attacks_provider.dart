@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -31,6 +32,9 @@ class AttacksProvider extends ChangeNotifier {
 
   String _userKey = '';
   String _ownId = '';
+
+  OwnProfileModel _userDetails;
+  AttacksProvider(this._userDetails);
 
   void initializeAttacks() async {
     await restoreSharedPreferences();
@@ -203,8 +207,8 @@ class AttacksProvider extends ChangeNotifier {
 
   Future<void> restoreSharedPreferences() async {
     // User key
-    _userKey = await SharedPreferencesModel().getApiKey();
-    _ownId = await SharedPreferencesModel().getOwnId();
+    _userKey = _userDetails.userApiKey;
+    _ownId = _userDetails.playerId.toString();
 
     // Attack sort
     String attackSort = await SharedPreferencesModel().getAttackSort();

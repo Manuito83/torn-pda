@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
@@ -55,7 +56,7 @@ class _TravelPageState extends State<TravelPage> {
     super.initState();
     _requestIOSPermissions();
 
-    _finishedLoadingPreferences = _restoreSharedPreferences();
+    _finishedLoadingPreferences = _restorePreferences();
 
     _retrievePendingNotifications();
 
@@ -961,10 +962,10 @@ class _TravelPageState extends State<TravelPage> {
     intent.launch();
   }
 
-  Future _restoreSharedPreferences() async {
-    String key = await SharedPreferencesModel().getApiKey();
-    if (key != '') {
-      _myCurrentKey = key;
+  Future _restorePreferences() async {
+    var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    _myCurrentKey = userDetails.myUser.userApiKey;
+    if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
     _notificationTitle =

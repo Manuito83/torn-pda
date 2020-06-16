@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -43,9 +44,9 @@ Future<void> main() async {
   var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
 
   var initializationSettingsIOS = IOSInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
   );
 
   var initializationSettings = InitializationSettings(
@@ -59,20 +60,29 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<TargetsProvider>(
-            create: (context) => TargetsProvider()),
-        ChangeNotifierProvider<AttacksProvider>(
-            create: (context) => AttacksProvider()),
+        // UserDetailsProvider has to go first to initialize the others!
+        ChangeNotifierProvider<UserDetailsProvider>(
+            create: (context) => UserDetailsProvider()),
+        ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
+          create: (context) => TargetsProvider(OwnProfileModel()),
+          update: (BuildContext context, UserDetailsProvider userProvider,
+                  TargetsProvider targetsProvider) =>
+              TargetsProvider(userProvider.myUser),
+        ),
+        ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
+          create: (context) => AttacksProvider(OwnProfileModel()),
+          update: (BuildContext context, UserDetailsProvider userProvider,
+                  AttacksProvider attacksProvider) =>
+              AttacksProvider(userProvider.myUser),
+        ),
         ChangeNotifierProvider<ThemeProvider>(
             create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
-        ChangeNotifierProvider<UserDetailsProvider>(
-            create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(UserDetails()),
+          create: (context) => FriendsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-              FriendsProvider friendsProvider) =>
+                  FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
       ],

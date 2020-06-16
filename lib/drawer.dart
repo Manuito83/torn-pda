@@ -34,7 +34,7 @@ class _DrawerPageState extends State<DrawerPage> {
   ];
 
   ThemeProvider _themeProvider;
-  UserDetailsProvider _userDetails;
+  UserDetailsProvider _userProvider;
 
   Future _finishedWithPreferences;
 
@@ -85,7 +85,7 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _userDetails = Provider.of<UserDetailsProvider>(context, listen: true);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -184,7 +184,7 @@ class _DrawerPageState extends State<DrawerPage> {
     var drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings page (just don't
     // add the other sections to the list
-    if (!_userDetails.myUser.userApiKeyValid) {
+    if (!_userProvider.myUser.userApiKeyValid) {
       drawerOptions.add(
         ListTileTheme(
           selectedColor: Colors.red,
@@ -295,11 +295,11 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Future<void> _getKeyStatus() async {
     // Set up provider
-    _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
-    await _userDetails.loadPreferences();
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    await _userProvider.loadPreferences();
 
     // If key is empty, redirect to the Settings page. Else, open the default
-    if (!_userDetails.myUser.userApiKeyValid) {
+    if (!_userProvider.myUser.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {

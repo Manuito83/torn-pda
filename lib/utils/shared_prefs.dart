@@ -6,8 +6,7 @@ class SharedPreferencesModel {
   /// Instantiation of the SharedPreferences library
   ///
   final String _kAppVersion = "pda_appVersion";
-  final String _kApiKey = "pda_apiKey";
-  final String _kOwnId = "pda_ownId";
+  final String _kOwnDetails = "pda_ownDetails";
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kAttacksSort = "pda_attacksSort";
@@ -22,6 +21,11 @@ class SharedPreferencesModel {
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
+
+  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
+  /// UserDetailsProvider for retrieving the API key and other details!
+  @deprecated
+  final String _kApiKey = "pda_apiKey";
 
   /// ----------------------------
   /// Methods for app version
@@ -39,25 +43,22 @@ class SharedPreferencesModel {
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------
+  Future<String> getOwnDetails() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kOwnDetails) ?? "";
+  }
+
+  Future<bool> setOwnDetails(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kOwnDetails, value);
+  }
+
+  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
+  /// UserDetailsProvider for retrieving the API key and other details!
+  @deprecated
   Future<String> getApiKey() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kApiKey) ?? "";
-  }
-
-  Future<bool> setApiKey(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kApiKey, value);
-  }
-
-  //*****************
-  Future<String> getOwnId() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kOwnId) ?? "";
-  }
-
-  Future<bool> setOwnId(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kOwnId, value);
   }
 
   /// ----------------------------

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
@@ -12,7 +14,6 @@ class ChainingPage extends StatefulWidget {
 
 class _ChainingPageState extends State<ChainingPage> {
   String _myCurrentKey = '';
-  Future _finishedLoadingPreferences;
 
   ThemeProvider _themeProvider;
 
@@ -23,7 +24,7 @@ class _ChainingPageState extends State<ChainingPage> {
   @override
   void initState() {
     super.initState();
-    _finishedLoadingPreferences = _restoreSharedPreferences();
+    _restorePreferences();
     _bottomNavPageController = PageController(
       initialPage: 0,
     );
@@ -33,73 +34,19 @@ class _ChainingPageState extends State<ChainingPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      body: FutureBuilder(
-          future: _finishedLoadingPreferences,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (_myCurrentKey != '') {
-                return Scaffold(
-                  body: PageView(
-                    physics: NeverScrollableScrollPhysics(),
-                    controller: _bottomNavPageController,
-                    children: <Widget>[
-                      TargetsPage(
-                        userKey: _myCurrentKey,
-                      ),
-                      AttacksPage(
-                        userKey: _myCurrentKey,
-                      ),
-                    ],
-                  ),
-                  bottomNavigationBar: _bottomNavBar(),
-                );
-              } else {
-                return Scaffold(
-                  drawer: new Drawer(),
-                  appBar: AppBar(
-                    title: Text('Chaining'),
-                    leading: new IconButton(
-                      icon: new Icon(Icons.menu),
-                      onPressed: () {
-                        final ScaffoldState scaffoldState =
-                        context.findRootAncestorStateOfType();
-                        scaffoldState.openDrawer();
-                      },
-                    ),
-                  ),
-                  body: Center(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          Text(
-                            'Torn API Key not found!',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 40, vertical: 30),
-                            child: Text(
-                              'Please go to the Settings section and configure your '
-                              'Torn API Key properly.',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }
-            } else {
-              return Padding(
-                padding: EdgeInsets.all(10),
-                child: CircularProgressIndicator(),
-              );
-            }
-          }),
+      body: PageView(
+        physics: NeverScrollableScrollPhysics(),
+        controller: _bottomNavPageController,
+        children: <Widget>[
+          TargetsPage(
+            userKey: _myCurrentKey,
+          ),
+          AttacksPage(
+            userKey: _myCurrentKey,
+          ),
+        ],
+      ),
+      bottomNavigationBar: _bottomNavBar(),
     );
   }
 
@@ -145,7 +92,8 @@ class _ChainingPageState extends State<ChainingPage> {
                   ? _themeProvider.navSelected
                   : Colors.transparent,
               child: IconButton(
-                icon: Icon(Icons.person,
+                icon: Icon(
+                  Icons.person,
                   color: _themeProvider.mainText,
                 ),
                 onPressed: () {
@@ -172,10 +120,8 @@ class _ChainingPageState extends State<ChainingPage> {
     });
   }
 
-  Future _restoreSharedPreferences() async {
-    String key = await SharedPreferencesModel().getApiKey();
-    if (key != '') {
-      _myCurrentKey = key;
-    }
+  void _restorePreferences() {
+    var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    _myCurrentKey = userDetails.myUser.userApiKey;
   }
 }

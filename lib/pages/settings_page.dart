@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -24,7 +25,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _apiError = false;
   String _errorReason = '';
   bool _apiIsLoading = false;
-  ProfileModel _userProfile;
+  OwnProfileModel _userProfile;
 
   String _openSectionValue;
   String _openBrowserValue;
@@ -217,7 +218,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                 _formKey.currentState.reset();
                                 _apiKeyInputController.clear();
                                 _myCurrentKey = '';
-                                SharedPreferencesModel().setOwnId('');
                                 _userProvider.removeUser();
                                 setState(() {
                                   _userToLoad = false;
@@ -305,7 +305,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             Text("Gender: ${_userProfile.gender}"),
             Text("Level: ${_userProfile.level}"),
-            Text("Life: ${_userProfile.life}"),
+            Text("Life: ${_userProfile.life.current}"),
             Text("Status: ${_userProfile.status}"),
             Text("Last action: ${_userProfile.lastAction}"),
             Text("Rank: ${_userProfile.rank}"),
@@ -429,24 +429,19 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
     }
-    dynamic myProfile = await TornApiCaller.profile(_myCurrentKey).getProfile;
-    if (myProfile is ProfileModel) {
+    dynamic myProfile = await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
+    if (myProfile is OwnProfileModel) {
       setState(() {
         _apiIsLoading = false;
         _userToLoad = true;
         _apiError = false;
         _userProfile = myProfile;
       });
-      SharedPreferencesModel().setOwnId(myProfile.playerId.toString());
 
-      var newDetails = UserDetails();
-      newDetails
+      myProfile
         ..userApiKey = _myCurrentKey
-        ..userApiKeyValid = true
-        ..userId = myProfile.playerId.toString()
-        ..userName = myProfile.name
-        ..userFactionId = myProfile.factionId.toString();
-      _userProvider.setUserDetails(userDetails: newDetails);
+        ..userApiKeyValid = true;
+      _userProvider.setUserDetails(userDetails: myProfile);
 
     } else if (myProfile is ApiError) {
       setState(() {
@@ -455,7 +450,6 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiError = true;
         _errorReason = myProfile.errorReason;
       });
-      SharedPreferencesModel().setOwnId('');
       _userProvider.removeUser();
     }
   }

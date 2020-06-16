@@ -165,7 +165,6 @@ class _FriendCardState extends State<FriendCard> {
                               ],
                             ),
                           ),
-
                         ],
                       ),
                     ),
@@ -312,9 +311,7 @@ class _FriendCardState extends State<FriendCard> {
     if (_friend.hasFaction) {
       Color iconColor;
 
-      print('${_userProvider.myUser.userFactionId}');
-
-
+      //print('${_userProvider.myUser.faction.factionId}');
 
       return Padding(
         padding: const EdgeInsets.only(right: 4),
