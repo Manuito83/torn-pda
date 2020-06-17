@@ -46,23 +46,28 @@ class UserDetailsProvider extends ChangeNotifier {
             : myUser.userApiKeyValid = true;
       }
     }
-    // In v1.3.0 we deprecate getApiKey and setApiKey, but to avoid a logout
-    // we check if there is still a save key. If there is, we call with it
-    // and erase it. Otherwise we do nothing else.
+
     else {
-      var oldKeySave = await SharedPreferencesModel().getApiKey();
-      if (oldKeySave != '') {
-        var apiVerify =
-            await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
-        if (apiVerify is OwnProfileModel) {
-          myUser = apiVerify;
-          SharedPreferencesModel().setApiKey('');
-        }
-      }
+      // In v1.3.0 we deprecate getApiKey and setApiKey, but to avoid a logout
+      // we check if there is still a save key. If there is, we call with it
+      // and erase it. Otherwise we do nothing else.
+      await _tryWithDeprecatedSave();
     }
 
     notifyListeners();
+  }
 
-    // TODO: put here a async call without awaiting
+  Future _tryWithDeprecatedSave() async {
+    var oldKeySave = await SharedPreferencesModel().getApiKey();
+    if (oldKeySave != '') {
+      var apiVerify =
+          await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
+      if (apiVerify is OwnProfileModel) {
+        apiVerify.userApiKey = myUser.userApiKey;
+        apiVerify.userApiKeyValid = true;
+        myUser = apiVerify;
+        SharedPreferencesModel().setApiKey('');
+      }
+    }
   }
 }
