@@ -22,34 +22,31 @@ class UserDetailsProvider extends ChangeNotifier {
     // Initialize [myUser]. We will configure it in the next few lines.
     myUser = OwnProfileModel();
 
-    // Check if we have a saved user in SharedPreferences
     var savedUser = await SharedPreferencesModel().getOwnDetails();
+    // Check if we have an user at all (json is not empty)
     if (savedUser != '') {
       myUser = ownProfileModelFromJson(savedUser);
-      // Saved user must have a valid API Key
+      // Check if we have a valid API Key
       if (myUser.userApiKeyValid) {
+        // Call the API again to get the latest details (e.g. in case the
+        // user has changed name or faction. Then save is as current user.
         var apiVerify =
             await TornApiCaller.ownProfile(myUser.userApiKey).getOwnProfile;
         if (apiVerify is OwnProfileModel) {
           apiVerify.userApiKey = myUser.userApiKey;
           apiVerify.userApiKeyValid = true;
           myUser = apiVerify;
+          SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
 
+          // We delete this deprecated ApiKey from version 1.2.0 since we won't
+          // need to use it in the future again
           SharedPreferencesModel().setApiKey('');
         }
       }
-      // If the user is not valid, we just update two values in [myUser] to
-      // indicate that no API key has been inserted
-      else {
-        myUser.userApiKey == ''
-            ? myUser.userApiKeyValid = false
-            : myUser.userApiKeyValid = true;
-      }
-    }
-
-    else {
+    } else {
       // In v1.3.0 we deprecate getApiKey and setApiKey, but to avoid a logout
-      // we check if there is still a save key. If there is, we call with it
+      // when transitioning to a newer version, we check if
+      // there is still a key saved. If there is, we call with it
       // and erase it. Otherwise we do nothing else.
       await _tryWithDeprecatedSave();
     }
@@ -63,9 +60,10 @@ class UserDetailsProvider extends ChangeNotifier {
       var apiVerify =
           await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
       if (apiVerify is OwnProfileModel) {
-        apiVerify.userApiKey = myUser.userApiKey;
+        apiVerify.userApiKey = oldKeySave;
         apiVerify.userApiKeyValid = true;
         myUser = apiVerify;
+        SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
         SharedPreferencesModel().setApiKey('');
       }
     }
