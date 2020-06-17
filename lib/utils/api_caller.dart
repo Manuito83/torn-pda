@@ -10,7 +10,7 @@ import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/travel_model.dart';
-import 'package:torn_pda/models/profile_model.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 
 enum ApiType {
   user,
@@ -20,7 +20,7 @@ enum ApiType {
 
 enum ApiSelection {
   travel,
-  profile, // TODO: we can get rid of this with ApiKeyProvider
+  userDetails,
   ownProfile,
   target,
   attacks,
@@ -85,7 +85,7 @@ class TornApiCaller {
   String queryId;
 
   TornApiCaller.travel(this.apiKey);
-  TornApiCaller.profile(this.apiKey);
+  TornApiCaller.userDetails(this.apiKey);
   TornApiCaller.ownProfile(this.apiKey);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
@@ -107,14 +107,14 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getProfile async {
+  Future<dynamic> get getUserDetails async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.profile)
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.userDetails)
         .then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
-      return ProfileModel.fromJson(json.decode(apiResult.body));
+      return UserDetailsModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -260,7 +260,7 @@ class TornApiCaller {
       case ApiSelection.travel:
         url += '?selections=travel';
         break;
-      case ApiSelection.profile:
+      case ApiSelection.userDetails:
         url += '?selections=profile';
         break;
       case ApiSelection.ownProfile:

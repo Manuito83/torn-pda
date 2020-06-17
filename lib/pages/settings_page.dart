@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/models/profile_model.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -25,7 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _apiError = false;
   String _errorReason = '';
   bool _apiIsLoading = false;
-  OwnProfileModel _userProfile;
+  UserDetailsModel _userProfile;
 
   String _openSectionValue;
   String _openBrowserValue;
@@ -429,8 +428,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
     }
-    dynamic myProfile = await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
-    if (myProfile is OwnProfileModel) {
+    dynamic myProfile = await TornApiCaller.userDetails(_myCurrentKey).getUserDetails;
+    if (myProfile is UserDetailsModel) {
       setState(() {
         _apiIsLoading = false;
         _userToLoad = true;

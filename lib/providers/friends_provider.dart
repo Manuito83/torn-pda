@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/models/friends_sort.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -32,9 +32,9 @@ class FriendsProvider extends ChangeNotifier {
 
   FriendSort _currentSort;
 
-  UserDetailsProvider _apiKeyProvider;
+  UserDetailsProvider _userDetailsProvider;
 
-  OwnProfileModel _userDetails;
+  UserDetailsModel _userDetails;
   FriendsProvider(this._userDetails) {
     restorePreferences();
   }

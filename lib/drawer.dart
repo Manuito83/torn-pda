@@ -20,8 +20,6 @@ class DrawerPage extends StatefulWidget {
   _DrawerPageState createState() => _DrawerPageState();
 }
 
-// TODO: we need to refresh the UserDetailsProvider upon first connection
-
 class _DrawerPageState extends State<DrawerPage> {
   int _settingsPosition = 4;
 

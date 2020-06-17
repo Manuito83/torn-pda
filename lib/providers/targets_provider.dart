@@ -4,7 +4,7 @@ import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -46,7 +46,7 @@ class TargetsProvider extends ChangeNotifier {
 
   String _userKey = '';
 
-  OwnProfileModel _userDetails;
+  UserDetailsModel _userDetails;
   TargetsProvider(this._userDetails) {
     restorePreferences();
   }

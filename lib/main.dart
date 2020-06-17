@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -64,13 +65,13 @@ Future<void> main() async {
         ChangeNotifierProvider<UserDetailsProvider>(
             create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
-          create: (context) => TargetsProvider(OwnProfileModel()),
+          create: (context) => TargetsProvider(UserDetailsModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   TargetsProvider targetsProvider) =>
               TargetsProvider(userProvider.myUser),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
-          create: (context) => AttacksProvider(OwnProfileModel()),
+          create: (context) => AttacksProvider(UserDetailsModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.myUser),
@@ -80,7 +81,7 @@ Future<void> main() async {
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(OwnProfileModel()),
+          create: (context) => FriendsProvider(UserDetailsModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
