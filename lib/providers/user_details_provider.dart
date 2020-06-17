@@ -28,9 +28,14 @@ class UserDetailsProvider extends ChangeNotifier {
       myUser = ownProfileModelFromJson(savedUser);
       // Saved user must have a valid API Key
       if (myUser.userApiKeyValid) {
-        var apiVerify = await TornApiCaller.ownProfile(myUser.userApiKey).getOwnProfile;
+        var apiVerify =
+            await TornApiCaller.ownProfile(myUser.userApiKey).getOwnProfile;
         if (apiVerify is OwnProfileModel) {
+          apiVerify.userApiKey = myUser.userApiKey;
+          apiVerify.userApiKeyValid = true;
           myUser = apiVerify;
+
+          SharedPreferencesModel().setApiKey('');
         }
       }
       // If the user is not valid, we just update two values in [myUser] to
@@ -46,8 +51,9 @@ class UserDetailsProvider extends ChangeNotifier {
     // and erase it. Otherwise we do nothing else.
     else {
       var oldKeySave = await SharedPreferencesModel().getApiKey();
-      if (oldKeySave !='') {
-        var apiVerify = await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
+      if (oldKeySave != '') {
+        var apiVerify =
+            await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
         if (apiVerify is OwnProfileModel) {
           myUser = apiVerify;
           SharedPreferencesModel().setApiKey('');
@@ -55,11 +61,8 @@ class UserDetailsProvider extends ChangeNotifier {
       }
     }
 
-
-
     notifyListeners();
 
     // TODO: put here a async call without awaiting
-
   }
 }
