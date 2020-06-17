@@ -61,6 +61,14 @@ class SharedPreferencesModel {
     return prefs.getString(_kApiKey) ?? "";
   }
 
+  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
+  /// UserDetailsProvider for retrieving the API key and other details!
+  @deprecated
+  Future<bool> setApiKey(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kApiKey, value);
+  }
+
   /// ----------------------------
   /// Methods for targets
   /// ----------------------------
