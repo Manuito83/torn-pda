@@ -53,6 +53,7 @@ class FriendModel {
     this.basicicons,
     this.states,
     this.lastAction,
+    this.discord,
   });
 
   String rank;
@@ -79,6 +80,7 @@ class FriendModel {
   Basicicons basicicons;
   States states;
   LastAction lastAction;
+  Discord discord;
 
   factory FriendModel.fromJson(Map<String, dynamic> json) => FriendModel(
     personalNote: json["personalNote"] == null ? '' : json["personalNote"],
@@ -110,6 +112,7 @@ class FriendModel {
     basicicons: json["basicicons"] == null ? null : Basicicons.fromJson(json["basicicons"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
+    discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -142,6 +145,7 @@ class FriendModel {
     "basicicons": basicicons == null ? null : basicicons.toJson(),
     "states": states == null ? null : states.toJson(),
     "last_action": lastAction == null ? null : lastAction.toJson(),
+    "discord": discord == null ? null : discord.toJson(),
   };
 }
 
@@ -166,6 +170,26 @@ class Basicicons {
     "icon6": icon6 == null ? null : icon6,
     "icon3": icon3 == null ? null : icon3,
     "icon15": icon15 == null ? null : icon15,
+  };
+}
+
+class Discord {
+  Discord({
+    this.userId,
+    this.discordId,
+  });
+
+  int userId;
+  String discordId;
+
+  factory Discord.fromJson(Map<String, dynamic> json) => Discord(
+    userId: json["userID"] == null ? null : json["userID"],
+    discordId: json["discordID"] == null ? null : json["discordID"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "userID": userId == null ? null : userId,
+    "discordID": discordId == null ? null : discordId,
   };
 }
 

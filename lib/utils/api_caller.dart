@@ -285,7 +285,7 @@ class TornApiCaller {
         url += '?selections=items';
         break;
       case ApiSelection.friends:
-        url += '$prefix?selections=';
+        url += '$prefix?selections=profile,discord';
         break;
     }
     url += '&key=$apiKey';

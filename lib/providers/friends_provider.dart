@@ -1,9 +1,9 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/friend_model.dart';
-import 'package:torn_pda/models/friends_sort.dart';
+import 'package:torn_pda/models/friends/friends_sort.dart';
 import 'package:torn_pda/models/user_details_model.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -20,6 +20,17 @@ class AddFriendResult {
       this.friendName});
 }
 
+class UpdateFriendResult {
+  bool success;
+  int numberErrors;
+  int numberSuccessful;
+
+  UpdateFriendResult(
+      {@required this.success,
+      @required this.numberErrors,
+      @required this.numberSuccessful});
+}
+
 class FriendsProvider extends ChangeNotifier {
   List<FriendModel> _friends = [];
   UnmodifiableListView<FriendModel> get allFriends =>
@@ -30,9 +41,7 @@ class FriendsProvider extends ChangeNotifier {
   String _currentFilter = '';
   String get currentFilter => _currentFilter;
 
-  FriendSort _currentSort;
-
-  UserDetailsProvider _userDetailsProvider;
+  FriendSortType _currentSort;
 
   UserDetailsModel _userDetails;
   FriendsProvider(this._userDetails) {
@@ -87,6 +96,12 @@ class FriendsProvider extends ChangeNotifier {
     _saveFriendsSharedPrefs();
   }
 
+  void restoredDeleted() {
+    _friends = List<FriendModel>.from(_oldFriendsList);
+    _oldFriendsList.clear();
+    notifyListeners();
+  }
+
   Future<bool> updateFriend(FriendModel oldFriend) async {
     oldFriend.isUpdating = true;
     notifyListeners();
@@ -118,6 +133,57 @@ class FriendsProvider extends ChangeNotifier {
     }
   }
 
+  Future<UpdateFriendResult> updateAllFriends() async {
+    bool wasSuccessful = true;
+    int numberOfErrors = 0;
+    int numberSuccessful = 0;
+    // Activate every single update icon
+    for (var fri in _friends) {
+      fri.isUpdating = true;
+    }
+    notifyListeners();
+    // Then start the real update
+    for (var i = 0; i < _friends.length; i++) {
+      try {
+        dynamic myUpdatedFriendModel = await TornApiCaller.friends(
+                _userDetails.userApiKey, _friends[i].playerId.toString())
+            .getFriends;
+        if (myUpdatedFriendModel is FriendModel) {
+          _getFriendFaction(myUpdatedFriendModel);
+          var notes = _friends[i].personalNote;
+          var notesColor = _friends[i].personalNoteColor;
+          _friends[i] = myUpdatedFriendModel;
+          _updateResultAnimation(_friends[i], true);
+          _friends[i].personalNote = notes;
+          _friends[i].personalNoteColor = notesColor;
+          _friends[i].lastUpdated = DateTime.now();
+          _saveFriendsSharedPrefs();
+          numberSuccessful++;
+        } else {
+          // myUpdatedFriendModel is ApiError
+          _updateResultAnimation(_friends[i], false);
+          _friends[i].isUpdating = false;
+          numberOfErrors++;
+          wasSuccessful = false;
+        }
+        // Wait for the API limit (100 calls/minute)
+        if (_friends.length > 90) {
+          await Future.delayed(const Duration(seconds: 1), () {});
+        }
+      } catch (e) {
+        _updateResultAnimation(_friends[i], false);
+        _friends[i].isUpdating = false;
+        numberOfErrors++;
+        wasSuccessful = false;
+      }
+    }
+    return UpdateFriendResult(
+      success: wasSuccessful,
+      numberErrors: numberOfErrors,
+      numberSuccessful: numberSuccessful,
+    );
+  }
+
   void _getFriendFaction(FriendModel myNewFriendModel) {
     if (myNewFriendModel.faction.factionId != 0) {
       myNewFriendModel.hasFaction = true;
@@ -131,6 +197,22 @@ class FriendsProvider extends ChangeNotifier {
     friend.personalNoteColor = color;
     _saveFriendsSharedPrefs();
     notifyListeners();
+  }
+
+  int getFriendNumber() {
+    return _friends.length;
+  }
+
+  String exportFriends() {
+    var output = List<FriendBackup>();
+    for (var fri in _friends) {
+      var export = FriendBackup();
+      export.id = fri.playerId;
+      export.notes = fri.personalNote;
+      export.notesColor = fri.personalNoteColor;
+      output.add(export);
+    }
+    return friendsBackupModelToJson(FriendsBackupModel(friendBackup: output));
   }
 
   void _saveFriendsSharedPrefs() {
@@ -157,67 +239,105 @@ class FriendsProvider extends ChangeNotifier {
     }
   }
 
-  void _saveSortSharedPrefs() {
-    /*
-    String sortToSave;
-    switch (_currentSort) {
-      case TargetSort.levelDes:
-        sortToSave = 'levelDes';
+  /// CAREFUL!
+  void wipeAllFriends() {
+    _friends.clear();
+  }
+
+  void setFilterText(String newFilter) {
+    _currentFilter = newFilter;
+    notifyListeners();
+  }
+
+  void sortTargets(FriendSortType sortType) {
+    _currentSort = sortType;
+    switch (sortType) {
+      case FriendSortType.levelDes:
+        _friends.sort((a, b) => b.level.compareTo(a.level));
         break;
-      case TargetSort.levelAsc:
-        sortToSave = 'levelAsc';
+      case FriendSortType.levelAsc:
+        _friends.sort((a, b) => a.level.compareTo(b.level));
         break;
-      case TargetSort.respectDes:
-        sortToSave = 'respectDes';
+      case FriendSortType.factionDes:
+        _friends.sort(
+            (a, b) => b.faction.factionName.compareTo(a.faction.factionName));
         break;
-      case TargetSort.respectAsc:
-        sortToSave = 'respectDes';
+      case FriendSortType.factionAsc:
+        _friends.sort(
+            (a, b) => a.faction.factionName.compareTo(b.faction.factionName));
         break;
-      case TargetSort.nameDes:
-        sortToSave = 'nameDes';
+      case FriendSortType.nameDes:
+        _friends.sort(
+            (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
-      case TargetSort.nameAsc:
-        sortToSave = 'nameDes';
+      case FriendSortType.nameAsc:
+        _friends.sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
     }
-    SharedPreferencesModel().setTargetSort(sortToSave);
-    */
+    _saveSortSharedPrefs();
+    _saveFriendsSharedPrefs();
+    notifyListeners();
+  }
+
+  void _saveSortSharedPrefs() {
+    String sortToSave;
+    switch (_currentSort) {
+      case FriendSortType.levelDes:
+        sortToSave = 'levelDes';
+        break;
+      case FriendSortType.levelAsc:
+        sortToSave = 'levelAsc';
+        break;
+      case FriendSortType.nameDes:
+        sortToSave = 'nameDes';
+        break;
+      case FriendSortType.nameAsc:
+        sortToSave = 'nameDes';
+        break;
+      case FriendSortType.factionDes:
+        sortToSave = 'factionDes';
+        break;
+      case FriendSortType.factionAsc:
+        sortToSave = 'factionAsc';
+        break;
+    }
+    SharedPreferencesModel().setFriendsSort(sortToSave);
   }
 
   Future<void> restorePreferences() async {
-    // Target list
+    // Friends list
     List<String> jsonFriends = await SharedPreferencesModel().getFriendsList();
     for (var jFri in jsonFriends) {
       _friends.add(friendModelFromJson(jFri));
     }
 
-    /*
-    // Target sort
-    String targetSort = await SharedPreferencesModel().getTargetSort();
-    switch (targetSort) {
+    // Friends sort
+    String friendsSort = await SharedPreferencesModel().getFriendsSort();
+    switch (friendsSort) {
       case '':
-        _currentSort = TargetSort.levelDes;
+        _currentSort = FriendSortType.levelDes;
         break;
       case 'levelDes':
-        _currentSort = TargetSort.levelDes;
+        _currentSort = FriendSortType.levelDes;
         break;
       case 'levelAsc':
-        _currentSort = TargetSort.levelAsc;
+        _currentSort = FriendSortType.levelAsc;
         break;
       case 'respectDes':
-        _currentSort = TargetSort.respectDes;
+        _currentSort = FriendSortType.factionDes;
         break;
       case 'respectAsc':
-        _currentSort = TargetSort.respectAsc;
+        _currentSort = FriendSortType.factionAsc;
         break;
       case 'nameDes':
-        _currentSort = TargetSort.nameDes;
+        _currentSort = FriendSortType.nameDes;
         break;
       case 'nameAsc':
-        _currentSort = TargetSort.nameAsc;
+        _currentSort = FriendSortType.nameAsc;
         break;
     }
-    */
+
     // Notification
     notifyListeners();
   }

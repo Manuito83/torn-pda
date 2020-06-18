@@ -11,6 +11,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'notes_dialog.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class FriendCard extends StatefulWidget {
   final FriendModel friendModel;
@@ -71,7 +72,7 @@ class _FriendCardState extends State<FriendCard> {
                     label: 'UNDO',
                     textColor: Colors.orange,
                     onPressed: () {
-                      //_friendsProvider.restoredDeleted();
+                      _friendsProvider.restoredDeleted();
                     },
                   ),
                 ),
@@ -82,7 +83,7 @@ class _FriendCardState extends State<FriendCard> {
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
         child: Card(
           shape: RoundedRectangleBorder(
-              side: BorderSide(color: _borderColor(), width: 1.5),
+              side: BorderSide(color: _cardBorderColor(), width: 1.5),
               borderRadius: BorderRadius.circular(4.0)),
           elevation: 2,
           child: Column(
@@ -93,45 +94,10 @@ class _FriendCardState extends State<FriendCard> {
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
                   children: <Widget>[
-                    SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: IconButton(
-                        padding: EdgeInsets.all(0.0),
-                        iconSize: 20,
-                        icon: Icon(
-                          Icons.remove_red_eye,
-                        ),
-                        onPressed: () async {
-                          var browserType = _settingsProvider.currentBrowser;
-                          switch (browserType) {
-                            case BrowserSetting.app:
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      TornWebViewGeneric(
-                                    profileId: '${_friend.playerId}',
-                                    profileName: _friend.name,
-                                    webViewType: WebViewType.profile,
-                                  ),
-                                ),
-                              );
-                              break;
-                            case BrowserSetting.external:
-                              var url = 'https://www.torn.com/profiles.php?'
-                                  'XID=${_friend.playerId}';
-                              if (await canLaunch(url)) {
-                                await launch(url, forceSafariVC: false);
-                              }
-                              break;
-                          }
-                        },
-                      ),
-                    ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        _attackIcon(),
+                        _visitProfileIcon(),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
@@ -165,6 +131,13 @@ class _FriendCardState extends State<FriendCard> {
                               ],
                             ),
                           ),
+                          Row(
+                            children: <Widget>[
+                              _tradeIcon(),
+                              SizedBox(width: 8),
+                              _messageIcon(),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -176,15 +149,28 @@ class _FriendCardState extends State<FriendCard> {
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
                   mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Text(
-                      'Lvl ${_friend.level}',
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          'Lvl ${_friend.level}',
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 15),
+                          child: _factionIcon(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: _companyIcon(),
+                        ),
+                      ],
                     ),
                     Row(
                       children: <Widget>[
                         Padding(
                           padding: const EdgeInsets.only(left: 15),
-                          child: _factionIcon(),
+                          child: _status(),
                         ),
                       ],
                     ),
@@ -284,9 +270,117 @@ class _FriendCardState extends State<FriendCard> {
     );
   }
 
-  Widget _attackIcon() {
-    return SizedBox.shrink();
-    // TODO: return same as in attacks to see profile
+  Widget _tradeIcon() {
+    var messageUrl = 'https://www.torn.com/trade.php#step=start&user'
+        'ID=${_friend.playerId}';
+    return SizedBox(
+      height: 20,
+      width: 20,
+      child: IconButton(
+        padding: EdgeInsets.all(0.0),
+        iconSize: 18,
+        icon: Icon(
+          Icons.swap_horiz,
+        ),
+        onPressed: () async {
+          var browserType = _settingsProvider.currentBrowser;
+          switch (browserType) {
+            case BrowserSetting.app:
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => TornWebViewGeneric(
+                    webViewType: WebViewType.custom,
+                    customUrl: messageUrl,
+                    genericTitle: 'Trade',
+                  ),
+                ),
+              );
+              break;
+            case BrowserSetting.external:
+              var url = messageUrl;
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+              break;
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _messageIcon() {
+    var messageUrl = 'https://www.torn.com/messages.php#/p=compose&'
+        'XID=${_friend.playerId}';
+    return SizedBox(
+      height: 20,
+      width: 20,
+      child: IconButton(
+        padding: EdgeInsets.all(0.0),
+        iconSize: 18,
+        icon: Icon(
+          Icons.email,
+        ),
+        onPressed: () async {
+          var browserType = _settingsProvider.currentBrowser;
+          switch (browserType) {
+            case BrowserSetting.app:
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => TornWebViewGeneric(
+                    webViewType: WebViewType.custom,
+                    customUrl: messageUrl,
+                    genericTitle: 'Message',
+                  ),
+                ),
+              );
+              break;
+            case BrowserSetting.external:
+              var url = messageUrl;
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+              break;
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _visitProfileIcon() {
+    return SizedBox(
+      height: 20,
+      width: 20,
+      child: IconButton(
+        padding: EdgeInsets.all(0.0),
+        iconSize: 18,
+        icon: Icon(
+          Icons.remove_red_eye,
+        ),
+        onPressed: () async {
+          var browserType = _settingsProvider.currentBrowser;
+          switch (browserType) {
+            case BrowserSetting.app:
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => TornWebViewGeneric(
+                    profileId: '${_friend.playerId}',
+                    profileName: _friend.name,
+                    webViewType: WebViewType.profile,
+                  ),
+                ),
+              );
+              break;
+            case BrowserSetting.external:
+              var url = 'https://www.torn.com/profiles.php?'
+                  'XID=${_friend.playerId}';
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+              break;
+          }
+        },
+      ),
+    );
   }
 
   Widget _refreshIcon() {
@@ -309,26 +403,154 @@ class _FriendCardState extends State<FriendCard> {
 
   Widget _factionIcon() {
     if (_friend.hasFaction) {
-      Color iconColor;
+      Color borderColor = Colors.transparent;
+      Color iconColor = _themeProvider.mainText;
+      if (_friend.faction.factionId == _userProvider.myUser.faction.factionId) {
+        borderColor = iconColor = Colors.green[500];
+      }
 
-      //print('${_userProvider.myUser.faction.factionId}');
+      void showFactionToast() {
+        if (_friend.faction.factionId ==
+            _userProvider.myUser.faction.factionId) {
+          BotToast.showText(
+            text: "${_friend.name} belongs to your same faction "
+                "(${_friend.faction.factionName}) as "
+                "${_friend.faction.position}",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+        } else {
+          BotToast.showText(
+            text: "${_friend.name} belongs to faction "
+                "${_friend.faction.factionName} as "
+                "${_friend.faction.position}",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
 
-      return Padding(
-        padding: const EdgeInsets.only(right: 4),
-        child: SizedBox(
-          height: 13,
-          width: 13,
-          child: ImageIcon(
-            AssetImage('images/icons/faction.png'),
+      Widget factionIcon = Material(
+        type: MaterialType.transparency,
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: borderColor,
+              width: 1.5,
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onTap: () {
+              showFactionToast();
+            },
+            child: Padding(
+              padding: EdgeInsets.all(2),
+              child: ImageIcon(
+                AssetImage('images/icons/faction.png'),
+                size: 12,
+                color: iconColor,
+              ),
+            ),
           ),
         ),
       );
+      return factionIcon;
     } else {
       return SizedBox.shrink();
     }
   }
 
-  Color _borderColor() {
+  Widget _companyIcon() {
+    void showCompanyToast() {
+      BotToast.showText(
+        text: "${_friend.name} belongs to your same company "
+            "(${_friend.job.companyName}) as "
+            "${_friend.job.position}",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.green,
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
+
+    if (_friend.job.companyId == _userProvider.myUser.job.companyId) {
+      Widget companyIcon = Material(
+        type: MaterialType.transparency,
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.brown[400],
+              width: 1.5,
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onTap: () {
+              showCompanyToast();
+            },
+            child: Padding(
+              padding: EdgeInsets.all(1),
+              child: Icon(
+                Icons.business_center,
+                size: 14,
+                color: Colors.brown[400],
+              ),
+            ),
+          ),
+        ),
+      );
+      return companyIcon;
+    }
+    return SizedBox.shrink();
+  }
+
+  Widget _status() {
+    Color stateColor;
+    if (_friend.status.color == 'red') {
+      stateColor = Colors.red;
+    } else if (_friend.status.color == 'green') {
+      stateColor = Colors.green;
+    } else if (_friend.status.color == 'blue') {
+      stateColor = Colors.blue;
+    }
+
+    Widget stateBall = Padding(
+      padding: EdgeInsets.only(left: 5, right: 3, top: 1),
+      child: Container(
+        width: 13,
+        height: 13,
+        decoration: BoxDecoration(
+            color: stateColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black)),
+      ),
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(_friend.status.state),
+        stateBall,
+      ],
+    );
+  }
+
+  Color _cardBorderColor() {
     if (_friend.justUpdatedWithSuccess) {
       return Colors.green;
     } else if (_friend.justUpdatedWithError) {
