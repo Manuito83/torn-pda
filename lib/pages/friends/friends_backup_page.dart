@@ -62,7 +62,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
-                      "HOW TO EXPORT friendS",
+                      "HOW TO EXPORT friends",
                       style:
                       TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
@@ -141,7 +141,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
                     child: Text(
-                      "HOW TO IMPORT friendS",
+                      "HOW TO IMPORT friends",
                       style:
                       TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),

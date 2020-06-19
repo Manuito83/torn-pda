@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/friend_model.dart';
+import 'package:torn_pda/pages/friends/friend_details_page.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'notes_dialog.dart';
@@ -102,7 +105,7 @@ class _FriendCardState extends State<FriendCard> {
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
                         SizedBox(
-                          width: 95,
+                          width: 120,
                           child: Text(
                             '${_friend.name}',
                             overflow: TextOverflow.ellipsis,
@@ -118,18 +121,31 @@ class _FriendCardState extends State<FriendCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
-                          SizedBox(
-                            width: 120,
-                            child: Row(
-                              children: <Widget>[
-                                Text(
-                                  ' [${_friend.playerId}]',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                          OpenContainer(
+                            transitionDuration: Duration(milliseconds: 500),
+                            transitionType: ContainerTransitionType.fadeThrough,
+                            openBuilder:
+                                (BuildContext context, VoidCallback _) {
+                              return FriendDetailsPage(friend: _friend);
+                            },
+                            closedElevation: 0,
+                            closedShape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(56 / 2),
+                              ),
                             ),
+                            closedColor: Colors.transparent,
+                            closedBuilder: (BuildContext context,
+                                VoidCallback openContainer) {
+                              return SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                ),
+                              );
+                            },
                           ),
                           Row(
                             children: <Widget>[
@@ -413,9 +429,9 @@ class _FriendCardState extends State<FriendCard> {
         if (_friend.faction.factionId ==
             _userProvider.myUser.faction.factionId) {
           BotToast.showText(
-            text: "${_friend.name} belongs to your same faction "
+            text: HtmlParser.parse("${_friend.name} belongs to your same faction "
                 "(${_friend.faction.factionName}) as "
-                "${_friend.faction.position}",
+                "${_friend.faction.position}"),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -426,9 +442,9 @@ class _FriendCardState extends State<FriendCard> {
           );
         } else {
           BotToast.showText(
-            text: "${_friend.name} belongs to faction "
+            text: HtmlParser.parse("${_friend.name} belongs to faction "
                 "${_friend.faction.factionName} as "
-                "${_friend.faction.position}",
+                "${_friend.faction.position}"),
             textStyle: TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -474,9 +490,9 @@ class _FriendCardState extends State<FriendCard> {
   Widget _companyIcon() {
     void showCompanyToast() {
       BotToast.showText(
-        text: "${_friend.name} belongs to your same company "
+        text: HtmlParser.parse("${_friend.name} belongs to your same company "
             "(${_friend.job.companyName}) as "
-            "${_friend.job.position}",
+            "${_friend.job.position}"),
         textStyle: TextStyle(
           fontSize: 14,
           color: Colors.white,
