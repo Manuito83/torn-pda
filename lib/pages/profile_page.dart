@@ -1211,7 +1211,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               color: Colors.black,
             ),
           ),
-          backgroundColor: Colors.green[400],
+          backgroundColor: Colors.deepOrange[400],
           onTap: () async {
             _openTornBrowser('crimes');
           },
@@ -1220,14 +1220,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
-          labelBackgroundColor: Colors.green[400],
+          labelBackgroundColor: Colors.deepOrange[400],
         ),
         SpeedDialChild(
           child: Icon(
             Icons.fitness_center,
             color: Colors.black,
           ),
-          backgroundColor: Colors.deepOrange[400],
+          backgroundColor: Colors.green[400],
           onTap: () async {
             _openTornBrowser('gym');
           },
@@ -1236,7 +1236,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
-          labelBackgroundColor: Colors.deepOrange[400],
+          labelBackgroundColor: Colors.green[400],
         ),
       ],
     );
