@@ -11,6 +11,7 @@ import 'package:timeline_tile/timeline_tile.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -202,14 +203,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         descriptionText += '- ${_user.status.details}';
       }
 
-      // Removing the ugly HTML in the API... oh God, why?
+      // Causing player ID (jailed of hospitalised the user)
       RegExp expHtml = RegExp(r"<[^>]*>");
       var matches = expHtml.allMatches(descriptionText).map((m) => m[0]);
-      for (var m in matches) {
-        descriptionText = descriptionText.replaceAll(m, '');
-      }
-
-      // Causing player ID (jailed of hospitalised the user)
       String causingId = '';
       if (matches.length > 0) {
         RegExp expId = RegExp(r"(?!XID=)([0-9])+");
@@ -224,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           text: new TextSpan(
             children: [
               new TextSpan(
-                text: descriptionText,
+                text: HtmlParser.parse(descriptionText),
                 style: new TextStyle(color: _themeProvider.mainText),
               ),
               new TextSpan(
@@ -760,12 +756,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         unreadCount++;
       }
 
-      String message = e.event;
-      RegExp expHtml = RegExp(r"<[^>]*>");
-      var matches = expHtml.allMatches(message).map((m) => m[0]);
-      for (var m in matches) {
-        message = message.replaceAll(m, '');
-      }
+      String message = HtmlParser.parse(e.event);
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll(' [view]', '.');
 
