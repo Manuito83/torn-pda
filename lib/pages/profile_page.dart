@@ -101,7 +101,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   child: Column(
                     children: <Widget>[
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 15),
+                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
                         child: Column(
                           children: <Widget>[
                             Text(
@@ -124,7 +124,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 15, 20, 5),
+                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
                         child: _playerStatus(),
                       ),
                       Padding(

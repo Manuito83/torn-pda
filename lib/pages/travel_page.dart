@@ -34,7 +34,7 @@ class _TravelPageState extends State<TravelPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
-  int _notificationsPendingNumber;
+  bool _notificationsPending = false;
   bool _alarmSound = false;
   bool _alarmVibration = true;
 
@@ -368,7 +368,7 @@ class _TravelPageState extends State<TravelPage> {
                 builder: (ctx) => RaisedButton(
                     child: Text("Cancel"),
                     onPressed: () async {
-                      await _cancelAllNotifications();
+                      await _cancelTravelNotification();
                       Scaffold.of(ctx).showSnackBar(SnackBar(
                         content: Text('Notifications cancelled!'),
                       ));
@@ -661,7 +661,7 @@ class _TravelPageState extends State<TravelPage> {
   }
 
   Widget _notificationNumberText() {
-    if (_notificationsPendingNumber == 0) {
+    if (!_notificationsPending) {
       return SizedBox.shrink();
     } else {
       return Padding(
@@ -915,8 +915,16 @@ class _TravelPageState extends State<TravelPage> {
     return scheduledNotificationDateTime;
   }
 
-  Future<void> _cancelAllNotifications() async {
-    await flutterLocalNotificationsPlugin.cancelAll();
+  Future<void> _cancelTravelNotification() async {
+    var pendingNotificationRequests =
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+    for (var i = 0; i < pendingNotificationRequests.length; i++) {
+      if (pendingNotificationRequests[i].payload == 'travel') {
+        await flutterLocalNotificationsPlugin.cancel(i);
+      }
+    }
+
     _retrievePendingNotifications();
   }
 
@@ -924,7 +932,17 @@ class _TravelPageState extends State<TravelPage> {
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
     setState(() {
-      _notificationsPendingNumber = pendingNotificationRequests.length;
+      if (pendingNotificationRequests.length > 0) {
+        for (var notification in pendingNotificationRequests) {
+          if (notification.payload == 'travel') {
+            _notificationsPending = true;
+          } else {
+            _notificationsPending = false;
+          }
+        }
+      } else {
+        _notificationsPending = false;
+      }
     });
   }
 
@@ -973,5 +991,4 @@ class _TravelPageState extends State<TravelPage> {
     _notificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
   }
-
 }
