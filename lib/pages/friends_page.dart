@@ -292,7 +292,7 @@ class _FriendsPageState extends State<FriendsPage> {
                             decoration: InputDecoration(
                               counterText: "",
                               border: OutlineInputBorder(),
-                              labelText: 'Insert player ID',
+                              labelText: 'Insert friend ID',
                             ),
                             validator: (value) {
                               if (value.isEmpty) {
@@ -374,10 +374,7 @@ class _FriendsPageState extends State<FriendsPage> {
                       child: SizedBox(
                         height: 28,
                         width: 28,
-                        child: Image.asset(
-                          'images/icons/ic_target_account_black_48dp.png',
-                          color: _themeProvider.background,
-                        ),
+                        child: Icon(Icons.people),
                       ),
                     ),
                   ),
