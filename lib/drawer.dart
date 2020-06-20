@@ -11,6 +11,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
@@ -71,6 +72,28 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
           case 'external':
             var url = 'https://www.torn.com';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
+      } else if (payload == 'energy') {
+        // Works best if we get SharedPrefs directly instead of SettingsProvider
+        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        switch (browserType) {
+          case 'app':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  webViewType: WebViewType.custom,
+                  customUrl: 'https://www.torn.com/gym.php',
+                  genericTitle: 'Torn',
+                ),
+              ),
+            );
+            break;
+          case 'external':
+            var url = 'https://www.torn.com/gym.php';
             if (await canLaunch(url)) {
               await launch(url, forceSafariVC: false);
             }
