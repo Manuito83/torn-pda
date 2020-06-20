@@ -48,6 +48,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Color _energyNotificationColor;
   bool _energyNotificationsPending = false;
+  DateTime _energyCurrentSchedule;
+
+  Color _nerveNotificationColor;
+  bool _nerveNotificationsPending = false;
+  DateTime _nerveCurrentSchedule;
+
+  Color _lifeNotificationColor;
+  bool _lifeNotificationsPending = false;
+  DateTime _lifeCurrentSchedule;
+
+  Color _drugsNotificationColor;
+  bool _drugsNotificationsPending = false;
+  DateTime _drugsCurrentSchedule;
+
+  Color _medicalNotificationColor;
+  bool _medicalNotificationsPending = false;
+  DateTime _medicalCurrentSchedule;
+
+  Color _boosterNotificationColor;
+  bool _boosterNotificationsPending = false;
+  DateTime _boosterCurrentSchedule;
 
   @override
   void initState() {
@@ -472,53 +493,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                      InkWell(
-                        child: Icon(
-                          Icons.alarm,
-                          size: 25,
-                          color: _energyNotificationColor == null
-                              ? _themeProvider.mainText
-                              : _energyNotificationColor,
-                        ),
-                        onTap: () {
-                          if (!_energyNotificationsPending) {
-                            _scheduleEnergyNotification();
-                            setState(() {
-                              _energyNotificationColor = Colors.green;
-                            });
-                            var energyTime = DateTime.now()
-                                .add(Duration(seconds: _user.energy.fulltime));
-                            var formatter = new DateFormat('HH:mm:ss');
-                            String formattedTime = formatter.format(energyTime);
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Energy notification set for $formattedTime LT',
-                                ),
-                              ),
-                            );
-                          } else {
-                            _cancelEnergyNotifications();
-                            setState(() {
-                              _energyNotificationColor =
-                                  _themeProvider.mainText;
-                            });
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Energy notification cancelled!',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      ),
+                      _energyNotificationIcon(),
                     ],
                   ),
-                  _user.energy.fulltime == 0 ||
-                          _user.energy.current > _user.energy.maximum
-                      ? SizedBox.shrink()
-                      : _barTime('energy'),
+                  _barTime('energy'),
                 ],
               ),
             ),
@@ -528,31 +506,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Column(
                 children: <Widget>[
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      SizedBox(
-                        width: 50,
-                        child: Text('Nerve'),
+                      Row(
+                        children: <Widget>[
+                          SizedBox(
+                            width: 50,
+                            child: Text('Nerve'),
+                          ),
+                          SizedBox(width: 10),
+                          LinearPercentIndicator(
+                            width: 150,
+                            lineHeight: 20,
+                            progressColor: Colors.redAccent,
+                            backgroundColor: Colors.grey,
+                            center: Text(
+                              '${_user.nerve.current}',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                            percent:
+                                _user.nerve.current / _user.nerve.maximum > 1.0
+                                    ? 1.0
+                                    : _user.nerve.current / _user.nerve.maximum,
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 10),
-                      LinearPercentIndicator(
-                        width: 150,
-                        lineHeight: 20,
-                        progressColor: Colors.redAccent,
-                        backgroundColor: Colors.grey,
-                        center: Text(
-                          '${_user.nerve.current}',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        percent: _user.nerve.current / _user.nerve.maximum > 1.0
-                            ? 1.0
-                            : _user.nerve.current / _user.nerve.maximum,
-                      ),
+                      _nerveNotificationIcon(),
                     ],
                   ),
-                  _user.nerve.fulltime == 0 ||
-                          _user.nerve.current >= _user.nerve.maximum
-                      ? SizedBox.shrink()
-                      : _barTime('nerve'),
+                  _barTime('nerve'),
                 ],
               ),
             ),
@@ -583,10 +565,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-                  _user.happy.fulltime == 0 ||
-                          _user.happy.current > _user.happy.maximum
-                      ? SizedBox.shrink()
-                      : _barTime('happy'),
+                  _barTime('happy'),
                 ],
               ),
             ),
@@ -596,38 +575,43 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Column(
                 children: <Widget>[
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      SizedBox(
-                        width: 50,
-                        child: Text('Life'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          SizedBox(
+                            width: 50,
+                            child: Text('Life'),
+                          ),
+                          SizedBox(width: 10),
+                          LinearPercentIndicator(
+                            width: 150,
+                            lineHeight: 20,
+                            progressColor: Colors.blue,
+                            backgroundColor: Colors.grey,
+                            center: Text(
+                              '${_user.life.current}',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                            percent:
+                                _user.life.current / _user.life.maximum > 1.0
+                                    ? 1.0
+                                    : _user.life.current / _user.life.maximum,
+                          ),
+                          _user.status.state == "Hospital"
+                              ? Icon(
+                                  Icons.local_hospital,
+                                  size: 20,
+                                  color: Colors.red,
+                                )
+                              : SizedBox.shrink(),
+                        ],
                       ),
-                      SizedBox(width: 10),
-                      LinearPercentIndicator(
-                        width: 150,
-                        lineHeight: 20,
-                        progressColor: Colors.blue,
-                        backgroundColor: Colors.grey,
-                        center: Text(
-                          '${_user.life.current}',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        percent: _user.life.current / _user.life.maximum > 1.0
-                            ? 1.0
-                            : _user.life.current / _user.life.maximum,
-                      ),
-                      _user.status.state == "Hospital"
-                          ? Icon(
-                              Icons.local_hospital,
-                              size: 20,
-                              color: Colors.red,
-                            )
-                          : SizedBox.shrink(),
+                      //_lifeNotificationIcon(),
                     ],
                   ),
-                  _user.life.fulltime == 0 ||
-                          _user.life.current > _user.life.maximum
-                      ? SizedBox.shrink()
-                      : _barTime('life'),
+                  _barTime('life'),
                 ],
               ),
             ),
@@ -638,32 +622,171 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _barTime(String type) {
-    var time;
     switch (type) {
       case "energy":
-        time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
+        if (_user.energy.fulltime == 0 ||
+            _user.energy.current > _user.energy.maximum) {
+          return SizedBox.shrink();
+        } else {
+          var time;
+          time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
+          var formatter = new DateFormat('HH:mm');
+          String timeFormatted = formatter.format(time);
+          return Row(
+            children: <Widget>[
+              SizedBox(width: 65),
+              Text('Full at $timeFormatted LT'),
+            ],
+          );
+        }
         break;
       case "nerve":
-        time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
+        if (_user.nerve.fulltime == 0 ||
+            _user.nerve.current > _user.nerve.maximum) {
+          return SizedBox.shrink();
+        } else {
+          var time;
+          time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
+          var formatter = new DateFormat('HH:mm');
+          String timeFormatted = formatter.format(time);
+          return Row(
+            children: <Widget>[
+              SizedBox(width: 65),
+              Text('Full at $timeFormatted LT'),
+            ],
+          );
+        }
         break;
       case "happy":
-        time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
+        if (_user.happy.fulltime == 0 ||
+            _user.happy.current > _user.happy.maximum) {
+          return SizedBox.shrink();
+        } else {
+          var time;
+          time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
+          var formatter = new DateFormat('HH:mm');
+          String timeFormatted = formatter.format(time);
+          return Row(
+            children: <Widget>[
+              SizedBox(width: 65),
+              Text('Full at $timeFormatted LT'),
+            ],
+          );
+        }
         break;
       case "life":
-        time = _serverTime.add(Duration(seconds: _user.life.fulltime));
+        if (_user.life.fulltime == 0 ||
+            _user.life.current > _user.life.maximum) {
+          return SizedBox.shrink();
+        } else {
+          var time;
+          time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
+          var formatter = new DateFormat('HH:mm');
+          String timeFormatted = formatter.format(time);
+          return Row(
+            children: <Widget>[
+              SizedBox(width: 65),
+              Text('Full at $timeFormatted LT'),
+            ],
+          );
+        }
         break;
+      default:
+        return SizedBox.shrink();
     }
-
-    var formatter = new DateFormat('HH:mm');
-    String timeFormatted = formatter.format(time);
-
-    return Row(
-      children: <Widget>[
-        SizedBox(width: 65),
-        Text('Full at $timeFormatted LT'),
-      ],
-    );
   }
+
+  Widget _energyNotificationIcon() {
+    if (_user.energy.fulltime == 0) {
+      return SizedBox.shrink();
+    } else {
+      Color thisColor;
+      if (_energyNotificationsPending) {
+        thisColor = Colors.green;
+      } else {
+        thisColor = _themeProvider.mainText;
+      }
+
+      return InkWell(
+        child: Icon(
+          Icons.alarm,
+          size: 22,
+          color: thisColor,
+        ),
+        onTap: () {
+          if (!_energyNotificationsPending) {
+            _scheduleNotification('energy');
+            _energyCurrentSchedule =
+                DateTime.now().add(Duration(seconds: _user.energy.fulltime));
+            var formatter = new DateFormat('HH:mm:ss');
+            String formattedTime = formatter.format(_energyCurrentSchedule);
+            Scaffold.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Energy notification set for $formattedTime LT',
+                ),
+              ),
+            );
+          } else {
+            _cancelNotifications('energy');
+            Scaffold.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Energy notification cancelled!',
+                ),
+              ),
+            );
+          }
+        },
+      );
+    }
+  }
+
+  Widget _nerveNotificationIcon() {
+    if (_user.nerve.fulltime == 0) {
+      return SizedBox.shrink();
+    } else {
+      Color thisColor;
+      if (_nerveNotificationsPending) {
+        thisColor = Colors.green;
+      } else {
+        thisColor = _themeProvider.mainText;
+      }
+      return InkWell(
+        child: Icon(
+          Icons.alarm,
+          size: 22,
+          color: thisColor,
+        ),
+        onTap: () {
+          if (!_nerveNotificationsPending) {
+            _scheduleNotification('nerve');
+            _nerveCurrentSchedule =
+                DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+            var formatter = new DateFormat('HH:mm:ss');
+            String formattedTime = formatter.format(_nerveCurrentSchedule);
+            Scaffold.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Nerve notification set for $formattedTime LT',
+                ),
+              ),
+            );
+          } else {
+            _cancelNotifications('nerve');
+            Scaffold.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Nerve notification cancelled!',
+                ),
+              ),
+            );
+          }
+        },
+      );
+    }
+  }
+
 
   Card _coolDowns() {
     Widget cooldownItems;
@@ -682,6 +805,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _drugIcon(),
                           SizedBox(width: 10),
                           _drugCounter(),
+                          _energyNotificationIcon(),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -696,6 +820,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _medicalIcon(),
                           SizedBox(width: 10),
                           _medicalCounter(),
+                          _energyNotificationIcon(),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -710,6 +835,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _boosterIcon(),
                           SizedBox(width: 10),
                           _boosterCounter(),
+                          _energyNotificationIcon(),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -1258,6 +1384,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _apiGoodData = false;
       }
     });
+
+    _checkIfNotificationsAreCurrent();
+    _retrievePendingNotifications();
   }
 
   SpeedDial buildSpeedDial() {
@@ -1407,7 +1536,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _fetchApi();
   }
 
-  void _scheduleEnergyNotification() async {
+  void _scheduleNotification(String type) async {
+    String channelTitle;
+    String channelSubtitle;
+    String channelDescription;
+    String notificationTitle;
+    String notificationSubtitle;
+    int notificationId;
+    switch (type) {
+      case "energy":
+        notificationId = 101;
+        channelTitle = 'energy';
+        channelSubtitle = 'Energy Full';
+        channelDescription = 'Urgent notifications about energy';
+        notificationTitle = 'Energy Full';
+        notificationSubtitle = 'Here is your energy reminder!';
+        break;
+      case "nerve":
+        notificationId = 102;
+        channelTitle = 'Nerve';
+        channelSubtitle = 'Nerve Full';
+        channelDescription = 'Urgent notifications about nerve';
+        notificationTitle = 'Nerve Full';
+        notificationSubtitle = 'Here is your nerve reminder!';
+        break;
+      case "life":
+        notificationId = 103;
+        channelTitle = 'Life';
+        channelSubtitle = 'Life Full';
+        channelDescription = 'Urgent notifications about life';
+        notificationTitle = 'Life Full';
+        notificationSubtitle = 'Here is your life reminder!';
+        break;
+    }
+
     var vibrationPattern = Int64List(8);
     vibrationPattern[0] = 0;
     vibrationPattern[1] = 400;
@@ -1419,9 +1581,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     vibrationPattern[7] = 1000;
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Energy', // TODO: several notification channels
-      'Energy Full',
-      'Urgent notifications about energy',
+      channelTitle,
+      channelSubtitle,
+      channelDescription,
       importance: Importance.Max,
       priority: Priority.High,
       visibility: NotificationVisibility.Public,
@@ -1443,13 +1605,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
-      0,
-      'Energy Full',
-      'Here is your energy reminder!',
+      notificationId,
+      notificationTitle,
+      notificationSubtitle,
       DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      //DateTime.now().add(Duration(seconds: _user.energy.fulltime)),
+      //TODO: DateTime.now().add(Duration(seconds: _user.energy.fulltime)),
       platformChannelSpecifics,
-      payload: 'energy',
+      payload: type,
       androidAllowWhileIdle: true, // Deliver at exact time
     );
 
@@ -1457,33 +1619,139 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
+    bool energy = false;
+    bool nerve = false;
+    bool life = false;
+    bool drugs = false;
+    bool medical = false;
+    bool booster = false;
+
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-    setState(() {
-      if (pendingNotificationRequests.length > 0) {
-        for (var notification in pendingNotificationRequests) {
-          if (notification.payload == 'energy') {
-            _energyNotificationsPending = true;
-          } else {
-            _energyNotificationsPending = false;
-          }
+
+    if (pendingNotificationRequests.length > 0) {
+      for (var notification in pendingNotificationRequests) {
+        if (notification.payload == 'energy') {
+          energy = true;
+        } else if (notification.payload == 'nerve') {
+          nerve = true;
+        } else if (notification.payload == 'life') {
+          life = true;
+        } else if (notification.payload == 'drugs') {
+          drugs = true;
+        } else if (notification.payload == 'medical') {
+          medical = true;
+        } else if (notification.payload == 'booster') {
+          booster = true;
         }
-      } else {
-        _energyNotificationsPending = false;
       }
+    }
+
+    setState(() {
+      _energyNotificationsPending = energy;
+      _nerveNotificationsPending = nerve;
+      _lifeNotificationsPending = life;
+      _drugsNotificationsPending = drugs;
+      _medicalNotificationsPending = medical;
+      _boosterNotificationsPending = booster;
     });
   }
 
-  Future<void> _cancelEnergyNotifications() async {
+  Future<void> _cancelNotifications(String type) async {
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     for (var i = 0; i < pendingNotificationRequests.length; i++) {
-      if (pendingNotificationRequests[i].payload == 'energy') {
+      if (pendingNotificationRequests[i].payload == type) {
         await flutterLocalNotificationsPlugin.cancel(i);
       }
     }
 
     _retrievePendingNotifications();
+  }
+
+  void _checkIfNotificationsAreCurrent() {
+    bool triggered = false;
+    if (_energyNotificationsPending && _energyCurrentSchedule != null) {
+      var newCalculation =
+          DateTime.now().add(Duration(seconds: _user.energy.fulltime));
+      var compare = newCalculation.difference(_energyCurrentSchedule);
+      if (compare.inMinutes > 2) {
+        _cancelNotifications('energy');
+        _scheduleNotification('energy');
+        _energyCurrentSchedule = newCalculation;
+        triggered = true;
+      }
+    }
+
+    if (_nerveNotificationsPending && _nerveCurrentSchedule != null) {
+      var newCalculation =
+          DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+      var compare = newCalculation.difference(_nerveCurrentSchedule);
+      if (compare.inMinutes > 2) {
+        _cancelNotifications('nerve');
+        _scheduleNotification('nerve');
+        _nerveCurrentSchedule = newCalculation;
+        triggered = true;
+      }
+    }
+
+    if (_lifeNotificationsPending && _lifeCurrentSchedule != null) {
+      var newCalculation =
+          DateTime.now().add(Duration(seconds: _user.life.fulltime));
+      var compare = newCalculation.difference(_lifeCurrentSchedule);
+      if (compare.inMinutes > 2) {
+        _cancelNotifications('life');
+        _scheduleNotification('life');
+        _lifeCurrentSchedule = newCalculation;
+        triggered = true;
+      }
+    }
+
+    if (_drugsNotificationsPending && _drugsNotificationsPending != null) {
+      var newCalculation =
+          DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+      var compare = newCalculation.difference(_drugsCurrentSchedule);
+      if (compare.inMinutes > 2) {
+        _cancelNotifications('drugs');
+        _scheduleNotification('drugs');
+        _drugsCurrentSchedule = newCalculation;
+        triggered = true;
+      }
+    }
+
+    if (_medicalNotificationsPending && _medicalCurrentSchedule != null) {
+      var newCalculation =
+          DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
+      var compare = newCalculation.difference(_medicalCurrentSchedule);
+      if (compare.inMinutes > 2) {
+        _cancelNotifications('medical');
+        _scheduleNotification('medical');
+        _medicalCurrentSchedule = newCalculation;
+        triggered = true;
+      }
+    }
+
+    if (_boosterNotificationsPending && _boosterCurrentSchedule != null) {
+      var newCalculation =
+          DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
+      var compare = newCalculation.difference(_boosterCurrentSchedule);
+      if (compare.inMinutes > 2) {
+        _cancelNotifications('booster');
+        _scheduleNotification('booster');
+        _energyCurrentSchedule = newCalculation;
+        triggered = true;
+      }
+    }
+
+    if (triggered) {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Some notifications times have been updated!',
+          ),
+        ),
+      );
+    }
   }
 }

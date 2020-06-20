@@ -99,6 +99,28 @@ class _DrawerPageState extends State<DrawerPage> {
             }
             break;
         }
+      } else if (payload == 'nerve') {
+        // Works best if we get SharedPrefs directly instead of SettingsProvider
+        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        switch (browserType) {
+          case 'app':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  webViewType: WebViewType.custom,
+                  customUrl: 'https://www.torn.com/crimes.php',
+                  genericTitle: 'Torn',
+                ),
+              ),
+            );
+            break;
+          case 'external':
+            var url = 'https://www.torn.com/crimes.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
       }
     });
   }
