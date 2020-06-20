@@ -28,7 +28,7 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 ## iOS / Android
 
 [![Play Store](https://i.imgur.com/R12sw2i.png?2)](https://play.google.com/store/apps/details?id=com.manuito.tornpda "Play Store")
-[![App Store](https://i.imgur.com/6k02rJZ.png?1)](https://apps.apple.com/us/app/torn-pda/id1510138514?l=es&ls=1 "App Store")
+[![App Store](https://i.imgur.com/6k02rJZ.png?1)](https://apps.apple.com/us/app/torn-pda/id1510138514 "App Store")
 
 
 ## Contribute
