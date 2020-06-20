@@ -42,6 +42,7 @@ class OwnProfileModel {
     this.networth,
     this.cooldowns,
     this.events,
+    this.travel,
   });
 
   String rank;
@@ -76,10 +77,9 @@ class OwnProfileModel {
   Map<String, double> networth;
   Cooldowns cooldowns;
   Map<String, Event> events;
+  Travel travel;
 
   factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
-
-
     rank: json["rank"] == null ? null : json["rank"],
     level: json["level"] == null ? null : json["level"],
     gender: json["gender"] == null ? null : json["gender"],
@@ -112,6 +112,7 @@ class OwnProfileModel {
     networth: json["networth"] == null ? null : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
     cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
     events: json["events"] == null ? null : Map.from(json["events"]).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v))),
+    travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -147,6 +148,7 @@ class OwnProfileModel {
     "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
     "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
     "events": events == null ? null : Map.from(events).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+    "travel": travel == null ? null : travel.toJson(),
   };
 }
 
@@ -447,5 +449,33 @@ class Status {
     "state": state == null ? null : state,
     "color": color == null ? null : color,
     "until": until == null ? null : until,
+  };
+}
+
+class Travel {
+  Travel({
+    this.destination,
+    this.timestamp,
+    this.departed,
+    this.timeLeft,
+  });
+
+  String destination;
+  int timestamp;
+  int departed;
+  int timeLeft;
+
+  factory Travel.fromJson(Map<String, dynamic> json) => Travel(
+    destination: json["destination"] == null ? null : json["destination"],
+    timestamp: json["timestamp"] == null ? null : json["timestamp"],
+    departed: json["departed"] == null ? null : json["departed"],
+    timeLeft: json["time_left"] == null ? null : json["time_left"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "destination": destination == null ? null : destination,
+    "timestamp": timestamp == null ? null : timestamp,
+    "departed": departed == null ? null : departed,
+    "time_left": timeLeft == null ? null : timeLeft,
   };
 }
