@@ -35,7 +35,6 @@ class UserDetailsModel {
     this.job,
     this.faction,
     this.married,
-    this.basicicons,
     this.states,
     this.lastAction,
   });
@@ -65,7 +64,6 @@ class UserDetailsModel {
   Job job;
   Faction faction;
   Married married;
-  Basicicons basicicons;
   States states;
   LastAction lastAction;
 
@@ -94,7 +92,6 @@ class UserDetailsModel {
     job: json["job"] == null ? null : Job.fromJson(json["job"]),
     faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
     married: json["married"] == null ? null : Married.fromJson(json["married"]),
-    basicicons: json["basicicons"] == null ? null : Basicicons.fromJson(json["basicicons"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
   );
@@ -124,41 +121,8 @@ class UserDetailsModel {
     "job": job == null ? null : job.toJson(),
     "faction": faction == null ? null : faction.toJson(),
     "married": married == null ? null : married.toJson(),
-    "basicicons": basicicons == null ? null : basicicons.toJson(),
     "states": states == null ? null : states.toJson(),
     "last_action": lastAction == null ? null : lastAction.toJson(),
-  };
-}
-
-class Basicicons {
-  Basicicons({
-    this.icon6,
-    this.icon4,
-    this.icon8,
-    this.icon27,
-    this.icon9,
-  });
-
-  String icon6;
-  String icon4;
-  String icon8;
-  String icon27;
-  String icon9;
-
-  factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
-    icon6: json["icon6"] == null ? null : json["icon6"],
-    icon4: json["icon4"] == null ? null : json["icon4"],
-    icon8: json["icon8"] == null ? null : json["icon8"],
-    icon27: json["icon27"] == null ? null : json["icon27"],
-    icon9: json["icon9"] == null ? null : json["icon9"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "icon6": icon6 == null ? null : icon6,
-    "icon4": icon4 == null ? null : icon4,
-    "icon8": icon8 == null ? null : icon8,
-    "icon27": icon27 == null ? null : icon27,
-    "icon9": icon9 == null ? null : icon9,
   };
 }
 

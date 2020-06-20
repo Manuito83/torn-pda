@@ -50,7 +50,6 @@ class FriendModel {
     this.job,
     this.faction,
     this.married,
-    this.basicicons,
     this.states,
     this.lastAction,
     this.discord,
@@ -77,7 +76,6 @@ class FriendModel {
   Job job;
   Faction faction;
   Married married;
-  Basicicons basicicons;
   States states;
   LastAction lastAction;
   Discord discord;
@@ -109,7 +107,6 @@ class FriendModel {
     job: json["job"] == null ? null : Job.fromJson(json["job"]),
     faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
     married: json["married"] == null ? null : Married.fromJson(json["married"]),
-    basicicons: json["basicicons"] == null ? null : Basicicons.fromJson(json["basicicons"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
     discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
@@ -142,34 +139,9 @@ class FriendModel {
     "job": job == null ? null : job.toJson(),
     "faction": faction == null ? null : faction.toJson(),
     "married": married == null ? null : married.toJson(),
-    "basicicons": basicicons == null ? null : basicicons.toJson(),
     "states": states == null ? null : states.toJson(),
     "last_action": lastAction == null ? null : lastAction.toJson(),
     "discord": discord == null ? null : discord.toJson(),
-  };
-}
-
-class Basicicons {
-  Basicicons({
-    this.icon6,
-    this.icon3,
-    this.icon15,
-  });
-
-  String icon6;
-  String icon3;
-  String icon15;
-
-  factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
-    icon6: json["icon6"] == null ? null : json["icon6"],
-    icon3: json["icon3"] == null ? null : json["icon3"],
-    icon15: json["icon15"] == null ? null : json["icon15"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "icon6": icon6 == null ? null : icon6,
-    "icon3": icon3 == null ? null : icon3,
-    "icon15": icon15 == null ? null : icon15,
   };
 }
 
