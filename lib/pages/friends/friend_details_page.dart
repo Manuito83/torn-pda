@@ -233,8 +233,8 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                   Clipboard.setData(
                       ClipboardData(text: widget.friend.discord.discordId));
                   BotToast.showText(
-                    text: "Your friend's Discord ID (${widget.friend.discord.discordId})"
-                        "has been copied to the clipboard!",
+                    text: "Your friend's Discord ID (${widget.friend.discord.discordId}) "
+                        "copied to the clipboard!",
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
