@@ -77,7 +77,7 @@ class _DrawerPageState extends State<DrawerPage> {
             }
             break;
         }
-      } else if (payload == 'energy') {
+      } else if (payload.contains('energy')) {
         // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
@@ -99,7 +99,7 @@ class _DrawerPageState extends State<DrawerPage> {
             }
             break;
         }
-      } else if (payload == 'nerve') {
+      } else if (payload.contains('nerve')) {
         // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
