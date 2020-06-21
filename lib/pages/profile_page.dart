@@ -21,8 +21,43 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter/rendering.dart';
-
 import '../main.dart';
+
+enum ProfileNotification {
+  energy,
+  nerve,
+  life,
+  drugs,
+  medical,
+  booster,
+}
+
+extension ProfileNotificationExtension on ProfileNotification {
+  String get string {
+    switch (this) {
+      case ProfileNotification.energy:
+        return 'energy';
+        break;
+      case ProfileNotification.nerve:
+        return 'nerve';
+        break;
+      case ProfileNotification.life:
+        return 'life';
+        break;
+      case ProfileNotification.drugs:
+        return 'drugs';
+        break;
+      case ProfileNotification.medical:
+        return 'medical';
+        break;
+      case ProfileNotification.booster:
+        return 'booster';
+        break;
+      default:
+        return null;
+    }
+  }
+}
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -46,27 +81,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   ScrollController scrollController;
   bool dialVisible = true;
 
-  Color _energyNotificationColor;
   bool _energyNotificationsPending = false;
   DateTime _energyCurrentSchedule;
 
-  Color _nerveNotificationColor;
   bool _nerveNotificationsPending = false;
   DateTime _nerveCurrentSchedule;
 
-  Color _lifeNotificationColor;
   bool _lifeNotificationsPending = false;
   DateTime _lifeCurrentSchedule;
 
-  Color _drugsNotificationColor;
   bool _drugsNotificationsPending = false;
   DateTime _drugsCurrentSchedule;
 
-  Color _medicalNotificationColor;
   bool _medicalNotificationsPending = false;
   DateTime _medicalCurrentSchedule;
 
-  Color _boosterNotificationColor;
   bool _boosterNotificationsPending = false;
   DateTime _boosterCurrentSchedule;
 
@@ -365,22 +394,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         var dateTimeArrival =
             DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
-        String diff;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
-        if (timeDifference.inSeconds <= 0) {
-          diff = 'now'; // Might happen due to update delays
-        } else if (timeDifference.inMinutes < 1) {
-          diff = '${timeDifference.inSeconds} seconds';
-        } else if (timeDifference.inMinutes == 1 &&
-            timeDifference.inHours < 1) {
-          diff = '1 minute';
-        } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-          diff = '${timeDifference.inMinutes} minutes';
-        } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-          diff = '1 hour';
-        } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-          diff = '${timeDifference.inHours} hours';
-        }
+        String twoDigits(int n) => n.toString().padLeft(2, "0");
+        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return Padding(
           padding: const EdgeInsets.only(top: 10),
@@ -388,9 +405,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             children: <Widget>[
               Text('Arriving in '),
               LinearPercentIndicator(
-                center: Text(diff),
+                center: Text(
+                  diff,
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
                 width: 150,
-                lineHeight: 15,
+                lineHeight: 18,
                 progressColor: Colors.blue[200],
                 backgroundColor: Colors.grey,
                 percent: 1 - (_user.travel.timeLeft / totalSeconds),
@@ -493,7 +515,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                      _energyNotificationIcon(),
+                      _notificationIcon(ProfileNotification.energy),
                     ],
                   ),
                   _barTime('energy'),
@@ -531,7 +553,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                      _nerveNotificationIcon(),
+                      _notificationIcon(ProfileNotification.nerve),
                     ],
                   ),
                   _barTime('nerve'),
@@ -608,7 +630,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               : SizedBox.shrink(),
                         ],
                       ),
-                      //_lifeNotificationIcon(),
+                      _notificationIcon(ProfileNotification.life),
                     ],
                   ),
                   _barTime('life'),
@@ -696,12 +718,75 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _energyNotificationIcon() {
-    if (_user.energy.fulltime == 0) {
+  Widget _notificationIcon(ProfileNotification notificationType) {
+    int fullTime;
+    bool notificationsPending;
+    String setString;
+    String cancelString;
+    var formatter = new DateFormat('HH:mm:ss');
+
+    switch (notificationType) {
+      case ProfileNotification.energy:
+        fullTime = _user.energy.fulltime;
+        notificationsPending = _energyNotificationsPending;
+        _energyCurrentSchedule =
+            DateTime.now().add(Duration(seconds: _user.energy.fulltime));
+        String formattedTime = formatter.format(_energyCurrentSchedule);
+        setString = 'Energy notification set for $formattedTime LT';
+        cancelString = 'Energy notification cancelled!';
+        break;
+      case ProfileNotification.nerve:
+        fullTime = _user.nerve.fulltime;
+        notificationsPending = _nerveNotificationsPending;
+        _nerveCurrentSchedule =
+            DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+        String formattedTime = formatter.format(_nerveCurrentSchedule);
+        setString = 'Nerve notification set for $formattedTime LT';
+        cancelString = 'Nerve notification cancelled!';
+        break;
+      case ProfileNotification.life:
+        fullTime = _user.life.fulltime;
+        notificationsPending = _lifeNotificationsPending;
+        _lifeCurrentSchedule =
+            DateTime.now().add(Duration(seconds: _user.life.fulltime));
+        String formattedTime = formatter.format(_lifeCurrentSchedule);
+        setString = 'Life notification set for $formattedTime LT';
+        cancelString = 'Life notification cancelled!';
+        break;
+      case ProfileNotification.drugs:
+        fullTime = _user.cooldowns.drug;
+        notificationsPending = _drugsNotificationsPending;
+        _drugsCurrentSchedule =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+        String formattedTime = formatter.format(_drugsCurrentSchedule);
+        setString = 'Drugs cooldown notification set for $formattedTime LT';
+        cancelString = 'Drugs cooldown notification cancelled!';
+        break;
+      case ProfileNotification.medical:
+        fullTime = _user.cooldowns.medical;
+        notificationsPending = _medicalNotificationsPending;
+        _medicalCurrentSchedule =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
+        String formattedTime = formatter.format(_medicalCurrentSchedule);
+        setString = 'Medical cooldown notification set for $formattedTime LT';
+        cancelString = 'Medical cooldown notification cancelled!';
+        break;
+      case ProfileNotification.booster:
+        fullTime = _user.cooldowns.booster;
+        notificationsPending = _boosterNotificationsPending;
+        _boosterCurrentSchedule =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
+        String formattedTime = formatter.format(_boosterCurrentSchedule);
+        setString = 'Booster cooldown notification set for $formattedTime LT';
+        cancelString = 'Booster cooldown notification cancelled!';
+        break;
+    }
+
+    if (fullTime == 0) {
       return SizedBox.shrink();
     } else {
       Color thisColor;
-      if (_energyNotificationsPending) {
+      if (notificationsPending) {
         thisColor = Colors.green;
       } else {
         thisColor = _themeProvider.mainText;
@@ -714,25 +799,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           color: thisColor,
         ),
         onTap: () {
-          if (!_energyNotificationsPending) {
-            _scheduleNotification('energy');
-            _energyCurrentSchedule =
-                DateTime.now().add(Duration(seconds: _user.energy.fulltime));
-            var formatter = new DateFormat('HH:mm:ss');
-            String formattedTime = formatter.format(_energyCurrentSchedule);
+          if (!notificationsPending) {
+            _scheduleNotification(notificationType);
             Scaffold.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Energy notification set for $formattedTime LT',
+                  setString,
                 ),
               ),
             );
           } else {
-            _cancelNotifications('energy');
+            _cancelNotifications(notificationType);
             Scaffold.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Energy notification cancelled!',
+                  cancelString,
                 ),
               ),
             );
@@ -741,52 +822,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
   }
-
-  Widget _nerveNotificationIcon() {
-    if (_user.nerve.fulltime == 0) {
-      return SizedBox.shrink();
-    } else {
-      Color thisColor;
-      if (_nerveNotificationsPending) {
-        thisColor = Colors.green;
-      } else {
-        thisColor = _themeProvider.mainText;
-      }
-      return InkWell(
-        child: Icon(
-          Icons.alarm,
-          size: 22,
-          color: thisColor,
-        ),
-        onTap: () {
-          if (!_nerveNotificationsPending) {
-            _scheduleNotification('nerve');
-            _nerveCurrentSchedule =
-                DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
-            var formatter = new DateFormat('HH:mm:ss');
-            String formattedTime = formatter.format(_nerveCurrentSchedule);
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Nerve notification set for $formattedTime LT',
-                ),
-              ),
-            );
-          } else {
-            _cancelNotifications('nerve');
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Nerve notification cancelled!',
-                ),
-              ),
-            );
-          }
-        },
-      );
-    }
-  }
-
 
   Card _coolDowns() {
     Widget cooldownItems;
@@ -801,11 +836,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ? Column(
                     children: <Widget>[
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          _drugIcon(),
-                          SizedBox(width: 10),
-                          _drugCounter(),
-                          _energyNotificationIcon(),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                _drugIcon(),
+                                SizedBox(width: 10),
+                                _drugCounter(),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _notificationIcon(ProfileNotification.drugs),
+                            ],
+                          ),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -816,11 +863,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ? Column(
                     children: <Widget>[
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          _medicalIcon(),
-                          SizedBox(width: 10),
-                          _medicalCounter(),
-                          _energyNotificationIcon(),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                _medicalIcon(),
+                                SizedBox(width: 10),
+                                _medicalCounter(),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _notificationIcon(ProfileNotification.medical),
+                            ],
+                          ),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -831,11 +890,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ? Column(
                     children: <Widget>[
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          _boosterIcon(),
-                          SizedBox(width: 10),
-                          _boosterCounter(),
-                          _energyNotificationIcon(),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                _boosterIcon(),
+                                SizedBox(width: 10),
+                                _boosterCounter(),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              _notificationIcon(ProfileNotification.booster),
+                            ],
+                          ),
                         ],
                       ),
                       SizedBox(height: 10),
@@ -1536,37 +1607,68 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _fetchApi();
   }
 
-  void _scheduleNotification(String type) async {
+  void _scheduleNotification(ProfileNotification notificationType) async {
+    int secondsToNotification;
     String channelTitle;
     String channelSubtitle;
     String channelDescription;
     String notificationTitle;
     String notificationSubtitle;
     int notificationId;
-    switch (type) {
-      case "energy":
+    switch (notificationType) {
+      case ProfileNotification.energy:
         notificationId = 101;
+        secondsToNotification = _user.energy.fulltime;
         channelTitle = 'energy';
         channelSubtitle = 'Energy Full';
         channelDescription = 'Urgent notifications about energy';
         notificationTitle = 'Energy Full';
         notificationSubtitle = 'Here is your energy reminder!';
         break;
-      case "nerve":
+      case ProfileNotification.nerve:
         notificationId = 102;
+        secondsToNotification = _user.nerve.fulltime;
         channelTitle = 'Nerve';
         channelSubtitle = 'Nerve Full';
         channelDescription = 'Urgent notifications about nerve';
         notificationTitle = 'Nerve Full';
         notificationSubtitle = 'Here is your nerve reminder!';
         break;
-      case "life":
+      case ProfileNotification.life:
         notificationId = 103;
+        secondsToNotification = _user.life.fulltime;
         channelTitle = 'Life';
         channelSubtitle = 'Life Full';
         channelDescription = 'Urgent notifications about life';
         notificationTitle = 'Life Full';
         notificationSubtitle = 'Here is your life reminder!';
+        break;
+      case ProfileNotification.drugs:
+        notificationId = 104;
+        secondsToNotification = _user.cooldowns.drug;
+        channelTitle = 'Drugs';
+        channelSubtitle = 'Drugs Expired';
+        channelDescription = 'Urgent notifications about drugs cooldown';
+        notificationTitle = 'Drug Cooldown';
+        notificationSubtitle = 'Here is your drugs cooldown reminder!';
+        break;
+      case ProfileNotification.medical:
+        notificationId = 105;
+        secondsToNotification = _user.cooldowns.medical;
+        channelTitle = 'Medical';
+        channelSubtitle = 'Medical Expired';
+        channelDescription = 'Urgent notifications about medical cooldown';
+        notificationTitle = 'Medical Cooldown';
+        notificationSubtitle = 'Here is your medical cooldown reminder!';
+        break;
+      case ProfileNotification.booster:
+        notificationId = 106;
+        secondsToNotification = _user.cooldowns.booster;
+        channelTitle = 'Booster';
+        channelSubtitle = 'Booster Expired';
+        channelDescription = 'Urgent notifications about booster cooldown';
+        notificationTitle = 'Booster Cooldown';
+        notificationSubtitle = 'Here is your booster cooldown reminder!';
         break;
     }
 
@@ -1608,10 +1710,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      //TODO: DateTime.now().add(Duration(seconds: _user.energy.fulltime)),
+      //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
+      DateTime.now().add(Duration(seconds: secondsToNotification)),
       platformChannelSpecifics,
-      payload: type,
+      payload: notificationType.string,
       androidAllowWhileIdle: true, // Deliver at exact time
     );
 
@@ -1657,14 +1759,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _cancelNotifications(String type) async {
-    var pendingNotificationRequests =
-        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-
-    for (var i = 0; i < pendingNotificationRequests.length; i++) {
-      if (pendingNotificationRequests[i].payload == type) {
-        await flutterLocalNotificationsPlugin.cancel(i);
-      }
+  Future<void> _cancelNotifications(
+      ProfileNotification notificationType) async {
+    switch (notificationType) {
+      case ProfileNotification.energy:
+        await flutterLocalNotificationsPlugin.cancel(101);
+        break;
+      case ProfileNotification.nerve:
+        await flutterLocalNotificationsPlugin.cancel(102);
+        break;
+      case ProfileNotification.life:
+        await flutterLocalNotificationsPlugin.cancel(103);
+        break;
+      case ProfileNotification.drugs:
+        await flutterLocalNotificationsPlugin.cancel(104);
+        break;
+      case ProfileNotification.medical:
+        await flutterLocalNotificationsPlugin.cancel(105);
+        break;
+      case ProfileNotification.booster:
+        await flutterLocalNotificationsPlugin.cancel(106);
+        break;
     }
 
     _retrievePendingNotifications();
@@ -1677,8 +1792,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           DateTime.now().add(Duration(seconds: _user.energy.fulltime));
       var compare = newCalculation.difference(_energyCurrentSchedule);
       if (compare.inMinutes > 2) {
-        _cancelNotifications('energy');
-        _scheduleNotification('energy');
+        _cancelNotifications(ProfileNotification.energy);
+        _scheduleNotification(ProfileNotification.energy);
         _energyCurrentSchedule = newCalculation;
         triggered = true;
       }
@@ -1689,8 +1804,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
       var compare = newCalculation.difference(_nerveCurrentSchedule);
       if (compare.inMinutes > 2) {
-        _cancelNotifications('nerve');
-        _scheduleNotification('nerve');
+        _cancelNotifications(ProfileNotification.nerve);
+        _scheduleNotification(ProfileNotification.nerve);
         _nerveCurrentSchedule = newCalculation;
         triggered = true;
       }
@@ -1701,8 +1816,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           DateTime.now().add(Duration(seconds: _user.life.fulltime));
       var compare = newCalculation.difference(_lifeCurrentSchedule);
       if (compare.inMinutes > 2) {
-        _cancelNotifications('life');
-        _scheduleNotification('life');
+        _cancelNotifications(ProfileNotification.life);
+        _scheduleNotification(ProfileNotification.life);
         _lifeCurrentSchedule = newCalculation;
         triggered = true;
       }
@@ -1713,8 +1828,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
       var compare = newCalculation.difference(_drugsCurrentSchedule);
       if (compare.inMinutes > 2) {
-        _cancelNotifications('drugs');
-        _scheduleNotification('drugs');
+        _cancelNotifications(ProfileNotification.drugs);
+        _scheduleNotification(ProfileNotification.drugs);
         _drugsCurrentSchedule = newCalculation;
         triggered = true;
       }
@@ -1725,8 +1840,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
       var compare = newCalculation.difference(_medicalCurrentSchedule);
       if (compare.inMinutes > 2) {
-        _cancelNotifications('medical');
-        _scheduleNotification('medical');
+        _cancelNotifications(ProfileNotification.medical);
+        _scheduleNotification(ProfileNotification.medical);
         _medicalCurrentSchedule = newCalculation;
         triggered = true;
       }
@@ -1737,8 +1852,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
       var compare = newCalculation.difference(_boosterCurrentSchedule);
       if (compare.inMinutes > 2) {
-        _cancelNotifications('booster');
-        _scheduleNotification('booster');
+        _cancelNotifications(ProfileNotification.booster);
+        _scheduleNotification(ProfileNotification.booster);
         _energyCurrentSchedule = newCalculation;
         triggered = true;
       }
