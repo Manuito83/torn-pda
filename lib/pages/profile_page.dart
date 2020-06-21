@@ -82,22 +82,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool dialVisible = true;
 
   bool _energyNotificationsPending = false;
-  DateTime _energyCurrentSchedule;
-
   bool _nerveNotificationsPending = false;
-  DateTime _nerveCurrentSchedule;
-
   bool _lifeNotificationsPending = false;
-  DateTime _lifeCurrentSchedule;
-
   bool _drugsNotificationsPending = false;
-  DateTime _drugsCurrentSchedule;
-
   bool _medicalNotificationsPending = false;
-  DateTime _medicalCurrentSchedule;
-
   bool _boosterNotificationsPending = false;
-  DateTime _boosterCurrentSchedule;
 
   @override
   void initState() {
@@ -704,7 +693,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           return SizedBox.shrink();
         } else {
           var time;
-          time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
+          time = _serverTime.add(Duration(seconds: _user.life.fulltime));
           var formatter = new DateFormat('HH:mm');
           String timeFormatted = formatter.format(time);
           return Row(
@@ -725,42 +714,42 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool notificationsPending;
     String setString;
     String cancelString;
-    var formatter = new DateFormat('HH:mm:ss');
+    var formatter = new DateFormat('HH:mm');
 
     switch (notificationType) {
       case ProfileNotification.energy:
         fullTime = _user.energy.fulltime;
         notificationsPending = _energyNotificationsPending;
-        _energyCurrentSchedule =
+        var energyCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.energy.fulltime));
-        String formattedTime = formatter.format(_energyCurrentSchedule);
+        String formattedTime = formatter.format(energyCurrentSchedule);
         setString = 'Energy notification set for $formattedTime local time';
         cancelString = 'Energy notification cancelled!';
         break;
       case ProfileNotification.nerve:
         fullTime = _user.nerve.fulltime;
         notificationsPending = _nerveNotificationsPending;
-        _nerveCurrentSchedule =
+        var nerveCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
-        String formattedTime = formatter.format(_nerveCurrentSchedule);
+        String formattedTime = formatter.format(nerveCurrentSchedule);
         setString = 'Nerve notification set for $formattedTime local time';
         cancelString = 'Nerve notification cancelled!';
         break;
       case ProfileNotification.life:
         fullTime = _user.life.fulltime;
         notificationsPending = _lifeNotificationsPending;
-        _lifeCurrentSchedule =
+        var lifeCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.life.fulltime));
-        String formattedTime = formatter.format(_lifeCurrentSchedule);
+        String formattedTime = formatter.format(lifeCurrentSchedule);
         setString = 'Life notification set for $formattedTime local time';
         cancelString = 'Life notification cancelled!';
         break;
       case ProfileNotification.drugs:
         fullTime = _user.cooldowns.drug;
         notificationsPending = _drugsNotificationsPending;
-        _drugsCurrentSchedule =
+        var drugsCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
-        String formattedTime = formatter.format(_drugsCurrentSchedule);
+        String formattedTime = formatter.format(drugsCurrentSchedule);
         setString =
             'Drugs cooldown notification set for $formattedTime local time';
         cancelString = 'Drugs cooldown notification cancelled!';
@@ -768,9 +757,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.medical:
         fullTime = _user.cooldowns.medical;
         notificationsPending = _medicalNotificationsPending;
-        _medicalCurrentSchedule =
+        var medicalCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
-        String formattedTime = formatter.format(_medicalCurrentSchedule);
+        String formattedTime = formatter.format(medicalCurrentSchedule);
         setString =
             'Medical cooldown notification set for $formattedTime local time';
         cancelString = 'Medical cooldown notification cancelled!';
@@ -778,9 +767,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.booster:
         fullTime = _user.cooldowns.booster;
         notificationsPending = _boosterNotificationsPending;
-        _boosterCurrentSchedule =
+        var boosterCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
-        String formattedTime = formatter.format(_boosterCurrentSchedule);
+        String formattedTime = formatter.format(boosterCurrentSchedule);
         setString =
             'Booster cooldown notification set for $formattedTime local time';
         cancelString = 'Booster cooldown notification cancelled!';
@@ -1459,12 +1448,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _serverTime =
             DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
+        _checkIfNotificationsAreCurrent();
       } else {
         _apiGoodData = false;
       }
     });
 
-    _checkIfNotificationsAreCurrent();
     _retrievePendingNotifications();
   }
 
@@ -1830,11 +1819,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     bool triggered = false;
-    var updatedList = List<String>();
+    var updatedTypes = List<String>();
+    var updatedTimes = List<String>();
+    var formatter = new DateFormat('HH:mm');
 
     for (var notification in pendingNotificationRequests) {
       var splitPayload = notification.payload.split('-');
       var oldTimeStamp = int.parse(splitPayload[1]);
+
       if (notification.payload.contains('energy')) {
         var newCalculation = DateTime.now()
                 .add(Duration(seconds: _user.energy.fulltime))
@@ -1845,7 +1837,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _cancelNotifications(ProfileNotification.energy);
           _scheduleNotification(ProfileNotification.energy);
           triggered = true;
-          updatedList.add('energy');
+          updatedTypes.add('energy');
+          var energyCurrentSchedule =
+              DateTime.now().add(Duration(seconds: _user.energy.fulltime));
+          updatedTimes.add(formatter.format(energyCurrentSchedule));
         }
       } else if (notification.payload.contains('nerve')) {
         var newCalculation = DateTime.now()
@@ -1857,7 +1852,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _cancelNotifications(ProfileNotification.nerve);
           _scheduleNotification(ProfileNotification.nerve);
           triggered = true;
-          updatedList.add('nerve');
+          updatedTypes.add('nerve');
+          var nerveCurrentSchedule =
+              DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+          updatedTimes.add(formatter.format(nerveCurrentSchedule));
         }
       } else if (notification.payload.contains('life')) {
         var newCalculation = DateTime.now()
@@ -1869,7 +1867,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _cancelNotifications(ProfileNotification.life);
           _scheduleNotification(ProfileNotification.life);
           triggered = true;
-          updatedList.add('life');
+          updatedTypes.add('life');
+          var lifeCurrentSchedule =
+              DateTime.now().add(Duration(seconds: _user.life.fulltime));
+          updatedTimes.add(formatter.format(lifeCurrentSchedule));
         }
       } else if (notification.payload.contains('drugs')) {
         var newCalculation = DateTime.now()
@@ -1881,7 +1882,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _cancelNotifications(ProfileNotification.drugs);
           _scheduleNotification(ProfileNotification.drugs);
           triggered = true;
-          updatedList.add('drugs');
+          updatedTypes.add('drugs');
+          var drugsCurrentSchedule =
+              DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+          updatedTimes.add(formatter.format(drugsCurrentSchedule));
         }
       } else if (notification.payload.contains('medical')) {
         var newCalculation = DateTime.now()
@@ -1893,7 +1897,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _cancelNotifications(ProfileNotification.medical);
           _scheduleNotification(ProfileNotification.medical);
           triggered = true;
-          updatedList.add('medical');
+          updatedTypes.add('medical');
+          var medicalCurrentSchedule =
+              DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
+          updatedTimes.add(formatter.format(medicalCurrentSchedule));
         }
       } else if (notification.payload.contains('booster')) {
         var newCalculation = DateTime.now()
@@ -1905,30 +1912,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _cancelNotifications(ProfileNotification.booster);
           _scheduleNotification(ProfileNotification.booster);
           triggered = true;
-          updatedList.add('booster');
+          updatedTypes.add('booster');
+          var boosterCurrentSchedule =
+              DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
+          updatedTimes.add(formatter.format(boosterCurrentSchedule));
         }
-      }
-
-      if (triggered) {
-        String thoseUpdated = '';
-        for (var i = 0; i < updatedList.length; i++) {
-          thoseUpdated += updatedList[i];
-          if (i < updatedList.length - 1) {
-            thoseUpdated += ", ";
-          }
-        }
-
-        BotToast.showText(
-          text: 'Some notifications have been updated: $thoseUpdated',
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[700],
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
-        );
       }
     }
+
+    if (triggered) {
+      String thoseUpdated = '';
+      for (var i = 0; i < updatedTypes.length; i++) {
+        thoseUpdated += updatedTypes[i];
+        thoseUpdated += ' (${updatedTimes[i]})';
+        if (i < updatedTypes.length - 1) {
+          thoseUpdated += ", ";
+        }
+      }
+
+      BotToast.showText(
+        text: 'Some notifications have been updated: $thoseUpdated',
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[700],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
   }
+
 }
