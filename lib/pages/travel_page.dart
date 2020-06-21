@@ -877,7 +877,7 @@ class _TravelPageState extends State<TravelPage> {
     vibrationPattern[7] = 1000;
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Travel', // TODO: several notification channels
+      'Travel',
       'Travel Full',
       'Urgent notifications about arriving to destination',
       importance: Importance.Max,
@@ -901,7 +901,7 @@ class _TravelPageState extends State<TravelPage> {
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
-      0,
+      201,
       _notificationTitle,
       _notificationBody,
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
@@ -916,15 +916,7 @@ class _TravelPageState extends State<TravelPage> {
   }
 
   Future<void> _cancelTravelNotification() async {
-    var pendingNotificationRequests =
-        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-
-    for (var i = 0; i < pendingNotificationRequests.length; i++) {
-      if (pendingNotificationRequests[i].payload == 'travel') {
-        await flutterLocalNotificationsPlugin.cancel(i);
-      }
-    }
-
+    await flutterLocalNotificationsPlugin.cancel(201);
     _retrievePendingNotifications();
   }
 
