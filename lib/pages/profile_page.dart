@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:expandable/expandable.dart';
@@ -396,8 +397,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        String twoDigitMinutes =
+            twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff =
+            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return Padding(
           padding: const EdgeInsets.only(top: 10),
@@ -732,7 +735,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _energyCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.energy.fulltime));
         String formattedTime = formatter.format(_energyCurrentSchedule);
-        setString = 'Energy notification set for $formattedTime LT';
+        setString = 'Energy notification set for $formattedTime local time';
         cancelString = 'Energy notification cancelled!';
         break;
       case ProfileNotification.nerve:
@@ -741,7 +744,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _nerveCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
         String formattedTime = formatter.format(_nerveCurrentSchedule);
-        setString = 'Nerve notification set for $formattedTime LT';
+        setString = 'Nerve notification set for $formattedTime local time';
         cancelString = 'Nerve notification cancelled!';
         break;
       case ProfileNotification.life:
@@ -750,7 +753,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _lifeCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.life.fulltime));
         String formattedTime = formatter.format(_lifeCurrentSchedule);
-        setString = 'Life notification set for $formattedTime LT';
+        setString = 'Life notification set for $formattedTime local time';
         cancelString = 'Life notification cancelled!';
         break;
       case ProfileNotification.drugs:
@@ -759,7 +762,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _drugsCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
         String formattedTime = formatter.format(_drugsCurrentSchedule);
-        setString = 'Drugs cooldown notification set for $formattedTime LT';
+        setString = 'Drugs cooldown notification set for $formattedTime local time';
         cancelString = 'Drugs cooldown notification cancelled!';
         break;
       case ProfileNotification.medical:
@@ -768,7 +771,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _medicalCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
         String formattedTime = formatter.format(_medicalCurrentSchedule);
-        setString = 'Medical cooldown notification set for $formattedTime LT';
+        setString = 'Medical cooldown notification set for $formattedTime local time';
         cancelString = 'Medical cooldown notification cancelled!';
         break;
       case ProfileNotification.booster:
@@ -777,7 +780,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _boosterCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
         String formattedTime = formatter.format(_boosterCurrentSchedule);
-        setString = 'Booster cooldown notification set for $formattedTime LT';
+        setString = 'Booster cooldown notification set for $formattedTime local time';
         cancelString = 'Booster cooldown notification cancelled!';
         break;
     }
@@ -801,21 +804,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         onTap: () {
           if (!notificationsPending) {
             _scheduleNotification(notificationType);
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  setString,
-                ),
+            BotToast.showText(
+              text: setString,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.green,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
             );
           } else {
             _cancelNotifications(notificationType);
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  cancelString,
-                ),
+            BotToast.showText(
+              text: cancelString,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.orange[800],
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
             );
           }
         },
@@ -1615,15 +1624,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String notificationTitle;
     String notificationSubtitle;
     int notificationId;
+
+    // We will add the timestamp to the payload
+    String notificationPayload = '';
+
     switch (notificationType) {
       case ProfileNotification.energy:
         notificationId = 101;
         secondsToNotification = _user.energy.fulltime;
-        channelTitle = 'energy';
+        channelTitle = 'Energy';
         channelSubtitle = 'Energy Full';
         channelDescription = 'Urgent notifications about energy';
         notificationTitle = 'Energy Full';
         notificationSubtitle = 'Here is your energy reminder!';
+        var myTimeStamp =
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
+                _user.energy.fulltime;
+        notificationPayload += '${notificationType.string}-$myTimeStamp';
         break;
       case ProfileNotification.nerve:
         notificationId = 102;
@@ -1633,6 +1650,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelDescription = 'Urgent notifications about nerve';
         notificationTitle = 'Nerve Full';
         notificationSubtitle = 'Here is your nerve reminder!';
+        var myTimeStamp =
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
+                _user.nerve.fulltime;
+        notificationPayload += '${notificationType.string}-$myTimeStamp';
         break;
       case ProfileNotification.life:
         notificationId = 103;
@@ -1642,6 +1663,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelDescription = 'Urgent notifications about life';
         notificationTitle = 'Life Full';
         notificationSubtitle = 'Here is your life reminder!';
+        var myTimeStamp =
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
+                _user.life.fulltime;
+        notificationPayload += '${notificationType.string}-$myTimeStamp';
         break;
       case ProfileNotification.drugs:
         notificationId = 104;
@@ -1651,6 +1676,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelDescription = 'Urgent notifications about drugs cooldown';
         notificationTitle = 'Drug Cooldown';
         notificationSubtitle = 'Here is your drugs cooldown reminder!';
+        var myTimeStamp =
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
+                _user.cooldowns.drug;
+        notificationPayload += '${notificationType.string}-$myTimeStamp';
         break;
       case ProfileNotification.medical:
         notificationId = 105;
@@ -1660,6 +1689,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelDescription = 'Urgent notifications about medical cooldown';
         notificationTitle = 'Medical Cooldown';
         notificationSubtitle = 'Here is your medical cooldown reminder!';
+        var myTimeStamp =
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
+                _user.cooldowns.medical;
+        notificationPayload += '${notificationType.string}-$myTimeStamp';
         break;
       case ProfileNotification.booster:
         notificationId = 106;
@@ -1669,6 +1702,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelDescription = 'Urgent notifications about booster cooldown';
         notificationTitle = 'Booster Cooldown';
         notificationSubtitle = 'Here is your booster cooldown reminder!';
+        var myTimeStamp =
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
+                _user.cooldowns.booster;
+        notificationPayload += '${notificationType.string}-$myTimeStamp';
         break;
     }
 
@@ -1713,7 +1750,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
       DateTime.now().add(Duration(seconds: secondsToNotification)),
       platformChannelSpecifics,
-      payload: notificationType.string,
+      payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
     );
 
@@ -1733,17 +1770,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (pendingNotificationRequests.length > 0) {
       for (var notification in pendingNotificationRequests) {
-        if (notification.payload == 'energy') {
+        if (notification.payload.contains('energy')) {
           energy = true;
-        } else if (notification.payload == 'nerve') {
+        } else if (notification.payload.contains('nerve')) {
           nerve = true;
-        } else if (notification.payload == 'life') {
+        } else if (notification.payload.contains('life')) {
           life = true;
-        } else if (notification.payload == 'drugs') {
+        } else if (notification.payload.contains('drugs')) {
           drugs = true;
-        } else if (notification.payload == 'medical') {
+        } else if (notification.payload.contains('medical')) {
           medical = true;
-        } else if (notification.payload == 'booster') {
+        } else if (notification.payload.contains('booster')) {
           booster = true;
         }
       }
@@ -1785,88 +1822,116 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
   }
 
-  void _checkIfNotificationsAreCurrent() {
+  void _checkIfNotificationsAreCurrent() async {
+
+
+    var pendingNotificationRequests =
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+    if (pendingNotificationRequests.length == 0) {
+      return;
+    }
+
     bool triggered = false;
-    if (_energyNotificationsPending && _energyCurrentSchedule != null) {
-      var newCalculation =
-          DateTime.now().add(Duration(seconds: _user.energy.fulltime));
-      var compare = newCalculation.difference(_energyCurrentSchedule);
-      if (compare.inMinutes > 2) {
-        _cancelNotifications(ProfileNotification.energy);
-        _scheduleNotification(ProfileNotification.energy);
-        _energyCurrentSchedule = newCalculation;
-        triggered = true;
-      }
-    }
+    var updatedList = List<String>();
 
-    if (_nerveNotificationsPending && _nerveCurrentSchedule != null) {
-      var newCalculation =
-          DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
-      var compare = newCalculation.difference(_nerveCurrentSchedule);
-      if (compare.inMinutes > 2) {
-        _cancelNotifications(ProfileNotification.nerve);
-        _scheduleNotification(ProfileNotification.nerve);
-        _nerveCurrentSchedule = newCalculation;
-        triggered = true;
+    for (var notification in pendingNotificationRequests) {
+      var splitPayload = notification.payload.split('-');
+      var oldTimeStamp = int.parse(splitPayload[1]);
+      if (notification.payload.contains('energy')) {
+        var newCalculation = DateTime.now()
+                .add(Duration(seconds: _user.energy.fulltime))
+                .millisecondsSinceEpoch /
+            1000;
+        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (compareTimeStamps > 120) {
+          _cancelNotifications(ProfileNotification.energy);
+          _scheduleNotification(ProfileNotification.energy);
+          triggered = true;
+          updatedList.add('energy');
+        }
+      } else if (notification.payload.contains('nerve')) {
+        var newCalculation = DateTime.now()
+                .add(Duration(seconds: _user.nerve.fulltime))
+                .millisecondsSinceEpoch /
+            1000;
+        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (compareTimeStamps > 120) {
+          _cancelNotifications(ProfileNotification.nerve);
+          _scheduleNotification(ProfileNotification.nerve);
+          triggered = true;
+          updatedList.add('nerve');
+        }
+      } else if (notification.payload.contains('life')) {
+        var newCalculation = DateTime.now()
+                .add(Duration(seconds: _user.life.fulltime))
+                .millisecondsSinceEpoch /
+            1000;
+        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (compareTimeStamps > 120) {
+          _cancelNotifications(ProfileNotification.life);
+          _scheduleNotification(ProfileNotification.life);
+          triggered = true;
+          updatedList.add('life');
+        }
+      } else if (notification.payload.contains('drugs')) {
+        var newCalculation = DateTime.now()
+                .add(Duration(seconds: _user.cooldowns.drug))
+                .millisecondsSinceEpoch /
+            1000;
+        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (compareTimeStamps > 120) {
+          _cancelNotifications(ProfileNotification.drugs);
+          _scheduleNotification(ProfileNotification.drugs);
+          triggered = true;
+          updatedList.add('drugs');
+        }
+      } else if (notification.payload.contains('medical')) {
+        var newCalculation = DateTime.now()
+                .add(Duration(seconds: _user.cooldowns.medical))
+                .millisecondsSinceEpoch /
+            1000;
+        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (compareTimeStamps > 120) {
+          _cancelNotifications(ProfileNotification.medical);
+          _scheduleNotification(ProfileNotification.medical);
+          triggered = true;
+          updatedList.add('medical');
+        }
+      } else if (notification.payload.contains('booster')) {
+        var newCalculation = DateTime.now()
+                .add(Duration(seconds: _user.cooldowns.booster))
+                .millisecondsSinceEpoch /
+            1000;
+        var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
+        if (compareTimeStamps > 120) {
+          _cancelNotifications(ProfileNotification.booster);
+          _scheduleNotification(ProfileNotification.booster);
+          triggered = true;
+          updatedList.add('booster');
+        }
       }
-    }
 
-    if (_lifeNotificationsPending && _lifeCurrentSchedule != null) {
-      var newCalculation =
-          DateTime.now().add(Duration(seconds: _user.life.fulltime));
-      var compare = newCalculation.difference(_lifeCurrentSchedule);
-      if (compare.inMinutes > 2) {
-        _cancelNotifications(ProfileNotification.life);
-        _scheduleNotification(ProfileNotification.life);
-        _lifeCurrentSchedule = newCalculation;
-        triggered = true;
-      }
-    }
+      if (triggered) {
+        String thoseUpdated = '';
+        for (var i = 0; i < updatedList.length; i++) {
+          thoseUpdated += updatedList[i];
+          if (i < updatedList.length - 1) {
+            thoseUpdated += ", ";
+          }
+        }
 
-    if (_drugsNotificationsPending && _drugsNotificationsPending != null) {
-      var newCalculation =
-          DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
-      var compare = newCalculation.difference(_drugsCurrentSchedule);
-      if (compare.inMinutes > 2) {
-        _cancelNotifications(ProfileNotification.drugs);
-        _scheduleNotification(ProfileNotification.drugs);
-        _drugsCurrentSchedule = newCalculation;
-        triggered = true;
-      }
-    }
-
-    if (_medicalNotificationsPending && _medicalCurrentSchedule != null) {
-      var newCalculation =
-          DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
-      var compare = newCalculation.difference(_medicalCurrentSchedule);
-      if (compare.inMinutes > 2) {
-        _cancelNotifications(ProfileNotification.medical);
-        _scheduleNotification(ProfileNotification.medical);
-        _medicalCurrentSchedule = newCalculation;
-        triggered = true;
-      }
-    }
-
-    if (_boosterNotificationsPending && _boosterCurrentSchedule != null) {
-      var newCalculation =
-          DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
-      var compare = newCalculation.difference(_boosterCurrentSchedule);
-      if (compare.inMinutes > 2) {
-        _cancelNotifications(ProfileNotification.booster);
-        _scheduleNotification(ProfileNotification.booster);
-        _energyCurrentSchedule = newCalculation;
-        triggered = true;
-      }
-    }
-
-    if (triggered) {
-      Scaffold.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Some notifications times have been updated!',
+        BotToast.showText(
+          text: 'Some notifications have been updated: $thoseUpdated',
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
           ),
-        ),
-      );
+          contentColor: Colors.grey[700],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
     }
   }
 }
