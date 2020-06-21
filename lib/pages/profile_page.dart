@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -762,7 +761,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _drugsCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
         String formattedTime = formatter.format(_drugsCurrentSchedule);
-        setString = 'Drugs cooldown notification set for $formattedTime local time';
+        setString =
+            'Drugs cooldown notification set for $formattedTime local time';
         cancelString = 'Drugs cooldown notification cancelled!';
         break;
       case ProfileNotification.medical:
@@ -771,7 +771,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _medicalCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
         String formattedTime = formatter.format(_medicalCurrentSchedule);
-        setString = 'Medical cooldown notification set for $formattedTime local time';
+        setString =
+            'Medical cooldown notification set for $formattedTime local time';
         cancelString = 'Medical cooldown notification cancelled!';
         break;
       case ProfileNotification.booster:
@@ -780,7 +781,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _boosterCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
         String formattedTime = formatter.format(_boosterCurrentSchedule);
-        setString = 'Booster cooldown notification set for $formattedTime local time';
+        setString =
+            'Booster cooldown notification set for $formattedTime local time';
         cancelString = 'Booster cooldown notification cancelled!';
         break;
     }
@@ -1428,12 +1430,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             softWrap: true,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.droidSerif(
-              textStyle: TextStyle(
-                fontSize: 16,
-                color: total <= 0 ? Colors.red : Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
+            style: TextStyle(
+              color: total <= 0 ? Colors.red : Colors.green,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -1823,8 +1822,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _checkIfNotificationsAreCurrent() async {
-
-
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
