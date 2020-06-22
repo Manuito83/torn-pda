@@ -1600,6 +1600,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _updateCallback() async {
+    // Even if this implies colling the app twice, it enhances player
+    // experience as the bars are updated quickly after a change
+    // In turn, we only call the API every 30 seconds with the timer
+    await Future.delayed(Duration(seconds: 10));
+    _fetchApi();
     await Future.delayed(Duration(seconds: 10));
     _fetchApi();
   }
