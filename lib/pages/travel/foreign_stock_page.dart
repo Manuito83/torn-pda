@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:torn_pda/models/foreign_stock_in.dart';
+import 'file:///D:/PROGRAMACION/torn_pda/lib/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/models/stock_sort_popup.dart';
+import 'file:///D:/PROGRAMACION/torn_pda/lib/models/travel/foreign_stock_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/stock_options_dialog.dart';
 import 'package:http/http.dart' as http;
@@ -70,13 +70,13 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   ];
 
   var _currentSort;
-  final _popupChoices = <StockSortPopup>[
-    StockSortPopup(type: StockSort.country),
-    StockSortPopup(type: StockSort.name),
-    StockSortPopup(type: StockSort.type),
-    StockSortPopup(type: StockSort.price),
-    StockSortPopup(type: StockSort.value),
-    StockSortPopup(type: StockSort.profit),
+  final _popupChoices = <StockSort>[
+    StockSort(type: StockSortType.country),
+    StockSort(type: StockSortType.name),
+    StockSort(type: StockSortType.type),
+    StockSort(type: StockSortType.price),
+    StockSort(type: StockSortType.value),
+    StockSort(type: StockSortType.profit),
   ];
 
   @override
@@ -94,14 +94,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       appBar: AppBar(
         title: Text("Foreign Stock"),
         actions: <Widget>[
-          PopupMenuButton<StockSortPopup>(
+          PopupMenuButton<StockSort>(
             icon: Icon(
               Icons.sort,
             ),
             onSelected: _sortStocks,
             itemBuilder: (BuildContext context) {
-              return _popupChoices.map((StockSortPopup choice) {
-                return PopupMenuItem<StockSortPopup>(
+              return _popupChoices.map((StockSort choice) {
+                return PopupMenuItem<StockSort>(
                   value: choice,
                   child: Text(choice.description),
                 );
@@ -913,35 +913,35 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     });
   }
 
-  void _sortStocks(StockSortPopup choice) {
+  void _sortStocks(StockSort choice) {
     _currentSort = choice;
     setState(() {
       switch (choice.type) {
-        case StockSort.country:
+        case StockSortType.country:
           _filteredStocks.stocks.sort(
               (a, b) => a.countryName.index.compareTo(b.countryName.index));
           SharedPreferencesModel().setStockSort('country');
           break;
-        case StockSort.name:
+        case StockSortType.name:
           _filteredStocks.stocks
               .sort((a, b) => a.itemName.compareTo(b.itemName));
           SharedPreferencesModel().setStockSort('name');
           break;
-        case StockSort.type:
+        case StockSortType.type:
           _filteredStocks.stocks
               .sort((a, b) => a.itemType.compareTo(b.itemType));
           SharedPreferencesModel().setStockSort('type');
           break;
-        case StockSort.price:
+        case StockSortType.price:
           _filteredStocks.stocks
               .sort((a, b) => b.abroadCost.compareTo(a.abroadCost));
           SharedPreferencesModel().setStockSort('price');
           break;
-        case StockSort.value:
+        case StockSortType.value:
           _filteredStocks.stocks.sort((a, b) => b.value.compareTo(a.value));
           SharedPreferencesModel().setStockSort('value');
           break;
-        case StockSort.profit:
+        case StockSortType.profit:
           _filteredStocks.stocks.sort((a, b) => b.profit.compareTo(a.profit));
           SharedPreferencesModel().setStockSort('profit');
           break;
@@ -965,21 +965,21 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     var sortString = await SharedPreferencesModel().getStockSort();
-    StockSort sortType;
+    StockSortType sortType;
     if (sortString == 'country') {
-      sortType = StockSort.country;
+      sortType = StockSortType.country;
     } else if (sortString == 'name') {
-      sortType = StockSort.name;
+      sortType = StockSortType.name;
     } else if (sortString == 'type') {
-      sortType = StockSort.type;
+      sortType = StockSortType.type;
     } else if (sortString == 'price') {
-      sortType = StockSort.price;
+      sortType = StockSortType.price;
     } else if (sortString == 'value') {
-      sortType = StockSort.value;
+      sortType = StockSortType.value;
     } else if (sortString == 'profit') {
-      sortType = StockSort.profit;
+      sortType = StockSortType.profit;
     }
-    _currentSort = StockSortPopup(type: sortType);
+    _currentSort = StockSort(type: sortType);
 
     _capacity = await SharedPreferencesModel().getStockCapacity();
   }

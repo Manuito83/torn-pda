@@ -1,4 +1,4 @@
-enum TargetSort {
+enum TargetSortType {
   levelDes,
   levelAsc,
   respectDes,
@@ -7,28 +7,28 @@ enum TargetSort {
   nameAsc
 }
 
-class TargetSortPopup {
-  TargetSort type;
+class TargetSort {
+  TargetSortType type;
   String description;
 
-  TargetSortPopup({this.type}) {
+  TargetSort({this.type}) {
     switch (type) {
-      case TargetSort.levelDes:
+      case TargetSortType.levelDes:
         description = 'Sort by level (des)';
         break;
-      case TargetSort.levelAsc:
+      case TargetSortType.levelAsc:
         description = 'Sort by level (asc)';
         break;
-      case TargetSort.respectDes:
+      case TargetSortType.respectDes:
         description = 'Sort by respect (des)';
         break;
-      case TargetSort.respectAsc:
+      case TargetSortType.respectAsc:
         description = 'Sort by respect (asc)';
         break;
-      case TargetSort.nameDes:
+      case TargetSortType.nameDes:
         description = 'Sort by name (des)';
         break;
-      case TargetSort.nameAsc:
+      case TargetSortType.nameAsc:
         description = 'Sort by name (asc)';
         break;
     }

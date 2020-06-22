@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
@@ -33,7 +34,7 @@ class _TravelPageState extends State<TravelPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
-  int _notificationsPendingNumber;
+  bool _notificationsPending = false;
   bool _alarmSound = false;
   bool _alarmVibration = true;
 
@@ -55,7 +56,7 @@ class _TravelPageState extends State<TravelPage> {
     super.initState();
     _requestIOSPermissions();
 
-    _finishedLoadingPreferences = _restoreSharedPreferences();
+    _finishedLoadingPreferences = _restorePreferences();
 
     _retrievePendingNotifications();
 
@@ -367,7 +368,7 @@ class _TravelPageState extends State<TravelPage> {
                 builder: (ctx) => RaisedButton(
                     child: Text("Cancel"),
                     onPressed: () async {
-                      await _cancelAllNotifications();
+                      await _cancelTravelNotification();
                       Scaffold.of(ctx).showSnackBar(SnackBar(
                         content: Text('Notifications cancelled!'),
                       ));
@@ -660,7 +661,7 @@ class _TravelPageState extends State<TravelPage> {
   }
 
   Widget _notificationNumberText() {
-    if (_notificationsPendingNumber == 0) {
+    if (!_notificationsPending) {
       return SizedBox.shrink();
     } else {
       return Padding(
@@ -876,7 +877,7 @@ class _TravelPageState extends State<TravelPage> {
     vibrationPattern[7] = 1000;
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Travel', // TODO: several notification channels
+      'Travel',
       'Travel Full',
       'Urgent notifications about arriving to destination',
       importance: Importance.Max,
@@ -900,7 +901,7 @@ class _TravelPageState extends State<TravelPage> {
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
-      0,
+      201,
       _notificationTitle,
       _notificationBody,
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
@@ -914,8 +915,8 @@ class _TravelPageState extends State<TravelPage> {
     return scheduledNotificationDateTime;
   }
 
-  Future<void> _cancelAllNotifications() async {
-    await flutterLocalNotificationsPlugin.cancelAll();
+  Future<void> _cancelTravelNotification() async {
+    await flutterLocalNotificationsPlugin.cancel(201);
     _retrievePendingNotifications();
   }
 
@@ -923,7 +924,17 @@ class _TravelPageState extends State<TravelPage> {
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
     setState(() {
-      _notificationsPendingNumber = pendingNotificationRequests.length;
+      if (pendingNotificationRequests.length > 0) {
+        for (var notification in pendingNotificationRequests) {
+          if (notification.payload == 'travel') {
+            _notificationsPending = true;
+          } else {
+            _notificationsPending = false;
+          }
+        }
+      } else {
+        _notificationsPending = false;
+      }
     });
   }
 
@@ -961,10 +972,10 @@ class _TravelPageState extends State<TravelPage> {
     intent.launch();
   }
 
-  Future _restoreSharedPreferences() async {
-    String key = await SharedPreferencesModel().getApiKey();
-    if (key != '') {
-      _myCurrentKey = key;
+  Future _restorePreferences() async {
+    var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    _myCurrentKey = userDetails.myUser.userApiKey;
+    if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
     _notificationTitle =
@@ -972,5 +983,4 @@ class _TravelPageState extends State<TravelPage> {
     _notificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
   }
-
 }

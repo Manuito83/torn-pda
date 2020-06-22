@@ -2,14 +2,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
+import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/pages/travel_page.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
@@ -20,17 +22,18 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
-  int _settingsPosition = 3;
+  int _settingsPosition = 4;
 
   final _drawerItemsList = [
     "Profile",
     "Travel",
     "Chaining",
+    "Friends",
     "Settings",
   ];
 
   ThemeProvider _themeProvider;
-  ApiKeyProvider _apiKeyProvider;
+  UserDetailsProvider _userProvider;
 
   Future _finishedWithPreferences;
 
@@ -74,6 +77,50 @@ class _DrawerPageState extends State<DrawerPage> {
             }
             break;
         }
+      } else if (payload.contains('energy')) {
+        // Works best if we get SharedPrefs directly instead of SettingsProvider
+        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        switch (browserType) {
+          case 'app':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  webViewType: WebViewType.custom,
+                  customUrl: 'https://www.torn.com/gym.php',
+                  genericTitle: 'Torn',
+                ),
+              ),
+            );
+            break;
+          case 'external':
+            var url = 'https://www.torn.com/gym.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
+      } else if (payload.contains('nerve')) {
+        // Works best if we get SharedPrefs directly instead of SettingsProvider
+        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        switch (browserType) {
+          case 'app':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  webViewType: WebViewType.custom,
+                  customUrl: 'https://www.torn.com/crimes.php',
+                  genericTitle: 'Torn',
+                ),
+              ),
+            );
+            break;
+          case 'external':
+            var url = 'https://www.torn.com/crimes.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
       }
     });
   }
@@ -81,7 +128,7 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: true);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -180,7 +227,7 @@ class _DrawerPageState extends State<DrawerPage> {
     var drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings page (just don't
     // add the other sections to the list
-    if (!_apiKeyProvider.apiKeyValid) {
+    if (!_userProvider.myUser.userApiKeyValid) {
       drawerOptions.add(
         ListTileTheme(
           selectedColor: Colors.red,
@@ -249,6 +296,9 @@ class _DrawerPageState extends State<DrawerPage> {
         return ChainingPage();
         break;
       case 3:
+        return FriendsPage();
+        break;
+      case 4:
         return SettingsPage();
         break;
       default:
@@ -268,6 +318,9 @@ class _DrawerPageState extends State<DrawerPage> {
         return Icon(Icons.link);
         break;
       case 3:
+        return Icon(Icons.people);
+        break;
+      case 4:
         return Icon(Icons.settings);
         break;
       default:
@@ -285,11 +338,11 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Future<void> _getKeyStatus() async {
     // Set up provider
-    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
-    await _apiKeyProvider.loadPreferences();
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    await _userProvider.loadPreferences();
 
     // If key is empty, redirect to the Settings page. Else, open the default
-    if (_apiKeyProvider.apiKey == '') {
+    if (!_userProvider.myUser.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {

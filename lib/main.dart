@@ -1,18 +1,21 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/models/user_details_model.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
+import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE
-final String appVersion = '1.2.0';
+final String appVersion = '1.3.0';
 final bool appNeedsChangelog = true;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -41,9 +44,9 @@ Future<void> main() async {
   var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
 
   var initializationSettingsIOS = IOSInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
   );
 
   var initializationSettings = InitializationSettings(
@@ -57,16 +60,31 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<TargetsProvider>(
-            create: (context) => TargetsProvider()),
-        ChangeNotifierProvider<AttacksProvider>(
-            create: (context) => AttacksProvider()),
+        // UserDetailsProvider has to go first to initialize the others!
+        ChangeNotifierProvider<UserDetailsProvider>(
+            create: (context) => UserDetailsProvider()),
+        ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
+          create: (context) => TargetsProvider(UserDetailsModel()),
+          update: (BuildContext context, UserDetailsProvider userProvider,
+                  TargetsProvider targetsProvider) =>
+              TargetsProvider(userProvider.myUser),
+        ),
+        ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
+          create: (context) => AttacksProvider(UserDetailsModel()),
+          update: (BuildContext context, UserDetailsProvider userProvider,
+                  AttacksProvider attacksProvider) =>
+              AttacksProvider(userProvider.myUser),
+        ),
         ChangeNotifierProvider<ThemeProvider>(
             create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
-        ChangeNotifierProvider<ApiKeyProvider>(
-            create: (context) => ApiKeyProvider()),
+        ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
+          create: (context) => FriendsProvider(UserDetailsModel()),
+          update: (BuildContext context, UserDetailsProvider userProvider,
+                  FriendsProvider friendsProvider) =>
+              FriendsProvider(userProvider.myUser),
+        ),
       ],
       child: MyApp(),
     ),
@@ -78,6 +96,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return MaterialApp(
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()],
       title: 'Torn PDA',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

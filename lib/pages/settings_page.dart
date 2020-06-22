@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/api_key_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/models/profile_model.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -24,20 +24,20 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _apiError = false;
   String _errorReason = '';
   bool _apiIsLoading = false;
-  ProfileModel _userProfile;
+  UserDetailsModel _userProfile;
 
   String _openSectionValue;
   String _openBrowserValue;
 
   SettingsProvider _settingsProvider;
-  ApiKeyProvider _apiKeyProvider;
+  UserDetailsProvider _userProvider;
 
   var _apiKeyInputController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _apiKeyProvider = Provider.of<ApiKeyProvider>(context, listen: false);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _restorePreferences();
     _ticker = new Timer.periodic(
@@ -217,8 +217,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 _formKey.currentState.reset();
                                 _apiKeyInputController.clear();
                                 _myCurrentKey = '';
-                                SharedPreferencesModel().setOwnId('');
-                                _apiKeyProvider.setApiKey(newApiKey: '');
+                                _userProvider.removeUser();
                                 setState(() {
                                   _userToLoad = false;
                                   _apiError = false;
@@ -305,7 +304,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             Text("Gender: ${_userProfile.gender}"),
             Text("Level: ${_userProfile.level}"),
-            Text("Life: ${_userProfile.life}"),
+            Text("Life: ${_userProfile.life.current}"),
             Text("Status: ${_userProfile.status}"),
             Text("Last action: ${_userProfile.lastAction}"),
             Text("Rank: ${_userProfile.rank}"),
@@ -366,6 +365,15 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "3",
+          child: Text(
+            "Friends",
+            style: TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         SharedPreferencesModel().setDefaultSection(value);
@@ -420,16 +428,20 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
     }
-    dynamic myProfile = await TornApiCaller.profile(_myCurrentKey).getProfile;
-    if (myProfile is ProfileModel) {
+    dynamic myProfile = await TornApiCaller.userDetails(_myCurrentKey).getUserDetails;
+    if (myProfile is UserDetailsModel) {
       setState(() {
         _apiIsLoading = false;
         _userToLoad = true;
         _apiError = false;
         _userProfile = myProfile;
       });
-      SharedPreferencesModel().setOwnId(myProfile.playerId.toString());
-      _apiKeyProvider.setApiKey(newApiKey: _myCurrentKey);
+
+      myProfile
+        ..userApiKey = _myCurrentKey
+        ..userApiKeyValid = true;
+      _userProvider.setUserDetails(userDetails: myProfile);
+
     } else if (myProfile is ApiError) {
       setState(() {
         _apiIsLoading = false;
@@ -437,16 +449,15 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiError = true;
         _errorReason = myProfile.errorReason;
       });
-      SharedPreferencesModel().setOwnId('');
-      _apiKeyProvider.setApiKey(newApiKey: '');
+      _userProvider.removeUser();
     }
   }
 
   void _restorePreferences() async {
-    if (_apiKeyProvider.apiKeyValid) {
+    if (_userProvider.myUser.userApiKeyValid) {
       setState(() {
-        _apiKeyInputController.text = _apiKeyProvider.apiKey;
-        _myCurrentKey = _apiKeyProvider.apiKey;
+        _apiKeyInputController.text = _userProvider.myUser.userApiKey;
+        _myCurrentKey = _userProvider.myUser.userApiKey;
       });
       _getApiDetails();
     }

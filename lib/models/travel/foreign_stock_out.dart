@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../main.dart';
+import '../../main.dart';
 
 ForeignStockOutModel foreignStockOutModelFromJson(String str) =>
     ForeignStockOutModel.fromJson(json.decode(str));

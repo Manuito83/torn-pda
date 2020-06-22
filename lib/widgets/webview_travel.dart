@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:torn_pda/models/foreign_stock_out.dart';
-import 'package:torn_pda/models/profile_model.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/models/user_details_model.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
@@ -121,9 +122,12 @@ class _TornWebViewTravelState extends State<TornWebViewTravel> {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
 
-        String key = await SharedPreferencesModel().getApiKey();
-        var userProfile = await TornApiCaller.profile(key).getProfile;
-        if (userProfile is ProfileModel) {
+        var userDetailsProvider =
+            Provider.of<UserDetailsProvider>(context, listen: false);
+        var userProfile =
+            await TornApiCaller.userDetails(userDetailsProvider.myUser.userApiKey)
+                .getUserDetails;
+        if (userProfile is UserDetailsModel) {
           stockModel.authorName = userProfile.name;
           stockModel.authorId = userProfile.playerId;
         }

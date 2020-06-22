@@ -1,15 +1,34 @@
 // To parse this JSON data, do
 //
-//     final ownProfileModel = ownProfileModelFromJson(jsonString);
+//     final friendModel = friendModelFromJson(jsonString);
 
 import 'dart:convert';
 
-OwnProfileModel ownProfileModelFromJson(String str) => OwnProfileModel.fromJson(json.decode(str));
+FriendModel friendModelFromJson(String str) => FriendModel.fromJson(json.decode(str));
 
-String ownProfileModelToJson(OwnProfileModel data) => json.encode(data.toJson());
+String friendModelToJson(FriendModel data) => json.encode(data.toJson());
 
-class OwnProfileModel {
-  OwnProfileModel({
+class FriendModel {
+  // For state management
+  bool isUpdating = false;
+  bool justUpdatedWithError = false;
+  bool justUpdatedWithSuccess = false;
+
+  // External, exported/imported to Shared Preferences!
+  String personalNote;
+  String personalNoteColor;
+  DateTime lastUpdated;
+  bool hasFaction;
+
+  FriendModel({
+    // This first batch is here to export/import from SharedPreferences,
+    // so we also have to initialize them below
+    this.personalNote,
+    this.personalNoteColor,
+    this.lastUpdated,
+    this.hasFaction,
+    /////////////////
+
     this.rank,
     this.level,
     this.gender,
@@ -26,7 +45,6 @@ class OwnProfileModel {
     this.playerId,
     this.name,
     this.propertyId,
-    this.serverTime,
     this.life,
     this.status,
     this.job,
@@ -34,14 +52,7 @@ class OwnProfileModel {
     this.married,
     this.states,
     this.lastAction,
-    this.happy,
-    this.energy,
-    this.nerve,
-    this.chain,
-    this.networth,
-    this.cooldowns,
-    this.events,
-    this.travel,
+    this.discord,
   });
 
   String rank;
@@ -60,24 +71,21 @@ class OwnProfileModel {
   int playerId;
   String name;
   int propertyId;
-  int serverTime;
-  Energy life;
+  Life life;
   Status status;
   Job job;
   Faction faction;
   Married married;
   States states;
   LastAction lastAction;
-  Energy happy;
-  Energy energy;
-  Energy nerve;
-  Chain chain;
-  Map<String, double> networth;
-  Cooldowns cooldowns;
-  Map<String, Event> events;
-  Travel travel;
+  Discord discord;
 
-  factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
+  factory FriendModel.fromJson(Map<String, dynamic> json) => FriendModel(
+    personalNote: json["personalNote"] == null ? '' : json["personalNote"],
+    personalNoteColor: json["personalNoteColor"] == null ? '' : json["personalNoteColor"],
+    lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
+    hasFaction: json["hasFaction"] == null ? false : json["hasFaction"],
+
     rank: json["rank"] == null ? null : json["rank"],
     level: json["level"] == null ? null : json["level"],
     gender: json["gender"] == null ? null : json["gender"],
@@ -94,25 +102,22 @@ class OwnProfileModel {
     playerId: json["player_id"] == null ? null : json["player_id"],
     name: json["name"] == null ? null : json["name"],
     propertyId: json["property_id"] == null ? null : json["property_id"],
-    serverTime: json["server_time"] == null ? null : json["server_time"],
-    life: json["life"] == null ? null : Energy.fromJson(json["life"]),
+    life: json["life"] == null ? null : Life.fromJson(json["life"]),
     status: json["status"] == null ? null : Status.fromJson(json["status"]),
     job: json["job"] == null ? null : Job.fromJson(json["job"]),
     faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
     married: json["married"] == null ? null : Married.fromJson(json["married"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
-    happy: json["happy"] == null ? null : Energy.fromJson(json["happy"]),
-    energy: json["energy"] == null ? null : Energy.fromJson(json["energy"]),
-    nerve: json["nerve"] == null ? null : Energy.fromJson(json["nerve"]),
-    chain: json["chain"] == null ? null : Chain.fromJson(json["chain"]),
-    networth: json["networth"] == null ? null : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
-    cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
-    events: json["events"] == null ? null : Map.from(json["events"]).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v))),
-    travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
+    discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
   );
 
   Map<String, dynamic> toJson() => {
+    "personalNote": personalNote,
+    "personalNoteColor": personalNoteColor,
+    "lastUpdated": lastUpdated.toIso8601String(),
+    "hasFaction": hasFaction,
+
     "rank": rank == null ? null : rank,
     "level": level == null ? null : level,
     "gender": gender == null ? null : gender,
@@ -129,7 +134,6 @@ class OwnProfileModel {
     "player_id": playerId == null ? null : playerId,
     "name": name == null ? null : name,
     "property_id": propertyId == null ? null : propertyId,
-    "server_time": serverTime == null ? null : serverTime,
     "life": life == null ? null : life.toJson(),
     "status": status == null ? null : status.toJson(),
     "job": job == null ? null : job.toJson(),
@@ -137,130 +141,27 @@ class OwnProfileModel {
     "married": married == null ? null : married.toJson(),
     "states": states == null ? null : states.toJson(),
     "last_action": lastAction == null ? null : lastAction.toJson(),
-    "happy": happy == null ? null : happy.toJson(),
-    "energy": energy == null ? null : energy.toJson(),
-    "nerve": nerve == null ? null : nerve.toJson(),
-    "chain": chain == null ? null : chain.toJson(),
-    "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
-    "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
-    "events": events == null ? null : Map.from(events).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-    "travel": travel == null ? null : travel.toJson(),
+    "discord": discord == null ? null : discord.toJson(),
   };
 }
 
-class Chain {
-  Chain({
-    this.current,
-    this.maximum,
-    this.timeout,
-    this.modifier,
-    this.cooldown,
+class Discord {
+  Discord({
+    this.userId,
+    this.discordId,
   });
 
-  int current;
-  int maximum;
-  int timeout;
-  double modifier;
-  int cooldown;
+  int userId;
+  String discordId;
 
-  factory Chain.fromJson(Map<String, dynamic> json) => Chain(
-    current: json["current"] == null ? null : json["current"],
-    maximum: json["maximum"] == null ? null : json["maximum"],
-    timeout: json["timeout"] == null ? null : json["timeout"],
-    modifier: json["modifier"] == null ? null : json["modifier"].toDouble(),
-    cooldown: json["cooldown"] == null ? null : json["cooldown"],
+  factory Discord.fromJson(Map<String, dynamic> json) => Discord(
+    userId: json["userID"] == null ? null : json["userID"],
+    discordId: json["discordID"] == null ? null : json["discordID"],
   );
 
   Map<String, dynamic> toJson() => {
-    "current": current == null ? null : current,
-    "maximum": maximum == null ? null : maximum,
-    "timeout": timeout == null ? null : timeout,
-    "modifier": modifier == null ? null : modifier,
-    "cooldown": cooldown == null ? null : cooldown,
-  };
-}
-
-class Cooldowns {
-  Cooldowns({
-    this.drug,
-    this.medical,
-    this.booster,
-  });
-
-  int drug;
-  int medical;
-  int booster;
-
-  factory Cooldowns.fromJson(Map<String, dynamic> json) => Cooldowns(
-    drug: json["drug"] == null ? null : json["drug"],
-    medical: json["medical"] == null ? null : json["medical"],
-    booster: json["booster"] == null ? null : json["booster"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "drug": drug == null ? null : drug,
-    "medical": medical == null ? null : medical,
-    "booster": booster == null ? null : booster,
-  };
-}
-
-class Energy {
-  Energy({
-    this.current,
-    this.maximum,
-    this.increment,
-    this.interval,
-    this.ticktime,
-    this.fulltime,
-  });
-
-  int current;
-  int maximum;
-  int increment;
-  int interval;
-  int ticktime;
-  int fulltime;
-
-  factory Energy.fromJson(Map<String, dynamic> json) => Energy(
-    current: json["current"] == null ? null : json["current"],
-    maximum: json["maximum"] == null ? null : json["maximum"],
-    increment: json["increment"] == null ? null : json["increment"],
-    interval: json["interval"] == null ? null : json["interval"],
-    ticktime: json["ticktime"] == null ? null : json["ticktime"],
-    fulltime: json["fulltime"] == null ? null : json["fulltime"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "current": current == null ? null : current,
-    "maximum": maximum == null ? null : maximum,
-    "increment": increment == null ? null : increment,
-    "interval": interval == null ? null : interval,
-    "ticktime": ticktime == null ? null : ticktime,
-    "fulltime": fulltime == null ? null : fulltime,
-  };
-}
-
-class Event {
-  Event({
-    this.timestamp,
-    this.event,
-    this.seen,
-  });
-
-  int timestamp;
-  String event;
-  int seen;
-
-  factory Event.fromJson(Map<String, dynamic> json) => Event(
-    timestamp: json["timestamp"] == null ? null : json["timestamp"],
-    event: json["event"] == null ? null : json["event"],
-    seen: json["seen"] == null ? null : json["seen"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "timestamp": timestamp == null ? null : timestamp,
-    "event": event == null ? null : event,
-    "seen": seen == null ? null : seen,
+    "userID": userId == null ? null : userId,
+    "discordID": discordId == null ? null : discordId,
   };
 }
 
@@ -340,6 +241,42 @@ class LastAction {
   };
 }
 
+class Life {
+  Life({
+    this.current,
+    this.maximum,
+    this.increment,
+    this.interval,
+    this.ticktime,
+    this.fulltime,
+  });
+
+  int current;
+  int maximum;
+  int increment;
+  int interval;
+  int ticktime;
+  int fulltime;
+
+  factory Life.fromJson(Map<String, dynamic> json) => Life(
+    current: json["current"] == null ? null : json["current"],
+    maximum: json["maximum"] == null ? null : json["maximum"],
+    increment: json["increment"] == null ? null : json["increment"],
+    interval: json["interval"] == null ? null : json["interval"],
+    ticktime: json["ticktime"] == null ? null : json["ticktime"],
+    fulltime: json["fulltime"] == null ? null : json["fulltime"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "current": current == null ? null : current,
+    "maximum": maximum == null ? null : maximum,
+    "increment": increment == null ? null : increment,
+    "interval": interval == null ? null : interval,
+    "ticktime": ticktime == null ? null : ticktime,
+    "fulltime": fulltime == null ? null : fulltime,
+  };
+}
+
 class Married {
   Married({
     this.spouseId,
@@ -413,33 +350,5 @@ class Status {
     "state": state == null ? null : state,
     "color": color == null ? null : color,
     "until": until == null ? null : until,
-  };
-}
-
-class Travel {
-  Travel({
-    this.destination,
-    this.timestamp,
-    this.departed,
-    this.timeLeft,
-  });
-
-  String destination;
-  int timestamp;
-  int departed;
-  int timeLeft;
-
-  factory Travel.fromJson(Map<String, dynamic> json) => Travel(
-    destination: json["destination"] == null ? null : json["destination"],
-    timestamp: json["timestamp"] == null ? null : json["timestamp"],
-    departed: json["departed"] == null ? null : json["departed"],
-    timeLeft: json["time_left"] == null ? null : json["time_left"],
-  );
-
-  Map<String, dynamic> toJson() => {
-    "destination": destination == null ? null : destination,
-    "timestamp": timestamp == null ? null : timestamp,
-    "departed": departed == null ? null : departed,
-    "time_left": timeLeft == null ? null : timeLeft,
   };
 }

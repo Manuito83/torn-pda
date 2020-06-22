@@ -1,4 +1,4 @@
-enum StockSort {
+enum StockSortType {
   country,
   name,
   type,
@@ -7,28 +7,28 @@ enum StockSort {
   profit,
 }
 
-class StockSortPopup {
-  StockSort type;
+class StockSort {
+  StockSortType type;
   String description;
 
-  StockSortPopup({this.type}) {
+  StockSort({this.type}) {
     switch (type) {
-      case StockSort.country:
+      case StockSortType.country:
         description = 'Sort by country';
         break;
-      case StockSort.name:
+      case StockSortType.name:
         description = 'Sort by name';
         break;
-      case StockSort.type:
+      case StockSortType.type:
         description = 'Sort by type';
         break;
-      case StockSort.price:
+      case StockSortType.price:
         description = 'Sort by price';
         break;
-      case StockSort.value:
+      case StockSortType.value:
         description = 'Sort by value';
         break;
-      case StockSort.profit:
+      case StockSortType.profit:
         description = 'Sort by profit';
         break;
     }

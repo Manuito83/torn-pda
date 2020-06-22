@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/models/chaining/target_sort_popup.dart';
+import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -41,11 +42,13 @@ class TargetsProvider extends ChangeNotifier {
   String _currentFilter = '';
   String get currentFilter => _currentFilter;
 
-  TargetSort _currentSort;
+  TargetSortType _currentSort;
 
-  String userKey = '';
-  TargetsProvider() {
-    restoreSharedPreferences();
+  String _userKey = '';
+
+  UserDetailsModel _userDetails;
+  TargetsProvider(this._userDetails) {
+    restorePreferences();
   }
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
@@ -62,10 +65,11 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     dynamic myNewTargetModel =
-        await TornApiCaller.target(userKey, targetId).getTarget;
+        await TornApiCaller.target(_userKey, targetId).getTarget;
 
     if (myNewTargetModel is TargetModel) {
-      dynamic attacksFull = await TornApiCaller.attacks(userKey).getAttacksFull;
+      dynamic attacksFull =
+          await TornApiCaller.attacks(_userKey).getAttacksFull;
       _getTargetRespect(attacksFull, myNewTargetModel);
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
@@ -115,14 +119,16 @@ class TargetsProvider extends ChangeNotifier {
 
           // Find out if this was won or successfully defended by the user
           if (myNewTargetModel.playerId == value.defenderId) {
-            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+            if (value.result == Result.LOST ||
+                value.result == Result.STALEMATE) {
               // If we attacked and lost
               userWonOrDefended.add(false);
             } else {
               userWonOrDefended.add(true);
             }
           } else if (myNewTargetModel.playerId == value.attackerId) {
-            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
+            if (value.result == Result.LOST ||
+                value.result == Result.STALEMATE) {
               // If we were attacked and the attacker lost
               userWonOrDefended.add(true);
             } else {
@@ -152,11 +158,11 @@ class TargetsProvider extends ChangeNotifier {
 
     try {
       dynamic myUpdatedTargetModel =
-          await TornApiCaller.target(userKey, oldTarget.playerId.toString())
+          await TornApiCaller.target(_userKey, oldTarget.playerId.toString())
               .getTarget;
       if (myUpdatedTargetModel is TargetModel) {
         dynamic attacksFull =
-            await TornApiCaller.attacks(userKey).getAttacksFull;
+            await TornApiCaller.attacks(_userKey).getAttacksFull;
         _getTargetRespect(attacksFull, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(oldTarget)] = myUpdatedTargetModel;
@@ -190,12 +196,12 @@ class TargetsProvider extends ChangeNotifier {
     }
     notifyListeners();
     // Then start the real update
-    dynamic attacksFull = await TornApiCaller.attacks(userKey).getAttacksFull;
+    dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel =
-            await TornApiCaller.target(userKey, _targets[i].playerId.toString())
-                .getTarget;
+        dynamic myUpdatedTargetModel = await TornApiCaller.target(
+                _userKey, _targets[i].playerId.toString())
+            .getTarget;
         if (myUpdatedTargetModel is TargetModel) {
           _getTargetRespect(attacksFull, myUpdatedTargetModel);
           _getTargetFaction(myUpdatedTargetModel);
@@ -235,7 +241,7 @@ class TargetsProvider extends ChangeNotifier {
 
   Future<void> updateTargetsAfterAttacks(List<String> targetsIds) async {
     // Local function for the update of several targets after attacking
-    void updatePass (bool showUpdateAnimation) async {
+    void updatePass(bool showUpdateAnimation) async {
       for (var tar in _targets) {
         for (var i = 0; i < targetsIds.length; i++) {
           if (tar.playerId.toString() == targetsIds[i]) {
@@ -245,14 +251,16 @@ class TargetsProvider extends ChangeNotifier {
             }
             try {
               dynamic myUpdatedTargetModel =
-              await TornApiCaller.target(userKey, tar.playerId.toString()).getTarget;
+                  await TornApiCaller.target(_userKey, tar.playerId.toString())
+                      .getTarget;
               if (myUpdatedTargetModel is TargetModel) {
                 dynamic attacksFull =
-                await TornApiCaller.attacks(userKey).getAttacksFull;
+                    await TornApiCaller.attacks(_userKey).getAttacksFull;
                 _getTargetRespect(attacksFull, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
                 _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-                var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
+                var newTarget =
+                    _targets[_targets.indexOf(myUpdatedTargetModel)];
                 if (showUpdateAnimation) {
                   _updateResultAnimation(newTarget, true);
                 }
@@ -340,26 +348,26 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortTargets(TargetSort sortType) {
+  void sortTargets(TargetSortType sortType) {
     _currentSort = sortType;
     switch (sortType) {
-      case TargetSort.levelDes:
+      case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level.compareTo(a.level));
         break;
-      case TargetSort.levelAsc:
+      case TargetSortType.levelAsc:
         _targets.sort((a, b) => a.level.compareTo(b.level));
         break;
-      case TargetSort.respectDes:
+      case TargetSortType.respectDes:
         _targets.sort((a, b) => b.respectGain.compareTo(a.respectGain));
         break;
-      case TargetSort.respectAsc:
+      case TargetSortType.respectAsc:
         _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
-      case TargetSort.nameDes:
+      case TargetSortType.nameDes:
         _targets.sort(
             (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
-      case TargetSort.nameAsc:
+      case TargetSortType.nameAsc:
         _targets.sort(
             (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
@@ -390,68 +398,69 @@ class TargetsProvider extends ChangeNotifier {
     for (var tar in _targets) {
       newPrefs.add(targetModelToJson(tar));
     }
-    SharedPreferencesModel().setTargetLists(newPrefs);
+    SharedPreferencesModel().setTargetsList(newPrefs);
   }
 
   void _saveSortSharedPrefs() {
     String sortToSave;
     switch (_currentSort) {
-      case TargetSort.levelDes:
+      case TargetSortType.levelDes:
         sortToSave = 'levelDes';
         break;
-      case TargetSort.levelAsc:
+      case TargetSortType.levelAsc:
         sortToSave = 'levelAsc';
         break;
-      case TargetSort.respectDes:
+      case TargetSortType.respectDes:
         sortToSave = 'respectDes';
         break;
-      case TargetSort.respectAsc:
+      case TargetSortType.respectAsc:
         sortToSave = 'respectDes';
         break;
-      case TargetSort.nameDes:
+      case TargetSortType.nameDes:
         sortToSave = 'nameDes';
         break;
-      case TargetSort.nameAsc:
+      case TargetSortType.nameAsc:
         sortToSave = 'nameDes';
         break;
     }
-    SharedPreferencesModel().setTargetSort(sortToSave);
+    SharedPreferencesModel().setTargetsSort(sortToSave);
   }
 
-  Future<void> restoreSharedPreferences() async {
+  Future<void> restorePreferences() async {
     // User key
-    String key = await SharedPreferencesModel().getApiKey();
-    if (key != '') {
-      userKey = key;
+    if (_userDetails.userApiKeyValid) {
+      _userKey = _userDetails.userApiKey;
     }
+
     // Target list
     List<String> jsonTargets = await SharedPreferencesModel().getTargetsList();
     for (var jTar in jsonTargets) {
       _targets.add(targetModelFromJson(jTar));
     }
+
     // Target sort
-    String targetSort = await SharedPreferencesModel().getTargetSort();
+    String targetSort = await SharedPreferencesModel().getTargetsSort();
     switch (targetSort) {
       case '':
-        _currentSort = TargetSort.levelDes;
+        _currentSort = TargetSortType.levelDes;
         break;
       case 'levelDes':
-        _currentSort = TargetSort.levelDes;
+        _currentSort = TargetSortType.levelDes;
         break;
       case 'levelAsc':
-        _currentSort = TargetSort.levelAsc;
+        _currentSort = TargetSortType.levelAsc;
         break;
       case 'respectDes':
-        _currentSort = TargetSort.respectDes;
+        _currentSort = TargetSortType.respectDes;
         break;
       case 'respectAsc':
-        _currentSort = TargetSort.respectAsc;
+        _currentSort = TargetSortType.respectAsc;
         break;
       case 'nameDes':
-        _currentSort = TargetSort.nameDes;
+        _currentSort = TargetSortType.nameDes;
         break;
       case 'nameAsc':
-        _currentSort = TargetSort.nameAsc;
+        _currentSort = TargetSortType.nameAsc;
         break;
     }
     // Notification

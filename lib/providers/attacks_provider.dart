@@ -2,7 +2,8 @@ import 'dart:collection';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
-import 'package:torn_pda/models/chaining/attack_sort_popup.dart';
+import 'package:torn_pda/models/chaining/attack_sort.dart';
+import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -27,10 +28,13 @@ class AttacksProvider extends ChangeNotifier {
   AttackTypeFilter _currentTypeFilter = AttackTypeFilter.all;
   AttackTypeFilter get currentTypeFilter => _currentTypeFilter;
 
-  AttackSort _currentSort;
+  AttackSortType _currentSort;
 
   String _userKey = '';
   String _ownId = '';
+
+  UserDetailsModel _userDetails;
+  AttacksProvider(this._userDetails);
 
   void initializeAttacks() async {
     await restoreSharedPreferences();
@@ -150,25 +154,25 @@ class AttacksProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortAttacks(AttackSort sortType) {
+  void sortAttacks(AttackSortType sortType) {
     _currentSort = sortType;
     switch (sortType) {
-      case AttackSort.levelDes:
+      case AttackSortType.levelDes:
         _attacks.sort((a, b) => b.targetLevel.compareTo(a.targetLevel));
         break;
-      case AttackSort.levelAsc:
+      case AttackSortType.levelAsc:
         _attacks.sort((a, b) => a.targetLevel.compareTo(b.targetLevel));
         break;
-      case AttackSort.respectDes:
+      case AttackSortType.respectDes:
         _attacks.sort((a, b) => b.respectGain.compareTo(a.respectGain));
         break;
-      case AttackSort.respectAsc:
+      case AttackSortType.respectAsc:
         _attacks.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
-      case AttackSort.dateDes:
+      case AttackSortType.dateDes:
         _attacks.sort((a, b) => b.timestampEnded.compareTo(a.timestampEnded));
         break;
-      case AttackSort.dateAsc:
+      case AttackSortType.dateAsc:
         _attacks.sort((a, b) => a.timestampEnded.compareTo(b.timestampEnded));
         break;
     }
@@ -179,22 +183,22 @@ class AttacksProvider extends ChangeNotifier {
   void _saveSortSharedPrefs() {
     String sortToSave;
     switch (_currentSort) {
-      case AttackSort.levelDes:
+      case AttackSortType.levelDes:
         sortToSave = 'levelDes';
         break;
-      case AttackSort.levelAsc:
+      case AttackSortType.levelAsc:
         sortToSave = 'levelAsc';
         break;
-      case AttackSort.respectDes:
+      case AttackSortType.respectDes:
         sortToSave = 'respectDes';
         break;
-      case AttackSort.respectAsc:
+      case AttackSortType.respectAsc:
         sortToSave = 'respectDes';
         break;
-      case AttackSort.dateAsc:
+      case AttackSortType.dateAsc:
         sortToSave = 'dateDes';
         break;
-      case AttackSort.dateDes:
+      case AttackSortType.dateDes:
         sortToSave = 'dateDes';
         break;
     }
@@ -203,32 +207,32 @@ class AttacksProvider extends ChangeNotifier {
 
   Future<void> restoreSharedPreferences() async {
     // User key
-    _userKey = await SharedPreferencesModel().getApiKey();
-    _ownId = await SharedPreferencesModel().getOwnId();
+    _userKey = _userDetails.userApiKey;
+    _ownId = _userDetails.playerId.toString();
 
     // Attack sort
     String attackSort = await SharedPreferencesModel().getAttackSort();
     switch (attackSort) {
       case '':
-        _currentSort = AttackSort.levelDes;
+        _currentSort = AttackSortType.levelDes;
         break;
       case 'levelDes':
-        _currentSort = AttackSort.levelDes;
+        _currentSort = AttackSortType.levelDes;
         break;
       case 'levelAsc':
-        _currentSort = AttackSort.levelAsc;
+        _currentSort = AttackSortType.levelAsc;
         break;
       case 'respectDes':
-        _currentSort = AttackSort.respectDes;
+        _currentSort = AttackSortType.respectDes;
         break;
       case 'respectAsc':
-        _currentSort = AttackSort.respectAsc;
+        _currentSort = AttackSortType.respectAsc;
         break;
       case 'nameDes':
-        _currentSort = AttackSort.dateDes;
+        _currentSort = AttackSortType.dateDes;
         break;
       case 'nameAsc':
-        _currentSort = AttackSort.dateAsc;
+        _currentSort = AttackSortType.dateAsc;
         break;
     }
   }

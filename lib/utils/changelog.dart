@@ -45,8 +45,29 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "New profile page with access to basic status data, "
-                        "recent events, cooldowns and networth calculation"
+                          "New Friends section, with quick access to player "
+                          "details and in-game actions. Personal notes and "
+                          "backup functionality is also included."
+                          //style: TextStyle(
+                          //  fontWeight: FontWeight.bold,
+                          //),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    _factionIcon(),
+                    Padding(padding: EdgeInsets.only(right: 12)),
+                    Flexible(
+                      child: Text(
+                        "New notifications (manually activated) added in the "
+                        "Profile section for energy, nerve, life and "
+                        "all cooldowns.",
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
@@ -64,7 +85,27 @@ class ChangeLog extends StatelessWidget {
                     Padding(padding: EdgeInsets.only(right: 12)),
                     Flexible(
                       child: Text(
-                        "General bug fixes",
+                        "Energy and nerve had their colors corrected in the "
+                        "Profile section to adapt to game colors.",
+                        //style: TextStyle(
+                        //  fontWeight: FontWeight.bold,
+                        //),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: <Widget>[
+                    _factionIcon(),
+                    Padding(padding: EdgeInsets.only(right: 12)),
+                    Flexible(
+                      child: Text(
+                        "Other bug fixes and corrections thanks to "
+                            "players suggestions.",
                         //style: TextStyle(
                         //  fontWeight: FontWeight.bold,
                         //),
