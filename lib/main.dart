@@ -3,11 +3,9 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
@@ -17,7 +15,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE
-final String appVersion = '1.2.0';
+final String appVersion = '1.3.0';
 final bool appNeedsChangelog = true;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
