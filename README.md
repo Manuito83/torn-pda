@@ -9,6 +9,8 @@ Torn PDA has been developed as an assistant for players of [TORN City](https://w
 
 It was conceived to enhance the experience of playing Torn from a mobile platform, and other already existing applications, such as YATA, have been a great influence.
 
+* Profile page with access to basic status data, recent events, cooldowns and networth calculation. You can also manually activate notifications so that you don't waste any energy, nerve, or miss any cooldown expiry.
+
 * Check your travel status and configure notifications just before you arrive. No more forgetting and being mugged abroad. Also, configure the notification shown so that it is safe to use even at work or in other public environments.
 
 * Have a look at foreign stocks directly in the Travel section. Filter and sort items at your convenience, including profit based on item capacity. Also, by using the in-app browser, you are contributing by sending stock data automatically to the shared database!
@@ -20,6 +22,8 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 * Have a look at your last few attacks, with simple statistics so that you can decide when/who to add to your common chaining targets.
 
 * Export targets as a backup or share them with other players
+
+* Create a friends list, with quick access to in-game messaging, trading and other important details. Also, add note to your friends' profiles. Backup functionality included.
 
 * Dark Mode
 
