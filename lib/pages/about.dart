@@ -38,7 +38,7 @@ class _AboutPageState extends State<AboutPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Padding(
-              padding: EdgeInsets.fromLTRB(30, 50, 30, 10),
+              padding: EdgeInsets.fromLTRB(20, 50, 30, 10),
               child: Image(
                 image: AssetImage('images/icons/torn_pda.png'),
                 height: 100,
@@ -53,7 +53,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(30, 25, 30, 10),
+              padding: EdgeInsets.fromLTRB(20, 25, 30, 10),
               child: Text(
                 "Torn PDA has been developed as an assistant for "
                 "players of TORN City. It was conceived to enhance the "
@@ -61,7 +61,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(30, 10, 30, 20),
+              padding: EdgeInsets.fromLTRB(20, 10, 30, 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -74,7 +74,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(50, 0, 30, 10),
+              padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -135,7 +135,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(50, 0, 30, 10),
+              padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -193,7 +193,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(50, 0, 30, 10),
+              padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -258,7 +258,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(50, 0, 30, 10),
+              padding: EdgeInsets.fromLTRB(40, 0, 30, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
@@ -276,6 +276,38 @@ class _AboutPageState extends State<AboutPage> {
                         'it would be certainly appreciated!'),
                   ),
                 ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 15, 30, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Flexible(
+                    child: Text(
+                      "Changelog: ",
+                    ),
+                  ),
+                  Flexible(
+                    child: InkWell(
+                      child: Text(
+                        "click here to view",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      onTap: _showChangeLogDialog,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 10, 30, 0),
+                child: Text('Contributors:'),
               ),
             ),
             Padding(
@@ -304,15 +336,16 @@ class _AboutPageState extends State<AboutPage> {
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
                                             TornWebViewGeneric(
-                                          profileId: '2225097',
-                                          profileName: 'Manuito',
-                                          webViewType: WebViewType.profile,
-                                        ),
+                                              profileId: '2225097',
+                                              profileName: 'Manuito',
+                                              webViewType: WebViewType.profile,
+                                            ),
                                       ),
                                     );
                                     break;
                                   case BrowserSetting.external:
-                                    var url = 'https://www.torn.com/profiles.php?XID=2225097';
+                                    var url =
+                                        'https://www.torn.com/profiles.php?XID=2225097';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
@@ -328,30 +361,56 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(30, 10, 30, 10),
+              padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Flexible(
-                    child: Text(
-                      "Changelog: ",
-                    ),
-                  ),
-                  Flexible(
-                    child: InkWell(
-                      child: Text(
-                        "click here to view",
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          color: Colors.blue,
-                        ),
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Discord: ',
+                        style: DefaultTextStyle.of(context).style,
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: 'Phillip_J_Fry [2184575]',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
+                                switch (browserType) {
+                                  case BrowserSetting.app:
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (BuildContext context) =>
+                                            TornWebViewGeneric(
+                                          profileId: '2225097',
+                                          profileName: 'Manuito',
+                                          webViewType: WebViewType.profile,
+                                        ),
+                                      ),
+                                    );
+                                    break;
+                                  case BrowserSetting.external:
+                                    var url =
+                                        'https://www.torn.com/profiles.php?XID=2225097';
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                    break;
+                                }
+                              },
+                          ),
+                        ],
                       ),
-                      onTap: _showChangeLogDialog,
                     ),
                   ),
                 ],
               ),
             ),
+
           ],
         ),
       ),
