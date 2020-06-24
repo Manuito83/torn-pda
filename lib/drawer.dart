@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
@@ -23,6 +24,8 @@ class DrawerPage extends StatefulWidget {
 
 class _DrawerPageState extends State<DrawerPage> {
   int _settingsPosition = 4;
+  int _aboutPosition = 5;
+  var _allowSectionsWithoutKey = [];
 
   final _drawerItemsList = [
     "Profile",
@@ -30,6 +33,7 @@ class _DrawerPageState extends State<DrawerPage> {
     "Chaining",
     "Friends",
     "Settings",
+    "About",
   ];
 
   ThemeProvider _themeProvider;
@@ -43,6 +47,10 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   void initState() {
     super.initState();
+    _allowSectionsWithoutKey = [
+      _settingsPosition,
+      _aboutPosition,
+    ];
     _handleChangelog();
     _finishedWithPreferences = _getKeyStatus();
     _configureSelectNotificationSubject();
@@ -225,29 +233,34 @@ class _DrawerPageState extends State<DrawerPage> {
 
   Widget _getDrawerItems() {
     var drawerOptions = <Widget>[];
-    // If API key is not valid, we just show the Settings page (just don't
-    // add the other sections to the list
+    // If API key is not valid, we just show the Settings + About pages
+    // (just don't add the other sections to the list)
     if (!_userProvider.myUser.userApiKeyValid) {
-      drawerOptions.add(
-        ListTileTheme(
-          selectedColor: Colors.red,
-          iconColor: _themeProvider.mainText,
-          child: Ink(
-            color: Colors.grey[300],
-            child: ListTile(
-              leading: _returnDrawerIcons(drawerPosition: _settingsPosition),
-              title: Text(
-                _drawerItemsList[_settingsPosition],
-                style: TextStyle(
-                  fontWeight:
-                  FontWeight.bold,
+      for (var position in _allowSectionsWithoutKey) {
+        drawerOptions.add(
+          ListTileTheme(
+            selectedColor: Colors.red,
+            iconColor: _themeProvider.mainText,
+            child: Ink(
+              color:
+                  position == _selected ? Colors.grey[300] : Colors.transparent,
+              child: ListTile(
+                leading: _returnDrawerIcons(drawerPosition: position),
+                title: Text(
+                  _drawerItemsList[position],
+                  style: TextStyle(
+                    fontWeight: position == _selected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
                 ),
+                selected: position == _selected,
+                onTap: () => _onSelectItem(position),
               ),
-              selected: true,
             ),
           ),
-        ),
-      );
+        );
+      }
     } else {
       // Otherwise, if the key is valid, we loop all the sections
       for (var i = 0; i < _drawerItemsList.length; i++) {
@@ -267,7 +280,7 @@ class _DrawerPageState extends State<DrawerPage> {
                   _drawerItemsList[i],
                   style: TextStyle(
                     fontWeight:
-                    i == _selected ? FontWeight.bold : FontWeight.normal,
+                        i == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: i == _selected,
@@ -278,8 +291,6 @@ class _DrawerPageState extends State<DrawerPage> {
         );
       }
     }
-
-
 
     return Column(children: drawerOptions);
   }
@@ -300,6 +311,9 @@ class _DrawerPageState extends State<DrawerPage> {
         break;
       case 4:
         return SettingsPage();
+        break;
+      case 5:
+        return AboutPage();
         break;
       default:
         return new Text("Error");
@@ -322,6 +336,9 @@ class _DrawerPageState extends State<DrawerPage> {
         break;
       case 4:
         return Icon(Icons.settings);
+        break;
+      case 5:
+        return Icon(Icons.info_outline);
         break;
       default:
         return SizedBox.shrink();
@@ -365,7 +382,7 @@ class _DrawerPageState extends State<DrawerPage> {
   void _showChangeLogDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: false,
       builder: (context) {
         return ChangeLog();
       },
