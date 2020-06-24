@@ -11,7 +11,7 @@ class ChangeLog extends StatefulWidget {
 }
 
 class _ChangeLogState extends State<ChangeLog> {
-  var lala = Map<String, List<String>>();
+  var _changeLogItems = Map<String, List<String>>();
 
   @override
   void initState() {
@@ -22,14 +22,14 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
-    // VERSION 1.3.1
-    var v1_3_1 = ChangeLogItem();
-    v1_3_1.version = 'Torn PDA v1.3.1';
-    String feat1_3_1_1 = "New 'About' section";
-    String feat1_3_1_2 = "Fixed issues reported in previous version "
+    // VERSION 1.4.0
+    var v1_4_0 = ChangeLogItem();
+    v1_4_0.version = 'Torn PDA v1.3.1';
+    String feat1_4_0_1 = "New 'About' section";
+    String feat1_4_0_2 = "Fixed issues reported in previous version "
         "(thanks Kivou + JDTech)";
-    v1_3_1.features.add(feat1_3_1_1);
-    v1_3_1.features.add(feat1_3_1_2);
+    v1_4_0.features.add(feat1_4_0_1);
+    v1_4_0.features.add(feat1_4_0_2);
 
     // VERSION 1.3.0
     var v1_3_0 = ChangeLogItem();
@@ -50,11 +50,11 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v1_3_1);
+    itemList.add(v1_4_0);
     itemList.add(v1_3_0);
 
     for (var i = 0; i < itemList.length; i++) {
-      lala.putIfAbsent(itemList[i].version, () => itemList[i].features);
+      _changeLogItems.putIfAbsent(itemList[i].version, () => itemList[i].features);
     }
   }
 
@@ -103,7 +103,7 @@ class _ChangeLogState extends State<ChangeLog> {
   List<Widget> _items() {
     var itemList = List<Widget>();
     var itemNumber = 1;
-    for (var entry in lala.entries) {
+    for (var entry in _changeLogItems.entries) {
       if (itemNumber > 1) {
         itemList.add(
           Padding(
