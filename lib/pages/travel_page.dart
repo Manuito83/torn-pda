@@ -85,81 +85,89 @@ class _TravelPageState extends State<TravelPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    return Stack(
-      // Stack for FAB ripple
-      children: <Widget>[
-        Scaffold(
-          drawer: Drawer(),
-          appBar: AppBar(
-            leading: IconButton(
-              icon: Icon(Icons.dehaze),
-              onPressed: () {
-                final ScaffoldState scaffoldState =
-                    context.findRootAncestorStateOfType();
-                scaffoldState.openDrawer();
-              },
-            ),
-            title: Text('Travel'),
-            actions: <Widget>[
-              IconButton(
-                icon: Icon(Icons.textsms),
-                onPressed: () {
-                  _notificationTitleController.text = _notificationTitle;
-                  _notificationBodyController.text = _notificationBody;
-                  _showNotificationTextDialog(context);
-                },
-              ),
-            ],
-          ),
-          body: Center(
-            child: SingleChildScrollView(
-                child: FutureBuilder(
-              future: _finishedLoadingPreferences,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return Column(
-                    children: _travelMain(),
-                  );
-                } else {
-                  return Padding(
-                    padding: EdgeInsets.all(10),
-                    child: CircularProgressIndicator(),
-                  );
-                }
-              },
-            )),
-          ),
-          floatingActionButtonLocation: _travelModel.travelling
-              ? FloatingActionButtonLocation.endFloat
-              : FloatingActionButtonLocation.centerFloat,
-          floatingActionButton: OpenContainer(
-            transitionDuration: Duration(seconds: 1),
-            transitionType: ContainerTransitionType.fadeThrough,
-            openBuilder: (BuildContext context, VoidCallback _) {
-              return ForeignStockPage(apiKey: _myCurrentKey);
+    return Scaffold(
+      drawer: Drawer(),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.dehaze),
+          onPressed: () {
+            final ScaffoldState scaffoldState =
+                context.findRootAncestorStateOfType();
+            scaffoldState.openDrawer();
+          },
+        ),
+        title: Text('Travel'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.textsms),
+            onPressed: () {
+              _notificationTitleController.text = _notificationTitle;
+              _notificationBodyController.text = _notificationBody;
+              _showNotificationTextDialog(context);
             },
-            closedElevation: 6.0,
-            closedShape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(56 / 2),
-              ),
-            ),
-            closedColor: Colors.orange,
-            closedBuilder: (BuildContext context, VoidCallback openContainer) {
-              return SizedBox(
-                height: 56,
-                width: 56,
-                child: Center(
-                  child: Image.asset(
-                    'images/icons/box.png',
-                    width: 24,
-                  ),
-                ),
-              );
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: FutureBuilder(
+            future: _finishedLoadingPreferences,
+            builder:
+                (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return Column(
+                  children: _travelMain(),
+                );
+              } else {
+                return Padding(
+                  padding: EdgeInsets.all(10),
+                  child: CircularProgressIndicator(),
+                );
+              }
             },
           ),
         ),
-      ],
+      ),
+      floatingActionButtonAnimator: FabOverrideAnimation(),
+      floatingActionButtonLocation: _travelModel.travelling
+          ? FloatingActionButtonLocation.endFloat
+          : FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FutureBuilder(
+        future: _finishedLoadingPreferences,
+        builder:
+            (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return OpenContainer(
+              transitionDuration: Duration(seconds: 1),
+              transitionType: ContainerTransitionType.fadeThrough,
+              openBuilder: (BuildContext context, VoidCallback _) {
+                return ForeignStockPage(apiKey: _myCurrentKey);
+              },
+              closedElevation: 6.0,
+              closedShape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(56 / 2),
+                ),
+              ),
+              closedColor: Colors.orange,
+              closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                return SizedBox(
+                  height: 56,
+                  width: 56,
+                  child: Center(
+                    child: Image.asset(
+                      'images/icons/box.png',
+                      width: 24,
+                    ),
+                  ),
+                );
+              },
+            );
+          } else {
+            return SizedBox.shrink();
+          }
+        },
+      ),
     );
   }
 
@@ -982,5 +990,24 @@ class _TravelPageState extends State<TravelPage> {
         await SharedPreferencesModel().getTravelNotificationTitle();
     _notificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
+  }
+
+}
+
+
+class FabOverrideAnimation extends FloatingActionButtonAnimator{
+  @override
+  Offset getOffset({Offset begin, Offset end, double progress}) {
+    return Offset(end.dx,end.dy);
+  }
+
+  @override
+  Animation<double> getRotationAnimation({Animation<double> parent}) {
+    return Tween<double>(begin: 1.0, end: 1.0).animate(parent);
+  }
+
+  @override
+  Animation<double> getScaleAnimation({Animation<double> parent}) {
+    return Tween<double>(begin: 1.0, end: 1.0).animate(parent);
   }
 }
