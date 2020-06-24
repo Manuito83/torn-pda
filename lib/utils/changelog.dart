@@ -1,138 +1,157 @@
 import 'package:flutter/material.dart';
-import 'package:torn_pda/main.dart';
 
-class ChangeLog extends StatelessWidget {
+class ChangeLogItem {
+  String version;
+  var features = List<String>();
+}
+
+class ChangeLog extends StatefulWidget {
+  @override
+  _ChangeLogState createState() => _ChangeLogState();
+}
+
+class _ChangeLogState extends State<ChangeLog> {
+  var lala = Map<String, List<String>>();
+
+  @override
+  void initState() {
+    super.initState();
+    _createItems();
+  }
+
+  void _createItems() {
+    var itemList = List<ChangeLogItem>();
+
+    // VERSION 1.3.1
+    var v1_3_1 = ChangeLogItem();
+    v1_3_1.version = 'Torn PDA v1.3.1';
+    String feat1_3_1_1 = "New 'About' section";
+    String feat1_3_1_2 = "Fixed issues reported in previous version "
+        "(thanks Kivou + JDTech)";
+    v1_3_1.features.add(feat1_3_1_1);
+    v1_3_1.features.add(feat1_3_1_2);
+
+    // VERSION 1.3.0
+    var v1_3_0 = ChangeLogItem();
+    v1_3_0.version = 'Torn PDA v1.3.0';
+    String feat1_3_0_1 = "New Friends section, with quick access to player "
+        "details and in-game actions. Personal notes and "
+        "backup functionality is also included";
+    String feat1_3_0_2 = "New notifications (manually activated) added in the "
+        "Profile section for energy, nerve, life and "
+        "all cooldowns";
+    String feat1_3_0_3 = "Energy and nerve had their colors corrected in the "
+        "Profile section to adapt to game colors";
+    String feat1_3_0_4 = "Other bug fixes and corrections thanks to "
+        "players suggestions";
+    v1_3_0.features.add(feat1_3_0_1);
+    v1_3_0.features.add(feat1_3_0_2);
+    v1_3_0.features.add(feat1_3_0_3);
+    v1_3_0.features.add(feat1_3_0_4);
+
+    // NEED TO ADD HERE!
+    itemList.add(v1_3_1);
+    itemList.add(v1_3_0);
+
+    for (var i = 0; i < itemList.length; i++) {
+      lala.putIfAbsent(itemList[i].version, () => itemList[i].features);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      child: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.fromLTRB(15, 25, 15, 15),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                "Torn PDA v$appVersion",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              child: Container(
+                padding: EdgeInsets.fromLTRB(15, 25, 15, 15),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: _items(),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(5, 20, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Flexible(
-                      child: Text(
-                        "FEATURES",
-                        style: TextStyle(
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    _factionIcon(),
-                    Padding(padding: EdgeInsets.only(right: 12)),
-                    Flexible(
-                      child: Text(
-                          "New Friends section, with quick access to player "
-                          "details and in-game actions. Personal notes and "
-                          "backup functionality is also included."
-                          //style: TextStyle(
-                          //  fontWeight: FontWeight.bold,
-                          //),
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    _factionIcon(),
-                    Padding(padding: EdgeInsets.only(right: 12)),
-                    Flexible(
-                      child: Text(
-                        "New notifications (manually activated) added in the "
-                        "Profile section for energy, nerve, life and "
-                        "all cooldowns.",
-                        //style: TextStyle(
-                        //  fontWeight: FontWeight.bold,
-                        //),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    _factionIcon(),
-                    Padding(padding: EdgeInsets.only(right: 12)),
-                    Flexible(
-                      child: Text(
-                        "Energy and nerve had their colors corrected in the "
-                        "Profile section to adapt to game colors.",
-                        //style: TextStyle(
-                        //  fontWeight: FontWeight.bold,
-                        //),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    _factionIcon(),
-                    Padding(padding: EdgeInsets.only(right: 12)),
-                    Flexible(
-                      child: Text(
-                        "Other bug fixes and corrections thanks to "
-                            "players suggestions.",
-                        //style: TextStyle(
-                        //  fontWeight: FontWeight.bold,
-                        //),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 30),
-                child: RaisedButton(
-                  child: Text(
-                    'Great!',
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Divider(
+            thickness: 1,
+            color: Colors.blueGrey,
+          ),
+          Padding(
+            padding: EdgeInsets.all(5),
+            child: RaisedButton(
+              child: Text(
+                'Great!',
+                style: TextStyle(
+                  fontSize: 15,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  List<Widget> _items() {
+    var itemList = List<Widget>();
+    var itemNumber = 1;
+    for (var entry in lala.entries) {
+      if (itemNumber > 1) {
+        itemList.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 24,
+              horizontal: 50,
+            ),
+            child: Divider(
+              thickness: 1,
+              color: Colors.blueGrey,
+            ),
+          ),
+        );
+      }
+      itemList.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 15),
+          child: Text(
+            entry.key,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+      for (var feat in entry.value) {
+        itemList.add(
+          Padding(
+            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                _factionIcon(),
+                Padding(padding: EdgeInsets.only(right: 12)),
+                Flexible(
+                  child: Text(
+                    feat,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      itemNumber++;
+    }
+    return itemList;
   }
 
   Widget _factionIcon() {
