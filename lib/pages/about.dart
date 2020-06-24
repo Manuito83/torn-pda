@@ -386,8 +386,8 @@ class _AboutPageState extends State<AboutPage> {
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
                                             TornWebViewGeneric(
-                                          profileId: '2225097',
-                                          profileName: 'Manuito',
+                                          profileId: '2184575',
+                                          profileName: 'Phillip_J_Fry',
                                           webViewType: WebViewType.profile,
                                         ),
                                       ),
@@ -395,7 +395,7 @@ class _AboutPageState extends State<AboutPage> {
                                     break;
                                   case BrowserSetting.external:
                                     var url =
-                                        'https://www.torn.com/profiles.php?XID=2225097';
+                                        'https://www.torn.com/profiles.php?XID=2184575';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
