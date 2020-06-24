@@ -17,12 +17,12 @@ class FriendDetailsPage extends StatefulWidget {
 }
 
 class _FriendDetailsPageState extends State<FriendDetailsPage> {
-  UserDetailsProvider _userdDetails;
+  UserDetailsProvider _userDetails;
 
   @override
   void initState() {
     super.initState();
-    _userdDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
   }
 
   @override
@@ -64,7 +64,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                 _returnStatus(),
                 SizedBox(height: 20),
                 Text('Awards: ${widget.friend.awards} '
-                    '(you have ${_userdDetails.myUser.awards})'),
+                    '(you have ${_userDetails.myUser.awards})'),
                 SizedBox(height: 20),
                 Text('Donator: ${widget.friend.donator == 0 ? 'NO' : 'YES'}'),
                 Text('Friends/Enemies: ${widget.friend.friends}'
@@ -94,7 +94,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         ),
         LinearPercentIndicator(
           width: 150,
-          lineHeight: 15,
+          lineHeight: 18,
           progressColor: Colors.blue,
           backgroundColor: Colors.grey,
           center: Text(
@@ -192,7 +192,8 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     if (widget.friend.faction.factionId != 0) {
       return Column(
         children: <Widget>[
-          Text('Faction: ${HtmlParser.parse(widget.friend.faction.factionName)}'),
+          Text(
+              'Faction: ${HtmlParser.fix(widget.friend.faction.factionName)}'),
           Text('Position: ${widget.friend.faction.position}'),
           Text('Joined: ${widget.friend.faction.daysInFaction} days ago'),
         ],
@@ -206,7 +207,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     if (widget.friend.job.companyId != 0) {
       return Column(
         children: <Widget>[
-          Text('Company: ${HtmlParser.parse(widget.friend.job.companyName)}'),
+          Text('Company: ${HtmlParser.fix(widget.friend.job.companyName)}'),
           Text('Position: ${widget.friend.job.position}'),
         ],
       );
@@ -233,7 +234,8 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                   Clipboard.setData(
                       ClipboardData(text: widget.friend.discord.discordId));
                   BotToast.showText(
-                    text: "Your friend's Discord ID (${widget.friend.discord.discordId}) "
+                    text:
+                        "Your friend's Discord ID (${widget.friend.discord.discordId}) "
                         "copied to the clipboard!",
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -253,5 +255,4 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       return SizedBox.shrink();
     }
   }
-
 }

@@ -429,7 +429,7 @@ class _FriendCardState extends State<FriendCard> {
         if (_friend.faction.factionId ==
             _userProvider.myUser.faction.factionId) {
           BotToast.showText(
-            text: HtmlParser.parse("${_friend.name} belongs to your same faction "
+            text: HtmlParser.fix("${_friend.name} belongs to your same faction "
                 "(${_friend.faction.factionName}) as "
                 "${_friend.faction.position}"),
             textStyle: TextStyle(
@@ -442,7 +442,7 @@ class _FriendCardState extends State<FriendCard> {
           );
         } else {
           BotToast.showText(
-            text: HtmlParser.parse("${_friend.name} belongs to faction "
+            text: HtmlParser.fix("${_friend.name} belongs to faction "
                 "${_friend.faction.factionName} as "
                 "${_friend.faction.position}"),
             textStyle: TextStyle(
@@ -490,7 +490,7 @@ class _FriendCardState extends State<FriendCard> {
   Widget _companyIcon() {
     void showCompanyToast() {
       BotToast.showText(
-        text: HtmlParser.parse("${_friend.name} belongs to your same company "
+        text: HtmlParser.fix("${_friend.name} belongs to your same company "
             "(${_friend.job.companyName}) as "
             "${_friend.job.position}"),
         textStyle: TextStyle(

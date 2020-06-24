@@ -283,7 +283,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               text: new TextSpan(
                 children: [
                   new TextSpan(
-                    text: HtmlParser.parse(descriptionText),
+                    text: HtmlParser.fix(descriptionText),
                     style: new TextStyle(color: _themeProvider.mainText),
                   ),
                   new TextSpan(
@@ -1075,7 +1075,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         unreadCount++;
       }
 
-      String message = HtmlParser.parse(e.event);
+      String message = HtmlParser.fix(e.event);
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll(' [view]', '.');
 
