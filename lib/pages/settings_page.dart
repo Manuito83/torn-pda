@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -31,6 +32,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
+
+  var _expandableController = ExpandableController();
 
   var _apiKeyInputController = TextEditingController();
 
@@ -65,6 +68,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
+                _userDetails(),
                 Padding(
                   padding: const EdgeInsets.only(
                       left: 20, top: 10, right: 20, bottom: 5),
@@ -140,98 +144,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
                 ),
-                Divider(),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsetsDirectional.only(bottom: 15),
-                          child: Text('TORN API Key'),
-                        ),
-                        SizedBox(
-                          width: 300,
-                          child: Form(
-                            key: _formKey,
-                            child: TextFormField(
-                              validator: (value) {
-                                if (value.isEmpty) {
-                                  return "The API Key is empty!";
-                                }
-                                return null;
-                              },
-                              controller: _apiKeyInputController,
-                              maxLength: 30,
-                              style: TextStyle(fontSize: 14),
-                              decoration: InputDecoration(
-                                hintText: 'Please insert your Torn API Key',
-                                hintStyle: TextStyle(fontSize: 14),
-                                counterText: "",
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
-                                  borderSide: BorderSide(
-                                    color: Colors.amber,
-                                    style: BorderStyle.solid,
-                                  ),
-                                ),
-                              ),
-                              onEditingComplete: () {
-                                FocusScope.of(context)
-                                    .requestFocus(new FocusNode());
-                                if (_formKey.currentState.validate()) {
-                                  _myCurrentKey = _apiKeyInputController.text;
-                                  _getApiDetails();
-                                }
-                              },
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.only(top: 10),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            RaisedButton(
-                              child: Text("Load"),
-                              onPressed: () {
-                                FocusScope.of(context)
-                                    .requestFocus(new FocusNode());
-                                if (_formKey.currentState.validate()) {
-                                  _myCurrentKey = _apiKeyInputController.text;
-                                  _getApiDetails();
-                                }
-                              },
-                            ),
-                            Padding(
-                              padding: EdgeInsetsDirectional.only(start: 10),
-                            ),
-                            RaisedButton(
-                              child: Text("Remove"),
-                              onPressed: () {
-                                FocusScope.of(context)
-                                    .requestFocus(new FocusNode());
-                                // Removes the form error
-                                _formKey.currentState.reset();
-                                _apiKeyInputController.clear();
-                                _myCurrentKey = '';
-                                _userProvider.removeUser();
-                                setState(() {
-                                  _userToLoad = false;
-                                  _apiError = false;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        _explanatoryApiText(),
-                        _userDetails(),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           )),
@@ -241,11 +153,274 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _expandableController.dispose();
+    _apiKeyInputController.dispose();
     super.dispose();
   }
 
-  Widget _explanatoryApiText() {
-    if (_myCurrentKey == '') {
+  Widget _userDetails() {
+    if (_apiIsLoading) {
+      return Padding(
+        padding: EdgeInsets.all(40),
+        child: CircularProgressIndicator(),
+      );
+    }
+    if (_userToLoad) {
+      _expandableController.expanded = false;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+        child: Card(
+          child: ExpandablePanel(
+            header: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        "TORN API USER LOADED",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      "${_userProfile.name} [${_userProfile.playerId}]",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            expanded: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          _apiKeyForm(),
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(top: 10),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              RaisedButton(
+                                child: Text("Load"),
+                                onPressed: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
+                                  if (_formKey.currentState.validate()) {
+                                    _myCurrentKey = _apiKeyInputController.text;
+                                    _getApiDetails();
+                                  }
+                                },
+                              ),
+                              Padding(
+                                padding: EdgeInsetsDirectional.only(start: 10),
+                              ),
+                              RaisedButton(
+                                child: Text("Remove"),
+                                onPressed: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
+                                  // Removes the form error
+                                  _formKey.currentState.reset();
+                                  _apiKeyInputController.clear();
+                                  _myCurrentKey = '';
+                                  _userProvider.removeUser();
+                                  setState(() {
+                                    _userToLoad = false;
+                                    _apiError = false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          _bottomExplanatory(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      _expandableController.expanded = true;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
+        child: Card(
+          child: ExpandablePanel(
+            controller: _expandableController,
+            header: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        "NO USER LOADED",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Text(
+                      "(expand for details)",
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            expanded: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          _apiKeyForm(),
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(top: 10),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              RaisedButton(
+                                child: Text("Load"),
+                                onPressed: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
+                                  if (_formKey.currentState.validate()) {
+                                    _myCurrentKey = _apiKeyInputController.text;
+                                    _getApiDetails();
+                                  }
+                                },
+                              ),
+                              Padding(
+                                padding: EdgeInsetsDirectional.only(start: 10),
+                              ),
+                              RaisedButton(
+                                child: Text("Remove"),
+                                onPressed: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
+                                  // Removes the form error
+                                  _formKey.currentState.reset();
+                                  _apiKeyInputController.clear();
+                                  _myCurrentKey = '';
+                                  _userProvider.removeUser();
+                                  setState(() {
+                                    _userToLoad = false;
+                                    _apiError = false;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          _bottomExplanatory(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  SizedBox _apiKeyForm() {
+    return SizedBox(
+      width: 300,
+      child: Form(
+        key: _formKey,
+        child: TextFormField(
+          validator: (value) {
+            if (value.isEmpty) {
+              return "The API Key is empty!";
+            }
+            return null;
+          },
+          controller: _apiKeyInputController,
+          maxLength: 30,
+          style: TextStyle(fontSize: 14),
+          decoration: InputDecoration(
+            hintText: 'Please insert your Torn API Key',
+            hintStyle: TextStyle(fontSize: 14),
+            counterText: "",
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5.0),
+              borderSide: BorderSide(
+                color: Colors.amber,
+                style: BorderStyle.solid,
+              ),
+            ),
+          ),
+          onEditingComplete: () {
+            FocusScope.of(context).requestFocus(new FocusNode());
+            if (_formKey.currentState.validate()) {
+              _myCurrentKey = _apiKeyInputController.text;
+              _getApiDetails();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomExplanatory() {
+    if (_apiError) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 25),
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: EdgeInsetsDirectional.only(bottom: 15),
+              child: Text(
+                "ERROR LOADING USER",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Text("Error: $_errorReason"),
+          ],
+        ),
+      );
+    } else if (_myCurrentKey == '') {
       return Padding(
         padding: EdgeInsetsDirectional.fromSTEB(30, 30, 30, 0),
         child: Column(
@@ -267,40 +442,15 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       );
     } else {
-      return SizedBox.shrink();
-    }
-  }
-
-  Widget _userDetails() {
-    if (_apiIsLoading) {
       return Padding(
-        padding: EdgeInsets.all(40),
-        child: CircularProgressIndicator(),
-      );
-    }
-    if (_userToLoad) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 30),
+        padding: const EdgeInsets.only(top: 20),
         child: Column(
           children: <Widget>[
-            Padding(
-              padding: EdgeInsetsDirectional.only(bottom: 30),
-              child: Text(
-                "USER LOADED",
-                style: TextStyle(
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
             Text(
               "${_userProfile.name} [${_userProfile.playerId}]",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
-            ),
-            Padding(
-              padding: EdgeInsetsDirectional.only(bottom: 8),
             ),
             Text("Gender: ${_userProfile.gender}"),
             Text("Level: ${_userProfile.level}"),
@@ -311,27 +461,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       );
-    } else if (_apiError) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 30),
-        child: Column(
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsetsDirectional.only(bottom: 30),
-              child: Text(
-                "ERROR LOADING USER",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text("Error: $_errorReason"),
-          ],
-        ),
-      );
     }
-    return SizedBox.shrink();
   }
 
   DropdownButton _openSectionDropdown() {
@@ -428,7 +558,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
     }
-    dynamic myProfile = await TornApiCaller.userDetails(_myCurrentKey).getUserDetails;
+    dynamic myProfile =
+        await TornApiCaller.userDetails(_myCurrentKey).getUserDetails;
     if (myProfile is UserDetailsModel) {
       setState(() {
         _apiIsLoading = false;
@@ -441,15 +572,20 @@ class _SettingsPageState extends State<SettingsPage> {
         ..userApiKey = _myCurrentKey
         ..userApiKeyValid = true;
       _userProvider.setUserDetails(userDetails: myProfile);
-
     } else if (myProfile is ApiError) {
       setState(() {
         _apiIsLoading = false;
         _userToLoad = false;
         _apiError = true;
         _errorReason = myProfile.errorReason;
+        _expandableController.expanded = true;
       });
-      _userProvider.removeUser();
+      // We'll only remove the user if the key is invalid, otherwise we
+      // risk removing it if we access the Settings page with no internet
+      // connectivity
+      if (myProfile.errorId == 2) {
+        _userProvider.removeUser();
+      }
     }
   }
 
