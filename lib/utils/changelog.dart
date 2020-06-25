@@ -26,15 +26,18 @@ class _ChangeLogState extends State<ChangeLog> {
     var v1_4_0 = ChangeLogItem();
     v1_4_0.version = 'Torn PDA v1.4.0';
     String feat1_4_0_1 = "New 'About' section";
-    String feat1_4_0_2 = "You can now choose between 12h/24h time systems and "
+    String feat1_4_0_2 = "You can now choose between 12h/24h time systems & "
         "local time (LT) or Torn City TIme (TCT) time zones";
     String feat1_4_0_3 = "Added travel progress bar to the Travel section";
-    String feat1_4_0_4 = "Fixed issues reported in previous version "
+    String feat1_4_0_4 = "Fixed an issue causing user settings preferences not "
+        "to be applied after restarting the application";
+    String feat1_4_0_5 = "Fixed several issues reported in previous version "
         "(thanks Kivou + JDTech)";
     v1_4_0.features.add(feat1_4_0_1);
     v1_4_0.features.add(feat1_4_0_2);
     v1_4_0.features.add(feat1_4_0_3);
     v1_4_0.features.add(feat1_4_0_4);
+    v1_4_0.features.add(feat1_4_0_5);
 
     // VERSION 1.3.0
     var v1_3_0 = ChangeLogItem();
