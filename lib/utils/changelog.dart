@@ -24,7 +24,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.4.0
     var v1_4_0 = ChangeLogItem();
-    v1_4_0.version = 'Torn PDA v1.3.1';
+    v1_4_0.version = 'Torn PDA v1.4.0';
     String feat1_4_0_1 = "New 'About' section";
     String feat1_4_0_2 = "You can now choose between 12h/24h time systems and "
         "local time (LT) or Torn City TIme (TCT) time zones";
@@ -59,7 +59,8 @@ class _ChangeLogState extends State<ChangeLog> {
     itemList.add(v1_3_0);
 
     for (var i = 0; i < itemList.length; i++) {
-      _changeLogItems.putIfAbsent(itemList[i].version, () => itemList[i].features);
+      _changeLogItems.putIfAbsent(
+          itemList[i].version, () => itemList[i].features);
     }
   }
 
@@ -108,6 +109,14 @@ class _ChangeLogState extends State<ChangeLog> {
   List<Widget> _items() {
     var itemList = List<Widget>();
     var itemNumber = 1;
+
+    itemList.add(
+      Padding(
+        padding: const EdgeInsets.only(bottom: 25),
+        child: Text("CHANGELOG"),
+      ),
+    );
+
     for (var entry in _changeLogItems.entries) {
       if (itemNumber > 1) {
         itemList.add(
