@@ -8,6 +8,7 @@ import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/pages/travel_page.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
@@ -38,6 +39,7 @@ class _DrawerPageState extends State<DrawerPage> {
 
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
+  SettingsProvider _settingsProvider;
 
   Future _finishedWithPreferences;
 
@@ -52,7 +54,7 @@ class _DrawerPageState extends State<DrawerPage> {
       _aboutPosition,
     ];
     _handleChangelog();
-    _finishedWithPreferences = _getKeyStatus();
+    _finishedWithPreferences = _loadInitPreferences();
     _configureSelectNotificationSubject();
   }
 
@@ -353,12 +355,12 @@ class _DrawerPageState extends State<DrawerPage> {
     });
   }
 
-  Future<void> _getKeyStatus() async {
-    // Set up provider
+  Future<void> _loadInitPreferences() async {
+    // Set up UserProvider. If key is empty, redirect to the Settings page.
+    // Else, open the default
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     await _userProvider.loadPreferences();
 
-    // If key is empty, redirect to the Settings page. Else, open the default
     if (!_userProvider.myUser.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
@@ -367,6 +369,10 @@ class _DrawerPageState extends State<DrawerPage> {
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
     }
+
+    // Set up SettingsProvider so that user preferences are applied
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    await _settingsProvider.loadPreferences();
   }
 
   void _handleChangelog() async {
