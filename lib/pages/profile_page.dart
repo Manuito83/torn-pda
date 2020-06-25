@@ -819,6 +819,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       return InkWell(
+        splashColor: Colors.transparent,
         child: Icon(
           Icons.alarm,
           size: 22,
