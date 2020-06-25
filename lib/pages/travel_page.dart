@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
@@ -312,8 +314,26 @@ class _TravelPageState extends State<TravelPage> {
         ];
       } else {
         // We are flying somewhere (another country or TORN)
-        var formatter = new DateFormat('HH:mm:ss');
-        String formattedTime = formatter.format(_travelModel.timeArrival);
+
+        // Time formatting
+        var formattedTime = TimeFormatter(
+          inputTime: _travelModel.timeArrival,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+
+        // Calculations for travel bar
+        var startTime = _travelModel.departed;
+        var endTime = _travelModel.timeStamp;
+        var totalSeconds = endTime - startTime;
+        var dateTimeArrival = _travelModel.timeArrival;
+        var timeDifference = dateTimeArrival.difference(DateTime.now());
+        String twoDigits(int n) => n.toString().padLeft(2, "0");
+        String twoDigitMinutes =
+        twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff =
+            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+
         return <Widget>[
           Padding(
             padding: EdgeInsetsDirectional.only(top: 50, bottom: 30),
@@ -331,10 +351,31 @@ class _TravelPageState extends State<TravelPage> {
             ),
           ),
           Text(
-            'Arriving in ${_travelModel.destination} at: \n',
+            'Arriving in ${_travelModel.destination} at:',
           ),
-          Text(
-            '$formattedTime LT',
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              '$formattedTime',
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              LinearPercentIndicator(
+                center: Text(
+                  diff,
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+                width: 150,
+                lineHeight: 18,
+                progressColor: Colors.blue[200],
+                backgroundColor: Colors.grey,
+                percent: 1 - (_travelModel.timeLeft / totalSeconds),
+              ),
+            ],
           ),
           Padding(
             padding: EdgeInsetsDirectional.only(top: 20, bottom: 20),

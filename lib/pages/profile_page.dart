@@ -14,6 +14,7 @@ import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -641,14 +642,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _user.energy.current > _user.energy.maximum) {
           return SizedBox.shrink();
         } else {
-          var time;
-          time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
-          var formatter = new DateFormat('HH:mm');
-          String timeFormatted = formatter.format(time);
+          var time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
+          var timeFormatted = TimeFormatter(
+            inputTime: time,
+            timeFormatSetting: _settingsProvider.currentTimeFormat,
+            timeZoneSetting: _settingsProvider.currentTimeZone,
+          ).format;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
-              Text('Full at $timeFormatted LT'),
+              Text('Full at $timeFormatted'),
             ],
           );
         }
@@ -658,14 +661,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _user.nerve.current > _user.nerve.maximum) {
           return SizedBox.shrink();
         } else {
-          var time;
-          time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
-          var formatter = new DateFormat('HH:mm');
-          String timeFormatted = formatter.format(time);
+          var time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
+          var timeFormatted = TimeFormatter(
+            inputTime: time,
+            timeFormatSetting: _settingsProvider.currentTimeFormat,
+            timeZoneSetting: _settingsProvider.currentTimeZone,
+          ).format;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
-              Text('Full at $timeFormatted LT'),
+              Text('Full at $timeFormatted'),
             ],
           );
         }
@@ -675,14 +680,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _user.happy.current > _user.happy.maximum) {
           return SizedBox.shrink();
         } else {
-          var time;
-          time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
-          var formatter = new DateFormat('HH:mm');
-          String timeFormatted = formatter.format(time);
+          var time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
+          var timeFormatted = TimeFormatter(
+            inputTime: time,
+            timeFormatSetting: _settingsProvider.currentTimeFormat,
+            timeZoneSetting: _settingsProvider.currentTimeZone,
+          ).format;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
-              Text('Full at $timeFormatted LT'),
+              Text('Full at $timeFormatted'),
             ],
           );
         }
@@ -692,14 +699,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _user.life.current > _user.life.maximum) {
           return SizedBox.shrink();
         } else {
-          var time;
-          time = _serverTime.add(Duration(seconds: _user.life.fulltime));
-          var formatter = new DateFormat('HH:mm');
-          String timeFormatted = formatter.format(time);
+          var time = _serverTime.add(Duration(seconds: _user.life.fulltime));
+          var timeFormatted = TimeFormatter(
+            inputTime: time,
+            timeFormatSetting: _settingsProvider.currentTimeFormat,
+            timeZoneSetting: _settingsProvider.currentTimeZone,
+          ).format;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
-              Text('Full at $timeFormatted LT'),
+              Text('Full at $timeFormatted'),
             ],
           );
         }
@@ -714,7 +723,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool notificationsPending;
     String setString;
     String cancelString;
-    var formatter = new DateFormat('HH:mm');
 
     switch (notificationType) {
       case ProfileNotification.energy:
@@ -722,8 +730,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationsPending = _energyNotificationsPending;
         var energyCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.energy.fulltime));
-        String formattedTime = formatter.format(energyCurrentSchedule);
-        setString = 'Energy notification set for $formattedTime local time';
+        var formattedTime = TimeFormatter(
+          inputTime: energyCurrentSchedule,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        setString = 'Energy notification set for $formattedTime';
         cancelString = 'Energy notification cancelled!';
         break;
       case ProfileNotification.nerve:
@@ -731,8 +743,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationsPending = _nerveNotificationsPending;
         var nerveCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
-        String formattedTime = formatter.format(nerveCurrentSchedule);
-        setString = 'Nerve notification set for $formattedTime local time';
+        var formattedTime = TimeFormatter(
+          inputTime: nerveCurrentSchedule,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        setString = 'Nerve notification set for $formattedTime';
         cancelString = 'Nerve notification cancelled!';
         break;
       case ProfileNotification.life:
@@ -740,8 +756,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationsPending = _lifeNotificationsPending;
         var lifeCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.life.fulltime));
-        String formattedTime = formatter.format(lifeCurrentSchedule);
-        setString = 'Life notification set for $formattedTime local time';
+        var formattedTime = TimeFormatter(
+          inputTime: lifeCurrentSchedule,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        setString = 'Life notification set for $formattedTime';
         cancelString = 'Life notification cancelled!';
         break;
       case ProfileNotification.drugs:
@@ -749,9 +769,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationsPending = _drugsNotificationsPending;
         var drugsCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
-        String formattedTime = formatter.format(drugsCurrentSchedule);
+        var formattedTime = TimeFormatter(
+          inputTime: drugsCurrentSchedule,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
         setString =
-            'Drugs cooldown notification set for $formattedTime local time';
+            'Drugs cooldown notification set for $formattedTime';
         cancelString = 'Drugs cooldown notification cancelled!';
         break;
       case ProfileNotification.medical:
@@ -759,9 +783,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationsPending = _medicalNotificationsPending;
         var medicalCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
-        String formattedTime = formatter.format(medicalCurrentSchedule);
+        var formattedTime = TimeFormatter(
+          inputTime: medicalCurrentSchedule,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
         setString =
-            'Medical cooldown notification set for $formattedTime local time';
+            'Medical cooldown notification set for $formattedTime';
         cancelString = 'Medical cooldown notification cancelled!';
         break;
       case ProfileNotification.booster:
@@ -769,9 +797,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationsPending = _boosterNotificationsPending;
         var boosterCurrentSchedule =
             DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
-        String formattedTime = formatter.format(boosterCurrentSchedule);
+        var formattedTime = TimeFormatter(
+          inputTime: boosterCurrentSchedule,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
         setString =
-            'Booster cooldown notification set for $formattedTime local time';
+            'Booster cooldown notification set for $formattedTime';
         cancelString = 'Booster cooldown notification cancelled!';
         break;
     }
@@ -1016,43 +1048,52 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _drugCounter() {
     var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.drug));
-    var formatter = new DateFormat('HH:mm');
-    String timeFormatted = formatter.format(timeEnd);
+    var formattedTime = TimeFormatter(
+      inputTime: timeEnd,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).format;
     String diff = _cooldownTimeFormatted(timeEnd);
-    return Flexible(child: Text('@ $timeFormatted $diff'));
+    return Flexible(child: Text('@ $formattedTime$diff'));
   }
 
   Widget _medicalCounter() {
     var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.medical));
-    var formatter = new DateFormat('HH:mm');
-    String timeFormatted = formatter.format(timeEnd);
+    var formattedTime = TimeFormatter(
+      inputTime: timeEnd,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).format;
     String diff = _cooldownTimeFormatted(timeEnd);
-    return Flexible(child: Text('@ $timeFormatted $diff'));
+    return Flexible(child: Text('@ $formattedTime$diff'));
   }
 
   Widget _boosterCounter() {
     var timeEnd = _serverTime.add(Duration(seconds: _user.cooldowns.booster));
-    var formatter = new DateFormat('HH:mm');
-    String timeFormatted = formatter.format(timeEnd);
+    var formattedTime = TimeFormatter(
+      inputTime: timeEnd,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).format;
     String diff = _cooldownTimeFormatted(timeEnd);
-    return Flexible(child: Text('@ $timeFormatted $diff'));
+    return Flexible(child: Text('@ $formattedTime$diff'));
   }
 
   String _cooldownTimeFormatted(DateTime timeEnd) {
     String diff;
     var timeDifference = timeEnd.difference(_serverTime);
     if (timeDifference.inMinutes < 1) {
-      diff = 'LT , seconds away';
+      diff = ', seconds away';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      diff = 'LT , in 1 minute';
+      diff = ', in 1 minute';
     } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-      diff = 'LT , in ${timeDifference.inMinutes} minutes';
+      diff = ', in ${timeDifference.inMinutes} minutes';
     } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      diff = 'LT , in 1 hour';
+      diff = ', in 1 hour';
     } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      diff = 'LT , in ${timeDifference.inHours} hours';
+      diff = ', in ${timeDifference.inHours} hours';
     } else {
-      diff = 'LT tomorrow, in ${timeDifference.inHours} hours';
+      diff = ' tomorrow, in ${timeDifference.inHours} hours';
     }
     return diff;
   }
@@ -1947,5 +1988,4 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
   }
-
 }

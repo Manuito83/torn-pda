@@ -29,6 +29,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   String _openSectionValue;
   String _openBrowserValue;
+  String _timeFormatValue;
+  String _timeZoneValue;
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
@@ -68,7 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
-                _userDetails(),
+                _apiKeyWidget(),
                 Padding(
                   padding: const EdgeInsets.only(
                       left: 20, top: 10, right: 20, bottom: 5),
@@ -144,6 +146,46 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 20, top: 10, right: 20, bottom: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Time format",
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 20),
+                      ),
+                      Flexible(
+                        child: _timeFormatDropdown(),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 20, top: 10, right: 20, bottom: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Time zone",
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 20),
+                      ),
+                      Flexible(
+                        child: _timeZoneDropdown(),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           )),
@@ -158,7 +200,7 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  Widget _userDetails() {
+  Widget _apiKeyWidget() {
     if (_apiIsLoading) {
       return Padding(
         padding: EdgeInsets.all(40),
@@ -470,37 +512,53 @@ class _SettingsPageState extends State<SettingsPage> {
       items: [
         DropdownMenuItem(
           value: "0",
-          child: Text(
-            "Profile",
-            style: TextStyle(
-              fontSize: 14,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Profile",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
           ),
         ),
         DropdownMenuItem(
           value: "1",
-          child: Text(
-            "Travel",
-            style: TextStyle(
-              fontSize: 14,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Travel",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
           ),
         ),
         DropdownMenuItem(
           value: "2",
-          child: Text(
-            "Chaining",
-            style: TextStyle(
-              fontSize: 14,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Chaining",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
           ),
         ),
         DropdownMenuItem(
-          value: "3",
-          child: Text(
-            "Friends",
-            style: TextStyle(
-              fontSize: 14,
+          value: "4",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Friends",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
           ),
         ),
@@ -520,19 +578,27 @@ class _SettingsPageState extends State<SettingsPage> {
       items: [
         DropdownMenuItem(
           value: "0",
-          child: Text(
-            "App",
-            style: TextStyle(
-              fontSize: 14,
+          child: SizedBox(
+            width: 55,
+            child: Text(
+              "App",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
           ),
         ),
         DropdownMenuItem(
           value: "1",
-          child: Text(
-            "External",
-            style: TextStyle(
-              fontSize: 14,
+          child: SizedBox(
+            width: 55,
+            child: Text(
+              "External",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
             ),
           ),
         ),
@@ -545,6 +611,94 @@ class _SettingsPageState extends State<SettingsPage> {
         }
         setState(() {
           _openBrowserValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _timeFormatDropdown() {
+    return DropdownButton<String>(
+      value: _timeFormatValue,
+      items: [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "24 hours",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "12 hours",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == '0') {
+          _settingsProvider.changeTimeFormat = TimeFormatSetting.h24;
+        } else {
+          _settingsProvider.changeTimeFormat = TimeFormatSetting.h12;
+        }
+        setState(() {
+          _timeFormatValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _timeZoneDropdown() {
+    return DropdownButton<String>(
+      value: _timeZoneValue,
+      items: [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 135,
+            child: Text(
+              "Local Time (LT)",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 135,
+            child: Text(
+              "Torn City Time (TCT)",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == '0') {
+          _settingsProvider.changeTimeZone = TimeZoneSetting.localTime;
+        } else {
+          _settingsProvider.changeTimeZone = TimeZoneSetting.tornTime;
+        }
+        setState(() {
+          _timeZoneValue = value;
         });
       },
     );
@@ -599,6 +753,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     await _settingsProvider.loadPreferences();
+
     var browser = _settingsProvider.currentBrowser;
     setState(() {
       switch (browser) {
@@ -607,6 +762,30 @@ class _SettingsPageState extends State<SettingsPage> {
           break;
         case BrowserSetting.external:
           _openBrowserValue = '1';
+          break;
+      }
+    });
+
+    var timeFormat = _settingsProvider.currentTimeFormat;
+    setState(() {
+      switch (timeFormat) {
+        case TimeFormatSetting.h24:
+          _timeFormatValue = '0';
+          break;
+        case TimeFormatSetting.h12:
+          _timeFormatValue = '1';
+          break;
+      }
+    });
+
+    var timeZone = _settingsProvider.currentTimeZone;
+    setState(() {
+      switch (timeZone) {
+        case TimeZoneSetting.localTime:
+          _timeZoneValue = '0';
+          break;
+        case TimeZoneSetting.tornTime:
+          _timeZoneValue = '1';
           break;
       }
     });

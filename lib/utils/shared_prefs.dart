@@ -15,6 +15,8 @@ class SharedPreferencesModel {
   final String _kTheme = "pda_theme";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
+  final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -167,6 +169,32 @@ class SharedPreferencesModel {
   Future<bool> setDefaultBrowser(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultBrowser, value);
+  }
+
+  /// ----------------------------
+  /// Methods for default time format
+  /// ----------------------------
+  Future<String> getDefaultTimeFormat() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDefaultTimeFormat) ?? '24';
+  }
+
+  Future<bool> setDefaultTimeFormat(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDefaultTimeFormat, value);
+  }
+
+  /// ----------------------------
+  /// Methods for default time zone
+  /// ----------------------------
+  Future<String> getDefaultTimeZone() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDefaultTimeZone) ?? 'local';
+  }
+
+  Future<bool> setDefaultTimeZone(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDefaultTimeZone, value);
   }
 
   /// ----------------------------
