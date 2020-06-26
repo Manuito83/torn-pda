@@ -67,44 +67,57 @@ class _ChangeLogState extends State<ChangeLog> {
     }
   }
 
+  var _scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: SingleChildScrollView(
-              child: Container(
-                padding: EdgeInsets.fromLTRB(15, 25, 15, 15),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _items(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Scrollbar(
+                  controller: _scrollController,
+                  isAlwaysShown: true,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Container(
+                      padding: EdgeInsets.fromLTRB(15, 25, 15, 15),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _items(),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Divider(
-            thickness: 1,
-            color: Colors.blueGrey,
-          ),
-          Padding(
-            padding: EdgeInsets.all(5),
-            child: RaisedButton(
-              child: Text(
-                'Great!',
-                style: TextStyle(
-                  fontSize: 15,
+              Divider(
+                thickness: 1,
+                color: Colors.blueGrey,
+              ),
+              Padding(
+                padding: EdgeInsets.all(5),
+                child: RaisedButton(
+                  child: Text(
+                    'Great!',
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
               ),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
