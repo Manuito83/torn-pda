@@ -483,62 +483,6 @@ class _TravelPageState extends State<TravelPage> {
                 }
               },
             ),
-
-            // Old buttons going to database apps. Keeping here in case
-            // something goes bad with shared database
-            /*
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Divider(),
-            ),
-            RaisedButton(
-              child: Text("DoctorN"),
-              onPressed: () async {
-                var browserType = _settingsProvider.currentBrowser;
-                switch (browserType) {
-                  case BrowserSetting.app:
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewTravel(
-                          webViewType: WebViewTypeTravel.docTorn,
-                        ),
-                      ),
-                    );
-                    break;
-                  case BrowserSetting.external:
-                    var url = 'https://doctorn.rocks/travel-hub/';
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                    break;
-                }
-              },
-            ),
-            RaisedButton(
-              child: Text("Arson Warehouse"),
-              onPressed: () async {
-                var browserType = _settingsProvider.currentBrowser;
-                switch (browserType) {
-                  case BrowserSetting.app:
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewTravel(
-                          webViewType: WebViewTypeTravel.arsonWarehouse,
-                        ),
-                      ),
-                    );
-                    break;
-                  case BrowserSetting.external:
-                    var url = 'https://arsonwarehouse.com/foreign-stock';
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                    break;
-                }
-              },
-            ),
-            SizedBox(height: 0),
-            */
           ],
         )
       ];
