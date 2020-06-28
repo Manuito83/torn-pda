@@ -7,6 +7,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/browser_info_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -109,30 +110,11 @@ class _SettingsPageState extends State<SettingsPage> {
                             icon: Icon(Icons.info_outline),
                             onPressed: () {
                               showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: Text("Browser type"),
-                                      content: Text(
-                                          "Choosing the in-app browser "
-                                          "offers a better experience and additional "
-                                          "features, such as foreign stock uploading "
-                                          "to a common database in YATA that everyone "
-                                          "benefits from."
-                                          "\n\n"
-                                          "Please consider using it, unless you "
-                                          "have issues, in which case you can select "
-                                          "you mobile phone's default browser (external)."),
-                                      actions: [
-                                        FlatButton(
-                                          child: Text("Close"),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        )
-                                      ],
-                                    );
-                                  });
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BrowserInfoDialog();
+                                },
+                              );
                             },
                           ),
                         ],
