@@ -15,6 +15,7 @@ class SharedPreferencesModel {
   final String _kTheme = "pda_theme";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
@@ -177,6 +178,19 @@ class SharedPreferencesModel {
   Future<bool> setDefaultBrowser(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultBrowser, value);
+  }
+
+  /// ----------------------------
+  /// Methods for default browser
+  /// ----------------------------
+  Future<bool> getTestBrowserActive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTestBrowserActive) ?? false;
+  }
+
+  Future<bool> setTestBrowserActive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTestBrowserActive, value);
   }
 
   /// ----------------------------

@@ -19,6 +19,7 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/webview2.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -87,6 +88,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
+  UserDetailsProvider _userProvider;
 
   // For dial FAB
   ScrollController scrollController;
@@ -137,6 +139,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ScrollDirection.forward);
       });
 
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _apiFetched = _fetchApi();
 
     _loadNotificationPreferences();
@@ -1600,9 +1603,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchApi() async {
-    var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     var apiResponse =
-        await TornApiCaller.ownProfile(userProvider.myUser.userApiKey)
+        await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey)
             .getOwnProfile;
 
     setState(() {
@@ -1734,25 +1736,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     var browserType = _settingsProvider.currentBrowser;
-    switch (browserType) {
-      case BrowserSetting.app:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => TornWebViewGeneric(
-              webViewType: WebViewType.custom,
-              customUrl: tornPage,
-              genericTitle: 'Torn',
-              genericCallBack: _updateCallback,
-            ),
+    // TEST BROWSER vvv
+    if (_settingsProvider.testBrowserActive &&
+        browserType == BrowserSetting.app) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => WebView2(
+            customUrl: tornPage,
+            customTitle: 'Torn',
+            customCallBack: _updateCallback,
           ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = tornPage;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
+        ),
+      );
+      // TEST BROWSER ^^^
+    } else {
+      switch (browserType) {
+        case BrowserSetting.app:
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (BuildContext context) => TornWebViewGeneric(
+                webViewType: WebViewType.custom,
+                customUrl: tornPage,
+                genericTitle: 'Torn',
+                genericCallBack: _updateCallback,
+              ),
+            ),
+          );
+          break;
+        case BrowserSetting.external:
+          var url = tornPage;
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
     }
   }
 

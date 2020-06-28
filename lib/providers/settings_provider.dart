@@ -3,17 +3,17 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum BrowserSetting {
   app,
-  external
+  external,
 }
 
 enum TimeFormatSetting {
   h24,
-  h12
+  h12,
 }
 
 enum TimeZoneSetting {
   localTime,
-  tornTime
+  tornTime,
 }
 
 class SettingsProvider extends ChangeNotifier {
@@ -26,6 +26,14 @@ class SettingsProvider extends ChangeNotifier {
   BrowserSetting get currentBrowser => _currentBrowser;
   set changeBrowser(BrowserSetting browserType) {
     _currentBrowser = browserType;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
+  var _testBrowserActive = false;
+  bool get testBrowserActive => _testBrowserActive;
+  set changeTestBrowserActive(bool active) {
+    _testBrowserActive = active;
     _saveSettingsSharedPrefs();
     notifyListeners();
   }
@@ -57,6 +65,8 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
     SharedPreferencesModel().setDefaultBrowser(browserSave);
+
+    SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
 
     String timeFormatSave;
     switch (_currentTimeFormat) {
@@ -92,7 +102,10 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
+    _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
+
+    String restoredTimeFormat =
+        await SharedPreferencesModel().getDefaultTimeFormat();
     switch (restoredTimeFormat) {
       case '24':
         _currentTimeFormat = TimeFormatSetting.h24;
@@ -102,7 +115,8 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    String restoredTimeZone = await SharedPreferencesModel().getDefaultTimeZone();
+    String restoredTimeZone =
+        await SharedPreferencesModel().getDefaultTimeZone();
     switch (restoredTimeZone) {
       case 'local':
         _currentTimeZone = TimeZoneSetting.localTime;
