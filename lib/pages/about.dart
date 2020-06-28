@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share/share.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
@@ -96,35 +97,19 @@ class _AboutPageState extends State<AboutPage> {
                       style: DefaultTextStyle.of(context).style,
                       children: <TextSpan>[
                         TextSpan(
-                          text: 'Discord channel',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.blue),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () async {
-                              var browserType =
-                                  _settingsProvider.currentBrowser;
-                              switch (browserType) {
-                                case BrowserSetting.app:
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          TornWebViewGeneric(
-                                        genericTitle: 'Discord',
-                                        webViewType: WebViewType.custom,
-                                        customUrl: 'https://discord.gg/vyP23kJ',
-                                      ),
-                                    ),
-                                  );
-                                  break;
-                                case BrowserSetting.external:
-                                  var url = 'https://discord.gg/vyP23kJ';
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                  break;
-                              }
-                            },
-                        ),
+                            text: 'Discord channel',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                // Only option for external browser, or
+                                // Discord won't open
+                                var url = 'https://discord.gg/vyP23kJ';
+                                if (await canLaunch(url)) {
+                                  await launch(url, forceSafariVC: false);
+                                }
+                              }),
                         TextSpan(
                             text: ' and offer suggestions for new '
                                 'features or report bugs you find!'),
@@ -336,10 +321,10 @@ class _AboutPageState extends State<AboutPage> {
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
                                             TornWebViewGeneric(
-                                              profileId: '2225097',
-                                              profileName: 'Manuito',
-                                              webViewType: WebViewType.profile,
-                                            ),
+                                          profileId: '2225097',
+                                          profileName: 'Manuito',
+                                          webViewType: WebViewType.profile,
+                                        ),
                                       ),
                                     );
                                     break;
@@ -410,7 +395,6 @@ class _AboutPageState extends State<AboutPage> {
                 ],
               ),
             ),
-
           ],
         ),
       ),
