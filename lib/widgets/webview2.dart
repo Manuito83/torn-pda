@@ -53,16 +53,23 @@ class _WebView2State extends State<WebView2> {
           title: Text(_pageTitle),
         ),
         body: Container(
-          child: InAppWebView(
-            initialUrl: _initialUrl,
-            initialHeaders: {},
-            initialOptions: InAppWebViewGroupOptions(
-                crossPlatform: InAppWebViewOptions(
-              debuggingEnabled: true,
-            )),
-            onWebViewCreated: (InAppWebViewController controller) {
-              webView = controller;
-            },
+          color: Colors.black,
+          child: SafeArea(
+            top: false,
+            left: false,
+            right: false,
+            bottom: true,
+            child: InAppWebView(
+              initialUrl: _initialUrl,
+              initialHeaders: {},
+              initialOptions: InAppWebViewGroupOptions(
+                  crossPlatform: InAppWebViewOptions(
+                debuggingEnabled: true,
+              )),
+              onWebViewCreated: (InAppWebViewController controller) {
+                webView = controller;
+              },
+            ),
           ),
         ),
       ),
