@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 class ChangeLogItem {
   String version;
@@ -28,11 +29,16 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat1_4_1_1 = "[Android] Now you can choose different notification "
         "styles (notification, alarm or timer) for each of the status bars and "
         "cooldowns available in the Profile section";
-    String feat1_4_1_2 = "Corrected Discord link in the About section";
-    String feat1_4_1_3 = "Several other bug fixes thanks to player feedback";
-    v1_4_1.features.add(feat1_4_1_1);
+    String feat1_4_1_2 = "Added option to select a test in-app browser, with a "
+        "different engine, to try to solve issues reported by some players";
+    String feat1_4_1_3 = "Corrected Discord link in the About section";
+    String feat1_4_1_4 = "Several other bug fixes thanks to player feedback";
+    if (Platform.isAndroid) {
+      v1_4_1.features.add(feat1_4_1_1);
+    }
     v1_4_1.features.add(feat1_4_1_2);
     v1_4_1.features.add(feat1_4_1_3);
+    v1_4_1.features.add(feat1_4_1_4);
 
 
     // VERSION 1.4.0
