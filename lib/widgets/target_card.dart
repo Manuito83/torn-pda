@@ -515,19 +515,6 @@ class _TargetCardState extends State<TargetCard> {
 
   void _updateSeveralTargets(List<String> attackedIds) async {
     await _targetsProvider.updateTargetsAfterAttacks(attackedIds);
-
-    /*    bool updateWorked = await _targetsProvider.updateTarget(_target);
-    if (updateWorked) {
-    } else {
-      Scaffold.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            'Error updating ${_target.name}!',
-          ),
-        ),
-      );
-    }*/
   }
 
   void _timerUpdateInformation() {
