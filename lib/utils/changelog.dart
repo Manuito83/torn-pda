@@ -22,6 +22,19 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.4.1
+    var v1_4_1 = ChangeLogItem();
+    v1_4_1.version = 'Torn PDA v1.4.1';
+    String feat1_4_1_1 = "[Android] Now you can choose different notification "
+        "styles (notification, alarm or timer) for each of the status bars and "
+        "cooldowns available in the Profile section";
+    String feat1_4_1_2 = "Corrected Discord link in the About section";
+    String feat1_4_1_3 = "Several other bug fixes thanks to player feedback";
+    v1_4_1.features.add(feat1_4_1_1);
+    v1_4_1.features.add(feat1_4_1_2);
+    v1_4_1.features.add(feat1_4_1_3);
+
+
     // VERSION 1.4.0
     var v1_4_0 = ChangeLogItem();
     v1_4_0.version = 'Torn PDA v1.4.0';
@@ -58,6 +71,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_4_1);
     itemList.add(v1_4_0);
     itemList.add(v1_3_0);
 
