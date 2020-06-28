@@ -37,7 +37,7 @@ class ApiError {
   ApiError({int errorId}) {
     switch (errorId) {
       case 0:
-        errorReason = 'Unknown error';
+        errorReason = 'Could not contact Torn';
         break;
       case 1:
         errorReason = 'Key is empty';
