@@ -11,8 +11,6 @@ import 'package:http/http.dart' as http;
 enum WebViewTypeTravel {
   generic,
   travelAgency,
-  docTorn,
-  arsonWarehouse,
 }
 
 class TornWebViewTravel extends StatefulWidget {
@@ -50,58 +48,53 @@ class _TornWebViewTravelState extends State<TornWebViewTravel> {
         _initialUrl = 'https://www.torn.com/travelagency.php';
         _pageTitle = 'Travel Agency';
         break;
-      case WebViewTypeTravel.docTorn:
-        _initialUrl = 'https://doctorn.rocks/travel-hub/';
-        _pageTitle = 'DoctorN';
-        break;
-      case WebViewTypeTravel.arsonWarehouse:
-        _initialUrl = 'https://arsonwarehouse.com/foreign-stock';
-        _pageTitle = 'Arson Warehouse';
-        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              if (widget.genericCallBack != null) {
-                widget.genericCallBack();
-              }
-              Navigator.pop(context);
-            }),
-        title: Text(_pageTitle),
-      ),
-      body: Container(
-        color: Colors.black,
-        child: SafeArea(
-          top: false,
-          right: false,
-          left: false,
-          bottom: true,
-          child: Builder(
-            builder: (BuildContext context) {
-              return WebView(
-                initialUrl: _initialUrl,
-                javascriptMode: JavascriptMode.unrestricted,
-                javascriptChannels: <JavascriptChannel>[
-                  JavascriptChannel(
-                    name: 'Source',
-                    onMessageReceived: (JavascriptMessage msg) {
-                      _sendStockInformation(msg.message);
-                    },
-                  ),
-                ].toSet(),
-                onWebViewCreated: (WebViewController c) {
-                  _controller = c;
-                },
-                onPageFinished: (value) => _loadSourceCode(),
-                gestureNavigationEnabled: true,
-              );
-            },
+    return WillPopScope(
+      onWillPop: _willPopCallback,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                if (widget.genericCallBack != null) {
+                  widget.genericCallBack();
+                }
+                Navigator.pop(context);
+              }),
+          title: Text(_pageTitle),
+        ),
+        body: Container(
+          color: Colors.black,
+          child: SafeArea(
+            top: false,
+            right: false,
+            left: false,
+            bottom: true,
+            child: Builder(
+              builder: (BuildContext context) {
+                return WebView(
+                  initialUrl: _initialUrl,
+                  javascriptMode: JavascriptMode.unrestricted,
+                  javascriptChannels: <JavascriptChannel>[
+                    JavascriptChannel(
+                      name: 'Source',
+                      onMessageReceived: (JavascriptMessage msg) {
+                        _sendStockInformation(msg.message);
+                      },
+                    ),
+                  ].toSet(),
+                  onWebViewCreated: (WebViewController c) {
+                    _controller = c;
+                  },
+                  onPageFinished: (value) => _loadSourceCode(),
+                  gestureNavigationEnabled: true,
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -167,5 +160,12 @@ class _TornWebViewTravelState extends State<TornWebViewTravel> {
         // Error parsing
       }
     }
+  }
+
+  Future<bool> _willPopCallback() async {
+    if (widget.genericCallBack != null) {
+      widget.genericCallBack();
+    }
+    return true;
   }
 }

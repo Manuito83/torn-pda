@@ -41,52 +41,55 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () async {
-              // Normal behaviour is just to pop and go to previous page
-              if (_backButtonPopsContext) {
-                widget.attacksCallback(_attackedIds);
-                Navigator.pop(context);
-              } else {
-                // But we can change and go back to previous page in certain
-                // situations (e.g. when going for medical items during an
-                // attack), in which case we need to return to previous target
-                var backPossible = await _webViewController.canGoBack();
-                if (backPossible) {
-                  _webViewController.goBack();
-                  setState(() {
-                    _currentPageTitle = _goBackTitle;
-                  });
-                } else {
+    return WillPopScope(
+      onWillPop: _willPopCallback,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () async {
+                // Normal behaviour is just to pop and go to previous page
+                if (_backButtonPopsContext) {
+                  widget.attacksCallback(_attackedIds);
                   Navigator.pop(context);
+                } else {
+                  // But we can change and go back to previous page in certain
+                  // situations (e.g. when going for medical items during an
+                  // attack), in which case we need to return to previous target
+                  var backPossible = await _webViewController.canGoBack();
+                  if (backPossible) {
+                    _webViewController.goBack();
+                    setState(() {
+                      _currentPageTitle = _goBackTitle;
+                    });
+                  } else {
+                    Navigator.pop(context);
+                  }
+                  _backButtonPopsContext = true;
                 }
-                _backButtonPopsContext = true;
-              }
-            }),
-        title: Text(_currentPageTitle),
-        actions: _actionButton(),
-      ),
-      body: Container(
-        color: Colors.black,
-        child: SafeArea(
-          top: false,
-          right: false,
-          left: false,
-          bottom: true,
-          child: Builder(
-            builder: (BuildContext context) {
-              return WebView(
-                initialUrl: _initialUrl,
-                javascriptMode: JavascriptMode.unrestricted,
-                onWebViewCreated: (WebViewController c) {
-                  _webViewController = c;
-                },
-                gestureNavigationEnabled: true,
-              );
-            },
+              }),
+          title: Text(_currentPageTitle),
+          actions: _actionButton(),
+        ),
+        body: Container(
+          color: Colors.black,
+          child: SafeArea(
+            top: false,
+            right: false,
+            left: false,
+            bottom: true,
+            child: Builder(
+              builder: (BuildContext context) {
+                return WebView(
+                  initialUrl: _initialUrl,
+                  javascriptMode: JavascriptMode.unrestricted,
+                  onWebViewCreated: (WebViewController c) {
+                    _webViewController = c;
+                  },
+                  gestureNavigationEnabled: true,
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -143,5 +146,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         }
       },
     );
+  }
+
+  Future<bool> _willPopCallback() async {
+    widget.attacksCallback(_attackedIds);
+    return true;
   }
 }

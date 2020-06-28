@@ -21,7 +21,7 @@ class TornWebViewGeneric extends StatefulWidget {
   /// [profileId] and [profileName] make sense for targets and attacks.
   /// [genericCallBack] is used to update the target card when we go back
   /// [webViewType] determines the actual URL and logic
-  /// [url] and [title] needs to be entered for custom WebViewType
+  /// [_initialUrl] and [title] needs to be entered for custom WebViewType
   TornWebViewGeneric({
     this.profileId = '',
     this.profileName = '',
@@ -79,39 +79,49 @@ class _TornWebViewGenericState extends State<TornWebViewGeneric> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              if (widget.genericCallBack != null) {
-                widget.genericCallBack();
-              }
-              Navigator.pop(context);
-            }),
-        title: Text(_pageTitle),
+    return WillPopScope(
+      onWillPop: _willPopCallback,
+        child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                if (widget.genericCallBack != null) {
+                  widget.genericCallBack();
+                }
+                Navigator.pop(context);
+              }),
+          title: Text(_pageTitle),
+        ),
+         body: Container(
+           color: Colors.black,
+           child: SafeArea(
+            top: false,
+            right: false,
+            left: false,
+            bottom: true,
+            child: Builder(
+              builder: (BuildContext context) {
+                return WebView(
+                  initialUrl: _initialUrl,
+                  javascriptMode: JavascriptMode.unrestricted,
+                  onWebViewCreated: (WebViewController c) {
+                    _controller = c;
+                  },
+                  gestureNavigationEnabled: true,
+                );
+              },
+            ),
+        ),
+         ),
       ),
-       body: Container(
-         color: Colors.black,
-         child: SafeArea(
-          top: false,
-          right: false,
-          left: false,
-          bottom: true,
-          child: Builder(
-            builder: (BuildContext context) {
-              return WebView(
-                initialUrl: _initialUrl,
-                javascriptMode: JavascriptMode.unrestricted,
-                onWebViewCreated: (WebViewController c) {
-                  _controller = c;
-                },
-                gestureNavigationEnabled: true,
-              );
-            },
-          ),
-      ),
-       ),
     );
+  }
+
+  Future<bool> _willPopCallback() async {
+    if (widget.genericCallBack != null) {
+      widget.genericCallBack();
+    }
+    return true;
   }
 }
