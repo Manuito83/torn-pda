@@ -23,6 +23,14 @@ class SharedPreferencesModel {
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
+  final String _kEnergyNotificationType = "pda_energyNotificationType";
+  final String _kNerveNotificationType = "pda_nerveNotificationType";
+  final String _kLifeNotificationType = "pda_lifeNotificationType";
+  final String _kDrugNotificationType = "pda_drugNotificationType";
+  final String _kMedicalNotificationType = "pda_medicalNotificationType";
+  final String _kBoosterNotificationType = "pda_boosterNotificationType";
+  final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
+  final String _kProfileAlarmSound = "pda_profileAlarmSound";
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
   /// UserDetailsProvider for retrieving the API key and other details!
@@ -265,5 +273,93 @@ class SharedPreferencesModel {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kStockCapacity, value);
   }
+
+  /// ----------------------------
+  /// Methods for notification types
+  /// ----------------------------
+  Future<String> getEnergyNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kEnergyNotificationType) ?? '0';
+  }
+
+  Future<bool> setEnergyNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kEnergyNotificationType, value);
+  }
+
+  Future<String> getNerveNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kNerveNotificationType) ?? '0';
+  }
+
+  Future<bool> setNerveNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kNerveNotificationType, value);
+  }
+
+  Future<String> getLifeNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLifeNotificationType) ?? '0';
+  }
+
+  Future<bool> setLifeNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLifeNotificationType, value);
+  }
+
+  Future<String> getDrugNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDrugNotificationType) ?? '0';
+  }
+
+  Future<bool> setDrugNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDrugNotificationType, value);
+  }
+
+  Future<String> getMedicalNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kMedicalNotificationType) ?? '0';
+  }
+
+  Future<bool> setMedicalNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kMedicalNotificationType, value);
+  }
+
+  Future<String> getBoosterNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kBoosterNotificationType) ?? '0';
+  }
+
+  Future<bool> setBoosterNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kBoosterNotificationType, value);
+  }
+
+  Future<bool> getProfileAlarmVibration() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kProfileAlarmVibration) ?? true;
+  }
+
+  Future<bool> setProfileAlarmVibration(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kProfileAlarmVibration, value);
+  }
+
+  Future<bool> getProfileAlarmSound() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kProfileAlarmSound) ?? true;
+  }
+
+  Future<bool> setProfileAlarmSound(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kProfileAlarmSound, value);
+  }
+
+
+
+
+
 
 }
