@@ -163,6 +163,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         padding: EdgeInsets.only(left: 20),
                       ),
                       Flexible(
+                        flex: 2,
                         child: _timeZoneDropdown(),
                       ),
                     ],
