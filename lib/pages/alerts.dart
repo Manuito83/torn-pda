@@ -40,7 +40,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                 SizedBox(height: 20),
                 CheckboxListTile(
                   value: firebaseUserModel.travelNotification ?? false,
-                  title: Text("Travel Arrival Notification"),
+                  title: Text("Travel Notification"),
                   subtitle: Text(
                       "Get notified 60 seconds before you reach your destination"),
                   onChanged: (value) {
