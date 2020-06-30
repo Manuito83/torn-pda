@@ -37,9 +37,9 @@ class _DrawerPageState extends State<DrawerPage> {
     "Travel",
     "Chaining",
     "Friends",
+    "Alerts",
     "Settings",
     "About",
-    "Alerts",
   ];
 
   ThemeProvider _themeProvider;
@@ -379,6 +379,10 @@ class _DrawerPageState extends State<DrawerPage> {
   }
 
   Future<void> _loadInitPreferences() async {
+    // Set up SettingsProvider so that user preferences are applied
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    await _settingsProvider.loadPreferences();
+
     // Set up UserProvider. If key is empty, redirect to the Settings page.
     // Else, open the default
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -387,15 +391,13 @@ class _DrawerPageState extends State<DrawerPage> {
     if (!_userProvider.myUser.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
+
     } else {
       var defaultSection = await SharedPreferencesModel().getDefaultSection();
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
+      firestore.setUserKey(_userProvider.myUser.playerId.toString());
     }
-
-    // Set up SettingsProvider so that user preferences are applied
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    await _settingsProvider.loadPreferences();
   }
 
   void _handleChangelog() async {

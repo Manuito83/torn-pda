@@ -2,11 +2,10 @@ import 'dart:async';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/models/user_details_model.dart';
-import 'package:torn_pda/models/profile_model.dart';
 import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/browser_info_dialog.dart';
@@ -28,7 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _apiError = false;
   String _errorReason = '';
   bool _apiIsLoading = false;
-  UserDetailsModel _userProfile;
+  OwnProfileModel _userProfile;
 
   String _openSectionValue;
   String _openBrowserValue;
@@ -549,6 +548,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ],
       onChanged: (value) {
+        // TODO: use settings provider for this?
         SharedPreferencesModel().setDefaultSection(value);
         setState(() {
           _openSectionValue = value;
@@ -698,15 +698,15 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     }
     dynamic myProfile =
-        await TornApiCaller.userDetails(_myCurrentKey).getUserDetails;
-    if (myProfile is UserDetailsModel) {
+        await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
+    if (myProfile is OwnProfileModel) {
       setState(() {
         _apiIsLoading = false;
         _userToLoad = true;
         _apiError = false;
         _userProfile = myProfile;
       });
-
+      firestore.uploadUsersProfileDetail(_myCurrentKey, myProfile);
       myProfile
         ..userApiKey = _myCurrentKey
         ..userApiKeyValid = true;

@@ -10,6 +10,10 @@ String ownProfileModelToJson(OwnProfileModel data) => json.encode(data.toJson())
 
 class OwnProfileModel {
   OwnProfileModel({
+    // For state management
+    this.userApiKey = '',
+    this.userApiKeyValid = false,
+
     this.rank,
     this.level,
     this.gender,
@@ -43,6 +47,10 @@ class OwnProfileModel {
     this.events,
     this.travel,
   });
+
+  // For state management
+  String userApiKey;
+  bool userApiKeyValid;
 
   String rank;
   int level;
@@ -78,6 +86,9 @@ class OwnProfileModel {
   Travel travel;
 
   factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
+    userApiKey: json["userApiKey"] == null ? '' : json["userApiKey"],
+    userApiKeyValid: json["userApiKeyValid"] == null ? false : json["userApiKeyValid"],
+
     rank: json["rank"] == null ? null : json["rank"],
     level: json["level"] == null ? null : json["level"],
     gender: json["gender"] == null ? null : json["gender"],
@@ -113,6 +124,9 @@ class OwnProfileModel {
   );
 
   Map<String, dynamic> toJson() => {
+    "userApiKey": userApiKey == null ? null : userApiKey,
+    "userApiKeyValid": userApiKeyValid == null ? null : userApiKeyValid,
+
     "rank": rank == null ? null : rank,
     "level": level == null ? null : level,
     "gender": gender == null ? null : gender,

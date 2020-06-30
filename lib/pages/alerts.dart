@@ -47,7 +47,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                     setState(() {
                       firebaseUserModel?.travelNotification = value;
                     });
-                    firestore.subscribeToTravelNotificaion(value);
+                    firestore.subscribeToTravelNotification(value);
                   },
                 ),
                 CheckboxListTile(
@@ -58,7 +58,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                     setState(() {
                       firebaseUserModel?.energyNotification = value;
                     });
-                    firestore.subscribeToEnergyNotificaion(value);
+                    firestore.subscribeToEnergyNotification(value);
                   },
                 ),
                 Padding(

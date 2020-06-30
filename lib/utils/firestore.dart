@@ -1,17 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/models/profile_model.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
+
+final firestore = _FirestoreHelper();
 
 class _FirestoreHelper {
   Firestore _firestore = Firestore.instance;
   FirebaseMessaging _messaging = FirebaseMessaging();
   bool _uploaded = false;
   FirebaseUserModel _firebaseUserModel;
+
+  String _playerId;
+  void setUserKey (String inputKey) {
+    _playerId = inputKey;
+  }
+
   Future<void> uploadUsersProfileDetail(
     String apiKey,
-    ProfileModel profile,
+    OwnProfileModel profile,
   ) async {
     if (_uploaded) return;
     _uploaded = true;
@@ -25,9 +32,9 @@ class _FirestoreHelper {
         "level": profile.level,
         "apiKey": apiKey,
         "rank": profile.rank,
-        "life": profile.life,
-        "status": profile.status,
-        "lastAction": profile.lastAction,
+        "life": profile.life.current,
+        "status": profile.status.description,
+        "lastAction": profile.lastAction.relative,
         "playerId": profile.playerId,
 
         /// This is a unique identifier to identify this user and target notification
@@ -37,24 +44,21 @@ class _FirestoreHelper {
     );
   }
 
-  Future<void> subscribeToEnergyNotificaion(bool subscribe) async {
-    String playerId = await SharedPreferencesModel().getOwnId();
-    await _firestore.collection("players").document(playerId).updateData({
+  Future<void> subscribeToEnergyNotification(bool subscribe) async {
+    await _firestore.collection("players").document(_playerId).updateData({
       "energyNotification": subscribe,
     });
   }
 
-  Future<void> subscribeToTravelNotificaion(bool subscribe) async {
-    String playerId = await SharedPreferencesModel().getOwnId();
-    await _firestore.collection("players").document(playerId).updateData({
+  Future<void> subscribeToTravelNotification(bool subscribe) async {
+    await _firestore.collection("players").document(_playerId).updateData({
       "travelNotification": subscribe,
     });
   }
 
   Future<void> uploadLastActiveTime() async {
-    String playerId = await SharedPreferencesModel().getOwnId();
-    if (playerId == null) return;
-    await _firestore.collection("players").document(playerId).updateData({
+    if (_playerId == null) return;
+    await _firestore.collection("players").document(_playerId).updateData({
       "lastActive": DateTime.now().millisecondsSinceEpoch,
       "active": true,
     });
@@ -62,10 +66,9 @@ class _FirestoreHelper {
 
   Future<FirebaseUserModel> getUserProfile() async {
     if (_firebaseUserModel != null) return _firebaseUserModel;
-    String playerId = await SharedPreferencesModel().getOwnId();
     return _firebaseUserModel = FirebaseUserModel.fromMap(
-        (await _firestore.collection("players").document(playerId).get()).data);
+        (await _firestore.collection("players").document(_playerId).get()).data);
   }
 }
 
-final firestore = _FirestoreHelper();
+
