@@ -6,6 +6,8 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/models/user_details_model.dart';
+import 'package:torn_pda/models/profile_model.dart';
+import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/browser_info_dialog.dart';
 

@@ -1,7 +1,9 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/about.dart';
+import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
@@ -12,6 +14,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
+import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
@@ -24,8 +28,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
-  int _settingsPosition = 4;
-  int _aboutPosition = 5;
+  int _settingsPosition = 5;
+  int _aboutPosition = 6;
   var _allowSectionsWithoutKey = [];
 
   final _drawerItemsList = [
@@ -35,11 +39,13 @@ class _DrawerPageState extends State<DrawerPage> {
     "Friends",
     "Settings",
     "About",
+    "Alerts",
   ];
 
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
+  FirebaseMessaging _messaging = FirebaseMessaging();
 
   Future _finishedWithPreferences;
 
@@ -56,6 +62,17 @@ class _DrawerPageState extends State<DrawerPage> {
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
     _configureSelectNotificationSubject();
+    firestore.uploadLastActiveTime();
+    _messaging.requestNotificationPermissions(IosNotificationSettings(
+      sound: true,
+      badge: true,
+      alert: true,
+    ));
+    _messaging.configure(onMessage: (message) {
+      /// This is where notifications will come if the user has the app turned on.
+      /// In case of background, it will go to system tray automatically
+      return showNotification(message);
+    });
   }
 
   @override
@@ -293,7 +310,6 @@ class _DrawerPageState extends State<DrawerPage> {
         );
       }
     }
-
     return Column(children: drawerOptions);
   }
 
@@ -312,11 +328,15 @@ class _DrawerPageState extends State<DrawerPage> {
         return FriendsPage();
         break;
       case 4:
-        return SettingsPage();
+        return AlertsSettings();
         break;
       case 5:
+        return SettingsPage();
+        break;
+      case 6:
         return AboutPage();
         break;
+
       default:
         return new Text("Error");
     }
@@ -337,9 +357,12 @@ class _DrawerPageState extends State<DrawerPage> {
         return Icon(Icons.people);
         break;
       case 4:
-        return Icon(Icons.settings);
+        return Icon(Icons.notifications_active);
         break;
       case 5:
+        return Icon(Icons.settings);
+        break;
+      case 6:
         return Icon(Icons.info_outline);
         break;
       default:

@@ -29,6 +29,8 @@ dependencies:
   flutter_slidable: ^0.5.4
   provider: ^4.1.3
   percent_indicator: ^2.1.4
+  provider: ^4.0.5
+  percent_indicator: ^2.1.3
   webview_flutter: ^0.3.22+1
   share: ^0.6.4
   html: ^0.14.0+3
@@ -40,6 +42,10 @@ dependencies:
   animations: ^1.1.0
   bot_toast: ^3.0.0
   flutter_inappwebview: ^3.4.0+2
+  material_design_icons_flutter:
+  firebase_messaging:
+  firebase_analytics:
+  cloud_firestore:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -56,13 +62,11 @@ flutter_icons:
   image_path: "images/icons/torn_pda.png"
   image_path_ios: "images/icons/torn_pda_ios.jpg"
 
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
