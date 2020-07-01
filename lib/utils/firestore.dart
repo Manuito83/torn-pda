@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
 
 final firestore = _FirestoreHelper();
 
@@ -16,6 +17,7 @@ class _FirestoreHelper {
     _playerId = inputKey;
   }
 
+  // Settings, when user initialized after API key validated
   Future<void> uploadUsersProfileDetail(
     String apiKey,
     OwnProfileModel profile,
@@ -64,6 +66,7 @@ class _FirestoreHelper {
     });
   }
 
+  // Init State in alerts
   Future<FirebaseUserModel> getUserProfile() async {
     if (_firebaseUserModel != null) return _firebaseUserModel;
     return _firebaseUserModel = FirebaseUserModel.fromMap(
