@@ -393,24 +393,29 @@ class _DrawerPageState extends State<DrawerPage> {
     if (!_userProvider.myUser.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
-
     } else {
       var defaultSection = await SharedPreferencesModel().getDefaultSection();
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
       // Firestore get auth and init
-      firebaseAuth.getUID().then((uid) => () {
+      var user = await firebaseAuth.currentUser();
+      if (user == null) {
+        FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+        firestore.setUID(mFirebaseUser.uid);
+        await firestore.uploadUsersProfileDetail(_userProvider.myUser);
+        await firestore
+            .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+      } else {
+        var uid = await firebaseAuth.getUID();
         firestore.setUID(uid);
+      }
 
-        var now = DateTime.now().millisecondsSinceEpoch;
-        var dTimeStamp = now - _settingsProvider.lastAppUse;
-        var duration = Duration(milliseconds: dTimeStamp);
-        _settingsProvider.updateLastUsed(now);
-        if (duration.inDays > 2)
-          firestore.uploadLastActiveTime(now);
-      });
-
+      var now = DateTime.now().millisecondsSinceEpoch;
+      var dTimeStamp = now - _settingsProvider.lastAppUse;
+      var duration = Duration(milliseconds: dTimeStamp);
+      _settingsProvider.updateLastUsed(now);
+      if (duration.inDays > 2) firestore.uploadLastActiveTime(now);
     }
   }
 
