@@ -239,7 +239,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          _apiKeyForm(),
+                          _apiKeyForm(enabled: false),
                           Padding(
                             padding: EdgeInsetsDirectional.only(top: 10),
                           ),
@@ -247,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               RaisedButton(
-                                child: Text("Load"),
+                                child: Text("Reload"),
                                 onPressed: () {
                                   FocusScope.of(context)
                                       .requestFocus(new FocusNode());
@@ -262,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               RaisedButton(
                                 child: Text("Remove"),
-                                onPressed: () {
+                                onPressed: () async {
                                   FocusScope.of(context)
                                       .requestFocus(new FocusNode());
                                   // Removes the form error
@@ -274,6 +274,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                     _userToLoad = false;
                                     _apiError = false;
                                   });
+                                  await FirebaseMessaging().deleteInstanceID();
+                                  await firestore.deleteUserProfile();
+                                  await firebaseAuth.signOut();
                                 },
                               ),
                             ],
@@ -336,7 +339,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          _apiKeyForm(),
+                          _apiKeyForm(enabled: true),
                           Padding(
                             padding: EdgeInsetsDirectional.only(top: 10),
                           ),
@@ -352,27 +355,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
                                   }
-                                },
-                              ),
-                              Padding(
-                                padding: EdgeInsetsDirectional.only(start: 10),
-                              ),
-                              RaisedButton(
-                                child: Text("Remove"),
-                                onPressed: () async {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
-                                  // Removes the form error
-                                  _formKey.currentState.reset();
-                                  _apiKeyInputController.clear();
-                                  _myCurrentKey = '';
-                                  _userProvider.removeUser();
-                                  setState(() {
-                                    _userToLoad = false;
-                                    _apiError = false;
-                                  });
-                                  await FirebaseMessaging().deleteInstanceID();
-                                  await FirebaseAuth.instance.signOut();
                                 },
                               ),
                             ],
@@ -391,12 +373,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  SizedBox _apiKeyForm() {
+  SizedBox _apiKeyForm({@required bool enabled}) {
     return SizedBox(
       width: 300,
       child: Form(
         key: _formKey,
         child: TextFormField(
+          enabled: enabled,
           validator: (value) {
             if (value.isEmpty) {
               return "The API Key is empty!";
