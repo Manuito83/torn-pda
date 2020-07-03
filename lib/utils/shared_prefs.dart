@@ -7,6 +7,7 @@ class SharedPreferencesModel {
   ///
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
+  final String _kLastAppUse = "pda_lastAppUse";
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kAttacksSort = "pda_attacksSort";
@@ -62,6 +63,19 @@ class SharedPreferencesModel {
   Future<bool> setOwnDetails(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kOwnDetails, value);
+  }
+
+  /// ----------------------------
+  /// Methods for identification
+  /// ----------------------------
+  Future<int> getLastAppUse() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kLastAppUse) ?? 0;
+  }
+
+  Future<bool> setLastAppUse(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kLastAppUse, value);
   }
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use

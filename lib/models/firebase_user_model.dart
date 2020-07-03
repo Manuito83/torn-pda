@@ -37,16 +37,11 @@ class FirebaseUserModel extends OwnProfileModel {
     return FirebaseUserModel()
       ..energyNotification = data["energyNotification"] ?? false
       ..travelNotification = data["travelNotification"] ?? false
-      ..lastAction = LastAction()
-      ..lastAction.relative = data["lastAction"]
       ..playerId = data["playerId"]
-      ..status = Status()
-      ..status.description = data["status"]
       ..gender = data["gender"]
       ..level = data["level"]
-      ..rank = data["rank"]
       ..name = data["name"]
-      ..life = Energy()
+      ..life = Life()
       ..life.current = data["life"];
   }
 }

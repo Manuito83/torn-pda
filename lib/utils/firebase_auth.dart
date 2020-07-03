@@ -6,14 +6,21 @@ class _AuthService {
 
   final _firebaseAuth = FirebaseAuth.instance;
 
-  bool authenticated = false;
-
   Future signInAnon() async {
     try {
       AuthResult result = await _firebaseAuth.signInAnonymously();
       FirebaseUser user = result.user;
-      authenticated = true;
       return user;
+    } catch (e) {
+      print(e.toString());
+      return null;
+    }
+  }
+
+  Future getUID() async {
+    try {
+      var user = await _firebaseAuth.currentUser();
+      return user.uid;
     } catch (e) {
       print(e.toString());
       return null;

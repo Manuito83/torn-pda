@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:expandable/expandable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
@@ -21,7 +23,6 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
   Timer _ticker;
-  bool _updateRequestedByTicker = false;
 
   String _myCurrentKey = '';
   bool _userToLoad = false;
@@ -252,7 +253,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       .requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
-                                    _getApiDetails();
+                                    _getApiDetails(userTriggered: true);
                                   }
                                 },
                               ),
@@ -349,7 +350,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       .requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
-                                    _getApiDetails();
+                                    _getApiDetails(userTriggered: true);
                                   }
                                 },
                               ),
@@ -358,7 +359,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               RaisedButton(
                                 child: Text("Remove"),
-                                onPressed: () {
+                                onPressed: () async {
                                   FocusScope.of(context)
                                       .requestFocus(new FocusNode());
                                   // Removes the form error
@@ -370,6 +371,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                     _userToLoad = false;
                                     _apiError = false;
                                   });
+                                  await FirebaseMessaging().deleteInstanceID();
+                                  await FirebaseAuth.instance.signOut();
                                 },
                               ),
                             ],
@@ -415,11 +418,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          // This is here in case the user submits from the keyboard and not
+          // hitting the "Load" button
           onEditingComplete: () {
             FocusScope.of(context).requestFocus(new FocusNode());
             if (_formKey.currentState.validate()) {
               _myCurrentKey = _apiKeyInputController.text;
-              _getApiDetails();
+              _getApiDetails(userTriggered: true);
             }
           },
         ),
@@ -690,14 +695,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _getApiDetails() async {
-    if (!_updateRequestedByTicker) {
-      // If it's the ticker updating, we don't want to show a
-      // progress bar, but just update the text
-      setState(() {
-        _apiIsLoading = true;
-      });
-    }
+  void _getApiDetails({@required bool userTriggered}) async {
     dynamic myProfile =
         await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
     if (myProfile is OwnProfileModel) {
@@ -707,12 +705,19 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiError = false;
         _userProfile = myProfile;
       });
-      await firebaseAuth.signInAnon();
-      firestore.uploadUsersProfileDetail(_myCurrentKey, myProfile);
       myProfile
         ..userApiKey = _myCurrentKey
         ..userApiKeyValid = true;
       _userProvider.setUserDetails(userDetails: myProfile);
+
+      // Firestore uploading, but only if "Load" pressed by user
+      if (userTriggered) {
+        FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+        firestore.setUID(mFirebaseUser.uid);
+        await firestore.uploadUsersProfileDetail(myProfile);
+        await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+      }
+
     } else if (myProfile is ApiError) {
       setState(() {
         _apiIsLoading = false;
@@ -735,8 +740,9 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         _apiKeyInputController.text = _userProvider.myUser.userApiKey;
         _myCurrentKey = _userProvider.myUser.userApiKey;
+        _apiIsLoading = true;
       });
-      _getApiDetails();
+      _getApiDetails(userTriggered: false);
     }
 
     await _settingsProvider.loadPreferences();
@@ -786,9 +792,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _timerUpdateInformation() {
     if (_myCurrentKey != '') {
-      _updateRequestedByTicker = true;
-      _getApiDetails();
-      _updateRequestedByTicker = false;
+      _getApiDetails(userTriggered: false);
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -62,7 +64,7 @@ class _DrawerPageState extends State<DrawerPage> {
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
     _configureSelectNotificationSubject();
-    firestore.uploadLastActiveTime();
+
     _messaging.requestNotificationPermissions(IosNotificationSettings(
       sound: true,
       badge: true,
@@ -181,7 +183,7 @@ class _DrawerPageState extends State<DrawerPage> {
             ),
           );
         } else {
-          return SizedBox.shrink();
+          return Center(child: CircularProgressIndicator());
         }
       },
     );
@@ -396,7 +398,19 @@ class _DrawerPageState extends State<DrawerPage> {
       var defaultSection = await SharedPreferencesModel().getDefaultSection();
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
-      firestore.setUserKey(_userProvider.myUser.playerId.toString());
+
+      // Firestore get auth and init
+      firebaseAuth.getUID().then((uid) => () {
+        firestore.setUID(uid);
+
+        var now = DateTime.now().millisecondsSinceEpoch;
+        var dTimeStamp = now - _settingsProvider.lastAppUse;
+        var duration = Duration(milliseconds: dTimeStamp);
+        _settingsProvider.updateLastUsed(now);
+        if (duration.inDays > 2)
+          firestore.uploadLastActiveTime(now);
+      });
+
     }
   }
 

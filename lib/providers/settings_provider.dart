@@ -17,10 +17,8 @@ enum TimeZoneSetting {
 }
 
 class SettingsProvider extends ChangeNotifier {
-  Color background;
-  Color mainText;
-  Color buttonText;
-  Color navSelected;
+
+  int lastAppUse;
 
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
@@ -91,7 +89,15 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setDefaultTimeZone(timeZoneSave);
   }
 
+  void updateLastUsed(int timeStamp) {
+    SharedPreferencesModel().setLastAppUse(timeStamp);
+    lastAppUse = timeStamp;
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
+    lastAppUse = await SharedPreferencesModel().getLastAppUse();
+
     String restoredBrowser = await SharedPreferencesModel().getDefaultBrowser();
     switch (restoredBrowser) {
       case 'app':

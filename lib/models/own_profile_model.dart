@@ -69,16 +69,16 @@ class OwnProfileModel {
   String name;
   int propertyId;
   int serverTime;
-  Energy life;
+  Life life;
   Status status;
   Job job;
   Faction faction;
   Married married;
   States states;
   LastAction lastAction;
-  Energy happy;
+  Happy happy;
   Energy energy;
-  Energy nerve;
+  Nerve nerve;
   Chain chain;
   Map<String, double> networth;
   Cooldowns cooldowns;
@@ -106,16 +106,16 @@ class OwnProfileModel {
     name: json["name"] == null ? null : json["name"],
     propertyId: json["property_id"] == null ? null : json["property_id"],
     serverTime: json["server_time"] == null ? null : json["server_time"],
-    life: json["life"] == null ? null : Energy.fromJson(json["life"]),
+    life: json["life"] == null ? null : Life.fromJson(json["life"]),
     status: json["status"] == null ? null : Status.fromJson(json["status"]),
     job: json["job"] == null ? null : Job.fromJson(json["job"]),
     faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
     married: json["married"] == null ? null : Married.fromJson(json["married"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
-    happy: json["happy"] == null ? null : Energy.fromJson(json["happy"]),
+    happy: json["happy"] == null ? null : Happy.fromJson(json["happy"]),
     energy: json["energy"] == null ? null : Energy.fromJson(json["energy"]),
-    nerve: json["nerve"] == null ? null : Energy.fromJson(json["nerve"]),
+    nerve: json["nerve"] == null ? null : Nerve.fromJson(json["nerve"]),
     chain: json["chain"] == null ? null : Chain.fromJson(json["chain"]),
     networth: json["networth"] == null ? null : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
     cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
@@ -236,6 +236,114 @@ class Energy {
   int fulltime;
 
   factory Energy.fromJson(Map<String, dynamic> json) => Energy(
+    current: json["current"] == null ? null : json["current"],
+    maximum: json["maximum"] == null ? null : json["maximum"],
+    increment: json["increment"] == null ? null : json["increment"],
+    interval: json["interval"] == null ? null : json["interval"],
+    ticktime: json["ticktime"] == null ? null : json["ticktime"],
+    fulltime: json["fulltime"] == null ? null : json["fulltime"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "current": current == null ? null : current,
+    "maximum": maximum == null ? null : maximum,
+    "increment": increment == null ? null : increment,
+    "interval": interval == null ? null : interval,
+    "ticktime": ticktime == null ? null : ticktime,
+    "fulltime": fulltime == null ? null : fulltime,
+  };
+}
+
+class Nerve {
+  Nerve({
+    this.current,
+    this.maximum,
+    this.increment,
+    this.interval,
+    this.ticktime,
+    this.fulltime,
+  });
+
+  int current;
+  int maximum;
+  int increment;
+  int interval;
+  int ticktime;
+  int fulltime;
+
+  factory Nerve.fromJson(Map<String, dynamic> json) => Nerve(
+    current: json["current"] == null ? null : json["current"],
+    maximum: json["maximum"] == null ? null : json["maximum"],
+    increment: json["increment"] == null ? null : json["increment"],
+    interval: json["interval"] == null ? null : json["interval"],
+    ticktime: json["ticktime"] == null ? null : json["ticktime"],
+    fulltime: json["fulltime"] == null ? null : json["fulltime"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "current": current == null ? null : current,
+    "maximum": maximum == null ? null : maximum,
+    "increment": increment == null ? null : increment,
+    "interval": interval == null ? null : interval,
+    "ticktime": ticktime == null ? null : ticktime,
+    "fulltime": fulltime == null ? null : fulltime,
+  };
+}
+
+class Happy {
+  Happy({
+    this.current,
+    this.maximum,
+    this.increment,
+    this.interval,
+    this.ticktime,
+    this.fulltime,
+  });
+
+  int current;
+  int maximum;
+  int increment;
+  int interval;
+  int ticktime;
+  int fulltime;
+
+  factory Happy.fromJson(Map<String, dynamic> json) => Happy(
+    current: json["current"] == null ? null : json["current"],
+    maximum: json["maximum"] == null ? null : json["maximum"],
+    increment: json["increment"] == null ? null : json["increment"],
+    interval: json["interval"] == null ? null : json["interval"],
+    ticktime: json["ticktime"] == null ? null : json["ticktime"],
+    fulltime: json["fulltime"] == null ? null : json["fulltime"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "current": current == null ? null : current,
+    "maximum": maximum == null ? null : maximum,
+    "increment": increment == null ? null : increment,
+    "interval": interval == null ? null : interval,
+    "ticktime": ticktime == null ? null : ticktime,
+    "fulltime": fulltime == null ? null : fulltime,
+  };
+}
+
+class Life {
+  Life({
+    this.current,
+    this.maximum,
+    this.increment,
+    this.interval,
+    this.ticktime,
+    this.fulltime,
+  });
+
+  int current;
+  int maximum;
+  int increment;
+  int interval;
+  int ticktime;
+  int fulltime;
+
+  factory Life.fromJson(Map<String, dynamic> json) => Life(
     current: json["current"] == null ? null : json["current"],
     maximum: json["maximum"] == null ? null : json["maximum"],
     increment: json["increment"] == null ? null : json["increment"],
