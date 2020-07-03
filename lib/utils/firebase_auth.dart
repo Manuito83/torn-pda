@@ -17,6 +17,11 @@ class _AuthService {
     }
   }
 
+  Future signOut() async {
+    var user = await _firebaseAuth.currentUser();
+    user.delete();
+  }
+
   Future getUID() async {
     try {
       var user = await _firebaseAuth.currentUser();
@@ -27,6 +32,8 @@ class _AuthService {
     }
   }
 
-  // TODO: sign out when API Key removed
+  Future currentUser() async {
+    return _firebaseAuth.currentUser();
+  }
 
 }

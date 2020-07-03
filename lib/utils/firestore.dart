@@ -65,6 +65,12 @@ class _FirestoreHelper {
     return _firebaseUserModel = FirebaseUserModel.fromMap(
         (await _firestore.collection("players").document(_uid).get()).data);
   }
+
+  Future deleteUserProfile() async {
+    _uploaded = false;
+    await _firestore.collection("players").document(_uid).delete();
+
+  }
 }
 
 
