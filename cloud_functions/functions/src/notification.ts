@@ -1,57 +1,74 @@
 import * as admin from "firebase-admin";
 import { currentDateInMillis } from "./constants";
 
-export async function sendEnergyNotificaion(userStats: any, subscriber: any) {
+export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
   const promises: Promise<any>[] = [];
 
   if (
-    energy.maximum === energy.current &&
-    subscriber.lastEnergyValue !== energy.current
+    energy.maximum === energy.current && 
+    (subscriber.energyLastCheckFull === false)
   ) {
     promises.push(
-      sendNotificaionToUser(
+      sendNotificationToUser(
         subscriber.token,
-        subscriber.playerId,
+        subscriber.uid,
         "Full Energy Bar",
-        "You have got full Energy bar, go spend on something."
+        "Your energy is full, go spend on something!"
       )
     );
     promises.push(
       admin
         .firestore()
         .collection("players")
-        .doc(subscriber.playerId.toString())
+        .doc(subscriber.uid)
         .update({
-          lastEnergyValue: energy.current,
+          energyLastCheckFull: true,
         })
     );
   }
+
+  if (
+    energy.current < energy.maximum &&
+    (subscriber.energyLastCheckFull === true)
+  ) {
+    promises.push(
+      admin
+        .firestore()
+        .collection("players")
+        .doc(subscriber.uid)
+        .update({
+          energyLastCheckFull: false,
+        })
+    );
+  }
+
   return Promise.all(promises);
 }
 
 export async function sendTravelNotification(userStats: any, subscriber: any) {
   const travel = userStats.travel;
   const promises: Promise<any>[] = [];
-  const lastTravelNotificaionSent = subscriber.lastTravelNotified || 0;
+  const lastTravelNotificationSent = subscriber.lastTravelNotified || 0;
+
   if (
     travel.time_left > 0 &&
     travel.time_left <= 90 &&
-    currentDateInMillis - lastTravelNotificaionSent > 90
+    currentDateInMillis - lastTravelNotificationSent > 90 * 1000
   ) {
     promises.push(
-      sendNotificaionToUser(
+      sendNotificationToUser(
         subscriber.token,
-        subscriber.playerId,
-        "Your travel is about to complete",
-        `You will arrive at ${travel.destination} in ${travel.time_left} seconds.`
+        subscriber.uid,
+        `Approaching ${travel.destination}!`,
+        `You will arrive in ${travel.destination} in ${travel.time_left} seconds`
       )
     );
     promises.push(
       admin
         .firestore()
         .collection("players")
-        .doc(subscriber.playerId.toString())
+        .doc(subscriber.uid)
         .update({
           lastTravelNotified: currentDateInMillis,
         })
@@ -60,15 +77,14 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
-export async function sendNotificaionToUser(
+export async function sendNotificationToUser(
   token: string,
-  playerId: string,
+  uid: string,
   title: string,
   body: string
 ): Promise<any> {
-  // This will send notificiaon to the registered user, notificaion will only be shown if the app is on background or terminated, when the app is on screen
-  // Notification will come as a callback, letting you do whatever we want with noticaion.
-  // If you still wanna send notificion when app is open use localNotificaion to do so. More details on https://pub.dev/packages/firebase_messaging
+  // This will send notification to the registered user, notification will only be shown if the app is on background or terminated, when the app is on screen
+  // Notification will come as a callback, letting us do whatever we want with it.
   return admin
     .messaging()
     .send({
@@ -82,7 +98,7 @@ export async function sendNotificaionToUser(
       return admin
         .firestore()
         .collection("players")
-        .doc(playerId.toString())
+        .doc(uid)
         .update({
           active: false,
         });

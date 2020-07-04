@@ -3,13 +3,19 @@ import * as admin from "firebase-admin";
 
 export const playersGroup = {
   onPlayerAdded: functions.firestore
-    .document("players/{playerId}")
+    .document("players/{uid}")
     .onCreate(async (snap, context) => {
       await manageStats("totalUsers", 1);
     }),
 
+  onPlayerDeleted: functions.firestore
+    .document("players/{uid}")
+    .onDelete(async (snap, context) => {
+      await manageStats("totalUsers", -1);
+    }),
+
   onPlayerUpdated: functions.firestore
-    .document("players/{playerId}")
+    .document("players/{uid}")
     .onUpdate(async (snap, context) => {
       const promises: Promise<any>[] = [];
       const beforeStat = snap.before.data();
@@ -25,16 +31,13 @@ export const playersGroup = {
 
       if (beforeStat.energyNotification !== afterStat.energyNotification)
         promises.push(
-          manageStats(
-            "energyNotification",
-            afterStat.energyNotification ? 1 : -1
+          manageStats("energyNotification", afterStat.energyNotification ? 1 : -1
           )
         );
+      
       if (beforeStat.travelNotification !== afterStat.travelNotification)
         promises.push(
-          manageStats(
-            "travelNotification",
-            afterStat.travelNotification ? 1 : -1
+          manageStats("travelNotification", afterStat.travelNotification ? 1 : -1
           )
         );
 
@@ -47,7 +50,7 @@ export const playersGroup = {
           admin
             .firestore()
             .collection("players")
-            .doc(context.params.playerId)
+            .doc(context.params.uid)
             .update({
               alertsEnabled: false,
             })
@@ -61,7 +64,7 @@ export const playersGroup = {
           admin
             .firestore()
             .collection("players")
-            .doc(context.params.playerId)
+            .doc(context.params.uid)
             .update({
               alertsEnabled: true,
             })

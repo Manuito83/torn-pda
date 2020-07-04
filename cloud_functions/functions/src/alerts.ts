@@ -1,14 +1,13 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { sendEnergyNotificaion, sendTravelNotification } from "./notification";
+import { sendEnergyNotification, sendTravelNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
 export const alertsGroup = {
   runEveryMinute: functions.pubsub
-    // This is something called cron expression check https://crontab.guru/ for more details
     .schedule("* * * * *")
     .onRun(async () => {
-      // get the list of subscribers
+      // Get the list of subscribers
       // TODO: Research on possibility to change this to realtime database
       const response = await admin
         .firestore()
@@ -27,7 +26,7 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
   const userStats = await getUsersStat(subscriber.apiKey);
   // Follow the similar step to notify about the energy increase
   if (subscriber.energyNotification)
-    promises.push(sendEnergyNotificaion(userStats, subscriber));
+    promises.push(sendEnergyNotification(userStats, subscriber));
   if (subscriber.travelNotification)
     promises.push(sendTravelNotification(userStats, subscriber));
 
