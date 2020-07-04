@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
@@ -9,7 +8,7 @@ final firestore = _FirestoreHelper();
 class _FirestoreHelper {
   Firestore _firestore = Firestore.instance;
   FirebaseMessaging _messaging = FirebaseMessaging();
-  bool _uploaded = false;
+  bool _alreadyUploaded = false;
   FirebaseUserModel _firebaseUserModel;
 
   String _uid;
@@ -18,19 +17,22 @@ class _FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<void> uploadUsersProfileDetail(OwnProfileModel profile) async {
-    if (_uploaded) return;
-    _uploaded = true;
+  Future<void> uploadUsersProfileDetail(OwnProfileModel profile, {bool forceUpdate = false}) async {
+    if (_alreadyUploaded && !forceUpdate) return;
+    _alreadyUploaded = true;
+    _firebaseUserModel = FirebaseUserModel();
     await _firestore
         .collection("players")
         .document(_uid)
         .setData(
       {
+        "uid": _uid,
         "name": profile.name,
         "level": profile.level,
         "apiKey": profile.userApiKey,
         "life": profile.life.current,
         "playerId": profile.playerId,
+        "energyLastCheckFull": true,
 
         /// This is a unique identifier to identify this user and target notification
         "token": await _messaging.getToken(),
@@ -67,7 +69,7 @@ class _FirestoreHelper {
   }
 
   Future deleteUserProfile() async {
-    _uploaded = false;
+    _alreadyUploaded = false;
     await _firestore.collection("players").document(_uid).delete();
 
   }
