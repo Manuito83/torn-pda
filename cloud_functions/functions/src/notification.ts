@@ -1,5 +1,4 @@
 import * as admin from "firebase-admin";
-import { currentDateInMillis } from "./constants";
 
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
@@ -50,6 +49,8 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
   const travel = userStats.travel;
   const promises: Promise<any>[] = [];
   const lastTravelNotificationSent = subscriber.lastTravelNotified || 0;
+
+  var currentDateInMillis = Date.now();
 
   if (
     travel.time_left > 0 &&

@@ -1,19 +1,21 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
-import { currentDateInMillis, aDayInMiliseconds } from "./constants";
+import { aDayInMilliseconds } from "./constants";
 
 export const staleGroup = {
   runEveryDay: functions.pubsub.schedule("0 0 * * *").onRun(async () => {
     const promises: Promise<any>[] = [];
     
+    var currentDateInMillis = Date.now();
+
     // This pull the users who havent open the app for 7 days
     const usersWhoAreStale = (
       await admin
         .firestore()
         .collection("players")
         .where("active", "==", true)
-        .where("lastActive", "<=", currentDateInMillis - aDayInMiliseconds * 7)
+        .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 7)
         .get()
     ).docs.map((d) => d.data());
 
