@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -47,7 +48,8 @@ class _DrawerPageState extends State<DrawerPage> {
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
-  FirebaseMessaging _messaging = FirebaseMessaging();
+  final FirebaseMessaging _messaging = FirebaseMessaging();
+  final FirebaseAnalytics analytics = FirebaseAnalytics();
 
   Future _finishedWithPreferences;
 
@@ -373,6 +375,11 @@ class _DrawerPageState extends State<DrawerPage> {
   }
 
   _onSelectItem(int index) {
+
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': _drawerItemsList[index]});
+
     Navigator.of(context).pop();
     setState(() {
       _selected = index;
