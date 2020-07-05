@@ -41,7 +41,7 @@ dependencies:
   bot_toast: ^3.0.0
   flutter_inappwebview: ^3.4.0+2
   material_design_icons_flutter:
-  firebase_messaging:
+  firebase_messaging: ^6.0.16
   firebase_analytics:
   cloud_firestore:
   firebase_auth:
