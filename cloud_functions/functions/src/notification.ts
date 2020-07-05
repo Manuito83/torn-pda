@@ -11,7 +11,6 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
     promises.push(
       sendNotificationToUser(
         subscriber.token,
-        subscriber.uid,
         "Full Energy Bar",
         "Your energy is full, go spend on something!"
       )
@@ -60,7 +59,6 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
     promises.push(
       sendNotificationToUser(
         subscriber.token,
-        subscriber.uid,
         `Approaching ${travel.destination}!`,
         `You will arrive in ${travel.destination} in ${travel.time_left} seconds`
       )
@@ -80,7 +78,6 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
 
 export async function sendNotificationToUser(
   token: string,
-  uid: string,
   title: string,
   body: string
 ): Promise<any> {
@@ -100,15 +97,6 @@ export async function sendNotificationToUser(
   };
 
   return admin.messaging()
-    .sendToDevice(token, payload, options)
-    .catch((error) => {
-      return admin
-        .firestore()
-        .collection("players")
-        .doc(uid)
-        .update({
-          active: false,
-        });
-    });
+    .sendToDevice(token, payload, options);
   
 }
