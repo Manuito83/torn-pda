@@ -86,15 +86,21 @@ export async function sendNotificationToUser(
 ): Promise<any> {
   // This will send notification to the registered user, notification will only be shown if the app is on background or terminated, when the app is on screen
   // Notification will come as a callback, letting us do whatever we want with it.
-  return admin
-    .messaging()
-    .send({
-      token: token,
-      notification: {
-        title: title,
-        body: body,
-      },
-    })
+  
+  var payload = {
+    notification: {
+      title: title,
+      body: body
+    }
+  };
+
+  var options = {
+    priority: 'high',
+    timeToLive: 60 * 60 * 24
+  };
+
+  return admin.messaging()
+    .sendToDevice(token, payload, options)
     .catch((error) => {
       return admin
         .firestore()
@@ -104,4 +110,5 @@ export async function sendNotificationToUser(
           active: false,
         });
     });
+  
 }
