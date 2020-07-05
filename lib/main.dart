@@ -44,9 +44,9 @@ Future<void> main() async {
   var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
 
   var initializationSettingsIOS = IOSInitializationSettings(
-    requestAlertPermission: false,
-    requestBadgePermission: false,
-    requestSoundPermission: false,
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
   );
 
   var initializationSettings = InitializationSettings(

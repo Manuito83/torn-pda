@@ -2013,6 +2013,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var formatter = new DateFormat('HH:mm');
 
     for (var notification in pendingNotificationRequests) {
+      // Don't take into account Firebase or Travel notifications,
+      // as they don't have the same payload with timestamp
+      if (notification.id == 999 ||
+          notification.id == 101 ||
+          notification.id == 102 ||
+          notification.id == 103 ||
+          notification.id == 104 ||
+          notification.id == 105 ||
+          notification.id == 106 ) {
+        continue;
+      }
+
       var splitPayload = notification.payload.split('-');
       var oldTimeStamp = int.parse(splitPayload[1]);
 

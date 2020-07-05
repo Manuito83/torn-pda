@@ -71,6 +71,7 @@ class _DrawerPageState extends State<DrawerPage> {
       sound: true,
       badge: true,
       alert: true,
+      provisional: false,
     ));
     _messaging.configure(onMessage: (message) {
       /// This is where notifications will come if the user has the app turned on.

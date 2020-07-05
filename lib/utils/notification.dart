@@ -1,17 +1,13 @@
-import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:torn_pda/main.dart';
 
 Future showNotification(Map payload) async {
-  if (Platform.isIOS)
-    showNotificationOnIos(payload);
-  else if (Platform.isAndroid) showNotificationOnAndroid(payload);
+  showNotificationBoth(payload);
 }
 
-Future showNotificationOnAndroid(Map payload) async {
+Future showNotificationBoth(Map payload) async {
   var vibrationPattern = Int64List(8);
   vibrationPattern[0] = 0;
   vibrationPattern[1] = 400;
@@ -41,31 +37,17 @@ Future showNotificationOnAndroid(Map payload) async {
     ticker: payload["notification"]["title"],
   );
 
-  var platformChannelSpecifics = NotificationDetails(
-    androidPlatformChannelSpecifics,
-    null,
+  var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+    sound: 'slow_spring_board.aiff',
   );
 
+  var platformChannelSpecifics = NotificationDetails(
+      androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
   await flutterLocalNotificationsPlugin.show(
-    Random().nextInt(5000),
+    999,
     payload["notification"]["title"],
     payload["notification"]["body"],
-    platformChannelSpecifics,
-  );
-}
-
-Future showNotificationOnIos(Map payload) async {
-  var platformChannelSpecifics = NotificationDetails(
-    null,
-    IOSNotificationDetails(
-      sound: 'slow_spring_board.aiff',
-    ),
-  );
-
-  await flutterLocalNotificationsPlugin.show(
-    Random().nextInt(5000),
-    payload["aps"]["alert"]["title"],
-    payload["aps"]["alert"]["body"],
     platformChannelSpecifics,
   );
 }
