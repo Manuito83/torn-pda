@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
@@ -21,6 +22,8 @@ class _FirestoreHelper {
     if (_alreadyUploaded && !forceUpdate) return;
     _alreadyUploaded = true;
     _firebaseUserModel = FirebaseUserModel();
+    var platform = Platform.isAndroid ? "android" : "ios";
+    var token = await _messaging.getToken();
     await _firestore
         .collection("players")
         .document(_uid)
@@ -33,9 +36,9 @@ class _FirestoreHelper {
         "life": profile.life.current,
         "playerId": profile.playerId,
         "energyLastCheckFull": true,
-
+        "platform": platform,
         /// This is a unique identifier to identify this user and target notification
-        "token": await _messaging.getToken(),
+        "token": token,
       },
       merge: true,
     );

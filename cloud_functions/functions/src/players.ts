@@ -5,13 +5,56 @@ export const playersGroup = {
   onPlayerAdded: functions.firestore
     .document("players/{uid}")
     .onCreate(async (snap, context) => {
-      await manageStats("totalUsers", 1);
+      const promises: Promise<any>[] = [];
+      const beforeStat = snap.data();
+      
+      promises.push(manageStats("totalUsers", 1));
+
+      if (beforeStat.platform === "ios") {
+        promises.push(manageStats("ios", 1));
+      }
+
+      if (beforeStat.platform === "android") {
+        promises.push(manageStats("android", 1));
+      }
+
+      await Promise.all(promises);
     }),
 
   onPlayerDeleted: functions.firestore
     .document("players/{uid}")
     .onDelete(async (snap, context) => {
-      await manageStats("totalUsers", -1);
+      const promises: Promise<any>[] = [];
+      const beforeStat = snap.data();
+      
+      promises.push(manageStats("totalUsers", -1));
+      
+      if (beforeStat.active) {
+        promises.push(manageStats("activeUsers", -1));
+      }
+
+      if (beforeStat.alertsEnabled) {
+        promises.push(manageStats("alertsEnabled", -1));
+      }
+
+      if (beforeStat.energyNotification) {
+        promises.push(manageStats("energyNotification", -1));
+      }
+
+      if (beforeStat.travelNotification) {
+        promises.push(manageStats("travelNotification", -1));
+      }
+
+      if (beforeStat.platform === "android") {
+        promises.push(manageStats("android", -1));
+      }
+
+      if (beforeStat.platform === "ios") {
+        promises.push(manageStats("ios", -1));
+      }
+
+      await Promise.all(promises);
+
     }),
 
   onPlayerUpdated: functions.firestore
