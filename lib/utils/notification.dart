@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -18,36 +19,50 @@ Future showNotificationBoth(Map payload) async {
   vibrationPattern[6] = 400;
   vibrationPattern[7] = 1000;
 
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    "Automatic alerts",
-    "Alerts Full",
-    "Automatic alerts chosen by the user",
-    importance: Importance.Max,
-    priority: Priority.High,
-    visibility: NotificationVisibility.Public,
-    autoCancel: true,
-    channelShowBadge: true,
-    icon: 'notification_icon',
-    sound: RawResourceAndroidNotificationSound('slow_spring_board'),
-    vibrationPattern: vibrationPattern,
-    enableLights: true,
-    ledColor: const Color.fromARGB(255, 255, 0, 0),
-    ledOnMs: 1000,
-    ledOffMs: 500,
-    ticker: payload["notification"]["title"],
-  );
+  if (Platform.isAndroid) {
+    var platformChannelSpecifics = NotificationDetails(
+        AndroidNotificationDetails(
+          "Automatic alerts",
+          "Alerts Full",
+          "Automatic alerts chosen by the user",
+          importance: Importance.Max,
+          priority: Priority.High,
+          visibility: NotificationVisibility.Public,
+          autoCancel: true,
+          channelShowBadge: true,
+          icon: 'notification_icon',
+          sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+          vibrationPattern: vibrationPattern,
+          enableLights: true,
+          ledColor: const Color.fromARGB(255, 255, 0, 0),
+          ledOnMs: 1000,
+          ledOffMs: 500,
+          ticker: payload["notification"]["title"],
+        ),
+      null,
+    );
 
-  var iOSPlatformChannelSpecifics = IOSNotificationDetails(
-    sound: 'slow_spring_board.aiff',
-  );
+    await flutterLocalNotificationsPlugin.show(
+      999,
+      payload["notification"]["title"],
+      payload["notification"]["body"],
+      platformChannelSpecifics,
+    );
 
-  var platformChannelSpecifics = NotificationDetails(
-      androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+  } else if (Platform.isIOS) {
+    var platformChannelSpecifics = NotificationDetails(
+      null,
+      IOSNotificationDetails(
+        sound: 'slow_spring_board.aiff',
+      ),
+    );
 
-  await flutterLocalNotificationsPlugin.show(
-    999,
-    payload["notification"]["title"],
-    payload["notification"]["body"],
-    platformChannelSpecifics,
-  );
+    await flutterLocalNotificationsPlugin.show(
+      999,
+      payload["aps"]["alert"]["title"],
+      payload["aps"]["alert"]["title"],
+      platformChannelSpecifics,
+    );
+  }
+
 }
