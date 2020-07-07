@@ -56,8 +56,6 @@ class _TravelPageState extends State<TravelPage> {
   @override
   void initState() {
     super.initState();
-
-    // This is now handled by Firebase messaging in Drawer!
     //_requestIOSPermissions();
 
     _finishedLoadingPreferences = _restorePreferences();
@@ -68,9 +66,7 @@ class _TravelPageState extends State<TravelPage> {
         Duration(seconds: 10), (Timer t) => _updateInformation());
   }
 
-  // This is now handled by Firebase messaging in Drawer!
-  /*
-  void _requestIOSPermissions() {
+/*  void _requestIOSPermissions() {
     flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>()
@@ -79,8 +75,7 @@ class _TravelPageState extends State<TravelPage> {
           badge: true,
           sound: true,
         );
-  }
-  */
+  }*/
 
   @override
   void dispose() {
