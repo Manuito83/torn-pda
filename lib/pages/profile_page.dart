@@ -78,7 +78,9 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _apiFetched;
-  bool _apiGoodData;
+  bool _apiGoodData = false;
+  String _apiError = '';
+  int _apiRetries = 0;
 
   OwnProfileModel _user;
 
@@ -283,8 +285,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 50, vertical: 20),
                         child: Text(
-                          'There was an error getting the information, please '
-                          'try again later!',
+                          'There was an error: $_apiError\n\n'
+                          'This will retry automatically!',
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
@@ -1615,7 +1618,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _apiGoodData = true;
         _checkIfNotificationsAreCurrent();
       } else {
-        _apiGoodData = false;
+        if (_apiGoodData && _apiRetries < 3) {
+          _apiRetries++;
+        } else {
+          _apiGoodData = false;
+          var error = apiResponse as ApiError;
+          _apiError = error.errorReason;
+          _apiRetries = 0;
+        }
       }
     });
 
@@ -2021,7 +2031,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           notification.id == 103 ||
           notification.id == 104 ||
           notification.id == 105 ||
-          notification.id == 106 ) {
+          notification.id == 106) {
         continue;
       }
 
