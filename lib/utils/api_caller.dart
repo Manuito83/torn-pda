@@ -35,28 +35,28 @@ class ApiError {
   ApiError({int errorId}) {
     switch (errorId) {
       case 0:
-        errorReason = 'Could not contact Torn';
+        errorReason = 'could not contact Torn';
         break;
       case 1:
-        errorReason = 'Key is empty';
+        errorReason = 'key is empty';
         break;
       case 2:
-        errorReason = 'Incorrect Key';
+        errorReason = 'incorrect Key';
         break;
       case 3:
-        errorReason = 'Wrong type';
+        errorReason = 'wrong type';
         break;
       case 4:
-        errorReason = 'Wrong fields';
+        errorReason = 'wrong fields';
         break;
       case 5:
-        errorReason = 'Too many requests';
+        errorReason = 'too many requests';
         break;
       case 6:
-        errorReason = 'Incorrect ID';
+        errorReason = 'incorrect ID';
         break;
       case 7:
-        errorReason = 'Incorrect ID-entity relation';
+        errorReason = 'incorrect ID-entity relation';
         break;
       case 8:
         errorReason = 'IP block';
@@ -65,14 +65,14 @@ class ApiError {
         errorReason = 'API disabled';
         break;
       case 10:
-        errorReason = 'Key owner is in federal jail';
+        errorReason = 'key owner is in federal jail';
         break;
       case 11:
-        errorReason = 'Key change error: You can only '
+        errorReason = 'key change error: You can only '
             'change your API key once every 60 seconds';
         break;
       case 12:
-        errorReason = 'Key read error: Error reading key from Database';
+        errorReason = 'key read error: Error reading key from Database';
         break;
     }
   }
