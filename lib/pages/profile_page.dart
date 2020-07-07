@@ -13,7 +13,8 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
-import 'package:torn_pda/pages/profile/profile_notifications_page.dart';
+import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
+import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -117,6 +118,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _medicalNotificationType;
   NotificationType _boosterNotificationType;
 
+  int _energyPercentage;
+  int _nervePercentage;
+
   IconData _energyNotificationIcon;
   IconData _nerveNotificationIcon;
   IconData _lifeNotificationIcon;
@@ -192,7 +196,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           },
         ),
         actions: <Widget>[
-          Platform.isAndroid
+          _apiGoodData
               ? IconButton(
                   icon: Icon(
                     Icons.alarm_on,
@@ -202,9 +206,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ProfileNotificationsPage(
-                          callback: _loadNotificationPreferences,
-                        ),
+                        builder: (context) {
+                          if (Platform.isAndroid) {
+                            return ProfileNotificationsAndroid(
+                              energyMax: _user.energy.maximum,
+                              nerveMax: _user.nerve.maximum,
+                              callback: _loadNotificationPreferences,
+                            );
+                          } else {
+                            return ProfileNotificationsIOS(
+                              energyMax: _user.energy.maximum,
+                              nerveMax: _user.nerve.maximum,
+                              callback: _loadNotificationPreferences,
+                            );
+                          }
+                        }
                       ),
                     );
                   },
@@ -781,7 +797,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _notificationIcon(ProfileNotification profileNotification) {
-    int fullTime;
+    int notificationTime;
+    int percentage;
+    bool percentageError = false;
     bool notificationsPending;
     String notificationSetString;
     String notificationCancelString;
@@ -792,43 +810,119 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (profileNotification) {
       case ProfileNotification.energy:
-        fullTime = _user.energy.fulltime;
-        notificationsPending = _energyNotificationsPending;
+        double targetEnergy = 100;
+        percentage = _energyPercentage;
+        if (percentage < 100) {
+          targetEnergy = _user.energy.maximum * percentage / 100;
+          var energyToGo = targetEnergy - _user.energy.current;
+          var energyTicksToGo = energyToGo / _user.energy.increment;
+          // If there is more than 1 tick to go, we multiply ticks times
+          // the interval, and decrease for the current tick consumed
+          if (energyTicksToGo > 1) {
+            var consumedTick = _user.energy.interval - _user.energy.ticktime;
+            notificationTime =
+                (energyTicksToGo * _user.energy.interval - consumedTick)
+                    .floor();
+          }
+          // If we are in the current tick or example in the next one,
+          // we just take into consideration the tick time left
+          else if (energyTicksToGo > 0 && energyTicksToGo <= 1) {
+            notificationTime = _user.energy.ticktime;
+          // If ticks are negative, we'll go full time and raise a warning
+          } else {
+            percentageError = true;
+            notificationTime = _user.energy.fulltime;
+          }
+        } else {
+          notificationTime = _user.energy.fulltime;
+        }
         _energyFinishTime =
-            DateTime.now().add(Duration(seconds: _user.energy.fulltime));
+            DateTime.now().add(Duration(seconds: notificationTime));
         var formattedTime = TimeFormatter(
           inputTime: _energyFinishTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        notificationSetString = 'Energy notification set for $formattedTime';
+        if (!percentageError) {
+          notificationSetString =
+              'Energy notification set for $formattedTime (E${targetEnergy.floor()} or $percentage%)';
+          alarmSetString =
+              'Energy alarm set for $formattedTime (E${targetEnergy.floor()} or $percentage%)';
+          timerSetString =
+              'Energy timer set for $formattedTime (E${targetEnergy.floor()} or $percentage%)';
+        } else {
+          notificationSetString =
+              'You are already above your chosen value '
+              '(E${targetEnergy.floor()} or $percentage%), notification set for 100% at $formattedTime';
+          alarmSetString = 'You are already above your chosen value '
+              '(E${targetEnergy.floor()} or $percentage%), alarm set for 100% at $formattedTime';
+          timerSetString = 'You are already above your chosen value '
+              '(E${targetEnergy.floor()} or $percentage%), timer set for 100% at $formattedTime';
+        }
         notificationCancelString = 'Energy notification cancelled!';
-        alarmSetString = 'Energy alarm set for $formattedTime';
-        timerSetString = 'Energy timer set for $formattedTime';
         notificationType = _energyNotificationType;
         notificationIcon = _energyNotificationIcon;
+        notificationsPending = _energyNotificationsPending;
         break;
 
       case ProfileNotification.nerve:
-        fullTime = _user.nerve.fulltime;
-        notificationsPending = _nerveNotificationsPending;
+        percentage = _nervePercentage;
+        double targetNerve = 100;
+        if (percentage < 100) {
+          targetNerve = _user.nerve.maximum * percentage / 100;
+          var nerveToGo = targetNerve - _user.nerve.current;
+          var nerveTicksToGo = nerveToGo / _user.nerve.increment;
+          // If there is more than 1 tick to go, we multiply ticks times
+          // the interval, and decrease for the current tick consumed
+          if (nerveTicksToGo > 1) {
+            var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
+            notificationTime =
+                (nerveTicksToGo * _user.nerve.interval - consumedTick)
+                    .floor();
+          }
+          // If we are in the current tick or example in the next one,
+          // we just take into consideration the tick time left
+          else if (nerveTicksToGo > 0 && nerveTicksToGo <= 1) {
+            notificationTime = _user.nerve.ticktime;
+            // If ticks are negative, we'll go full time and raise a warning
+          } else {
+            percentageError = true;
+            notificationTime = _user.nerve.fulltime;
+          }
+        } else {
+          notificationTime = _user.nerve.fulltime;
+        }
         _nerveFinishTime =
-            DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+            DateTime.now().add(Duration(seconds: notificationTime));
         var formattedTime = TimeFormatter(
           inputTime: _nerveFinishTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        notificationSetString = 'Nerve notification set for $formattedTime';
+        if (!percentageError) {
+          notificationSetString =
+          'Nerve notification set for $formattedTime (E${targetNerve.floor()} or $percentage%)';
+          alarmSetString =
+          'Nerve alarm set for $formattedTime (E${targetNerve.floor()} or $percentage%)';
+          timerSetString =
+          'Nerve timer set for $formattedTime (E${targetNerve.floor()} or $percentage%)';
+        } else {
+          notificationSetString =
+          'You are already above your chosen value '
+              '(E${targetNerve.floor()} or $percentage%), notification set for 100% at $formattedTime';
+          alarmSetString = 'You are already above your chosen value '
+              '(E${targetNerve.floor()} or $percentage%), alarm set for 100% at $formattedTime';
+          timerSetString = 'You are already above your chosen value '
+              '(E${targetNerve.floor()} or $percentage%), timer set for 100% at $formattedTime';
+        }
         notificationCancelString = 'Nerve notification cancelled!';
-        alarmSetString = 'Nerve alarm set for $formattedTime';
-        timerSetString = 'Nerve timer set for $formattedTime';
         notificationType = _nerveNotificationType;
         notificationIcon = _nerveNotificationIcon;
+        notificationsPending = _nerveNotificationsPending;
         break;
 
       case ProfileNotification.life:
-        fullTime = _user.life.fulltime;
+        notificationTime = _user.life.fulltime;
         notificationsPending = _lifeNotificationsPending;
         _lifeFinishTime =
             DateTime.now().add(Duration(seconds: _user.life.fulltime));
@@ -846,7 +940,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
 
       case ProfileNotification.drugs:
-        fullTime = _user.cooldowns.drug;
+        notificationTime = _user.cooldowns.drug;
         notificationsPending = _drugsNotificationsPending;
         _drugsFinishTime =
             DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
@@ -865,7 +959,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
 
       case ProfileNotification.medical:
-        fullTime = _user.cooldowns.medical;
+        notificationTime = _user.cooldowns.medical;
         notificationsPending = _medicalNotificationsPending;
         _medicalFinishTime =
             DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
@@ -884,7 +978,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
 
       case ProfileNotification.booster:
-        fullTime = _user.cooldowns.booster;
+        notificationTime = _user.cooldowns.booster;
         notificationsPending = _boosterNotificationsPending;
         _boosterFinishTime =
             DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
@@ -903,7 +997,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
     }
 
-    if (fullTime == 0) {
+    if (notificationTime == 0) {
       return SizedBox.shrink();
     } else {
       Color thisColor;
@@ -932,7 +1026,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.green,
+                  contentColor: percentageError ? Colors.red : Colors.green,
                   duration: Duration(seconds: 5),
                   contentPadding: EdgeInsets.all(10),
                 );
@@ -959,7 +1053,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.green,
+                contentColor: percentageError ? Colors.red : Colors.green,
                 duration: Duration(seconds: 5),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -972,7 +1066,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: Colors.green,
+                contentColor: percentageError ? Colors.red : Colors.green,
                 duration: Duration(seconds: 5),
                 contentPadding: EdgeInsets.all(10),
               );
@@ -2156,6 +2250,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   void _loadNotificationPreferences() async {
     var energy = await SharedPreferencesModel().getEnergyNotificationType();
+    _energyPercentage =
+        await SharedPreferencesModel().getEnergyNotificationPercentage();
+    _nervePercentage =
+        await SharedPreferencesModel().getNerveNotificationPercentage();
     var nerve = await SharedPreferencesModel().getNerveNotificationType();
     var life = await SharedPreferencesModel().getLifeNotificationType();
     var drugs = await SharedPreferencesModel().getDrugNotificationType();

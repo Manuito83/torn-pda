@@ -4,17 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class ProfileNotificationsPage extends StatefulWidget {
+class ProfileNotificationsAndroid extends StatefulWidget {
   final Function callback;
+  final int energyMax;
+  final int nerveMax;
 
-  ProfileNotificationsPage({@required this.callback});
+  ProfileNotificationsAndroid({
+    @required this.callback,
+    @required this.energyMax,
+    @required this.nerveMax,
+  });
 
   @override
-  _ProfileNotificationsPageState createState() =>
-      _ProfileNotificationsPageState();
+  _ProfileNotificationsAndroidState createState() =>
+      _ProfileNotificationsAndroidState();
 }
 
-class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
+class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid> {
   String _energyDropDownValue;
   String _nerveDropDownValue;
   String _lifeDropDownValue;
@@ -24,6 +30,9 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
 
   bool _alarmSound;
   bool _alarmVibration;
+
+  int _energyPercentage = 100;
+  int _nervePercentage = 100;
 
   Future _preferencesLoaded;
 
@@ -65,7 +74,7 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
                             padding: const EdgeInsets.all(20.0),
                             child: Text(
                                 'Here you can specify your preferred alerting '
-                                'method each type of event.'),
+                                'method for each type of event.'),
                           ),
                           _rowsWithTypes(),
                           Padding(
@@ -217,6 +226,82 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
           ),
         ),
       );
+
+      if (element == ProfileNotification.energy) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text('Energy %'),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Row(
+                  children: <Widget>[
+                    Text('E${(widget.energyMax * _energyPercentage / 100).floor()}'),
+                    Slider(
+                      value: _energyPercentage.toDouble(),
+                      min: 10,
+                      max: 100,
+                      label: '${_energyPercentage.floor()}%',
+                      divisions: 90,
+                      onChanged: (double newPercentage) {
+                        setState(() {
+                          _energyPercentage = newPercentage.floor();
+                          SharedPreferencesModel()
+                              .setEnergyNotificationPercentage(
+                                  newPercentage.floor());
+                        });
+                      },
+                    ),
+
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      if (element == ProfileNotification.nerve) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text('Nerve %'),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Row(
+                  children: <Widget>[
+                    Text('N${(widget.nerveMax * _nervePercentage / 100).floor()}'),
+                    Slider(
+                      value: _nervePercentage.toDouble(),
+                      min: 1,
+                      max: 100,
+                      label: '${_nervePercentage.floor()}%',
+                      divisions: 90,
+                      onChanged: (double newPercentage) {
+                        setState(() {
+                          _nervePercentage = newPercentage.floor();
+                          SharedPreferencesModel()
+                              .setNerveNotificationPercentage(
+                              newPercentage.floor());
+                        });
+                      },
+                    ),
+
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }
     });
 
     return Column(
@@ -335,6 +420,10 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
 
   Future _restorePreferences() async {
     var energy = await SharedPreferencesModel().getEnergyNotificationType();
+    var energyPercentage =
+        await SharedPreferencesModel().getEnergyNotificationPercentage();
+    var nervePercentage =
+        await SharedPreferencesModel().getNerveNotificationPercentage();
     var nerve = await SharedPreferencesModel().getNerveNotificationType();
     var life = await SharedPreferencesModel().getLifeNotificationType();
     var drugs = await SharedPreferencesModel().getDrugNotificationType();
@@ -346,7 +435,9 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
 
     setState(() {
       _energyDropDownValue = energy;
+      _energyPercentage = energyPercentage;
       _nerveDropDownValue = nerve;
+      _nervePercentage = nervePercentage;
       _lifeDropDownValue = life;
       _drugDropDownValue = drugs;
       _medicalDropDownValue = medical;

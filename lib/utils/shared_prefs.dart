@@ -26,6 +26,8 @@ class SharedPreferencesModel {
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
+  final String _kEnergyNotificationPercentage = "pda_energyNotificationPercentage";
+  final String _kNerveNotificationPercentage = "pda_nerveNotificationPercentage";
   final String _kNerveNotificationType = "pda_nerveNotificationType";
   final String _kLifeNotificationType = "pda_lifeNotificationType";
   final String _kDrugNotificationType = "pda_drugNotificationType";
@@ -313,6 +315,26 @@ class SharedPreferencesModel {
   Future<bool> setEnergyNotificationType(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kEnergyNotificationType, value);
+  }
+
+  Future<int> getEnergyNotificationPercentage() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEnergyNotificationPercentage) ?? 100;
+  }
+
+  Future<bool> setEnergyNotificationPercentage(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kEnergyNotificationPercentage, value);
+  }
+
+  Future<int> getNerveNotificationPercentage() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kNerveNotificationPercentage) ?? 100;
+  }
+
+  Future<bool> setNerveNotificationPercentage(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kNerveNotificationPercentage, value);
   }
 
   Future<String> getNerveNotificationType() async {
