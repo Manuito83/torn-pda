@@ -443,7 +443,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Text(
               'Torn PDA needs your API Key to obtain your user\'s '
               'information. The key is protected in the app and will not '
-              'be shared under any circunstances.',
+              'be shared under any circumstances.',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -692,6 +692,12 @@ class _SettingsPageState extends State<SettingsPage> {
         ..userApiKey = _myCurrentKey
         ..userApiKeyValid = true;
       _userProvider.setUserDetails(userDetails: myProfile);
+
+      var customEnergyTrigger = myProfile.energy.maximum;
+      SharedPreferencesModel().setEnergyNotificationValue(customEnergyTrigger);
+
+      var customNerveTrigger = myProfile.nerve.maximum;
+      SharedPreferencesModel().setNerveNotificationValue(customNerveTrigger);
 
       // Firestore uploading, but only if "Load" pressed by user
       if (userTriggered) {

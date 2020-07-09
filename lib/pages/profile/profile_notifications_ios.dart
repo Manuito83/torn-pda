@@ -20,8 +20,9 @@ class ProfileNotificationsIOS extends StatefulWidget {
 
 class _ProfileNotificationsIOSState
     extends State<ProfileNotificationsIOS> {
-  int _energyPercentage = 100;
-  int _nervePercentage = 100;
+
+  double _energyValue = 20;
+  double _nerveValue = 20;
 
   Future _preferencesLoaded;
 
@@ -101,27 +102,25 @@ class _ProfileNotificationsIOSState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Energy %'),
+                Text('Trigger'),
                 Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
-                    Text(
-                        'E${(widget.energyMax * _energyPercentage / 100).floor()}'),
+                    Text('E${_energyValue.floor()}'),
                     Slider(
-                      value: _energyPercentage.toDouble(),
+                      value: _energyValue.toDouble(),
                       min: 10,
-                      max: 100,
-                      label: '${_energyPercentage.floor()}%',
-                      divisions: 90,
-                      onChanged: (double newPercentage) {
+                      max: widget.energyMax.toDouble(),
+                      onChanged: (double newValue) {
                         setState(() {
-                          _energyPercentage = newPercentage.floor();
-                          SharedPreferencesModel()
-                              .setEnergyNotificationPercentage(
-                                  newPercentage.floor());
+                          _energyValue = newValue;
                         });
+                      },
+                      onChangeEnd: (double finalValue) {
+                        SharedPreferencesModel()
+                            .setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -139,27 +138,25 @@ class _ProfileNotificationsIOSState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Nerve %'),
+                Text('Trigger'),
                 Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
-                    Text(
-                        'N${(widget.nerveMax * _nervePercentage / 100).floor()}'),
+                    Text('N${_nerveValue.floor()}'),
                     Slider(
-                      value: _nervePercentage.toDouble(),
-                      min: 1,
-                      max: 100,
-                      label: '${_nervePercentage.floor()}%',
-                      divisions: 90,
-                      onChanged: (double newPercentage) {
+                      value: _nerveValue.toDouble(),
+                      min: 2,
+                      max: widget.nerveMax.toDouble(),
+                      onChanged: (double newValue) {
                         setState(() {
-                          _nervePercentage = newPercentage.floor();
-                          SharedPreferencesModel()
-                              .setNerveNotificationPercentage(
-                                  newPercentage.floor());
+                          _nerveValue = newValue;
                         });
+                      },
+                      onChangeEnd: (double finalValue) {
+                        SharedPreferencesModel()
+                            .setNerveNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -177,15 +174,17 @@ class _ProfileNotificationsIOSState
   }
 
   Future _restorePreferences() async {
-    var energyPercentage =
-        await SharedPreferencesModel().getEnergyNotificationPercentage();
-    var nervePercentage =
-        await SharedPreferencesModel().getNerveNotificationPercentage();
+    var energyValue =
+      await SharedPreferencesModel().getEnergyNotificationValue();
+
+    var nerveValue =
+      await SharedPreferencesModel().getNerveNotificationValue();
 
     setState(() {
-      _energyPercentage = energyPercentage;
-      _nervePercentage = nervePercentage;
+      _energyValue = energyValue.toDouble();
+      _nerveValue = nerveValue.toDouble();
     });
+
   }
 
   Future<bool> _willPopCallback() async {
