@@ -321,7 +321,7 @@ class SharedPreferencesModel {
 
   Future<int> getEnergyNotificationValue() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kEnergyNotificationValue) ?? 20;
+    return prefs.getInt(_kEnergyNotificationValue) ?? 0;
   }
 
   Future<bool> setEnergyNotificationValue(int value) async {
@@ -351,7 +351,7 @@ class SharedPreferencesModel {
 
   Future<int> getNerveNotificationValue() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kNerveNotificationValue) ?? 20;
+    return prefs.getInt(_kNerveNotificationValue) ?? 0;
   }
 
   Future<bool> setNerveNotificationValue(int value) async {

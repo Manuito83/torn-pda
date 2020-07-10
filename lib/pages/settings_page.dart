@@ -693,12 +693,6 @@ class _SettingsPageState extends State<SettingsPage> {
         ..userApiKeyValid = true;
       _userProvider.setUserDetails(userDetails: myProfile);
 
-      var customEnergyTrigger = myProfile.energy.maximum;
-      SharedPreferencesModel().setEnergyNotificationValue(customEnergyTrigger);
-
-      var customNerveTrigger = myProfile.nerve.maximum;
-      SharedPreferencesModel().setNerveNotificationValue(customNerveTrigger);
-
       // Firestore uploading, but only if "Load" pressed by user
       if (userTriggered) {
         FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();

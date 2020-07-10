@@ -1727,18 +1727,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _serverTime =
             DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
-        _checkIfNotificationsAreCurrent();
 
-        // If energy max value has decreased
-        if (_customEnergyTrigger > _user.energy.maximum) {
+        // If max values have decreased or were never initialized
+        if (_customEnergyTrigger > _user.energy.maximum ||
+            _customEnergyTrigger == 0) {
           _customEnergyTrigger = _user.energy.maximum;
-          SharedPreferencesModel().setEnergyNotificationValue(_customEnergyTrigger);
+          SharedPreferencesModel()
+              .setEnergyNotificationValue(_customEnergyTrigger);
         }
-        if (_customNerveTrigger > _user.nerve.maximum) {
+        if (_customNerveTrigger > _user.nerve.maximum ||
+            _customNerveTrigger == 0) {
           _customNerveTrigger = _user.nerve.maximum;
-          SharedPreferencesModel().setNerveNotificationValue(_customNerveTrigger);
+          SharedPreferencesModel()
+              .setNerveNotificationValue(_customNerveTrigger);
         }
 
+        _checkIfNotificationsAreCurrent();
       } else {
         if (_apiGoodData && _apiRetries < 3) {
           _apiRetries++;
@@ -2160,9 +2164,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // ENERGY
       if (notification.payload.contains('energy')) {
+        var customTriggerRoundedUp = (_customEnergyTrigger + 4) / 5 * 5;
         if (_user.energy.current >= _user.energy.maximum ||
             (!_customEnergyMaxOverride &&
-                _user.energy.current > _customEnergyTrigger)) {
+                _user.energy.current > customTriggerRoundedUp)) {
           _cancelNotifications(ProfileNotification.energy);
           BotToast.showText(
             text: 'Energy notification expired, removing!',

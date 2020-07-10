@@ -21,8 +21,13 @@ class ProfileNotificationsIOS extends StatefulWidget {
 class _ProfileNotificationsIOSState
     extends State<ProfileNotificationsIOS> {
 
-  double _energyValue = 20;
-  double _nerveValue = 20;
+  final _energyMin = 10.0;
+  final _nerveMin = 2.0;
+
+  int _energyDivisions;
+
+  double _energyTrigger;
+  double _nerveTrigger;
 
   Future _preferencesLoaded;
 
@@ -102,20 +107,21 @@ class _ProfileNotificationsIOSState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Trigger'),
+                Text('Energy'),
                 Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
-                    Text('E${_energyValue.floor()}'),
+                    Text('E${_energyTrigger.floor()}'),
                     Slider(
-                      value: _energyValue.toDouble(),
-                      min: 10,
+                      value: _energyTrigger.toDouble(),
+                      min: _energyMin,
                       max: widget.energyMax.toDouble(),
+                      divisions: _energyDivisions,
                       onChanged: (double newValue) {
                         setState(() {
-                          _energyValue = newValue;
+                          _energyTrigger = newValue;
                         });
                       },
                       onChangeEnd: (double finalValue) {
@@ -138,20 +144,20 @@ class _ProfileNotificationsIOSState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text('Trigger'),
+                Text('Nerve'),
                 Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Row(
                   children: <Widget>[
-                    Text('N${_nerveValue.floor()}'),
+                    Text('N${_nerveTrigger.floor()}'),
                     Slider(
-                      value: _nerveValue.toDouble(),
-                      min: 2,
+                      value: _nerveTrigger.toDouble(),
+                      min: _nerveMin,
                       max: widget.nerveMax.toDouble(),
                       onChanged: (double newValue) {
                         setState(() {
-                          _nerveValue = newValue;
+                          _nerveTrigger = newValue;
                         });
                       },
                       onChangeEnd: (double finalValue) {
@@ -174,15 +180,24 @@ class _ProfileNotificationsIOSState
   }
 
   Future _restorePreferences() async {
-    var energyValue =
+    var energyTrigger =
       await SharedPreferencesModel().getEnergyNotificationValue();
+    // In case we pass some incorrect values, we correct them here
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax ) {
+      energyTrigger = widget.energyMax;
+    }
 
-    var nerveValue =
+    var nerveTrigger =
       await SharedPreferencesModel().getNerveNotificationValue();
+    // In case we pass some incorrect values, we correct them here
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax ) {
+      nerveTrigger = widget.nerveMax;
+    }
 
     setState(() {
-      _energyValue = energyValue.toDouble();
-      _nerveValue = nerveValue.toDouble();
+      _energyDivisions = ((widget.energyMax - _energyMin) / 5).floor();
+      _energyTrigger = energyTrigger.toDouble();
+      _nerveTrigger = nerveTrigger.toDouble();
     });
 
   }
