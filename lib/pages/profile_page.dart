@@ -847,6 +847,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ).format;
 
           if (!percentageError) {
+            _customEnergyMaxOverride = false;
+            SharedPreferencesModel().setEnergyPercentageOverride(false);
             notificationSetString =
                 'Energy notification set for $formattedTime (E$_customEnergyTrigger)';
             alarmSetString =
@@ -854,6 +856,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             timerSetString =
                 'Energy timer set for $formattedTime (E$_customEnergyTrigger)';
           } else {
+            _customEnergyMaxOverride = true;
+            SharedPreferencesModel().setEnergyPercentageOverride(true);
             notificationSetString = 'You are already above your chosen value '
                 '(E$_customEnergyTrigger), notification set for full energy at $formattedTime';
             alarmSetString = 'You are already above your chosen value '
@@ -904,6 +908,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ).format;
 
           if (!percentageError) {
+            _customNerveMaxOverride = false;
+            SharedPreferencesModel().setNervePercentageOverride(false);
             notificationSetString =
                 'Nerve notification set for $formattedTime (E$_customNerveTrigger)';
             alarmSetString =
@@ -911,6 +917,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             timerSetString =
                 'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
           } else {
+            _customNerveMaxOverride = true;
+            SharedPreferencesModel().setNervePercentageOverride(true);
             notificationSetString = 'You are already above your chosen value '
                 '(E$_customNerveTrigger), notification set for full nerve at $formattedTime';
             alarmSetString = 'You are already above your chosen value '
@@ -1028,13 +1036,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           switch (notificationType) {
             case NotificationType.notification:
               if (!notificationsPending) {
-                if (percentageError) {
-                  _customEnergyMaxOverride = true;
-                  SharedPreferencesModel().setEnergyPercentageOverride(true);
-                } else {
-                  _customEnergyMaxOverride = false;
-                  SharedPreferencesModel().setEnergyPercentageOverride(false);
-                }
                 _scheduleNotification(profileNotification);
                 BotToast.showText(
                   text: notificationSetString,
@@ -1062,13 +1063,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
               break;
             case NotificationType.alarm:
-              if (percentageError) {
-                _customEnergyMaxOverride = true;
-                SharedPreferencesModel().setEnergyPercentageOverride(true);
-              } else {
-                _customEnergyMaxOverride = false;
-                SharedPreferencesModel().setEnergyPercentageOverride(false);
-              }
               _setAlarm(profileNotification);
               BotToast.showText(
                 text: alarmSetString,
@@ -1082,13 +1076,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               );
               break;
             case NotificationType.timer:
-              if (percentageError) {
-                _customEnergyMaxOverride = true;
-                SharedPreferencesModel().setEnergyPercentageOverride(true);
-              } else {
-                _customEnergyMaxOverride = false;
-                SharedPreferencesModel().setEnergyPercentageOverride(false);
-              }
               _setTimer(profileNotification);
               BotToast.showText(
                 text: timerSetString,
@@ -2077,8 +2064,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
 
     // DEBUG
-    print('Notification $notificationTitle @ '
-        '${DateTime.now().add(Duration(seconds: secondsToNotification))}');
+    //print('Notification $notificationTitle @ '
+    //    '${DateTime.now().add(Duration(seconds: secondsToNotification))}');
 
     _retrievePendingNotifications();
   }
@@ -2160,8 +2147,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var updatedTypes = List<String>();
     var updatedTimes = List<String>();
     var formatter = new DateFormat('HH:mm');
-
-    double targetNerve = 0;
 
     for (var notification in pendingNotificationRequests) {
       // Don't take into account Firebase or Travel notifications,
@@ -2392,7 +2377,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (updatedTypes[i] == 'energy') {
           thoseUpdated += ' for E${_customEnergyTrigger.floor()})';
         } else if (updatedTypes[i] == 'nerve') {
-          thoseUpdated += ' for N${targetNerve.floor()})';
+          thoseUpdated += ' for N${_customNerveTrigger.floor()})';
         } else {
           thoseUpdated += ')';
         }
