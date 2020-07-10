@@ -124,7 +124,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'There was an error contacting the server! Please try again later.',
+            'There was an error contacting the server!',
             style: TextStyle(
               color: Colors.red,
             ),
