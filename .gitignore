@@ -31,6 +31,10 @@
 .pub/
 /build/
 
+# Firebase
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+
 # Android related
 **/android/**/gradle-wrapper.jar
 **/android/.gradle
@@ -39,7 +43,6 @@
 **/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
-**/android/app/google-services.json
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
