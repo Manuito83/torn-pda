@@ -5,6 +5,8 @@ import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 
+import '../main.dart';
+
 class ChainingPage extends StatefulWidget {
   @override
   _ChainingPageState createState() => _ChainingPageState();
@@ -26,6 +28,9 @@ class _ChainingPageState extends State<ChainingPage> {
     _bottomNavPageController = PageController(
       initialPage: 0,
     );
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'chaining'});
   }
 
   @override

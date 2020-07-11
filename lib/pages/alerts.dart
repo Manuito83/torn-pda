@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/utils/firestore.dart';
 
+import '../main.dart';
+
 class AlertsSettings extends StatefulWidget {
   @override
   _AlertsSettingsState createState() => _AlertsSettingsState();
@@ -17,6 +19,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   void initState() {
     super.initState();
     _firestoreProfileReceived = firestore.getUserProfile();
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'alerts'});
   }
 
   @override

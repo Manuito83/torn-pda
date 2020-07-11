@@ -8,6 +8,8 @@ import 'package:torn_pda/widgets/friends_list.dart';
 import 'package:torn_pda/pages/friends/friends_backup_page.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
 
+import '../main.dart';
+
 class FriendsPage extends StatefulWidget {
   @override
   _FriendsPageState createState() => _FriendsPageState();
@@ -44,6 +46,9 @@ class _FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'friends'});
   }
 
   @override

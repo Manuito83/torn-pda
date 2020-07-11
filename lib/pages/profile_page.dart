@@ -156,6 +156,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _tickerCallChainApi =
         new Timer.periodic(Duration(seconds: 30), (Timer t) => _fetchApi());
+
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'profile'});
   }
 
   void _requestIOSPermissions() {

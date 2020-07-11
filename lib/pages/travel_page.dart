@@ -66,6 +66,10 @@ class _TravelPageState extends State<TravelPage> {
 
     _ticker = new Timer.periodic(
         Duration(seconds: 10), (Timer t) => _updateInformation());
+
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'travel'});
   }
 
   // This is commented because it's handled by Firebase messaging!

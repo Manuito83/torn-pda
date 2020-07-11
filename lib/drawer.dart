@@ -375,11 +375,11 @@ class _DrawerPageState extends State<DrawerPage> {
     }
   }
 
-  _onSelectItem(int index) {
+  _onSelectItem(int index) async {
 
-    analytics.logEvent(
+/*    await analytics.logEvent(
         name: 'section_changed',
-        parameters: {'section': _drawerItemsList[index]});
+        parameters: {'section': _drawerItemsList[index]});*/
 
     Navigator.of(context).pop();
     setState(() {

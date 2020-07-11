@@ -13,6 +13,8 @@ import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/browser_info_dialog.dart';
 
+import '../main.dart';
+
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
 
@@ -51,6 +53,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _restorePreferences();
     _ticker = new Timer.periodic(
         Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'settings'});
   }
 
   @override

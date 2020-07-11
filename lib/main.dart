@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -17,6 +18,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 // TODO: CONFIGURE FOR APP RELEASE
 final String appVersion = '1.4.1';
 final bool appNeedsChangelog = true;
+
+final FirebaseAnalytics analytics = FirebaseAnalytics();
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
