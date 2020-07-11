@@ -53,14 +53,14 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
 
   if (
     travel.time_left > 0 &&
-    travel.time_left <= 90 &&
-    currentDateInMillis - lastTravelNotificationSent > 90 * 1000
+    travel.time_left <= 180 &&
+    currentDateInMillis - lastTravelNotificationSent > 180 * 1000
   ) {
     promises.push(
       sendNotificationToUser(
         subscriber.token,
         `Approaching ${travel.destination}!`,
-        `You will arrive in ${travel.destination} in ${travel.time_left} seconds`
+        `You are about to land in ${travel.destination}!`
       )
     );
     promises.push(

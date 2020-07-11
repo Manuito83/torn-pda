@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
 export const playersGroup = {
-  onPlayerAdded: functions.firestore
+  onPlayerAdded: functions.region('us-east4').firestore
     .document("players/{uid}")
     .onCreate(async (snap, context) => {
       const promises: Promise<any>[] = [];
@@ -21,7 +21,7 @@ export const playersGroup = {
       await Promise.all(promises);
     }),
 
-  onPlayerDeleted: functions.firestore
+  onPlayerDeleted: functions.region('us-east4').firestore
     .document("players/{uid}")
     .onDelete(async (snap, context) => {
       const promises: Promise<any>[] = [];
@@ -57,7 +57,7 @@ export const playersGroup = {
 
     }),
 
-  onPlayerUpdated: functions.firestore
+  onPlayerUpdated: functions.region('us-east4').firestore
     .document("players/{uid}")
     .onUpdate(async (snap, context) => {
       const promises: Promise<any>[] = [];

@@ -3,7 +3,12 @@ import { alertsGroup } from "./alerts";
 import { staleGroup } from "./stale_users";
 import { playersGroup } from "./players";
 
-admin.initializeApp();
+var serviceAccount = require("../../key/serviceAccountKey.json");
+
+admin.initializeApp({
+credential: admin.credential.cert(serviceAccount),
+databaseURL: "https://torn-pda-manuito.firebaseio.com"
+});
 
 export const alerts = alertsGroup;
 export const stale = staleGroup;

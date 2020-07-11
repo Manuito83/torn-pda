@@ -4,8 +4,8 @@ import { sendEnergyNotification, sendTravelNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
 export const alertsGroup = {
-  runEveryMinute: functions.pubsub
-    .schedule("* * * * *")
+  runEveryMinute: functions.region('us-east4').pubsub
+    .schedule("*/2 * * * *")
     .onRun(async () => {
       // Get the list of subscribers
       // TODO: Research on possibility to change this to realtime database
