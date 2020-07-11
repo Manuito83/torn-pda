@@ -57,12 +57,26 @@ Future showNotificationBoth(Map payload) async {
       ),
     );
 
-    await flutterLocalNotificationsPlugin.show(
-      999,
-      payload["aps"]["alert"]["title"],
-      payload["aps"]["alert"]["title"],
-      platformChannelSpecifics,
-    );
+    // Two kind of messages might be sent by Firebase, depending
+    // on notification and data payload
+    try {
+      await flutterLocalNotificationsPlugin.show(
+        999,
+        payload["notification"]["title"],
+        payload["notification"]["body"],
+        platformChannelSpecifics,
+      );
+    } catch (e) {
+      await flutterLocalNotificationsPlugin.show(
+        999,
+        payload["aps"]["alert"]["title"],
+        payload["aps"]["alert"]["body"],
+        platformChannelSpecifics,
+      );
+    }
   }
 
 }
+
+
+
