@@ -1748,7 +1748,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         _checkIfNotificationsAreCurrent();
       } else {
-        if (_apiGoodData && _apiRetries < 3) {
+        if (_apiGoodData && _apiRetries < 8) {
           _apiRetries++;
         } else {
           _apiGoodData = false;
