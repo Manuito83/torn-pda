@@ -34,6 +34,7 @@
 # Firebase
 **/android/app/google-services.json
 **/ios/Runner/GoogleService-Info.plist
+/cloud_functions/functions/key/serviceAccountKey.json
 
 # Android related
 **/android/**/gradle-wrapper.jar
