@@ -67,9 +67,8 @@ class _TravelPageState extends State<TravelPage> {
     _ticker = new Timer.periodic(
         Duration(seconds: 10), (Timer t) => _updateInformation());
 
-    analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': 'travel'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'travel'});
   }
 
   // This is commented because it's handled by Firebase messaging!
@@ -123,8 +122,7 @@ class _TravelPageState extends State<TravelPage> {
         child: SingleChildScrollView(
           child: FutureBuilder(
             future: _finishedLoadingPreferences,
-            builder:
-                (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 return Column(
                   children: _travelMain(),
@@ -145,8 +143,7 @@ class _TravelPageState extends State<TravelPage> {
           : FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FutureBuilder(
         future: _finishedLoadingPreferences,
-        builder:
-            (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return OpenContainer(
               transitionDuration: Duration(seconds: 1),
@@ -161,7 +158,8 @@ class _TravelPageState extends State<TravelPage> {
                 ),
               ),
               closedColor: Colors.orange,
-              closedBuilder: (BuildContext context, VoidCallback openContainer) {
+              closedBuilder:
+                  (BuildContext context, VoidCallback openContainer) {
                 return SizedBox(
                   height: 56,
                   width: 56,
@@ -211,9 +209,9 @@ class _TravelPageState extends State<TravelPage> {
           child: Column(
             children: <Widget>[
               Padding(
-                padding: EdgeInsetsDirectional.only(bottom: 30),
+                padding: EdgeInsetsDirectional.only(bottom: 15),
                 child: Text(
-                  "ERROR LOADING USER",
+                  "ERROR CONTACTING TORN",
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
@@ -221,6 +219,10 @@ class _TravelPageState extends State<TravelPage> {
                 ),
               ),
               Text("Error: $_errorReason"),
+              SizedBox(height: 40),
+              Text("You can still try to visit the website:"),
+              SizedBox(height: 10),
+              _travelAgencyButton(),
             ],
           ),
         ),
@@ -339,7 +341,7 @@ class _TravelPageState extends State<TravelPage> {
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
         String twoDigitMinutes =
-        twoDigits(timeDifference.inMinutes.remainder(60));
+            twoDigits(timeDifference.inMinutes.remainder(60));
         String diff =
             '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
@@ -468,34 +470,38 @@ class _TravelPageState extends State<TravelPage> {
                 ),
               ),
             ),
-            RaisedButton(
-              child: Text("Travel Agency"),
-              onPressed: () async {
-                var browserType = _settingsProvider.currentBrowser;
-                switch (browserType) {
-                  case BrowserSetting.app:
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewTravel(
-                          webViewType: WebViewTypeTravel.travelAgency,
-                          genericCallBack: _updateInformation,
-                        ),
-                      ),
-                    );
-                    break;
-                  case BrowserSetting.external:
-                    var url = 'https://www.torn.com/travelagency.php';
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                    break;
-                }
-              },
-            ),
+            _travelAgencyButton(),
           ],
         )
       ];
     }
+  }
+
+  RaisedButton _travelAgencyButton() {
+    return RaisedButton(
+      child: Text("Travel Agency"),
+      onPressed: () async {
+        var browserType = _settingsProvider.currentBrowser;
+        switch (browserType) {
+          case BrowserSetting.app:
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewTravel(
+                  webViewType: WebViewTypeTravel.travelAgency,
+                  genericCallBack: _updateInformation,
+                ),
+              ),
+            );
+            break;
+          case BrowserSetting.external:
+            var url = 'https://www.torn.com/travelagency.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
+      },
+    );
   }
 
   Widget _conditionalAlarm() {
@@ -985,14 +991,12 @@ class _TravelPageState extends State<TravelPage> {
     _notificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
   }
-
 }
 
-
-class FabOverrideAnimation extends FloatingActionButtonAnimator{
+class FabOverrideAnimation extends FloatingActionButtonAnimator {
   @override
   Offset getOffset({Offset begin, Offset end, double progress}) {
-    return Offset(end.dx,end.dy);
+    return Offset(end.dx, end.dy);
   }
 
   @override
