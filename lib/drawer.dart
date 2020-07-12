@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -94,7 +96,19 @@ class _DrawerPageState extends State<DrawerPage> {
 
   // TODO: transfer notification functions to two separate files in utils
   Future<void> _fireLaunchResumeNotifications(Map message) async {
-    if (message["data"]["message"].contains("about to land")) {
+    bool travel = false;
+
+    if (Platform.isIOS) {
+      if (message["message"].contains("about to land")) {
+        travel = true;
+      }
+    } else if (Platform.isAndroid) {
+      if (message["data"]["message"].contains("about to land")) {
+        travel = true;
+      }
+    }
+
+    if (travel) {
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       var browserType = await SharedPreferencesModel().getDefaultBrowser();
       switch (browserType) {
