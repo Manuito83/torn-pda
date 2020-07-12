@@ -81,8 +81,6 @@ export async function sendNotificationToUser(
   title: string,
   body: string
 ): Promise<any> {
-  // This will send notification to the registered user, notification will only be shown if the app is on background or terminated, when the app is on screen
-  // Notification will come as a callback, letting us do whatever we want with it.
   
   var payload = {
     notification: {
