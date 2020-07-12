@@ -33,6 +33,8 @@ class _TravelPageState extends State<TravelPage> {
   TravelModel _travelModel = TravelModel();
   Timer _ticker;
 
+  int _apiRetries = 0;
+
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
@@ -41,7 +43,7 @@ class _TravelPageState extends State<TravelPage> {
   bool _alarmVibration = true;
 
   String _myCurrentKey = '';
-  bool _apiError = false;
+  bool _apiError = true;
   String _errorReason = '';
 
   var _notificationFormKey = GlobalKey<FormState>();
@@ -859,15 +861,21 @@ class _TravelPageState extends State<TravelPage> {
   Future<void> _fetchTornApi() async {
     var myTravel = await TornApiCaller.travel(_myCurrentKey).getTravel;
     if (myTravel is TravelModel) {
+      _apiRetries = 0;
       setState(() {
         _travelModel = myTravel;
         _apiError = false;
       });
     } else if (myTravel is ApiError) {
-      setState(() {
-        _apiError = true;
-        _errorReason = myTravel.errorReason;
-      });
+      if (!_apiError && _apiRetries < 4) {
+        _apiRetries++;
+      } else {
+        _apiRetries = 0;
+        setState(() {
+          _apiError = true;
+          _errorReason = myTravel.errorReason;
+        });
+      }
     }
   }
 

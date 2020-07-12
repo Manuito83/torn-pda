@@ -1727,6 +1727,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     setState(() {
       if (apiResponse is OwnProfileModel) {
+        _apiRetries = 0;
         _user = apiResponse;
         _serverTime =
             DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
