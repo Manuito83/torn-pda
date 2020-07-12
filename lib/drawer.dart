@@ -73,17 +73,49 @@ class _DrawerPageState extends State<DrawerPage> {
       alert: true,
       provisional: false,
     ));
-    _messaging.configure(onMessage: (message) {
-      /// This is where notifications will come if the user has the app turned on.
-      /// In case of background, it will go to system tray automatically
-      return showNotification(message);
-    });
+    _messaging.configure(
+      onResume: (message) {
+        return _fireLaunchResumeNotifications(message);
+      },
+      onLaunch: (message) {
+        return _fireLaunchResumeNotifications(message);
+      },
+      onMessage: (message) {
+        return showNotification(message);
+      },
+    );
   }
 
   @override
   void dispose() {
     selectNotificationSubject.close();
     super.dispose();
+  }
+
+  // TODO: transfer notification functions to two separate files in utils
+  Future<void> _fireLaunchResumeNotifications(Map message) async {
+    if (message["data"]["message"].contains("about to land")) {
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (BuildContext context) => TornWebViewTravel(
+                webViewType: WebViewTypeTravel.generic,
+                genericTitle: 'Travel',
+              ),
+            ),
+          );
+          break;
+        case 'external':
+          var url = 'https://www.torn.com';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
   }
 
   Future<void> _configureSelectNotificationSubject() async {
@@ -376,7 +408,6 @@ class _DrawerPageState extends State<DrawerPage> {
   }
 
   _onSelectItem(int index) async {
-
 /*    await analytics.logEvent(
         name: 'section_changed',
         parameters: {'section': _drawerItemsList[index]});*/
