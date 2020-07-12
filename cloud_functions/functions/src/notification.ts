@@ -86,7 +86,11 @@ export async function sendNotificationToUser(
     notification: {
       title: title,
       body: body
-    }
+    },
+    data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
+      message: body, 
+    },
   };
 
   const options = {
