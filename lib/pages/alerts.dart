@@ -162,8 +162,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "This feature is under test. If you find any issues, "
-                "please be kind and report it (see 'About' section).",
+                "This feature is under test. If you find any issue, "
+                "please report it to us (see 'About' section).",
                 style: TextStyle(
                   fontSize: 15,
                 ),
