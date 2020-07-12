@@ -23,6 +23,21 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.5.0
+    var v1_5_0 = ChangeLogItem();
+    v1_5_0.version = 'Torn PDA v1.5.0';
+    String feat1_5_0_1 = "New ALERTS section with automatic notifications "
+        "for travel";
+    String feat1_5_0_2 = "You can now set a custom trigger for energy and "
+        "nerve notifications in the profile page";
+    String feat1_5_0_3 = "Several changes and another try at fixing issues "
+        "reported by some players with the in-app browsers";
+    String feat1_5_0_4 = "Several other bug fixes and changes";
+    v1_5_0.features.add(feat1_5_0_1);
+    v1_5_0.features.add(feat1_5_0_2);
+    v1_5_0.features.add(feat1_5_0_3);
+    v1_5_0.features.add(feat1_5_0_4);
+
     // VERSION 1.4.1
     var v1_4_1 = ChangeLogItem();
     v1_4_1.version = 'Torn PDA v1.4.1';
@@ -77,6 +92,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_5_0);
     itemList.add(v1_4_1);
     itemList.add(v1_4_0);
     itemList.add(v1_3_0);
