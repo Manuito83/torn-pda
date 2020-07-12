@@ -35,7 +35,7 @@ class ApiError {
   ApiError({int errorId}) {
     switch (errorId) {
       case 0:
-        errorReason = 'could not contact Torn';
+        errorReason = 'no connection';
         break;
       case 1:
         errorReason = 'key is empty';
@@ -62,7 +62,8 @@ class ApiError {
         errorReason = 'IP block';
         break;
       case 9:
-        errorReason = 'API disabled';
+        errorReason = 'API disabled (probably under maintenance by Torn\'s '
+            'developers)!';
         break;
       case 10:
         errorReason = 'key owner is in federal jail';
