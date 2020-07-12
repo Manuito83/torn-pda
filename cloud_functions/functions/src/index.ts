@@ -1,9 +1,9 @@
 import * as admin from "firebase-admin";
 import { alertsGroup } from "./alerts";
-import { staleGroup } from "./stale_users";
+import { staleGroup } from "./stale_users"
 import { playersGroup } from "./players";
 
-var serviceAccount = require("../../key/serviceAccountKey.json");
+const serviceAccount = require("../key/serviceAccountKey.json");
 
 admin.initializeApp({
 credential: admin.credential.cert(serviceAccount),

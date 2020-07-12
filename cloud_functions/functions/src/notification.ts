@@ -49,7 +49,7 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
   const promises: Promise<any>[] = [];
   const lastTravelNotificationSent = subscriber.lastTravelNotified || 0;
 
-  var currentDateInMillis = Date.now();
+  const currentDateInMillis = Date.now();
 
   if (
     travel.time_left > 0 &&
@@ -82,14 +82,14 @@ export async function sendNotificationToUser(
   body: string
 ): Promise<any> {
   
-  var payload = {
+  const payload = {
     notification: {
       title: title,
       body: body
     }
   };
 
-  var options = {
+  const options = {
     priority: 'high',
     timeToLive: 60 * 60 * 24
   };

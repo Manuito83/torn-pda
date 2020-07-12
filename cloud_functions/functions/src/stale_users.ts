@@ -9,7 +9,7 @@ export const staleGroup = {
     .onRun(async () => {
       const promises: Promise<any>[] = [];
       
-      var currentDateInMillis = Date.now();
+      const currentDateInMillis = Date.now();
 
       // This pull the users who havent open the app for 7 days
       const usersWhoAreStale = (
