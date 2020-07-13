@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -109,6 +108,8 @@ class _DrawerPageState extends State<DrawerPage> {
     }
 
     if (travel) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       var browserType = await SharedPreferencesModel().getDefaultBrowser();
       switch (browserType) {
