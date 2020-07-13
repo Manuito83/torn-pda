@@ -63,9 +63,17 @@ class _WebView2State extends State<WebView2> {
               initialUrl: _initialUrl,
               initialHeaders: {},
               initialOptions: InAppWebViewGroupOptions(
-                  crossPlatform: InAppWebViewOptions(
-                debuggingEnabled: true,
-              )),
+                crossPlatform: InAppWebViewOptions(
+                  debuggingEnabled: true,
+                  preferredContentMode: UserPreferredContentMode.DESKTOP,
+                ),
+                android: AndroidInAppWebViewOptions(
+                  useWideViewPort: true,
+                  loadWithOverviewMode: true,
+                  builtInZoomControls: true,
+                  displayZoomControls: true,
+                ),
+              ),
               onWebViewCreated: (InAppWebViewController controller) {
                 webView = controller;
               },

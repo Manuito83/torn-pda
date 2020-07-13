@@ -10,7 +10,6 @@ import 'package:torn_pda/models/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/travel_model.dart';
-import 'package:torn_pda/models/user_details_model.dart';
 
 enum ApiType {
   user,
@@ -20,7 +19,6 @@ enum ApiType {
 
 enum ApiSelection {
   travel,
-  userDetails,
   ownProfile,
   target,
   attacks,
@@ -37,44 +35,45 @@ class ApiError {
   ApiError({int errorId}) {
     switch (errorId) {
       case 0:
-        errorReason = 'Could not contact Torn';
+        errorReason = 'no connection';
         break;
       case 1:
-        errorReason = 'Key is empty';
+        errorReason = 'key is empty';
         break;
       case 2:
-        errorReason = 'Incorrect Key';
+        errorReason = 'incorrect Key';
         break;
       case 3:
-        errorReason = 'Wrong type';
+        errorReason = 'wrong type';
         break;
       case 4:
-        errorReason = 'Wrong fields';
+        errorReason = 'wrong fields';
         break;
       case 5:
-        errorReason = 'Too many requests';
+        errorReason = 'too many requests';
         break;
       case 6:
-        errorReason = 'Incorrect ID';
+        errorReason = 'incorrect ID';
         break;
       case 7:
-        errorReason = 'Incorrect ID-entity relation';
+        errorReason = 'incorrect ID-entity relation';
         break;
       case 8:
         errorReason = 'IP block';
         break;
       case 9:
-        errorReason = 'API disabled';
+        errorReason = 'API disabled (probably under maintenance by Torn\'s '
+            'developers)!';
         break;
       case 10:
-        errorReason = 'Key owner is in federal jail';
+        errorReason = 'key owner is in federal jail';
         break;
       case 11:
-        errorReason = 'Key change error: You can only '
+        errorReason = 'key change error: You can only '
             'change your API key once every 60 seconds';
         break;
       case 12:
-        errorReason = 'Key read error: Error reading key from Database';
+        errorReason = 'key read error: Error reading key from Database';
         break;
     }
   }
@@ -85,7 +84,6 @@ class TornApiCaller {
   String queryId;
 
   TornApiCaller.travel(this.apiKey);
-  TornApiCaller.userDetails(this.apiKey);
   TornApiCaller.ownProfile(this.apiKey);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
@@ -102,19 +100,6 @@ class TornApiCaller {
     });
     if (apiResult is http.Response) {
       return TravelModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
-      return apiResult;
-    }
-  }
-
-  Future<dynamic> get getUserDetails async {
-    dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.userDetails)
-        .then((value) {
-      apiResult = value;
-    });
-    if (apiResult is http.Response) {
-      return UserDetailsModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -259,9 +244,6 @@ class TornApiCaller {
     switch (apiSelection) {
       case ApiSelection.travel:
         url += '?selections=travel';
-        break;
-      case ApiSelection.userDetails:
-        url += '?selections=profile';
         break;
       case ApiSelection.ownProfile:
         url += '?selections=profile,bars,networth,cooldowns,events,travel';

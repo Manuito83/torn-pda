@@ -1,42 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:torn_pda/models/user_details_model.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class UserDetailsProvider extends ChangeNotifier {
-  UserDetailsModel myUser;
+  OwnProfileModel myUser;
 
-  void setUserDetails({@required UserDetailsModel userDetails}) {
+  void setUserDetails({@required OwnProfileModel userDetails}) {
     myUser = userDetails;
-    SharedPreferencesModel().setOwnDetails(userDetailsModelToJson(myUser));
+    SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
     notifyListeners();
   }
 
   void removeUser() {
-    myUser = UserDetailsModel();
+    myUser = OwnProfileModel();
     SharedPreferencesModel().setOwnDetails('');
     notifyListeners();
   }
 
   Future<void> loadPreferences() async {
     // Initialize [myUser]. We will configure it in the next few lines.
-    myUser = UserDetailsModel();
+    myUser = OwnProfileModel();
 
     var savedUser = await SharedPreferencesModel().getOwnDetails();
     // Check if we have an user at all (json is not empty)
     if (savedUser != '') {
-      myUser = userDetailsModelFromJson(savedUser);
+      myUser = ownProfileModelFromJson(savedUser);
       // Check if we have a valid API Key
       if (myUser.userApiKeyValid) {
         // Call the API again to get the latest details (e.g. in case the
         // user has changed name or faction. Then save is as current user.
         var apiVerify =
-            await TornApiCaller.userDetails(myUser.userApiKey).getUserDetails;
-        if (apiVerify is UserDetailsModel) {
+            await TornApiCaller.ownProfile(myUser.userApiKey).getOwnProfile;
+        if (apiVerify is OwnProfileModel) {
           apiVerify.userApiKey = myUser.userApiKey;
           apiVerify.userApiKeyValid = true;
           myUser = apiVerify;
-          SharedPreferencesModel().setOwnDetails(userDetailsModelToJson(myUser));
+          SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
 
           // We delete this deprecated ApiKey from version 1.2.0 since we won't
           // need to use it in the future again
@@ -58,12 +58,12 @@ class UserDetailsProvider extends ChangeNotifier {
     var oldKeySave = await SharedPreferencesModel().getApiKey();
     if (oldKeySave != '') {
       var apiVerify =
-          await TornApiCaller.userDetails(oldKeySave).getUserDetails;
-      if (apiVerify is UserDetailsModel) {
+          await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
+      if (apiVerify is OwnProfileModel) {
         apiVerify.userApiKey = oldKeySave;
         apiVerify.userApiKeyValid = true;
         myUser = apiVerify;
-        SharedPreferencesModel().setOwnDetails(userDetailsModelToJson(myUser));
+        SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
         SharedPreferencesModel().setApiKey('');
       }
     }

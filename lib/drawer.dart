@@ -1,7 +1,12 @@
+import 'dart:io';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/about.dart';
+import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
@@ -12,6 +17,9 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
+import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:torn_pda/widgets/webview_travel.dart';
@@ -24,8 +32,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
-  int _settingsPosition = 4;
-  int _aboutPosition = 5;
+  int _settingsPosition = 5;
+  int _aboutPosition = 6;
   var _allowSectionsWithoutKey = [];
 
   final _drawerItemsList = [
@@ -33,6 +41,7 @@ class _DrawerPageState extends State<DrawerPage> {
     "Travel",
     "Chaining",
     "Friends",
+    "Alerts",
     "Settings",
     "About",
   ];
@@ -40,6 +49,8 @@ class _DrawerPageState extends State<DrawerPage> {
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
+  final FirebaseMessaging _messaging = FirebaseMessaging();
+  final FirebaseAnalytics analytics = FirebaseAnalytics();
 
   Future _finishedWithPreferences;
 
@@ -56,12 +67,70 @@ class _DrawerPageState extends State<DrawerPage> {
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
     _configureSelectNotificationSubject();
+
+    _messaging.requestNotificationPermissions(IosNotificationSettings(
+      sound: true,
+      badge: true,
+      alert: true,
+      provisional: false,
+    ));
+    _messaging.configure(
+      onResume: (message) {
+        return _fireLaunchResumeNotifications(message);
+      },
+      onLaunch: (message) {
+        return _fireLaunchResumeNotifications(message);
+      },
+      onMessage: (message) {
+        return showNotification(message);
+      },
+    );
   }
 
   @override
   void dispose() {
     selectNotificationSubject.close();
     super.dispose();
+  }
+
+  // TODO: transfer notification functions to two separate files in utils
+  Future<void> _fireLaunchResumeNotifications(Map message) async {
+    bool travel = false;
+
+    if (Platform.isIOS) {
+      if (message["message"].contains("about to land")) {
+        travel = true;
+      }
+    } else if (Platform.isAndroid) {
+      if (message["data"]["message"].contains("about to land")) {
+        travel = true;
+      }
+    }
+
+    if (travel) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (BuildContext context) => TornWebViewTravel(
+                webViewType: WebViewTypeTravel.generic,
+                genericTitle: 'Travel',
+              ),
+            ),
+          );
+          break;
+        case 'external':
+          var url = 'https://www.torn.com';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
   }
 
   Future<void> _configureSelectNotificationSubject() async {
@@ -164,7 +233,7 @@ class _DrawerPageState extends State<DrawerPage> {
             ),
           );
         } else {
-          return SizedBox.shrink();
+          return Center(child: CircularProgressIndicator());
         }
       },
     );
@@ -293,7 +362,6 @@ class _DrawerPageState extends State<DrawerPage> {
         );
       }
     }
-
     return Column(children: drawerOptions);
   }
 
@@ -312,11 +380,15 @@ class _DrawerPageState extends State<DrawerPage> {
         return FriendsPage();
         break;
       case 4:
-        return SettingsPage();
+        return AlertsSettings();
         break;
       case 5:
+        return SettingsPage();
+        break;
+      case 6:
         return AboutPage();
         break;
+
       default:
         return new Text("Error");
     }
@@ -337,9 +409,12 @@ class _DrawerPageState extends State<DrawerPage> {
         return Icon(Icons.people);
         break;
       case 4:
-        return Icon(Icons.settings);
+        return Icon(Icons.notifications_active);
         break;
       case 5:
+        return Icon(Icons.settings);
+        break;
+      case 6:
         return Icon(Icons.info_outline);
         break;
       default:
@@ -347,7 +422,11 @@ class _DrawerPageState extends State<DrawerPage> {
     }
   }
 
-  _onSelectItem(int index) {
+  _onSelectItem(int index) async {
+/*    await analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': _drawerItemsList[index]});*/
+
     Navigator.of(context).pop();
     setState(() {
       _selected = index;
@@ -356,6 +435,10 @@ class _DrawerPageState extends State<DrawerPage> {
   }
 
   Future<void> _loadInitPreferences() async {
+    // Set up SettingsProvider so that user preferences are applied
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    await _settingsProvider.loadPreferences();
+
     // Set up UserProvider. If key is empty, redirect to the Settings page.
     // Else, open the default
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -368,11 +451,26 @@ class _DrawerPageState extends State<DrawerPage> {
       var defaultSection = await SharedPreferencesModel().getDefaultSection();
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
-    }
 
-    // Set up SettingsProvider so that user preferences are applied
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    await _settingsProvider.loadPreferences();
+      // Firestore get auth and init
+      var user = await firebaseAuth.currentUser();
+      if (user == null) {
+        FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+        firestore.setUID(mFirebaseUser.uid);
+        await firestore.uploadUsersProfileDetail(_userProvider.myUser);
+        await firestore
+            .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+      } else {
+        var uid = await firebaseAuth.getUID();
+        firestore.setUID(uid);
+      }
+
+      var now = DateTime.now().millisecondsSinceEpoch;
+      var dTimeStamp = now - _settingsProvider.lastAppUse;
+      var duration = Duration(milliseconds: dTimeStamp);
+      _settingsProvider.updateLastUsed(now);
+      if (duration.inDays > 2) firestore.uploadLastActiveTime(now);
+    }
   }
 
   void _handleChangelog() async {

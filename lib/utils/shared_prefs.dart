@@ -7,6 +7,7 @@ class SharedPreferencesModel {
   ///
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
+  final String _kLastAppUse = "pda_lastAppUse";
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kAttacksSort = "pda_attacksSort";
@@ -25,6 +26,10 @@ class SharedPreferencesModel {
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
+  final String _kEnergyNotificationValue = "pda_energyNotificationValue";
+  final String _kEnergyCustomOverride = "pda_energyCustomOverride";
+  final String _kNerveNotificationValue = "pda_nerveNotificationValue";
+  final String _kNerveCustomOverride = "pda_nerveCustomOverride";
   final String _kNerveNotificationType = "pda_nerveNotificationType";
   final String _kLifeNotificationType = "pda_lifeNotificationType";
   final String _kDrugNotificationType = "pda_drugNotificationType";
@@ -62,6 +67,19 @@ class SharedPreferencesModel {
   Future<bool> setOwnDetails(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kOwnDetails, value);
+  }
+
+  /// ----------------------------
+  /// Methods for identification
+  /// ----------------------------
+  Future<int> getLastAppUse() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kLastAppUse) ?? 0;
+  }
+
+  Future<bool> setLastAppUse(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kLastAppUse, value);
   }
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -301,6 +319,26 @@ class SharedPreferencesModel {
     return prefs.setString(_kEnergyNotificationType, value);
   }
 
+  Future<int> getEnergyNotificationValue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEnergyNotificationValue) ?? 0;
+  }
+
+  Future<bool> setEnergyNotificationValue(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kEnergyNotificationValue, value);
+  }
+
+  Future<bool> setEnergyPercentageOverride(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kEnergyCustomOverride, value);
+  }
+
+  Future<bool> getEnergyPercentageOverride() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kEnergyCustomOverride) ?? false;
+  }
+
   Future<String> getNerveNotificationType() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kNerveNotificationType) ?? '0';
@@ -309,6 +347,26 @@ class SharedPreferencesModel {
   Future<bool> setNerveNotificationType(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kNerveNotificationType, value);
+  }
+
+  Future<int> getNerveNotificationValue() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kNerveNotificationValue) ?? 0;
+  }
+
+  Future<bool> setNerveNotificationValue(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kNerveNotificationValue, value);
+  }
+
+  Future<bool> setNervePercentageOverride(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kNerveCustomOverride, value);
+  }
+
+  Future<bool> getNervePercentageOverride() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kNerveCustomOverride) ?? false;
   }
 
   Future<String> getLifeNotificationType() async {

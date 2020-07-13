@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
-import 'package:torn_pda/models/user_details_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -118,9 +118,9 @@ class _TornWebViewTravelState extends State<TornWebViewTravel> {
         var userDetailsProvider =
             Provider.of<UserDetailsProvider>(context, listen: false);
         var userProfile =
-            await TornApiCaller.userDetails(userDetailsProvider.myUser.userApiKey)
-                .getUserDetails;
-        if (userProfile is UserDetailsModel) {
+            await TornApiCaller.ownProfile(userDetailsProvider.myUser.userApiKey)
+                .getOwnProfile;
+        if (userProfile is OwnProfileModel) {
           stockModel.authorName = userProfile.name;
           stockModel.authorId = userProfile.playerId;
         }

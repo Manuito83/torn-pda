@@ -4,17 +4,33 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class ProfileNotificationsPage extends StatefulWidget {
+class ProfileNotificationsAndroid extends StatefulWidget {
   final Function callback;
+  final int energyMax;
+  final int nerveMax;
 
-  ProfileNotificationsPage({@required this.callback});
+  ProfileNotificationsAndroid({
+    @required this.callback,
+    @required this.energyMax,
+    @required this.nerveMax,
+  });
 
   @override
-  _ProfileNotificationsPageState createState() =>
-      _ProfileNotificationsPageState();
+  _ProfileNotificationsAndroidState createState() =>
+      _ProfileNotificationsAndroidState();
 }
 
-class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
+class _ProfileNotificationsAndroidState
+    extends State<ProfileNotificationsAndroid> {
+
+  final _energyMin = 10.0;
+  final _nerveMin = 2.0;
+
+  int _energyDivisions;
+
+  double _energyTrigger;
+  double _nerveTrigger;
+
   String _energyDropDownValue;
   String _nerveDropDownValue;
   String _lifeDropDownValue;
@@ -65,7 +81,7 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
                             padding: const EdgeInsets.all(20.0),
                             child: Text(
                                 'Here you can specify your preferred alerting '
-                                'method each type of event.'),
+                                'method for each type of event.'),
                           ),
                           _rowsWithTypes(),
                           Padding(
@@ -217,6 +233,79 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
           ),
         ),
       );
+
+      if (element == ProfileNotification.energy) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text('Trigger'),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Row(
+                  children: <Widget>[
+                    Text('E${_energyTrigger.floor()}'),
+                    Slider(
+                      value: _energyTrigger.toDouble(),
+                      min: _energyMin,
+                      max: widget.energyMax.toDouble(),
+                      divisions: _energyDivisions,
+                      onChanged: (double newValue) {
+                        setState(() {
+                          _energyTrigger = newValue;
+                        });
+                      },
+                      onChangeEnd: (double finalValue) {
+                        SharedPreferencesModel()
+                            .setEnergyNotificationValue(finalValue.floor());
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      if (element == ProfileNotification.nerve) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text('Trigger'),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Row(
+                  children: <Widget>[
+                    Text('N${_nerveTrigger.floor()}'),
+                    Slider(
+                      value: _nerveTrigger.toDouble(),
+                      min: _nerveMin,
+                      max: widget.nerveMax.toDouble(),
+                      onChanged: (double newValue) {
+                        setState(() {
+                          _nerveTrigger = newValue;
+                        });
+                      },
+                      onChangeEnd: (double finalValue) {
+                        SharedPreferencesModel()
+                            .setNerveNotificationValue(finalValue.floor());
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }
     });
 
     return Column(
@@ -334,23 +423,44 @@ class _ProfileNotificationsPageState extends State<ProfileNotificationsPage> {
   }
 
   Future _restorePreferences() async {
-    var energy = await SharedPreferencesModel().getEnergyNotificationType();
-    var nerve = await SharedPreferencesModel().getNerveNotificationType();
-    var life = await SharedPreferencesModel().getLifeNotificationType();
-    var drugs = await SharedPreferencesModel().getDrugNotificationType();
-    var medical = await SharedPreferencesModel().getMedicalNotificationType();
-    var booster = await SharedPreferencesModel().getBoosterNotificationType();
+    var energyType = await SharedPreferencesModel().getEnergyNotificationType();
+    var energyTrigger =
+        await SharedPreferencesModel().getEnergyNotificationValue();
+    // In case we pass some incorrect values, we correct them here
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax ) {
+      energyTrigger = widget.energyMax;
+    }
+
+    var nerveType = await SharedPreferencesModel().getNerveNotificationType();
+    var nerveTrigger =
+        await SharedPreferencesModel().getNerveNotificationValue();
+    // In case we pass some incorrect values, we correct them here
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax ) {
+      nerveTrigger = widget.nerveMax;
+    }
+
+    var lifeType = await SharedPreferencesModel().getLifeNotificationType();
+    var drugsType = await SharedPreferencesModel().getDrugNotificationType();
+    var medicalType = await SharedPreferencesModel().getMedicalNotificationType();
+    var boosterType = await SharedPreferencesModel().getBoosterNotificationType();
+
     var alarmSound = await SharedPreferencesModel().getProfileAlarmSound();
     var alarmVibration =
         await SharedPreferencesModel().getProfileAlarmVibration();
 
     setState(() {
-      _energyDropDownValue = energy;
-      _nerveDropDownValue = nerve;
-      _lifeDropDownValue = life;
-      _drugDropDownValue = drugs;
-      _medicalDropDownValue = medical;
-      _boosterDropDownValue = booster;
+      _energyDivisions = ((widget.energyMax - _energyMin) / 5).floor();
+
+      _energyDropDownValue = energyType;
+      _energyTrigger = energyTrigger.toDouble();
+
+      _nerveDropDownValue = nerveType;
+      _nerveTrigger = nerveTrigger.toDouble();
+
+      _lifeDropDownValue = lifeType;
+      _drugDropDownValue = drugsType;
+      _medicalDropDownValue = medicalType;
+      _boosterDropDownValue = boosterType;
       _alarmSound = alarmSound;
       _alarmVibration = alarmVibration;
     });

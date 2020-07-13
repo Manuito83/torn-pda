@@ -33,6 +33,8 @@ class _TravelPageState extends State<TravelPage> {
   TravelModel _travelModel = TravelModel();
   Timer _ticker;
 
+  int _apiRetries = 0;
+
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
@@ -41,7 +43,7 @@ class _TravelPageState extends State<TravelPage> {
   bool _alarmVibration = true;
 
   String _myCurrentKey = '';
-  bool _apiError = false;
+  bool _apiError = true;
   String _errorReason = '';
 
   var _notificationFormKey = GlobalKey<FormState>();
@@ -56,7 +58,9 @@ class _TravelPageState extends State<TravelPage> {
   @override
   void initState() {
     super.initState();
-    _requestIOSPermissions();
+
+    // This is commented because it's handled by Firebase messaging!
+    //_requestIOSPermissions();
 
     _finishedLoadingPreferences = _restorePreferences();
 
@@ -64,8 +68,13 @@ class _TravelPageState extends State<TravelPage> {
 
     _ticker = new Timer.periodic(
         Duration(seconds: 10), (Timer t) => _updateInformation());
+
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'travel'});
   }
 
+  // This is commented because it's handled by Firebase messaging!
+  /*
   void _requestIOSPermissions() {
     flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -76,6 +85,7 @@ class _TravelPageState extends State<TravelPage> {
           sound: true,
         );
   }
+  */
 
   @override
   void dispose() {
@@ -114,8 +124,7 @@ class _TravelPageState extends State<TravelPage> {
         child: SingleChildScrollView(
           child: FutureBuilder(
             future: _finishedLoadingPreferences,
-            builder:
-                (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 return Column(
                   children: _travelMain(),
@@ -136,8 +145,7 @@ class _TravelPageState extends State<TravelPage> {
           : FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FutureBuilder(
         future: _finishedLoadingPreferences,
-        builder:
-            (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return OpenContainer(
               transitionDuration: Duration(seconds: 1),
@@ -152,7 +160,8 @@ class _TravelPageState extends State<TravelPage> {
                 ),
               ),
               closedColor: Colors.orange,
-              closedBuilder: (BuildContext context, VoidCallback openContainer) {
+              closedBuilder:
+                  (BuildContext context, VoidCallback openContainer) {
                 return SizedBox(
                   height: 56,
                   width: 56,
@@ -202,9 +211,9 @@ class _TravelPageState extends State<TravelPage> {
           child: Column(
             children: <Widget>[
               Padding(
-                padding: EdgeInsetsDirectional.only(bottom: 30),
+                padding: EdgeInsetsDirectional.only(bottom: 15),
                 child: Text(
-                  "ERROR LOADING USER",
+                  "ERROR CONTACTING TORN",
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
@@ -212,6 +221,10 @@ class _TravelPageState extends State<TravelPage> {
                 ),
               ),
               Text("Error: $_errorReason"),
+              SizedBox(height: 40),
+              Text("You can still try to visit the website:"),
+              SizedBox(height: 10),
+              _travelAgencyButton(),
             ],
           ),
         ),
@@ -330,7 +343,7 @@ class _TravelPageState extends State<TravelPage> {
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
         String twoDigitMinutes =
-        twoDigits(timeDifference.inMinutes.remainder(60));
+            twoDigits(timeDifference.inMinutes.remainder(60));
         String diff =
             '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
@@ -459,34 +472,38 @@ class _TravelPageState extends State<TravelPage> {
                 ),
               ),
             ),
-            RaisedButton(
-              child: Text("Travel Agency"),
-              onPressed: () async {
-                var browserType = _settingsProvider.currentBrowser;
-                switch (browserType) {
-                  case BrowserSetting.app:
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => TornWebViewTravel(
-                          webViewType: WebViewTypeTravel.travelAgency,
-                          genericCallBack: _updateInformation,
-                        ),
-                      ),
-                    );
-                    break;
-                  case BrowserSetting.external:
-                    var url = 'https://www.torn.com/travelagency.php';
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                    break;
-                }
-              },
-            ),
+            _travelAgencyButton(),
           ],
         )
       ];
     }
+  }
+
+  RaisedButton _travelAgencyButton() {
+    return RaisedButton(
+      child: Text("Travel Agency"),
+      onPressed: () async {
+        var browserType = _settingsProvider.currentBrowser;
+        switch (browserType) {
+          case BrowserSetting.app:
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewTravel(
+                  webViewType: WebViewTypeTravel.travelAgency,
+                  genericCallBack: _updateInformation,
+                ),
+              ),
+            );
+            break;
+          case BrowserSetting.external:
+            var url = 'https://www.torn.com/travelagency.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
+      },
+    );
   }
 
   Widget _conditionalAlarm() {
@@ -844,15 +861,21 @@ class _TravelPageState extends State<TravelPage> {
   Future<void> _fetchTornApi() async {
     var myTravel = await TornApiCaller.travel(_myCurrentKey).getTravel;
     if (myTravel is TravelModel) {
+      _apiRetries = 0;
       setState(() {
         _travelModel = myTravel;
         _apiError = false;
       });
     } else if (myTravel is ApiError) {
-      setState(() {
-        _apiError = true;
-        _errorReason = myTravel.errorReason;
-      });
+      if (!_apiError && _apiRetries < 4) {
+        _apiRetries++;
+      } else {
+        _apiRetries = 0;
+        setState(() {
+          _apiError = true;
+          _errorReason = myTravel.errorReason;
+        });
+      }
     }
   }
 
@@ -976,14 +999,12 @@ class _TravelPageState extends State<TravelPage> {
     _notificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
   }
-
 }
 
-
-class FabOverrideAnimation extends FloatingActionButtonAnimator{
+class FabOverrideAnimation extends FloatingActionButtonAnimator {
   @override
   Offset getOffset({Offset begin, Offset end, double progress}) {
-    return Offset(end.dx,end.dy);
+    return Offset(end.dx, end.dy);
   }
 
   @override

@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/models/user_details_model.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -15,8 +16,10 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE
-final String appVersion = '1.4.1';
+final String appVersion = '1.5.0';
 final bool appNeedsChangelog = true;
+
+final FirebaseAnalytics analytics = FirebaseAnalytics();
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -44,9 +47,9 @@ Future<void> main() async {
   var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
 
   var initializationSettingsIOS = IOSInitializationSettings(
-    requestAlertPermission: false,
-    requestBadgePermission: false,
-    requestSoundPermission: false,
+    requestAlertPermission: true,
+    requestBadgePermission: true,
+    requestSoundPermission: true,
   );
 
   var initializationSettings = InitializationSettings(
@@ -64,13 +67,13 @@ Future<void> main() async {
         ChangeNotifierProvider<UserDetailsProvider>(
             create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
-          create: (context) => TargetsProvider(UserDetailsModel()),
+          create: (context) => TargetsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   TargetsProvider targetsProvider) =>
               TargetsProvider(userProvider.myUser),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
-          create: (context) => AttacksProvider(UserDetailsModel()),
+          create: (context) => AttacksProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.myUser),
@@ -80,7 +83,7 @@ Future<void> main() async {
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(UserDetailsModel()),
+          create: (context) => FriendsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),

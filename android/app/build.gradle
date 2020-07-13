@@ -13,12 +13,12 @@ if (flutterRoot == null) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '14'
+    flutterVersionCode = '16'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.4.1'
+    flutterVersionName = '1.5.0'
 }
 
 apply plugin: 'com.android.application'
@@ -41,6 +41,7 @@ android {
         applicationId "com.manuito.tornpda"
         minSdkVersion 20
         targetSdkVersion 28
+        multiDexEnabled true
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -74,5 +75,9 @@ flutter {
 dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
+    implementation 'androidx.multidex:multidex:2.0.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
+    implementation 'com.google.firebase:firebase-auth:19.3.1'
 }
+
+apply plugin: 'com.google.gms.google-services'

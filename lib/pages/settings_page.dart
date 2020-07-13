@@ -1,13 +1,19 @@
 import 'dart:async';
 import 'package:expandable/expandable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/models/user_details_model.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
+import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/browser_info_dialog.dart';
+
+import '../main.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -19,14 +25,13 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
   Timer _ticker;
-  bool _updateRequestedByTicker = false;
 
   String _myCurrentKey = '';
   bool _userToLoad = false;
   bool _apiError = false;
   String _errorReason = '';
   bool _apiIsLoading = false;
-  UserDetailsModel _userProfile;
+  OwnProfileModel _userProfile;
 
   String _openSectionValue;
   String _openBrowserValue;
@@ -48,6 +53,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _restorePreferences();
     _ticker = new Timer.periodic(
         Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'settings'});
   }
 
   @override
@@ -236,7 +244,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          _apiKeyForm(),
+                          _apiKeyForm(enabled: false),
                           Padding(
                             padding: EdgeInsetsDirectional.only(top: 10),
                           ),
@@ -244,13 +252,13 @@ class _SettingsPageState extends State<SettingsPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               RaisedButton(
-                                child: Text("Load"),
+                                child: Text("Reload"),
                                 onPressed: () {
                                   FocusScope.of(context)
                                       .requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
-                                    _getApiDetails();
+                                    _getApiDetails(userTriggered: true);
                                   }
                                 },
                               ),
@@ -259,7 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                               RaisedButton(
                                 child: Text("Remove"),
-                                onPressed: () {
+                                onPressed: () async {
                                   FocusScope.of(context)
                                       .requestFocus(new FocusNode());
                                   // Removes the form error
@@ -271,6 +279,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                     _userToLoad = false;
                                     _apiError = false;
                                   });
+                                  await FirebaseMessaging().deleteInstanceID();
+                                  await firestore.deleteUserProfile();
+                                  await firebaseAuth.signOut();
                                 },
                               ),
                             ],
@@ -333,7 +344,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
-                          _apiKeyForm(),
+                          _apiKeyForm(enabled: true),
                           Padding(
                             padding: EdgeInsetsDirectional.only(top: 10),
                           ),
@@ -347,27 +358,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                       .requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
-                                    _getApiDetails();
+                                    _getApiDetails(userTriggered: true);
                                   }
-                                },
-                              ),
-                              Padding(
-                                padding: EdgeInsetsDirectional.only(start: 10),
-                              ),
-                              RaisedButton(
-                                child: Text("Remove"),
-                                onPressed: () {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
-                                  // Removes the form error
-                                  _formKey.currentState.reset();
-                                  _apiKeyInputController.clear();
-                                  _myCurrentKey = '';
-                                  _userProvider.removeUser();
-                                  setState(() {
-                                    _userToLoad = false;
-                                    _apiError = false;
-                                  });
                                 },
                               ),
                             ],
@@ -386,12 +378,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  SizedBox _apiKeyForm() {
+  SizedBox _apiKeyForm({@required bool enabled}) {
     return SizedBox(
       width: 300,
       child: Form(
         key: _formKey,
         child: TextFormField(
+          enabled: enabled,
           validator: (value) {
             if (value.isEmpty) {
               return "The API Key is empty!";
@@ -413,11 +406,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          // This is here in case the user submits from the keyboard and not
+          // hitting the "Load" button
           onEditingComplete: () {
             FocusScope.of(context).requestFocus(new FocusNode());
             if (_formKey.currentState.validate()) {
               _myCurrentKey = _apiKeyInputController.text;
-              _getApiDetails();
+              _getApiDetails(userTriggered: true);
             }
           },
         ),
@@ -453,7 +448,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Text(
               'Torn PDA needs your API Key to obtain your user\'s '
               'information. The key is protected in the app and will not '
-              'be shared under any circunstances.',
+              'be shared under any circumstances.',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -547,6 +542,7 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ],
       onChanged: (value) {
+        // TODO: use settings provider for this?
         SharedPreferencesModel().setDefaultSection(value);
         setState(() {
           _openSectionValue = value;
@@ -687,28 +683,29 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _getApiDetails() async {
-    if (!_updateRequestedByTicker) {
-      // If it's the ticker updating, we don't want to show a
-      // progress bar, but just update the text
-      setState(() {
-        _apiIsLoading = true;
-      });
-    }
+  void _getApiDetails({@required bool userTriggered}) async {
     dynamic myProfile =
-        await TornApiCaller.userDetails(_myCurrentKey).getUserDetails;
-    if (myProfile is UserDetailsModel) {
+        await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
+    if (myProfile is OwnProfileModel) {
       setState(() {
         _apiIsLoading = false;
         _userToLoad = true;
         _apiError = false;
         _userProfile = myProfile;
       });
-
       myProfile
         ..userApiKey = _myCurrentKey
         ..userApiKeyValid = true;
       _userProvider.setUserDetails(userDetails: myProfile);
+
+      // Firestore uploading, but only if "Load" pressed by user
+      if (userTriggered) {
+        FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+        firestore.setUID(mFirebaseUser.uid);
+        await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
+        await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+      }
+
     } else if (myProfile is ApiError) {
       setState(() {
         _apiIsLoading = false;
@@ -731,8 +728,9 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         _apiKeyInputController.text = _userProvider.myUser.userApiKey;
         _myCurrentKey = _userProvider.myUser.userApiKey;
+        _apiIsLoading = true;
       });
-      _getApiDetails();
+      _getApiDetails(userTriggered: false);
     }
 
     await _settingsProvider.loadPreferences();
@@ -782,9 +780,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _timerUpdateInformation() {
     if (_myCurrentKey != '') {
-      _updateRequestedByTicker = true;
-      _getApiDetails();
-      _updateRequestedByTicker = false;
+      _getApiDetails(userTriggered: false);
     }
   }
 }

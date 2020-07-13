@@ -1,12 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share/share.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../main.dart';
 
 class AboutPage extends StatefulWidget {
   @override
@@ -16,6 +17,14 @@ class AboutPage extends StatefulWidget {
 class _AboutPageState extends State<AboutPage> {
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    analytics.logEvent(
+        name: 'section_changed',
+        parameters: {'section': 'about'});
+  }
 
   @override
   Widget build(BuildContext context) {
