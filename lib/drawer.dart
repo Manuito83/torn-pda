@@ -432,7 +432,7 @@ class _DrawerPageState extends State<DrawerPage> {
         return Icon(MdiIcons.linkVariant);
         break;
       case 3:
-        return Icon(MdiIcons.knife);
+        return Icon(MdiIcons.knifeMilitary);
         break;
       case 4:
         return Icon(Icons.people);
