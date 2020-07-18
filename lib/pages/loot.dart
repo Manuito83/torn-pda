@@ -47,7 +47,7 @@ class _LootPageState extends State<LootPage> {
   LootTimeType _lootTimeType;
 
   // Payload is: 400idlevel
-  var _activePayloads = List<int>();
+  var _activeNotificationsIds = List<int>();
 
   @override
   void initState() {
@@ -218,7 +218,7 @@ class _LootPageState extends State<LootPage> {
             timeString += " at $time";
           }
           if (timeDiff.inMinutes < 10) {
-            if (npcDetails.levels.next >= 3) {
+            if (npcDetails.levels.next >= 4) {
               style = TextStyle(
                 color: Colors.orange,
                 fontWeight: FontWeight.bold,
@@ -234,7 +234,7 @@ class _LootPageState extends State<LootPage> {
         Widget notificationIcon;
         if (!isPast && !isCurrent) {
           bool isPending = false;
-          for (var pay in _activePayloads) {
+          for (var pay in _activeNotificationsIds) {
             if (pay == int.parse('400$npcId$levelNumber')) {
               isPending = true;
             }
@@ -253,13 +253,13 @@ class _LootPageState extends State<LootPage> {
                 });
                 await flutterLocalNotificationsPlugin
                     .cancel(int.parse('400$npcId$levelNumber'));
-                _activePayloads.removeWhere(
+                _activeNotificationsIds.removeWhere(
                     (element) => element == int.parse('400$npcId$levelNumber'));
               } else {
                 setState(() {
                   isPending = true;
                 });
-                _activePayloads.add(int.parse('400$npcId$levelNumber'));
+                _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
                 _scheduleNotification(
                   levelDateTime.add(Duration(seconds: 20)),
                   int.parse('400$npcId$levelNumber'),
@@ -287,11 +287,14 @@ class _LootPageState extends State<LootPage> {
 
         var timeRow = Row(
           children: [
-            Text(
-              timeString,
-              style: style,
+            SizedBox(
+              width: 165,
+              child: Text(
+                timeString,
+                style: style,
+              ),
             ),
-            SizedBox(width: 20),
+            SizedBox(width: 15),
             notificationIcon,
           ],
         );
@@ -316,11 +319,24 @@ class _LootPageState extends State<LootPage> {
       }
 
       Widget npcImage;
+      var shadow = List<BoxShadow>();
+      if (npcDetails.levels.current >= 4) {
+        shadow = [
+          BoxShadow(
+            color: Colors.red,
+            blurRadius: 8.0,
+            spreadRadius: 2.0,
+          )
+        ];
+      } else {
+        shadow = null;
+      }
       if (npcId == '4' || npcId == '15' || npcId == '19') {
         npcImage = Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.grey[900], width: 2),
+            boxShadow: shadow,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
@@ -349,16 +365,17 @@ class _LootPageState extends State<LootPage> {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (BuildContext context) => TornWebViewGeneric(
-                    profileId: npcId,
+                    customUrl:
+                        'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
                     genericTitle: npcDetails.name,
-                    webViewType: WebViewType.profile,
+                    webViewType: WebViewType.custom,
                   ),
                 ),
               );
               break;
             case BrowserSetting.external:
-              var url = 'https://www.torn.com/profiles.php?'
-                  'XID=$npcId';
+              var url =
+                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               if (await canLaunch(url)) {
                 await launch(url, forceSafariVC: false);
               }
@@ -454,7 +471,7 @@ class _LootPageState extends State<LootPage> {
         _yataTicks = 0;
       }
       if (_tornTicks > 30) {
-        await _retrievePendingNotifications();
+        await _cancelPassedNotifications();
         await _fetchCompareTornApi(tsNow);
         _tornTicks = 0;
       }
@@ -635,8 +652,33 @@ class _LootPageState extends State<LootPage> {
     for (var not in pendingNotificationRequests) {
       var id = not.id.toString();
       if (id.length > 3 && id.substring(0, 3) == '400') {
-        _activePayloads.add(not.id);
+        _activeNotificationsIds.add(not.id);
       }
     }
   }
+
+  Future _cancelPassedNotifications() async {
+    var pendingNotificationRequests =
+      await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+    // Check which notifications are still in our active list but have
+    // already been issued
+    var toRemove = List<int>();
+    for (var active in _activeNotificationsIds) {
+      var stillActive = false;
+      for (var not in pendingNotificationRequests) {
+        if (not.id == active) {
+          stillActive = true;
+        }
+      }
+      if (!stillActive) {
+        toRemove.add(active);
+      }
+    }
+    // Remove the expired ones from the main list
+    for (var remover in toRemove) {
+      _activeNotificationsIds.removeWhere((element) => element == remover);
+    }
+  }
+
 }
