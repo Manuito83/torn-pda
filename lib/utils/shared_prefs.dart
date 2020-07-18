@@ -37,6 +37,10 @@ class SharedPreferencesModel {
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
+  final String _kLootTimerType = "pda_lootTimerType";
+  final String _kLootNotificationType = "pda_lootNotificationType";
+  final String _kLootAlarmVibration = "pda_lootAlarmVibration";
+  final String _kLootAlarmSound = "pda_lootAlarmSound";
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
   /// UserDetailsProvider for retrieving the API key and other details!
@@ -429,9 +433,48 @@ class SharedPreferencesModel {
     return prefs.setBool(_kProfileAlarmSound, value);
   }
 
+  /// ----------------------------
+  /// Methods for loot
+  /// ----------------------------
+  Future<String> getLootTimerType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootTimerType) ?? 'timer';
+  }
 
+  Future<bool> setLootTimerType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootTimerType, value);
+  }
 
+  Future<String> getLootNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootNotificationType) ?? '0';
+  }
 
+  Future<bool> setLootNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootNotificationType, value);
+  }
+
+  Future<bool> getLootAlarmVibration() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kLootAlarmVibration) ?? true;
+  }
+
+  Future<bool> setLootAlarmVibration(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kLootAlarmVibration, value);
+  }
+
+  Future<bool> getLootAlarmSound() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kLootAlarmSound) ?? true;
+  }
+
+  Future<bool> setLootAlarmSound(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kLootAlarmSound, value);
+  }
 
 
 }

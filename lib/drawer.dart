@@ -4,11 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
+import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/main.dart';
@@ -32,14 +34,15 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> {
-  int _settingsPosition = 5;
-  int _aboutPosition = 6;
+  int _settingsPosition = 6;
+  int _aboutPosition = 7;
   var _allowSectionsWithoutKey = [];
 
   final _drawerItemsList = [
     "Profile",
     "Travel",
     "Chaining",
+    "Loot",
     "Friends",
     "Alerts",
     "Settings",
@@ -157,7 +160,6 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
         }
       } else if (payload.contains('energy')) {
-        // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
           case 'app':
@@ -179,7 +181,6 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
         }
       } else if (payload.contains('nerve')) {
-        // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
           case 'app':
@@ -195,6 +196,28 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
           case 'external':
             var url = 'https://www.torn.com/crimes.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
+      } else if (payload.contains('400-')) {
+        var npcId = payload.split('-')[1];
+        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        switch (browserType) {
+          case 'app':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
+                  genericTitle: 'Loot',
+                  webViewType: WebViewType.custom,
+                ),
+              ),
+            );
+            break;
+          case 'external':
+            var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
             if (await canLaunch(url)) {
               await launch(url, forceSafariVC: false);
             }
@@ -377,15 +400,18 @@ class _DrawerPageState extends State<DrawerPage> {
         return ChainingPage();
         break;
       case 3:
-        return FriendsPage();
+        return LootPage();
         break;
       case 4:
-        return AlertsSettings();
+        return FriendsPage();
         break;
       case 5:
-        return SettingsPage();
+        return AlertsSettings();
         break;
       case 6:
+        return SettingsPage();
+        break;
+      case 7:
         return AboutPage();
         break;
 
@@ -403,18 +429,21 @@ class _DrawerPageState extends State<DrawerPage> {
         return Icon(Icons.local_airport);
         break;
       case 2:
-        return Icon(Icons.link);
+        return Icon(MdiIcons.linkVariant);
         break;
       case 3:
-        return Icon(Icons.people);
+        return Icon(MdiIcons.knifeMilitary);
         break;
       case 4:
-        return Icon(Icons.notifications_active);
+        return Icon(Icons.people);
         break;
       case 5:
-        return Icon(Icons.settings);
+        return Icon(Icons.notifications_active);
         break;
       case 6:
+        return Icon(Icons.settings);
+        break;
+      case 7:
         return Icon(Icons.info_outline);
         break;
       default:
