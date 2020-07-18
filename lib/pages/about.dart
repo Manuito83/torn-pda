@@ -404,6 +404,61 @@ class _AboutPageState extends State<AboutPage> {
                 ],
               ),
             ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Flexible(
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Special mention to ',
+                        style: DefaultTextStyle.of(context).style,
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: 'Kivou [2000607]',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
+                                switch (browserType) {
+                                  case BrowserSetting.app:
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (BuildContext context) =>
+                                            TornWebViewGeneric(
+                                              profileId: '2000607',
+                                              profileName: 'Kivou',
+                                              webViewType: WebViewType.profile,
+                                            ),
+                                      ),
+                                    );
+                                    break;
+                                  case BrowserSetting.external:
+                                    var url =
+                                        'https://www.torn.com/profiles.php?XID=2184575';
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                    break;
+                                }
+                              },
+                          ),
+                          TextSpan(
+                            text: ' for the resources offered by YATA',
+                            style: DefaultTextStyle.of(context).style,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 60),
           ],
         ),
       ),

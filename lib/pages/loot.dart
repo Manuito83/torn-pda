@@ -108,13 +108,27 @@ class _LootPageState extends State<LootPage> {
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (_apiSuccess) {
-                return Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: _returnNpcCards(),
-                    ),
-                  ],
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: _returnNpcCards(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(15),
+                        child: Text(
+                          'Loot times calculation thanks to YATA',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 13,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
                 );
               } else {
                 return _connectError();
