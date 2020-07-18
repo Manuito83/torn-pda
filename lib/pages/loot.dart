@@ -291,7 +291,7 @@ class _LootPageState extends State<LootPage> {
               timeString,
               style: style,
             ),
-            SizedBox(width: 10),
+            SizedBox(width: 20),
             notificationIcon,
           ],
         );
@@ -315,10 +315,29 @@ class _LootPageState extends State<LootPage> {
         hospitalized = SizedBox.shrink();
       }
 
+      Widget npcImage;
+      if (npcId == '4' || npcId == '15' || npcId == '19') {
+        npcImage = Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.grey[900], width: 2),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image(
+              image: AssetImage('images/npcs/npc_$npcId.png'),
+              height: 60,
+            ),
+          ),
+        );
+      } else {
+        npcImage = Icon(Icons.person);
+      }
+
       Widget knifeIcon;
       knifeIcon = IconButton(
         icon: Icon(
-          MdiIcons.knife,
+          MdiIcons.knifeMilitary,
           color: npcDetails.levels.current >= 4
               ? Colors.red
               : _themeProvider.mainText,
@@ -367,8 +386,16 @@ class _LootPageState extends State<LootPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.people),
-                SizedBox(width: 20),
+                Column(
+                  children: [
+                    npcImage,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: knifeIcon,
+                    ),
+                  ],
+                ),
+                SizedBox(width: 30),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,10 +417,6 @@ class _LootPageState extends State<LootPage> {
                       npcLevelsColumn,
                     ],
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: knifeIcon,
                 ),
               ],
             ),
