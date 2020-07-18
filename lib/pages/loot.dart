@@ -1,15 +1,21 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 
 enum LootTimeType {
@@ -31,6 +37,7 @@ class _LootPageState extends State<LootPage> {
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
+  ThemeProvider _themeProvider;
 
   bool _firstLoad = true;
   int _tornTicks = 0;
@@ -38,6 +45,9 @@ class _LootPageState extends State<LootPage> {
   Timer _tickerUpdateTimes;
 
   LootTimeType _lootTimeType;
+
+  // Payload is: 400idlevel
+  var _activePayloads = List<int>();
 
   @override
   void initState() {
@@ -62,6 +72,7 @@ class _LootPageState extends State<LootPage> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
       appBar: AppBar(
         title: Text('Loot'),
@@ -88,7 +99,6 @@ class _LootPageState extends State<LootPage> {
                   SharedPreferencesModel().setLootTimerType('timer');
                 }
               });
-
             },
           ),
         ],
@@ -145,7 +155,7 @@ class _LootPageState extends State<LootPage> {
     // Loop every NPC
     var npcModels = List<LootModel>();
 
-    for (var npc in _lootMap.values) {
+    _lootMap.forEach((npcId, npcDetails) {
       // Get npcLevels in a column and format them
       int thisIndex = 1;
       var npcLevels = List<Widget>();
@@ -154,10 +164,10 @@ class _LootPageState extends State<LootPage> {
         children: npcLevels,
       );
 
-      npc.timings.forEach((key, value) {
+      npcDetails.timings.forEach((levelNumber, levelDetails) {
         // Time formatting
         var levelDateTime =
-            DateTime.fromMillisecondsSinceEpoch(value.ts * 1000);
+            DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
         var time = TimeFormatter(
           inputTime: levelDateTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -170,7 +180,7 @@ class _LootPageState extends State<LootPage> {
           isPast = true;
         }
         bool isCurrent = false;
-        if (key == npc.levels.current.toString()) {
+        if (levelNumber == npcDetails.levels.current.toString()) {
           isCurrent = true;
         }
 
@@ -194,7 +204,7 @@ class _LootPageState extends State<LootPage> {
             timeString += " at $time";
           }
           if (timeDiff.inMinutes < 10) {
-            if (npc.levels.next >= 3) {
+            if (npcDetails.levels.next >= 3) {
               style = TextStyle(
                 color: Colors.orange,
                 fontWeight: FontWeight.bold,
@@ -207,22 +217,84 @@ class _LootPageState extends State<LootPage> {
           }
         }
 
-        var timeText = Text(
-          timeString,
-          style: style,
+        Widget notificationIcon;
+        if (!isPast && !isCurrent) {
+          bool isPending = false;
+          for (var pay in _activePayloads) {
+            if (pay == int.parse('400$npcId$levelNumber')) {
+              isPending = true;
+            }
+          }
+          notificationIcon = InkWell(
+            splashColor: Colors.transparent,
+            child: Icon(
+              Icons.chat_bubble_outline,
+              size: 20,
+              color: isPending ? Colors.green : null,
+            ),
+            onTap: () async {
+              if (isPending) {
+                setState(() {
+                  isPending = false;
+                });
+                await flutterLocalNotificationsPlugin
+                    .cancel(int.parse('400$npcId$levelNumber'));
+                _activePayloads.removeWhere(
+                    (element) => element == int.parse('400$npcId$levelNumber'));
+              } else {
+                setState(() {
+                  isPending = true;
+                });
+                _activePayloads.add(int.parse('400$npcId$levelNumber'));
+                _scheduleNotification(
+                  levelDateTime.add(Duration(seconds: 20)),
+                  int.parse('400$npcId$levelNumber'),
+                  '400-$npcId',
+                  "${npcDetails.name} loot",
+                  "Level $levelNumber in 20 seconds!",
+                );
+                BotToast.showText(
+                  text:
+                      'Loot level $levelNumber notification set for ${npcDetails.name}!',
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green[700],
+                  duration: Duration(seconds: 5),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              }
+            },
+          );
+        } else {
+          notificationIcon = SizedBox.shrink();
+        }
+
+        var timeRow = Row(
+          children: [
+            Text(
+              timeString,
+              style: style,
+            ),
+            SizedBox(width: 10),
+            notificationIcon,
+          ],
         );
 
-        npcLevels.add(timeText);
-        npcLevels.add(SizedBox(height: 2));
+        npcLevels.add(timeRow);
+        npcLevels.add(SizedBox(height: 8));
         thisIndex++;
       });
 
       Widget hospitalized;
-      if (npc.status == "hospitalized") {
+      if (npcDetails.status == "hospitalized") {
         hospitalized = Text(
           '[HOSPITALIZED]',
           style: TextStyle(
+            fontSize: 12,
             color: Colors.red,
+            fontWeight: FontWeight.bold,
           ),
         );
       } else {
@@ -230,17 +302,40 @@ class _LootPageState extends State<LootPage> {
       }
 
       Widget knifeIcon;
-      if (npc.levels.current >= 4) {
-        knifeIcon = Icon(
+      knifeIcon = IconButton(
+        icon: Icon(
           MdiIcons.knife,
-          color: Colors.red,
-        );
-      } else {
-        knifeIcon = Icon(MdiIcons.knife);
-      }
+          color: npcDetails.levels.current >= 4
+              ? Colors.red
+              : _themeProvider.mainText,
+        ),
+        onPressed: () async {
+          var browserType = _settingsProvider.currentBrowser;
+          switch (browserType) {
+            case BrowserSetting.app:
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => TornWebViewGeneric(
+                    profileId: npcId,
+                    genericTitle: npcDetails.name,
+                    webViewType: WebViewType.profile,
+                  ),
+                ),
+              );
+              break;
+            case BrowserSetting.external:
+              var url = 'https://www.torn.com/profiles.php?'
+                  'XID=$npcId';
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+              break;
+          }
+        },
+      );
 
       Color cardBorderColor() {
-        if (npc.levels.current >= 4) {
+        if (npcDetails.levels.current >= 4) {
           return Colors.orange;
         } else {
           return Colors.transparent;
@@ -264,15 +359,18 @@ class _LootPageState extends State<LootPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            '${npc.name}',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 10),
-                          hospitalized,
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              '${npcDetails.name}',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(width: 10),
+                            hospitalized,
+                          ],
+                        ),
                       ),
                       SizedBox(height: 10),
                       npcLevelsColumn,
@@ -288,8 +386,8 @@ class _LootPageState extends State<LootPage> {
           ),
         ),
       );
-      npcModels.add(npc);
-    }
+      npcModels.add(npcDetails);
+    });
 
     Widget npcWidget = Column(children: npcBoxes);
     return npcWidget;
@@ -302,6 +400,7 @@ class _LootPageState extends State<LootPage> {
     if (_firstLoad) {
       _firstLoad = false;
       await _loadPreferences();
+      await _retrievePendingNotifications();
       // Fill in YATA information
       await _fetchYataApi();
       // Get Torn API so that we can compare
@@ -318,6 +417,7 @@ class _LootPageState extends State<LootPage> {
         _yataTicks = 0;
       }
       if (_tornTicks > 30) {
+        await _retrievePendingNotifications();
         await _fetchCompareTornApi(tsNow);
         _tornTicks = 0;
       }
@@ -428,5 +528,78 @@ class _LootPageState extends State<LootPage> {
     lootType == 'timer'
         ? _lootTimeType = LootTimeType.timer
         : _lootTimeType = LootTimeType.dateTime;
+  }
+
+  void _scheduleNotification(
+    DateTime notificationTime,
+    int id,
+    String payload,
+    String title,
+    String subtitle,
+  ) async {
+    String channelTitle = 'Loot';
+    String channelSubtitle = 'NPC Loot';
+    String channelDescription = 'Notifications about NPC loot';
+    String notificationTitle = title;
+    String notificationSubtitle = subtitle;
+    int notificationId = id;
+    String notificationPayload = payload;
+
+    var vibrationPattern = Int64List(8);
+    vibrationPattern[0] = 0;
+    vibrationPattern[1] = 400;
+    vibrationPattern[2] = 400;
+    vibrationPattern[3] = 600;
+    vibrationPattern[4] = 400;
+    vibrationPattern[5] = 800;
+    vibrationPattern[6] = 400;
+    vibrationPattern[7] = 1000;
+
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      channelTitle,
+      channelSubtitle,
+      channelDescription,
+      importance: Importance.Max,
+      priority: Priority.High,
+      visibility: NotificationVisibility.Public,
+      icon: 'notification_icon',
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      //color: const Color.fromARGB(255, 255, 0, 0),
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ledOnMs: 1000,
+      ledOffMs: 500,
+    );
+
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      sound: 'slow_spring_board.aiff',
+    );
+
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.schedule(
+      notificationId,
+      notificationTitle,
+      notificationSubtitle,
+      DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
+      //notificationTime,  //TODO!!!!! ALSO, in DRAWER OPEN NOT!!!
+      platformChannelSpecifics,
+      payload: notificationPayload,
+      androidAllowWhileIdle: true, // Deliver at exact time
+    );
+  }
+
+  Future _retrievePendingNotifications() async {
+    var pendingNotificationRequests =
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+    for (var not in pendingNotificationRequests) {
+      var id = not.id.toString();
+      if (id.length > 3 && id.substring(0, 3) == '400') {
+        _activePayloads.add(not.id);
+      }
+    }
   }
 }
