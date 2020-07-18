@@ -160,7 +160,6 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
         }
       } else if (payload.contains('energy')) {
-        // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
           case 'app':
@@ -182,7 +181,6 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
         }
       } else if (payload.contains('nerve')) {
-        // Works best if we get SharedPrefs directly instead of SettingsProvider
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
           case 'app':
@@ -198,6 +196,28 @@ class _DrawerPageState extends State<DrawerPage> {
             break;
           case 'external':
             var url = 'https://www.torn.com/crimes.php';
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+            break;
+        }
+      } else if (payload.contains('400-')) {
+        var npcId = payload.split('-')[1];
+        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        switch (browserType) {
+          case 'app':
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => TornWebViewGeneric(
+                  customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
+                  genericTitle: 'Loot',
+                  webViewType: WebViewType.custom,
+                ),
+              ),
+            );
+            break;
+          case 'external':
+            var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
             if (await canLaunch(url)) {
               await launch(url, forceSafariVC: false);
             }
