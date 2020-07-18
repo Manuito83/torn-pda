@@ -1,16 +1,18 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import '../main.dart';
 
-enum LootTime {
+enum LootTimeType {
   dateTime,
   timer,
 }
@@ -21,21 +23,29 @@ class LootPage extends StatefulWidget {
 }
 
 class _LootPageState extends State<LootPage> {
+  final _npcIds = [4, 15, 19];
+
   Map<String, LootModel> _lootMap;
   Future _getLootInfoFromYata;
   bool _apiSuccess = false;
 
   SettingsProvider _settingsProvider;
+  UserDetailsProvider _userProvider;
 
+  bool _firstLoad = true;
+  int _tornTicks = 0;
   int _yataTicks = 0;
   Timer _tickerUpdateTimes;
 
-  LootTime _lootTime;
+  LootTimeType _lootTimeType;
 
   @override
   void initState() {
     super.initState();
-    _getLootInfoFromYata = _fetchYataApi();
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+
+    _getLootInfoFromYata = _updateTimes();
+
     analytics
         .logEvent(name: 'section_changed', parameters: {'section': 'loot'});
 
@@ -70,10 +80,15 @@ class _LootPageState extends State<LootPage> {
             ),
             onPressed: () {
               setState(() {
-                _lootTime == LootTime.timer
-                    ? _lootTime = LootTime.dateTime
-                    : _lootTime = LootTime.timer;
+                if (_lootTimeType == LootTimeType.timer) {
+                  _lootTimeType = LootTimeType.dateTime;
+                  SharedPreferencesModel().setLootTimerType('dateTime');
+                } else {
+                  _lootTimeType = LootTimeType.timer;
+                  SharedPreferencesModel().setLootTimerType('timer');
+                }
               });
+
             },
           ),
         ],
@@ -87,7 +102,7 @@ class _LootPageState extends State<LootPage> {
                   children: <Widget>[
                     Padding(
                       padding: const EdgeInsets.all(5),
-                      child: _returnNpcs(),
+                      child: _returnNpcCards(),
                     ),
                   ],
                 );
@@ -123,7 +138,7 @@ class _LootPageState extends State<LootPage> {
     );
   }
 
-  Widget _returnNpcs() {
+  Widget _returnNpcCards() {
     // Final card of every NPC
     var npcBoxes = List<Widget>();
 
@@ -173,10 +188,22 @@ class _LootPageState extends State<LootPage> {
         } else {
           var timeDiff = levelDateTime.difference(DateTime.now());
           var diffFormatted = _formatDuration(timeDiff);
-          if (_lootTime == LootTime.timer) {
+          if (_lootTimeType == LootTimeType.timer) {
             timeString += " in $diffFormatted";
           } else {
             timeString += " at $time";
+          }
+          if (timeDiff.inMinutes < 10) {
+            if (npc.levels.next >= 3) {
+              style = TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              );
+            } else {
+              style = TextStyle(
+                fontWeight: FontWeight.bold,
+              );
+            }
           }
         }
 
@@ -190,38 +217,144 @@ class _LootPageState extends State<LootPage> {
         thisIndex++;
       });
 
-      npcBoxes.add(Card(
-        elevation: 3,
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(Icons.people),
-              SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${npc.name}',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 10),
-                    npcLevelsColumn,
-                  ],
+      Widget hospitalized;
+      if (npc.status == "hospitalized") {
+        hospitalized = Text(
+          '[HOSPITALIZED]',
+          style: TextStyle(
+            color: Colors.red,
+          ),
+        );
+      } else {
+        hospitalized = SizedBox.shrink();
+      }
+
+      Widget knifeIcon;
+      if (npc.levels.current >= 4) {
+        knifeIcon = Icon(
+          MdiIcons.knife,
+          color: Colors.red,
+        );
+      } else {
+        knifeIcon = Icon(MdiIcons.knife);
+      }
+
+      Color cardBorderColor() {
+        if (npc.levels.current >= 4) {
+          return Colors.orange;
+        } else {
+          return Colors.transparent;
+        }
+      }
+
+      npcBoxes.add(
+        Card(
+          shape: RoundedRectangleBorder(
+              side: BorderSide(color: cardBorderColor(), width: 1.5),
+              borderRadius: BorderRadius.circular(4.0)),
+          elevation: 3,
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(Icons.people),
+                SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '${npc.name}',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 10),
+                          hospitalized,
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      npcLevelsColumn,
+                    ],
+                  ),
                 ),
-              ),
-              Icon(MdiIcons.knife),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: knifeIcon,
+                ),
+              ],
+            ),
           ),
         ),
-      ));
+      );
       npcModels.add(npc);
     }
 
     Widget npcWidget = Column(children: npcBoxes);
     return npcWidget;
+  }
+
+  Future _updateTimes() async {
+    var tsNow = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+
+    // On start, get both API and compare if Torn has more up to date info
+    if (_firstLoad) {
+      _firstLoad = false;
+      await _loadPreferences();
+      // Fill in YATA information
+      await _fetchYataApi();
+      // Get Torn API so that we can compare
+      await _fetchCompareTornApi(tsNow);
+    }
+    // If it's not the first execution, fetch YATA every 5 minutes and Torn
+    // every 30 seconds
+    else {
+      _yataTicks++;
+      _tornTicks++;
+
+      if (_yataTicks >= 300) {
+        await _fetchYataApi();
+        _yataTicks = 0;
+      }
+      if (_tornTicks > 30) {
+        await _fetchCompareTornApi(tsNow);
+        _tornTicks = 0;
+      }
+    }
+
+    // We need to ensure that we keep all times updated
+    if (mounted) {
+      setState(() {
+        for (var npc in _lootMap.values) {
+          // Update main timing values comparing stored TS with current time
+          var timingsList = List<Timing>();
+          npc.timings.forEach((key, value) {
+            value.due = value.ts - tsNow;
+            timingsList.add(Timing(
+              due: value.due,
+              ts: value.ts,
+              pro: value.pro,
+            ));
+          });
+          // Make sure to advance levels if the times comes in between updates
+          if (timingsList[0].due > 0) {
+            npc.levels.current = 0;
+            npc.levels.next = 1;
+          } else if (timingsList[4].due < 0) {
+            npc.levels.current = 5;
+            npc.levels.next = 5;
+          } else {
+            for (var i = 0; i < 4; i++) {
+              if (timingsList[i].due < 0 && timingsList[i + 1].due > 0) {
+                npc.levels.current = i + 1;
+                npc.levels.next = i + 2;
+              }
+            }
+          }
+        }
+      });
+    }
   }
 
   Future _fetchYataApi() async {
@@ -238,64 +371,49 @@ class _LootPageState extends State<LootPage> {
     } catch (e) {
       _apiSuccess = false;
     }
-
-    // DEBUG //
-    /*
-    _lootMap.remove('4');
-    _lootMap.forEach((key, value) {
-      if (key == '15') {
-        value.levels.current = 0;
-        value.levels.next = 1;
-        int adder = 15;
-        value.timings.forEach((key, value) {
-          value.due = adder;
-          value.ts = (DateTime.now().millisecondsSinceEpoch/1000).floor() + adder;
-          adder = adder + 15;
-        });
-      }
-    });
-    print("Debugging! Comment this out!");
-    */
-    // DEBUG //
-
   }
 
-  void _updateTimes() {
-    setState(() {
-      // As we only call YATA every few minutes, we need to ensure
-      // that we keep all times updated
-      for (var npc in _lootMap.values) {
-        // Update main timing values comparing stored TS with current time
-        var tsNow = (DateTime.now().millisecondsSinceEpoch/1000).round();
-        var timingsList = List<Timing>();
-        npc.timings.forEach((key, value) {
-          value.due = value.ts - tsNow;
-          timingsList.add(Timing(due: value.due, ts: value.ts, pro: value.pro));
-        });
-        // Make sure to advance levels if the times comes in between updates
-        if (timingsList[0].due > 0) {
-          npc.levels.current = 0;
-          npc.levels.next = 1;
-        } else if (timingsList[4].due < 0) {
-          npc.levels.current = 5;
-          npc.levels.next = 5;
-        } else {
-          for (var i = 0; i < 4; i++) {
-            if (timingsList[i].due < 0 && timingsList[i + 1].due > 0) {
-              npc.levels.current = i + 1;
-              npc.levels.next = i + 2;
+  Future _fetchCompareTornApi(int tsNow) async {
+    // Get Torn API so that we can compare
+    for (var id in _npcIds) {
+      var tornTarget = await TornApiCaller.target(
+        _userProvider.myUser.userApiKey,
+        id.toString(),
+      ).getTarget;
+      // If the tornTarget is in hospital as per Torn, we might need to
+      // correct times that come from YATA
+      if (tornTarget is TargetModel) {
+        _lootMap.forEach((key, value) {
+          // Look for our tornTarget
+          if (key == id.toString()) {
+            if (tornTarget.status.state == 'Hospital') {
+              // If Torn gives a more up to date hospital out value
+              if (tornTarget.status.until - 60 > value.hospout) {
+                value.hospout = tornTarget.status.until;
+                value.levels.current = 0;
+                value.levels.next = 1;
+                value.status = "hospitalized";
+                value.update = tsNow;
+                // Generate updated timings
+                var newTimingMap = Map<String, Timing>();
+                var lootDelays = [0, 30 * 60, 90 * 60, 210 * 60, 450 * 60];
+                for (var i = 0; i < lootDelays.length; i++) {
+                  var thisLevel = Timing(
+                    due: value.hospout + lootDelays[i] - tsNow,
+                    ts: value.hospout + lootDelays[i],
+                    pro: 0,
+                  );
+                  newTimingMap.addAll({(i + 1).toString(): thisLevel});
+                }
+                value.timings = newTimingMap;
+              }
+            } else {
+              value.status = "loot";
             }
           }
-        }
+        });
       }
-    });
-
-    // We only call YATA once every 5 minutes
-    if (_yataTicks >= 300) {
-      _fetchYataApi();
-      _yataTicks = 0;
     }
-    _yataTicks++;
   }
 
   String _formatDuration(Duration duration) {
@@ -303,5 +421,12 @@ class _LootPageState extends State<LootPage> {
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
     return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+  }
+
+  Future _loadPreferences() async {
+    var lootType = await SharedPreferencesModel().getLootTimerType();
+    lootType == 'timer'
+        ? _lootTimeType = LootTimeType.timer
+        : _lootTimeType = LootTimeType.dateTime;
   }
 }
