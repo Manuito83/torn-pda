@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -8,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
+import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -17,6 +20,7 @@ import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
+import 'loot/loot_notification_android.dart';
 
 enum LootTimeType {
   dateTime,
@@ -45,6 +49,9 @@ class _LootPageState extends State<LootPage> {
   Timer _tickerUpdateTimes;
 
   LootTimeType _lootTimeType;
+  NotificationType _lootNotificationType;
+  bool _alarmSound;
+  bool _alarmVibration;
 
   // Payload is: 400idlevel
   var _activeNotificationsIds = List<int>();
@@ -85,22 +92,44 @@ class _LootPageState extends State<LootPage> {
           },
         ),
         actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              MdiIcons.timerSandEmpty,
-            ),
-            onPressed: () {
-              setState(() {
-                if (_lootTimeType == LootTimeType.timer) {
-                  _lootTimeType = LootTimeType.dateTime;
-                  SharedPreferencesModel().setLootTimerType('dateTime');
-                } else {
-                  _lootTimeType = LootTimeType.timer;
-                  SharedPreferencesModel().setLootTimerType('timer');
-                }
-              });
-            },
-          ),
+          _apiSuccess
+              ? IconButton(
+                  icon: Icon(
+                    MdiIcons.timerSandEmpty,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      if (_lootTimeType == LootTimeType.timer) {
+                        _lootTimeType = LootTimeType.dateTime;
+                        SharedPreferencesModel().setLootTimerType('dateTime');
+                      } else {
+                        _lootTimeType = LootTimeType.timer;
+                        SharedPreferencesModel().setLootTimerType('timer');
+                      }
+                    });
+                  },
+                )
+              : SizedBox.shrink(),
+          _apiSuccess && Platform.isAndroid
+              ? IconButton(
+                  icon: Icon(
+                    Icons.alarm_on,
+                    color: _themeProvider.buttonText,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return LootNotificationsAndroid(
+                            callback: _callBackFromNotificationOptions,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                )
+              : SizedBox.shrink()
         ],
       ),
       body: FutureBuilder(
@@ -117,9 +146,23 @@ class _LootPageState extends State<LootPage> {
                         child: _returnNpcCards(),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(15),
+                        padding: const EdgeInsets.only(left: 15, top: 5),
                         child: Text(
-                          'Loot times calculation thanks to YATA',
+                          Platform.isAndroid
+                              ? 'Notifications and timers are activated with 20 '
+                              'seconds to spare. Alarms are rounded to the minute.'
+                              : 'Notifications are activated with 20 seconds to spare.',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15, top: 5),
+                        child: Text(
+                          'Loot times calculation thanks to YATA.',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontStyle: FontStyle.italic,
@@ -231,53 +274,112 @@ class _LootPageState extends State<LootPage> {
           }
         }
 
+        String typeString;
+        IconData iconData;
+        switch (_lootNotificationType) {
+          case NotificationType.notification:
+            typeString = 'notification';
+            iconData = Icons.chat_bubble_outline;
+            break;
+          case NotificationType.alarm:
+            typeString = 'alarm';
+            iconData = Icons.notifications_none;
+            break;
+          case NotificationType.timer:
+            typeString = 'timer';
+            iconData = Icons.timer;
+            break;
+        }
+
         Widget notificationIcon;
         if (!isPast && !isCurrent) {
           bool isPending = false;
-          for (var pay in _activeNotificationsIds) {
-            if (pay == int.parse('400$npcId$levelNumber')) {
+          for (var id in _activeNotificationsIds) {
+            if (id == int.parse('400$npcId$levelNumber')) {
               isPending = true;
             }
           }
           notificationIcon = InkWell(
             splashColor: Colors.transparent,
             child: Icon(
-              Icons.chat_bubble_outline,
+              iconData,
               size: 20,
-              color: isPending ? Colors.green : null,
+              color: _lootNotificationType == NotificationType.notification &&
+                      isPending
+                  ? Colors.green
+                  : null,
             ),
             onTap: () async {
-              if (isPending) {
-                setState(() {
-                  isPending = false;
-                });
-                await flutterLocalNotificationsPlugin
-                    .cancel(int.parse('400$npcId$levelNumber'));
-                _activeNotificationsIds.removeWhere(
-                    (element) => element == int.parse('400$npcId$levelNumber'));
-              } else {
-                setState(() {
-                  isPending = true;
-                });
-                _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
-                _scheduleNotification(
-                  levelDateTime.add(Duration(seconds: 20)),
-                  int.parse('400$npcId$levelNumber'),
-                  '400-$npcId',
-                  "${npcDetails.name} loot",
-                  "Level $levelNumber in 20 seconds!",
-                );
-                BotToast.showText(
-                  text:
-                      'Loot level $levelNumber notification set for ${npcDetails.name}!',
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green[700],
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
-                );
+              switch (_lootNotificationType) {
+                case NotificationType.notification:
+                  if (isPending) {
+                    setState(() {
+                      isPending = false;
+                    });
+                    await flutterLocalNotificationsPlugin
+                        .cancel(int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds.removeWhere((element) =>
+                        element == int.parse('400$npcId$levelNumber'));
+                  } else {
+                    setState(() {
+                      isPending = true;
+                    });
+                    _activeNotificationsIds
+                        .add(int.parse('400$npcId$levelNumber'));
+                    _scheduleNotification(
+                      levelDateTime,
+                      int.parse('400$npcId$levelNumber'),
+                      '400-$npcId',
+                      "${npcDetails.name} loot",
+                      "Level $levelNumber in 20 seconds!",
+                    );
+                    BotToast.showText(
+                      text: 'Loot level $levelNumber'
+                          ' $typeString set for ${npcDetails.name}!',
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green[700],
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  }
+                  break;
+                case NotificationType.alarm:
+                  _setAlarm(
+                    levelDateTime,
+                    "${npcDetails.name} level $levelNumber",
+                  );
+                  BotToast.showText(
+                    text: 'Loot level $levelNumber'
+                        ' $typeString set for ${npcDetails.name}!',
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[700],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                  break;
+                case NotificationType.timer:
+                  _setTimer(
+                    levelDateTime,
+                    "${npcDetails.name} level $levelNumber",
+                  );
+                  BotToast.showText(
+                    text: 'Loot level $levelNumber'
+                        ' $typeString set for ${npcDetails.name}!',
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[700],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                  break;
               }
             },
           );
@@ -578,10 +680,23 @@ class _LootPageState extends State<LootPage> {
   }
 
   Future _loadPreferences() async {
-    var lootType = await SharedPreferencesModel().getLootTimerType();
-    lootType == 'timer'
+    var lootTimeType = await SharedPreferencesModel().getLootTimerType();
+    lootTimeType == 'timer'
         ? _lootTimeType = LootTimeType.timer
         : _lootTimeType = LootTimeType.dateTime;
+
+    var notification = await SharedPreferencesModel().getLootNotificationType();
+    _alarmSound = await SharedPreferencesModel().getLootAlarmSound();
+    _alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
+    setState(() {
+      if (notification == '0') {
+        _lootNotificationType = NotificationType.notification;
+      } else if (notification == '1') {
+        _lootNotificationType = NotificationType.alarm;
+      } else if (notification == '2') {
+        _lootNotificationType = NotificationType.timer;
+      }
+    });
   }
 
   void _scheduleNotification(
@@ -637,8 +752,8 @@ class _LootPageState extends State<LootPage> {
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      //notificationTime,  //TODO!!!!! ALSO, in DRAWER OPEN NOT!!!
+      //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
+      notificationTime.subtract(Duration(seconds: 20)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
@@ -659,7 +774,7 @@ class _LootPageState extends State<LootPage> {
 
   Future _cancelPassedNotifications() async {
     var pendingNotificationRequests =
-      await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     // Check which notifications are still in our active list but have
     // already been issued
@@ -681,4 +796,48 @@ class _LootPageState extends State<LootPage> {
     }
   }
 
+  void _setAlarm(DateTime alarmTime, String title) {
+    int hour = alarmTime.hour;
+    int minute = alarmTime.minute;
+    String message = title;
+
+    String thisSound;
+    if (_alarmSound) {
+      thisSound = '';
+    } else {
+      thisSound = 'silent';
+    }
+
+    AndroidIntent intent = AndroidIntent(
+      action: 'android.intent.action.SET_ALARM',
+      arguments: <String, dynamic>{
+        'android.intent.extra.alarm.HOUR': hour,
+        'android.intent.extra.alarm.MINUTES': minute,
+        'android.intent.extra.alarm.SKIP_UI': true,
+        'android.intent.extra.alarm.VIBRATE': _alarmVibration,
+        'android.intent.extra.alarm.RINGTONE': thisSound,
+        'android.intent.extra.alarm.MESSAGE': message,
+      },
+    );
+    intent.launch();
+  }
+
+  void _setTimer(DateTime alarmTime, String title) {
+    int totalSeconds = alarmTime.difference(DateTime.now()).inSeconds;
+    String message = title;
+
+    AndroidIntent intent = AndroidIntent(
+      action: 'android.intent.action.SET_TIMER',
+      arguments: <String, dynamic>{
+        'android.intent.extra.alarm.LENGTH': totalSeconds - 20,
+        'android.intent.extra.alarm.SKIP_UI': true,
+        'android.intent.extra.alarm.MESSAGE': message,
+      },
+    );
+    intent.launch();
+  }
+
+  void _callBackFromNotificationOptions() async {
+    await _loadPreferences();
+  }
 }
