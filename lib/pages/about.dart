@@ -439,7 +439,7 @@ class _AboutPageState extends State<AboutPage> {
                                     break;
                                   case BrowserSetting.external:
                                     var url =
-                                        'https://www.torn.com/profiles.php?XID=2184575';
+                                        'https://www.torn.com/profiles.php?XID=2000607';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
