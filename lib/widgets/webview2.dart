@@ -136,7 +136,7 @@ class _WebView2State extends State<WebView2> {
   }
 
   Future _assessCrimes() async {
-
+    // H4 is 'Please validate' with captcha or 'Crimes' without it
     var html = await webView.getHtml();
     var document = parse(html);
     var h4 = document
