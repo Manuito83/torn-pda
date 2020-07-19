@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:html/parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
@@ -26,16 +27,13 @@ class _WebView2State extends State<WebView2> {
   String _pageTitle = "";
   String _currentUrl = '';
 
+  Widget _crimesWidget = SizedBox.shrink();
+
   @override
   void initState() {
     super.initState();
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -66,7 +64,7 @@ class _WebView2State extends State<WebView2> {
             bottom: true,
             child: Column(
               children: [
-                _crimesWidget(),
+                _crimesWidget,
                 Expanded(
                   child: InAppWebView(
                     initialUrl: _initialUrl,
@@ -86,10 +84,11 @@ class _WebView2State extends State<WebView2> {
                     onWebViewCreated: (InAppWebViewController c) {
                       webView = c;
                     },
-                    onLoadStart: (InAppWebViewController c, String url) async {
-                      setState(() {
-                        _currentUrl = url;
-                      });
+                    onLoadStop: (InAppWebViewController c, String url) {
+                      _currentUrl = url;
+                      if (_currentUrl.contains('https://www.torn.com/crimes.php')) {
+                        _assessCrimes();
+                      }
                     },
                     onConsoleMessage:
                         (InAppWebViewController c, consoleMessage) {
@@ -136,15 +135,27 @@ class _WebView2State extends State<WebView2> {
     }
   }
 
-  Widget _crimesWidget() {
-    if (_currentUrl.contains('https://www.torn.com/crimes.php')) {
-      return CrimesWidget(
-        controller: webView,
-        //crimeList: _crimeList,
-      );
-    } else {
-      return SizedBox.shrink();
-    }
+  Future _assessCrimes() async {
+
+    var html = await webView.getHtml();
+    var document = parse(html);
+    var h4 = document
+        .querySelector(".content-title > h4")
+        .innerHtml
+        .substring(0)
+        .toLowerCase()
+        .trim();
+
+    setState(() {
+      if (_currentUrl.contains('https://www.torn.com/crimes.php')
+          && !h4.contains('please validate')) {
+        _crimesWidget = CrimesWidget(
+          controller: webView,
+        );
+      } else {
+        _crimesWidget = SizedBox.shrink();
+      }
+    });
   }
 
   Future<bool> _willPopCallback() async {
