@@ -37,6 +37,7 @@ class SharedPreferencesModel {
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
+  final String _kActiveCrimesList = "pda_activeCrimesList";
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
   /// UserDetailsProvider for retrieving the API key and other details!
@@ -429,7 +430,18 @@ class SharedPreferencesModel {
     return prefs.setBool(_kProfileAlarmSound, value);
   }
 
+  /// ----------------------------
+  /// Methods for easy crimes
+  /// ----------------------------
+  Future<List<String>> getActiveCrimesList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kActiveCrimesList) ?? List<String>();
+  }
 
+  Future<bool> setActiveCrimesList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kActiveCrimesList, value);
+  }
 
 
 

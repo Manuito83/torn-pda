@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -88,6 +89,8 @@ Future<void> main() async {
                   FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
+        ChangeNotifierProvider<CrimesProvider>(
+            create: (context) => CrimesProvider()),
       ],
       child: MyApp(),
     ),

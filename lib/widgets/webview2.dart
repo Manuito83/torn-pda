@@ -1,5 +1,9 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
+import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 
 class WebView2 extends StatefulWidget {
   final String customTitle;
@@ -20,6 +24,7 @@ class _WebView2State extends State<WebView2> {
   InAppWebViewController webView;
   String _initialUrl = "";
   String _pageTitle = "";
+  String _currentUrl = '';
 
   @override
   void initState() {
@@ -48,9 +53,12 @@ class _WebView2State extends State<WebView2> {
                 Navigator.pop(context);
               }),
           title: Text(_pageTitle),
+          actions: <Widget>[
+            _crimesAppBar(),
+          ],
         ),
         body: Container(
-          color: Colors.black,
+          color: Colors.grey[900],
           child: SafeArea(
             top: false,
             left: false,
@@ -58,53 +66,7 @@ class _WebView2State extends State<WebView2> {
             bottom: true,
             child: Column(
               children: [
-                RaisedButton(
-                  child: Text('lala'),
-                  onPressed: () async {
-
-                    await webView.evaluateJavascript(source: """
-
-                      var first_load = true;
-                      
-                      if (first_load) {
-                        var loadingPlaceholderContent = `
-                          <div class="content-title m-bottom10">
-                            <h4 class="left">Crimes</h4>
-                            <hr class="page-head-delimiter">
-                            <div class="clear"></div>
-                          </div>`
-                          
-                        first_load = false;
-                      }
-                      
-                      loadingPlaceholderContent += `<img class="ajax-placeholder" src="/images/v2/main/ajax-loader.gif"/>`;
-                      
-                      window.location.hash = "#";
-                      \$(".content-wrapper").html(loadingPlaceholderContent);
-                      
-                      var action = 'https://www.torn.com/crimes.php?step=docrime2&timestamp=' + Date.now();
-                      
-                      ajaxWrapper({
-                        url: action,
-                        type: 'POST',
-                        data: 'nervetake=2&crime=searchtrainstation',
-                        oncomplete: function(resp) {
-                          \$(".content-wrapper").html(resp.responseText);
-                        
-                        var steps = action.split("?"),
-                        step = steps[1] ? steps[1].split("=")[1] : "";
-                        if (step == "docrime2" || step == "docrime4") refreshTopOfSidebar();
-                        if (animElement) clearTimeout(animElement);
-                        highlightElement("/" + step + ".php");
-                        },
-                        onerror: function(e) {
-                          console.error(e)
-                        }
-                      });
-
-                  """);
-                  },
-                ),
+                _crimesWidget(),
                 Expanded(
                   child: InAppWebView(
                     initialUrl: _initialUrl,
@@ -121,10 +83,16 @@ class _WebView2State extends State<WebView2> {
                         displayZoomControls: true,
                       ),
                     ),
-                    onWebViewCreated: (InAppWebViewController controller) {
-                      webView = controller;
+                    onWebViewCreated: (InAppWebViewController c) {
+                      webView = c;
                     },
-                    onConsoleMessage: (controller, consoleMessage) {
+                    onLoadStart: (InAppWebViewController c, String url) async {
+                      setState(() {
+                        _currentUrl = url;
+                      });
+                    },
+                    onConsoleMessage:
+                        (InAppWebViewController c, consoleMessage) {
                       print("CONSOLE MESSAGE: " + consoleMessage.message);
                     },
                   ),
@@ -135,6 +103,48 @@ class _WebView2State extends State<WebView2> {
         ),
       ),
     );
+  }
+
+  Widget _crimesAppBar() {
+    if (_currentUrl.contains('https://www.torn.com/crimes.php')) {
+      return OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return CrimesOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(MdiIcons.fingerprint),
+            ),
+          );
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _crimesWidget() {
+    if (_currentUrl.contains('https://www.torn.com/crimes.php')) {
+      return CrimesWidget(
+        controller: webView,
+        //crimeList: _crimeList,
+      );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   Future<bool> _willPopCallback() async {
