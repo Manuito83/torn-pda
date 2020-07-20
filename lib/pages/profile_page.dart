@@ -91,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
+UserDetailsProvider _userProvider;
 
   // For dial FAB
   ScrollController scrollController;
@@ -2142,12 +2142,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var formatter = new DateFormat('HH:mm');
 
     for (var notification in pendingNotificationRequests) {
-      // Don't take into account Firebase or Travel notifications,
+      // Don't take into account other kind of notifications,
       // as they don't have the same payload with timestamp
-      if (notification.id == 999 || notification.id == 201) {
+      if (notification.id == 999 ||
+          notification.id == 201 ||
+          notification.payload.substring(0, 3).contains('400')) {
         continue;
       }
-
       var splitPayload = notification.payload.split('-');
       var oldTimeStamp = int.parse(splitPayload[1]);
 
