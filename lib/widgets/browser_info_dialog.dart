@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
+//import 'package:provider/provider.dart';
+//import 'package:torn_pda/providers/settings_provider.dart';
 
 class BrowserInfoDialog extends StatefulWidget {
   @override
@@ -8,12 +8,15 @@ class BrowserInfoDialog extends StatefulWidget {
 }
 
 class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
-  SettingsProvider _settingsProvider;
+
+  // TODO: remove test browser preferences if no reported issues
+
+  //SettingsProvider _settingsProvider;
 
   @override
   void initState() {
     super.initState();
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    //_settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
   }
 
   @override
@@ -32,6 +35,7 @@ class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
                 "Please consider using it, unless you "
                 "have issues, in which case you can select "
                 "you mobile phone's default browser (external)."),
+            /*
             Row(
               children: <Widget>[
                 Text("Use test browser"),
@@ -47,6 +51,7 @@ class _BrowserInfoDialogState extends State<BrowserInfoDialog> {
                 ),
               ],
             ),
+            */
           ],
         ),
       ),
