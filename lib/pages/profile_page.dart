@@ -20,7 +20,7 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webview2.dart';
+import 'package:torn_pda/widgets/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -157,9 +157,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _tickerCallChainApi =
         new Timer.periodic(Duration(seconds: 30), (Timer t) => _fetchApi());
 
-    analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': 'profile'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'profile'});
   }
 
   void _requestIOSPermissions() {
@@ -1877,40 +1876,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     var browserType = _settingsProvider.currentBrowser;
-    // TEST BROWSER vvv
-    if (_settingsProvider.testBrowserActive &&
-        browserType == BrowserSetting.app) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (BuildContext context) => WebView2(
-            customUrl: tornPage,
-            customTitle: 'Torn',
-            customCallBack: _updateCallback,
-          ),
-        ),
-      );
-      // TEST BROWSER ^^^
-    } else {
-      switch (browserType) {
-        case BrowserSetting.app:
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => TornWebViewGeneric(
-                webViewType: WebViewType.custom,
-                customUrl: tornPage,
-                genericTitle: 'Torn',
-                genericCallBack: _updateCallback,
-              ),
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: tornPage,
+              customTitle: 'Torn',
+              customCallBack: _updateCallback,
             ),
-          );
-          break;
-        case BrowserSetting.external:
-          var url = tornPage;
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = tornPage;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
     }
   }
 

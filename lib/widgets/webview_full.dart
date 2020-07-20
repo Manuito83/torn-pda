@@ -8,22 +8,22 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 
-class WebView2 extends StatefulWidget {
+class WebViewFull extends StatefulWidget {
   final String customTitle;
   final String customUrl;
   final Function customCallBack;
 
-  WebView2({
+  WebViewFull({
     this.customTitle = '',
     this.customCallBack,
     this.customUrl,
   });
 
   @override
-  _WebView2State createState() => _WebView2State();
+  _WebViewFullState createState() => _WebViewFullState();
 }
 
-class _WebView2State extends State<WebView2> {
+class _WebViewFullState extends State<WebViewFull> {
   InAppWebViewController webView;
   String _initialUrl = "";
   String _pageTitle = "";
