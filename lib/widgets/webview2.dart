@@ -1,4 +1,6 @@
 import 'package:animations/animations.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/parser.dart';
@@ -27,7 +29,8 @@ class _WebView2State extends State<WebView2> {
   String _pageTitle = "";
   String _currentUrl = '';
 
-  Widget _crimesWidget = SizedBox.shrink();
+  var crimesActive = false;
+  var crimesController = ExpandableController();
 
   @override
   void initState() {
@@ -52,7 +55,8 @@ class _WebView2State extends State<WebView2> {
               }),
           title: Text(_pageTitle),
           actions: <Widget>[
-            _crimesAppBar(),
+            _crimesInfoIcon(),
+            _crimesMenuIcon(),
           ],
         ),
         body: Container(
@@ -64,7 +68,17 @@ class _WebView2State extends State<WebView2> {
             bottom: true,
             child: Column(
               children: [
-                _crimesWidget,
+                ExpandablePanel(
+                  theme: ExpandableThemeData(
+                  hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: SizedBox.shrink(),
+                  controller: crimesController,
+                  header: SizedBox.shrink(),
+                  expanded: CrimesWidget(controller: webView),
+                ),
                 Expanded(
                   child: InAppWebView(
                     initialUrl: _initialUrl,
@@ -86,9 +100,7 @@ class _WebView2State extends State<WebView2> {
                     },
                     onLoadStop: (InAppWebViewController c, String url) {
                       _currentUrl = url;
-                      if (_currentUrl.contains('https://www.torn.com/crimes.php')) {
-                        _assessCrimes();
-                      }
+                      _assessCrimes();
                     },
                     onConsoleMessage:
                         (InAppWebViewController c, consoleMessage) {
@@ -104,8 +116,32 @@ class _WebView2State extends State<WebView2> {
     );
   }
 
-  Widget _crimesAppBar() {
-    if (_currentUrl.contains('https://www.torn.com/crimes.php')) {
+  Widget _crimesInfoIcon() {
+    if (crimesActive) {
+      return IconButton(
+        icon: Icon(Icons.info_outline),
+        onPressed: () {
+          BotToast.showText(
+            text: 'If you need more information about a crime, maintain the '
+                'quick crime button pressed for a few seconds and a tooltip '
+                'will be shown!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: Duration(seconds: 8),
+            contentPadding: EdgeInsets.all(10),
+          );
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _crimesMenuIcon() {
+    if (crimesActive) {
       return OpenContainer(
         transitionDuration: Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
@@ -136,7 +172,8 @@ class _WebView2State extends State<WebView2> {
   }
 
   Future _assessCrimes() async {
-    // H4 is 'Please validate' with captcha or 'Crimes' without it
+    // H4 is helpful to understand if we are in the correct page
+    // Taking into account not logged in conditions and captcha
     var html = await webView.getHtml();
     var document = parse(html);
     var h4 = document
@@ -148,12 +185,14 @@ class _WebView2State extends State<WebView2> {
 
     setState(() {
       if (_currentUrl.contains('https://www.torn.com/crimes.php')
-          && !h4.contains('please validate')) {
-        _crimesWidget = CrimesWidget(
-          controller: webView,
-        );
+          && !h4.contains('please validate')
+          && !h4.contains('error')
+          && h4.contains('crimes')) {
+        crimesController.expanded = true;
+        crimesActive = true;
       } else {
-        _crimesWidget = SizedBox.shrink();
+        crimesController.expanded = false;
+        crimesActive = false;
       }
     });
   }
