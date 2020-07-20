@@ -1,5 +1,10 @@
+import 'package:flutter/material.dart';
 
-String easyCrimesJS (String nerve, String crime) {
+String easyCrimesJS({
+  @required String nerve,
+  @required String crime,
+  @required String doCrime,
+}) {
   return '''
     var first_load = true;
     
@@ -19,7 +24,7 @@ String easyCrimesJS (String nerve, String crime) {
     window.location.hash = "#";
     \$(".content-wrapper").html(loadingPlaceholderContent);
     
-    var action = 'https://www.torn.com/crimes.php?step=docrime2&timestamp=' + Date.now();
+    var action = 'https://www.torn.com/crimes.php?step=docrime$doCrime&timestamp=' + Date.now();
     
     ajaxWrapper({
       url: action,
@@ -27,12 +32,6 @@ String easyCrimesJS (String nerve, String crime) {
       data: 'nervetake=$nerve&crime=$crime',
       oncomplete: function(resp) {
         \$(".content-wrapper").html(resp.responseText);
-      
-      var steps = action.split("?"),
-      step = steps[1] ? steps[1].split("=")[1] : "";
-      if (step == "docrime2" || step == "docrime4") refreshTopOfSidebar();
-      if (animElement) clearTimeout(animElement);
-      highlightElement("/" + step + ".php");
       },
       onerror: function(e) {
         console.error(e)
