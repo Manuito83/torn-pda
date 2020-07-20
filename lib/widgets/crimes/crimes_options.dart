@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -69,6 +70,16 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                   }
                 }
               });
+              BotToast.showText(
+                text: 'All crimes deactivated!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                duration: Duration(seconds: 3),
+                contentColor: Colors.grey[700],
+                contentPadding: EdgeInsets.all(10),
+              );
             },
           ),
         ],
