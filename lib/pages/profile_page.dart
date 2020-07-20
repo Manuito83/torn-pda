@@ -1194,7 +1194,7 @@ UserDetailsProvider _userProvider;
       cooldownItems = Row(
         children: <Widget>[
           Padding(
-            padding: EdgeInsets.only(left: 8),
+            padding: EdgeInsets.only(left: 10),
             child: Text("Nothing to report, well done!"),
           ),
         ],
@@ -1446,7 +1446,7 @@ UserDetailsProvider _userProvider;
           ),
         ),
         collapsed: Padding(
-          padding: const EdgeInsets.fromLTRB(30, 5, 20, 20),
+          padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
           child: Text(
             unreadString,
             style: TextStyle(
@@ -1696,7 +1696,7 @@ UserDetailsProvider _userProvider;
           ),
         ),
         collapsed: Padding(
-          padding: const EdgeInsets.fromLTRB(30, 5, 20, 20),
+          padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
           child: Text(
             '\$${moneyFormat.format(total)}',
             softWrap: true,
