@@ -50,7 +50,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Crimes Menu"),
+        title: Text("Quick Crimes"),
         leading: new IconButton(
           icon: new Icon(Icons.arrow_back),
           onPressed: () {
