@@ -169,7 +169,8 @@ class _LootPageState extends State<LootPage> {
                             fontSize: 13,
                           ),
                         ),
-                      )
+                      ),
+                      SizedBox(height: 20),
                     ],
                   ),
                 );
