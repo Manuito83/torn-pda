@@ -310,7 +310,9 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future<bool> _willPopCallback() async {
-    widget.customCallBack();
+    if (widget.customCallBack != null) {
+      widget.customCallBack();
+    }
     return true;
   }
 }
