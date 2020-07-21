@@ -13,7 +13,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webview_travel.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/travel_model.dart';
 import 'package:android_intent/android_intent.dart';
@@ -258,10 +258,9 @@ class _TravelPageState extends State<TravelPage> {
                 case BrowserSetting.app:
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => TornWebViewTravel(
-                        webViewType: WebViewTypeTravel.generic,
-                        genericTitle: '${_travelModel.destination}',
-                        genericCallBack: _updateInformation,
+                      builder: (BuildContext context) => WebViewFull(
+                        customTitle: '${_travelModel.destination}',
+                        customCallBack: _updateInformation,
                       ),
                     ),
                   );
@@ -307,10 +306,9 @@ class _TravelPageState extends State<TravelPage> {
                 case BrowserSetting.app:
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => TornWebViewTravel(
-                        webViewType: WebViewTypeTravel.generic,
-                        genericTitle: '${_travelModel.destination}',
-                        genericCallBack: _updateInformation,
+                      builder: (BuildContext context) => WebViewFull(
+                        customTitle: '${_travelModel.destination}',
+                        customCallBack: _updateInformation,
                       ),
                     ),
                   );
@@ -488,9 +486,10 @@ class _TravelPageState extends State<TravelPage> {
           case BrowserSetting.app:
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => TornWebViewTravel(
-                  webViewType: WebViewTypeTravel.travelAgency,
-                  genericCallBack: _updateInformation,
+                builder: (BuildContext context) => WebViewFull(
+                  customUrl: 'https://www.torn.com/travelagency.php',
+                  customTitle: '${_travelModel.destination}',
+                  customCallBack: _updateInformation,
                 ),
               ),
             );

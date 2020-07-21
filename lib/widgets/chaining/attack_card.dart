@@ -7,7 +7,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'webview_generic.dart';
+import '../webviews/webview_generic.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;

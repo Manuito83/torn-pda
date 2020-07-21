@@ -17,7 +17,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';

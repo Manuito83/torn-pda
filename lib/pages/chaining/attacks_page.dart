@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/attacks_list.dart';
+import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 
 class AttacksPage extends StatefulWidget {
   final String userKey;

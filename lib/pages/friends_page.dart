@@ -4,7 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/friends_list.dart';
+import 'package:torn_pda/widgets/friends/friends_list.dart';
 import 'package:torn_pda/pages/friends/friends_backup_page.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
 

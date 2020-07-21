@@ -9,7 +9,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/stock_options_dialog.dart';
+import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:ui';
 

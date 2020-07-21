@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
-import 'package:torn_pda/widgets/attack_card.dart';
+import 'package:torn_pda/widgets/chaining/attack_card.dart';
 
 class AttacksList extends StatelessWidget {
   final List<Attack> attacks;

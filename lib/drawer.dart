@@ -23,8 +23,8 @@ import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
-import 'package:torn_pda/widgets/webview_travel.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
 
@@ -119,9 +119,8 @@ class _DrawerPageState extends State<DrawerPage> {
         case 'app':
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (BuildContext context) => TornWebViewTravel(
-                webViewType: WebViewTypeTravel.generic,
-                genericTitle: 'Travel',
+              builder: (BuildContext context) => WebViewFull(
+                customTitle: 'Travel',
               ),
             ),
           );
@@ -145,9 +144,8 @@ class _DrawerPageState extends State<DrawerPage> {
           case 'app':
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => TornWebViewTravel(
-                  webViewType: WebViewTypeTravel.generic,
-                  genericTitle: 'Travel',
+                builder: (BuildContext context) => WebViewFull(
+                  customTitle: 'Travel',
                 ),
               ),
             );

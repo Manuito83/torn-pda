@@ -6,8 +6,8 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/chain_timer.dart';
-import 'package:torn_pda/widgets/targets_list.dart';
+import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/chaining/targets_list.dart';
 
 class TargetsPage extends StatefulWidget {
   final String userKey;
