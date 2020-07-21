@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
-import 'package:torn_pda/widgets/target_card.dart';
+import 'package:torn_pda/widgets/chaining/target_card.dart';
 
 class TargetsList extends StatelessWidget {
   final List<TargetModel> targets;

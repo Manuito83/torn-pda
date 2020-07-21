@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';

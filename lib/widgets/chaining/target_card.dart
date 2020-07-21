@@ -8,9 +8,9 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/webview_attack.dart';
+import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'notes_dialog.dart';
+import '../notes_dialog.dart';
 
 class TargetCard extends StatefulWidget {
   final TargetModel targetModel;

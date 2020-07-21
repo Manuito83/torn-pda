@@ -11,9 +11,9 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'notes_dialog.dart';
+import '../notes_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
 
 class FriendCard extends StatefulWidget {
