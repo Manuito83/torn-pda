@@ -23,10 +23,24 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.6.0
+    var v1_6_0 = ChangeLogItem();
+    v1_6_0.version = 'Torn PDA v1.6.0';
+    String feat1_6_0_1 = "New NPC Loot section";
+    String feat1_6_0_2 = "Added a quick crimes bar (internal app browser)";
+    String feat1_6_0_3 = "Added option to fill max travel items taking into "
+        "account current money and capacity, as well as a quick return button "
+        "in the app bar";
+    String feat1_6_0_4 = "Added energy in the automatic alerts section (beta)";
+    v1_6_0.features.add(feat1_6_0_1);
+    v1_6_0.features.add(feat1_6_0_2);
+    v1_6_0.features.add(feat1_6_0_3);
+    v1_6_0.features.add(feat1_6_0_4);
+
     // VERSION 1.5.0
     var v1_5_0 = ChangeLogItem();
     v1_5_0.version = 'Torn PDA v1.5.0';
-    String feat1_5_0_1 = "New ALERTS section with automatic notifications "
+    String feat1_5_0_1 = "New Alerts section with automatic notifications "
         "for travel";
     String feat1_5_0_2 = "You can now set a custom trigger for energy and "
         "nerve notifications in the profile page";
@@ -92,6 +106,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_6_0);
     itemList.add(v1_5_0);
     itemList.add(v1_4_1);
     itemList.add(v1_4_0);
