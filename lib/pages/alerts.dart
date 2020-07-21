@@ -78,7 +78,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
@@ -93,19 +93,23 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      /*CheckboxListTile(
-                      checkColor: Colors.white,
-                      activeColor: Colors.blueGrey,
-                      value: _firebaseUserModel.energyNotification ?? false,
-                      title: Text("Energy Full Notification"),
-                      subtitle: Text("Get notified once you reach full energy"),
-                      onChanged: (value) {
-                        setState(() {
-                          _firebaseUserModel?.energyNotification = value;
-                        });
-                        firestore.subscribeToEnergyNotification(value);
-                      },
-                    ),*/
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.energyNotification ?? false,
+                          title: Text("Energy Full Notification"),
+                          subtitle:
+                              Text("Get notified once you reach full energy"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.energyNotification = value;
+                            });
+                            firestore.subscribeToEnergyNotification(value);
+                          },
+                        ),
+                      ),
                     ],
                   );
                 } else {
@@ -177,10 +181,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                 "This is to prevent the over usage of resources. "
                 "Please make sure you return back to the app once a "
                 "week to get uninterrupted service.",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic
-                ),
+                style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
               ),
             ),
           ],
