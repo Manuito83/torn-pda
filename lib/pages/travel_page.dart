@@ -855,6 +855,15 @@ class _TravelPageState extends State<TravelPage> {
       _fetchTornApi();
     }
     _retrievePendingNotifications();
+
+    // Update timeLeft so that the percentage indicator and timer set time work
+    // correctly
+    if (_travelModel.timeArrival.isAfter(DateTime.now())) {
+      setState(() {
+        var diff = _travelModel.timeArrival.difference(DateTime.now());
+        _travelModel.timeLeft = diff.inSeconds;
+      });
+    }
   }
 
   Future<void> _fetchTornApi() async {
@@ -978,7 +987,7 @@ class _TravelPageState extends State<TravelPage> {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - 20,
+        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - 25,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': 'TORN PDA',
