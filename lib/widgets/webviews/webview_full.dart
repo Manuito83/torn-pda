@@ -3,6 +3,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -118,12 +119,11 @@ class _WebViewFullState extends State<WebViewFull> {
                         },
                       );
 
-                      _assessTravel();
-                      _assessCrimes();
+                      _assessGeneral();
                     },
                     onConsoleMessage:
                         (InAppWebViewController c, consoleMessage) {
-                      print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+                      //print("TORN PDA JS CONSOLE: " + consoleMessage.message);
                     },
                   ),
                 ),
@@ -135,9 +135,14 @@ class _WebViewFullState extends State<WebViewFull> {
     );
   }
 
-  Future _assessTravel() async {
+  Future _assessGeneral() async {
     var html = await webView.getHtml();
     var document = parse(html);
+    _assessTravel(document);
+    _assessCrimes(document);
+  }
+
+  Future _assessTravel(dom.Document document) async {
     var query = document.querySelectorAll(".travel-home");
 
     if (query.length > 0) {
@@ -228,21 +233,18 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  Future _assessCrimes() async {
-    var html = await webView.getHtml();
-    var document = parse(html);
-    var h4 = document
-        .querySelector(".content-title > h4")
-        .innerHtml
-        .substring(0)
-        .toLowerCase()
-        .trim();
+  Future _assessCrimes(dom.Document document) async {
+    var h4 = document.querySelector(".content-title > h4");
+    var pageTitle = '';
+    if (h4 != null) {
+      pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+    }
 
     setState(() {
       if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
-          !h4.contains('please validate') &&
-          !h4.contains('error') &&
-          h4.contains('crimes')) {
+          !pageTitle.contains('please validate') &&
+          !pageTitle.contains('error') &&
+          pageTitle.contains('crimes')) {
         _crimesController.expanded = true;
         _crimesActive = true;
       } else {
