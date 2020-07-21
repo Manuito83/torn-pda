@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
@@ -21,9 +21,8 @@ class _AboutPageState extends State<AboutPage> {
   @override
   void initState() {
     super.initState();
-    analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': 'about'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'about'});
   }
 
   @override
@@ -157,9 +156,8 @@ class _AboutPageState extends State<AboutPage> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
-                                            TornWebViewGeneric(
-                                          genericTitle: 'Forums',
-                                          webViewType: WebViewType.custom,
+                                            WebViewFull(
+                                          customTitle: 'Forums',
                                           customUrl:
                                               'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0',
                                         ),
@@ -178,7 +176,7 @@ class _AboutPageState extends State<AboutPage> {
                           ),
                           TextSpan(
                               text: ' and stay updated about the app or '
-                                  'suggest new features'),
+                                  'suggest new features.'),
                         ],
                       ),
                     ),
@@ -222,9 +220,8 @@ class _AboutPageState extends State<AboutPage> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
-                                            TornWebViewGeneric(
-                                          genericTitle: 'Github',
-                                          webViewType: WebViewType.custom,
+                                            WebViewFull(
+                                          customTitle: 'Github',
                                           customUrl:
                                               'https://github.com/Manuito83/torn-pda',
                                         ),
@@ -265,9 +262,48 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                   ),
                   Flexible(
-                    child: Text('If you\'d like to show your appreciation and '
-                        'can afford a donation in game, '
-                        'it would be certainly appreciated!'),
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'If you\'d like to show your appreciation and '
+                            'can afford a ',
+                        style: DefaultTextStyle.of(context).style,
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: 'donation in game',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
+                                switch (browserType) {
+                                  case BrowserSetting.app:
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
+                                          customTitle: 'Donate to Manuito',
+                                          customUrl:
+                                              'https://www.torn.com/trade.php#step=start&userID=2225097',
+                                        ),
+                                      ),
+                                    );
+                                    break;
+                                  case BrowserSetting.external:
+                                    var url =
+                                        'https://www.torn.com/trade.php#step=start&userID=2225097';
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                    break;
+                                }
+                              },
+                          ),
+                          TextSpan(text: ' it would be certainly appreciated!'),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -329,10 +365,9 @@ class _AboutPageState extends State<AboutPage> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
-                                            TornWebViewGeneric(
-                                          profileId: '2225097',
-                                          profileName: 'Manuito',
-                                          webViewType: WebViewType.profile,
+                                            WebViewFull(
+                                          customUrl: 'https://www.torn.com/profiles.php?XID=2225097',
+                                          customTitle: 'Manuito',
                                         ),
                                       ),
                                     );
@@ -379,10 +414,9 @@ class _AboutPageState extends State<AboutPage> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
-                                            TornWebViewGeneric(
-                                          profileId: '2184575',
-                                          profileName: 'Phillip_J_Fry',
-                                          webViewType: WebViewType.profile,
+                                            WebViewFull(
+                                          customTitle: 'Phillip_J_Fry',
+                                          customUrl: 'https://www.torn.com/profiles.php?XID=2184575',
                                         ),
                                       ),
                                     );
@@ -429,11 +463,10 @@ class _AboutPageState extends State<AboutPage> {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
-                                            TornWebViewGeneric(
-                                              profileId: '2000607',
-                                              profileName: 'Kivou',
-                                              webViewType: WebViewType.profile,
-                                            ),
+                                            WebViewFull(
+                                          customTitle: 'Kivou',
+                                          customUrl: 'https://www.torn.com/profiles.php?XID=2000607',
+                                        ),
                                       ),
                                     );
                                     break;
@@ -448,7 +481,7 @@ class _AboutPageState extends State<AboutPage> {
                               },
                           ),
                           TextSpan(
-                            text: ' for the resources offered by YATA',
+                            text: ' for the resources offered by YATA.',
                             style: DefaultTextStyle.of(context).style,
                           ),
                         ],
@@ -456,6 +489,15 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+                child: Text('Some scripts, concepts and features have been '
+                    'adapted from preexisting ones in tools like YATA, '
+                    'Torn Tools or DocTorn.'),
               ),
             ),
             SizedBox(height: 60),
