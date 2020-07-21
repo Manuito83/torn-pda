@@ -32,10 +32,13 @@ class _ChangeLogState extends State<ChangeLog> {
         "account current money and capacity, as well as a quick return button "
         "in the app bar";
     String feat1_6_0_4 = "Added energy in the automatic alerts section (beta)";
+    String feat1_6_0_5 = "Fixed issue with travel bar and timer not updating "
+        "correctly after the flight has departed";
     v1_6_0.features.add(feat1_6_0_1);
     v1_6_0.features.add(feat1_6_0_2);
     v1_6_0.features.add(feat1_6_0_3);
     v1_6_0.features.add(feat1_6_0_4);
+    v1_6_0.features.add(feat1_6_0_5);
 
     // VERSION 1.5.0
     var v1_5_0 = ChangeLogItem();
