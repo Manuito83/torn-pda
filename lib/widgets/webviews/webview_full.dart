@@ -140,8 +140,10 @@ class _WebViewFullState extends State<WebViewFull> {
     var document = parse(html);
     _assessTravel(document);
     _assessCrimes(document);
+    _assessTrades(document);
   }
 
+  // TRAVEL
   Future _assessTravel(dom.Document document) async {
     var query = document.querySelectorAll(".travel-home");
 
@@ -163,6 +165,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _assessTravelStocks() async {
+    // TODO: WTF? This can go. Try.
     await webView.evaluateJavascript(source: addForeignStocksEventJS());
     await webView.evaluateJavascript(source: getForeignStocksJS());
   }
@@ -233,6 +236,7 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  // CRIMES
   Future _assessCrimes(dom.Document document) async {
     var h4 = document.querySelector(".content-title > h4");
     var pageTitle = '';
@@ -309,6 +313,30 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  // TRADES
+  Future _assessTrades(dom.Document document) async {
+    var h4 = document.querySelector(".content-title > h4");
+    var leftSide = document.querySelectorAll(".user.left");
+
+    // We check we are in Trade and we have left side items
+    if (h4 != null && leftSide != null) {
+      var pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+      if (!pageTitle.contains('Trade')) {
+        return;
+      }
+    }
+
+    try {
+
+    } catch (e) {
+
+    }
+
+
+
+  }
+
+  // UTILS
   Future<bool> _willPopCallback() async {
     if (widget.customCallBack != null) {
       widget.customCallBack();
