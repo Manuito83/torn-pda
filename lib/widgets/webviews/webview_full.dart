@@ -179,8 +179,11 @@ class _WebViewFullState extends State<WebViewFull> {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
 
-        var userDetailsProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-        var userProfile = await TornApiCaller.ownProfile(userDetailsProvider.myUser.userApiKey).getOwnProfile;
+        var userDetailsProvider =
+            Provider.of<UserDetailsProvider>(context, listen: false);
+        var userProfile = await TornApiCaller.ownProfile(
+                userDetailsProvider.myUser.userApiKey)
+            .getOwnProfile;
         if (userProfile is OwnProfileModel) {
           stockModel.authorName = userProfile.name;
           stockModel.authorId = userProfile.playerId;
@@ -315,8 +318,33 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // TRADES
   Future _assessTrades(dom.Document document) async {
+
+    // Check that we are in Trades, but also inside an existing trade
+    // (step=view) or just created one (step=initiateTrade)
     var h4 = document.querySelector(".content-title > h4");
-    var leftSide = document.querySelectorAll(".user.left");
+    if (h4 != null) {
+      var pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+      var easyUrl =
+          _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+      if (!pageTitle.contains('trade') ||
+          !easyUrl[0].contains('trade.php') ||
+          (!easyUrl[0].contains('step=initiateTrade') &&
+              !easyUrl[0].contains('step=view'))) {
+        return;
+      }
+    }
+
+    // Because only the frame reloads, if we can't find anything
+    // we'll wait 1 second, get the html again and query again
+    var leftSide = document.querySelectorAll(".color1 .left , .color2 .left");
+    if (leftSide.length == 0) {
+      await Future.delayed(const Duration(seconds: 1));
+      var updatedHtml = await webView.getHtml();
+      var updatedDoc = parse(updatedHtml);
+      leftSide = updatedDoc.querySelectorAll(".color1 .left , .color2 .left");
+    }
+
+    if (leftSide.length > 0) {}
 
     // We check we are in Trade and we have left side items
     if (h4 != null && leftSide != null) {
@@ -326,14 +354,7 @@ class _WebViewFullState extends State<WebViewFull> {
       }
     }
 
-    try {
-
-    } catch (e) {
-
-    }
-
-
-
+    try {} catch (e) {}
   }
 
   // UTILS
