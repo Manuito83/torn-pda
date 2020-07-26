@@ -22,7 +22,6 @@ final String appVersion = '1.6.0';
 final bool appNeedsChangelog = true;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
-final Crashlytics crashlytics = Crashlytics();
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -51,9 +50,9 @@ Future<void> main() async {
   });
 
   // Only 'true' intended for debugging
-  crashlytics.enableInDevMode = true;
+  Crashlytics.instance.enableInDevMode = true;
   // Pass all uncaught errors from the framework to Crashlytics
-  FlutterError.onError = crashlytics.recordFlutterError;
+  FlutterError.onError = Crashlytics.instance.recordFlutterError;
 
   runApp(
     MultiProvider(

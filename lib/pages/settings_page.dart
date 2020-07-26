@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -706,6 +707,12 @@ class _SettingsPageState extends State<SettingsPage> {
           await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
         }
+
+        var a;
+        a = a + 1;
+
+
+
       } else if (myProfile is ApiError) {
         setState(() {
           _apiIsLoading = false;
@@ -722,9 +729,9 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      crashlytics.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+      Crashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
           "Error: $e. Stack: $stack");
-      crashlytics.recordError(e, null);
+      Crashlytics.instance.recordError(e, null);
     }
   }
 
