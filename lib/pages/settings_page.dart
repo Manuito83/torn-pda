@@ -5,6 +5,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -14,7 +15,6 @@ import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 
-import '../main.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -707,12 +707,6 @@ class _SettingsPageState extends State<SettingsPage> {
           await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
         }
-
-        var a;
-        a = a + 1;
-
-
-
       } else if (myProfile is ApiError) {
         setState(() {
           _apiIsLoading = false;
