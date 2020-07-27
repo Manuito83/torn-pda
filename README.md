@@ -11,9 +11,15 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Profile page with access to basic status data, recent events, cooldowns and networth calculation. You can also manually activate notifications so that you don't waste any energy, nerve, or miss any cooldown expiry.
 
-* Check your travel status and configure notifications just before you arrive. No more forgetting and being mugged abroad. Also, configure the notification shown so that it is safe to use even at work or in other public environments.
+* Check your travel status and configure notifications or alarms just before you arrive. No more forgetting and being mugged abroad. Also, configure the notification shown so that it is safe to use even at work or in other public environments.
 
 * Have a look at foreign stocks directly in the Travel section. Filter and sort items at your convenience, including profit based on item capacity. Also, by using the in-app browser, you are contributing by sending stock data automatically to the shared database!
+
+* Ability to fill max items on arrival to destination, based on current capacity and money available. Then, use the quick home return button in the top bar to make your stay quicker and safer.
+
+* Quick crimes option when you visit the crimes section. Just set up your preferred crimes and they'll appear in the top bar.
+
+* Automatic alerts for travel and energy
 
 * Follow your faction's chain live from the app, with instant energy updates.
 
@@ -25,7 +31,9 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Create a friends list, with quick access to in-game messaging, trading and other important details. Also, add note to your friends' profiles. Backup functionality included.
 
-* Dark Mode
+* Activate alerts for NPC loot
+
+* Dark mode
 
 
 
