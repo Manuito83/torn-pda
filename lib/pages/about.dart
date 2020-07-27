@@ -309,25 +309,44 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(20, 15, 30, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+              padding: EdgeInsets.fromLTRB(20, 15, 30, 0),
+              child: Column(
                 children: <Widget>[
-                  Flexible(
-                    child: Text(
-                      "Changelog: ",
-                    ),
-                  ),
-                  Flexible(
-                    child: InkWell(
-                      child: Text(
-                        "click here to view",
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          color: Colors.blue,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: <Widget>[
+                      Flexible(
+                        flex: 2,
+                        child: Text(
+                          "Changelog (major versions): ",
                         ),
                       ),
-                      onTap: _showChangeLogDialog,
+                      Flexible(
+                        child: InkWell(
+                          child: Text(
+                            "show",
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          onTap: _showChangeLogDialog,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        Flexible(
+                          flex: 2,
+                          child: Text(
+                            "Your version: v$appVersion",
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -336,7 +355,7 @@ class _AboutPageState extends State<AboutPage> {
             Align(
               alignment: Alignment.bottomLeft,
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 10, 30, 0),
+                padding: EdgeInsets.fromLTRB(20, 15, 30, 0),
                 child: Text('Contributors:'),
               ),
             ),
@@ -366,7 +385,8 @@ class _AboutPageState extends State<AboutPage> {
                                       MaterialPageRoute(
                                         builder: (BuildContext context) =>
                                             WebViewFull(
-                                          customUrl: 'https://www.torn.com/profiles.php?XID=2225097',
+                                          customUrl:
+                                              'https://www.torn.com/profiles.php?XID=2225097',
                                           customTitle: 'Manuito',
                                         ),
                                       ),
@@ -416,7 +436,8 @@ class _AboutPageState extends State<AboutPage> {
                                         builder: (BuildContext context) =>
                                             WebViewFull(
                                           customTitle: 'Phillip_J_Fry',
-                                          customUrl: 'https://www.torn.com/profiles.php?XID=2184575',
+                                          customUrl:
+                                              'https://www.torn.com/profiles.php?XID=2184575',
                                         ),
                                       ),
                                     );
@@ -465,7 +486,8 @@ class _AboutPageState extends State<AboutPage> {
                                         builder: (BuildContext context) =>
                                             WebViewFull(
                                           customTitle: 'Kivou',
-                                          customUrl: 'https://www.torn.com/profiles.php?XID=2000607',
+                                          customUrl:
+                                              'https://www.torn.com/profiles.php?XID=2000607',
                                         ),
                                       ),
                                     );

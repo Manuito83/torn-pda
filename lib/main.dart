@@ -17,9 +17,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
-// TODO: CONFIGURE FOR APP RELEASE
-final String appVersion = '1.6.0';
-final bool appNeedsChangelog = true;
+// TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
+final String appVersion = '1.6.1';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -50,7 +49,7 @@ Future<void> main() async {
   });
 
   // Only 'true' intended for debugging
-  Crashlytics.instance.enableInDevMode = true;
+  Crashlytics.instance.enableInDevMode = false;
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = Crashlytics.instance.recordFlutterError;
 
