@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -684,42 +685,53 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _getApiDetails({@required bool userTriggered}) async {
-    dynamic myProfile =
-        await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
-    if (myProfile is OwnProfileModel) {
-      setState(() {
-        _apiIsLoading = false;
-        _userToLoad = true;
-        _apiError = false;
-        _userProfile = myProfile;
-      });
-      myProfile
-        ..userApiKey = _myCurrentKey
-        ..userApiKeyValid = true;
-      _userProvider.setUserDetails(userDetails: myProfile);
+    try {
+      dynamic myProfile =
+      await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
+      if (myProfile is OwnProfileModel) {
+        setState(() {
+          _apiIsLoading = false;
+          _userToLoad = true;
+          _apiError = false;
+          _userProfile = myProfile;
+        });
+        myProfile
+          ..userApiKey = _myCurrentKey
+          ..userApiKeyValid = true;
+        _userProvider.setUserDetails(userDetails: myProfile);
 
-      // Firestore uploading, but only if "Load" pressed by user
-      if (userTriggered) {
-        FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
-        firestore.setUID(mFirebaseUser.uid);
-        await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
-        await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
-      }
+        // Firestore uploading, but only if "Load" pressed by user
+        if (userTriggered) {
+          FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+          firestore.setUID(mFirebaseUser.uid);
+          await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
+          await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+        }
 
-    } else if (myProfile is ApiError) {
-      setState(() {
-        _apiIsLoading = false;
-        _userToLoad = false;
-        _apiError = true;
-        _errorReason = myProfile.errorReason;
-        _expandableController.expanded = true;
-      });
-      // We'll only remove the user if the key is invalid, otherwise we
-      // risk removing it if we access the Settings page with no internet
-      // connectivity
-      if (myProfile.errorId == 2) {
-        _userProvider.removeUser();
+        var a;
+        a = a + 1;
+
+
+
+      } else if (myProfile is ApiError) {
+        setState(() {
+          _apiIsLoading = false;
+          _userToLoad = false;
+          _apiError = true;
+          _errorReason = myProfile.errorReason;
+          _expandableController.expanded = true;
+        });
+        // We'll only remove the user if the key is invalid, otherwise we
+        // risk removing it if we access the Settings page with no internet
+        // connectivity
+        if (myProfile.errorId == 2) {
+          _userProvider.removeUser();
+        }
       }
+    } catch (e, stack) {
+      Crashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+          "Error: $e. Stack: $stack");
+      Crashlytics.instance.recordError(e, null);
     }
   }
 
