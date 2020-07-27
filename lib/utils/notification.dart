@@ -47,6 +47,8 @@ Future showNotificationBoth(Map payload) async {
       payload["notification"]["title"],
       payload["notification"]["body"],
       platformChannelSpecifics,
+      // Set payload to be handled by local notifications
+      //payload: '',
     );
 
   } else if (Platform.isIOS) {
@@ -64,6 +66,8 @@ Future showNotificationBoth(Map payload) async {
         payload["aps"]["alert"]["title"],
         payload["aps"]["alert"]["body"],
         platformChannelSpecifics,
+        // Set payload to be handled by local notifications
+        //payload: '',
       );
     } catch (e) {
       await flutterLocalNotificationsPlugin.show(
@@ -71,6 +75,8 @@ Future showNotificationBoth(Map payload) async {
         payload["notification"]["title"],
         payload["notification"]["body"],
         platformChannelSpecifics,
+        // Set payload to be handled by local notifications
+        //payload: '',
       );
     }
   }

@@ -96,7 +96,14 @@ class _DrawerPageState extends State<DrawerPage> {
     super.dispose();
   }
 
-  // TODO: transfer notification functions to two separate files in utils
+  // TODO Missing bits:
+  //  - Join all notifications in one file
+  //  - Firebase onResume/Launch notification for energy is not configured,
+  //    so nothing happens (the APP just opens). This behaviour is different
+  //    to what happens now with standard scheduled notifications
+  //  - Firebase with 'showNotification' does not have a payload in show(),
+  //    so we don't do anything if triggered while app is open
+
   Future<void> _fireLaunchResumeNotifications(Map message) async {
     bool travel = false;
 
