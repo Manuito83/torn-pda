@@ -13,11 +13,18 @@ class ChangeLog extends StatefulWidget {
 
 class _ChangeLogState extends State<ChangeLog> {
   var _changeLogItems = Map<String, List<String>>();
+  var _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _createItems();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _createItems() {
@@ -120,8 +127,6 @@ class _ChangeLogState extends State<ChangeLog> {
           itemList[i].version, () => itemList[i].features);
     }
   }
-
-  var _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
