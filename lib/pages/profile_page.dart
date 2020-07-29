@@ -91,7 +91,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
-UserDetailsProvider _userProvider;
+  UserDetailsProvider _userProvider;
 
   // For dial FAB
   ScrollController scrollController;
@@ -144,8 +144,7 @@ UserDetailsProvider _userProvider;
 
     scrollController = ScrollController()
       ..addListener(() {
-        setDialVisible(scrollController.position.userScrollDirection ==
-            ScrollDirection.forward);
+        setDialVisible(scrollController.position.userScrollDirection == ScrollDirection.forward);
       });
 
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -154,17 +153,14 @@ UserDetailsProvider _userProvider;
       _apiFetched = _fetchApi();
     });
 
-    _tickerCallChainApi =
-        new Timer.periodic(Duration(seconds: 30), (Timer t) => _fetchApi());
+    _tickerCallChainApi = new Timer.periodic(Duration(seconds: 30), (Timer t) => _fetchApi());
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'profile'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
   }
 
   void _requestIOSPermissions() {
     flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(
           alert: true,
           badge: true,
@@ -197,8 +193,7 @@ UserDetailsProvider _userProvider;
         leading: new IconButton(
           icon: new Icon(Icons.menu),
           onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
             scaffoldState.openDrawer();
           },
         ),
@@ -299,14 +294,11 @@ UserDetailsProvider _userProvider;
                     children: <Widget>[
                       Text(
                         'OOPS!',
-                        style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                        style:
+                            TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
                         child: Text(
                           'There was an error: $_apiError\n\n'
                           'This will retry automatically!',
@@ -386,8 +378,7 @@ UserDetailsProvider _userProvider;
                           case BrowserSetting.app:
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    TornWebViewGeneric(
+                                builder: (BuildContext context) => TornWebViewGeneric(
                                   profileId: causingId,
                                   //profileName: causingId,
                                   genericTitle: 'Event Profile',
@@ -454,9 +445,7 @@ UserDetailsProvider _userProvider;
           width: 13,
           height: 13,
           decoration: BoxDecoration(
-              color: stateColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.black)),
+              color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
         ),
       );
     }
@@ -467,14 +456,11 @@ UserDetailsProvider _userProvider;
         var endTime = _user.travel.timestamp;
         var totalSeconds = endTime - startTime;
 
-        var dateTimeArrival =
-            DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
+        var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes =
-            twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff =
-            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return Padding(
           padding: const EdgeInsets.only(top: 10),
@@ -584,9 +570,7 @@ UserDetailsProvider _userProvider;
                               '${_user.energy.current}',
                               style: TextStyle(color: Colors.black),
                             ),
-                            percent: _user.energy.current /
-                                        _user.energy.maximum >
-                                    1.0
+                            percent: _user.energy.current / _user.energy.maximum > 1.0
                                 ? 1.0
                                 : _user.energy.current / _user.energy.maximum,
                           ),
@@ -623,10 +607,9 @@ UserDetailsProvider _userProvider;
                               '${_user.nerve.current}',
                               style: TextStyle(color: Colors.black),
                             ),
-                            percent:
-                                _user.nerve.current / _user.nerve.maximum > 1.0
-                                    ? 1.0
-                                    : _user.nerve.current / _user.nerve.maximum,
+                            percent: _user.nerve.current / _user.nerve.maximum > 1.0
+                                ? 1.0
+                                : _user.nerve.current / _user.nerve.maximum,
                           ),
                         ],
                       ),
@@ -693,10 +676,9 @@ UserDetailsProvider _userProvider;
                               '${_user.life.current}',
                               style: TextStyle(color: Colors.black),
                             ),
-                            percent:
-                                _user.life.current / _user.life.maximum > 1.0
-                                    ? 1.0
-                                    : _user.life.current / _user.life.maximum,
+                            percent: _user.life.current / _user.life.maximum > 1.0
+                                ? 1.0
+                                : _user.life.current / _user.life.maximum,
                           ),
                           _user.status.state == "Hospital"
                               ? Icon(
@@ -723,8 +705,7 @@ UserDetailsProvider _userProvider;
   Widget _barTime(String type) {
     switch (type) {
       case "energy":
-        if (_user.energy.fulltime == 0 ||
-            _user.energy.current > _user.energy.maximum) {
+        if (_user.energy.fulltime == 0 || _user.energy.current > _user.energy.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
@@ -742,8 +723,7 @@ UserDetailsProvider _userProvider;
         }
         break;
       case "nerve":
-        if (_user.nerve.fulltime == 0 ||
-            _user.nerve.current > _user.nerve.maximum) {
+        if (_user.nerve.fulltime == 0 || _user.nerve.current > _user.nerve.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
@@ -761,8 +741,7 @@ UserDetailsProvider _userProvider;
         }
         break;
       case "happy":
-        if (_user.happy.fulltime == 0 ||
-            _user.happy.current > _user.happy.maximum) {
+        if (_user.happy.fulltime == 0 || _user.happy.current > _user.happy.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
@@ -780,8 +759,7 @@ UserDetailsProvider _userProvider;
         }
         break;
       case "life":
-        if (_user.life.fulltime == 0 ||
-            _user.life.current > _user.life.maximum) {
+        if (_user.life.fulltime == 0 || _user.life.current > _user.life.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.life.fulltime));
@@ -824,9 +802,7 @@ UserDetailsProvider _userProvider;
             // the interval, and decrease for the current tick consumed
             if (energyTicksToGo > 1) {
               var consumedTick = _user.energy.interval - _user.energy.ticktime;
-              secondsToGo =
-                  (energyTicksToGo * _user.energy.interval - consumedTick)
-                      .floor();
+              secondsToGo = (energyTicksToGo * _user.energy.interval - consumedTick).floor();
             }
             // If we are in the current tick or example in the next one,
             // we just take into consideration the tick time left
@@ -841,8 +817,7 @@ UserDetailsProvider _userProvider;
             secondsToGo = _user.energy.fulltime;
           }
 
-          _energyNotificationTime =
-              DateTime.now().add(Duration(seconds: secondsToGo));
+          _energyNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
           var formattedTime = TimeFormatter(
             inputTime: _energyNotificationTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -854,10 +829,8 @@ UserDetailsProvider _userProvider;
             SharedPreferencesModel().setEnergyPercentageOverride(false);
             notificationSetString =
                 'Energy notification set for $formattedTime (E$_customEnergyTrigger)';
-            alarmSetString =
-                'Energy alarm set for $formattedTime (E$_customEnergyTrigger)';
-            timerSetString =
-                'Energy timer set for $formattedTime (E$_customEnergyTrigger)';
+            alarmSetString = 'Energy alarm set for $formattedTime (E$_customEnergyTrigger)';
+            timerSetString = 'Energy timer set for $formattedTime (E$_customEnergyTrigger)';
           } else {
             _customEnergyMaxOverride = true;
             SharedPreferencesModel().setEnergyPercentageOverride(true);
@@ -885,9 +858,7 @@ UserDetailsProvider _userProvider;
             // the interval, and decrease for the current tick consumed
             if (nerveTicksToGo > 1) {
               var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
-              secondsToGo =
-                  (nerveTicksToGo * _user.nerve.interval - consumedTick)
-                      .floor();
+              secondsToGo = (nerveTicksToGo * _user.nerve.interval - consumedTick).floor();
             }
             // If we are in the current tick or example in the next one,
             // we just take into consideration the tick time left
@@ -902,8 +873,7 @@ UserDetailsProvider _userProvider;
             secondsToGo = _user.nerve.fulltime;
           }
 
-          _nerveNotificationTime =
-              DateTime.now().add(Duration(seconds: secondsToGo));
+          _nerveNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
           var formattedTime = TimeFormatter(
             inputTime: _nerveNotificationTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -915,10 +885,8 @@ UserDetailsProvider _userProvider;
             SharedPreferencesModel().setNervePercentageOverride(false);
             notificationSetString =
                 'Nerve notification set for $formattedTime (E$_customNerveTrigger)';
-            alarmSetString =
-                'Nerve alarm set for $formattedTime (E$_customNerveTrigger)';
-            timerSetString =
-                'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
+            alarmSetString = 'Nerve alarm set for $formattedTime (E$_customNerveTrigger)';
+            timerSetString = 'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
           } else {
             _customNerveMaxOverride = true;
             SharedPreferencesModel().setNervePercentageOverride(true);
@@ -940,8 +908,7 @@ UserDetailsProvider _userProvider;
       case ProfileNotification.life:
         secondsToGo = _user.life.fulltime;
         notificationsPending = _lifeNotificationsPending;
-        _lifeNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.life.fulltime));
+        _lifeNotificationTime = DateTime.now().add(Duration(seconds: _user.life.fulltime));
         var formattedTime = TimeFormatter(
           inputTime: _lifeNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -958,15 +925,13 @@ UserDetailsProvider _userProvider;
       case ProfileNotification.drugs:
         secondsToGo = _user.cooldowns.drug;
         notificationsPending = _drugsNotificationsPending;
-        _drugsNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+        _drugsNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
         var formattedTime = TimeFormatter(
           inputTime: _drugsNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        notificationSetString =
-            'Drugs cooldown notification set for $formattedTime';
+        notificationSetString = 'Drugs cooldown notification set for $formattedTime';
         notificationCancelString = 'Drugs cooldown notification cancelled!';
         alarmSetString = 'Drugs cooldown alarm set for $formattedTime';
         timerSetString = 'Drugs cooldown timer set for $formattedTime';
@@ -977,15 +942,13 @@ UserDetailsProvider _userProvider;
       case ProfileNotification.medical:
         secondsToGo = _user.cooldowns.medical;
         notificationsPending = _medicalNotificationsPending;
-        _medicalNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
+        _medicalNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
         var formattedTime = TimeFormatter(
           inputTime: _medicalNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        notificationSetString =
-            'Medical cooldown notification set for $formattedTime';
+        notificationSetString = 'Medical cooldown notification set for $formattedTime';
         notificationCancelString = 'Medical cooldown notification cancelled!';
         alarmSetString = 'Medical cooldown alarm set for $formattedTime';
         timerSetString = 'Medical cooldown timer set for $formattedTime';
@@ -996,15 +959,13 @@ UserDetailsProvider _userProvider;
       case ProfileNotification.booster:
         secondsToGo = _user.cooldowns.booster;
         notificationsPending = _boosterNotificationsPending;
-        _boosterNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
+        _boosterNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
         var formattedTime = TimeFormatter(
           inputTime: _boosterNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        notificationSetString =
-            'Booster cooldown notification set for $formattedTime';
+        notificationSetString = 'Booster cooldown notification set for $formattedTime';
         notificationCancelString = 'Booster cooldown notification cancelled!';
         alarmSetString = 'Booster cooldown alarm set for $formattedTime';
         timerSetString = 'Booster cooldown timer set for $formattedTime';
@@ -1017,8 +978,7 @@ UserDetailsProvider _userProvider;
       return SizedBox.shrink();
     } else {
       Color thisColor;
-      if (notificationsPending &&
-          notificationType == NotificationType.notification) {
+      if (notificationsPending && notificationType == NotificationType.notification) {
         thisColor = Colors.green;
       } else {
         if (percentageError) {
@@ -1099,9 +1059,7 @@ UserDetailsProvider _userProvider;
 
   Card _coolDowns() {
     Widget cooldownItems;
-    if (_user.cooldowns.drug > 0 ||
-        _user.cooldowns.booster > 0 ||
-        _user.cooldowns.medical > 0) {
+    if (_user.cooldowns.drug > 0 || _user.cooldowns.booster > 0 || _user.cooldowns.medical > 0) {
       cooldownItems = Padding(
         padding: const EdgeInsets.only(left: 8),
         child: Column(
@@ -1249,16 +1207,13 @@ UserDetailsProvider _userProvider;
     if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 21600) {
       return Image.asset('images/icons/cooldowns/medical1.png', width: 20);
     } // 6-12 hours
-    else if (_user.cooldowns.medical >= 21600 &&
-        _user.cooldowns.medical < 43200) {
+    else if (_user.cooldowns.medical >= 21600 && _user.cooldowns.medical < 43200) {
       return Image.asset('images/icons/cooldowns/medical2.png', width: 20);
     } // 12-18 hours
-    else if (_user.cooldowns.medical >= 43200 &&
-        _user.cooldowns.medical < 64800) {
+    else if (_user.cooldowns.medical >= 43200 && _user.cooldowns.medical < 64800) {
       return Image.asset('images/icons/cooldowns/medical3.png', width: 20);
     } // 18-24 hours
-    else if (_user.cooldowns.medical >= 64800 &&
-        _user.cooldowns.medical < 86400) {
+    else if (_user.cooldowns.medical >= 64800 && _user.cooldowns.medical < 86400) {
       return Image.asset('images/icons/cooldowns/medical4.png', width: 20);
     } // 24+ hours
     else {
@@ -1271,16 +1226,13 @@ UserDetailsProvider _userProvider;
     if (_user.cooldowns.booster > 0 && _user.cooldowns.booster < 21600) {
       return Image.asset('images/icons/cooldowns/booster1.png', width: 20);
     } // 6-12 hours
-    else if (_user.cooldowns.booster >= 21600 &&
-        _user.cooldowns.booster < 43200) {
+    else if (_user.cooldowns.booster >= 21600 && _user.cooldowns.booster < 43200) {
       return Image.asset('images/icons/cooldowns/booster2.png', width: 20);
     } // 12-18 hours
-    else if (_user.cooldowns.booster >= 43200 &&
-        _user.cooldowns.booster < 64800) {
+    else if (_user.cooldowns.booster >= 43200 && _user.cooldowns.booster < 64800) {
       return Image.asset('images/icons/cooldowns/booster3.png', width: 20);
     } // 18-24 hours
-    else if (_user.cooldowns.booster >= 64800 &&
-        _user.cooldowns.booster < 86400) {
+    else if (_user.cooldowns.booster >= 64800 && _user.cooldowns.booster < 86400) {
       return Image.asset('images/icons/cooldowns/booster4.png', width: 20);
     } // 24+ hours
     else {
@@ -1341,25 +1293,63 @@ UserDetailsProvider _userProvider;
   }
 
   Card _eventsTimeline() {
+    // Some users might an empty events map. This is why we have the events parameters as dynamic
+    // in OwnProfile Model. We need to check if it contains several elements, in which case we
+    // create a map in a new variable. Otherwise, we return an empty Card.
+    var events = Map<String, Event>();
+    if (_user.events.length > 0) {
+      events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
+    } else {
+      return Card(
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: Text(
+                    'EVENTS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+                  child: Text(
+                    "You have no events",
+                    style: TextStyle(color: Colors.green),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     var timeline = List<Widget>();
 
     int unreadCount = 0;
     int loopCount = 1;
     int maxCount;
 
-    if (_user.events.length > 20) {
+    if (events.length > 20) {
       maxCount = 20;
     } else {
-      maxCount = _user.events.length;
+      maxCount = events.length;
     }
 
-    for (var e in _user.events.values) {
+    for (var e in events.values) {
       if (e.seen == 0) {
         unreadCount++;
       }
 
       String message = HtmlParser.fix(e.event);
       message = message.replaceAll('View the details here!', '');
+      message = message.replaceAll('Please click here to continue.', '');
       message = message.replaceAll(' [view]', '.');
 
       Widget insideIcon = _eventsInsideIconCases(message);
@@ -1451,8 +1441,7 @@ UserDetailsProvider _userProvider;
             unreadString,
             style: TextStyle(
               color: unreadCount == 0 ? Colors.green : Colors.red,
-              fontWeight:
-                  unreadCount == 0 ? FontWeight.normal : FontWeight.bold,
+              fontWeight: unreadCount == 0 ? FontWeight.normal : FontWeight.bold,
             ),
           ),
         ),
@@ -1720,30 +1709,23 @@ UserDetailsProvider _userProvider;
   }
 
   Future<void> _fetchApi() async {
-    var apiResponse =
-        await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey)
-            .getOwnProfile;
+    var apiResponse = await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey).getOwnProfile;
 
     setState(() {
       if (apiResponse is OwnProfileModel) {
         _apiRetries = 0;
         _user = apiResponse;
-        _serverTime =
-            DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
+        _serverTime = DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
 
         // If max values have decreased or were never initialized
-        if (_customEnergyTrigger > _user.energy.maximum ||
-            _customEnergyTrigger == 0) {
+        if (_customEnergyTrigger > _user.energy.maximum || _customEnergyTrigger == 0) {
           _customEnergyTrigger = _user.energy.maximum;
-          SharedPreferencesModel()
-              .setEnergyNotificationValue(_customEnergyTrigger);
+          SharedPreferencesModel().setEnergyNotificationValue(_customEnergyTrigger);
         }
-        if (_customNerveTrigger > _user.nerve.maximum ||
-            _customNerveTrigger == 0) {
+        if (_customNerveTrigger > _user.nerve.maximum || _customNerveTrigger == 0) {
           _customNerveTrigger = _user.nerve.maximum;
-          SharedPreferencesModel()
-              .setNerveNotificationValue(_customNerveTrigger);
+          SharedPreferencesModel().setNerveNotificationValue(_customNerveTrigger);
         }
 
         _checkIfNotificationsAreCurrent();
@@ -1933,28 +1915,24 @@ UserDetailsProvider _userProvider;
     switch (profileNotification) {
       case ProfileNotification.energy:
         notificationId = 101;
-        secondsToNotification =
-            _energyNotificationTime.difference(DateTime.now()).inSeconds;
+        secondsToNotification = _energyNotificationTime.difference(DateTime.now()).inSeconds;
         channelTitle = 'Energy';
         channelSubtitle = 'Energy Full';
         channelDescription = 'Urgent notifications about energy';
         notificationTitle = 'Energy bar';
         notificationSubtitle = 'Here is your energy reminder!';
-        var myTimeStamp =
-            (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
+        var myTimeStamp = (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.nerve:
         notificationId = 102;
-        secondsToNotification =
-            _nerveNotificationTime.difference(DateTime.now()).inSeconds;
+        secondsToNotification = _nerveNotificationTime.difference(DateTime.now()).inSeconds;
         channelTitle = 'Nerve';
         channelSubtitle = 'Nerve Full';
         channelDescription = 'Urgent notifications about nerve';
         notificationTitle = 'Nerve bar';
         notificationSubtitle = 'Here is your nerve reminder!';
-        var myTimeStamp =
-            (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
+        var myTimeStamp = (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.life:
@@ -1966,8 +1944,7 @@ UserDetailsProvider _userProvider;
         notificationTitle = 'Life bar';
         notificationSubtitle = 'Here is your life reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.life.fulltime;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.life.fulltime;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.drugs:
@@ -1979,8 +1956,7 @@ UserDetailsProvider _userProvider;
         notificationTitle = 'Drug Cooldown';
         notificationSubtitle = 'Here is your drugs cooldown reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.cooldowns.drug;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.drug;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.medical:
@@ -1992,8 +1968,7 @@ UserDetailsProvider _userProvider;
         notificationTitle = 'Medical Cooldown';
         notificationSubtitle = 'Here is your medical cooldown reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.cooldowns.medical;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.medical;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.booster:
@@ -2005,8 +1980,7 @@ UserDetailsProvider _userProvider;
         notificationTitle = 'Booster Cooldown';
         notificationSubtitle = 'Here is your booster cooldown reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.cooldowns.booster;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.booster;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
     }
@@ -2042,8 +2016,8 @@ UserDetailsProvider _userProvider;
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics =
+        NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
       notificationId,
@@ -2102,8 +2076,7 @@ UserDetailsProvider _userProvider;
     });
   }
 
-  Future<void> _cancelNotifications(
-      ProfileNotification profileNotification) async {
+  Future<void> _cancelNotifications(ProfileNotification profileNotification) async {
     switch (profileNotification) {
       case ProfileNotification.energy:
         await flutterLocalNotificationsPlugin.cancel(101);
@@ -2156,8 +2129,7 @@ UserDetailsProvider _userProvider;
       if (notification.payload.contains('energy')) {
         var customTriggerRoundedUp = (_customEnergyTrigger + 4) / 5 * 5;
         if (_user.energy.current >= _user.energy.maximum ||
-            (!_customEnergyMaxOverride &&
-                _user.energy.current > customTriggerRoundedUp)) {
+            (!_customEnergyMaxOverride && _user.energy.current > customTriggerRoundedUp)) {
           _cancelNotifications(ProfileNotification.energy);
           BotToast.showText(
             text: 'Energy notification expired, removing!',
@@ -2172,12 +2144,10 @@ UserDetailsProvider _userProvider;
           continue;
         }
         // If override and still below it, we compare with full
-        if (_customEnergyMaxOverride &&
-            _customEnergyTrigger < _user.energy.current) {
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: _user.energy.fulltime))
-                  .millisecondsSinceEpoch /
-              1000;
+        if (_customEnergyMaxOverride && _customEnergyTrigger < _user.energy.current) {
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: _user.energy.fulltime)).millisecondsSinceEpoch /
+                  1000;
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.energy);
@@ -2199,37 +2169,30 @@ UserDetailsProvider _userProvider;
             var energyTicksToGo = energyToGo / _user.energy.increment;
             if (energyTicksToGo > 1) {
               var consumedTick = _user.energy.interval - _user.energy.ticktime;
-              newSecondsToGo =
-                  (energyTicksToGo * _user.energy.interval - consumedTick)
-                      .floor();
+              newSecondsToGo = (energyTicksToGo * _user.energy.interval - consumedTick).floor();
             } else if (energyTicksToGo > 0 && energyTicksToGo <= 1) {
               newSecondsToGo = _user.energy.ticktime;
             }
           }
 
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: newSecondsToGo))
-                  .millisecondsSinceEpoch /
-              1000;
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: newSecondsToGo)).millisecondsSinceEpoch / 1000;
 
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.energy);
-            _energyNotificationTime =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            _energyNotificationTime = DateTime.now().add(Duration(seconds: newSecondsToGo));
             _scheduleNotification(ProfileNotification.energy);
             triggered = true;
             updatedTypes.add('energy');
-            var energyCurrentSchedule =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            var energyCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
             updatedTimes.add(formatter.format(energyCurrentSchedule));
           }
         }
         // NERVE
       } else if (notification.payload.contains('nerve')) {
         if (_user.nerve.current >= _user.nerve.maximum ||
-            (!_customNerveMaxOverride &&
-                _user.nerve.current > _customNerveTrigger)) {
+            (!_customNerveMaxOverride && _user.nerve.current > _customNerveTrigger)) {
           _cancelNotifications(ProfileNotification.nerve);
           BotToast.showText(
             text: 'Nerve notification expired, removing!',
@@ -2244,20 +2207,17 @@ UserDetailsProvider _userProvider;
           continue;
         }
         // If override and still below it, we compare with full
-        if (_customNerveMaxOverride &&
-            _customNerveTrigger < _user.nerve.current) {
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: _user.nerve.fulltime))
-                  .millisecondsSinceEpoch /
-              1000;
+        if (_customNerveMaxOverride && _customNerveTrigger < _user.nerve.current) {
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: _user.nerve.fulltime)).millisecondsSinceEpoch /
+                  1000;
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.nerve);
             _scheduleNotification(ProfileNotification.nerve);
             triggered = true;
             updatedTypes.add('nerve');
-            var nerveCurrentSchedule =
-                DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+            var nerveCurrentSchedule = DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
             updatedTimes.add(formatter.format(nerveCurrentSchedule));
           }
         }
@@ -2271,70 +2231,59 @@ UserDetailsProvider _userProvider;
             var nerveTicksToGo = nerveToGo / _user.nerve.increment;
             if (nerveTicksToGo > 1) {
               var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
-              newSecondsToGo =
-                  (nerveTicksToGo * _user.nerve.interval - consumedTick)
-                      .floor();
+              newSecondsToGo = (nerveTicksToGo * _user.nerve.interval - consumedTick).floor();
             } else if (nerveTicksToGo > 0 && nerveTicksToGo <= 1) {
               newSecondsToGo = _user.nerve.ticktime;
             }
           }
 
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: newSecondsToGo))
-                  .millisecondsSinceEpoch /
-              1000;
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: newSecondsToGo)).millisecondsSinceEpoch / 1000;
 
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.nerve);
-            _nerveNotificationTime =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            _nerveNotificationTime = DateTime.now().add(Duration(seconds: newSecondsToGo));
             _scheduleNotification(ProfileNotification.nerve);
             triggered = true;
             updatedTypes.add('nerve');
-            var nerveCurrentSchedule =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            var nerveCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
             updatedTimes.add(formatter.format(nerveCurrentSchedule));
           }
         }
         // LIFE
       } else if (notification.payload.contains('life')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.life.fulltime))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.life.fulltime)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.life);
           _scheduleNotification(ProfileNotification.life);
           triggered = true;
           updatedTypes.add('life');
-          var lifeCurrentSchedule =
-              DateTime.now().add(Duration(seconds: _user.life.fulltime));
+          var lifeCurrentSchedule = DateTime.now().add(Duration(seconds: _user.life.fulltime));
           updatedTimes.add(formatter.format(lifeCurrentSchedule));
         }
         // DRUGS
       } else if (notification.payload.contains('drugs')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.cooldowns.drug))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.drug)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.drugs);
           _scheduleNotification(ProfileNotification.drugs);
           triggered = true;
           updatedTypes.add('drugs');
-          var drugsCurrentSchedule =
-              DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+          var drugsCurrentSchedule = DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
           updatedTimes.add(formatter.format(drugsCurrentSchedule));
         }
         // MEDICAL
       } else if (notification.payload.contains('medical')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.cooldowns.medical))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.medical)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.medical);
@@ -2347,10 +2296,9 @@ UserDetailsProvider _userProvider;
         }
         // BOOSTER
       } else if (notification.payload.contains('booster')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.cooldowns.booster))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.booster)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.booster);
@@ -2396,16 +2344,12 @@ UserDetailsProvider _userProvider;
 
   Future _loadNotificationPreferences() async {
     var energy = await SharedPreferencesModel().getEnergyNotificationType();
-    _customEnergyTrigger =
-        await SharedPreferencesModel().getEnergyNotificationValue();
-    _customEnergyMaxOverride =
-        await SharedPreferencesModel().getEnergyPercentageOverride();
+    _customEnergyTrigger = await SharedPreferencesModel().getEnergyNotificationValue();
+    _customEnergyMaxOverride = await SharedPreferencesModel().getEnergyPercentageOverride();
 
     var nerve = await SharedPreferencesModel().getNerveNotificationType();
-    _customNerveTrigger =
-        await SharedPreferencesModel().getNerveNotificationValue();
-    _customNerveMaxOverride =
-        await SharedPreferencesModel().getNervePercentageOverride();
+    _customNerveTrigger = await SharedPreferencesModel().getNerveNotificationValue();
+    _customNerveMaxOverride = await SharedPreferencesModel().getNervePercentageOverride();
 
     var life = await SharedPreferencesModel().getLifeNotificationType();
     var drugs = await SharedPreferencesModel().getDrugNotificationType();
@@ -2559,33 +2503,27 @@ UserDetailsProvider _userProvider;
 
     switch (profileNotification) {
       case ProfileNotification.energy:
-        totalSeconds =
-            _energyNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _energyNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Energy';
         break;
       case ProfileNotification.nerve:
-        totalSeconds =
-            _nerveNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _nerveNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Nerve';
         break;
       case ProfileNotification.life:
-        totalSeconds =
-            _lifeNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _lifeNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Life';
         break;
       case ProfileNotification.drugs:
-        totalSeconds =
-            _drugsNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _drugsNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Drugs';
         break;
       case ProfileNotification.medical:
-        totalSeconds =
-            _medicalNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _medicalNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Medical';
         break;
       case ProfileNotification.booster:
-        totalSeconds =
-            _boosterNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _boosterNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Booster';
         break;
     }

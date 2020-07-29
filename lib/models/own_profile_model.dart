@@ -82,7 +82,7 @@ class OwnProfileModel {
   Chain chain;
   Map<String, double> networth;
   Cooldowns cooldowns;
-  Map<String, Event> events;
+  dynamic events;
   Travel travel;
 
   factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
@@ -119,7 +119,7 @@ class OwnProfileModel {
     chain: json["chain"] == null ? null : Chain.fromJson(json["chain"]),
     networth: json["networth"] == null ? null : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
     cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
-    events: json["events"] == null ? null : Map.from(json["events"]).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v))),
+    events: json["events"],
     travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
   );
 
@@ -157,7 +157,7 @@ class OwnProfileModel {
     "chain": chain == null ? null : chain.toJson(),
     "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
     "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
-    "events": events == null ? null : Map.from(events).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+    "events": events,
     "travel": travel == null ? null : travel.toJson(),
   };
 }
