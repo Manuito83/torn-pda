@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
@@ -54,13 +56,21 @@ class _WebViewFullState extends State<WebViewFull> {
 
   var _tradesActive = false;
   Widget _tradesExpandable = SizedBox.shrink();
-  var _tradesController = ExpandableController();
+  Timer _tradesTimer;
 
   @override
   void initState() {
     super.initState();
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
+  }
+
+  @override
+  void dispose() {
+    if (_tradesTimer != null) {
+      _tradesTimer.cancel();
+    }
+    super.dispose();
   }
 
   @override
@@ -139,9 +149,11 @@ class _WebViewFullState extends State<WebViewFull> {
 
                       _assessGeneral();
                     },
+                    /*
                     onConsoleMessage: (InAppWebViewController c, consoleMessage) {
-                      //print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+                      print("TORN PDA JS CONSOLE: " + consoleMessage.message);
                     },
+                    */
                   ),
                 ),
               ],
@@ -338,7 +350,6 @@ class _WebViewFullState extends State<WebViewFull> {
           !easyUrl[0].contains('trade.php') ||
           (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view'))) {
         if (_tradesActive) {
-          _tradesActive = false;
           _toggleTradesExpandable(active: false);
         }
         return;
@@ -348,8 +359,8 @@ class _WebViewFullState extends State<WebViewFull> {
     }
 
     // Final items
-    int leftMoney;
-    int rightMoney;
+    int leftMoney = 0;
+    int rightMoney = 0;
     var leftItems = List<TradeItem>();
     var rightItems = List<TradeItem>();
 
@@ -362,14 +373,24 @@ class _WebViewFullState extends State<WebViewFull> {
     var leftItemsElements;
     var rightMoneyElements;
     var rightItemsElements;
-    if (totalFinds.length == 0) {
-      await Future.delayed(const Duration(seconds: 1));
-      var updatedHtml = await webView.getHtml();
-      var updatedDoc = parse(updatedHtml);
-      leftMoneyElements = updatedDoc.querySelectorAll(".left .color1 .name");
-      leftItemsElements = updatedDoc.querySelectorAll(".left .color2 .name");
-      rightMoneyElements = updatedDoc.querySelectorAll(".right .color1 .name");
-      rightItemsElements = updatedDoc.querySelectorAll(".right .color2 .name");
+
+    try {
+      if (totalFinds.length == 0) {
+        await Future.delayed(const Duration(seconds: 1));
+        var updatedHtml = await webView.getHtml();
+        var updatedDoc = parse(updatedHtml);
+        leftMoneyElements = updatedDoc.querySelectorAll(".left .color1 .name");
+        leftItemsElements = updatedDoc.querySelectorAll(".left .color2 .name");
+        rightMoneyElements = updatedDoc.querySelectorAll(".right .color1 .name");
+        rightItemsElements = updatedDoc.querySelectorAll(".right .color2 .name");
+      } else {
+        leftMoneyElements = document.querySelectorAll(".left .color1 .name");
+        leftItemsElements = document.querySelectorAll(".left .color2 .name");
+        rightMoneyElements = document.querySelectorAll(".right .color1 .name");
+        rightItemsElements = document.querySelectorAll(".right .color2 .name");
+      }
+    } catch (e) {
+      return;
     }
 
     // Left side money
@@ -440,46 +461,49 @@ class _WebViewFullState extends State<WebViewFull> {
       }
     }
 
-    if (leftMoney != null ||
-        rightMoney != null ||
-        leftItems.length != 0 ||
-        rightItems.length != 0) {
-      _toggleTradesExpandable(
-        active: true,
-        leftMoney: leftMoney,
-      );
-    } else {
-      _toggleTradesExpandable(active: false);
-    }
+    // Activate trades widget
+    _toggleTradesExpandable(
+      active: true,
+      leftMoney: leftMoney,
+      leftItems: leftItems,
+    );
   }
 
   /// Optional parameters required when [active] is true
   void _toggleTradesExpandable({
     @required bool active,
     int leftMoney,
+    List<TradeItem> leftItems,
   }) {
-    setState(() {
-      if (!active) {
+    if (!active) {
+      setState(() {
         _tradesActive = false;
         _tradesExpandable = SizedBox.shrink();
-      } else {
-        _tradesActive = true;
-        _tradesController.expanded = true;
-        _tradesExpandable = ExpandablePanel(
-          theme: ExpandableThemeData(
-            hasIcon: false,
-            tapBodyToCollapse: false,
-            tapHeaderToExpand: false,
-          ),
-          collapsed: SizedBox.shrink(),
-          controller: _tradesController,
-          header: SizedBox.shrink(),
-          expanded: TradesWidget(
-            leftMoney: leftMoney,
-          ),
-        );
+      });
+      if (_tradesTimer != null) {
+        _tradesTimer.cancel();
       }
-    });
+    } else {
+      setState(() {
+        _tradesActive = true;
+        _tradesExpandable = TradesWidget(
+          leftMoney: leftMoney,
+          leftItems: leftItems,
+        );
+      });
+      // Make sure timer is not active, then activate it again so that we refresh
+      // the page in case of item deletions
+      if (_tradesTimer != null) {
+        _tradesTimer.cancel();
+        _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
+      }
+    }
+  }
+
+  Future _reloadTrades() async {
+    var html = await webView.getHtml();
+    var document = parse(html);
+    _assessTrades(document);
   }
 
   // UTILS
