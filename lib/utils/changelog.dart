@@ -23,6 +23,13 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.6.2
+    var v1_6_2 = ChangeLogItem();
+    v1_6_2.version = 'Torn PDA v1.6.2';
+    String feat1_6_2_1 = "Fixes error when loading API Key and the profile page for players "
+        "that have deleted all their incoming events";
+    v1_6_2.features.add(feat1_6_2_1);
+
     // VERSION 1.6.0
     var v1_6_0 = ChangeLogItem();
     v1_6_0.version = 'Torn PDA v1.6.0';
@@ -109,6 +116,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_6_2);
     itemList.add(v1_6_0);
     itemList.add(v1_5_0);
     itemList.add(v1_4_1);

@@ -513,9 +513,11 @@ class _DrawerPageState extends State<DrawerPage> {
       SharedPreferencesModel().setAppVersion(appVersion);
 
       // Exceptions were we don't show a changelog
+      /*
       if (savedVersion == '1.6.0') {
         return;
       }
+      */
 
       _showChangeLogDialog(context);
     }
