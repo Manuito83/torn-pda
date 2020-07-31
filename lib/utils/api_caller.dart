@@ -6,10 +6,10 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/models/friend_model.dart';
+import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
-import 'package:torn_pda/models/travel_model.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
   user,

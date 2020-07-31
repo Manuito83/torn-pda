@@ -15,7 +15,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:torn_pda/models/travel_model.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:android_intent/android_intent.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/api_caller.dart';

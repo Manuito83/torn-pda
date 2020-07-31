@@ -1,6 +1,6 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
-import 'package:torn_pda/models/friend_model.dart';
+import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
