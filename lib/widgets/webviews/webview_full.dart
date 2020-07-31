@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
@@ -11,6 +10,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -20,13 +20,6 @@ import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/widgets/trades_widget.dart';
-
-class TradeItem {
-  String name;
-  int quantity;
-  int priceUnit;
-  int totalPrice;
-}
 
 class WebViewFull extends StatefulWidget {
   final String customTitle;
@@ -360,64 +353,94 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Final items
     int leftMoney = 0;
-    int rightMoney = 0;
     var leftItems = List<TradeItem>();
+    var leftProperties = List<TradeItem>();
+    var leftShares = List<TradeItem>();
+    int rightMoney = 0;
     var rightItems = List<TradeItem>();
+    var rightProperties = List<TradeItem>();
+    var rightShares = List<TradeItem>();
+
+    // Element containers
+    List<dom.Element> leftMoneyElements;
+    List<dom.Element> leftItemsElements;
+    List<dom.Element> leftPropertyElements;
+    List<dom.Element> leftSharesElements;
+    List<dom.Element> rightMoneyElements;
+    List<dom.Element> rightItemsElements;
+    List<dom.Element> rightPropertyElements;
+    List<dom.Element> rightSharesElements;
 
     // Because only the frame reloads, if we can't find anything
     // we'll wait 1 second, get the html again and query again
     var totalFinds = document
         .querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
 
-    var leftMoneyElements;
-    var leftItemsElements;
-    var rightMoneyElements;
-    var rightItemsElements;
-
     try {
       if (totalFinds.length == 0) {
         await Future.delayed(const Duration(seconds: 1));
         var updatedHtml = await webView.getHtml();
         var updatedDoc = parse(updatedHtml);
-        leftMoneyElements = updatedDoc.querySelectorAll(".left .color1 .name");
-        leftItemsElements = updatedDoc.querySelectorAll(".left .color2 .name");
-        rightMoneyElements = updatedDoc.querySelectorAll(".right .color1 .name");
-        rightItemsElements = updatedDoc.querySelectorAll(".right .color2 .name");
+        leftMoneyElements = updatedDoc.querySelectorAll("#trade-container .left .color1 .name");
+        leftItemsElements = updatedDoc.querySelectorAll("#trade-container .left .color2 .name");
+        leftPropertyElements = updatedDoc.querySelectorAll("#trade-container .left .color3 .name");
+        leftSharesElements = updatedDoc.querySelectorAll("#trade-container .left .color4 .name");
+        rightMoneyElements = updatedDoc.querySelectorAll("#trade-container .right .color1 .name");
+        rightItemsElements = updatedDoc.querySelectorAll("#trade-container .right .color2 .name");
+        rightPropertyElements =
+            updatedDoc.querySelectorAll("#trade-container .right .color3 .name");
+        rightSharesElements = updatedDoc.querySelectorAll("#trade-container .right .color4 .name");
       } else {
-        leftMoneyElements = document.querySelectorAll(".left .color1 .name");
-        leftItemsElements = document.querySelectorAll(".left .color2 .name");
-        rightMoneyElements = document.querySelectorAll(".right .color1 .name");
-        rightItemsElements = document.querySelectorAll(".right .color2 .name");
+        leftMoneyElements = document.querySelectorAll("#trade-container .left .color1 .name");
+        leftItemsElements = document.querySelectorAll("#trade-container .left .color2 .name");
+        leftPropertyElements = document.querySelectorAll("#trade-container .left .color3 .name");
+        leftSharesElements = document.querySelectorAll("#trade-container .left .color4 .name");
+        rightMoneyElements = document.querySelectorAll("#trade-container .right .color1 .name");
+        rightItemsElements = document.querySelectorAll("#trade-container .right .color2 .name");
+        rightPropertyElements = document.querySelectorAll("#trade-container .right .color3 .name");
+        rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
       }
     } catch (e) {
       return;
     }
 
-    // Left side money
+    // Color 1 is money
+    int colors1(List<dom.Element> sideMoneyElement) {
+      var row = sideMoneyElement[0];
+      RegExp regExp = new RegExp(r"([0-9][,]{0,3})+");
+      try {
+        var match = regExp.stringMatch(row.innerHtml);
+        return int.parse(match.replaceAll(",", ""));
+      } catch (e) {
+        return 0;
+      }
+    }
+
     if (leftMoneyElements.length > 0) {
-      var row = leftMoneyElements[0] as dom.Element;
-      RegExp regExp = new RegExp(r"([0-9][,]{0,3})+");
-      try {
-        var match = regExp.stringMatch(row.innerHtml);
-        leftMoney = int.parse(match.replaceAll(",", ""));
-      } catch (e) {
-        leftMoney = 0;
-      }
+      leftMoney = colors1(leftMoneyElements);
     }
 
-    // Right side money
     if (rightMoneyElements.length > 0) {
-      var row = rightMoneyElements[0] as dom.Element;
-      RegExp regExp = new RegExp(r"([0-9][,]{0,3})+");
-      try {
-        var match = regExp.stringMatch(row.innerHtml);
-        rightMoney = int.parse(match.replaceAll(",", ""));
-      } catch (e) {
-        rightMoney = 0;
-      }
+      rightMoney = colors1(rightMoneyElements);
     }
 
-    // Sum of left side items
+    // Color 2 is general items
+    void addColor2Items(dom.Element itemLine, ItemsModel allTornItems, List<TradeItem> sideItems) {
+      var thisItem = TradeItem();
+      var row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
+      thisItem.name = row.split(" x")[0].trim();
+      row.split(" x").length > 1
+          ? thisItem.quantity = int.parse(row.split(" x")[1])
+          : thisItem.quantity = 1;
+      allTornItems.items.forEach((key, value) {
+        if (thisItem.name == value.name) {
+          thisItem.priceUnit = value.marketValue;
+          thisItem.totalPrice = thisItem.priceUnit * thisItem.quantity;
+        }
+      });
+      sideItems.add(thisItem);
+    }
+
     if (leftItemsElements.length > 0 || rightItemsElements.length > 0) {
       var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
       var allTornItems = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
@@ -425,39 +448,68 @@ class _WebViewFullState extends State<WebViewFull> {
         return;
       } else if (allTornItems is ItemsModel) {
         // Loop left
-        for (var leftRow in leftItemsElements) {
-          var thisItem = TradeItem();
-          var row = pdaParser.HtmlParser.fix(leftRow.innerHtml.trim());
-          thisItem.name = row.split(" x")[0].trim();
-          row.split(" x").length > 1
-              ? thisItem.quantity = int.parse(row.split(" x")[1])
-              : thisItem.quantity = 1;
-          allTornItems.items.forEach((key, value) {
-            if (thisItem.name == value.name) {
-              thisItem.priceUnit = value.marketValue;
-              thisItem.totalPrice = thisItem.priceUnit * thisItem.quantity;
-            }
-          });
-          leftItems.add(thisItem);
+        for (var itemLine in leftItemsElements) {
+          addColor2Items(itemLine, allTornItems, leftItems);
         }
         // Loop right
-        for (var rightRow in rightItemsElements) {
-          var thisItem = TradeItem();
-          var row = pdaParser.HtmlParser.fix(rightRow.innerHtml.trim());
-          thisItem.name = row.split(" x")[0].trim();
-          row.split(" x").length > 1
-              ? thisItem.quantity = int.parse(row.split(" x")[1])
-              : thisItem.quantity = 1;
-
-          allTornItems.items.forEach((key, value) {
-            if (thisItem.name == value.name) {
-              thisItem.priceUnit = value.marketValue;
-              thisItem.totalPrice = thisItem.priceUnit * thisItem.quantity;
-            }
-          });
-
-          rightItems.add(thisItem);
+        for (var itemLine in rightItemsElements) {
+          addColor2Items(itemLine, allTornItems, rightItems);
         }
+      }
+    }
+
+    // Color 3 is properties
+    void addColor3Items(dom.Element propertyLine, List<TradeItem> sideProperty) {
+      var thisProperty = TradeItem();
+      var row = pdaParser.HtmlParser.fix(propertyLine.innerHtml.trim());
+      thisProperty.name = row.split(" (")[0].trim();
+      RegExp regExp = new RegExp(r"[0-9]+ happiness");
+      try {
+        var match = regExp.stringMatch(propertyLine.innerHtml);
+        thisProperty.happiness = match.substring(0);
+      } catch (e) {
+        thisProperty.happiness = '';
+      }
+      sideProperty.add(thisProperty);
+    }
+
+    if (leftPropertyElements.length > 0 || rightPropertyElements.length > 0) {
+      for (var propertyLine in leftPropertyElements) {
+        addColor3Items(propertyLine, leftProperties);
+      }
+      for (var propertyLine in rightPropertyElements) {
+        addColor3Items(propertyLine, rightProperties);
+      }
+    }
+
+    // Color 4 is general items
+    void addColor4Items(dom.Element shareLine, List<TradeItem> sideShares) {
+      var thisShare = TradeItem();
+      var row = pdaParser.HtmlParser.fix(shareLine.innerHtml.trim());
+      thisShare.name = row.split(" x")[0].trim();
+
+      try {
+        RegExp regQuantity = new RegExp(
+            r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
+        var matches = regQuantity.allMatches(shareLine.innerHtml);
+        thisShare.name = matches.elementAt(0).group(1);
+        thisShare.quantity = int.parse(matches.elementAt(0).group(2));
+        var singlePriceSplit = matches.elementAt(0).group(3).split('.');
+        thisShare.shareUnit = double.parse(singlePriceSplit[0].replaceAll(',', '')) +
+            double.parse('0.${singlePriceSplit[1]}');
+        thisShare.totalPrice = int.parse(matches.elementAt(0).group(4).replaceAll(',', ''));
+      } catch (e) {
+        thisShare.quantity = 0;
+      }
+      sideShares.add(thisShare);
+    }
+
+    if (leftSharesElements.length > 0 || rightSharesElements.length > 0) {
+      for (var shareLine in leftSharesElements) {
+        addColor4Items(shareLine, leftShares);
+      }
+      for (var shareLine in rightSharesElements) {
+        addColor4Items(shareLine, rightShares);
       }
     }
 
@@ -466,6 +518,12 @@ class _WebViewFullState extends State<WebViewFull> {
       active: true,
       leftMoney: leftMoney,
       leftItems: leftItems,
+      leftProperties: leftProperties,
+      leftShares: leftShares,
+      rightMoney: rightMoney,
+      rightItems: rightItems,
+      rightProperties: rightProperties,
+      rightShares: rightShares,
     );
   }
 
@@ -474,6 +532,12 @@ class _WebViewFullState extends State<WebViewFull> {
     @required bool active,
     int leftMoney,
     List<TradeItem> leftItems,
+    List<TradeItem> leftProperties,
+    List<TradeItem> leftShares,
+    int rightMoney,
+    List<TradeItem> rightItems,
+    List<TradeItem> rightProperties,
+    List<TradeItem> rightShares,
   }) {
     if (!active) {
       setState(() {
@@ -489,14 +553,20 @@ class _WebViewFullState extends State<WebViewFull> {
         _tradesExpandable = TradesWidget(
           leftMoney: leftMoney,
           leftItems: leftItems,
+          leftProperties: leftProperties,
+          leftShares: leftShares,
+          rightMoney: rightMoney,
+          rightItems: rightItems,
+          rightProperties: rightProperties,
+          rightShares: rightShares,
         );
       });
       // Make sure timer is not active, then activate it again so that we refresh
       // the page in case of item deletions
       if (_tradesTimer != null) {
         _tradesTimer.cancel();
-        _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
       }
+      _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
     }
   }
 
