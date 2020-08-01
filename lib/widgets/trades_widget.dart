@@ -1,5 +1,7 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
@@ -60,17 +62,12 @@ class _TradesWidgetState extends State<TradesWidget> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10.0),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  GestureDetector(
-                    child: _headerTotals('left'),
-                    onTap: () {
-                      print('cuac'); // TODO!!
-                    },
-                  ),
-                  _headerTotals('right'),
+                  Flexible(child: _headerTotals('left')),
+                  Flexible(child: _headerTotals('right')),
                 ],
               ),
             ),
@@ -86,7 +83,11 @@ class _TradesWidgetState extends State<TradesWidget> {
               ),
             ),
             ConstrainedBox(
-              constraints: BoxConstraints.loose(Size.fromHeight(200)),
+              constraints: BoxConstraints.loose(Size.fromHeight(
+                      (MediaQuery.of(context).size.height -
+                          kToolbarHeight -
+                          AppBar().preferredSize.height)) /
+                  3),
               child: Scrollbar(
                 controller: _scrollController,
                 isAlwaysShown: true,
@@ -170,16 +171,53 @@ class _TradesWidgetState extends State<TradesWidget> {
       }
     }
 
+    Widget clipboardIcon = SizedBox(
+      height: 20,
+      width: 20,
+      child: IconButton(
+        padding: EdgeInsets.all(0),
+        iconSize: 20,
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: '${_moneyFormat.format(total)}'));
+          BotToast.showText(
+            text: "\$${_moneyFormat.format(total)} copied to the clipboard!",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+        },
+        icon: Icon(
+          Icons.content_copy,
+          size: 15,
+          color: Colors.grey,
+        ),
+      ),
+    );
+
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '\$${_moneyFormat.format(total)}',
-          style: TextStyle(
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
+        side == 'left'
+            ? Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon)
+            : SizedBox.shrink(),
+        Flexible(
+          child: Text(
+            '\$${_moneyFormat.format(total)}',
+            textAlign: side == 'left' ? TextAlign.start : TextAlign.end,
+            style: TextStyle(
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         propertyIcon(),
+        side == 'right'
+            ? Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon)
+            : SizedBox.shrink(),
       ],
     );
   }
