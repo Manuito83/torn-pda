@@ -16,10 +16,12 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 import 'package:http/http.dart' as http;
-import 'package:torn_pda/widgets/trades_widget.dart';
+import 'package:torn_pda/widgets/trades/trades_options.dart';
+import 'package:torn_pda/widgets/trades/trades_widget.dart';
 
 class WebViewFull extends StatefulWidget {
   final String customTitle;
@@ -47,9 +49,13 @@ class _WebViewFullState extends State<WebViewFull> {
   var _crimesActive = false;
   var _crimesController = ExpandableController();
 
-  var _tradesActive = false;
+  var _tradesFullActive = false;
+  var _tradesIconActive = false;
   Widget _tradesExpandable = SizedBox.shrink();
   Timer _tradesTimer;
+  bool _tradesPreferencesLoaded = false;
+  bool _tradeCalculatorActive = false;
+  bool _tradeRefreshActive = false;
 
   @override
   void initState() {
@@ -85,6 +91,8 @@ class _WebViewFullState extends State<WebViewFull> {
             _travelHomeIcon(),
             _crimesInfoIcon(),
             _crimesMenuIcon(),
+            _crimesMenuIcon(),
+            _tradesMenuIcon(),
           ],
         ),
         body: Container(
@@ -336,18 +344,39 @@ class _WebViewFullState extends State<WebViewFull> {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
     var h4 = document.querySelector(".content-title > h4");
-    if (h4 != null) {
+    if (h4 == null) {
+      return;
+    } else {
       var pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
       var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
-      if (!pageTitle.contains('trade') ||
-          !easyUrl[0].contains('trade.php') ||
-          (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view'))) {
-        if (_tradesActive) {
+      if (pageTitle.contains('trade') && easyUrl[0].contains('trade.php')) {
+        // Activate trades icon even before starting a trade, so that it can be deactivated
+        _tradesIconActive = true;
+        if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
+          if (_tradesFullActive) {
+            _toggleTradesExpandable(active: false);
+          }
+          return;
+        }
+      } else {
+        if (_tradesFullActive) {
           _toggleTradesExpandable(active: false);
         }
+        _tradesIconActive = false;
         return;
       }
-    } else {
+    }
+
+    // We only get this once and if we are inside a trade
+    // It's also in the callback from trades options
+    if (!_tradesPreferencesLoaded) {
+      await _tradesPreferencesLoad();
+      _tradesPreferencesLoaded = true;
+    }
+    if (!_tradeCalculatorActive) {
+      if (_tradesFullActive) {
+        _toggleTradesExpandable(active: false);
+      }
       return;
     }
 
@@ -541,7 +570,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }) {
     if (!active) {
       setState(() {
-        _tradesActive = false;
+        _tradesFullActive = false;
         _tradesExpandable = SizedBox.shrink();
       });
       if (_tradesTimer != null) {
@@ -549,7 +578,7 @@ class _WebViewFullState extends State<WebViewFull> {
       }
     } else {
       setState(() {
-        _tradesActive = true;
+        _tradesFullActive = true;
         _tradesExpandable = TradesWidget(
           leftMoney: leftMoney,
           leftItems: leftItems,
@@ -566,7 +595,9 @@ class _WebViewFullState extends State<WebViewFull> {
       if (_tradesTimer != null) {
         _tradesTimer.cancel();
       }
-      _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
+      if (_tradeRefreshActive) {
+        _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
+      }
     }
   }
 
@@ -574,6 +605,45 @@ class _WebViewFullState extends State<WebViewFull> {
     var html = await webView.getHtml();
     var document = parse(html);
     _assessTrades(document);
+  }
+
+  Widget _tradesMenuIcon() {
+    if (_tradesIconActive) {
+      return OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return TradesOptions(
+            callback: _tradesPreferencesLoad,
+          );
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(MdiIcons.accountSwitchOutline),
+            ),
+          );
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Future _tradesPreferencesLoad() async {
+    _tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
+    _tradeRefreshActive = await SharedPreferencesModel().getTradeCalculatorRefresh();
+    _reloadTrades();
   }
 
   // UTILS

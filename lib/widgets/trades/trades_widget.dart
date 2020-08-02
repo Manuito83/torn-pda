@@ -160,12 +160,13 @@ class _TradesWidgetState extends State<TradesWidget> {
         return Row(
           children: [
             SizedBox(width: 5),
-            Text('(+'),
+            Text('(+', style: TextStyle(color: Colors.white)),
             Icon(
               MdiIcons.home,
+              color: Colors.white,
               size: 14,
             ),
-            Text(')'),
+            Text(')', style: TextStyle(color: Colors.white)),
           ],
         );
       }
@@ -312,7 +313,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.home, size: 18),
+            Icon(MdiIcons.home, size: 18, color: Colors.white),
             SizedBox(width: 5),
             Text(
               propertyName,
@@ -357,7 +358,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.chartTimelineVariant, size: 18),
+            Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
             SizedBox(width: 5),
             Text(
               shareName,
