@@ -1,5 +1,3 @@
-import 'package:android_intent/android_intent.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -52,6 +50,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                   if (snapshot.connectionState == ConnectionState.done) {
                     return SingleChildScrollView(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           SizedBox(height: 10),
                           Padding(
