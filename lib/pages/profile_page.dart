@@ -1791,6 +1791,22 @@ UserDetailsProvider _userProvider;
             Icons.comment,
             color: Colors.black,
           ),
+          backgroundColor: Colors.yellow[800],
+          onTap: () async {
+            _openTornBrowser('trades');
+          },
+          label: 'TRADES',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.yellow[800],
+        ),
+        SpeedDialChild(
+          child: Icon(
+            Icons.comment,
+            color: Colors.black,
+          ),
           backgroundColor: Colors.grey[400],
           onTap: () async {
             _openTornBrowser('events');
@@ -1872,6 +1888,9 @@ UserDetailsProvider _userProvider;
         break;
       case 'events':
         tornPage = 'https://www.torn.com/events.php#/step=all';
+        break;
+      case 'trades':
+        tornPage = 'https://www.torn.com/trade.php';
         break;
     }
 
