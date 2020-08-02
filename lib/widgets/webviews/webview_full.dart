@@ -140,14 +140,6 @@ class _WebViewFullState extends State<WebViewFull> {
                     },
                     onLoadStop: (InAppWebViewController c, String url) {
                       _currentUrl = url;
-
-                      webView.addJavaScriptHandler(
-                        handlerName: 'stocksChannel',
-                        callback: (args) {
-                          _sendStockInformation(args[0]);
-                        },
-                      );
-
                       _assessGeneral();
                     },
                     /*
@@ -179,7 +171,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     if (query.length > 0) {
       _insertTravelFillMaxButtons();
-      _assessTravelStocks();
+      _sendStockInformation(document);
       setState(() {
         _travelActive = true;
       });
@@ -194,14 +186,7 @@ class _WebViewFullState extends State<WebViewFull> {
     await webView.evaluateJavascript(source: buyMaxJS());
   }
 
-  Future _assessTravelStocks() async {
-    // TODO: WTF? This can go. Try.
-    await webView.evaluateJavascript(source: addForeignStocksEventJS());
-    await webView.evaluateJavascript(source: getForeignStocksJS());
-  }
-
-  void _sendStockInformation(String html) async {
-    var document = parse(html);
+  void _sendStockInformation(dom.Document document) async {
     var elements = document.querySelectorAll('.item-info-wrap');
 
     if (elements.length > 0) {
