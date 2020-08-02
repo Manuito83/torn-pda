@@ -30,6 +30,19 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.7.0
+    var v1_7_0 = ChangeLogItem();
+    v1_7_0.version = 'Torn PDA v1.7.0';
+    String feat1_7_0_1 = "Added Trade Calculator, with total price calculation for cash, items and "
+        "shares, plus the ability to copy total figures for a quick trading. Also added trades as "
+        "a quick link in the Profile section";
+    String feat1_7_0_2 = "Decluttered the Travel section, with the foreign stocks page and "
+        "notifications accessible through the floating button";
+    String feat1_7_0_3 = "Changed cooldown countdown to show total hours and minutes";
+    v1_7_0.features.add(feat1_7_0_1);
+    v1_7_0.features.add(feat1_7_0_2);
+    v1_7_0.features.add(feat1_7_0_3);
+
     // VERSION 1.6.2
     var v1_6_2 = ChangeLogItem();
     v1_6_2.version = 'Torn PDA v1.6.2';
@@ -123,6 +136,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_7_0);
     itemList.add(v1_6_2);
     itemList.add(v1_6_0);
     itemList.add(v1_5_0);
