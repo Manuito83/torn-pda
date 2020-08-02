@@ -21,6 +21,8 @@ class SharedPreferencesModel {
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
+  final String _kTravelAlarmSound = "pda_travelAlarmSound";
+  final String _kTravelAlarmVibration = "pda_travelAlarmVibration";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
@@ -267,6 +269,26 @@ class SharedPreferencesModel {
   Future<bool> setTravelNotificationBody(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTravelNotificationBody, value);
+  }
+
+  Future<bool> getTravelAlarmSound() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelAlarmSound) ?? true;
+  }
+
+  Future<bool> setTravelAlarmSound(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelAlarmSound, value);
+  }
+
+  Future<bool> getTravelAlarmVibration() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelAlarmVibration) ?? true;
+  }
+
+  Future<bool> setTravelAlarmVibration(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelAlarmVibration, value);
   }
 
   /// ----------------------------
