@@ -1248,7 +1248,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
     String diff = _cooldownTimeFormatted(timeEnd);
-    return Flexible(child: Text('@ $formattedTime$diff'));
+    return Flexible(
+        child: Padding(
+      padding: const EdgeInsets.only(right: 5),
+      child: Text('@ $formattedTime$diff'),
+    ));
   }
 
   Widget _medicalCounter() {
@@ -1259,7 +1263,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
     String diff = _cooldownTimeFormatted(timeEnd);
-    return Flexible(child: Text('@ $formattedTime$diff'));
+    return Flexible(
+        child: Padding(
+      padding: const EdgeInsets.only(right: 5),
+      child: Text('@ $formattedTime$diff'),
+    ));
   }
 
   Widget _boosterCounter() {
@@ -1270,12 +1278,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
     String diff = _cooldownTimeFormatted(timeEnd);
-    return Flexible(child: Text('@ $formattedTime$diff'));
+    return Flexible(
+        child: Padding(
+      padding: const EdgeInsets.only(right: 5),
+      child: Text('@ $formattedTime$diff'),
+    ));
   }
 
   String _cooldownTimeFormatted(DateTime timeEnd) {
-    String diff;
     var timeDifference = timeEnd.difference(_serverTime);
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+    String diff = '';
+    if (timeDifference.inMinutes < 1) {
+      diff = ', in a few seconds';
+    } else if (timeDifference.inMinutes >= 1 && timeDifference.inHours < 24) {
+      diff = ', in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+    } else {
+      diff = ' tomorrow, in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+    }
+
+    /*
     if (timeDifference.inMinutes < 1) {
       diff = ', seconds away';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
@@ -1289,6 +1312,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else {
       diff = ' tomorrow, in ${timeDifference.inHours} hours';
     }
+    */
+
     return diff;
   }
 
@@ -1773,6 +1798,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Icons.comment,
             color: Colors.black,
           ),
+          backgroundColor: Colors.yellow[800],
+          onTap: () async {
+            _openTornBrowser('trades');
+          },
+          label: 'TRADES',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.yellow[800],
+        ),
+        SpeedDialChild(
+          child: Icon(
+            Icons.comment,
+            color: Colors.black,
+          ),
           backgroundColor: Colors.grey[400],
           onTap: () async {
             _openTornBrowser('events');
@@ -1854,6 +1895,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case 'events':
         tornPage = 'https://www.torn.com/events.php#/step=all';
+        break;
+      case 'trades':
+        tornPage = 'https://www.torn.com/trade.php';
         break;
     }
 

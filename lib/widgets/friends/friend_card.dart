@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/friend_model.dart';
+import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/pages/friends/friend_details_page.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
