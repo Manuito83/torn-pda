@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
+import 'package:torn_pda/pages/travel/travel_options_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -34,6 +37,8 @@ class _TravelPageState extends State<TravelPage> {
   Timer _ticker;
 
   int _apiRetries = 0;
+
+  bool dialVisible = true;
 
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
@@ -66,11 +71,9 @@ class _TravelPageState extends State<TravelPage> {
 
     _retrievePendingNotifications();
 
-    _ticker = new Timer.periodic(
-        Duration(seconds: 10), (Timer t) => _updateInformation());
+    _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'travel'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'travel'});
   }
 
   // This is commented because it's handled by Firebase messaging!
@@ -103,13 +106,33 @@ class _TravelPageState extends State<TravelPage> {
         leading: IconButton(
           icon: Icon(Icons.dehaze),
           onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
             scaffoldState.openDrawer();
           },
         ),
         title: Text('Travel'),
         actions: <Widget>[
+          Platform.isAndroid
+              ? IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return TravelOptions(
+                      callback: _callBackFromTravelOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
+              : SizedBox.shrink(),
+
           IconButton(
             icon: Icon(Icons.textsms),
             onPressed: () {
@@ -147,38 +170,232 @@ class _TravelPageState extends State<TravelPage> {
         future: _finishedLoadingPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return OpenContainer(
-              transitionDuration: Duration(seconds: 1),
-              transitionType: ContainerTransitionType.fadeThrough,
-              openBuilder: (BuildContext context, VoidCallback _) {
-                return ForeignStockPage(apiKey: _myCurrentKey);
-              },
-              closedElevation: 6.0,
-              closedShape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(56 / 2),
-                ),
-              ),
-              closedColor: Colors.orange,
-              closedBuilder:
-                  (BuildContext context, VoidCallback openContainer) {
-                return SizedBox(
-                  height: 56,
-                  width: 56,
-                  child: Center(
-                    child: Image.asset(
-                      'images/icons/box.png',
-                      width: 24,
-                    ),
+            if (_travelModel.travelling) {
+              return buildSpeedDial();
+            } else {
+              return OpenContainer(
+                transitionDuration: Duration(seconds: 1),
+                transitionType: ContainerTransitionType.fadeThrough,
+                openBuilder: (BuildContext context, VoidCallback _) {
+                  return ForeignStockPage(apiKey: _myCurrentKey);
+                },
+                closedElevation: 6.0,
+                closedShape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(56 / 2),
                   ),
-                );
-              },
-            );
+                ),
+                closedColor: Colors.orange,
+                closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                  return SizedBox(
+                    height: 56,
+                    width: 56,
+                    child: Center(
+                      child: Image.asset(
+                        'images/icons/box.png',
+                        width: 24,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
           } else {
             return SizedBox.shrink();
           }
         },
       ),
+    );
+  }
+
+  SpeedDial buildSpeedDial() {
+
+    var dials = List<SpeedDialChild>();
+
+    var dialStocks = SpeedDialChild(
+      label: 'STOCKS',
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.orange,
+      child: OpenContainer(
+        transitionDuration: Duration(seconds: 1),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return ForeignStockPage(apiKey: _myCurrentKey);
+        },
+        closedElevation: 6.0,
+        closedShape: CircleBorder(),
+        closedColor: Colors.orange,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return SizedBox(
+            height: 56,
+            width: 56,
+            child: Center(
+              child: Image.asset(
+                'images/icons/box.png',
+                width: 24,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    var dialNotificationSet = SpeedDialChild(
+      child: Icon(
+        Icons.chat_bubble_outline,
+        color: Colors.black,
+      ),
+      backgroundColor: Colors.green,
+      onTap: () async {
+        await _scheduleNotification().then((value) {
+          var formatter = new DateFormat('HH:mm:ss');
+          String formattedTime = formatter.format(value);
+          BotToast.showText(
+            text: "Notification set for $formattedTime",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: Duration(seconds: 3),
+            contentPadding: EdgeInsets.all(10),
+          );
+        });
+      },
+      label: 'Set notification',
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.green,
+    );
+
+    var dialNotificationCancel = SpeedDialChild(
+      child: Icon(
+        Icons.chat_bubble_outline,
+        color: Colors.black,
+      ),
+      backgroundColor: Colors.red,
+      onTap: () async {
+        await _cancelTravelNotification();
+        BotToast.showText(
+          text: "Notification cancelled!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.black,
+          ),
+          contentColor: Colors.orange[700],
+          duration: Duration(seconds: 3),
+          contentPadding: EdgeInsets.all(10),
+        );
+      },
+      label: 'Cancel notification',
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.red,
+    );
+
+    var dialAlarm = SpeedDialChild(
+      child: Icon(
+        Icons.notifications_none,
+        color: Colors.black,
+      ),
+      backgroundColor: Colors.grey[400],
+      onTap: () async {
+        _setAlarm();
+        var formatter = new DateFormat('HH:mm');
+        String formatted = formatter.format(_travelModel.timeArrival);
+        BotToast.showText(
+          text: 'Alarm set, at $formatted local time, ${_travelModel.timeArrival.second} '
+              'seconds before arrival!',
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.green,
+          duration: Duration(seconds: 3),
+          contentPadding: EdgeInsets.all(10),
+        );
+      },
+      label: 'Set alarm',
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.grey[400],
+    );
+
+    var dialTimer = SpeedDialChild(
+      child: Icon(
+        Icons.timer,
+        color: Colors.black,
+      ),
+      backgroundColor: Colors.grey[400],
+      onTap: () async {
+        _setTimer();
+        var formatter = new DateFormat('HH:mm:ss');
+        String formattedTime =
+        formatter.format(_travelModel.timeArrival.subtract(Duration(seconds: 20)));
+        BotToast.showText(
+          text: "Timer set for $formattedTime",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.green,
+          duration: Duration(seconds: 3),
+          contentPadding: EdgeInsets.all(10),
+        );
+      },
+      label: 'Set timer',
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w500,
+        color: Colors.black,
+      ),
+      labelBackgroundColor: Colors.grey[400],
+    );
+
+    // We always add stocks
+    dials.add(dialStocks);
+
+    if (_travelModel.travelling && _travelModel.timeLeft > 120) {
+      if (_notificationsPending) {
+        dials.add(dialNotificationCancel);
+      } else {
+        dials.add(dialNotificationSet);
+      }
+
+      if (Platform.isAndroid) {
+        dials.add(dialAlarm);
+        dials.add(dialTimer);
+      }
+    }
+
+    return SpeedDial(
+      elevation: 2,
+      backgroundColor: Colors.transparent,
+      overlayColor: Colors.transparent,
+      child: Container(
+        child: Icon(
+          Icons.airplanemode_active,
+          color: Colors.black,
+          size: 30,
+        ),
+        width: 58,
+        height: 58,
+        decoration: new BoxDecoration(
+          color: Colors.orange,
+          shape: BoxShape.circle,
+        ),
+      ),
+      visible: dialVisible,
+      curve: Curves.bounceIn,
+      children: dials,
     );
   }
 
@@ -340,14 +557,12 @@ class _TravelPageState extends State<TravelPage> {
         var dateTimeArrival = _travelModel.timeArrival;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes =
-            twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff =
-            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return <Widget>[
           Padding(
-            padding: EdgeInsetsDirectional.only(top: 50, bottom: 30),
+            padding: EdgeInsetsDirectional.only(bottom: 30),
             child: _flagImage(),
           ),
           Padding(
@@ -388,57 +603,6 @@ class _TravelPageState extends State<TravelPage> {
               ),
             ],
           ),
-          Padding(
-            padding: EdgeInsetsDirectional.only(top: 20, bottom: 20),
-            child: Divider(),
-          ),
-          Text(
-            'NOTIFICATION',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-                top: 10, bottom: 15, start: 30, end: 30),
-            child: Text("This will launch a standard notification "
-                "20 seconds before arriving to destination."),
-          ),
-          _notificationNumberText(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Builder(
-                builder: (ctx) => RaisedButton(
-                  child: Text("Notify"),
-                  onPressed: () async {
-                    await _scheduleNotification().then((value) {
-                      var formatter = new DateFormat('HH:mm:ss');
-                      String formattedTime = formatter.format(value);
-                      Scaffold.of(ctx).showSnackBar(SnackBar(
-                        content: Text('Notification set for $formattedTime'),
-                      ));
-                    });
-                  },
-                ),
-              ),
-              Padding(padding: EdgeInsetsDirectional.only(start: 15)),
-              Builder(
-                builder: (ctx) => RaisedButton(
-                    child: Text("Cancel"),
-                    onPressed: () async {
-                      await _cancelTravelNotification();
-                      Scaffold.of(ctx).showSnackBar(SnackBar(
-                        content: Text('Notifications cancelled!'),
-                      ));
-                    }),
-              ),
-            ],
-          ),
-          _conditionalAlarm(),
-          _conditionalTimer(),
-          SizedBox(height: 90),
         ];
       }
     } else {
@@ -505,122 +669,6 @@ class _TravelPageState extends State<TravelPage> {
     );
   }
 
-  Widget _conditionalAlarm() {
-    if (Platform.isAndroid) {
-      return Column(
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsetsDirectional.only(top: 20, bottom: 20),
-            child: Divider(),
-          ),
-          Text(
-            'ALARM',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-                top: 10, bottom: 10, start: 30, end: 30),
-            child: Text("This will schedule a standard Android phone alarm, "
-                "rounded to the minute before arriving."),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Switch(
-                value: _alarmSound,
-                onChanged: (value) {
-                  setState(() {
-                    _alarmSound = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-              Text("Sound"),
-              Padding(
-                padding: EdgeInsetsDirectional.only(start: 10, end: 10),
-              ),
-              Switch(
-                value: _alarmVibration,
-                onChanged: (value) {
-                  setState(() {
-                    _alarmVibration = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-              Text("Vibration"),
-            ],
-          ),
-          Padding(
-            padding: EdgeInsetsDirectional.only(bottom: 10),
-          ),
-          Builder(
-            builder: (ctx) => RaisedButton(
-                child: Text("Set Alarm"),
-                onPressed: () async {
-                  _setAlarm();
-                  var formatter = new DateFormat('HH:mm');
-                  String formatted = formatter.format(_travelModel.timeArrival);
-                  Scaffold.of(ctx).showSnackBar(SnackBar(
-                    content: Text('Alarm set, at $formatted local time, '
-                        '${_travelModel.timeArrival.second} '
-                        'seconds before arrival!'),
-                  ));
-                }),
-          ),
-        ],
-      );
-    } else {
-      return SizedBox.shrink();
-    }
-  }
-
-  Widget _conditionalTimer() {
-    if (Platform.isAndroid) {
-      return Column(
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsetsDirectional.only(top: 20, bottom: 20),
-            child: Divider(),
-          ),
-          Text(
-            'TIMER',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-                top: 10, bottom: 15, start: 30, end: 30),
-            child: Text("This will launch an Android clock timer 20 seconds "
-                "before arriving to destination."),
-          ),
-          Builder(
-            builder: (ctx) => RaisedButton(
-                child: Text("Set Timer"),
-                onPressed: () async {
-                  _setTimer();
-                  var formatter = new DateFormat('HH:mm:ss');
-                  String formattedTime = formatter.format(
-                      _travelModel.timeArrival.subtract(Duration(seconds: 20)));
-                  Scaffold.of(ctx).showSnackBar(SnackBar(
-                    content: Text('Timer set for $formattedTime'),
-                  ));
-                }),
-          ),
-        ],
-      );
-    } else {
-      return SizedBox.shrink();
-    }
-  }
-
   Widget _flagImage() {
     String flagFile;
     switch (_travelModel.destination) {
@@ -667,23 +715,6 @@ class _TravelPageState extends State<TravelPage> {
       image: AssetImage(flagFile),
       width: 150,
     );
-  }
-
-  Widget _notificationNumberText() {
-    if (!_notificationsPending) {
-      return SizedBox.shrink();
-    } else {
-      return Padding(
-        padding: EdgeInsetsDirectional.only(bottom: 10),
-        child: Text(
-          'Notification active',
-          style: TextStyle(
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
   }
 
   Future<void> _showNotificationTextDialog(BuildContext _) {
@@ -777,24 +808,19 @@ class _TravelPageState extends State<TravelPage> {
                               FlatButton(
                                 child: Text("Change"),
                                 onPressed: () async {
-                                  if (_notificationFormKey.currentState
-                                      .validate()) {
+                                  if (_notificationFormKey.currentState.validate()) {
                                     // Get rid of dialog first, so that it can't
                                     // be pressed twice
                                     Navigator.of(context).pop();
                                     // Copy controller's text ot local variable
                                     // early and delete the global, so that text
                                     // does not appear again in case of failure
-                                    _notificationTitle =
-                                        _notificationTitleController.text;
-                                    _notificationBody =
-                                        _notificationBodyController.text;
+                                    _notificationTitle = _notificationTitleController.text;
+                                    _notificationBody = _notificationBodyController.text;
                                     SharedPreferencesModel()
-                                        .setTravelNotificationTitle(
-                                            _notificationTitle);
+                                        .setTravelNotificationTitle(_notificationTitle);
                                     SharedPreferencesModel()
-                                        .setTravelNotificationBody(
-                                            _notificationBody);
+                                        .setTravelNotificationBody(_notificationBody);
                                     Scaffold.of(_).showSnackBar(
                                       SnackBar(
                                         content: Text(
@@ -850,8 +876,7 @@ class _TravelPageState extends State<TravelPage> {
   void _updateInformation() {
     DateTime now = DateTime.now();
     // We avoid calling the API unnecessarily
-    if (now
-        .isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
+    if (now.isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
       _fetchTornApi();
     }
     _retrievePendingNotifications();
@@ -888,8 +913,7 @@ class _TravelPageState extends State<TravelPage> {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime =
-        _travelModel.timeArrival.subtract(Duration(seconds: 20));
+    var scheduledNotificationDateTime = _travelModel.timeArrival.subtract(Duration(seconds: 20));
     var vibrationPattern = Int64List(8);
     vibrationPattern[0] = 0;
     vibrationPattern[1] = 400;
@@ -921,8 +945,8 @@ class _TravelPageState extends State<TravelPage> {
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics =
+        NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
       201,
@@ -1002,10 +1026,14 @@ class _TravelPageState extends State<TravelPage> {
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
-    _notificationTitle =
-        await SharedPreferencesModel().getTravelNotificationTitle();
-    _notificationBody =
-        await SharedPreferencesModel().getTravelNotificationBody();
+    _notificationTitle = await SharedPreferencesModel().getTravelNotificationTitle();
+    _notificationBody = await SharedPreferencesModel().getTravelNotificationBody();
+    _alarmSound = await SharedPreferencesModel().getTravelAlarmSound();
+    _alarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
+  }
+
+  _callBackFromTravelOptions() async {
+    await _restorePreferences();
   }
 }
 
