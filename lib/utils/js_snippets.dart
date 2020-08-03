@@ -141,23 +141,6 @@ String buyMaxJS() {
   ''';
 }
 
-String addForeignStocksEventJS() {
-  return '''
-      var outHtml = document.documentElement.outerHTML;
-      window.flutter_inappwebview.callHandler('stocksChannel', outHtml).then(function(result) {
-        var stocksChannel = new MessageChannel();
-        stocksChannel.port1.postMessage(result);
-     });
-    ''';
-}
-
-String getForeignStocksJS() {
-  return '''
-    var stocksChannel = new MessageChannel();
-    stocksChannel.port1.postMessage(document.documentElement.outerHTML);
-  ''';
-}
-
 String travelReturnHomeJS() {
   return '''
     function goHome() {
