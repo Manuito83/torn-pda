@@ -56,7 +56,6 @@ class _WebViewFullState extends State<WebViewFull> {
   //Timer _tradesTimer;
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorActive = false;
-  bool _tradeRefreshActive = false;
 
   @override
   void initState() {
@@ -64,14 +63,6 @@ class _WebViewFullState extends State<WebViewFull> {
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
   }
-
-/*  @override
-  void dispose() {
-    if (_tradesTimer != null) {
-      _tradesTimer.cancel();
-    }
-    super.dispose();
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -574,9 +565,6 @@ class _WebViewFullState extends State<WebViewFull> {
         _tradesFullActive = false;
         _tradesExpandable = SizedBox.shrink();
       });
-/*      if (_tradesTimer != null) {
-        _tradesTimer.cancel();
-      }*/
     } else {
       setState(() {
         _tradesFullActive = true;
@@ -591,21 +579,10 @@ class _WebViewFullState extends State<WebViewFull> {
           rightShares: rightShares,
         );
       });
-      // Make sure timer is not active, then activate it again so that we refresh
-      // the page in case of item deletions
-/*      if (_tradesTimer != null) {
-        _tradesTimer.cancel();
-      }*/
-/*      if (_tradeRefreshActive) {
-        _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
-      }*/
     }
   }
 
   Future _forceAssessTrades() async {
-
-    print('BOIIING');
-
     _currentUrl = await webView.getUrl();
     var html = await webView.getHtml();
     var document = parse(html);
@@ -647,7 +624,6 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
-    _tradeRefreshActive = await SharedPreferencesModel().getTradeCalculatorRefresh();
     _forceAssessTrades();
   }
 
