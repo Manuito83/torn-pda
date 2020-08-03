@@ -45,7 +45,6 @@ class SharedPreferencesModel {
   final String _kLootAlarmVibration = "pda_lootAlarmVibration";
   final String _kLootAlarmSound = "pda_lootAlarmSound";
   final String _kTradeCalculatorActive = "pda_tradeCalculatorActive";
-  final String _kTradeCalculatorRefresh = "pda_tradeCalculatorRefresh";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -526,16 +525,6 @@ class SharedPreferencesModel {
   Future<bool> setTradeCalculatorActive(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTradeCalculatorActive, value);
-  }
-
-  Future<bool> getTradeCalculatorRefresh() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTradeCalculatorRefresh) ?? true;
-  }
-
-  Future<bool> setTradeCalculatorRefresh(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTradeCalculatorRefresh, value);
   }
 
 

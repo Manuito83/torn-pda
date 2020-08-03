@@ -14,7 +14,6 @@ class TradesOptions extends StatefulWidget {
 
 class _TradesOptionsState extends State<TradesOptions> {
   bool _tradeCalculatorActive = true;
-  bool _tradeCalculatorRefresh = true;
 
   Future _preferencesLoaded;
 
@@ -85,40 +84,6 @@ class _TradesOptionsState extends State<TradesOptions> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Watch for deletions"),
-                                Switch(
-                                  value: _tradeCalculatorRefresh,
-                                  onChanged: _tradeCalculatorActive ? (value) {
-                                    SharedPreferencesModel().setTradeCalculatorRefresh(value);
-                                    setState(() {
-                                      _tradeCalculatorRefresh = value;
-                                    });
-                                  } : null,
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Text(
-                              'Enables auto updating the list when an item is removed by the player, '
-                              'with no need to refresh manually refresh the trade. May have an '
-                              'impact on performance',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
                           SizedBox(height: 50),
                         ],
                       ),
@@ -139,11 +104,9 @@ class _TradesOptionsState extends State<TradesOptions> {
 
   Future _restorePreferences() async {
     var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
-    var tradeCalculatorRefresh = await SharedPreferencesModel().getTradeCalculatorRefresh();
 
     setState(() {
       _tradeCalculatorActive = tradeCalculatorActive;
-      _tradeCalculatorRefresh = tradeCalculatorRefresh;
     });
   }
 
