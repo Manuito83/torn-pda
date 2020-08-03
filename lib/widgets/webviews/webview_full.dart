@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
@@ -52,7 +53,7 @@ class _WebViewFullState extends State<WebViewFull> {
   var _tradesFullActive = false;
   var _tradesIconActive = false;
   Widget _tradesExpandable = SizedBox.shrink();
-  Timer _tradesTimer;
+  //Timer _tradesTimer;
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorActive = false;
   bool _tradeRefreshActive = false;
@@ -64,13 +65,13 @@ class _WebViewFullState extends State<WebViewFull> {
     _pageTitle = widget.customTitle;
   }
 
-  @override
+/*  @override
   void dispose() {
     if (_tradesTimer != null) {
       _tradesTimer.cancel();
     }
     super.dispose();
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -142,11 +143,26 @@ class _WebViewFullState extends State<WebViewFull> {
                       _currentUrl = url;
                       _assessGeneral();
                     },
-                    /*
-                    onConsoleMessage: (InAppWebViewController c, consoleMessage) {
+                    onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
                       print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+                      /// TRADES
+                      ///   - IOS: onLoadStop does not work inside of Trades, that is why we
+                      ///     redirect both with console messages (all 'hash.step') and from
+                      ///     [_assessGeneral] so that we can remove the widget when an unrelated
+                      ///     page is visited. Console messages also help with deletions updates
+                      ///     when 'hash.step view' is shown.
+                      ///   - Android: onLoadStop works, but we still need to catch deletions,
+                      ///     so we listen for 'hash.step view'.
+                      if (Platform.isIOS) {
+                        if (consoleMessage.message.contains('hash.step')) {
+                          _forceAssessTrades();
+                        }
+                      } else if (Platform.isAndroid) {
+                        if (consoleMessage.message.contains('hash.step view')) {
+                          _forceAssessTrades();
+                        }
+                      }
                     },
-                    */
                   ),
                 ),
               ],
@@ -334,7 +350,7 @@ class _WebViewFullState extends State<WebViewFull> {
     } else {
       var pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
       var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
-      if (pageTitle.contains('trade') && easyUrl[0].contains('trade.php')) {
+      if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
         // Activate trades icon even before starting a trade, so that it can be deactivated
         _tradesIconActive = true;
         if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
@@ -558,9 +574,9 @@ class _WebViewFullState extends State<WebViewFull> {
         _tradesFullActive = false;
         _tradesExpandable = SizedBox.shrink();
       });
-      if (_tradesTimer != null) {
+/*      if (_tradesTimer != null) {
         _tradesTimer.cancel();
-      }
+      }*/
     } else {
       setState(() {
         _tradesFullActive = true;
@@ -577,16 +593,20 @@ class _WebViewFullState extends State<WebViewFull> {
       });
       // Make sure timer is not active, then activate it again so that we refresh
       // the page in case of item deletions
-      if (_tradesTimer != null) {
+/*      if (_tradesTimer != null) {
         _tradesTimer.cancel();
-      }
-      if (_tradeRefreshActive) {
+      }*/
+/*      if (_tradeRefreshActive) {
         _tradesTimer = Timer.periodic(Duration(seconds: 10), (Timer t) => _reloadTrades());
-      }
+      }*/
     }
   }
 
-  Future _reloadTrades() async {
+  Future _forceAssessTrades() async {
+
+    print('BOIIING');
+
+    _currentUrl = await webView.getUrl();
     var html = await webView.getHtml();
     var document = parse(html);
     _assessTrades(document);
@@ -628,7 +648,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
     _tradeRefreshActive = await SharedPreferencesModel().getTradeCalculatorRefresh();
-    _reloadTrades();
+    _forceAssessTrades();
   }
 
   // UTILS
