@@ -83,7 +83,6 @@ class _WebViewFullState extends State<WebViewFull> {
             _travelHomeIcon(),
             _crimesInfoIcon(),
             _crimesMenuIcon(),
-            _crimesMenuIcon(),
             _tradesMenuIcon(),
           ],
         ),
