@@ -138,12 +138,12 @@ class _WebViewFullState extends State<WebViewFull> {
                       print("TORN PDA JS CONSOLE: " + consoleMessage.message);
                       /// TRADES
                       ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-                      ///     redirect both with console messages (all 'hash.step') and from
-                      ///     [_assessGeneral] so that we can remove the widget when an unrelated
-                      ///     page is visited. Console messages also help with deletions updates
-                      ///     when 'hash.step view' is shown.
+                      ///     redirect both with console messages (all 'hash.step') for trades
+                      ///     identification, but also with _assessGeneral() so that we can remove
+                      ///     the widget when an unrelated page is visited. Console messages also
+                      ///     help with deletions updates when 'hash.step view' is shown.
                       ///   - Android: onLoadStop works, but we still need to catch deletions,
-                      ///     so we listen for 'hash.step view'.
+                      ///     so we only listen for 'hash.step view'.
                       if (Platform.isIOS) {
                         if (consoleMessage.message.contains('hash.step')) {
                           _forceAssessTrades();
