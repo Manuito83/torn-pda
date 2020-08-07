@@ -4,41 +4,48 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
   const promises: Promise<any>[] = [];
 
-  if (
-    energy.maximum === energy.current && 
-    (subscriber.energyLastCheckFull === false)
-  ) {
-    promises.push(
-      sendNotificationToUser(
-        subscriber.token,
-        "Full Energy Bar",
-        "Your energy is full, go spend on something!"
-      )
-    );
-    promises.push(
-      admin
-        .firestore()
-        .collection("players")
-        .doc(subscriber.uid)
-        .update({
-          energyLastCheckFull: true,
-        })
-    );
-  }
+  try {
+    if (
+      energy.maximum === energy.current && 
+      (subscriber.energyLastCheckFull === false)
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          "Full Energy Bar",
+          "Your energy is full, go spend on something!"
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            energyLastCheckFull: true,
+          })
+      );
+    }
 
-  if (
-    energy.current < energy.maximum &&
-    (subscriber.energyLastCheckFull === true)
-  ) {
-    promises.push(
-      admin
-        .firestore()
-        .collection("players")
-        .doc(subscriber.uid)
-        .update({
-          energyLastCheckFull: false,
-        })
-    );
+    if (
+      energy.current < energy.maximum &&
+      (subscriber.energyLastCheckFull === true)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            energyLastCheckFull: false,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR");
+    console.log(subscriber.uid);
+    console.log(error);
   }
 
   return Promise.all(promises);
@@ -95,7 +102,7 @@ export async function sendNotificationToUser(
 
   const options = {
     priority: 'high',
-    timeToLive: 60 * 60 * 24
+    timeToLive: 60 * 60 * 5
   };
 
   return admin.messaging()
