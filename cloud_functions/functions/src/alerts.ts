@@ -24,11 +24,13 @@ export const alertsGroup = {
 async function sendNotificationForProfile(subscriber: any): Promise<any> {
   const promises: Promise<any>[] = [];
   const userStats = await getUsersStat(subscriber.apiKey);
-  // Follow the similar step to notify about the energy increase
-  if (subscriber.energyNotification)
-    promises.push(sendEnergyNotification(userStats, subscriber));
-  if (subscriber.travelNotification)
-    promises.push(sendTravelNotification(userStats, subscriber));
+  
+  if (!userStats.error) {
+    if (subscriber.energyNotification)
+      promises.push(sendEnergyNotification(userStats, subscriber));
+    if (subscriber.travelNotification)
+      promises.push(sendTravelNotification(userStats, subscriber));
+  }
 
   await Promise.all(promises);
 }
