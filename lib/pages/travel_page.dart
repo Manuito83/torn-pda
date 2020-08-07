@@ -114,25 +114,24 @@ class _TravelPageState extends State<TravelPage> {
         actions: <Widget>[
           Platform.isAndroid
               ? IconButton(
-            icon: Icon(
-              Icons.alarm_on,
-              color: _themeProvider.buttonText,
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return TravelOptions(
-                      callback: _callBackFromTravelOptions,
+                  icon: Icon(
+                    Icons.alarm_on,
+                    color: _themeProvider.buttonText,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return TravelOptions(
+                            callback: _callBackFromTravelOptions,
+                          );
+                        },
+                      ),
                     );
                   },
-                ),
-              );
-            },
-          )
+                )
               : SizedBox.shrink(),
-
           IconButton(
             icon: Icon(Icons.textsms),
             onPressed: () {
@@ -209,7 +208,6 @@ class _TravelPageState extends State<TravelPage> {
   }
 
   SpeedDial buildSpeedDial() {
-
     var dials = List<SpeedDialChild>();
 
     var dialStocks = SpeedDialChild(
@@ -340,7 +338,7 @@ class _TravelPageState extends State<TravelPage> {
         _setTimer();
         var formatter = new DateFormat('HH:mm:ss');
         String formattedTime =
-        formatter.format(_travelModel.timeArrival.subtract(Duration(seconds: 20)));
+            formatter.format(_travelModel.timeArrival.subtract(Duration(seconds: 20)));
         BotToast.showText(
           text: "Timer set for $formattedTime",
           textStyle: TextStyle(
@@ -881,8 +879,7 @@ class _TravelPageState extends State<TravelPage> {
     }
     _retrievePendingNotifications();
 
-    // Update timeLeft so that the percentage indicator and timer set time work
-    // correctly
+    // Update timeLeft so that the percentage indicator and timer set time work correctly
     if (_travelModel.timeArrival.isAfter(DateTime.now())) {
       setState(() {
         var diff = _travelModel.timeArrival.difference(DateTime.now());
@@ -971,18 +968,19 @@ class _TravelPageState extends State<TravelPage> {
   Future<void> _retrievePendingNotifications() async {
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
-    setState(() {
-      if (pendingNotificationRequests.length > 0) {
-        for (var notification in pendingNotificationRequests) {
-          if (notification.payload == 'travel') {
-            _notificationsPending = true;
-          } else {
-            _notificationsPending = false;
-          }
+
+    var pending = false;
+    if (pendingNotificationRequests.length > 0) {
+      for (var notification in pendingNotificationRequests) {
+        if (notification.payload == 'travel') {
+          pending = true;
+          break;
         }
-      } else {
-        _notificationsPending = false;
       }
+    }
+
+    setState(() {
+      _notificationsPending = pending;
     });
   }
 
