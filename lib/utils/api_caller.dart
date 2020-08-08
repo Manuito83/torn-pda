@@ -249,7 +249,7 @@ class TornApiCaller {
         url += '?selections=profile,bars,networth,cooldowns,events,travel';
         break;
       case ApiSelection.target:
-        url += '$prefix?selections=';
+        url += '$prefix?selections=profile,discord';
         break;
       case ApiSelection.attacks:
         url += '$prefix?selections=attacks';

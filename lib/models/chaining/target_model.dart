@@ -47,6 +47,8 @@ class TargetModel {
   Married married;
   States states;
   LastAction lastAction;
+  Discord discord;
+
 
   TargetModel({
     // This first batch is here to export/import from SharedPreferences,
@@ -82,6 +84,7 @@ class TargetModel {
     this.married,
     this.states,
     this.lastAction,
+    this.discord,
   });
 
   factory TargetModel.fromJson(Map<String, dynamic> json) => TargetModel(
@@ -117,6 +120,7 @@ class TargetModel {
     married: Married.fromJson(json["married"]),
     states: States.fromJson(json["states"]),
     lastAction: LastAction.fromJson(json["last_action"]),
+    discord: json["discord"] == null ? null : Discord.fromJson(json["discord"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -150,6 +154,27 @@ class TargetModel {
     "married": married.toJson(),
     "states": states.toJson(),
     "last_action": lastAction.toJson(),
+    "discord": discord == null ? null : discord.toJson(),
+  };
+}
+
+class Discord {
+  Discord({
+    this.userId,
+    this.discordId,
+  });
+
+  int userId;
+  String discordId;
+
+  factory Discord.fromJson(Map<String, dynamic> json) => Discord(
+    userId: json["userID"] == null ? null : json["userID"],
+    discordId: json["discordID"] == null ? null : json["discordID"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "userID": userId == null ? null : userId,
+    "discordID": discordId == null ? null : discordId,
   };
 }
 
