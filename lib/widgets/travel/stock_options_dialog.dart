@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-
 class StocksOptionsDialog extends StatefulWidget {
   final int capacity;
   final Function callBack;
@@ -13,7 +12,6 @@ class StocksOptionsDialog extends StatefulWidget {
   @override
   _StocksOptionsDialogState createState() => _StocksOptionsDialogState();
 }
-
 
 class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   ThemeProvider _themeProvider;
@@ -58,9 +56,17 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                 children: <Widget>[
                   Text(
                     'Set your item capacity (affects profit per hour calculation)',
-                    style: TextStyle(fontSize: 13),
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
                   ),
                   SizedBox(height: 16.0),
+                  Text(
+                    "Capacity: ${_capacity.round().toString()}",
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
                   Slider(
                     value: _capacity.toDouble(),
                     min: 1,
@@ -118,5 +124,4 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     widget.callBack(_capacity);
     SharedPreferencesModel().setStockCapacity(_capacity);
   }
-
 }
