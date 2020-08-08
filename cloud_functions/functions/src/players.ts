@@ -45,6 +45,10 @@ export const playersGroup = {
         promises.push(manageStats("travelNotification", -1));
       }
 
+      if (beforeStat.hospitalNotification) {
+        promises.push(manageStats("hospitalNotification", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -70,23 +74,30 @@ export const playersGroup = {
       if (beforeStat.alertsEnabled !== afterStat.alertsEnabled)
         promises.push(
           manageStats("alertsEnabled", afterStat.alertsEnabled ? 1 : -1)
-        );
+      );
 
       if (beforeStat.energyNotification !== afterStat.energyNotification)
         promises.push(
           manageStats("energyNotification", afterStat.energyNotification ? 1 : -1
-          )
-        );
+        )
+      );
       
       if (beforeStat.travelNotification !== afterStat.travelNotification)
         promises.push(
           manageStats("travelNotification", afterStat.travelNotification ? 1 : -1
-          )
-        );
+        )
+      );
+
+      if (beforeStat.hospitalNotification !== afterStat.hospitalNotification)
+        promises.push(
+          manageStats("hospitalNotification", afterStat.hospitalNotification ? 1 : -1
+        )
+      );
 
       if (
         !afterStat.energyNotification &&
         !afterStat.travelNotification &&
+        !afterStat.hospitalNotification &&
         afterStat.alertsEnabled
       )
         promises.push(
@@ -100,8 +111,10 @@ export const playersGroup = {
         );
 
       if (
-        (afterStat.energyNotification || afterStat.travelNotification) &&
-        !afterStat.alertsEnabled
+        (afterStat.energyNotification 
+         || afterStat.travelNotification
+         || afterStat.hospitalNotification) 
+         && !afterStat.alertsEnabled
       )
         promises.push(
           admin

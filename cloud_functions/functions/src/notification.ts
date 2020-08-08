@@ -43,7 +43,7 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    console.log("ERROR");
+    console.log("ERROR ENERGY");
     console.log(subscriber.uid);
     console.log(error);
   }
@@ -58,28 +58,156 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
 
   const currentDateInMillis = Date.now();
 
-  if (
-    travel.time_left > 0 &&
-    travel.time_left <= 180 &&
-    currentDateInMillis - lastTravelNotificationSent > 180 * 1000
-  ) {
-    promises.push(
-      sendNotificationToUser(
-        subscriber.token,
-        `Approaching ${travel.destination}!`,
-        `You are about to land in ${travel.destination}!`
-      )
-    );
-    promises.push(
-      admin
-        .firestore()
-        .collection("players")
-        .doc(subscriber.uid)
-        .update({
-          lastTravelNotified: currentDateInMillis,
-        })
-    );
+  try {
+
+    if (
+      travel.time_left > 0 &&
+      travel.time_left <= 180 &&
+      currentDateInMillis - lastTravelNotificationSent > 180 * 1000
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          `Approaching ${travel.destination}!`,
+          `You are about to land in ${travel.destination}!`
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            lastTravelNotified: currentDateInMillis,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR TRAVEL");
+    console.log(subscriber.uid);
+    console.log(error);
   }
+
+  return Promise.all(promises);
+}
+
+export async function sendHospitalNotification(userStats: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+  
+  const currentDateInMillis = Math.floor(Date.now() / 1000);
+  
+  let hospitalTimeToRelease = userStats.states.hospital_timestamp - currentDateInMillis;
+  if (hospitalTimeToRelease < 0)
+    hospitalTimeToRelease = 0;
+
+  const hospitalLastStatus = subscriber.hospitalLastStatus || 'out';
+  const status = userStats.last_action.status;
+
+  try {
+
+    // If we have just been hospitalised (stay > 180 seconds)
+    if (
+      hospitalTimeToRelease > 180 && hospitalLastStatus !== 'in'
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            hospitalLastStatus: 'in',
+          })
+      );
+
+      if (status !== 'Online') {
+        promises.push(
+          sendNotificationToUser(
+            subscriber.token,
+            `Hospital admission`,
+            `You have been hospitalised!`
+          )
+        );
+      }
+    }
+
+    // If we are about to be released and last time we checked we were in hospital
+    else if (
+      hospitalTimeToRelease > 0 && hospitalTimeToRelease <= 180 &&
+      hospitalLastStatus === 'in'
+    ) {
+    
+      // Change last status so that we don't notify more than once
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            hospitalLastStatus: 'notified',
+          })
+      );
+
+      if (status !== 'Online') {
+        promises.push(
+          sendNotificationToUser(
+            subscriber.token,
+            `Hospital time ending`,
+            `You are about to be released from hospital, grab your things!`
+          )
+        );
+      }
+    } 
+
+    // If we are out and did not anticipate this, we have been revived  
+    else if (
+      hospitalTimeToRelease === 0 &&
+      hospitalLastStatus === 'in'
+    ) {
+    
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            hospitalLastStatus: 'out',
+          })
+      );
+
+      if (status !== 'Online') {
+        promises.push(
+          sendNotificationToUser(
+            subscriber.token,
+            `You are out of hospital!`,
+            `You left hospital earlier than expected!`
+          )
+        );
+      }
+    }
+  
+    // If we are out and already sent the notification, just update the status
+    else if (
+      hospitalTimeToRelease === 0 &&
+      hospitalLastStatus === 'notified'
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            hospitalLastStatus: 'out',
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR HOSPITAL");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
   return Promise.all(promises);
 }
 

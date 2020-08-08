@@ -44,15 +44,21 @@ class _FirestoreHelper {
     );
   }
 
+  Future<void> subscribeToTravelNotification(bool subscribe) async {
+    await _firestore.collection("players").document(_uid).updateData({
+      "travelNotification": subscribe,
+    });
+  }
+
   Future<void> subscribeToEnergyNotification(bool subscribe) async {
     await _firestore.collection("players").document(_uid).updateData({
       "energyNotification": subscribe,
     });
   }
 
-  Future<void> subscribeToTravelNotification(bool subscribe) async {
+  Future<void> subscribeToHospitalNotification(bool subscribe) async {
     await _firestore.collection("players").document(_uid).updateData({
-      "travelNotification": subscribe,
+      "hospitalNotification": subscribe,
     });
   }
 
