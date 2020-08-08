@@ -174,7 +174,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     ),
                     child: Icon(
                       Icons.add,
-                      size: 25,
+                      size: 20,
                     ),
                     onPressed: () {
                       _showAddDialog(context);
@@ -192,7 +192,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     ),
                     child: Icon(
                       Icons.refresh,
-                      size: 25,
+                      size: 20,
                     ),
                     onPressed: () async {
                       var updateResult =
