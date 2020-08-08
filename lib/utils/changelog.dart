@@ -33,16 +33,17 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 1.7.1
     var v1_7_1 = ChangeLogItem();
     v1_7_1.version = 'Torn PDA v1.7.1';
-    String feat1_7_1_1 = "Added automatic alerts for hospital admission and release";
-    String feat1_7_1_2 = "Added TCT clock to the Profile section";
-    String feat1_7_1_3 = "Replaced ID with extended information page for targets, also made "
-        "faction icon clickable";
-    String feat1_7_1_4 = "Search form in Targets section move to the top, similar to the "
+    String feat1_7_1_1 = "Alerts section: added automatic alerts for hospital admission, "
+        "revives and hospital release";
+    String feat1_7_1_2 = "Profile section: added TCT clock at the top";
+    String feat1_7_1_3 = "Targets section: replaced target's ID string with an extended information "
+        "page for targets; also made the faction icon clickable for more details";
+    String feat1_7_1_4 = "Targets section: search form moved to the top, similar to the "
         "current layout in the Friends section";
-    String feat1_7_1_5 = "Added current item capacity value in travel capacity dialog, so there "
-        "is no need to move the slider to check it";
-    String feat1_7_1_6 = "Corrected an issue that prevented travel notifications from being "
-        "manually activated in some cases";
+    String feat1_7_1_5 = "Travel section: added current item capacity value in the travel capacity "
+        "dialog, so there is no need to move the slider to check it";
+    String feat1_7_1_6 = "Travel section: corrected an issue that prevented travel notifications "
+        "from being manually activated in some cases";
     v1_7_1.features.add(feat1_7_1_1);
     v1_7_1.features.add(feat1_7_1_2);
     v1_7_1.features.add(feat1_7_1_3);
@@ -293,7 +294,7 @@ class _ChangeLogState extends State<ChangeLog> {
         height: 18,
         width: 18,
         child: ImageIcon(
-          AssetImage('images/icons/faction.png'),
+          AssetImage('images/icons/pda_icon.png'),
         ),
       ),
     );
