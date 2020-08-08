@@ -87,7 +87,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   DateTime _serverTime;
 
-  Timer _tickerCallChainApi;
+  DateTime _currentTctTime;
+
+  Timer _tickerCallApi;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -153,7 +155,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
-    _tickerCallChainApi = new Timer.periodic(Duration(seconds: 30), (Timer t) => _fetchApi());
+    _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) => _fetchApi());
 
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
   }
@@ -170,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _tickerCallChainApi.cancel();
+    _tickerCallApi.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -198,6 +200,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           },
         ),
         actions: <Widget>[
+          _apiGoodData ? _tctClock() : SizedBox.shrink(),
           _apiGoodData
               ? IconButton(
                   icon: Icon(
@@ -326,6 +329,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           },
         ),
+      ),
+    );
+  }
+
+  Widget _tctClock() {
+    TimeFormatSetting timePrefs = _settingsProvider.currentTimeFormat;
+    DateFormat formatter;
+    switch (timePrefs) {
+      case TimeFormatSetting.h24:
+        formatter = DateFormat('HH:mm');
+        break;
+      case TimeFormatSetting.h12:
+        formatter = DateFormat('hh:mm a');
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(formatter.format(_currentTctTime)),
+          Text('TCT'),
+        ],
       ),
     );
   }
@@ -1742,6 +1769,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _user = apiResponse;
         _serverTime = DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
+
+        _currentTctTime = DateTime.now().toUtc();
 
         // If max values have decreased or were never initialized
         if (_customEnergyTrigger > _user.energy.maximum || _customEnergyTrigger == 0) {
