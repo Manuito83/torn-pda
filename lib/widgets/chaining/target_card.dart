@@ -1,13 +1,18 @@
 import 'dart:async';
+import 'package:animations/animations.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/pages/chaining/target_details_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notes_dialog.dart';
@@ -26,6 +31,7 @@ class _TargetCardState extends State<TargetCard> {
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  UserDetailsProvider _userProvider;
 
   Timer _ticker;
 
@@ -51,6 +57,7 @@ class _TargetCardState extends State<TargetCard> {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
       actionPane: SlidableDrawerActionPane(),
       actionExtentRatio: 0.25,
@@ -115,22 +122,41 @@ class _TargetCardState extends State<TargetCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         mainAxisSize: MainAxisSize.max,
                         children: <Widget>[
-                          SizedBox(
-                              width: 120,
-                              child: Row(
-                                children: <Widget>[
-                                  Text(
-                                    ' [${_target.playerId}]',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(width: 5),
+                              OpenContainer(
+                                transitionDuration: Duration(milliseconds: 500),
+                                transitionType: ContainerTransitionType.fadeThrough,
+                                openBuilder:
+                                    (BuildContext context, VoidCallback _) {
+                                  return TargetDetailsPage(target: _target);
+                                },
+                                closedElevation: 0,
+                                closedShape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(56 / 2),
+                                  ),
+                                ),
+                                closedColor: Colors.transparent,
+                                closedBuilder: (BuildContext context,
+                                    VoidCallback openContainer) {
+                                  return SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: Icon(
+                                      Icons.info_outline,
+                                      size: 20,
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 5),
-                                    child: _factionIcon(),
-                                  ),
-                                ],
-                              )),
+                                  );
+                                },
+                              ),
+                              SizedBox(width: 5),
+                              _factionIcon(),
+                            ],
+                          ),
                           Text(
                             'Lvl ${_target.level}',
                           ),
@@ -319,16 +345,69 @@ class _TargetCardState extends State<TargetCard> {
 
   Widget _factionIcon() {
     if (_target.hasFaction) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 4),
-        child: SizedBox(
-          height: 13,
-          width: 13,
-          child: ImageIcon(
-            AssetImage('images/icons/faction.png'),
+      Color borderColor = Colors.transparent;
+      Color iconColor = _themeProvider.mainText;
+      if (_target.faction.factionId == _userProvider.myUser.faction.factionId) {
+        borderColor = iconColor = Colors.green[500];
+      }
+
+      void showFactionToast() {
+        if (_target.faction.factionId ==
+            _userProvider.myUser.faction.factionId) {
+          BotToast.showText(
+            text: HtmlParser.fix("${_target.name} belongs to your same faction "
+                "(${_target.faction.factionName}) as "
+                "${_target.faction.position}"),
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+        } else {
+          BotToast.showText(
+            text: HtmlParser.fix("${_target.name} belongs to faction "
+                "${_target.faction.factionName} as "
+                "${_target.faction.position}"),
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
+
+      Widget factionIcon = Material(
+        type: MaterialType.transparency,
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: borderColor,
+              width: 1.5,
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onTap: () {
+              showFactionToast();
+            },
+            child: Padding(
+              padding: EdgeInsets.all(2),
+              child: ImageIcon(
+                AssetImage('images/icons/faction.png'),
+                size: 12,
+                color: iconColor,
+              ),
+            ),
           ),
         ),
       );
+      return factionIcon;
     } else {
       return SizedBox.shrink();
     }
