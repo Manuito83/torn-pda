@@ -30,6 +30,26 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.7.1
+    var v1_7_1 = ChangeLogItem();
+    v1_7_1.version = 'Torn PDA v1.7.1';
+    String feat1_7_1_1 = "Added automatic alerts for hospital admission and release";
+    String feat1_7_1_2 = "Added TCT clock to the Profile section";
+    String feat1_7_1_3 = "Replaced ID with extended information page for targets, also made "
+        "faction icon clickable";
+    String feat1_7_1_4 = "Search form in Targets section move to the top, similar to the "
+        "current layout in the Friends section";
+    String feat1_7_1_5 = "Added current item capacity value in travel capacity dialog, so there "
+        "is no need to move the slider to check it";
+    String feat1_7_1_6 = "Corrected an issue that prevented travel notifications from being "
+        "manually activated in some cases";
+    v1_7_1.features.add(feat1_7_1_1);
+    v1_7_1.features.add(feat1_7_1_2);
+    v1_7_1.features.add(feat1_7_1_3);
+    v1_7_1.features.add(feat1_7_1_4);
+    v1_7_1.features.add(feat1_7_1_5);
+    v1_7_1.features.add(feat1_7_1_6);
+
     // VERSION 1.7.0
     var v1_7_0 = ChangeLogItem();
     v1_7_0.version = 'Torn PDA v1.7.0';
@@ -136,6 +156,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_7_1);
     itemList.add(v1_7_0);
     itemList.add(v1_6_2);
     itemList.add(v1_6_0);
