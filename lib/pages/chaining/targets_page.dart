@@ -27,6 +27,11 @@ class _TargetsPageState extends State<TargetsPage> {
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
 
+  // For appBar search
+  Icon _searchIcon = Icon(Icons.search);
+  Widget _appBarText = Text("Targets");
+  var _focusSearch = new FocusNode();
+
   final _popupChoices = <TargetSort>[
     TargetSort(type: TargetSortType.levelDes),
     TargetSort(type: TargetSortType.levelAsc),
@@ -53,7 +58,7 @@ class _TargetsPageState extends State<TargetsPage> {
     return Scaffold(
       drawer: Drawer(),
       appBar: AppBar(
-        title: Text('Targets'),
+        title: _appBarText,
         leading: new IconButton(
           icon: new Icon(Icons.menu),
           onPressed: () {
@@ -64,43 +69,62 @@ class _TargetsPageState extends State<TargetsPage> {
         ),
         actions: <Widget>[
           IconButton(
-            icon: Icon(
-              Icons.add,
-              color: _themeProvider.buttonText,
-            ),
+            icon: _searchIcon,
             onPressed: () {
-              _showAddDialog(context);
-            },
-          ),
-          IconButton(
-            icon: Icon(
-              Icons.refresh,
-              color: _themeProvider.buttonText,
-            ),
-            onPressed: () async {
-              var updateResult = await _targetsProvider.updateAllTargets();
-              if (updateResult.success) {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(updateResult.numberSuccessful > 0
-                        ? 'Successfully updated '
-                            '${updateResult.numberSuccessful} '
-                            'targets!'
-                        : 'No targets to update!'),
-                  ),
-                );
-              } else {
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: Colors.red,
-                    content: Text(
-                      'Update with errors: ${updateResult.numberErrors} errors '
-                      'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                      'total targets!',
+              setState(() {
+                Color myColor = Colors.white;
+                if (_searchController.text != '') {
+                  myColor = Colors.orange[500];
+                }
+                if (_searchIcon.icon == Icons.search) {
+                  _searchIcon = Icon(
+                    Icons.cancel,
+                    color: myColor,
+                  );
+                  _appBarText = Form(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                          child: Row(
+                            children: <Widget>[
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _focusSearch,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: "search targets",
+                                      hintStyle: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.grey[300],
+                                          fontSize: 12),
+                                    ),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                );
-              }
+                  );
+                  _focusSearch.requestFocus();
+                } else {
+                  _searchIcon = Icon(
+                    Icons.search,
+                    color: myColor,
+                  );
+                  _appBarText = Text("Targets");
+                }
+              });
             },
           ),
           PopupMenuButton<TargetSort>(
@@ -135,40 +159,71 @@ class _TargetsPageState extends State<TargetsPage> {
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
         child: Column(
           children: <Widget>[
-            Form(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                    child: Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                labelText: "Search",
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(12.0),
-                                  ),
-                                ),
-                              ),
+            SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                ButtonTheme(
+                  minWidth: 1.0,
+                  child: RaisedButton(
+                    color: _themeProvider.background,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                    ),
+                    child: Icon(
+                      Icons.add,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      _showAddDialog(context);
+                    },
+                  ),
+                ),
+                SizedBox(width: 15),
+                ButtonTheme(
+                  minWidth: 1.0,
+                  child: RaisedButton(
+                    color: _themeProvider.background,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                    ),
+                    child: Icon(
+                      Icons.refresh,
+                      size: 20,
+                    ),
+                    onPressed: () async {
+                      var updateResult =
+                      await _targetsProvider.updateAllTargets();
+                      if (updateResult.success) {
+                        Scaffold.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(updateResult.numberSuccessful > 0
+                                ? 'Successfully updated '
+                                '${updateResult.numberSuccessful} '
+                                'friends!'
+                                : 'No targets to update!'),
+                          ),
+                        );
+                      } else {
+                        Scaffold.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text(
+                              'Update with errors: ${updateResult.numberErrors} errors '
+                                  'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                                  'total targets!',
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        );
+                      }
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+            SizedBox(height: 5),
             ChainTimer(userKey: widget.userKey),
             Flexible(
               child: Consumer<TargetsProvider>(
