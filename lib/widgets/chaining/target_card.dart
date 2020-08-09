@@ -40,8 +40,7 @@ class _TargetCardState extends State<TargetCard> {
   @override
   void initState() {
     super.initState();
-    _ticker = new Timer.periodic(
-        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
@@ -67,8 +66,7 @@ class _TargetCardState extends State<TargetCard> {
             color: Colors.red,
             icon: Icons.delete,
             onTap: () {
-              Provider.of<TargetsProvider>(context, listen: false)
-                  .deleteTarget(_target);
+              Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
               Scaffold.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Deleted ${_target.name}!'),
@@ -130,8 +128,7 @@ class _TargetCardState extends State<TargetCard> {
                               OpenContainer(
                                 transitionDuration: Duration(milliseconds: 500),
                                 transitionType: ContainerTransitionType.fadeThrough,
-                                openBuilder:
-                                    (BuildContext context, VoidCallback _) {
+                                openBuilder: (BuildContext context, VoidCallback _) {
                                   return TargetDetailsPage(target: _target);
                                 },
                                 closedElevation: 0,
@@ -141,8 +138,7 @@ class _TargetCardState extends State<TargetCard> {
                                   ),
                                 ),
                                 closedColor: Colors.transparent,
-                                closedBuilder: (BuildContext context,
-                                    VoidCallback openContainer) {
+                                closedBuilder: (BuildContext context, VoidCallback openContainer) {
                                   return SizedBox(
                                     height: 20,
                                     width: 20,
@@ -194,8 +190,7 @@ class _TargetCardState extends State<TargetCard> {
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
-                            color:
-                                _returnStatusColor(_target.lastAction.status),
+                            color: _returnStatusColor(_target.lastAction.status),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -208,8 +203,7 @@ class _TargetCardState extends State<TargetCard> {
                         Text(
                           _target.lastAction.relative == "0 minutes ago"
                               ? 'now'
-                              : _target.lastAction.relative
-                                  .replaceAll(' ago', ''),
+                              : _target.lastAction.relative.replaceAll(' ago', ''),
                         ),
                       ],
                     ),
@@ -287,8 +281,7 @@ class _TargetCardState extends State<TargetCard> {
             case BrowserSetting.app:
               // For app browser, we are going to pass a list of attacks
               // so that we can move to the next one
-              var myTargetList =
-                  List<TargetModel>.from(_targetsProvider.allTargets);
+              var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
               // First, find out where we are in the list
               for (var i = 0; i < myTargetList.length; i++) {
                 if (_target.playerId == myTargetList[i].playerId) {
@@ -308,6 +301,7 @@ class _TargetCardState extends State<TargetCard> {
                     attackIdList: attacksIds,
                     attackNameList: attacksNames,
                     attacksCallback: _updateSeveralTargets,
+                    userKey: _userProvider.myUser.userApiKey,
                   ),
                 ),
               );
@@ -352,8 +346,7 @@ class _TargetCardState extends State<TargetCard> {
       }
 
       void showFactionToast() {
-        if (_target.faction.factionId ==
-            _userProvider.myUser.faction.factionId) {
+        if (_target.faction.factionId == _userProvider.myUser.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_target.name} belongs to your same faction "
                 "(${_target.faction.factionName}) as "

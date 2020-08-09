@@ -9,8 +9,13 @@ import 'package:torn_pda/utils/api_caller.dart';
 
 class ChainTimer extends StatefulWidget {
   final String userKey;
+  final bool underDarkBackground;
 
-  ChainTimer({Key key, @required this.userKey}) : super(key: key);
+  ChainTimer({
+    Key key,
+    @required this.userKey,
+    this.underDarkBackground = false,
+  }) : super(key: key);
 
   @override
   _ChainTimerState createState() => _ChainTimerState();
@@ -42,10 +47,9 @@ class _ChainTimerState extends State<ChainTimer> {
     super.initState();
     _finishedLoadingChain = _getChainStatus();
     _finishedGettingBars = _getEnergy();
-    _tickerDecreaseCount = new Timer.periodic(
-        Duration(seconds: 1), (Timer t) => _autoDecreaseChainTimer());
-    _tickerCallChainApi =
-        new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
+    _tickerDecreaseCount =
+        new Timer.periodic(Duration(seconds: 1), (Timer t) => _autoDecreaseChainTimer());
+    _tickerCallChainApi = new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
   }
 
   @override
@@ -58,6 +62,13 @@ class _ChainTimerState extends State<ChainTimer> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    Color titleColor;
+    if (widget.underDarkBackground) {
+      titleColor = Colors.white;
+    } else {
+      titleColor = _themeProvider.mainText;
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
       child: Column(
@@ -75,9 +86,8 @@ class _ChainTimerState extends State<ChainTimer> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             Text(
-                              _chainModel.chain.cooldown > 0
-                                  ? 'Cooldown '
-                                  : 'Chain ',
+                              _chainModel.chain.cooldown > 0 ? 'Cooldown ' : 'Chain ',
+                              style: TextStyle(color: titleColor),
                             ),
                             Text(
                               '$_currentChainTimeString',
@@ -87,7 +97,7 @@ class _ChainTimerState extends State<ChainTimer> {
                                         _currentSecondsCounter < 60 &&
                                         _chainModel.chain.cooldown == 0
                                     ? Colors.red
-                                    : _themeProvider.mainText,
+                                    : titleColor,
                               ),
                             ),
                           ],
@@ -98,9 +108,8 @@ class _ChainTimerState extends State<ChainTimer> {
                         width: 150,
                         lineHeight: 16,
                         backgroundColor: Colors.grey,
-                        progressColor: _chainModel.chain.cooldown > 0
-                            ? Colors.green[200]
-                            : Colors.blue[200],
+                        progressColor:
+                            _chainModel.chain.cooldown > 0 ? Colors.green[200] : Colors.blue[200],
                         center: Text(
                           _chainModel.chain.cooldown > 0
                               ? '${_chainModel.chain.current} hits'
@@ -116,8 +125,7 @@ class _ChainTimerState extends State<ChainTimer> {
                 } else {
                   return Text(
                     'Cannot retrieve chain details!',
-                    style: TextStyle(
-                        fontStyle: FontStyle.italic, color: Colors.orange[800]),
+                    style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange[800]),
                   );
                 }
               } else {
@@ -146,12 +154,9 @@ class _ChainTimerState extends State<ChainTimer> {
                           style: TextStyle(color: Colors.black),
                         ),
                         // Take drugs into account
-                        percent: (_barsModel.energy.current /
-                                    _barsModel.energy.maximum) >
-                                1.0
+                        percent: (_barsModel.energy.current / _barsModel.energy.maximum) > 1.0
                             ? 1.0
-                            : _barsModel.energy.current /
-                                _barsModel.energy.maximum,
+                            : _barsModel.energy.current / _barsModel.energy.maximum,
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 2),
@@ -162,9 +167,7 @@ class _ChainTimerState extends State<ChainTimer> {
                         lineHeight: 3,
                         backgroundColor: Colors.green[100],
                         progressColor: Colors.green,
-                        percent: 1 -
-                            _barsModel.energy.ticktime /
-                                _barsModel.energy.interval,
+                        percent: 1 - _barsModel.energy.ticktime / _barsModel.energy.interval,
                       ),
                     ],
                   );
@@ -182,8 +185,7 @@ class _ChainTimerState extends State<ChainTimer> {
   }
 
   Future<void> _getChainStatus() async {
-    var chainResponse =
-        await TornApiCaller.chain(widget.userKey).getChainStatus;
+    var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
     if (chainResponse is ChainModel) {
       _accumulatedErrors = 0;
       _chainModel = chainResponse;
@@ -205,8 +207,7 @@ class _ChainTimerState extends State<ChainTimer> {
         }
         // Thereafter, only update if what we get from the API is below the
         // current automatic timer, or the last thing we have is chaining
-        if (_chainModel.chain.cooldown < _currentSecondsCounter ||
-            _wereWeChaining) {
+        if (_chainModel.chain.cooldown < _currentSecondsCounter || _wereWeChaining) {
           _currentSecondsCounter = _chainModel.chain.cooldown;
           _refreshCooldownClock(_chainModel.chain.cooldown);
           _wereWeChaining = false;

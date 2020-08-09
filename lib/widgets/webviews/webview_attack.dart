@@ -1,10 +1,14 @@
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class TornWebViewAttack extends StatefulWidget {
   final List<String> attackIdList;
   final List<String> attackNameList;
   final Function(List<String>) attacksCallback;
+  final String userKey;
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
@@ -12,6 +16,7 @@ class TornWebViewAttack extends StatefulWidget {
     this.attackIdList = const [],
     this.attackNameList = const [],
     this.attacksCallback,
+    @required this.userKey,
   });
 
   @override
@@ -30,6 +35,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   bool _backButtonPopsContext = true;
   String _goBackTitle = '';
 
+  var _chainWidgetController = ExpandableController();
+
   @override
   void initState() {
     super.initState();
@@ -40,39 +47,44 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   @override
+  void dispose() {
+    _chainWidgetController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () async {
-                // Normal behaviour is just to pop and go to previous page
-                if (_backButtonPopsContext) {
-                  widget.attacksCallback(_attackedIds);
-                  Navigator.pop(context);
-                } else {
-                  // But we can change and go back to previous page in certain
-                  // situations (e.g. when going for medical items during an
-                  // attack), in which case we need to return to previous target
-                  var backPossible = await _webViewController.canGoBack();
-                  if (backPossible) {
-                    _webViewController.goBack();
-                    setState(() {
-                      _currentPageTitle = _goBackTitle;
-                    });
-                  } else {
+            leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () async {
+                  // Normal behaviour is just to pop and go to previous page
+                  if (_backButtonPopsContext) {
+                    widget.attacksCallback(_attackedIds);
                     Navigator.pop(context);
+                  } else {
+                    // But we can change and go back to previous page in certain
+                    // situations (e.g. when going for medical items during an
+                    // attack), in which case we need to return to previous target
+                    var backPossible = await _webViewController.canGoBack();
+                    if (backPossible) {
+                      _webViewController.goBack();
+                      setState(() {
+                        _currentPageTitle = _goBackTitle;
+                      });
+                    } else {
+                      Navigator.pop(context);
+                    }
+                    _backButtonPopsContext = true;
                   }
-                  _backButtonPopsContext = true;
-                }
-              }),
-          title: Text(_currentPageTitle),
-          actions: _actionButton(),
-        ),
+                }),
+            title: Text(_currentPageTitle),
+            actions: _actionButtons()),
         body: Container(
-          color: Colors.black,
+          color: Colors.grey[900],
           child: SafeArea(
             top: false,
             right: false,
@@ -80,13 +92,33 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             bottom: true,
             child: Builder(
               builder: (BuildContext context) {
-                return WebView(
-                  initialUrl: _initialUrl,
-                  javascriptMode: JavascriptMode.unrestricted,
-                  onWebViewCreated: (WebViewController c) {
-                    _webViewController = c;
-                  },
-                  gestureNavigationEnabled: true,
+                return Column(
+                  children: [
+                    ExpandablePanel(
+                      theme: ExpandableThemeData(
+                        hasIcon: false,
+                        tapBodyToCollapse: false,
+                        tapHeaderToExpand: false,
+                      ),
+                      collapsed: SizedBox.shrink(),
+                      controller: _chainWidgetController,
+                      header: SizedBox.shrink(),
+                      expanded: ChainTimer(
+                        userKey: widget.userKey,
+                        underDarkBackground: true,
+                      ),
+                    ),
+                    Expanded(
+                      child: WebView(
+                        initialUrl: _initialUrl,
+                        javascriptMode: JavascriptMode.unrestricted,
+                        onWebViewCreated: (WebViewController c) {
+                          _webViewController = c;
+                        },
+                        gestureNavigationEnabled: true,
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -96,14 +128,28 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     );
   }
 
-  List<Widget> _actionButton() {
+  List<Widget> _actionButtons() {
     List<Widget> myButtons = List<Widget>();
+
+    myButtons.add(
+      IconButton(
+        icon: Icon(MdiIcons.linkVariant),
+        onPressed: () {
+          _chainWidgetController.expanded
+              ? _chainWidgetController.expanded = false
+              : _chainWidgetController.expanded = true;
+        },
+      ),
+    );
+
     myButtons.add(_medicalActionButton());
+
     if (_attackNumber < widget.attackIdList.length - 1) {
       myButtons.add(_nextAttackActionButton());
     } else {
       myButtons.add(SizedBox.shrink());
     }
+
     return myButtons;
   }
 
@@ -113,8 +159,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       icon: Icon(Icons.skip_next),
       onPressed: () async {
         _attackNumber++;
-        await _webViewController
-            .loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+        await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
         _attackedIds.add(widget.attackIdList[_attackNumber]);
         setState(() {
           _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
