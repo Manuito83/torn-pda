@@ -36,7 +36,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat1_7_1_1 = "Alerts section: added automatic alerts for hospital admission, "
         "revives and hospital release";
     String feat1_7_1_2 = "Profile section: added TCT clock at the top";
-    String feat1_7_1_3 = "Chaining: added option to monitor you faction's chain while attacking "
+    String feat1_7_1_3 = "Chaining: added option to monitor your faction's chain while attacking "
         "several targets in a row";
     String feat1_7_1_4 = "Targets section: replaced target's ID string with an extended information "
         "page for targets; also made the faction icon clickable for more details";
