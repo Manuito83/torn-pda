@@ -36,13 +36,15 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat1_7_1_1 = "Alerts section: added automatic alerts for hospital admission, "
         "revives and hospital release";
     String feat1_7_1_2 = "Profile section: added TCT clock at the top";
-    String feat1_7_1_3 = "Targets section: replaced target's ID string with an extended information "
+    String feat1_7_1_3 = "Chaining: added option to monitor you faction's chain while attacking "
+        "several targets in a row";
+    String feat1_7_1_4 = "Targets section: replaced target's ID string with an extended information "
         "page for targets; also made the faction icon clickable for more details";
-    String feat1_7_1_4 = "Targets section: search form moved to the top, similar to the "
+    String feat1_7_1_5 = "Targets section: search form moved to the top, similar to the "
         "current layout in the Friends section";
-    String feat1_7_1_5 = "Travel section: added current item capacity value in the travel capacity "
+    String feat1_7_1_6 = "Travel section: added current item capacity value in the travel capacity "
         "dialog, so there is no need to move the slider to check it";
-    String feat1_7_1_6 = "Travel section: corrected an issue that prevented travel notifications "
+    String feat1_7_1_7 = "Travel section: corrected an issue that prevented travel notifications "
         "from being manually activated in some cases";
     v1_7_1.features.add(feat1_7_1_1);
     v1_7_1.features.add(feat1_7_1_2);
@@ -50,6 +52,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_7_1.features.add(feat1_7_1_4);
     v1_7_1.features.add(feat1_7_1_5);
     v1_7_1.features.add(feat1_7_1_6);
+    v1_7_1.features.add(feat1_7_1_7);
 
     // VERSION 1.7.0
     var v1_7_0 = ChangeLogItem();
