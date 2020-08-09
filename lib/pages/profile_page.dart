@@ -88,7 +88,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _serverTime;
 
   Timer _oneSecTimer;
-  DateTime _currentTctTime;
+  DateTime _currentTctTime = DateTime.now().toUtc();
 
   Timer _tickerCallApi;
 
