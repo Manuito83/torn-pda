@@ -9,12 +9,12 @@ import 'package:torn_pda/utils/api_caller.dart';
 
 class ChainTimer extends StatefulWidget {
   final String userKey;
-  final bool underDarkBackground;
+  final bool alwaysDarkBackground;
 
   ChainTimer({
     Key key,
     @required this.userKey,
-    this.underDarkBackground = false,
+    @required this.alwaysDarkBackground,
   }) : super(key: key);
 
   @override
@@ -63,7 +63,7 @@ class _ChainTimerState extends State<ChainTimer> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     Color titleColor;
-    if (widget.underDarkBackground) {
+    if (widget.alwaysDarkBackground) {
       titleColor = Colors.white;
     } else {
       titleColor = _themeProvider.mainText;

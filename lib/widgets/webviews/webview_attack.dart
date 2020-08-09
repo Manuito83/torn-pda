@@ -105,7 +105,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                       header: SizedBox.shrink(),
                       expanded: ChainTimer(
                         userKey: widget.userKey,
-                        underDarkBackground: true,
+                        alwaysDarkBackground: true,
                       ),
                     ),
                     Expanded(

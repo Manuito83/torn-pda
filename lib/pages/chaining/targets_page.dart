@@ -62,8 +62,7 @@ class _TargetsPageState extends State<TargetsPage> {
         leading: new IconButton(
           icon: new Icon(Icons.menu),
           onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
             scaffoldState.openDrawer();
           },
         ),
@@ -194,15 +193,14 @@ class _TargetsPageState extends State<TargetsPage> {
                       size: 20,
                     ),
                     onPressed: () async {
-                      var updateResult =
-                      await _targetsProvider.updateAllTargets();
+                      var updateResult = await _targetsProvider.updateAllTargets();
                       if (updateResult.success) {
                         Scaffold.of(context).showSnackBar(
                           SnackBar(
                             content: Text(updateResult.numberSuccessful > 0
                                 ? 'Successfully updated '
-                                '${updateResult.numberSuccessful} '
-                                'friends!'
+                                    '${updateResult.numberSuccessful} '
+                                    'targets!'
                                 : 'No targets to update!'),
                           ),
                         );
@@ -212,8 +210,8 @@ class _TargetsPageState extends State<TargetsPage> {
                             backgroundColor: Colors.red,
                             content: Text(
                               'Update with errors: ${updateResult.numberErrors} errors '
-                                  'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                                  'total targets!',
+                              'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                              'total targets!',
                             ),
                           ),
                         );
@@ -224,7 +222,10 @@ class _TargetsPageState extends State<TargetsPage> {
               ],
             ),
             SizedBox(height: 5),
-            ChainTimer(userKey: widget.userKey),
+            ChainTimer(
+              userKey: widget.userKey,
+              alwaysDarkBackground: false,
+            ),
             Flexible(
               child: Consumer<TargetsProvider>(
                 builder: (context, targetsModel, child) => TargetsList(
@@ -284,8 +285,7 @@ class _TargetsPageState extends State<TargetsPage> {
                       child: Form(
                         key: _addFormKey,
                         child: Column(
-                          mainAxisSize:
-                              MainAxisSize.min, // To make the card compact
+                          mainAxisSize: MainAxisSize.min, // To make the card compact
                           children: <Widget>[
                             TextFormField(
                               style: TextStyle(fontSize: 14),
@@ -304,7 +304,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                   return "Cannot be empty!";
                                 }
                                 final n = num.tryParse(value);
-                                if(n == null) {
+                                if (n == null) {
                                   return '$value is not a valid ID!';
                                 }
                                 _addIdController.text = value.trim();
@@ -328,8 +328,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                       var inputId = _addIdController.text;
                                       _addIdController.text = '';
                                       AddTargetResult tryAddTarget =
-                                          await targetsProvider
-                                              .addTarget(inputId);
+                                          await targetsProvider.addTarget(inputId);
                                       if (tryAddTarget.success) {
                                         Scaffold.of(_).showSnackBar(
                                           SnackBar(
@@ -395,8 +394,7 @@ class _TargetsPageState extends State<TargetsPage> {
   }
 
   void onSearchInputTextChange() {
-    Provider.of<TargetsProvider>(context, listen: false)
-        .setFilterText(_searchController.text);
+    Provider.of<TargetsProvider>(context, listen: false).setFilterText(_searchController.text);
   }
 
   void _selectSortPopup(TargetSort choice) {
