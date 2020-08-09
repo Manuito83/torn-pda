@@ -87,6 +87,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   DateTime _serverTime;
 
+  Timer _oneSecTimer;
   DateTime _currentTctTime;
 
   Timer _tickerCallApi;
@@ -157,6 +158,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) => _fetchApi());
 
+    _oneSecTimer = new Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshTctClock());
+
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
   }
 
@@ -173,6 +176,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _tickerCallApi.cancel();
+    _oneSecTimer.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1770,8 +1774,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _serverTime = DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
         _apiGoodData = true;
 
-        _currentTctTime = DateTime.now().toUtc();
-
         // If max values have decreased or were never initialized
         if (_customEnergyTrigger > _user.energy.maximum || _customEnergyTrigger == 0) {
           _customEnergyTrigger = _user.energy.maximum;
@@ -2610,6 +2612,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       },
     );
     intent.launch();
+  }
+
+  void _refreshTctClock() {
+    setState(() {
+      _currentTctTime = DateTime.now().toUtc();
+    });
   }
 
   void _callBackFromNotificationOptions() async {
