@@ -9,6 +9,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
@@ -1826,7 +1827,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       children: [
         SpeedDialChild(
           child: Icon(
-            Icons.comment,
+            MdiIcons.cityVariantOutline,
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.purple[500],
+          onTap: () async {
+            _openTornBrowser('city');
+          },
+          label: 'CITY',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.purple[500],
+        ),
+        SpeedDialChild(
+          child: Icon(
+            MdiIcons.accountSwitchOutline,
             color: Colors.black,
           ),
           backgroundColor: Colors.yellow[800],
@@ -1929,6 +1946,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case 'trades':
         tornPage = 'https://www.torn.com/trade.php';
+        break;
+      case 'city':
+        tornPage = 'https://www.torn.com/city.php';
         break;
     }
 
