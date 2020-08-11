@@ -133,6 +133,15 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
     myButtons.add(
       IconButton(
+        icon: Icon(MdiIcons.refresh),
+        onPressed: () async {
+          await _webViewController.reload();
+        },
+      ),
+    );
+
+    myButtons.add(
+      IconButton(
         icon: Icon(MdiIcons.linkVariant),
         onPressed: () {
           _chainWidgetController.expanded
