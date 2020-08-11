@@ -80,6 +80,12 @@ class _WebViewFullState extends State<WebViewFull> {
               }),
           title: Text(_pageTitle),
           actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () async {
+                await webView.reload();
+              }
+            ),
             _travelHomeIcon(),
             _crimesInfoIcon(),
             _crimesMenuIcon(),
@@ -169,6 +175,7 @@ class _WebViewFullState extends State<WebViewFull> {
     _assessTravel(document);
     _assessCrimes(document);
     _assessTrades(document);
+    _assessCity(document);
   }
 
   // TRAVEL
@@ -625,6 +632,45 @@ class _WebViewFullState extends State<WebViewFull> {
     _tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
     _forceAssessTrades();
   }
+
+  // CITY
+  Future _assessCity(dom.Document document) async {
+    var h4 = document.querySelector(".content-title > h4");
+    var pageTitle = '';
+    if (h4 != null) {
+      pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+    }
+
+    if (_currentUrl.contains('https://www.torn.com/city.php') &&
+        !pageTitle.contains('please validate') &&
+        !pageTitle.contains('error') &&
+        pageTitle.contains('city')) {
+
+      // Retry several times and allow the map to load
+      List<dom.Element> query;
+      for (var i = 0; i < 10; i++) {
+        query = document.querySelectorAll("#map .leaflet-marker-pane");
+        if (query.length > 0) {
+          break;
+        } else {
+          await Future.delayed(const Duration(seconds: 1));
+          var updatedHtml = await webView.getHtml();
+          document = parse(updatedHtml);
+        }
+      }
+      if (query.length == 0) {
+        return;
+      }
+
+
+
+
+    } else {
+      return;
+    }
+
+  }
+
 
   // UTILS
   Future<bool> _willPopCallback() async {
