@@ -13,7 +13,7 @@ class TradesOptions extends StatefulWidget {
 }
 
 class _TradesOptionsState extends State<TradesOptions> {
-  bool _tradeCalculatorActive = true;
+  bool _tradeCalculatorEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -59,11 +59,11 @@ class _TradesOptionsState extends State<TradesOptions> {
                               children: <Widget>[
                                 Text("Use trade calculator"),
                                 Switch(
-                                  value: _tradeCalculatorActive,
+                                  value: _tradeCalculatorEnabled,
                                   onChanged: (value) {
-                                    SharedPreferencesModel().setTradeCalculatorActive(value);
+                                    SharedPreferencesModel().setTradeCalculatorEnabled(value);
                                     setState(() {
-                                      _tradeCalculatorActive = value;
+                                      _tradeCalculatorEnabled = value;
                                     });
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
@@ -103,10 +103,10 @@ class _TradesOptionsState extends State<TradesOptions> {
   }
 
   Future _restorePreferences() async {
-    var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
+    var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorEnabled();
 
     setState(() {
-      _tradeCalculatorActive = tradeCalculatorActive;
+      _tradeCalculatorEnabled = tradeCalculatorActive;
     });
   }
 
