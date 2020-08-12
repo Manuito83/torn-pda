@@ -44,7 +44,8 @@ class SharedPreferencesModel {
   final String _kLootNotificationType = "pda_lootNotificationType";
   final String _kLootAlarmVibration = "pda_lootAlarmVibration";
   final String _kLootAlarmSound = "pda_lootAlarmSound";
-  final String _kTradeCalculatorActive = "pda_tradeCalculatorActive";
+  final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
+  final String _kCityFinderEnabled = "pda_cityFinderActive";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -515,16 +516,29 @@ class SharedPreferencesModel {
   }
 
   /// ----------------------------
-  /// Methods for default browser
+  /// Methods for Trades Calculator
   /// ----------------------------
-  Future<bool> getTradeCalculatorActive() async {
+  Future<bool> getTradeCalculatorEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTradeCalculatorActive) ?? true;
+    return prefs.getBool(_kTradeCalculatorEnabled) ?? true;
   }
 
-  Future<bool> setTradeCalculatorActive(bool value) async {
+  Future<bool> setTradeCalculatorEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTradeCalculatorActive, value);
+    return prefs.setBool(_kTradeCalculatorEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for City Finder
+  /// ----------------------------
+  Future<bool> getCityEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kCityFinderEnabled) ?? true;
+  }
+
+  Future<bool> setCityEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kCityFinderEnabled, value);
   }
 
 
