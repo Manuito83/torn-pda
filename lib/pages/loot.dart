@@ -17,7 +17,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
@@ -63,11 +63,9 @@ class _LootPageState extends State<LootPage> {
 
     _getLootInfoFromYata = _updateTimes();
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'loot'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
 
-    _tickerUpdateTimes =
-        new Timer.periodic(Duration(seconds: 1), (Timer t) => _updateTimes());
+    _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _updateTimes());
   }
 
   @override
@@ -86,8 +84,7 @@ class _LootPageState extends State<LootPage> {
         leading: new IconButton(
           icon: new Icon(Icons.menu),
           onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
             scaffoldState.openDrawer();
           },
         ),
@@ -150,7 +147,7 @@ class _LootPageState extends State<LootPage> {
                         child: Text(
                           Platform.isAndroid
                               ? 'Notifications and timers are activated with 20 '
-                              'seconds to spare. Alarms are rounded to the minute.'
+                                  'seconds to spare. Alarms are rounded to the minute.'
                               : 'Notifications are activated with 20 seconds to spare.',
                           style: TextStyle(
                             color: Colors.grey[600],
@@ -224,8 +221,7 @@ class _LootPageState extends State<LootPage> {
 
       npcDetails.timings.forEach((levelNumber, levelDetails) {
         // Time formatting
-        var levelDateTime =
-            DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
+        var levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
         var time = TimeFormatter(
           inputTime: levelDateTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -305,8 +301,7 @@ class _LootPageState extends State<LootPage> {
             child: Icon(
               iconData,
               size: 20,
-              color: _lootNotificationType == NotificationType.notification &&
-                      isPending
+              color: _lootNotificationType == NotificationType.notification && isPending
                   ? Colors.green
                   : null,
             ),
@@ -319,14 +314,13 @@ class _LootPageState extends State<LootPage> {
                     });
                     await flutterLocalNotificationsPlugin
                         .cancel(int.parse('400$npcId$levelNumber'));
-                    _activeNotificationsIds.removeWhere((element) =>
-                        element == int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds
+                        .removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
                   } else {
                     setState(() {
                       isPending = true;
                     });
-                    _activeNotificationsIds
-                        .add(int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
                     _scheduleNotification(
                       levelDateTime,
                       int.parse('400$npcId$levelNumber'),
@@ -457,9 +451,7 @@ class _LootPageState extends State<LootPage> {
       knifeIcon = IconButton(
         icon: Icon(
           MdiIcons.knifeMilitary,
-          color: npcDetails.levels.current >= 4
-              ? Colors.red
-              : _themeProvider.mainText,
+          color: npcDetails.levels.current >= 4 ? Colors.red : _themeProvider.mainText,
         ),
         onPressed: () async {
           var browserType = _settingsProvider.currentBrowser;
@@ -467,18 +459,15 @@ class _LootPageState extends State<LootPage> {
             case BrowserSetting.app:
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewGeneric(
-                    customUrl:
-                        'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
-                    genericTitle: npcDetails.name,
-                    webViewType: WebViewType.custom,
+                  builder: (BuildContext context) => WebViewFull(
+                    customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
+                    customTitle: npcDetails.name,
                   ),
                 ),
               );
               break;
             case BrowserSetting.external:
-              var url =
-                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+              var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               if (await canLaunch(url)) {
                 await launch(url, forceSafariVC: false);
               }
@@ -746,8 +735,8 @@ class _LootPageState extends State<LootPage> {
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics =
+        NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
       notificationId,

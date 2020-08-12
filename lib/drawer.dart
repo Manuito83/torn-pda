@@ -24,7 +24,6 @@ import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'main.dart';
 
@@ -170,10 +169,9 @@ class _DrawerPageState extends State<DrawerPage> {
           case 'app':
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => TornWebViewGeneric(
-                  webViewType: WebViewType.custom,
+                builder: (BuildContext context) => WebViewFull(
                   customUrl: 'https://www.torn.com/gym.php',
-                  genericTitle: 'Torn',
+                  customTitle: 'Torn',
                 ),
               ),
             );
@@ -191,10 +189,9 @@ class _DrawerPageState extends State<DrawerPage> {
           case 'app':
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => TornWebViewGeneric(
-                  webViewType: WebViewType.custom,
+                builder: (BuildContext context) => WebViewFull(
                   customUrl: 'https://www.torn.com/crimes.php',
-                  genericTitle: 'Torn',
+                  customTitle: 'Torn',
                 ),
               ),
             );
@@ -213,10 +210,9 @@ class _DrawerPageState extends State<DrawerPage> {
           case 'app':
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => TornWebViewGeneric(
+                builder: (BuildContext context) => WebViewFull(
                   customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
-                  genericTitle: 'Loot',
-                  webViewType: WebViewType.custom,
+                  customTitle: 'Loot',
                 ),
               ),
             );

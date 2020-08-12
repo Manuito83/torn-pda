@@ -26,7 +26,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter/rendering.dart';
 import '../main.dart';
@@ -410,12 +409,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           case BrowserSetting.app:
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (BuildContext context) => TornWebViewGeneric(
-                                  profileId: causingId,
-                                  //profileName: causingId,
-                                  genericTitle: 'Event Profile',
-                                  webViewType: WebViewType.profile,
-                                  genericCallBack: _updateCallback,
+                                builder: (BuildContext context) => WebViewFull(
+                                  customUrl: 'https://www.torn.com/profiles.php?'
+                                      'XID=$causingId',
+                                  customTitle: 'Event Profile',
+                                  customCallBack: _updateCallback,
                                 ),
                               ),
                             );

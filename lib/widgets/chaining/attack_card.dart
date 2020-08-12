@@ -6,8 +6,8 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../webviews/webview_generic.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
@@ -61,12 +61,12 @@ class _AttackCardState extends State<AttackCard> {
                               case BrowserSetting.app:
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          TornWebViewGeneric(
-                                            profileId: '${_attack.targetId}',
-                                            profileName: _attack.targetName,
-                                            webViewType: WebViewType.profile,
-                                          )),
+                                    builder: (BuildContext context) => WebViewFull(
+                                      customUrl: 'https://www.torn.com/profiles.php?'
+                                          'XID=${_attack.targetId}',
+                                      customTitle: _attack.targetName,
+                                    ),
+                                  ),
                                 );
                                 break;
                               case BrowserSetting.external:
@@ -197,8 +197,7 @@ class _AttackCardState extends State<AttackCard> {
           color: Colors.green,
         ),
         onPressed: () async {
-          AddTargetResult tryAddTarget =
-              await targetsProvider.addTarget(_attack.targetId);
+          AddTargetResult tryAddTarget = await targetsProvider.addTarget(_attack.targetId);
           if (tryAddTarget.success) {
             Scaffold.of(context).showSnackBar(
               SnackBar(
@@ -255,8 +254,7 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   String _returnDateFormatted() {
-    var date =
-        new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
+    var date = new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
     var formatter = new DateFormat('dd MMMM HH:mm');
     return formatter.format(date);
   }
