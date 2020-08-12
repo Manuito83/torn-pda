@@ -84,7 +84,7 @@ class _WebViewFullState extends State<WebViewFull> {
               icon: Icon(Icons.refresh),
               onPressed: () async {
                 await webView.reload();
-              }
+              },
             ),
             _travelHomeIcon(),
             _crimesInfoIcon(),
@@ -137,10 +137,14 @@ class _WebViewFullState extends State<WebViewFull> {
                     },
                     onLoadStop: (InAppWebViewController c, String url) {
                       _currentUrl = url;
+
+
+
                       _assessGeneral();
                     },
                     onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
                       print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
                       /// TRADES
                       ///   - IOS: onLoadStop does not work inside of Trades, that is why we
                       ///     redirect both with console messages (all 'hash.step') for trades
@@ -641,33 +645,43 @@ class _WebViewFullState extends State<WebViewFull> {
       pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
     }
 
-    if (_currentUrl.contains('https://www.torn.com/city.php') &&
-        !pageTitle.contains('please validate') &&
-        !pageTitle.contains('error') &&
-        pageTitle.contains('city')) {
-
-      // Retry several times and allow the map to load
-      List<dom.Element> query;
-      for (var i = 0; i < 10; i++) {
-        query = document.querySelectorAll("#map .leaflet-marker-pane");
-        if (query.length > 0) {
-          break;
-        } else {
-          await Future.delayed(const Duration(seconds: 1));
-          var updatedHtml = await webView.getHtml();
-          document = parse(updatedHtml);
-        }
-      }
-      if (query.length == 0) {
-        return;
-      }
-
-
-
-
-    } else {
+    if (!_currentUrl.contains('https://www.torn.com/city.php') ||
+        !pageTitle.contains('city') ||
+        pageTitle.contains('please validate') ||
+        pageTitle.contains('error')) {
       return;
     }
+
+    // Retry several times and allow the map to load
+    List<dom.Element> query;
+    for (var i = 0; i < 10; i++) {
+      query = document.querySelectorAll("#map .leaflet-marker-pane *");
+      if (query.length > 0) {
+        break;
+      } else {
+        await Future.delayed(const Duration(seconds: 1));
+        var updatedHtml = await webView.getHtml();
+        document = parse(updatedHtml);
+      }
+    }
+    if (query.length == 0) {
+      return;
+    }
+
+    var items = List<String>();
+    for (var mapFind in query) {
+      mapFind.attributes.forEach((key, value) {
+        if (key == "src" && value.contains("https://www.torn.com/images/items/")) {
+          items.add(value.split("items/")[1].split("/")[0]);
+        }
+      });
+    }
+
+    // If items found, highlight them
+    if (items.isNotEmpty) {
+      webView.evaluateJavascript(source: highlightCityItemsJS());
+    }
+
 
   }
 
