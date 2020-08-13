@@ -17,6 +17,8 @@ class LootNotificationsAndroid extends StatefulWidget {
 class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   String _lootTypeDropDownValue;
   String _lootNotificationAheadDropDownValue;
+  String _lootAlarmAheadDropDownValue;
+  String _lootTimerAheadDropDownValue;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -171,20 +173,42 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             ],
           ),
         ),
-        if (_lootTypeDropDownValue == "0")
+        if (_lootTypeDropDownValue == "0") // Notification
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 Flexible(
-                  child: _lootTimerDropDown(),
+                  child: _lootNotificationAheadDropDown(),
                 ),
               ],
             ),
           )
-        else
-          SizedBox.shrink(),
+        else if (_lootTypeDropDownValue == "1")
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Flexible(
+                  child: _lootAlarmAheadDropDown(),
+                ),
+              ],
+            ),
+          )
+        else if (_lootTypeDropDownValue == "2")
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  Flexible(
+                    child: _lootTimerAheadDropDown(),
+                  ),
+                ],
+              ),
+            )
       ],
     );
   }
@@ -242,7 +266,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     );
   }
 
-  DropdownButton _lootTimerDropDown() {
+  DropdownButton _lootNotificationAheadDropDown() {
     return DropdownButton<String>(
       value: _lootNotificationAheadDropDownValue,
       items: [
@@ -321,15 +345,151 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     );
   }
 
+  DropdownButton _lootAlarmAheadDropDown() {
+    return DropdownButton<String>(
+      value: _lootAlarmAheadDropDownValue,
+      items: [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Same minute",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "1 minute before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "2 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        SharedPreferencesModel().setLootAlarmAhead(value);
+        setState(() {
+          _lootAlarmAheadDropDownValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _lootTimerAheadDropDown() {
+    return DropdownButton<String>(
+      value: _lootTimerAheadDropDownValue,
+      items: [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "20 seconds",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "40 seconds",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "1 minute",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "1.5 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "4",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "2 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        SharedPreferencesModel().setLootTimerAhead(value);
+        setState(() {
+          _lootTimerAheadDropDownValue = value;
+        });
+      },
+    );
+  }
+
   Future _restorePreferences() async {
     var lootType = await SharedPreferencesModel().getLootNotificationType();
     var lootNotificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
+    var lootAlarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
+    var lootTimerAhead = await SharedPreferencesModel().getLootTimerAhead();
     var alarmSound = await SharedPreferencesModel().getLootAlarmSound();
     var alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
 
     setState(() {
       _lootTypeDropDownValue = lootType;
       _lootNotificationAheadDropDownValue = lootNotificationAhead;
+      _lootAlarmAheadDropDownValue = lootAlarmAhead;
+      _lootTimerAheadDropDownValue = lootTimerAhead;
       _alarmSound = alarmSound;
       _alarmVibration = alarmVibration;
     });

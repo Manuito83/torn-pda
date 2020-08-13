@@ -52,6 +52,8 @@ class _LootPageState extends State<LootPage> {
   LootTimeType _lootTimeType;
   NotificationType _lootNotificationType;
   int _lootNotificationAhead;
+  int _lootAlarmAhead;
+  int _lootTimerAhead;
   bool _alarmSound;
   bool _alarmVibration;
 
@@ -685,6 +687,8 @@ class _LootPageState extends State<LootPage> {
 
     var notification = await SharedPreferencesModel().getLootNotificationType();
     var notificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
+    var alarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
+    var timerAhead = await SharedPreferencesModel().getLootTimerAhead();
     _alarmSound = await SharedPreferencesModel().getLootAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
     setState(() {
@@ -706,6 +710,26 @@ class _LootPageState extends State<LootPage> {
         _lootNotificationAhead = 90;
       } else if (notificationAhead == '4') {
         _lootNotificationAhead = 120;
+      }
+
+      if (alarmAhead == '0') {
+        _lootAlarmAhead = 0;
+      } else if (alarmAhead == '1') {
+        _lootAlarmAhead = 1;
+      } else if (alarmAhead == '2') {
+        _lootAlarmAhead = 2;
+      }
+
+      if (timerAhead == '0') {
+        _lootTimerAhead = 20;
+      } else if (timerAhead == '1') {
+        _lootTimerAhead = 40;
+      } else if (timerAhead == '2') {
+        _lootTimerAhead = 60;
+      } else if (timerAhead == '3') {
+        _lootTimerAhead = 90;
+      } else if (timerAhead == '4') {
+        _lootTimerAhead = 120;
       }
     });
   }
@@ -808,6 +832,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   void _setAlarm(DateTime alarmTime, String title) {
+    alarmTime = alarmTime.add(Duration(minutes: - _lootAlarmAhead));
     int hour = alarmTime.hour;
     int minute = alarmTime.minute;
     String message = title;
@@ -840,7 +865,7 @@ class _LootPageState extends State<LootPage> {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': totalSeconds - 20,
+        'android.intent.extra.alarm.LENGTH': totalSeconds - _lootTimerAhead,
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': message,
       },
