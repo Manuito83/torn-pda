@@ -61,6 +61,8 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityEnabled = false;
   var _cityIconActive = false;
   bool _cityPreferencesLoaded = false;
+  var _errorCityApi = false;
+  var _cityItemsFound = List<Item>();
   var _cityController = ExpandableController();
 
   @override
@@ -132,7 +134,11 @@ class _WebViewFullState extends State<WebViewFull> {
                   collapsed: SizedBox.shrink(),
                   controller: _cityController,
                   header: SizedBox.shrink(),
-                  expanded: CityWidget(controller: webView),
+                  expanded: CityWidget(
+                    controller: webView,
+                    cityItems: _cityItemsFound,
+                    error: _errorCityApi,
+                  ),
                 ),
                 // Actual WebView
                 Expanded(
@@ -156,8 +162,6 @@ class _WebViewFullState extends State<WebViewFull> {
                     },
                     onLoadStop: (InAppWebViewController c, String url) {
                       _currentUrl = url;
-
-
 
                       _assessGeneral();
                     },
@@ -668,9 +672,9 @@ class _WebViewFullState extends State<WebViewFull> {
         !pageTitle.contains('city') ||
         pageTitle.contains('please validate') ||
         pageTitle.contains('error')) {
-
       setState(() {
         _cityIconActive = false;
+        _cityController.expanded = false;
       });
       return;
     }
@@ -685,13 +689,6 @@ class _WebViewFullState extends State<WebViewFull> {
       await _cityPreferencesLoad();
       _cityPreferencesLoaded = true;
     }
-
-    if (!_cityEnabled) {
-      _cityController.expanded = false;
-      return;
-    }
-
-    _cityController.expanded = true;
 
     // Retry several times and allow the map to load
     List<dom.Element> query;
@@ -709,6 +706,17 @@ class _WebViewFullState extends State<WebViewFull> {
       return;
     }
 
+    // Assess if we need to show the widget, now that we are in the city
+    // By placing this check here, we also avoid showing the widget if we entered via Quick Links
+    // in the city
+    setState(() {
+      if (!_cityEnabled) {
+        _cityController.expanded = false;
+        return;
+      }
+      _cityController.expanded = true;
+    });
+
     var mapItemsList = List<String>();
     for (var mapFind in query) {
       mapFind.attributes.forEach((key, value) {
@@ -718,32 +726,30 @@ class _WebViewFullState extends State<WebViewFull> {
       });
     }
 
-    // If items found, highlight them
-    if (mapItemsList.isNotEmpty) {
-      var itemsFound = List<Item>();
-      try {
-        var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-        var apiResponse = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
-        if (apiResponse is ItemsModel) {
-          var tornItems = apiResponse.items.values.toList();
-          for (var mapItem in mapItemsList) {
-            Item itemMatch = tornItems[int.parse(mapItem) - 1];
-            itemsFound.add(itemMatch);
-          }
-          webView.evaluateJavascript(source: highlightCityItemsJS());
-        } else {
-          // TODO: ERROR FETCHING?
+    // Pass items to widget (if nothing found, widget's list will be empty)
+    try {
+      var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+      dynamic apiResponse = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
+      if (apiResponse is ItemsModel) {
+        var tornItems = apiResponse.items.values.toList();
+        var itemsFound = List<Item>();
+        for (var mapItem in mapItemsList) {
+          Item itemMatch = tornItems[int.parse(mapItem) - 1];
+          itemsFound.add(itemMatch);
         }
-      } catch (e) {
-        return;
+        setState(() {
+          _cityItemsFound = itemsFound;
+          _errorCityApi = false;
+        });
+        webView.evaluateJavascript(source: highlightCityItemsJS());
+      } else {
+        setState(() {
+          _errorCityApi = true;
+        });
       }
-
-
-
-    } else {
-      // TODO: EMPTY
+    } catch (e) {
+      return;
     }
-
   }
 
   Widget _cityMenuIcon() {
