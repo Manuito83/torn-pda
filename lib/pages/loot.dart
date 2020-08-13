@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
+import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -50,6 +51,7 @@ class _LootPageState extends State<LootPage> {
 
   LootTimeType _lootTimeType;
   NotificationType _lootNotificationType;
+  int _lootNotificationAhead;
   bool _alarmSound;
   bool _alarmVibration;
 
@@ -126,6 +128,26 @@ class _LootPageState extends State<LootPage> {
                     );
                   },
                 )
+              : SizedBox.shrink(),
+          _apiSuccess && Platform.isIOS
+              ? IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return LootNotificationsIOS(
+                      callback: _callBackFromNotificationOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
               : SizedBox.shrink()
         ],
       ),
@@ -141,20 +163,6 @@ class _LootPageState extends State<LootPage> {
                       Padding(
                         padding: const EdgeInsets.all(5),
                         child: _returnNpcCards(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15, top: 5),
-                        child: Text(
-                          Platform.isAndroid
-                              ? 'Notifications and timers are activated with 20 '
-                                  'seconds to spare. Alarms are rounded to the minute.'
-                              : 'Notifications are activated with 20 seconds to spare.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 13,
-                          ),
-                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 15, top: 5),
@@ -676,6 +684,7 @@ class _LootPageState extends State<LootPage> {
         : _lootTimeType = LootTimeType.dateTime;
 
     var notification = await SharedPreferencesModel().getLootNotificationType();
+    var notificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
     _alarmSound = await SharedPreferencesModel().getLootAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
     setState(() {
@@ -685,6 +694,18 @@ class _LootPageState extends State<LootPage> {
         _lootNotificationType = NotificationType.alarm;
       } else if (notification == '2') {
         _lootNotificationType = NotificationType.timer;
+      }
+
+      if (notificationAhead == '0') {
+        _lootNotificationAhead = 20;
+      } else if (notificationAhead == '1') {
+        _lootNotificationAhead = 40;
+      } else if (notificationAhead == '2') {
+        _lootNotificationAhead = 60;
+      } else if (notificationAhead == '3') {
+        _lootNotificationAhead = 90;
+      } else if (notificationAhead == '4') {
+        _lootNotificationAhead = 120;
       }
     });
   }
@@ -743,7 +764,7 @@ class _LootPageState extends State<LootPage> {
       notificationTitle,
       notificationSubtitle,
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      notificationTime.subtract(Duration(seconds: 20)),
+      notificationTime.subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time

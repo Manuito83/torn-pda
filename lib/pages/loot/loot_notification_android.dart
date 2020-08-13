@@ -11,12 +11,12 @@ class LootNotificationsAndroid extends StatefulWidget {
   });
 
   @override
-  _LootNotificationsAndroidState createState() =>
-      _LootNotificationsAndroidState();
+  _LootNotificationsAndroidState createState() => _LootNotificationsAndroidState();
 }
 
 class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
-  String _lootDropDownValue;
+  String _lootTypeDropDownValue;
+  String _lootNotificationAheadDropDownValue;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -51,17 +51,15 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
               onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
               child: FutureBuilder(
                 future: _preferencesLoaded,
-                builder:
-                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     return SingleChildScrollView(
                       child: Column(
                         children: <Widget>[
                           Padding(
                             padding: const EdgeInsets.all(20.0),
-                            child: Text(
-                                'Here you can specify your preferred alerting '
-                                'method.'),
+                            child: Text('Here you can specify your preferred alerting '
+                                'method and launch time before the loot level is reached'),
                           ),
                           _rowsWithTypes(),
                           SizedBox(height: 20),
@@ -69,8 +67,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                             padding: const EdgeInsets.all(20),
                             child: RichText(
                               text: TextSpan(
-                                text:
-                                    'Note: some Android clock applications do not work well '
+                                text: 'Note: some Android clock applications do not work well '
                                     'with more than 1 timer or do not allow to choose '
                                     'between sound and vibration for alarms. If you experience '
                                     'any issue, it is recommended to install ',
@@ -108,8 +105,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                     setState(() {
                                       _alarmSound = value;
                                     });
-                                    SharedPreferencesModel()
-                                        .setLootAlarmSound(value);
+                                    SharedPreferencesModel().setLootAlarmSound(value);
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
                                   activeColor: Colors.green,
@@ -129,8 +125,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                     setState(() {
                                       _alarmVibration = value;
                                     });
-                                    SharedPreferencesModel()
-                                        .setLootAlarmVibration(value);
+                                    SharedPreferencesModel().setLootAlarmVibration(value);
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
                                   activeColor: Colors.green,
@@ -176,13 +171,27 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             ],
           ),
         ),
+        if (_lootTypeDropDownValue == "0")
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Flexible(
+                  child: _lootTimerDropDown(),
+                ),
+              ],
+            ),
+          )
+        else
+          SizedBox.shrink(),
       ],
     );
   }
 
   DropdownButton _lootDropDown() {
     return DropdownButton<String>(
-      value: _lootDropDownValue,
+      value: _lootTypeDropDownValue,
       items: [
         DropdownMenuItem(
           value: "0",
@@ -227,7 +236,86 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
       onChanged: (value) {
         SharedPreferencesModel().setLootNotificationType(value);
         setState(() {
-          _lootDropDownValue = value;
+          _lootTypeDropDownValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _lootTimerDropDown() {
+    return DropdownButton<String>(
+      value: _lootNotificationAheadDropDownValue,
+      items: [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "20 seconds",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "40 seconds",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "1 minute",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "1.5 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "4",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "2 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        SharedPreferencesModel().setLootNotificationAhead(value);
+        setState(() {
+          _lootNotificationAheadDropDownValue = value;
         });
       },
     );
@@ -235,11 +323,13 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
 
   Future _restorePreferences() async {
     var lootType = await SharedPreferencesModel().getLootNotificationType();
+    var lootNotificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
     var alarmSound = await SharedPreferencesModel().getLootAlarmSound();
     var alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
 
     setState(() {
-      _lootDropDownValue = lootType;
+      _lootTypeDropDownValue = lootType;
+      _lootNotificationAheadDropDownValue = lootNotificationAhead;
       _alarmSound = alarmSound;
       _alarmVibration = alarmVibration;
     });

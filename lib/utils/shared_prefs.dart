@@ -42,6 +42,7 @@ class SharedPreferencesModel {
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
+  final String _kLootNotificationAhead = "pda_lootNotificationAhead";
   final String _kLootAlarmVibration = "pda_lootAlarmVibration";
   final String _kLootAlarmSound = "pda_lootAlarmSound";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
@@ -493,6 +494,16 @@ class SharedPreferencesModel {
   Future<bool> setLootNotificationType(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kLootNotificationType, value);
+  }
+
+  Future<String> getLootNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootNotificationAhead) ?? '0';
+  }
+
+  Future<bool> setLootNotificationAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootNotificationAhead, value);
   }
 
   Future<bool> getLootAlarmVibration() async {
