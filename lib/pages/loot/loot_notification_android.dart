@@ -188,27 +188,46 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         else if (_lootTypeDropDownValue == "1")
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Flexible(
-                  child: _lootAlarmAheadDropDown(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: _lootAlarmAheadDropDown(),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        "(alarms are set on the minute)",
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           )
         else if (_lootTypeDropDownValue == "2")
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  Flexible(
-                    child: _lootTimerAheadDropDown(),
-                  ),
-                ],
-              ),
-            )
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: <Widget>[
+                Flexible(
+                  child: _lootTimerAheadDropDown(),
+                ),
+              ],
+            ),
+          )
       ],
     );
   }
