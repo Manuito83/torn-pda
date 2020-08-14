@@ -37,6 +37,11 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   var _chainWidgetController = ExpandableController();
 
+  final _popupChoices = <HealingPages>[
+    HealingPages(description: "Personal"),
+    HealingPages(description: "Faction"),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -179,31 +184,55 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Widget _medicalActionButton() {
-    var medicalBaseUrl = 'https://www.torn.com/item.php#medical-items';
-    return IconButton(
+    return PopupMenuButton<HealingPages>(
       icon: Icon(Icons.healing),
-      onPressed: () async {
-        _goBackTitle = _currentPageTitle;
-        // Check if the proper page loads (e.g. if we have started an attack,
-        // it won't let us change to another page!). Note: this is something
-        // that can't be done from one target to another, but only between
-        // different sections (not sure why).
-        await _webViewController.loadUrl('$medicalBaseUrl');
-        await Future.delayed(const Duration(seconds: 1), () {});
-        var newUrl = await _webViewController.currentUrl();
-        // Only then make the changes
-        if (newUrl == '$medicalBaseUrl') {
-          setState(() {
-            _currentPageTitle = 'Items';
-          });
-          _backButtonPopsContext = false;
-        }
+      onSelected: _openHealingPage,
+      itemBuilder: (BuildContext context) {
+        return _popupChoices.map((HealingPages choice) {
+          return PopupMenuItem<HealingPages>(
+            value: choice,
+            child: Text(choice.description),
+          );
+        }).toList();
       },
     );
+  }
+
+  void _openHealingPage(HealingPages choice) async {
+    _goBackTitle = _currentPageTitle;
+    // Check if the proper page loads (e.g. if we have started an attack,
+    // it won't let us change to another page!). Note: this is something
+    // that can't be done from one target to another, but only between
+    // different sections (not sure why).
+    await _webViewController.loadUrl('${choice.url}');
+    await Future.delayed(const Duration(seconds: 1), () {});
+    var newUrl = await _webViewController.currentUrl();
+    if (newUrl == '${choice.url}') {
+      setState(() {
+        _currentPageTitle = 'Items';
+      });
+      _backButtonPopsContext = false;
+    }
   }
 
   Future<bool> _willPopCallback() async {
     widget.attacksCallback(_attackedIds);
     return true;
+  }
+}
+
+class HealingPages {
+  String description;
+  String url;
+
+  HealingPages({this.description}) {
+    switch (description) {
+      case "Personal":
+        url = 'https://www.torn.com/item.php#medical-items';
+        break;
+      case "Faction":
+        url = 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+        break;
+    }
   }
 }
