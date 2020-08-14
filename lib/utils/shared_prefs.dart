@@ -21,6 +21,9 @@ class SharedPreferencesModel {
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
+  final String _kTravelNotificationAhead = "pda_travelNotificationAhead";
+  final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
+  final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kTravelAlarmSound = "pda_travelAlarmSound";
   final String _kTravelAlarmVibration = "pda_travelAlarmVibration";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -272,6 +275,36 @@ class SharedPreferencesModel {
   Future<bool> setTravelNotificationBody(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTravelNotificationBody, value);
+  }
+
+  Future<String> getTravelNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelNotificationAhead) ?? '0';
+  }
+
+  Future<bool> setTravelNotificationAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelNotificationAhead, value);
+  }
+
+  Future<String> getTravelAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelAlarmAhead) ?? '0';
+  }
+
+  Future<bool> setTravelAlarmAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelAlarmAhead, value);
+  }
+
+  Future<String> getTravelTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelTimerAhead) ?? '0';
+  }
+
+  Future<bool> setTravelTimerAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelTimerAhead, value);
   }
 
   Future<bool> getTravelAlarmSound() async {
