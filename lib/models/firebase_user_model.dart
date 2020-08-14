@@ -1,4 +1,4 @@
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 
 class FirebaseUserModel extends OwnProfileModel {
   String token;

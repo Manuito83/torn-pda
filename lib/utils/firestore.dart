@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 
 final firestore = _FirestoreHelper();
 

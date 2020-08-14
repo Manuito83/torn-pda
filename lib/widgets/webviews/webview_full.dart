@@ -10,7 +10,7 @@ import 'package:html/parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';

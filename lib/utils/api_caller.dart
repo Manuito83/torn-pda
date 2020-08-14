@@ -8,7 +8,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
@@ -20,6 +20,7 @@ enum ApiType {
 enum ApiSelection {
   travel,
   ownProfile,
+  ownProfileMisc,
   target,
   attacks,
   attacksFull,
@@ -85,6 +86,7 @@ class TornApiCaller {
 
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.ownProfile(this.apiKey);
+  TornApiCaller.ownProfileMisc(this.apiKey);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
   TornApiCaller.chain(this.apiKey);
@@ -247,6 +249,9 @@ class TornApiCaller {
         break;
       case ApiSelection.ownProfile:
         url += '?selections=profile,bars,networth,cooldowns,events,travel';
+        break;
+      case ApiSelection.ownProfileMisc:
+        url += '?selections=money,education';
         break;
       case ApiSelection.target:
         url += '$prefix?selections=profile,discord';

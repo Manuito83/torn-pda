@@ -13,7 +13,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -285,6 +285,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                         child: _eventsTimeline(),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
+                        child: _miscellaneous(),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
@@ -1645,6 +1649,132 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       diff = '${timeDifference.inDays} days ago';
     }
     return diff;
+  }
+
+  Card _miscellaneous() {
+    Widget cooldownItems;
+    if (_user.cooldowns.drug > 0 || _user.cooldowns.booster > 0 || _user.cooldowns.medical > 0) {
+      cooldownItems = Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: Column(
+          children: <Widget>[
+            _user.cooldowns.drug > 0
+                ? Column(
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _drugIcon(),
+                          SizedBox(width: 10),
+                          _drugCounter(),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _notificationIcon(ProfileNotification.drugs),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+              ],
+            )
+                : SizedBox.shrink(),
+            _user.cooldowns.medical > 0
+                ? Column(
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _medicalIcon(),
+                          SizedBox(width: 10),
+                          _medicalCounter(),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _notificationIcon(ProfileNotification.medical),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+              ],
+            )
+                : SizedBox.shrink(),
+            _user.cooldowns.booster > 0
+                ? Column(
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Expanded(
+                      child: Row(
+                        children: [
+                          _boosterIcon(),
+                          SizedBox(width: 10),
+                          _boosterCounter(),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _notificationIcon(ProfileNotification.booster),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+              ],
+            )
+                : SizedBox.shrink(),
+          ],
+        ),
+      );
+    } else {
+      cooldownItems = Row(
+        children: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(left: 10),
+            child: Text("Nothing to report, well done!"),
+          ),
+        ],
+      );
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Text(
+                'MISC',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            cooldownItems,
+            SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
   }
 
   Card _netWorth() {

@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
