@@ -44,12 +44,42 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: <Widget>[
-                Text(
-                  '${widget.friend.name} [${widget.friend.playerId}]',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${widget.friend.name} [${widget.friend.playerId}]',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: IconButton(
+                          icon: Icon(Icons.content_copy),
+                          iconSize: 20,
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: widget.friend.playerId.toString()));
+                            BotToast.showText(
+                              text: "Your friend's ID [${widget.friend.playerId}] has been "
+                                  "copied to the clipboard!",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.green,
+                              duration: Duration(seconds: 5),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Text('${widget.friend.rank}'),
                 SizedBox(height: 20),
@@ -235,7 +265,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                       ClipboardData(text: widget.friend.discord.discordId));
                   BotToast.showText(
                     text:
-                        "Your friend's Discord ID (${widget.friend.discord.discordId}) "
+                        "Your friend's Discord ID (${widget.friend.discord.discordId}) has been "
                         "copied to the clipboard!",
                     textStyle: TextStyle(
                       fontSize: 14,
