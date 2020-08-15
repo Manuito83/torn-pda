@@ -32,7 +32,7 @@ class DrawerPage extends StatefulWidget {
   _DrawerPageState createState() => _DrawerPageState();
 }
 
-class _DrawerPageState extends State<DrawerPage> {
+class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   int _settingsPosition = 6;
   int _aboutPosition = 7;
   var _allowSectionsWithoutKey = [];
@@ -62,6 +62,7 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _allowSectionsWithoutKey = [
       _settingsPosition,
       _aboutPosition,
@@ -92,7 +93,15 @@ class _DrawerPageState extends State<DrawerPage> {
   @override
   void dispose() {
     selectNotificationSubject.close();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if(state == AppLifecycleState.resumed){
+      _updateLastActiveTime();
+    }
   }
 
   // TODO Missing bits:
@@ -495,11 +504,25 @@ class _DrawerPageState extends State<DrawerPage> {
         firestore.setUID(uid);
       }
 
-      var now = DateTime.now().millisecondsSinceEpoch;
-      var dTimeStamp = now - _settingsProvider.lastAppUse;
-      var duration = Duration(milliseconds: dTimeStamp);
-      _settingsProvider.updateLastUsed(now);
-      if (duration.inDays > 2) firestore.uploadLastActiveTime(now);
+      // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
+      // since some people might leave the app opened for weeks in the background)
+      _updateLastActiveTime();
+    }
+  }
+
+  void _updateLastActiveTime() {
+    // Calculate difference between last recorded use and current time
+    var now = DateTime.now().millisecondsSinceEpoch;
+    var dTimeStamp = now - _settingsProvider.lastAppUse;
+    var duration = Duration(milliseconds: dTimeStamp);
+
+    // After the check, in any case, update last recorded use to now
+    _settingsProvider.updateLastUsed(now);
+
+    // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
+    // retries, even if Firebase makes inactive at 7 days
+    if (duration.inDays > 2) {
+      firestore.uploadLastActiveTime(now);
     }
   }
 
