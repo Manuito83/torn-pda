@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
+import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -17,7 +18,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
@@ -50,6 +51,9 @@ class _LootPageState extends State<LootPage> {
 
   LootTimeType _lootTimeType;
   NotificationType _lootNotificationType;
+  int _lootNotificationAhead;
+  int _lootAlarmAhead;
+  int _lootTimerAhead;
   bool _alarmSound;
   bool _alarmVibration;
 
@@ -63,11 +67,9 @@ class _LootPageState extends State<LootPage> {
 
     _getLootInfoFromYata = _updateTimes();
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'loot'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
 
-    _tickerUpdateTimes =
-        new Timer.periodic(Duration(seconds: 1), (Timer t) => _updateTimes());
+    _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _updateTimes());
   }
 
   @override
@@ -86,8 +88,7 @@ class _LootPageState extends State<LootPage> {
         leading: new IconButton(
           icon: new Icon(Icons.menu),
           onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
             scaffoldState.openDrawer();
           },
         ),
@@ -129,6 +130,26 @@ class _LootPageState extends State<LootPage> {
                     );
                   },
                 )
+              : SizedBox.shrink(),
+          _apiSuccess && Platform.isIOS
+              ? IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return LootNotificationsIOS(
+                      callback: _callBackFromNotificationOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
               : SizedBox.shrink()
         ],
       ),
@@ -144,20 +165,6 @@ class _LootPageState extends State<LootPage> {
                       Padding(
                         padding: const EdgeInsets.all(5),
                         child: _returnNpcCards(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15, top: 5),
-                        child: Text(
-                          Platform.isAndroid
-                              ? 'Notifications and timers are activated with 20 '
-                              'seconds to spare. Alarms are rounded to the minute.'
-                              : 'Notifications are activated with 20 seconds to spare.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 13,
-                          ),
-                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 15, top: 5),
@@ -224,8 +231,7 @@ class _LootPageState extends State<LootPage> {
 
       npcDetails.timings.forEach((levelNumber, levelDetails) {
         // Time formatting
-        var levelDateTime =
-            DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
+        var levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
         var time = TimeFormatter(
           inputTime: levelDateTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -305,8 +311,7 @@ class _LootPageState extends State<LootPage> {
             child: Icon(
               iconData,
               size: 20,
-              color: _lootNotificationType == NotificationType.notification &&
-                      isPending
+              color: _lootNotificationType == NotificationType.notification && isPending
                   ? Colors.green
                   : null,
             ),
@@ -319,14 +324,13 @@ class _LootPageState extends State<LootPage> {
                     });
                     await flutterLocalNotificationsPlugin
                         .cancel(int.parse('400$npcId$levelNumber'));
-                    _activeNotificationsIds.removeWhere((element) =>
-                        element == int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds
+                        .removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
                   } else {
                     setState(() {
                       isPending = true;
                     });
-                    _activeNotificationsIds
-                        .add(int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
                     _scheduleNotification(
                       levelDateTime,
                       int.parse('400$npcId$levelNumber'),
@@ -457,9 +461,7 @@ class _LootPageState extends State<LootPage> {
       knifeIcon = IconButton(
         icon: Icon(
           MdiIcons.knifeMilitary,
-          color: npcDetails.levels.current >= 4
-              ? Colors.red
-              : _themeProvider.mainText,
+          color: npcDetails.levels.current >= 4 ? Colors.red : _themeProvider.mainText,
         ),
         onPressed: () async {
           var browserType = _settingsProvider.currentBrowser;
@@ -467,18 +469,15 @@ class _LootPageState extends State<LootPage> {
             case BrowserSetting.app:
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewGeneric(
-                    customUrl:
-                        'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
-                    genericTitle: npcDetails.name,
-                    webViewType: WebViewType.custom,
+                  builder: (BuildContext context) => WebViewFull(
+                    customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
+                    customTitle: npcDetails.name,
                   ),
                 ),
               );
               break;
             case BrowserSetting.external:
-              var url =
-                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+              var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               if (await canLaunch(url)) {
                 await launch(url, forceSafariVC: false);
               }
@@ -687,6 +686,9 @@ class _LootPageState extends State<LootPage> {
         : _lootTimeType = LootTimeType.dateTime;
 
     var notification = await SharedPreferencesModel().getLootNotificationType();
+    var notificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
+    var alarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
+    var timerAhead = await SharedPreferencesModel().getLootTimerAhead();
     _alarmSound = await SharedPreferencesModel().getLootAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
     setState(() {
@@ -696,6 +698,38 @@ class _LootPageState extends State<LootPage> {
         _lootNotificationType = NotificationType.alarm;
       } else if (notification == '2') {
         _lootNotificationType = NotificationType.timer;
+      }
+
+      if (notificationAhead == '0') {
+        _lootNotificationAhead = 20;
+      } else if (notificationAhead == '1') {
+        _lootNotificationAhead = 40;
+      } else if (notificationAhead == '2') {
+        _lootNotificationAhead = 60;
+      } else if (notificationAhead == '3') {
+        _lootNotificationAhead = 90;
+      } else if (notificationAhead == '4') {
+        _lootNotificationAhead = 120;
+      }
+
+      if (alarmAhead == '0') {
+        _lootAlarmAhead = 0;
+      } else if (alarmAhead == '1') {
+        _lootAlarmAhead = 1;
+      } else if (alarmAhead == '2') {
+        _lootAlarmAhead = 2;
+      }
+
+      if (timerAhead == '0') {
+        _lootTimerAhead = 20;
+      } else if (timerAhead == '1') {
+        _lootTimerAhead = 40;
+      } else if (timerAhead == '2') {
+        _lootTimerAhead = 60;
+      } else if (timerAhead == '3') {
+        _lootTimerAhead = 90;
+      } else if (timerAhead == '4') {
+        _lootTimerAhead = 120;
       }
     });
   }
@@ -746,15 +780,15 @@ class _LootPageState extends State<LootPage> {
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics =
+        NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.schedule(
       notificationId,
       notificationTitle,
       notificationSubtitle,
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      notificationTime.subtract(Duration(seconds: 20)),
+      notificationTime.subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
@@ -798,6 +832,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   void _setAlarm(DateTime alarmTime, String title) {
+    alarmTime = alarmTime.add(Duration(minutes: - _lootAlarmAhead));
     int hour = alarmTime.hour;
     int minute = alarmTime.minute;
     String message = title;
@@ -830,7 +865,7 @@ class _LootPageState extends State<LootPage> {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': totalSeconds - 20,
+        'android.intent.extra.alarm.LENGTH': totalSeconds - _lootTimerAhead,
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': message,
       },

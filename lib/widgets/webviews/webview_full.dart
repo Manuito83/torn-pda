@@ -10,7 +10,7 @@ import 'package:html/parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -18,6 +18,8 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/city/city_options.dart';
+import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 import 'package:http/http.dart' as http;
@@ -53,9 +55,15 @@ class _WebViewFullState extends State<WebViewFull> {
   var _tradesFullActive = false;
   var _tradesIconActive = false;
   Widget _tradesExpandable = SizedBox.shrink();
-  //Timer _tradesTimer;
   bool _tradesPreferencesLoaded = false;
-  bool _tradeCalculatorActive = false;
+  bool _tradeCalculatorEnabled = false;
+
+  var _cityEnabled = false;
+  var _cityIconActive = false;
+  bool _cityPreferencesLoaded = false;
+  var _errorCityApi = false;
+  var _cityItemsFound = List<Item>();
+  var _cityController = ExpandableController();
 
   @override
   void initState() {
@@ -84,6 +92,13 @@ class _WebViewFullState extends State<WebViewFull> {
             _crimesInfoIcon(),
             _crimesMenuIcon(),
             _tradesMenuIcon(),
+            _cityMenuIcon(),
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () async {
+                await webView.reload();
+              },
+            ),
           ],
         ),
         body: Container(
@@ -109,6 +124,22 @@ class _WebViewFullState extends State<WebViewFull> {
                 ),
                 // Trades widget
                 _tradesExpandable,
+                // City widget
+                ExpandablePanel(
+                  theme: ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: SizedBox.shrink(),
+                  controller: _cityController,
+                  header: SizedBox.shrink(),
+                  expanded: CityWidget(
+                    controller: webView,
+                    cityItems: _cityItemsFound,
+                    error: _errorCityApi,
+                  ),
+                ),
                 // Actual WebView
                 Expanded(
                   child: InAppWebView(
@@ -131,10 +162,12 @@ class _WebViewFullState extends State<WebViewFull> {
                     },
                     onLoadStop: (InAppWebViewController c, String url) {
                       _currentUrl = url;
+
                       _assessGeneral();
                     },
                     onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
                       print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
                       /// TRADES
                       ///   - IOS: onLoadStop does not work inside of Trades, that is why we
                       ///     redirect both with console messages (all 'hash.step') for trades
@@ -169,6 +202,7 @@ class _WebViewFullState extends State<WebViewFull> {
     _assessTravel(document);
     _assessCrimes(document);
     _assessTrades(document);
+    _assessCity(document);
   }
 
   // TRAVEL
@@ -316,7 +350,7 @@ class _WebViewFullState extends State<WebViewFull> {
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
-            padding: const EdgeInsets.only(right: 20),
+            padding: const EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -364,7 +398,7 @@ class _WebViewFullState extends State<WebViewFull> {
       await _tradesPreferencesLoad();
       _tradesPreferencesLoaded = true;
     }
-    if (!_tradeCalculatorActive) {
+    if (!_tradeCalculatorEnabled) {
       if (_tradesFullActive) {
         _toggleTradesExpandable(active: false);
       }
@@ -581,13 +615,6 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  Future _forceAssessTrades() async {
-    _currentUrl = await webView.getUrl();
-    var html = await webView.getHtml();
-    var document = parse(html);
-    _assessTrades(document);
-  }
-
   Widget _tradesMenuIcon() {
     if (_tradesIconActive) {
       return OpenContainer(
@@ -607,7 +634,7 @@ class _WebViewFullState extends State<WebViewFull> {
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
-            padding: const EdgeInsets.only(right: 20),
+            padding: const EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -622,8 +649,145 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _tradesPreferencesLoad() async {
-    _tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorActive();
+    _tradeCalculatorEnabled = await SharedPreferencesModel().getTradeCalculatorEnabled();
     _forceAssessTrades();
+  }
+
+  Future _forceAssessTrades() async {
+    _currentUrl = await webView.getUrl();
+    var html = await webView.getHtml();
+    var document = parse(html);
+    _assessTrades(document);
+  }
+
+  // CITY
+  Future _assessCity(dom.Document document) async {
+    var h4 = document.querySelector(".content-title > h4");
+    var pageTitle = '';
+    if (h4 != null) {
+      pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+    }
+
+    if (!_currentUrl.contains('https://www.torn.com/city.php') ||
+        !pageTitle.contains('city') ||
+        pageTitle.contains('please validate') ||
+        pageTitle.contains('error')) {
+      setState(() {
+        _cityIconActive = false;
+        _cityController.expanded = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _cityIconActive = true;
+    });
+
+    // We only get this once and if we are inside the city
+    // It's also in the callback from city options
+    if (!_cityPreferencesLoaded) {
+      await _cityPreferencesLoad();
+      _cityPreferencesLoaded = true;
+    }
+
+    // Retry several times and allow the map to load
+    List<dom.Element> query;
+    for (var i = 0; i < 10; i++) {
+      query = document.querySelectorAll("#map .leaflet-marker-pane *");
+      if (query.length > 0) {
+        break;
+      } else {
+        await Future.delayed(const Duration(seconds: 1));
+        var updatedHtml = await webView.getHtml();
+        document = parse(updatedHtml);
+      }
+    }
+    if (query.length == 0) {
+      return;
+    }
+
+    // Assess if we need to show the widget, now that we are in the city
+    // By placing this check here, we also avoid showing the widget if we entered via Quick Links
+    // in the city
+    setState(() {
+      if (!_cityEnabled) {
+        _cityController.expanded = false;
+        return;
+      }
+      _cityController.expanded = true;
+    });
+
+    var mapItemsList = List<String>();
+    for (var mapFind in query) {
+      mapFind.attributes.forEach((key, value) {
+        if (key == "src" && value.contains("https://www.torn.com/images/items/")) {
+          mapItemsList.add(value.split("items/")[1].split("/")[0]);
+        }
+      });
+    }
+
+    // Pass items to widget (if nothing found, widget's list will be empty)
+    try {
+      var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+      dynamic apiResponse = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
+      if (apiResponse is ItemsModel) {
+        var tornItems = apiResponse.items.values.toList();
+        var itemsFound = List<Item>();
+        for (var mapItem in mapItemsList) {
+          Item itemMatch = tornItems[int.parse(mapItem) - 1];
+          itemsFound.add(itemMatch);
+        }
+        setState(() {
+          _cityItemsFound = itemsFound;
+          _errorCityApi = false;
+        });
+        webView.evaluateJavascript(source: highlightCityItemsJS());
+      } else {
+        setState(() {
+          _errorCityApi = true;
+        });
+      }
+    } catch (e) {
+      return;
+    }
+  }
+
+  Widget _cityMenuIcon() {
+    if (_cityIconActive) {
+      return OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return CityOptions(
+            callback: _cityPreferencesLoad,
+          );
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(MdiIcons.cityVariantOutline),
+            ),
+          );
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Future _cityPreferencesLoad() async {
+    _cityEnabled = await SharedPreferencesModel().getCityEnabled();
+    await webView.reload();
   }
 
   // UTILS

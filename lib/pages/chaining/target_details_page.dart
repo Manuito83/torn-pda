@@ -44,12 +44,42 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: <Widget>[
-                Text(
-                  '${widget.target.name} [${widget.target.playerId}]',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${widget.target.name} [${widget.target.playerId}]',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: IconButton(
+                          icon: Icon(Icons.content_copy),
+                          iconSize: 20,
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: widget.target.playerId.toString()));
+                            BotToast.showText(
+                              text: "Your target's ID [${widget.target.playerId}] has been "
+                                  "copied to the clipboard!",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.green,
+                              duration: Duration(seconds: 5),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Text('${widget.target.rank}'),
                 SizedBox(height: 20),
@@ -239,7 +269,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: widget.target.discord.discordId));
                 BotToast.showText(
-                  text: "Your target's Discord ID (${widget.target.discord.discordId}) "
+                  text: "Your target's Discord ID (${widget.target.discord.discordId}) has been "
                       "copied to the clipboard!",
                   textStyle: TextStyle(
                     fontSize: 14,

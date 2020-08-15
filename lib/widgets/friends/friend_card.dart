@@ -11,7 +11,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notes_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -39,8 +39,7 @@ class _FriendCardState extends State<FriendCard> {
   @override
   void initState() {
     super.initState();
-    _ticker = new Timer.periodic(
-        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
@@ -66,8 +65,7 @@ class _FriendCardState extends State<FriendCard> {
             color: Colors.red,
             icon: Icons.delete,
             onTap: () {
-              Provider.of<FriendsProvider>(context, listen: false)
-                  .deleteFriend(_friend);
+              Provider.of<FriendsProvider>(context, listen: false).deleteFriend(_friend);
               Scaffold.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Deleted ${_friend.name}!'),
@@ -124,8 +122,7 @@ class _FriendCardState extends State<FriendCard> {
                           OpenContainer(
                             transitionDuration: Duration(milliseconds: 500),
                             transitionType: ContainerTransitionType.fadeThrough,
-                            openBuilder:
-                                (BuildContext context, VoidCallback _) {
+                            openBuilder: (BuildContext context, VoidCallback _) {
                               return FriendDetailsPage(friend: _friend);
                             },
                             closedElevation: 0,
@@ -135,8 +132,7 @@ class _FriendCardState extends State<FriendCard> {
                               ),
                             ),
                             closedColor: Colors.transparent,
-                            closedBuilder: (BuildContext context,
-                                VoidCallback openContainer) {
+                            closedBuilder: (BuildContext context, VoidCallback openContainer) {
                               return SizedBox(
                                 height: 20,
                                 width: 20,
@@ -204,8 +200,7 @@ class _FriendCardState extends State<FriendCard> {
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
-                            color:
-                                _returnStatusColor(_friend.lastAction.status),
+                            color: _returnStatusColor(_friend.lastAction.status),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -218,8 +213,7 @@ class _FriendCardState extends State<FriendCard> {
                         Text(
                           _friend.lastAction.relative == "0 minutes ago"
                               ? 'now'
-                              : _friend.lastAction.relative
-                                  .replaceAll(' ago', ''),
+                              : _friend.lastAction.relative.replaceAll(' ago', ''),
                         ),
                       ],
                     ),
@@ -304,10 +298,9 @@ class _FriendCardState extends State<FriendCard> {
             case BrowserSetting.app:
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewGeneric(
-                    webViewType: WebViewType.custom,
+                  builder: (BuildContext context) => WebViewFull(
                     customUrl: messageUrl,
-                    genericTitle: 'Trade',
+                    customTitle: 'Trade',
                   ),
                 ),
               );
@@ -342,10 +335,9 @@ class _FriendCardState extends State<FriendCard> {
             case BrowserSetting.app:
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewGeneric(
-                    webViewType: WebViewType.custom,
+                  builder: (BuildContext context) => WebViewFull(
                     customUrl: messageUrl,
-                    genericTitle: 'Message',
+                    customTitle: 'Message',
                   ),
                 ),
               );
@@ -378,10 +370,9 @@ class _FriendCardState extends State<FriendCard> {
             case BrowserSetting.app:
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewGeneric(
-                    profileId: '${_friend.playerId}',
-                    profileName: _friend.name,
-                    webViewType: WebViewType.profile,
+                  builder: (BuildContext context) => WebViewFull(
+                    customUrl: 'https://www.torn.com/profiles.php?XID=${_friend.playerId}',
+                    customTitle: _friend.name,
                   ),
                 ),
               );
@@ -426,8 +417,7 @@ class _FriendCardState extends State<FriendCard> {
       }
 
       void showFactionToast() {
-        if (_friend.faction.factionId ==
-            _userProvider.myUser.faction.factionId) {
+        if (_friend.faction.factionId == _userProvider.myUser.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_friend.name} belongs to your same faction "
                 "(${_friend.faction.factionName}) as "
@@ -551,9 +541,7 @@ class _FriendCardState extends State<FriendCard> {
         width: 13,
         height: 13,
         decoration: BoxDecoration(
-            color: stateColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.black)),
+            color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
       ),
     );
 

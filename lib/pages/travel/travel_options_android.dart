@@ -3,22 +3,21 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class LootNotificationsAndroid extends StatefulWidget {
+class TravelOptionsAndroid extends StatefulWidget {
   final Function callback;
 
-  LootNotificationsAndroid({
+  TravelOptionsAndroid({
     @required this.callback,
   });
 
   @override
-  _LootNotificationsAndroidState createState() => _LootNotificationsAndroidState();
+  _TravelOptionsAndroidState createState() => _TravelOptionsAndroidState();
 }
 
-class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
-  String _lootTypeDropDownValue;
-  String _lootNotificationAheadDropDownValue;
-  String _lootAlarmAheadDropDownValue;
-  String _lootTimerAheadDropDownValue;
+class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
+  String _travelNotificationAheadDropDownValue;
+  String _travelAlarmAheadDropDownValue;
+  String _travelTimerAheadDropDownValue;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -37,7 +36,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
       onWillPop: _willPopCallback,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Loot options"),
+          title: Text("Travel options"),
           leading: new IconButton(
             icon: new Icon(Icons.arrow_back),
             onPressed: () {
@@ -61,7 +60,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                           Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: Text('Here you can specify your preferred alerting '
-                                'method and launch time before the loot level is reached'),
+                                'method and launch time before arrival'),
                           ),
                           _rowsWithTypes(),
                           SizedBox(height: 20),
@@ -107,7 +106,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                     setState(() {
                                       _alarmSound = value;
                                     });
-                                    SharedPreferencesModel().setLootAlarmSound(value);
+                                    SharedPreferencesModel().setTravelAlarmSound(value);
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
                                   activeColor: Colors.green,
@@ -127,7 +126,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                     setState(() {
                                       _alarmVibration = value;
                                     });
-                                    SharedPreferencesModel().setLootAlarmVibration(value);
+                                    SharedPreferencesModel().setTravelAlarmVibration(value);
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
                                   activeColor: Colors.green,
@@ -162,132 +161,84 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Flexible(
-                child: Text('Loot'),
+                child: Text('Notification'),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
-                child: _lootDropDown(),
+                child: _travelNotificationAheadDropDown(),
               ),
             ],
           ),
         ),
-        if (_lootTypeDropDownValue == "0") // Notification
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Flexible(
-                  child: _lootNotificationAheadDropDown(),
-                ),
-              ],
-            ),
-          )
-        else if (_lootTypeDropDownValue == "1")
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: _lootAlarmAheadDropDown(),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        "(alarms are set on the minute)",
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          fontSize: 12,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text('Alarm'),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: _travelAlarmAheadDropDown(),
                         ),
-                      ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            "(alarms are set on the minute)",
+                            style: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          )
-        else if (_lootTypeDropDownValue == "2")
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                Flexible(
-                  child: _lootTimerAheadDropDown(),
-                ),
-              ],
-            ),
-          )
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text('Timer'),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _travelTimerAheadDropDown(),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  DropdownButton _lootDropDown() {
+  DropdownButton _travelNotificationAheadDropDown() {
     return DropdownButton<String>(
-      value: _lootTypeDropDownValue,
-      items: [
-        DropdownMenuItem(
-          value: "0",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Notification",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "1",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Alarm",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "2",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "Timer",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ],
-      onChanged: (value) {
-        SharedPreferencesModel().setLootNotificationType(value);
-        setState(() {
-          _lootTypeDropDownValue = value;
-        });
-      },
-    );
-  }
-
-  DropdownButton _lootNotificationAheadDropDown() {
-    return DropdownButton<String>(
-      value: _lootNotificationAheadDropDownValue,
+      value: _travelNotificationAheadDropDownValue,
       items: [
         DropdownMenuItem(
           value: "0",
@@ -356,17 +307,17 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootNotificationAhead(value);
+        SharedPreferencesModel().setTravelNotificationAhead(value);
         setState(() {
-          _lootNotificationAheadDropDownValue = value;
+          _travelNotificationAheadDropDownValue = value;
         });
       },
     );
   }
 
-  DropdownButton _lootAlarmAheadDropDown() {
+  DropdownButton _travelAlarmAheadDropDown() {
     return DropdownButton<String>(
-      value: _lootAlarmAheadDropDownValue,
+      value: _travelAlarmAheadDropDownValue,
       items: [
         DropdownMenuItem(
           value: "0",
@@ -409,17 +360,17 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootAlarmAhead(value);
+        SharedPreferencesModel().setTravelAlarmAhead(value);
         setState(() {
-          _lootAlarmAheadDropDownValue = value;
+          _travelAlarmAheadDropDownValue = value;
         });
       },
     );
   }
 
-  DropdownButton _lootTimerAheadDropDown() {
+  DropdownButton _travelTimerAheadDropDown() {
     return DropdownButton<String>(
-      value: _lootTimerAheadDropDownValue,
+      value: _travelTimerAheadDropDownValue,
       items: [
         DropdownMenuItem(
           value: "0",
@@ -488,27 +439,25 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootTimerAhead(value);
+        SharedPreferencesModel().setTravelTimerAhead(value);
         setState(() {
-          _lootTimerAheadDropDownValue = value;
+          _travelTimerAheadDropDownValue = value;
         });
       },
     );
   }
 
   Future _restorePreferences() async {
-    var lootType = await SharedPreferencesModel().getLootNotificationType();
-    var lootNotificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
-    var lootAlarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
-    var lootTimerAhead = await SharedPreferencesModel().getLootTimerAhead();
-    var alarmSound = await SharedPreferencesModel().getLootAlarmSound();
-    var alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
+    var travelNotificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
+    var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
+    var travelTimerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+    var alarmSound = await SharedPreferencesModel().getTravelAlarmSound();
+    var alarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
 
     setState(() {
-      _lootTypeDropDownValue = lootType;
-      _lootNotificationAheadDropDownValue = lootNotificationAhead;
-      _lootAlarmAheadDropDownValue = lootAlarmAhead;
-      _lootTimerAheadDropDownValue = lootTimerAhead;
+      _travelNotificationAheadDropDownValue = travelNotificationAhead;
+      _travelAlarmAheadDropDownValue = travelAlarmAhead;
+      _travelTimerAheadDropDownValue = travelTimerAhead;
       _alarmSound = alarmSound;
       _alarmVibration = alarmVibration;
     });

@@ -21,6 +21,9 @@ class SharedPreferencesModel {
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
+  final String _kTravelNotificationAhead = "pda_travelNotificationAhead";
+  final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
+  final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kTravelAlarmSound = "pda_travelAlarmSound";
   final String _kTravelAlarmVibration = "pda_travelAlarmVibration";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
@@ -42,9 +45,13 @@ class SharedPreferencesModel {
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
+  final String _kLootNotificationAhead = "pda_lootNotificationAhead";
+  final String _kLootAlarmAhead = "pda_lootAlarmAhead";
+  final String _kLootTimerAhead = "pda_lootTimerAhead";
   final String _kLootAlarmVibration = "pda_lootAlarmVibration";
   final String _kLootAlarmSound = "pda_lootAlarmSound";
-  final String _kTradeCalculatorActive = "pda_tradeCalculatorActive";
+  final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
+  final String _kCityFinderEnabled = "pda_cityFinderActive";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -268,6 +275,36 @@ class SharedPreferencesModel {
   Future<bool> setTravelNotificationBody(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTravelNotificationBody, value);
+  }
+
+  Future<String> getTravelNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelNotificationAhead) ?? '0';
+  }
+
+  Future<bool> setTravelNotificationAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelNotificationAhead, value);
+  }
+
+  Future<String> getTravelAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelAlarmAhead) ?? '0';
+  }
+
+  Future<bool> setTravelAlarmAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelAlarmAhead, value);
+  }
+
+  Future<String> getTravelTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelTimerAhead) ?? '0';
+  }
+
+  Future<bool> setTravelTimerAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelTimerAhead, value);
   }
 
   Future<bool> getTravelAlarmSound() async {
@@ -494,6 +531,36 @@ class SharedPreferencesModel {
     return prefs.setString(_kLootNotificationType, value);
   }
 
+  Future<String> getLootNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootNotificationAhead) ?? '0';
+  }
+
+  Future<bool> setLootNotificationAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootNotificationAhead, value);
+  }
+
+  Future<String> getLootAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootAlarmAhead) ?? '0';
+  }
+
+  Future<bool> setLootAlarmAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootAlarmAhead, value);
+  }
+
+  Future<String> getLootTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootTimerAhead) ?? '0';
+  }
+
+  Future<bool> setLootTimerAhead(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootTimerAhead, value);
+  }
+
   Future<bool> getLootAlarmVibration() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kLootAlarmVibration) ?? true;
@@ -515,16 +582,29 @@ class SharedPreferencesModel {
   }
 
   /// ----------------------------
-  /// Methods for default browser
+  /// Methods for Trades Calculator
   /// ----------------------------
-  Future<bool> getTradeCalculatorActive() async {
+  Future<bool> getTradeCalculatorEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTradeCalculatorActive) ?? true;
+    return prefs.getBool(_kTradeCalculatorEnabled) ?? true;
   }
 
-  Future<bool> setTradeCalculatorActive(bool value) async {
+  Future<bool> setTradeCalculatorEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTradeCalculatorActive, value);
+    return prefs.setBool(_kTradeCalculatorEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for City Finder
+  /// ----------------------------
+  Future<bool> getCityEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kCityFinderEnabled) ?? true;
+  }
+
+  Future<bool> setCityEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kCityFinderEnabled, value);
   }
 
 

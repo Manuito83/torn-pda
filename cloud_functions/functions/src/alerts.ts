@@ -25,13 +25,19 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
   const promises: Promise<any>[] = [];
   const userStats = await getUsersStat(subscriber.apiKey);
   
-  if (!userStats.error) {
-    if (subscriber.energyNotification)
-      promises.push(sendEnergyNotification(userStats, subscriber));
-    if (subscriber.travelNotification)
-      promises.push(sendTravelNotification(userStats, subscriber));
-    if (subscriber.hospitalNotification)
-      promises.push(sendHospitalNotification(userStats, subscriber));
+  try {
+    if (!userStats.error) {
+      if (subscriber.energyNotification)
+        promises.push(sendEnergyNotification(userStats, subscriber));
+      if (subscriber.travelNotification)
+        promises.push(sendTravelNotification(userStats, subscriber));
+      if (subscriber.hospitalNotification)
+        promises.push(sendHospitalNotification(userStats, subscriber));
+    }
+  } catch (e) {
+    console.log("ERROR ALERTS");
+    console.log(subscriber.uid);
+    console.log(e);
   }
 
   await Promise.all(promises);

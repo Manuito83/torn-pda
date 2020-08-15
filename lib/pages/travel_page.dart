@@ -11,7 +11,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
-import 'package:torn_pda/pages/travel/travel_options_page.dart';
+import 'package:torn_pda/pages/travel/travel_options_android.dart';
+import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -112,26 +113,46 @@ class _TravelPageState extends State<TravelPage> {
         ),
         title: Text('Travel'),
         actions: <Widget>[
-          Platform.isAndroid
-              ? IconButton(
-                  icon: Icon(
-                    Icons.alarm_on,
-                    color: _themeProvider.buttonText,
+          if (Platform.isAndroid)
+            IconButton(
+              icon: Icon(
+                Icons.alarm_on,
+                color: _themeProvider.buttonText,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return TravelOptionsAndroid(
+                        callback: _callBackFromTravelOptions,
+                      );
+                    },
                   ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return TravelOptions(
-                            callback: _callBackFromTravelOptions,
-                          );
-                        },
-                      ),
-                    );
-                  },
-                )
-              : SizedBox.shrink(),
+                );
+              },
+            )
+          else if (Platform.isIOS)
+            IconButton(
+              icon: Icon(
+                Icons.alarm_on,
+                color: _themeProvider.buttonText,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return TravelOptionsIOS(
+                        callback: _callBackFromTravelOptions,
+                      );
+                    },
+                  ),
+                );
+              },
+            )
+          else
+            SizedBox.shrink(),
           IconButton(
             icon: Icon(Icons.textsms),
             onPressed: () {

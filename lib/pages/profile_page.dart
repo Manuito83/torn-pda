@@ -9,10 +9,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timeline_tile/timeline_tile.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/education_model.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -25,7 +28,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/webviews/webview_generic.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter/rendering.dart';
 import '../main.dart';
@@ -136,6 +138,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   bool _alarmSound;
   bool _alarmVibration;
+
+  bool _miscApiFetched = false;
+  OwnProfileMiscModel _miscModel;
+  TornEducationModel _tornEducationModel;
 
   @override
   void initState() {
@@ -286,6 +292,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                         child: _eventsTimeline(),
                       ),
+                      _miscellaneous(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
                         child: _netWorth(),
@@ -409,12 +416,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           case BrowserSetting.app:
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (BuildContext context) => TornWebViewGeneric(
-                                  profileId: causingId,
-                                  //profileName: causingId,
-                                  genericTitle: 'Event Profile',
-                                  webViewType: WebViewType.profile,
-                                  genericCallBack: _updateCallback,
+                                builder: (BuildContext context) => WebViewFull(
+                                  customUrl: 'https://www.torn.com/profiles.php?'
+                                      'XID=$causingId',
+                                  customTitle: 'Event Profile',
+                                  customCallBack: _updateCallback,
                                 ),
                               ),
                             );
@@ -1648,6 +1654,187 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return diff;
   }
 
+  Widget _miscellaneous() {
+    bool showMisc = false;
+    int linesSeparator = 0;
+
+    if (_miscModel == null || _tornEducationModel == null) {
+      return SizedBox.shrink();
+    }
+
+    // BANK
+    Widget bankWidget = SizedBox.shrink();
+    if (_miscModel.cityBank.timeLeft > 0) {
+      showMisc = true;
+      linesSeparator++;
+      final moneyFormat = new NumberFormat("#,##0", "en_US");
+      var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.cityBank.timeLeft));
+      var timeDifference = timeExpiry.difference(DateTime.now());
+      Color expiryColor = Colors.orange[800];
+      String expiryString;
+      if (timeDifference.inHours < 1) {
+        expiryString = 'less than an hour';
+      } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+        expiryString = 'about 1 hour';
+      } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+        expiryString = '${timeDifference.inHours} hours';
+      } else if (timeDifference.inDays == 1) {
+        expiryString = '1 day';
+        expiryColor = _themeProvider.mainText;
+      } else {
+        expiryString = '${timeDifference.inDays} days';
+        expiryColor = _themeProvider.mainText;
+      }
+
+      bankWidget = Row(
+        children: <Widget>[
+          Icon(MdiIcons.bankOutline),
+          SizedBox(width: 10),
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                text: "Your bank investment of ",
+                style: DefaultTextStyle.of(context).style,
+                children: <TextSpan>[
+                  TextSpan(
+                    text: "\$${moneyFormat.format(_miscModel.cityBank.amount)}",
+                    style: TextStyle(
+                      color: Colors.green,
+                    ),
+                  ),
+                  TextSpan(text: " will expire in "),
+                  TextSpan(
+                    text: "$expiryString",
+                    style: TextStyle(color: expiryColor),
+                  ),
+                ],
+              ),
+            ),
+          )
+        ],
+      );
+    }
+
+    // EDUCATION
+    Widget educationWidget = SizedBox.shrink();
+    if (_miscModel.educationTimeleft > 0) {
+      showMisc = true;
+      linesSeparator++;
+      var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.educationTimeleft));
+      var timeDifference = timeExpiry.difference(DateTime.now());
+      Color expiryColor = Colors.orange[800];
+      String expiryString;
+      if (timeDifference.inHours < 1) {
+        expiryString = 'less than an hour';
+      } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+        expiryString = 'about 1 hour';
+      } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+        expiryString = '${timeDifference.inHours} hours';
+      } else if (timeDifference.inDays == 1) {
+        expiryString = '1 day';
+        expiryColor = _themeProvider.mainText;
+      } else {
+        expiryString = '${timeDifference.inDays} days';
+        expiryColor = _themeProvider.mainText;
+      }
+
+      String courseName;
+      _tornEducationModel.education.forEach((key, value) {
+        if (key == _miscModel.educationCurrent.toString()) {
+          courseName = value.name;
+        }
+      });
+
+      educationWidget = Row(
+        children: <Widget>[
+          Icon(MdiIcons.schoolOutline),
+          SizedBox(width: 10),
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                text: "Your education in ",
+                style: DefaultTextStyle.of(context).style,
+                children: <TextSpan>[
+                  TextSpan(
+                    text: "$courseName",
+                    /*
+                    style: TextStyle(
+                      color: Colors.green,
+                    ),
+                    */
+                  ),
+                  TextSpan(text: " will end in "),
+                  TextSpan(
+                    text: "$expiryString",
+                    style: TextStyle(color: expiryColor),
+                  ),
+                ],
+              ),
+            ),
+          )
+        ],
+      );
+    }
+    // There is no education on going... why? All done, or forgotten?
+    else {
+      // If the number of courses studied and available are not the same, we have forgotten
+      if (_miscModel.educationCompleted.length < _tornEducationModel.education.length) {
+        showMisc = true;
+        linesSeparator++;
+        educationWidget = Row(
+          children: <Widget>[
+            Icon(MdiIcons.schoolOutline),
+            SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                "You are not enrolled in any education course!",
+                style: TextStyle(color: Colors.red[500]),
+              ),
+            )
+          ],
+        );
+      }
+    }
+
+    if (!showMisc) {
+      return SizedBox.shrink();
+    } else {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 15),
+                  child: Text(
+                    'MISC',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: bankWidget,
+                ),
+                if (linesSeparator == 2)
+                  SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: educationWidget,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   Card _netWorth() {
     // Currency configuration
     final moneyFormat = new NumberFormat("#,##0", "en_US");
@@ -1797,6 +1984,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     });
 
+    // We get education and money (with ProfileMiscModel) separately and only once per load
+    // (timings are not specific, only going down to 1 hour).
+    if (_apiGoodData && !_miscApiFetched) {
+      _miscApiFetched = true;
+      try {
+        var miscApiResponse =
+            await TornApiCaller.ownProfileMisc(_userProvider.myUser.userApiKey).getOwnProfileMisc;
+        var educationResponse =
+            await TornApiCaller.education(_userProvider.myUser.userApiKey).getEducation;
+        if (miscApiResponse is OwnProfileMiscModel && educationResponse is TornEducationModel) {
+          setState(() {
+            _miscModel = miscApiResponse;
+            _tornEducationModel = educationResponse;
+          });
+        }
+      } catch (e) {
+        // If something fails, we simple don't show the MISC section
+      }
+    }
+
     _retrievePendingNotifications();
   }
 
@@ -1826,7 +2033,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       children: [
         SpeedDialChild(
           child: Icon(
-            Icons.comment,
+            MdiIcons.cityVariantOutline,
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.purple[500],
+          onTap: () async {
+            _openTornBrowser('city');
+          },
+          label: 'CITY',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.purple[500],
+        ),
+        SpeedDialChild(
+          child: Icon(
+            MdiIcons.accountSwitchOutline,
             color: Colors.black,
           ),
           backgroundColor: Colors.yellow[800],
@@ -1929,6 +2152,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case 'trades':
         tornPage = 'https://www.torn.com/trade.php';
+        break;
+      case 'city':
+        tornPage = 'https://www.torn.com/city.php';
         break;
     }
 

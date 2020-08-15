@@ -6,9 +6,11 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
@@ -20,12 +22,14 @@ enum ApiType {
 enum ApiSelection {
   travel,
   ownProfile,
+  ownProfileMisc,
   target,
   attacks,
   attacksFull,
   chainStatus,
   bars,
   items,
+  education,
   friends,
 }
 
@@ -85,11 +89,13 @@ class TornApiCaller {
 
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.ownProfile(this.apiKey);
+  TornApiCaller.ownProfileMisc(this.apiKey);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
   TornApiCaller.chain(this.apiKey);
   TornApiCaller.bars(this.apiKey);
   TornApiCaller.items(this.apiKey);
+  TornApiCaller.education(this.apiKey);
   TornApiCaller.friends(this.apiKey, this.queryId);
 
   Future<dynamic> get getTravel async {
@@ -113,6 +119,19 @@ class TornApiCaller {
     });
     if (apiResult is http.Response) {
       return OwnProfileModel.fromJson(json.decode(apiResult.body));
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getOwnProfileMisc async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownProfileMisc)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      return OwnProfileMiscModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -208,6 +227,23 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getEducation async {
+    dynamic apiResult;
+    await _apiCall(ApiType.torn, apiSelection: ApiSelection.education)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return TornEducationModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> get getFriends async {
     dynamic apiResult;
     await _apiCall(ApiType.user,
@@ -248,6 +284,9 @@ class TornApiCaller {
       case ApiSelection.ownProfile:
         url += '?selections=profile,bars,networth,cooldowns,events,travel';
         break;
+      case ApiSelection.ownProfileMisc:
+        url += '?selections=money,education';
+        break;
       case ApiSelection.target:
         url += '$prefix?selections=profile,discord';
         break;
@@ -265,6 +304,9 @@ class TornApiCaller {
         break;
       case ApiSelection.items:
         url += '?selections=items';
+        break;
+      case ApiSelection.education:
+        url += '?selections=education';
         break;
       case ApiSelection.friends:
         url += '$prefix?selections=profile,discord';

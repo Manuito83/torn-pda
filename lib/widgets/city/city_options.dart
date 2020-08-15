@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class TradesOptions extends StatefulWidget {
+class CityOptions extends StatefulWidget {
   final Function callback;
 
-  TradesOptions({
+  CityOptions({
     @required this.callback,
   });
 
   @override
-  _TradesOptionsState createState() => _TradesOptionsState();
+  _CityOptionsState createState() => _CityOptionsState();
 }
 
-class _TradesOptionsState extends State<TradesOptions> {
-  bool _tradeCalculatorEnabled = true;
+class _CityOptionsState extends State<CityOptions> {
+  bool _cityEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -29,7 +29,7 @@ class _TradesOptionsState extends State<TradesOptions> {
       onWillPop: _willPopCallback,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("Trade Calculator"),
+          title: Text("City Finder"),
           leading: new IconButton(
             icon: new Icon(Icons.arrow_back),
             onPressed: () {
@@ -57,13 +57,13 @@ class _TradesOptionsState extends State<TradesOptions> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
-                                Text("Use trade calculator"),
+                                Text("Use city finder"),
                                 Switch(
-                                  value: _tradeCalculatorEnabled,
+                                  value: _cityEnabled,
                                   onChanged: (value) {
-                                    SharedPreferencesModel().setTradeCalculatorEnabled(value);
+                                    SharedPreferencesModel().setCityEnabled(value);
                                     setState(() {
-                                      _tradeCalculatorEnabled = value;
+                                      _cityEnabled = value;
                                     });
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
@@ -75,8 +75,8 @@ class _TradesOptionsState extends State<TradesOptions> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Text(
-                              'Consider deactivating the trade calculator if it impacts '
-                              'performance or you just simply would not prefer to use it',
+                              'Consider deactivating the city finder if it impacts '
+                                  'performance or you just simply would not prefer to use it',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -103,10 +103,10 @@ class _TradesOptionsState extends State<TradesOptions> {
   }
 
   Future _restorePreferences() async {
-    var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorEnabled();
+    var cityEnabled = await SharedPreferencesModel().getCityEnabled();
 
     setState(() {
-      _tradeCalculatorEnabled = tradeCalculatorActive;
+      _cityEnabled = cityEnabled;
     });
   }
 
@@ -115,3 +115,4 @@ class _TradesOptionsState extends State<TradesOptions> {
     return true;
   }
 }
+

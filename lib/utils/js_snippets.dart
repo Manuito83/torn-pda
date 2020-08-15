@@ -168,3 +168,47 @@ String travelReturnHomeJS() {
     goHome();
   ''';
 }
+
+String highlightCityItemsJS() {
+  return '''
+    function addStyle(styleString) {
+        const style = document.createElement('style');
+        style.textContent = styleString;
+        document.head.append(style);
+    }
+      
+    addStyle(`
+      .pdaCityItem {
+        box-sizing: border-box;
+        box-shadow: rgb(195 20 20 / 0%) 0px 0px 20px 10px;
+        display: block !important;
+        width: 40px !important;
+        height: 40px !important;
+        left: -20px !important;
+        top: -20px !important;
+        z-index: 999 !important;
+        padding: 10px 0px;
+        border-width: medium;
+        border-style: dashed;
+        border-color: rgb(1 7 255);
+        border-image: initial;
+        border-radius: 100%;
+        background: rgb(206 202 184 / 77%);
+        transition: width 50ms cubic-bezier(0.65, 0.05, 0.36, 1), height 50ms cubic-bezier(0.65, 0.05, 0.36, 1), left 50ms cubic-bezier(0.65, 0.05, 0.36, 1), top 50ms cubic-bezier(0.65, 0.05, 0.36, 1), padding 50ms cubic-bezier(0.65, 0.05, 0.36, 1), background 50ms 0ms;
+        animation: svelte-1dz9z41-fade-in 500ms ease-out backwards;
+      }
+    `);
+      
+    function highlightItems() {
+      // Find items
+      for(let el of document.querySelectorAll("#map .leaflet-marker-pane *")){
+        let src = el.getAttribute("src");
+        if(src.indexOf("https://www.torn.com/images/items/") > -1){
+          el.classList.add("pdaCityItem");
+        }
+      }
+    }
+    
+    highlightItems();
+  ''';
+}
