@@ -42,7 +42,8 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat1_8_0_5 = "Profile: added a MISC section with bank and education expiries";
     String feat1_8_0_6 = "Chaining: the bandage icon now gives access to your personal items, but "
         "also to your faction's armory";
-    String feat1_8_0_7 = "Other minor bug fixes";
+    String feat1_8_0_7 = "Fixed issue with alerts not working. If you are affected, please "
+        "reload your API Key (just tap on 'reload')";
     v1_8_0.features.add(feat1_8_0_1);
     v1_8_0.features.add(feat1_8_0_2);
     v1_8_0.features.add(feat1_8_0_3);
