@@ -34,13 +34,13 @@ class _ChangeLogState extends State<ChangeLog> {
     var v1_8_0 = ChangeLogItem();
     v1_8_0.version = 'Torn PDA v1.8.0';
     String feat1_8_0_1 = "Added a city item finder when you visit the city in Torn, with a list of "
-        "items found and highlights in the map";
+        "items found and highlights on the map";
     String feat1_8_0_2 = "Loot & Travel: you can now choose how long in advance will "
         "the notifications or other alerting methods be triggered";
     String feat1_8_0_3 = "Browser: added a page refresh button at the top";
     String feat1_8_0_4 = "Targets & Friends: you can now copy the ID to the clipboard";
     String feat1_8_0_5 = "Profile: added a MISC section with bank and education expiries";
-    String feat1_8_0_6 = "Chaining: the bandage icon now gives access to your personal items but "
+    String feat1_8_0_6 = "Chaining: the bandage icon now gives access to your personal items, but "
         "also to your faction's armory";
     String feat1_8_0_7 = "Other minor bug fixes";
     v1_8_0.features.add(feat1_8_0_1);
