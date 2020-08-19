@@ -30,6 +30,15 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.8.1
+    var v1_8_1 = ChangeLogItem();
+    v1_8_1.version = 'Torn PDA v1.8.1';
+    String feat1_8_1_1 = "Loot: increased trigger options for loot notifications";
+    String feat1_8_1_2 = "Profile: corrected an issue causing delays when updating miscellaneous "
+        "information ";
+    v1_8_1.features.add(feat1_8_1_1);
+    v1_8_1.features.add(feat1_8_1_2);
+
     // VERSION 1.8.0
     var v1_8_0 = ChangeLogItem();
     v1_8_0.version = 'Torn PDA v1.8.0';
@@ -182,6 +191,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_8_1);
     itemList.add(v1_8_0);
     itemList.add(v1_7_1);
     itemList.add(v1_7_0);
