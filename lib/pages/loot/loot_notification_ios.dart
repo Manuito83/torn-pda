@@ -107,7 +107,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "20 seconds",
+              "30 seconds",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -120,7 +120,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "40 seconds",
+              "1 minute",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -133,7 +133,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "1 minute",
+              "2 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -146,7 +146,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "1.5 minutes",
+              "4 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -159,7 +159,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "2 minutes",
+              "6 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,

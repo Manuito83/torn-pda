@@ -701,35 +701,37 @@ class _LootPageState extends State<LootPage> {
       }
 
       if (notificationAhead == '0') {
-        _lootNotificationAhead = 20;
+        _lootNotificationAhead = 30;
       } else if (notificationAhead == '1') {
-        _lootNotificationAhead = 40;
-      } else if (notificationAhead == '2') {
         _lootNotificationAhead = 60;
-      } else if (notificationAhead == '3') {
-        _lootNotificationAhead = 90;
-      } else if (notificationAhead == '4') {
+      } else if (notificationAhead == '2') {
         _lootNotificationAhead = 120;
+      } else if (notificationAhead == '3') {
+        _lootNotificationAhead = 240;
+      } else if (notificationAhead == '4') {
+        _lootNotificationAhead = 360;
       }
 
       if (alarmAhead == '0') {
         _lootAlarmAhead = 0;
       } else if (alarmAhead == '1') {
-        _lootAlarmAhead = 1;
-      } else if (alarmAhead == '2') {
         _lootAlarmAhead = 2;
+      } else if (alarmAhead == '2') {
+        _lootAlarmAhead = 4;
+      } else if (alarmAhead == '3') {
+        _lootAlarmAhead = 6;
       }
 
       if (timerAhead == '0') {
-        _lootTimerAhead = 20;
+        _lootTimerAhead = 30;
       } else if (timerAhead == '1') {
-        _lootTimerAhead = 40;
-      } else if (timerAhead == '2') {
         _lootTimerAhead = 60;
-      } else if (timerAhead == '3') {
-        _lootTimerAhead = 90;
-      } else if (timerAhead == '4') {
+      } else if (timerAhead == '2') {
         _lootTimerAhead = 120;
+      } else if (timerAhead == '3') {
+        _lootTimerAhead = 240;
+      } else if (timerAhead == '4') {
+        _lootTimerAhead = 360;
       }
     });
   }
