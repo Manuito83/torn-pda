@@ -188,9 +188,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      _fetchApi();
+      await _fetchApi();
+      if (_apiGoodData) {
+        // We get miscellaneous information when we open the app for those cases where users
+        // stay with the app on the background for hours/days and only use the Profile section
+        await _getMiscInformation();
+      }
     }
   }
 
@@ -1675,7 +1680,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (timeDifference.inHours < 1) {
         expiryString = 'less than an hour';
       } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-        expiryString = 'about 1 hour';
+        expiryString = 'about an hour';
       } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
         expiryString = '${timeDifference.inHours} hours';
       } else if (timeDifference.inDays == 1) {
@@ -1727,7 +1732,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (timeDifference.inHours < 1) {
         expiryString = 'less than an hour';
       } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-        expiryString = 'about 1 hour';
+        expiryString = 'about an hour';
       } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
         expiryString = '${timeDifference.inHours} hours';
       } else if (timeDifference.inDays == 1) {
@@ -1985,26 +1990,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     // We get education and money (with ProfileMiscModel) separately and only once per load
-    // (timings are not specific, only going down to 1 hour).
+    // and then on onResumed
     if (_apiGoodData && !_miscApiFetched) {
-      _miscApiFetched = true;
-      try {
-        var miscApiResponse =
-            await TornApiCaller.ownProfileMisc(_userProvider.myUser.userApiKey).getOwnProfileMisc;
-        var educationResponse =
-            await TornApiCaller.education(_userProvider.myUser.userApiKey).getEducation;
-        if (miscApiResponse is OwnProfileMiscModel && educationResponse is TornEducationModel) {
-          setState(() {
-            _miscModel = miscApiResponse;
-            _tornEducationModel = educationResponse;
-          });
-        }
-      } catch (e) {
-        // If something fails, we simple don't show the MISC section
-      }
+      await _getMiscInformation();
     }
 
     _retrievePendingNotifications();
+  }
+
+  Future _getMiscInformation() async {
+    _miscApiFetched = true;
+    try {
+      var miscApiResponse =
+          await TornApiCaller.ownProfileMisc(_userProvider.myUser.userApiKey).getOwnProfileMisc;
+      var educationResponse =
+          await TornApiCaller.education(_userProvider.myUser.userApiKey).getEducation;
+      if (miscApiResponse is OwnProfileMiscModel && educationResponse is TornEducationModel) {
+        setState(() {
+          _miscModel = miscApiResponse;
+          _tornEducationModel = educationResponse;
+        });
+      }
+    } catch (e) {
+      // If something fails, we simple don't show the MISC section
+    }
   }
 
   SpeedDial buildSpeedDial() {
