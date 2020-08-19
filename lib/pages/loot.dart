@@ -336,7 +336,7 @@ class _LootPageState extends State<LootPage> {
                       int.parse('400$npcId$levelNumber'),
                       '400-$npcId',
                       "${npcDetails.name} loot",
-                      "Level $levelNumber in 20 seconds!",
+                      "Approaching level $levelNumber!",
                     );
                     BotToast.showText(
                       text: 'Loot level $levelNumber'
