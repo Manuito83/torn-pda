@@ -35,7 +35,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_8_1.version = 'Torn PDA v1.8.1';
     String feat1_8_1_1 = "Loot: increased trigger options for loot notifications";
     String feat1_8_1_2 = "Profile: corrected an issue causing delays when updating miscellaneous "
-        "information ";
+        "information";
     v1_8_1.features.add(feat1_8_1_1);
     v1_8_1.features.add(feat1_8_1_2);
 
