@@ -520,7 +520,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 lineHeight: 18,
                 progressColor: Colors.blue[200],
                 backgroundColor: Colors.grey,
-                percent: 1 - (_user.travel.timeLeft / totalSeconds),
+                percent: _getTravelPercentage(totalSeconds),
               ),
             ],
           ),
@@ -570,6 +570,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  double _getTravelPercentage(int totalSeconds) {
+    double percentage = 1 - (_user.travel.timeLeft / totalSeconds);
+    if (percentage > 1) {
+      return 1;
+    } else if (percentage < 0) {
+      return 0;
+    } else {
+      return percentage;
+    }
   }
 
   Card _basicBars() {
