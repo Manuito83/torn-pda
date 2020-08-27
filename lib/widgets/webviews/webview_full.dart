@@ -18,6 +18,7 @@ import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/external/torntrader.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -70,6 +71,7 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityController = ExpandableController();
 
   var _showOne = GlobalKey();
+  UserDetailsProvider _userProvider;
 
   @override
   void initState() {
@@ -80,6 +82,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   @override
   Widget build(BuildContext context) {
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: BubbleShowcase(
@@ -382,10 +385,8 @@ class _WebViewFullState extends State<WebViewFull> {
       try {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
-
-        var userDetailsProvider = Provider.of<UserDetailsProvider>(context, listen: false);
         var userProfile =
-            await TornApiCaller.ownProfile(userDetailsProvider.myUser.userApiKey).getOwnProfile;
+            await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey).getOwnProfile;
         if (userProfile is OwnProfileModel) {
           stockModel.authorName = userProfile.name;
           stockModel.authorId = userProfile.playerId;
@@ -631,6 +632,7 @@ class _WebViewFullState extends State<WebViewFull> {
           : thisItem.quantity = 1;
       allTornItems.items.forEach((key, value) {
         if (thisItem.name == value.name) {
+          thisItem.id = int.parse(key);
           thisItem.priceUnit = value.marketValue;
           thisItem.totalPrice = thisItem.priceUnit * thisItem.quantity;
         }
@@ -638,9 +640,29 @@ class _WebViewFullState extends State<WebViewFull> {
       sideItems.add(thisItem);
     }
 
+    // Extra info needed for Torn Trader (external services)
+    String sellerName;
+    int tradeId;
+    getTornTraderItems() {
+      // If from URL
+      try {
+        RegExp regId = new RegExp(r"(?:&ID=)([0-9]+)");
+        var matches = regId.allMatches(_currentUrl);
+        tradeId = int.parse(matches.elementAt(0).group(1));
+      } catch (e) {
+        tradeId = 0;
+      }
+
+      // Name of buyer
+      try {
+        sellerName = document.querySelector(".right .title-black").innerHtml;
+      } catch (e) {
+        sellerName = "";
+      }
+    }
+
     if (leftItemsElements.length > 0 || rightItemsElements.length > 0) {
-      var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-      var allTornItems = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
+      var allTornItems = await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
       if (allTornItems is ApiError) {
         return;
       } else if (allTornItems is ItemsModel) {
@@ -651,6 +673,14 @@ class _WebViewFullState extends State<WebViewFull> {
         // Loop right
         for (var itemLine in rightItemsElements) {
           addColor2Items(itemLine, allTornItems, rightItems);
+        }
+
+        // TORN TRADER init here (it only takes into account elements sold to us,
+        // so we'll only pass this information
+        bool _tornTraderActive = true; // TODO: MAKE GLOBAL
+        if (rightItemsElements.isNotEmpty && _tornTraderActive) {
+          getTornTraderItems();
+          _addTornTraderElements(rightItems, sellerName, tradeId);
         }
       }
     }
@@ -765,6 +795,7 @@ class _WebViewFullState extends State<WebViewFull> {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return TradesOptions(
+            playerId: _userProvider.myUser.playerId,
             callback: _tradesPreferencesLoad,
           );
         },
@@ -789,6 +820,20 @@ class _WebViewFullState extends State<WebViewFull> {
     } else {
       return SizedBox.shrink();
     }
+  }
+
+  void _addTornTraderElements(
+    List<TradeItem> sellerItems,
+    String sellerName,
+    int tradeId,
+  ) {
+
+    TornTraderHandler.submit(
+      sellerItems: sellerItems,
+      tradeId: tradeId,
+      sellerName: sellerName,
+      buyerId: _userProvider.myUser.playerId
+    );
   }
 
   Future _tradesPreferencesLoad() async {
@@ -872,8 +917,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-      dynamic apiResponse = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
+      dynamic apiResponse = await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
         var itemsFound = List<Item>();

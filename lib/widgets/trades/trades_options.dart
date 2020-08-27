@@ -1,10 +1,15 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/utils/external/torntrader.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesOptions extends StatefulWidget {
+  final int playerId;
   final Function callback;
 
   TradesOptions({
+    @required this.playerId,
     @required this.callback,
   });
 
@@ -14,6 +19,7 @@ class TradesOptions extends StatefulWidget {
 
 class _TradesOptionsState extends State<TradesOptions> {
   bool _tradeCalculatorEnabled = true;
+  bool _tornTraderEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -64,6 +70,10 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     SharedPreferencesModel().setTradeCalculatorEnabled(value);
                                     setState(() {
                                       _tradeCalculatorEnabled = value;
+                                      if (!value) {
+                                        _tornTraderEnabled = false;
+                                        // TODO: sharedprefs for torntrader
+                                      }
                                     });
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
@@ -77,6 +87,40 @@ class _TradesOptionsState extends State<TradesOptions> {
                             child: Text(
                               'Consider deactivating the trade calculator if it impacts '
                               'performance or you just simply would not prefer to use it',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Row(
+                                  children: [
+                                    Image(
+                                      image: AssetImage('images/icons/torntrader_logo.png'),
+                                      width: 20,
+                                      color: Colors.pink,
+                                      fit: BoxFit.fill,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text("Torn Trader sync"),
+                                  ],
+                                ),
+                                tornTraderSwitch(),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If you are a professional trader and have an account with Torn '
+                              'Trader, you can activate the sync functionality here',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -102,8 +146,64 @@ class _TradesOptionsState extends State<TradesOptions> {
     );
   }
 
+  Switch tornTraderSwitch() {
+    return Switch(
+      activeColor: Colors.pink,
+      activeTrackColor: Colors.pink[100],
+      value: _tornTraderEnabled,
+      onChanged: _tradeCalculatorEnabled
+          ? (activated) async {
+              if (activated) {
+                var auth = await TornTraderHandler.checkIfUserExists(
+                  widget.playerId,
+                );
+
+                if (auth.error) {
+                  // TODO: BOT
+                  return;
+                }
+
+                if (auth.allowed) {
+                  // TODO: SharedPreferencesModel().setTradeCalculatorEnabled(value);
+                  setState(() {
+                    _tornTraderEnabled = true;
+                  });
+                  BotToast.showText(
+                    text: 'User ${widget.playerId} synced successfully!',
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[500],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                } else {
+                  BotToast.showText(
+                    text: 'No user found, please visit torntrader.com and signup to use '
+                        'this functionality!',
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.orange[800],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                }
+              } else {
+                setState(() {
+                  _tornTraderEnabled = false;
+                });
+              }
+            }
+          : null,
+    );
+  }
+
   Future _restorePreferences() async {
     var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorEnabled();
+    // TODO: TORN TRADER
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;

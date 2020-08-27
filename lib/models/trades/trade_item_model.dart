@@ -1,4 +1,5 @@
 class TradeItem {
+  int id = 0;
   String name = '';
   int quantity = 0;
   int priceUnit = 0;
