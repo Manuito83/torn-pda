@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/external/torntrader.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:html/dom.dart' as dom;
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesContainer {
   bool firstLoad = true;
@@ -98,9 +100,17 @@ class TradesProvider extends ChangeNotifier {
 
         // TORN TRADER init here (it only takes into account elements sold to us,
         // so we'll only pass this information
-        bool _tornTraderActive = true; // TODO: MAKE GLOBAL
-        if (rightItemsElements.isNotEmpty && _tornTraderActive) {
-          _addTornTraderElements(newModel.rightItems, sellerName, tradeId);
+        var tornTraderActive = await SharedPreferencesModel().getTornTraderEnabled();
+        if (rightItemsElements.isNotEmpty && tornTraderActive) {
+          var tornTraderIn = await TornTrader.submitItems(
+            newModel.rightItems,
+            sellerName,
+            tradeId,
+            playerId,
+          );
+
+          // TODO:
+
         }
       }
     }
@@ -165,16 +175,5 @@ class TradesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _addTornTraderElements(
-    List<TradeItem> sellerItems,
-    String sellerName,
-    int tradeId,
-  ) {
-    TornTraderHandler.submit(
-      sellerItems: sellerItems,
-      tradeId: tradeId,
-      sellerName: sellerName,
-      buyerId: playerId,
-    );
-  }
+  void _getTornTraderElements(List<TradeItem> sellerItems, String sellerName, int tradeId) {}
 }

@@ -154,17 +154,26 @@ class _TradesOptionsState extends State<TradesOptions> {
       onChanged: _tradeCalculatorEnabled
           ? (activated) async {
               if (activated) {
-                var auth = await TornTraderHandler.checkIfUserExists(
+                var auth = await TornTrader.checkIfUserExists(
                   widget.playerId,
                 );
 
                 if (auth.error) {
-                  // TODO: BOT
+                  BotToast.showText(
+                    text: 'There was an issue contacting Torn Trader, please try again later!',
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.orange[800],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
                   return;
                 }
 
                 if (auth.allowed) {
-                  // TODO: SharedPreferencesModel().setTradeCalculatorEnabled(value);
+                  SharedPreferencesModel().setTornTraderEnabled(activated);
                   setState(() {
                     _tornTraderEnabled = true;
                   });
@@ -180,7 +189,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                   );
                 } else {
                   BotToast.showText(
-                    text: 'No user found, please visit torntrader.com and signup to use '
+                    text: 'No user found, please visit torntrader.com and sign up to use '
                         'this functionality!',
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -194,6 +203,7 @@ class _TradesOptionsState extends State<TradesOptions> {
               } else {
                 setState(() {
                   _tornTraderEnabled = false;
+                  SharedPreferencesModel().setTornTraderEnabled(activated);
                 });
               }
             }
@@ -203,10 +213,11 @@ class _TradesOptionsState extends State<TradesOptions> {
 
   Future _restorePreferences() async {
     var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorEnabled();
-    // TODO: TORN TRADER
+    var tornTraderActive = await SharedPreferencesModel().getTornTraderEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;
+      _tornTraderEnabled = tornTraderActive;
     });
   }
 

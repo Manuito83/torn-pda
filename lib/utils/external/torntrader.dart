@@ -1,41 +1,42 @@
-import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_auth.dart';
+import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_out.dart';
-import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:http/http.dart' as http;
 
-class TornTraderHandler {
-  List<TradeItem> sellerItems;
-  String tornPdaVersion;
-  String sellerName;
-  int tradeId;
-  int buyerId;
+class TornTrader {
+  static Future<TornTraderInModel> submitItems(sellerItems, sellerName, tradeId, buyerId) async {
+    var inModel = TornTraderInModel();
 
-  TornTraderHandler.checkIfAllowed({@required int buyerId}) {
-    checkIfUserExists(buyerId).then((value) {
-      return value;
-    });
-  }
+    var authModel = await checkIfUserExists(buyerId);
+    if (authModel.error) {
+      // TODO return with error
+    }
 
-  TornTraderHandler.submit({
-    @required this.sellerItems,
-    @required this.sellerName,
-    @required this.tradeId,
-    @required this.buyerId,
-  }) {
+    if (!authModel.allowed) {
+      // TODO return with not allowed
+    }
 
-    checkIfUserExists(buyerId).then((authModel) {
-      if (authModel.error) {
-        // TODO
-      } else {
-        if (!authModel.allowed) {
-          // TODO
-        } else if (authModel.allowed) {
-          _submitToTornTrader();
-        }
-      }
-    });
+    var outModel = TornTraderOutModel();
+    outModel
+      ..appVersion = appVersion
+      ..tradeId = tradeId
+      ..seller = sellerName
+      ..buyer = buyerId
+      ..items = List<Item>();
+
+    for (var product in sellerItems) {
+      var item = Item(
+        name: product.name,
+        quantity: product.quantity,
+        id: product.id,
+      );
+      outModel.items.add(item);
+    }
+
+    // TODO: MAIN LOGIC
+
+    return inModel;
   }
 
   static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
@@ -54,23 +55,5 @@ class TornTraderHandler {
     return authModel;
   }
 
-  _submitToTornTrader() {
-    var outModel = TornTraderOutModel();
-    outModel
-      ..appVersion = appVersion
-      ..tradeId = tradeId
-      ..seller = sellerName
-      ..buyer = buyerId
-      ..items = List<Item>();
-
-    for (var product in sellerItems) {
-      var item = Item(
-        name: product.name,
-        quantity: product.quantity,
-        id: product.id,
-      );
-      outModel.items.add(item);
-    }
-
-  }
+  _submitToTornTrader() {}
 }
