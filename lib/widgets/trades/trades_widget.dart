@@ -2,39 +2,24 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 
 class TradesWidget extends StatefulWidget {
-  final int leftMoney;
-  final List<TradeItem> leftItems;
-  final List<TradeItem> leftProperties;
-  final List<TradeItem> leftShares;
-  final int rightMoney;
-  final List<TradeItem> rightItems;
-  final List<TradeItem> rightProperties;
-  final List<TradeItem> rightShares;
-
-  TradesWidget({
-    @required this.leftMoney,
-    @required this.leftItems,
-    @required this.leftProperties,
-    @required this.leftShares,
-    @required this.rightMoney,
-    @required this.rightItems,
-    @required this.rightProperties,
-    @required this.rightShares,
-  });
-
   @override
   _TradesWidgetState createState() => _TradesWidgetState();
 }
 
 class _TradesWidgetState extends State<TradesWidget> {
+
   final _scrollController = ScrollController();
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
   final _moneyDecimalFormat = new NumberFormat("#,##0.##", "en_US");
+
+  TradesProvider _tradesProv;
 
   @override
   void dispose() {
@@ -44,6 +29,7 @@ class _TradesWidgetState extends State<TradesWidget> {
 
   @override
   Widget build(BuildContext context) {
+    _tradesProv = Provider.of<TradesProvider>(context, listen: true);
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
@@ -84,9 +70,9 @@ class _TradesWidgetState extends State<TradesWidget> {
             ),
             ConstrainedBox(
               constraints: BoxConstraints.loose(Size.fromHeight(
-                      (MediaQuery.of(context).size.height -
-                          kToolbarHeight -
-                          AppBar().preferredSize.height)) /
+                  (MediaQuery.of(context).size.height -
+                      kToolbarHeight -
+                      AppBar().preferredSize.height)) /
                   3),
               child: Scrollbar(
                 controller: _scrollController,
@@ -130,22 +116,22 @@ class _TradesWidgetState extends State<TradesWidget> {
     int total = 0;
     bool hasProperty = false;
     if (side == 'left') {
-      total += widget.leftMoney;
-      for (var item in widget.leftItems) {
+      total += _tradesProv.tradesContainer.leftMoney;
+      for (var item in _tradesProv.tradesContainer.leftItems) {
         total += item.totalPrice;
       }
-      for (var property in widget.leftProperties) {
+      for (var property in _tradesProv.tradesContainer.leftProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
           break;
         }
       }
     } else {
-      total += widget.rightMoney;
-      for (var item in widget.rightItems) {
+      total += _tradesProv.tradesContainer.rightMoney;
+      for (var item in _tradesProv.tradesContainer.rightItems) {
         total += item.totalPrice;
       }
-      for (var property in widget.rightProperties) {
+      for (var property in _tradesProv.tradesContainer.rightProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
           break;
@@ -199,6 +185,11 @@ class _TradesWidgetState extends State<TradesWidget> {
       ),
     );
 
+    // This prevents showing totals as 0 when the widget is first loaded with existing items
+    if (_tradesProv.tradesContainer.firstLoad) {
+      return SizedBox.shrink();
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -232,15 +223,15 @@ class _TradesWidgetState extends State<TradesWidget> {
     bool noItemsFound = true;
 
     if (side == 'left') {
-      sideMoney = widget.leftMoney;
-      sideItems = widget.leftItems;
-      sideProperties = widget.leftProperties;
-      sideShares = widget.leftShares;
+      sideMoney = _tradesProv.tradesContainer.leftMoney;
+      sideItems = _tradesProv.tradesContainer.leftItems;
+      sideProperties = _tradesProv.tradesContainer.leftProperties;
+      sideShares = _tradesProv.tradesContainer.leftShares;
     } else {
-      sideMoney = widget.rightMoney;
-      sideItems = widget.rightItems;
-      sideProperties = widget.rightProperties;
-      sideShares = widget.rightShares;
+      sideMoney = _tradesProv.tradesContainer.rightMoney;
+      sideItems = _tradesProv.tradesContainer.rightItems;
+      sideProperties = _tradesProv.tradesContainer.rightProperties;
+      sideShares = _tradesProv.tradesContainer.rightShares;
     }
 
     // CASH
@@ -401,4 +392,6 @@ class _TradesWidgetState extends State<TradesWidget> {
 
     return items;
   }
+
+
 }

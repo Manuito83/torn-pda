@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_auth.dart';
@@ -40,13 +38,10 @@ class TornTraderHandler {
     });
   }
 
-
-  // TODO ******************************
-  // TODO: CHANGE USER*/*/*/*/*/*/*/*/*/
   static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
     var authModel = TornTraderAuthModel();
     try {
-      var response = await http.post('https://torntrader.com/api/v1/users?user=2225097'); //TODO:$user
+      var response = await http.post('https://torntrader.com/api/v1/users?user=$user');
       if (response.statusCode == 200) {
         authModel = tornTraderAuthModelFromJson(response.body);
         authModel.error = false;
@@ -76,8 +71,6 @@ class TornTraderHandler {
       );
       outModel.items.add(item);
     }
-
-    print('lala');
 
   }
 }
