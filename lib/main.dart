@@ -12,6 +12,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -84,8 +85,9 @@ Future<void> main() async {
                   FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
-        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
+        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
       ],
       child: MyApp(),
     ),
@@ -103,9 +105,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
-        brightness: _themeProvider.currentTheme == AppTheme.light
-            ? Brightness.light
-            : Brightness.dark,
+        brightness:
+            _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
       ),
       home: Container(
         color: Colors.black,
