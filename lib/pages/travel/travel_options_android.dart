@@ -284,7 +284,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "1.5 minutes",
+              "2 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -297,7 +297,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "2 minutes",
+              "5 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -351,6 +351,19 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
             width: 120,
             child: Text(
               "2 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "5 minutes before",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -416,7 +429,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "1.5 minutes",
+              "2 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -429,7 +442,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "2 minutes",
+              "5 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,

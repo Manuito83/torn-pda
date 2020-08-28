@@ -146,7 +146,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "1.5 minutes",
+              "2 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -159,7 +159,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
-              "2 minutes",
+              "5 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,

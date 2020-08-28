@@ -48,6 +48,10 @@ class _TravelPageState extends State<TravelPage> {
   bool _alarmSound = false;
   bool _alarmVibration = true;
 
+  int _travelNotificationAhead;
+  int _travelAlarmAhead;
+  int _travelTimerAhead;
+
   String _myCurrentKey = '';
   bool _apiError = true;
   String _errorReason = '';
@@ -270,8 +274,7 @@ class _TravelPageState extends State<TravelPage> {
       backgroundColor: Colors.green,
       onTap: () async {
         await _scheduleNotification().then((value) {
-          var formatter = new DateFormat('HH:mm:ss');
-          String formattedTime = formatter.format(value);
+          String formattedTime = _formatTime(value);
           BotToast.showText(
             text: "Notification set for $formattedTime",
             textStyle: TextStyle(
@@ -326,20 +329,19 @@ class _TravelPageState extends State<TravelPage> {
       ),
       backgroundColor: Colors.grey[400],
       onTap: () async {
-        _setAlarm();
-        var formatter = new DateFormat('HH:mm');
-        String formatted = formatter.format(_travelModel.timeArrival);
-        BotToast.showText(
-          text: 'Alarm set, at $formatted local time, ${_travelModel.timeArrival.second} '
-              'seconds before arrival!',
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.green,
-          duration: Duration(seconds: 3),
-          contentPadding: EdgeInsets.all(10),
-        );
+        await _setAlarm().then((value) {
+          String formattedTime = _formatTime(value);
+          BotToast.showText(
+            text: 'Alarm set for $formattedTime!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: Duration(seconds: 3),
+            contentPadding: EdgeInsets.all(10),
+          );
+        });
       },
       label: 'Set alarm',
       labelStyle: TextStyle(
@@ -356,20 +358,19 @@ class _TravelPageState extends State<TravelPage> {
       ),
       backgroundColor: Colors.grey[400],
       onTap: () async {
-        _setTimer();
-        var formatter = new DateFormat('HH:mm:ss');
-        String formattedTime =
-            formatter.format(_travelModel.timeArrival.subtract(Duration(seconds: 20)));
-        BotToast.showText(
-          text: "Timer set for $formattedTime",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.green,
-          duration: Duration(seconds: 3),
-          contentPadding: EdgeInsets.all(10),
-        );
+        await _setTimer().then((value) {
+          String formattedTime = _formatTime(value);
+          BotToast.showText(
+            text: "Timer set for $formattedTime",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.green,
+            duration: Duration(seconds: 3),
+            contentPadding: EdgeInsets.all(10),
+          );
+        });
       },
       label: 'Set timer',
       labelStyle: TextStyle(
@@ -942,7 +943,8 @@ class _TravelPageState extends State<TravelPage> {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime = _travelModel.timeArrival.subtract(Duration(seconds: 20));
+    var scheduledNotificationDateTime =
+        _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
     var vibrationPattern = Int64List(8);
     vibrationPattern[0] = 0;
     vibrationPattern[1] = 400;
@@ -982,7 +984,7 @@ class _TravelPageState extends State<TravelPage> {
       _notificationTitle,
       _notificationBody,
       //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      scheduledNotificationDateTime, // ^instead of this
+      scheduledNotificationDateTime,
       platformChannelSpecifics,
       payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time
@@ -1016,7 +1018,11 @@ class _TravelPageState extends State<TravelPage> {
     });
   }
 
-  void _setAlarm() {
+  Future<DateTime> _setAlarm() async {
+    var alarmTime = _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
+    int hour = alarmTime.hour;
+    int minute = alarmTime.minute;
+
     String thisSound;
     if (_alarmSound) {
       thisSound = '';
@@ -1026,28 +1032,32 @@ class _TravelPageState extends State<TravelPage> {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.HOUR': _travelModel.timeArrival.hour,
-        'android.intent.extra.alarm.MINUTES': _travelModel.timeArrival.minute,
+        'android.intent.extra.alarm.HOUR': hour,
+        'android.intent.extra.alarm.MINUTES': minute,
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': _alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': 'TORN PDA',
+        'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
       },
     );
     intent.launch();
+
+    return alarmTime;
   }
 
-  void _setTimer() {
+  Future<DateTime> _setTimer() async {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - 25,
+        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': 'TORN PDA',
+        'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
       },
     );
     intent.launch();
+
+    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
   }
 
   Future _restorePreferences() async {
@@ -1060,7 +1070,55 @@ class _TravelPageState extends State<TravelPage> {
     _notificationBody = await SharedPreferencesModel().getTravelNotificationBody();
     _alarmSound = await SharedPreferencesModel().getTravelAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
+
+    // Ahead timers
+    var notificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
+    var alarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
+    var timerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+
+    if (notificationAhead == '0') {
+      _travelNotificationAhead = 20;
+    } else if (notificationAhead == '1') {
+      _travelNotificationAhead = 40;
+    } else if (notificationAhead == '2') {
+      _travelNotificationAhead = 60;
+    } else if (notificationAhead == '3') {
+      _travelNotificationAhead = 120;
+    } else if (notificationAhead == '4') {
+      _travelNotificationAhead = 300;
+    }
+
+    if (alarmAhead == '0') {
+      _travelAlarmAhead = 0;
+    } else if (alarmAhead == '1') {
+      _travelAlarmAhead = 1;
+    } else if (alarmAhead == '2') {
+      _travelAlarmAhead = 2;
+    } else if (alarmAhead == '3') {
+      _travelAlarmAhead = 5;
+    }
+
+    if (timerAhead == '0') {
+      _travelTimerAhead = 20;
+    } else if (timerAhead == '1') {
+      _travelTimerAhead = 40;
+    } else if (timerAhead == '2') {
+      _travelTimerAhead = 60;
+    } else if (timerAhead == '3') {
+      _travelTimerAhead = 120;
+    } else if (timerAhead == '4') {
+      _travelTimerAhead = 300;
+    }
   }
+
+  String _formatTime (DateTime inputTime) {
+    return TimeFormatter(
+      inputTime: inputTime,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).format;
+  }
+
 
   _callBackFromTravelOptions() async {
     await _restorePreferences();
