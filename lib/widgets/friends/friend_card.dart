@@ -439,6 +439,7 @@ class _FriendCardState extends State<FriendCard> {
               fontSize: 14,
               color: Colors.white,
             ),
+            contentColor: Colors.grey[600],
             duration: Duration(seconds: 5),
             contentPadding: EdgeInsets.all(10),
           );
