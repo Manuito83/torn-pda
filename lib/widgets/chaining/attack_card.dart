@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,8 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -22,12 +25,14 @@ class _AttackCardState extends State<AttackCard> {
   Attack _attack;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  UserDetailsProvider _userProvider;
 
   @override
   Widget build(BuildContext context) {
     _attack = widget.attackModel;
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       child: Card(
@@ -136,9 +141,15 @@ class _AttackCardState extends State<AttackCard> {
             Padding(
               padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text('Last results: '),
-                  _returnLastResults(),
+                  Row(
+                    children: [
+                      Text('Last results: '),
+                      _returnLastResults(),
+                    ],
+                  ),
+                  _factionIcon(),
                 ],
               ),
             ),
@@ -352,5 +363,85 @@ class _AttackCardState extends State<AttackCard> {
     }
 
     return Row(children: results);
+  }
+
+  Widget _factionIcon() {
+    String factionName;
+    int factionId;
+    if (_attack.attackInitiated) {
+      if (_attack.defenderFactionname != null) {
+        factionName = _attack.defenderFactionname;
+        factionId = _attack.defenderFaction;
+      } else {
+        return SizedBox.shrink();
+      }
+    } else {
+      if (_attack.attackerFactionname != null) {
+        factionName = _attack.attackerFactionname;
+        factionId = _attack.attackerFaction;
+      } else {
+        return SizedBox.shrink();
+      }
+    }
+
+    Color borderColor = Colors.transparent;
+    Color iconColor = _themeProvider.mainText;
+    if (factionId == _userProvider.myUser.faction.factionId) {
+      borderColor = iconColor = Colors.green[500];
+    }
+
+    void showFactionToast() {
+      if (factionId == _userProvider.myUser.faction.factionId) {
+        BotToast.showText(
+          text: HtmlParser.fix("${_attack.targetName} belongs to your same faction ($factionName)"),
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.green,
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+      } else {
+        BotToast.showText(
+          text: HtmlParser.fix("${_attack.targetName} belongs to faction $factionName"),
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    }
+
+    Widget factionIcon = Material(
+      type: MaterialType.transparency,
+      child: Ink(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: borderColor,
+            width: 1.5,
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(100),
+          onTap: () {
+            showFactionToast();
+          },
+          child: Padding(
+            padding: EdgeInsets.all(2),
+            child: ImageIcon(
+              AssetImage('images/icons/faction.png'),
+              size: 12,
+              color: iconColor,
+            ),
+          ),
+        ),
+      ),
+    );
+    return factionIcon;
   }
 }
