@@ -4,6 +4,7 @@ import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
@@ -86,7 +87,22 @@ class _WebViewFullState extends State<WebViewFull> {
                 }
                 Navigator.pop(context);
               }),
-          title: Text(_pageTitle),
+          title: GestureDetector(
+            child: Text(_pageTitle),
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: _currentUrl));
+              BotToast.showText(
+                text: "Current URL copied to the clipboard [$_currentUrl]",
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green,
+                duration: Duration(seconds: 5),
+                contentPadding: EdgeInsets.all(10),
+              );
+            },
+          ),
           actions: <Widget>[
             _travelHomeIcon(),
             _crimesInfoIcon(),

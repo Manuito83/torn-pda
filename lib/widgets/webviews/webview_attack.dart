@@ -1,5 +1,7 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -86,7 +88,23 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     _backButtonPopsContext = true;
                   }
                 }),
-            title: Text(_currentPageTitle),
+            title: GestureDetector(
+              child: Text(_currentPageTitle),
+              onLongPress: () async {
+                var url = await _webViewController.currentUrl();
+                Clipboard.setData(ClipboardData(text: url));
+                BotToast.showText(
+                  text: "Current URL copied to the clipboard [$url]",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green,
+                  duration: Duration(seconds: 5),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+            ),
             actions: _actionButtons()),
         body: Container(
           color: Colors.grey[900],
