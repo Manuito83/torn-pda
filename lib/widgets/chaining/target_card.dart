@@ -4,6 +4,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -33,19 +34,23 @@ class _TargetCardState extends State<TargetCard> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
 
-  Timer _ticker;
+  Timer _updatedTicker;
+  Timer _lifeTicker;
 
+  String _currentLifeString = "";
   String _lastUpdated;
 
   @override
   void initState() {
     super.initState();
-    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _updatedTicker =
+        new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
   void dispose() {
-    _ticker?.cancel();
+    _updatedTicker?.cancel();
+    _lifeTicker?.cancel();
     super.dispose();
   }
 
@@ -472,14 +477,38 @@ class _TargetCardState extends State<TargetCard> {
   Widget _returnHealth(TargetModel target) {
     Color lifeBarColor = Colors.green;
     Widget hospitalWarning = SizedBox.shrink();
+    String lifeText = _target.life.current.toString();
+
     if (target.status.state == "Hospital") {
-      lifeBarColor = Colors.red[300];
-      hospitalWarning = Icon(
-        Icons.local_hospital,
-        size: 20,
-        color: Colors.red,
-      );
+      // Handle if target is still in hospital
+      var now = DateTime.now().millisecondsSinceEpoch / 1000.floor();
+
+      if (target.status.until > now) {
+        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
+        if (_lifeTicker == null) {
+          _lifeTicker =
+              Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
+        }
+        lifeText = _currentLifeString;
+        lifeBarColor = Colors.red[300];
+        hospitalWarning = Icon(
+          Icons.local_hospital,
+          size: 20,
+          color: Colors.red,
+        );
+      } else {
+        _lifeTicker?.cancel();
+        lifeText = "OUT";
+        hospitalWarning = Icon(
+          MdiIcons.bandage,
+          size: 20,
+          color: Colors.green,
+        );
+      }
+    } else {
+      _lifeTicker?.cancel();
     }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -491,8 +520,8 @@ class _TargetCardState extends State<TargetCard> {
           lineHeight: 16,
           progressColor: lifeBarColor,
           center: Text(
-            '${_target.life.current}',
-            style: TextStyle(color: Colors.black),
+            lifeText,
+            style: TextStyle(color: Colors.black, fontSize: 12),
           ),
           percent: (_target.life.current / _target.life.maximum),
         ),
@@ -595,4 +624,69 @@ class _TargetCardState extends State<TargetCard> {
       _returnLastUpdated();
     });
   }
+
+  _refreshLifeClock(DateTime timeEnd) {
+    var diff = timeEnd.difference(DateTime.now());
+    if (diff.inSeconds > 0) {
+      Duration timeOut = Duration(seconds: diff.inSeconds);
+
+      String timeOutHrs = timeOut.inHours.remainder(60).toString();
+      if (timeOut.inHours.remainder(60) < 10) {
+        timeOutHrs = '0$timeOutHrs';
+      }
+
+      String timeOutMin = timeOut.inMinutes.remainder(60).toString();
+      if (timeOut.inMinutes.remainder(60) < 10) {
+        timeOutMin = '0$timeOutMin';
+      }
+
+      String timeOutSec = timeOut.inSeconds.remainder(60).toString();
+      if (timeOut.inSeconds.remainder(60) < 10) {
+        timeOutSec = '0$timeOutSec';
+      }
+
+      int timerCadence = 1;
+      if (diff.inSeconds > 80) {
+        timerCadence = 20;
+        if (mounted) {
+          setState(() {
+            _currentLifeString = '${timeOutHrs}h ${timeOutMin}m';
+          });
+        }
+      } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
+        timerCadence = 1;
+      } else {
+        timerCadence = 1;
+        if (mounted) {
+          setState(() {
+            _currentLifeString = '$timeOutSec sec';
+          });
+        }
+      }
+
+      if (_lifeTicker != null) {
+        _lifeTicker.cancel();
+        _lifeTicker =
+            Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
+      }
+
+      if (diff.inSeconds < 2) {
+        // Artificially release instead of updating
+        _releaseFromHospital();
+      }
+    }
+  }
+
+  _releaseFromHospital() async {
+    await Future.delayed(const Duration(seconds: 5));
+    if (_lifeTicker != null) {
+      _lifeTicker.cancel();
+    }
+    if (mounted) {
+      setState(() {
+        _target.status.until = (DateTime.now().millisecondsSinceEpoch/1000).floor();
+      });
+    }
+  }
+
 }
