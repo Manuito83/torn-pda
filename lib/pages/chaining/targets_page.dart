@@ -4,10 +4,27 @@ import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
+import 'package:torn_pda/pages/chaining/targets_options_page.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
+
+class TargetsOptions {
+  String description;
+  IconData iconData;
+
+  TargetsOptions({this.description}) {
+    switch (description) {
+      case "Options":
+        iconData = Icons.settings;
+        break;
+      case "Backup":
+        iconData = Icons.save;
+        break;
+    }
+  }
+}
 
 class TargetsPage extends StatefulWidget {
   final String userKey;
@@ -32,13 +49,18 @@ class _TargetsPageState extends State<TargetsPage> {
   Widget _appBarText = Text("Targets");
   var _focusSearch = new FocusNode();
 
-  final _popupChoices = <TargetSort>[
+  final _popupSortChoices = <TargetSort>[
     TargetSort(type: TargetSortType.levelDes),
     TargetSort(type: TargetSortType.levelAsc),
     TargetSort(type: TargetSortType.respectDes),
     TargetSort(type: TargetSortType.respectAsc),
     TargetSort(type: TargetSortType.nameDes),
     TargetSort(type: TargetSortType.nameAsc),
+  ];
+
+  final _popupOptionsChoices = <TargetsOptions>[
+    TargetsOptions(description: "Options"),
+    TargetsOptions(description: "Backup"),
   ];
 
   @override
@@ -132,7 +154,7 @@ class _TargetsPageState extends State<TargetsPage> {
             ),
             onSelected: _selectSortPopup,
             itemBuilder: (BuildContext context) {
-              return _popupChoices.map((TargetSort choice) {
+              return _popupSortChoices.map((TargetSort choice) {
                 return PopupMenuItem<TargetSort>(
                   value: choice,
                   child: Text(choice.description),
@@ -140,17 +162,7 @@ class _TargetsPageState extends State<TargetsPage> {
               }).toList();
             },
           ),
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TargetsBackupPage(),
-                ),
-              );
-            },
-          ),
+          _optionsPopUp(),
         ],
       ),
       body: GestureDetector(
@@ -419,4 +431,48 @@ class _TargetsPageState extends State<TargetsPage> {
         break;
     }
   }
+
+  Widget _optionsPopUp() {
+    return PopupMenuButton<TargetsOptions>(
+      icon: Icon(Icons.settings),
+      onSelected: _openOption,
+      itemBuilder: (BuildContext context) {
+        return _popupOptionsChoices.map((TargetsOptions choice) {
+          return PopupMenuItem<TargetsOptions>(
+            value: choice,
+            child: Row(
+              children: [
+                Icon(choice.iconData, size: 20),
+                SizedBox(width: 10),
+                Text(choice.description),
+              ],
+            ),
+          );
+        }).toList();
+      },
+    );
+  }
+
+  void _openOption(TargetsOptions choice) {
+    switch (choice.description) {
+      case "Options":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TargetsOptionsPage(),
+          ),
+        );
+        break;
+      case "Backup":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TargetsBackupPage(),
+          ),
+        );
+        break;
+    }
+  }
 }
+
+

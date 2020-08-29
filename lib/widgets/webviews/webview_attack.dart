@@ -3,6 +3,11 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -28,9 +33,12 @@ class TornWebViewAttack extends StatefulWidget {
 class _TornWebViewAttackState extends State<TornWebViewAttack> {
   WebViewController _webViewController;
 
+  UserDetailsProvider _userProv;
+
   String _initialUrl = "";
   String _currentPageTitle = "";
 
+  bool _skippingEnabled = true;
   int _attackNumber = 0;
   List<String> _attackedIds = [];
 
@@ -47,6 +55,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
+    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2'
         'ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
@@ -93,6 +103,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               onLongPress: () async {
                 var url = await _webViewController.currentUrl();
                 Clipboard.setData(ClipboardData(text: url));
+                if (url.length > 60) {
+                  url = url.substring(0, 60) + "...";
+                }
                 BotToast.showText(
                   text: "Current URL copied to the clipboard [$url]",
                   textStyle: TextStyle(
@@ -185,19 +198,121 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     return myButtons;
   }
 
+  bool _nextButtonPressed = false;
   Widget _nextAttackActionButton() {
     var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
     return IconButton(
       icon: Icon(Icons.skip_next),
-      onPressed: () async {
-        _attackNumber++;
-        await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
-        _attackedIds.add(widget.attackIdList[_attackNumber]);
-        setState(() {
-          _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
-        });
-        _backButtonPopsContext = true;
-      },
+      onPressed: _nextButtonPressed
+          ? null
+          : () async {
+              // Turn button grey
+              setState(() {
+                _nextButtonPressed = true;
+              });
+
+              if (_skippingEnabled) {
+                // Counters for target skipping
+                int targetsSkipped = 0;
+                var originalPosition = _attackNumber;
+                bool reachedEnd = false;
+                var skippedNames = List<String>();
+
+                // We'll skip maximum of 3 targets
+                for (var i = 0; i < 3; i++) {
+                  // Get the status of our next target
+                  var nextTarget = await TornApiCaller.target(
+                          _userProv.myUser.userApiKey, widget.attackIdList[_attackNumber + 1])
+                      .getTarget;
+
+                  if (nextTarget is TargetModel) {
+                    // If in hospital or jail (even in a different country), we skip
+                    if (nextTarget.status.color == "red") {
+                      targetsSkipped++;
+                      skippedNames.add(nextTarget.name);
+                      _attackNumber++;
+                    }
+                    // If flying, we need to see if he is in a different country (if we are in the same
+                    // place, we can attack him)
+                    else if (nextTarget.status.color == "blue") {
+                      var user = await TornApiCaller.target(
+                              _userProv.myUser.userApiKey, _userProv.myUser.playerId.toString())
+                          .getTarget;
+                      if (user is TargetModel) {
+                        if (user.status.description != nextTarget.status.description) {
+                          targetsSkipped++;
+                          skippedNames.add(nextTarget.name);
+                          _attackNumber++;
+                        }
+                      }
+                    }
+                    // If we found a good target, we break here
+                    else {
+                      break;
+                    }
+                    // If after looping we are over the target limit, it means we have reached the end
+                    // in which case we reset the position to the last target we attacked, and break
+                    if (_attackNumber >= widget.attackIdList.length - 1) {
+                      _attackNumber = originalPosition;
+                      reachedEnd = true;
+                      break;
+                    }
+                  }
+                  // If there is an error getting a target, don't skip
+                  else {
+                    break;
+                  }
+                }
+
+                if (targetsSkipped > 0 && !reachedEnd) {
+                  BotToast.showText(
+                    text:
+                        "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+                        "country",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.grey[600],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                }
+
+                if (targetsSkipped > 0 && reachedEnd) {
+                  BotToast.showText(
+                    text:
+                        "No more targets, all remaining are either in jail, hospital or in a different "
+                        "country (${skippedNames.join(", ")})",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.grey[600],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+
+                  setState(() {
+                    _nextButtonPressed = false;
+                  });
+                  return;
+                }
+              }
+
+              _attackNumber++;
+              await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+              _attackedIds.add(widget.attackIdList[_attackNumber]);
+              setState(() {
+                _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
+              });
+              _backButtonPopsContext = true;
+
+              // Turn button back to usable
+              setState(() {
+                _nextButtonPressed = false;
+              });
+            },
     );
   }
 
@@ -231,6 +346,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       });
       _backButtonPopsContext = false;
     }
+  }
+
+  Future _loadPreferences() async {
+    _skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
   }
 
   Future<bool> _willPopCallback() async {
