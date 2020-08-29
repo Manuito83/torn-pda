@@ -22,7 +22,7 @@ class TargetsList extends StatelessWidget {
     List<Widget> filteredCards = List<Widget>();
     for (var thisTarget in targets) {
       if (thisTarget.name.toUpperCase().contains(filter.toUpperCase())) {
-        filteredCards.add(TargetCard(targetModel: thisTarget));
+        filteredCards.add(TargetCard(key: UniqueKey(), targetModel: thisTarget));
       }
     }
     // Avoid collisions with SnackBar
