@@ -21,7 +21,8 @@ import '../notes_dialog.dart';
 class TargetCard extends StatefulWidget {
   final TargetModel targetModel;
 
-  TargetCard({@required this.targetModel});
+  // Key is needed to update at least the hospital counter individually
+  TargetCard({@required this.targetModel, @required Key key}) : super(key: key);
 
   @override
   _TargetCardState createState() => _TargetCardState();
@@ -191,6 +192,7 @@ class _TargetCardState extends State<TargetCard> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
+                        _travelIcon(),
                         Container(
                           width: 14,
                           height: 14,
@@ -489,6 +491,7 @@ class _TargetCardState extends State<TargetCard> {
           _lifeTicker =
               Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         }
+        _refreshLifeClock(endTimeStamp);
         lifeText = _currentLifeString;
         lifeBarColor = Colors.red[300];
         hospitalWarning = Icon(
@@ -528,6 +531,39 @@ class _TargetCardState extends State<TargetCard> {
         hospitalWarning,
       ],
     );
+  }
+
+  Widget _travelIcon() {
+    if (_target.status.color == "blue") {
+      return Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+              borderRadius: BorderRadius.circular(100),
+              onTap: () {
+                BotToast.showText(
+                  text: _target.status.description,
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  duration: Duration(seconds: 5),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Icon(
+                  Icons.airplanemode_active,
+                  color: Colors.blue,
+                  size: 16,
+                ),
+              ),
+            ),
+          );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   Color _returnStatusColor(String status) {
@@ -630,11 +666,6 @@ class _TargetCardState extends State<TargetCard> {
     if (diff.inSeconds > 0) {
       Duration timeOut = Duration(seconds: diff.inSeconds);
 
-      String timeOutHrs = timeOut.inHours.remainder(60).toString();
-      if (timeOut.inHours.remainder(60) < 10) {
-        timeOutHrs = '0$timeOutHrs';
-      }
-
       String timeOutMin = timeOut.inMinutes.remainder(60).toString();
       if (timeOut.inMinutes.remainder(60) < 10) {
         timeOutMin = '0$timeOutMin';
@@ -650,7 +681,7 @@ class _TargetCardState extends State<TargetCard> {
         timerCadence = 20;
         if (mounted) {
           setState(() {
-            _currentLifeString = '${timeOutHrs}h ${timeOutMin}m';
+            _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
           });
         }
       } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
@@ -684,9 +715,8 @@ class _TargetCardState extends State<TargetCard> {
     }
     if (mounted) {
       setState(() {
-        _target.status.until = (DateTime.now().millisecondsSinceEpoch/1000).floor();
+        _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
       });
     }
   }
-
 }
