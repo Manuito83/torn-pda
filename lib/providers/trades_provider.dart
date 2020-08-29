@@ -109,6 +109,7 @@ class TradesProvider extends ChangeNotifier {
             playerId,
           );
 
+          print('cuac');
           // TODO:
 
         }

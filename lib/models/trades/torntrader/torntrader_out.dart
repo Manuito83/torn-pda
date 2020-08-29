@@ -10,6 +10,7 @@ String tornTradesOutToJson(TornTraderOutModel data) => json.encode(data.toJson()
 
 class TornTraderOutModel {
   TornTraderOutModel({
+    this.token,
     this.buyer,
     this.seller,
     this.tradeId,
@@ -17,6 +18,7 @@ class TornTraderOutModel {
     this.appVersion,
   });
 
+  String token;
   int buyer;
   String seller;
   int tradeId;
@@ -24,6 +26,7 @@ class TornTraderOutModel {
   String appVersion;
 
   factory TornTraderOutModel.fromJson(Map<String, dynamic> json) => TornTraderOutModel(
+    token: json["token"] == null ? null : json["token"],
     buyer: json["buyer"] == null ? null : json["buyer"],
     seller: json["seller"] == null ? null : json["seller"],
     tradeId: json["trade_id"] == null ? null : json["trade_id"],
@@ -32,6 +35,7 @@ class TornTraderOutModel {
   );
 
   Map<String, dynamic> toJson() => {
+    "token": token == null ? null : token,
     "buyer": buyer == null ? null : buyer,
     "seller": seller == null ? null : seller,
     "trade_id": tradeId == null ? null : tradeId,
