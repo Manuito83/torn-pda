@@ -10,6 +10,7 @@ class SharedPreferencesModel {
   final String _kLastAppUse = "pda_lastAppUse";
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
+  final String _kTargetSkipping = "pda_targetSkipping";
   final String _kAttacksSort = "pda_attacksSort";
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
@@ -136,6 +137,16 @@ class SharedPreferencesModel {
   Future<bool> setTargetsSort(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTargetsSort, value);
+  }
+
+  Future<bool> getTargetSkipping() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTargetSkipping) ?? true;
+  }
+
+  Future<bool> setTargetSkipping(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTargetSkipping, value);
   }
 
   /// ----------------------------
