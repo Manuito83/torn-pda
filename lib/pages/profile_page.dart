@@ -1505,12 +1505,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       child: ExpandablePanel(
         header: Padding(
           padding: const EdgeInsets.all(15.0),
-          child: Text(
-            'EVENTS',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Row(
+            children: [
+              Text(
+                'EVENTS',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onTap: () {
+                  _openTornBrowser("events");
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: Icon(MdiIcons.openInApp, size:18),
+                ),
+              )
+            ],
           ),
         ),
         collapsed: Padding(
@@ -1837,8 +1852,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   padding: const EdgeInsets.only(left: 8),
                   child: bankWidget,
                 ),
-                if (linesSeparator == 2)
-                  SizedBox(height: 10),
+                if (linesSeparator == 2) SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: educationWidget,
@@ -2085,22 +2099,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           child: Icon(
-            Icons.comment,
-            color: Colors.black,
-          ),
-          backgroundColor: Colors.grey[400],
-          onTap: () async {
-            _openTornBrowser('events');
-          },
-          label: 'EVENTS',
-          labelStyle: TextStyle(
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
-          labelBackgroundColor: Colors.grey[400],
-        ),
-        SpeedDialChild(
-          child: Icon(
             Icons.card_giftcard,
             color: Colors.black,
           ),
@@ -2151,6 +2149,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           labelBackgroundColor: Colors.green[400],
         ),
+        SpeedDialChild(
+          child: Icon(
+            Icons.home_outlined,
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.grey[400],
+          onTap: () async {
+            _openTornBrowser('home');
+          },
+          label: 'HOME',
+          labelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+          labelBackgroundColor: Colors.grey[400],
+        ),
       ],
     );
   }
@@ -2158,6 +2172,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _openTornBrowser(String page) async {
     var tornPage = '';
     switch (page) {
+      case 'home':
+        tornPage = 'https://www.torn.com';
+        break;
       case 'gym':
         tornPage = 'https://www.torn.com/gym.php';
         break;
