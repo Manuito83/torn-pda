@@ -60,6 +60,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
+  DateTime _lastTradeCall = DateTime.now();
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -248,11 +249,11 @@ class _WebViewFullState extends State<WebViewFull> {
                         ///     so we only listen for 'hash.step view'.
                         if (Platform.isIOS) {
                           if (consoleMessage.message.contains('hash.step')) {
-                            _forceAssessTrades();
+                            _decideIfCallTrades();
                           }
                         } else if (Platform.isAndroid) {
                           if (consoleMessage.message.contains('hash.step view')) {
-                            _forceAssessTrades();
+                            _decideIfCallTrades();
                           }
                         }
                       },
@@ -332,7 +333,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     _assessTravel(document);
     _assessCrimes(document, pageTitle);
-    _assessTrades(document, pageTitle);
+    _decideIfCallTrades();
     _assessCity(document, pageTitle);
   }
 
@@ -679,17 +680,24 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorEnabled = await SharedPreferencesModel().getTradeCalculatorEnabled();
-    _forceAssessTrades();
+    _decideIfCallTrades();
   }
 
-  Future _forceAssessTrades() async {
-    _currentUrl = await webView.getUrl();
-    var html = await webView.getHtml();
-    var document = parse(html);
+  // Avoid continuous calls to trades from different activators
+  Future _decideIfCallTrades() async {
+    var now = DateTime.now();
+    var diff = now.difference(_lastTradeCall);
+    if (diff.inSeconds > 1) {
+      _lastTradeCall = now;
 
-    String pageTitle = _getPageTitle(document);
-
-    _assessTrades(document, pageTitle);
+      // Call trades
+      _currentUrl = await webView.getUrl();
+      var html = await webView.getHtml();
+      var document = parse(html);
+      // Assign page title
+      String pageTitle = _getPageTitle(document);
+      _assessTrades(document, pageTitle);
+    }
   }
 
   // CITY
