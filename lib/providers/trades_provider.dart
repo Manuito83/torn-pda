@@ -24,6 +24,8 @@ class TradesContainer {
   String ttTotalMoney = "";
   String ttProfit = "";
   String ttUrl = "";
+  bool ttServerError = false;
+  bool ttAuthError = false;
 }
 
 class TradesProvider extends ChangeNotifier {
@@ -115,8 +117,10 @@ class TradesProvider extends ChangeNotifier {
             playerId,
           );
 
-          if (tornTraderIn.trade.serverError || tornTraderIn.trade.authError) {
-            // TODO:
+          if (tornTraderIn.serverError || tornTraderIn.authError) {
+            newModel.ttActive = true;
+            newModel.ttServerError = tornTraderIn.serverError;
+            newModel.ttAuthError = tornTraderIn.authError;
           } else {
             newModel.ttActive = true;
             newModel.ttTotalMoney = tornTraderIn.trade.tradeTotal.replaceAll(" ", "");

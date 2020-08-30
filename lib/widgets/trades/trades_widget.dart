@@ -60,7 +60,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     ),
                   ),
                   SizedBox(
-                    width: 80,
+                    width: 90,
                     child: Row(
                       children: [
                         Padding(
@@ -72,14 +72,62 @@ class _TradesWidgetState extends State<TradesWidget> {
                             fit: BoxFit.fill,
                           ),
                         ),
-                        Text(
-                          'SYNC',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.pink,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        if (_tradesProv.container.ttServerError ||
+                            _tradesProv.container.ttAuthError)
+                          Row(
+                            children: [
+                              Text(
+                                'ERROR',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: IconButton(
+                                  padding: EdgeInsets.all(0),
+                                  iconSize: 20,
+                                  onPressed: () {
+                                    String errorString = "";
+                                    if (_tradesProv.container.ttServerError) {
+                                      errorString = "There was an error contacting Torn Trader, "
+                                          "please try again later!";
+                                    } else if (_tradesProv.container.ttAuthError) {
+                                      errorString = "There was an error authenticating in Torn "
+                                          "Trades, is your account active?";
+                                    }
+                                    BotToast.showText(
+                                      text: errorString,
+                                      textStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.orange[800],
+                                      duration: Duration(seconds: 5),
+                                      contentPadding: EdgeInsets.all(10),
+                                    );
+                                  },
+                                  icon: Icon(
+                                    Icons.info_outline,
+                                    size: 15,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              )
+                            ],
+                          )
+                        else
+                          Text(
+                            'SYNC',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.pink,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
                       ],
                     ),
                   ),
@@ -224,7 +272,9 @@ class _TradesWidgetState extends State<TradesWidget> {
       return SizedBox.shrink();
     }
 
-    if (!_tradesProv.container.ttActive) {
+    if (!_tradesProv.container.ttActive ||
+        (_tradesProv.container.ttActive &&
+            (_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError))) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -10,8 +10,16 @@ String tornTraderInModelToJson(TornTraderInModel data) => json.encode(data.toJso
 
 class TornTraderInModel {
   TornTraderInModel({
+    // State
+    this.serverError = false,
+    this.authError = false,
+
     this.trade,
   });
+
+  // State
+  bool serverError;
+  bool authError;
 
   Trade trade;
 
@@ -26,20 +34,12 @@ class TornTraderInModel {
 
 class Trade {
   Trade({
-    // State
-    this.serverError = false,
-    this.authError = false,
-
     this.tradeUrl,
     this.tradeTotal,
     this.items,
     this.tradeMessages,
     this.totalProfit,
   });
-
-  // State
-  bool serverError;
-  bool authError;
 
   String tradeUrl;
   String tradeTotal;

@@ -27,12 +27,12 @@ class TornTrader {
 
     var authModel = await checkIfUserExists(buyerId);
     if (authModel.error) {
-      inModel.trade.serverError = true;
+      inModel.serverError = true;
       return inModel;
     }
 
     if (!authModel.allowed) {
-      inModel.trade.authError = true;
+      inModel.authError = true;
       return inModel;
     }
 
@@ -65,10 +65,10 @@ class TornTrader {
       if (response.statusCode == 200) {
         inModel = tornTraderInModelFromJson(response.body);
       } else {
-        inModel.trade.serverError = true;
+        inModel.serverError = true;
       }
     } catch (e) {
-      inModel.trade.serverError = true;
+      inModel.serverError = true;
     }
 
     return inModel;
