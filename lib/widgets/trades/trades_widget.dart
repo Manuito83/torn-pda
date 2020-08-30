@@ -14,7 +14,6 @@ class TradesWidget extends StatefulWidget {
 }
 
 class _TradesWidgetState extends State<TradesWidget> {
-
   final _scrollController = ScrollController();
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
   final _moneyDecimalFormat = new NumberFormat("#,##0.##", "en_US");
@@ -41,12 +40,51 @@ class _TradesWidgetState extends State<TradesWidget> {
         ),
         header: Column(
           children: <Widget>[
-            Text(
-              'Trade Calculator',
-              style: TextStyle(
-                color: Colors.orange,
+            if (!_tradesProv.container.ttActive)
+              Text(
+                'Trade Calculator',
+                style: TextStyle(
+                  color: Colors.orange,
+                ),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  SizedBox(width: 80),
+                  Text(
+                    'Trade Calculator',
+                    style: TextStyle(
+                      color: Colors.orange,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 80,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10, right: 5),
+                          child: Image(
+                            image: AssetImage('images/icons/torntrader_logo.png'),
+                            width: 16,
+                            color: Colors.pink,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        Text(
+                          'SYNC',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.pink,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
               child: Row(
@@ -70,9 +108,9 @@ class _TradesWidgetState extends State<TradesWidget> {
             ),
             ConstrainedBox(
               constraints: BoxConstraints.loose(Size.fromHeight(
-                  (MediaQuery.of(context).size.height -
-                      kToolbarHeight -
-                      AppBar().preferredSize.height)) /
+                      (MediaQuery.of(context).size.height -
+                          kToolbarHeight -
+                          AppBar().preferredSize.height)) /
                   3),
               child: Scrollbar(
                 controller: _scrollController,
@@ -116,22 +154,22 @@ class _TradesWidgetState extends State<TradesWidget> {
     int total = 0;
     bool hasProperty = false;
     if (side == 'left') {
-      total += _tradesProv.tradesContainer.leftMoney;
-      for (var item in _tradesProv.tradesContainer.leftItems) {
+      total += _tradesProv.container.leftMoney;
+      for (var item in _tradesProv.container.leftItems) {
         total += item.totalPrice;
       }
-      for (var property in _tradesProv.tradesContainer.leftProperties) {
+      for (var property in _tradesProv.container.leftProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
           break;
         }
       }
     } else {
-      total += _tradesProv.tradesContainer.rightMoney;
-      for (var item in _tradesProv.tradesContainer.rightItems) {
+      total += _tradesProv.container.rightMoney;
+      for (var item in _tradesProv.container.rightItems) {
         total += item.totalPrice;
       }
-      for (var property in _tradesProv.tradesContainer.rightProperties) {
+      for (var property in _tradesProv.container.rightProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
           break;
@@ -165,17 +203,13 @@ class _TradesWidgetState extends State<TradesWidget> {
         padding: EdgeInsets.all(0),
         iconSize: 20,
         onPressed: () {
-          Clipboard.setData(ClipboardData(text: '${_moneyFormat.format(total)}'));
-          BotToast.showText(
-            text: "\$${_moneyFormat.format(total)} copied to the clipboard!",
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.green,
-            duration: Duration(seconds: 5),
-            contentPadding: EdgeInsets.all(10),
-          );
+          String amountCopied;
+          if (_tradesProv.container.ttActive && side == 'right') {
+            amountCopied = _tradesProv.container.ttTotalMoney;
+          } else {
+            amountCopied = _moneyFormat.format(total);
+          }
+          _copyToClipboard(amountCopied, amountCopied);
         },
         icon: Icon(
           Icons.content_copy,
@@ -186,32 +220,132 @@ class _TradesWidgetState extends State<TradesWidget> {
     );
 
     // This prevents showing totals as 0 when the widget is first loaded with existing items
-    if (_tradesProv.tradesContainer.firstLoad) {
+    if (_tradesProv.container.firstLoad) {
       return SizedBox.shrink();
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        side == 'left'
-            ? Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon)
-            : SizedBox.shrink(),
-        Flexible(
-          child: Text(
-            '\$${_moneyFormat.format(total)}',
-            textAlign: side == 'left' ? TextAlign.start : TextAlign.end,
-            style: TextStyle(
-              color: Colors.green,
-              fontWeight: FontWeight.bold,
+    if (!_tradesProv.container.ttActive) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          side == 'left'
+              ? Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon)
+              : SizedBox.shrink(),
+          Flexible(
+            child: Text(
+              '\$${_moneyFormat.format(total)}',
+              textAlign: side == 'left' ? TextAlign.start : TextAlign.end,
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-        ),
-        propertyIcon(),
-        side == 'right'
-            ? Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon)
-            : SizedBox.shrink(),
-      ],
-    );
+          propertyIcon(),
+          side == 'right'
+              ? Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon)
+              : SizedBox.shrink(),
+        ],
+      );
+    } else {
+      if (side == 'left') {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon),
+            Flexible(
+              child: Text(
+                '\$${_moneyFormat.format(total)}',
+                textAlign: side == 'left' ? TextAlign.start : TextAlign.end,
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            propertyIcon(),
+          ],
+        );
+      } else {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    _tradesProv.container.ttTotalMoney,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      color: Colors.pink[500],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 5),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    '${_tradesProv.container.ttProfit} profit',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 5),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon),
+                SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: IconButton(
+                    padding: EdgeInsets.all(0),
+                    iconSize: 20,
+                    onPressed: () {
+                      _copyToClipboard(_tradesProv.container.ttUrl, "Receipt URL");
+                    },
+                    icon: Icon(
+                      Icons.receipt_long_outlined,
+                      size: 15,
+                      color: Colors.pink[400],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: IconButton(
+                    padding: EdgeInsets.all(0),
+                    iconSize: 20,
+                    onPressed: () {
+                      // TODO
+                    },
+                    icon: Icon(
+                      Icons.message_outlined,
+                      size: 15,
+                      color: Colors.pink[400],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      }
+    }
   }
 
   List<Widget> sideDetailed(String side) {
@@ -223,15 +357,15 @@ class _TradesWidgetState extends State<TradesWidget> {
     bool noItemsFound = true;
 
     if (side == 'left') {
-      sideMoney = _tradesProv.tradesContainer.leftMoney;
-      sideItems = _tradesProv.tradesContainer.leftItems;
-      sideProperties = _tradesProv.tradesContainer.leftProperties;
-      sideShares = _tradesProv.tradesContainer.leftShares;
+      sideMoney = _tradesProv.container.leftMoney;
+      sideItems = _tradesProv.container.leftItems;
+      sideProperties = _tradesProv.container.leftProperties;
+      sideShares = _tradesProv.container.leftShares;
     } else {
-      sideMoney = _tradesProv.tradesContainer.rightMoney;
-      sideItems = _tradesProv.tradesContainer.rightItems;
-      sideProperties = _tradesProv.tradesContainer.rightProperties;
-      sideShares = _tradesProv.tradesContainer.rightShares;
+      sideMoney = _tradesProv.container.rightMoney;
+      sideItems = _tradesProv.container.rightItems;
+      sideProperties = _tradesProv.container.rightProperties;
+      sideShares = _tradesProv.container.rightShares;
     }
 
     // CASH
@@ -393,5 +527,17 @@ class _TradesWidgetState extends State<TradesWidget> {
     return items;
   }
 
-
+  Future _copyToClipboard(String copy, String toast) async {
+    Clipboard.setData(ClipboardData(text: copy));
+    BotToast.showText(
+      text: toast + " copied to the clipboard!",
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green,
+      duration: Duration(seconds: 5),
+      contentPadding: EdgeInsets.all(10),
+    );
+  }
 }

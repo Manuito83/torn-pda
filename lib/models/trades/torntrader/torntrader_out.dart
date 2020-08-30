@@ -4,13 +4,12 @@
 
 import 'dart:convert';
 
-TornTraderOutModel tornTradesOutFromJson(String str) => TornTraderOutModel.fromJson(json.decode(str));
+TornTraderOutModel tornTraderOutFromJson(String str) => TornTraderOutModel.fromJson(json.decode(str));
 
-String tornTradesOutToJson(TornTraderOutModel data) => json.encode(data.toJson());
+String tornTraderOutToJson(TornTraderOutModel data) => json.encode(data.toJson());
 
 class TornTraderOutModel {
   TornTraderOutModel({
-    this.token,
     this.buyer,
     this.seller,
     this.tradeId,
@@ -18,24 +17,21 @@ class TornTraderOutModel {
     this.appVersion,
   });
 
-  String token;
   int buyer;
   String seller;
   int tradeId;
-  List<Item> items;
+  List<ttOutItem> items;
   String appVersion;
 
   factory TornTraderOutModel.fromJson(Map<String, dynamic> json) => TornTraderOutModel(
-    token: json["token"] == null ? null : json["token"],
     buyer: json["buyer"] == null ? null : json["buyer"],
     seller: json["seller"] == null ? null : json["seller"],
     tradeId: json["trade_id"] == null ? null : json["trade_id"],
-    items: json["items"] == null ? null : List<Item>.from(json["items"].map((x) => Item.fromJson(x))),
+    items: json["items"] == null ? null : List<ttOutItem>.from(json["items"].map((x) => ttOutItem.fromJson(x))),
     appVersion: json["app_version"] == null ? null : json["app_version"],
   );
 
   Map<String, dynamic> toJson() => {
-    "token": token == null ? null : token,
     "buyer": buyer == null ? null : buyer,
     "seller": seller == null ? null : seller,
     "trade_id": tradeId == null ? null : tradeId,
@@ -44,8 +40,8 @@ class TornTraderOutModel {
   };
 }
 
-class Item {
-  Item({
+class ttOutItem {
+  ttOutItem({
     this.name,
     this.quantity,
     this.id,
@@ -55,7 +51,7 @@ class Item {
   int quantity;
   int id;
 
-  factory Item.fromJson(Map<String, dynamic> json) => Item(
+  factory ttOutItem.fromJson(Map<String, dynamic> json) => ttOutItem(
     name: json["name"] == null ? null : json["name"],
     quantity: json["quantity"] == null ? null : json["quantity"],
     id: json["id"] == null ? null : json["id"],

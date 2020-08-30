@@ -18,11 +18,17 @@ class TradesContainer {
   List<TradeItem> rightItems = [];
   List<TradeItem> rightProperties = [];
   List<TradeItem> rightShares = [];
+
+  // TornTradesConfig
+  bool ttActive = false;
+  String ttTotalMoney = "";
+  String ttProfit = "";
+  String ttUrl = "";
 }
 
 class TradesProvider extends ChangeNotifier {
   int playerId;
-  var tradesContainer = TradesContainer();
+  var container = TradesContainer();
 
   void updateTrades(
       {@required playerId,
@@ -102,15 +108,21 @@ class TradesProvider extends ChangeNotifier {
         // so we'll only pass this information
         var tornTraderActive = await SharedPreferencesModel().getTornTraderEnabled();
         if (rightItemsElements.isNotEmpty && tornTraderActive) {
-          var tornTraderIn = await TornTrader.submitItems(
+          TornTraderInModel tornTraderIn = await TornTrader.submitItems(
             newModel.rightItems,
             sellerName,
             tradeId,
             playerId,
           );
 
-          print('cuac');
-          // TODO:
+          if (tornTraderIn.trade.serverError || tornTraderIn.trade.authError) {
+            // TODO:
+          } else {
+            newModel.ttActive = true;
+            newModel.ttTotalMoney = tornTraderIn.trade.tradeTotal.replaceAll(" ", "");
+            newModel.ttProfit = tornTraderIn.trade.totalProfit.replaceAll(" ", "");
+            newModel.ttUrl = tornTraderIn.trade.tradeUrl;
+          }
 
         }
       }
@@ -172,9 +184,8 @@ class TradesProvider extends ChangeNotifier {
     }
 
     newModel.firstLoad = false;
-    tradesContainer = newModel;
+    container = newModel;
     notifyListeners();
   }
 
-  void _getTornTraderElements(List<TradeItem> sellerItems, String sellerName, int tradeId) {}
 }

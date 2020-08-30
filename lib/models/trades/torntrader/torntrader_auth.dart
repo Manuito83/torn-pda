@@ -19,7 +19,7 @@ class TornTraderAuthModel {
   });
 
   // State
-  bool error;
+  bool error = false;
 
   String message;
   bool allowed;

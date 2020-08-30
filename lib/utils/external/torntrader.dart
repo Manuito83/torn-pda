@@ -27,24 +27,25 @@ class TornTrader {
 
     var authModel = await checkIfUserExists(buyerId);
     if (authModel.error) {
-      // TODO return with error
+      inModel.trade.serverError = true;
+      return inModel;
     }
 
     if (!authModel.allowed) {
-      // TODO return with not allowed
+      inModel.trade.authError = true;
+      return inModel;
     }
 
     var outModel = TornTraderOutModel();
     outModel
-      ..token = authModel.token
       ..appVersion = appVersion
       ..tradeId = tradeId
       ..seller = sellerName
       ..buyer = buyerId
-      ..items = List<Item>();
+      ..items = List<ttOutItem>();
 
     for (var product in sellerItems) {
-      var item = Item(
+      var item = ttOutItem(
         name: product.name,
         quantity: product.quantity,
         id: product.id,
@@ -52,23 +53,22 @@ class TornTrader {
       outModel.items.add(item);
     }
 
-    dynamic lala;
     try {
       var response = await http.post('https://torntrader.com/api/v1/trades',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': authModel.token,
         },
-        body: tornTradesOutToJson(outModel),
+        body: tornTraderOutToJson(outModel),
       );
 
       if (response.statusCode == 200) {
-        lala = tornTradesOutFromJson(response.body);
-        print('LALA');
+        inModel = tornTraderInModelFromJson(response.body);
       } else {
-        // TODO
+        inModel.trade.serverError = true;
       }
     } catch (e) {
-      print(e);
+      inModel.trade.serverError = true;
     }
 
     return inModel;
