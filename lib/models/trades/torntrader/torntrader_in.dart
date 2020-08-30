@@ -44,14 +44,14 @@ class Trade {
   String tradeUrl;
   String tradeTotal;
   List<ttInItem> items;
-  List<dynamic> tradeMessages;
+  List<TradeMessage> tradeMessages;
   String totalProfit;
 
   factory Trade.fromJson(Map<String, dynamic> json) => Trade(
     tradeUrl: json["trade_url"] == null ? null : json["trade_url"],
     tradeTotal: json["trade_total"] == null ? null : json["trade_total"],
     items: json["items"] == null ? null : List<ttInItem>.from(json["items"].map((x) => ttInItem.fromJson(x))),
-    tradeMessages: json["trade_messages"] == null ? null : List<dynamic>.from(json["trade_messages"].map((x) => x)),
+    tradeMessages: json["trade_messages"] == null ? null : List<TradeMessage>.from(json["trade_messages"].map((x) => TradeMessage.fromJson(x))),
     totalProfit: json["total_profit"] == null ? null : json["total_profit"],
   );
 
@@ -59,7 +59,7 @@ class Trade {
     "trade_url": tradeUrl == null ? null : tradeUrl,
     "trade_total": tradeTotal == null ? null : tradeTotal,
     "items": items == null ? null : List<dynamic>.from(items.map((x) => x.toJson())),
-    "trade_messages": tradeMessages == null ? null : List<dynamic>.from(tradeMessages.map((x) => x)),
+    "trade_messages": tradeMessages == null ? null : List<dynamic>.from(tradeMessages.map((x) => x.toJson())),
     "total_profit": totalProfit == null ? null : totalProfit,
   };
 }
@@ -97,5 +97,25 @@ class ttInItem {
     "quantity": quantity == null ? null : quantity,
     "total": total == null ? null : total,
     "profit": profit == null ? null : profit,
+  };
+}
+
+class TradeMessage {
+  TradeMessage({
+    this.name,
+    this.message,
+  });
+
+  String name;
+  String message;
+
+  factory TradeMessage.fromJson(Map<String, dynamic> json) => TradeMessage(
+    name: json["name"] == null ? null : json["name"],
+    message: json["message"] == null ? null : json["message"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "name": name == null ? null : name,
+    "message": message == null ? null : message,
   };
 }

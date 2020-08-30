@@ -134,7 +134,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                 ],
               ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+              padding: const EdgeInsets.fromLTRB(0, 10, 0, 2),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -253,11 +253,13 @@ class _TradesWidgetState extends State<TradesWidget> {
         onPressed: () {
           String amountCopied;
           if (_tradesProv.container.ttActive && side == 'right') {
-            amountCopied = _tradesProv.container.ttTotalMoney;
+            amountCopied =
+                _tradesProv.container.ttTotalMoney.replaceAll("\$", "").replaceAll(",", "");
+            _copyToClipboard(amountCopied, _tradesProv.container.ttTotalMoney);
           } else {
             amountCopied = _moneyFormat.format(total);
+            _copyToClipboard(amountCopied, amountCopied);
           }
-          _copyToClipboard(amountCopied, amountCopied);
         },
         icon: Icon(
           Icons.content_copy,
@@ -381,7 +383,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     padding: EdgeInsets.all(0),
                     iconSize: 20,
                     onPressed: () {
-                      // TODO
+                      _copyTornTraderMessages();
                     },
                     icon: Icon(
                       Icons.message_outlined,
@@ -589,5 +591,77 @@ class _TradesWidgetState extends State<TradesWidget> {
       duration: Duration(seconds: 5),
       contentPadding: EdgeInsets.all(10),
     );
+  }
+
+  void _copyTornTraderMessages() {
+    if (_tradesProv.container.ttMessages.isEmpty) {
+      BotToast.showText(
+        text: "You have no predefined messages!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else if (_tradesProv.container.ttMessages.length == 1) {
+      String thisMessage = _tradesProv.container.ttMessages[0].message;
+      _copyToClipboard(thisMessage, 'Message "$thisMessage"');
+    } else {
+      var options = List<Widget>();
+      for (var msg in _tradesProv.container.ttMessages) {
+        options.add(
+          SimpleDialogOption(
+            onPressed: () {
+              _copyToClipboard(msg.message, 'Message "${msg.message}"');
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              msg.message,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        );
+      }
+      options.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: RaisedButton(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: Text(
+              'Choose message to copy',
+              style: TextStyle(
+                color: Colors.pink,
+                fontSize: 15,
+              ),
+            ),
+            children: options,
+          );
+        },
+      );
+    }
   }
 }

@@ -4,7 +4,7 @@ import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_out.dart';
 import 'package:http/http.dart' as http;
 
-class TornTrader {
+class TornTraderComm {
 
   static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
     var authModel = TornTraderAuthModel();

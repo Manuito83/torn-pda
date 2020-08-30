@@ -3,7 +3,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/external/torntrader.dart';
+import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:html/dom.dart' as dom;
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -26,6 +26,8 @@ class TradesContainer {
   String ttUrl = "";
   bool ttServerError = false;
   bool ttAuthError = false;
+  var ttItems = List<ttInItem>();
+  var ttMessages = List<TradeMessage>();
 }
 
 class TradesProvider extends ChangeNotifier {
@@ -110,7 +112,7 @@ class TradesProvider extends ChangeNotifier {
         // so we'll only pass this information
         var tornTraderActive = await SharedPreferencesModel().getTornTraderEnabled();
         if (rightItemsElements.isNotEmpty && tornTraderActive) {
-          TornTraderInModel tornTraderIn = await TornTrader.submitItems(
+          TornTraderInModel tornTraderIn = await TornTraderComm.submitItems(
             newModel.rightItems,
             sellerName,
             tradeId,
@@ -118,16 +120,19 @@ class TradesProvider extends ChangeNotifier {
           );
 
           if (tornTraderIn.serverError || tornTraderIn.authError) {
-            newModel.ttActive = true;
-            newModel.ttServerError = tornTraderIn.serverError;
-            newModel.ttAuthError = tornTraderIn.authError;
+            newModel
+              ..ttActive = true
+              ..ttServerError = tornTraderIn.serverError
+              ..ttAuthError = tornTraderIn.authError;
           } else {
-            newModel.ttActive = true;
-            newModel.ttTotalMoney = tornTraderIn.trade.tradeTotal.replaceAll(" ", "");
-            newModel.ttProfit = tornTraderIn.trade.totalProfit.replaceAll(" ", "");
-            newModel.ttUrl = tornTraderIn.trade.tradeUrl;
+            newModel
+              ..ttActive = true
+              ..ttTotalMoney = tornTraderIn.trade.tradeTotal.replaceAll(" ", "")
+              ..ttProfit = tornTraderIn.trade.totalProfit.replaceAll(" ", "")
+              ..ttUrl = tornTraderIn.trade.tradeUrl
+              ..ttItems = tornTraderIn.trade.items
+              ..ttMessages = tornTraderIn.trade.tradeMessages;
           }
-
         }
       }
     }
@@ -191,5 +196,4 @@ class TradesProvider extends ChangeNotifier {
     container = newModel;
     notifyListeners();
   }
-
 }

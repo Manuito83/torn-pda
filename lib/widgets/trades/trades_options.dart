@@ -1,7 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/utils/external/torntrader.dart';
+import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesOptions extends StatefulWidget {
@@ -154,7 +153,7 @@ class _TradesOptionsState extends State<TradesOptions> {
       onChanged: _tradeCalculatorEnabled
           ? (activated) async {
               if (activated) {
-                var auth = await TornTrader.checkIfUserExists(
+                var auth = await TornTraderComm.checkIfUserExists(
                   widget.playerId,
                 );
 
