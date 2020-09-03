@@ -1,5 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +15,8 @@ class TradesWidget extends StatefulWidget {
 }
 
 class _TradesWidgetState extends State<TradesWidget> {
+  static const ttColor = Color(0xffd186cf);
+
   final _scrollController = ScrollController();
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
   final _moneyDecimalFormat = new NumberFormat("#,##0.##", "en_US");
@@ -68,7 +71,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                           child: Image(
                             image: AssetImage('images/icons/torntrader_logo.png'),
                             width: 16,
-                            color: Colors.pink,
+                            color: ttColor,
                             fit: BoxFit.fill,
                           ),
                         ),
@@ -124,7 +127,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                             'SYNC',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.pink,
+                              color: Color(0xffd186cf),
                               fontWeight: FontWeight.bold,
                             ),
                           )
@@ -155,11 +158,17 @@ class _TradesWidgetState extends State<TradesWidget> {
               ),
             ),
             ConstrainedBox(
-              constraints: BoxConstraints.loose(Size.fromHeight(
-                      (MediaQuery.of(context).size.height -
+              // Take into account Torn Trader to leave more or less space
+              constraints: _tradesProv.container.ttActive &&
+                      (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
+                  ? BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
+                          kToolbarHeight*3 -
+                          AppBar().preferredSize.height)) /
+                      3)
+                  : BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
                           kToolbarHeight -
                           AppBar().preferredSize.height)) /
-                  3),
+                      3),
               child: Scrollbar(
                 controller: _scrollController,
                 isAlwaysShown: true,
@@ -330,7 +339,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     _tradesProv.container.ttTotalMoney,
                     textAlign: TextAlign.end,
                     style: TextStyle(
-                      color: Colors.pink[500],
+                      color: ttColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -371,7 +380,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     icon: Icon(
                       Icons.receipt_long_outlined,
                       size: 15,
-                      color: Colors.pink[400],
+                      color: ttColor,
                     ),
                   ),
                 ),
@@ -388,7 +397,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     icon: Icon(
                       Icons.message_outlined,
                       size: 15,
-                      color: Colors.pink[400],
+                      color: ttColor,
                     ),
                   ),
                 ),
@@ -418,6 +427,151 @@ class _TradesWidgetState extends State<TradesWidget> {
       sideItems = _tradesProv.container.rightItems;
       sideProperties = _tradesProv.container.rightProperties;
       sideShares = _tradesProv.container.rightShares;
+    }
+
+    // Torn Trades appears before rest of items
+    if (_tradesProv.container.ttActive &&
+        side == 'right' &&
+        (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)) {
+      var ttItems = _tradesProv.container.ttItems;
+      for (var ttProduct in ttItems) {
+        if (ttProduct.price == null) {
+          continue;
+        }
+
+        String itemName = ttProduct.name;
+        if (ttProduct.quantity > 1) {
+          itemName += ' x${ttProduct.quantity}';
+        }
+
+        items.add(
+          Text(
+            itemName,
+            style: TextStyle(
+              color: ttColor,
+              fontSize: 13,
+            ),
+          ),
+        );
+
+        // Item price
+        String itemPriceTotal = '${ttProduct.total.replaceAll(" ", "")}';
+        String itemPriceIndividual = "";
+        if (ttProduct.quantity > 1) {
+          itemPriceIndividual += '(@ ${ttProduct.price.replaceAll(" ", "")})';
+        }
+        String itemProfit;
+        if (ttProduct.profit >= 0) {
+          itemProfit = '\$${_moneyFormat.format(ttProduct.profit)}';
+        } else {
+          itemProfit = '\$-${_moneyFormat.format(ttProduct.profit)}';
+        }
+
+        items.add(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Flexible(
+                    child: Text(
+                      itemPriceTotal,
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      itemPriceIndividual,
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                itemProfit + ' profit',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        );
+
+        items.add(SizedBox(height: 10));
+
+        // We need to remove this product from the ones we have in the normal list,
+        // so that only non-TornTrader products remain there
+        var newSideItemList = List<TradeItem>.from(sideItems);
+        for (var standardItem in sideItems) {
+          if (standardItem.name == ttProduct.name) {
+            newSideItemList.remove(standardItem);
+          }
+        }
+        sideItems = List<TradeItem>.from(newSideItemList);
+      }
+
+      // If after comparing there are still items in sideItems, there are items not captured
+      // by Torn Trades, so we'll give a warning
+      if (sideItems.length > 0) {
+        items.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: SizedBox(
+              width: 80,
+              child: Divider(color: Colors.orange),
+            ),
+          ),
+        );
+        items.add(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Text(
+                  'NOT IN TORN TRADER',
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+              SizedBox(width: 4),
+              Icon(Icons.warning_amber_outlined, size: 16, color: Colors.orange),
+            ],
+          ),
+        );
+
+        // Recalculate remaining total
+        int remainingTotal = 0;
+        remainingTotal += _tradesProv.container.rightMoney;
+        for (var rem in sideItems) {
+          remainingTotal += rem.totalPrice;
+        }
+        items.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              '(additional \$${_moneyFormat.format(remainingTotal)} market value)',
+              textAlign: TextAlign.end,
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     // CASH
@@ -654,7 +808,7 @@ class _TradesWidgetState extends State<TradesWidget> {
             title: Text(
               'Choose message to copy',
               style: TextStyle(
-                color: Colors.pink,
+                color: ttColor,
                 fontSize: 15,
               ),
             ),

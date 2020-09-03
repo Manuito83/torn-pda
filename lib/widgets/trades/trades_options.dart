@@ -17,6 +17,8 @@ class TradesOptions extends StatefulWidget {
 }
 
 class _TradesOptionsState extends State<TradesOptions> {
+  static const ttColor = Color(0xffd186cf);
+
   bool _tradeCalculatorEnabled = true;
   bool _tornTraderEnabled = true;
 
@@ -104,7 +106,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     Image(
                                       image: AssetImage('images/icons/torntrader_logo.png'),
                                       width: 20,
-                                      color: Colors.pink,
+                                      color: ttColor,
                                       fit: BoxFit.fill,
                                     ),
                                     SizedBox(width: 10),
@@ -147,8 +149,8 @@ class _TradesOptionsState extends State<TradesOptions> {
 
   Switch tornTraderSwitch() {
     return Switch(
-      activeColor: Colors.pink,
-      activeTrackColor: Colors.pink[100],
+      activeColor: ttColor,
+      activeTrackColor: Colors.pink,
       value: _tornTraderEnabled,
       onChanged: _tradeCalculatorEnabled
           ? (activated) async {
