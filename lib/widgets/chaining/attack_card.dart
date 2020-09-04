@@ -181,19 +181,15 @@ class _AttackCardState extends State<AttackCard> {
         ),
         onPressed: () {
           targetsProvider.deleteTargetById(_attack.targetId);
-          Scaffold.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Removed ${_attack.targetName}!'),
-              action: SnackBarAction(
-                label: 'UNDO',
-                textColor: Colors.orange,
-                onPressed: () {
-                  targetsProvider.restoredDeleted();
-                  // Update the button
-                  setState(() {});
-                },
-              ),
+          BotToast.showText(
+            text: HtmlParser.fix('Removed ${_attack.targetName}!'),
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
             ),
+            contentColor: Colors.orange[900],
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
           );
           // Update the button
           setState(() {});
@@ -210,26 +206,28 @@ class _AttackCardState extends State<AttackCard> {
         onPressed: () async {
           AddTargetResult tryAddTarget = await targetsProvider.addTarget(_attack.targetId);
           if (tryAddTarget.success) {
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                duration: Duration(seconds: 1),
-                content: Text(
-                  'Added ${tryAddTarget.targetName} '
-                  '[${tryAddTarget.targetId}]',
-                ),
+            BotToast.showText(
+              text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.green[700],
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
             );
             // Update the button
             setState(() {});
           } else if (!tryAddTarget.success) {
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                backgroundColor: Colors.red,
-                content: Text(
-                  'Error adding ${_attack.targetId}.'
-                  ' ${tryAddTarget.errorReason}',
-                ),
+            BotToast.showText(
+              text: HtmlParser.fix('Error adding ${_attack.targetId}. ${tryAddTarget.errorReason}'),
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.red[900],
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
             );
           }
         },

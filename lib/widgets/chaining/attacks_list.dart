@@ -19,7 +19,7 @@ class AttacksList extends StatelessWidget {
             padding: const EdgeInsets.only(top: 80.0, bottom: 20),
             child: CircularProgressIndicator(),
           ),
-          Text('It\'s taking longer than expected...'),
+          Text('Getting last attacks...'),
           _apiErrorWarning(context),
         ],
       );
