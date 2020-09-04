@@ -30,6 +30,27 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.8.2
+    var v1_8_2 = ChangeLogItem();
+    v1_8_2.version = 'Torn PDA v1.8.2';
+    String feat1_8_2_1 = "Chaining: targets than can't be attacked (red status or in a different country) "
+        "will be skipped automatically. Maximum of 3 targets. This feature can be deactivated.";
+    String feat1_8_2_2 = "Targets: added a hospital countdown and a clickable travel icon "
+        "that shows your target's whereabouts";
+    String feat1_8_2_3 = "Recent attacks: a new clickable faction icon will show you if the target "
+        "you are adding to your chaining list is a member of a faction";
+    String feat1_8_2_4 = "Profile: added a 'home' button and displaced the 'events' button to the events card";
+    String feat1_8_2_5 = "You can now copy to the clipboard the full URL you are visiting in Torn's "
+        "website by pressing the page title for a few seconds";
+    String feat1_8_2_6 = "Bug fixes: travel percentage indicators and travel notification times "
+        "were not working properly";
+    v1_8_2.features.add(feat1_8_2_1);
+    v1_8_2.features.add(feat1_8_2_2);
+    v1_8_2.features.add(feat1_8_2_3);
+    v1_8_2.features.add(feat1_8_2_4);
+    v1_8_2.features.add(feat1_8_2_5);
+    v1_8_2.features.add(feat1_8_2_6);
+
     // VERSION 1.8.1
     var v1_8_1 = ChangeLogItem();
     v1_8_1.version = 'Torn PDA v1.8.1';
@@ -191,6 +212,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_8_2);
     itemList.add(v1_8_1);
     itemList.add(v1_8_0);
     itemList.add(v1_7_1);
