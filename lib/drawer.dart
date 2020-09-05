@@ -494,7 +494,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Firestore get auth and init
       var user = await firebaseAuth.currentUser();
       if (user == null) {
-        FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+        User mFirebaseUser = await firebaseAuth.signInAnon();
         firestore.setUID(mFirebaseUser.uid);
         await firestore.uploadUsersProfileDetail(_userProvider.myUser);
         await firestore
@@ -516,13 +516,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     var dTimeStamp = now - _settingsProvider.lastAppUse;
     var duration = Duration(milliseconds: dTimeStamp);
 
-    // After the check, in any case, update last recorded use to now
-    _settingsProvider.updateLastUsed(now);
-
     // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
-    // retries, even if Firebase makes inactive at 7 days
+    // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
     if (duration.inDays > 2) {
       firestore.uploadLastActiveTime(now);
+      _settingsProvider.updateLastUsed(now);
     }
   }
 
