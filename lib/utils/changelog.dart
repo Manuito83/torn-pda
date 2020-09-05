@@ -33,7 +33,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 1.8.2
     var v1_8_2 = ChangeLogItem();
     v1_8_2.version = 'Torn PDA v1.8.2';
-    String feat1_8_2_1 = "Chaining: targets than can't be attacked (red status or in a different country) "
+    String feat1_8_2_1 = "Chaining: targets that can't be attacked (red status or in a different country) "
         "will be skipped automatically. Maximum of 3 targets. This feature can be deactivated.";
     String feat1_8_2_2 = "Targets: added a hospital countdown and a clickable travel icon "
         "that shows your target's whereabouts";
