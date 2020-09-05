@@ -77,9 +77,8 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.1.1'
     implementation 'androidx.multidex:multidex:2.0.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
-    implementation 'com.google.firebase:firebase-auth:19.3.1'
+    implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 }
 
 apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.gms.google-services'
-apply plugin: 'io.fabric'   // For Crashlytics
+apply plugin: 'com.google.firebase.crashlytics'

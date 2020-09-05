@@ -189,7 +189,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "Note: if you don't use Torn PDA for more than 7 days, "
+                "Note: if you don't use Torn PDA for more than 5 days, "
                 "all notifications will be turned off automatically. "
                 "This is to prevent the over usage of resources. "
                 "Please make sure you return back to the app once a "

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 final String appVersion = '1.8.2';
@@ -25,9 +27,7 @@ final FirebaseAnalytics analytics = FirebaseAnalytics();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-final BehaviorSubject<String> selectNotificationSubject =
-    BehaviorSubject<String>();
-
+final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,25 +40,29 @@ Future<void> main() async {
     requestSoundPermission: true,
   );
 
-  var initializationSettings = InitializationSettings(
-      initializationSettingsAndroid, initializationSettingsIOS);
+  var initializationSettings =
+      InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onSelectNotification: (String payload) async {
     selectNotificationSubject.add(payload);
   });
 
-  // Only 'true' intended for debugging
-  Crashlytics.instance.enableInDevMode = false;
+  // ## FIREBASE
+  // Before any of the Firebase services can be used, FlutterFire needs to be initialized
+  await Firebase.initializeApp();
+  if (kDebugMode) {
+    // Only 'true' intended for debugging, otherwise leave in false
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+  }
   // Pass all uncaught errors from the framework to Crashlytics
-  FlutterError.onError = Crashlytics.instance.recordFlutterError;
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
   runApp(
     MultiProvider(
       providers: [
         // UserDetailsProvider has to go first to initialize the others!
-        ChangeNotifierProvider<UserDetailsProvider>(
-            create: (context) => UserDetailsProvider()),
+        ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
           create: (context) => TargetsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
@@ -71,18 +75,15 @@ Future<void> main() async {
                   AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.myUser),
         ),
-        ChangeNotifierProvider<ThemeProvider>(
-            create: (context) => ThemeProvider()),
-        ChangeNotifierProvider<SettingsProvider>(
-            create: (context) => SettingsProvider()),
+        ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
           create: (context) => FriendsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
-        ChangeNotifierProvider<CrimesProvider>(
-            create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
       ],
       child: MyApp(),
     ),

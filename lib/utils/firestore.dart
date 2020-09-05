@@ -7,13 +7,13 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 final firestore = _FirestoreHelper();
 
 class _FirestoreHelper {
-  Firestore _firestore = Firestore.instance;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
   FirebaseMessaging _messaging = FirebaseMessaging();
   bool _alreadyUploaded = false;
   FirebaseUserModel _firebaseUserModel;
 
   String _uid;
-  void setUID (String userUID) {
+  void setUID(String userUID) {
     _uid = userUID;
   }
 
@@ -24,10 +24,7 @@ class _FirestoreHelper {
     _firebaseUserModel = FirebaseUserModel();
     var platform = Platform.isAndroid ? "android" : "ios";
     var token = await _messaging.getToken();
-    await _firestore
-        .collection("players")
-        .document(_uid)
-        .setData(
+    await _firestore.collection("players").doc(_uid).set(
       {
         "uid": _uid,
         "name": profile.name,
@@ -37,34 +34,35 @@ class _FirestoreHelper {
         "playerId": profile.playerId,
         "energyLastCheckFull": true,
         "platform": platform,
+
         /// This is a unique identifier to identify this user and target notification
         "token": token,
       },
-      merge: true,
+      SetOptions(merge: true),
     );
   }
 
   Future<void> subscribeToTravelNotification(bool subscribe) async {
-    await _firestore.collection("players").document(_uid).updateData({
+    await _firestore.collection("players").doc(_uid).update({
       "travelNotification": subscribe,
     });
   }
 
   Future<void> subscribeToEnergyNotification(bool subscribe) async {
-    await _firestore.collection("players").document(_uid).updateData({
+    await _firestore.collection("players").doc(_uid).update({
       "energyNotification": subscribe,
     });
   }
 
   Future<void> subscribeToHospitalNotification(bool subscribe) async {
-    await _firestore.collection("players").document(_uid).updateData({
+    await _firestore.collection("players").doc(_uid).update({
       "hospitalNotification": subscribe,
     });
   }
 
   Future<void> uploadLastActiveTime(int timeStamp) async {
     if (_uid == null) return;
-    await _firestore.collection("players").document(_uid).updateData({
+    await _firestore.collection("players").doc(_uid).update({
       "lastActive": timeStamp,
       "active": true,
     });
@@ -73,15 +71,11 @@ class _FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel> getUserProfile() async {
     if (_firebaseUserModel != null) return _firebaseUserModel;
-    return _firebaseUserModel = FirebaseUserModel.fromMap(
-        (await _firestore.collection("players").document(_uid).get()).data);
+    return _firebaseUserModel = FirebaseUserModel.fromMap((await _firestore.collection("players").doc(_uid).get()).data());
   }
 
   Future deleteUserProfile() async {
     _alreadyUploaded = false;
-    await _firestore.collection("players").document(_uid).delete();
-
+    await _firestore.collection("players").doc(_uid).delete();
   }
 }
-
-

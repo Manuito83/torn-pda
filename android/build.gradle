@@ -3,16 +3,13 @@ buildscript {
     repositories {
         google()
         jcenter()
-        maven {
-            url 'https://maven.fabric.io/public'    // For Crashlytics
-        }
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.0'
         classpath 'com.google.gms:google-services:4.3.0'
-        classpath 'io.fabric.tools:gradle:1.26.1'   // For Crashlytics
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.2.0'
     }
 }
 

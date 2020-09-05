@@ -702,7 +702,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
-          FirebaseUser mFirebaseUser = await firebaseAuth.signInAnon();
+          User mFirebaseUser = await firebaseAuth.signInAnon();
           firestore.setUID(mFirebaseUser.uid);
           await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
@@ -723,9 +723,9 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      Crashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+      FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
           "Error: $e. Stack: $stack");
-      Crashlytics.instance.recordError(e, null);
+      FirebaseCrashlytics.instance.recordError(e, null);
     }
   }
 
