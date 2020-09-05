@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-import { sendNotificationToUser } from "./notification";
-import { aDayInMilliseconds } from "./constants";
+//import * as admin from "firebase-admin";
+//import { sendNotificationToUser } from "./notification";
+//import { aDayInMilliseconds } from "./constants";
 
 export const staleGroup = {
   runEveryDay: functions.region('us-east4').pubsub
@@ -9,6 +9,7 @@ export const staleGroup = {
     .onRun(async () => {
       const promises: Promise<any>[] = [];
       
+      /*
       const currentDateInMillis = Date.now();
 
       // This pull the users who havent open the app for 7 days
@@ -42,6 +43,7 @@ export const staleGroup = {
         console.log(`Staled: ${user.playerId.toString()} with UID ${user.uid}`);
 
       });
+      */
 
       return Promise.all(promises);
   }),
