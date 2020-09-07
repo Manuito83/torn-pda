@@ -1,11 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+
+enum ChainWatcherStatus {
+  green,
+  orange,
+  red,
+}
 
 class ChainTimer extends StatefulWidget {
   final String userKey;
@@ -21,7 +28,7 @@ class ChainTimer extends StatefulWidget {
   _ChainTimerState createState() => _ChainTimerState();
 }
 
-class _ChainTimerState extends State<ChainTimer> {
+class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
   ThemeProvider _themeProvider;
 
   Future _finishedLoadingChain;
@@ -42,20 +49,30 @@ class _ChainTimerState extends State<ChainTimer> {
 
   bool _wereWeChaining = false;
 
+  var _chainWatcherActive = false;
+  var _chainWatcherStatus = ChainWatcherStatus.green;
+  Color _chainBorderColor = Colors.transparent;
+  AnimationController _chainBorderController;
+
   @override
   void initState() {
     super.initState();
     _finishedLoadingChain = _getChainStatus();
     _finishedGettingBars = _getEnergy();
-    _tickerDecreaseCount =
-        new Timer.periodic(Duration(seconds: 1), (Timer t) => _autoDecreaseChainTimer());
+    _tickerDecreaseCount = new Timer.periodic(Duration(seconds: 1), (Timer t) => _decreaseTimer());
     _tickerCallChainApi = new Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
+
+    _chainBorderController = new AnimationController(
+      vsync: this,
+      duration: new Duration(seconds: 1),
+    );
   }
 
   @override
   void dispose() {
     _tickerDecreaseCount.cancel();
     _tickerCallChainApi.cancel();
+    _chainBorderController.dispose();
     super.dispose();
   }
 
@@ -70,116 +87,165 @@ class _ChainTimerState extends State<ChainTimer> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
-      child: Column(
-        children: <Widget>[
-          FutureBuilder(
-            future: _finishedLoadingChain,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_chainModel is ChainModel) {
-                  return Column(
+      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+      child: AnimatedBuilder(
+        animation: _chainBorderController,
+        builder: (_, __) {
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.symmetric(
+                vertical: BorderSide(
+                  color: _chainBorderColor,
+                  width: _assessChainBorderWidth(),
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: IconButton(
+                      icon: Icon(MdiIcons.eyeOutline),
+                      color: _chainWatcherActive ? Colors.green[600] : _themeProvider.mainText,
+                      onPressed: () {
+                        setState(() {
+                          if (_chainWatcherActive) {
+                            _deactivateChainWatcher();
+                          } else {
+                            _chainWatcherActive = true;
+                            _chainWatchCheck();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Column(
                     children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text(
-                              _chainModel.chain.cooldown > 0 ? 'Cooldown ' : 'Chain ',
-                              style: TextStyle(color: titleColor),
-                            ),
-                            Text(
-                              '$_currentChainTimeString',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _currentSecondsCounter > 0 &&
-                                        _currentSecondsCounter < 60 &&
-                                        _chainModel.chain.cooldown == 0
-                                    ? Colors.red
-                                    : titleColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      LinearPercentIndicator(
-                        alignment: MainAxisAlignment.center,
-                        width: 150,
-                        lineHeight: 16,
-                        backgroundColor: Colors.grey,
-                        progressColor:
-                            _chainModel.chain.cooldown > 0 ? Colors.green[200] : Colors.blue[200],
-                        center: Text(
-                          _chainModel.chain.cooldown > 0
-                              ? '${_chainModel.chain.current} hits'
-                              : '${_chainModel.chain.current}/${_chainModel.chain.max}',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        percent: _chainModel.chain.cooldown > 0
-                            ? 1.0
-                            : _chainModel.chain.current / _chainModel.chain.max,
-                      ),
-                    ],
-                  );
-                } else {
-                  return Text(
-                    'Cannot retrieve chain details!',
-                    style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange[800]),
-                  );
-                }
-              } else {
-                return SizedBox(height: 30);
-              }
-            },
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 2),
-          ),
-          FutureBuilder(
-            future: _finishedGettingBars,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_barsModel is BarsModel) {
-                  return Column(
-                    children: <Widget>[
-                      LinearPercentIndicator(
-                        alignment: MainAxisAlignment.center,
-                        width: 150,
-                        lineHeight: 16,
-                        backgroundColor: Colors.green[100],
-                        progressColor: Colors.green,
-                        center: Text(
-                          'E: ${_barsModel.energy.current}/${_barsModel.energy.maximum}',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                        // Take drugs into account
-                        percent: (_barsModel.energy.current / _barsModel.energy.maximum) > 1.0
-                            ? 1.0
-                            : _barsModel.energy.current / _barsModel.energy.maximum,
+                      FutureBuilder(
+                        future: _finishedLoadingChain,
+                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done) {
+                            if (_chainModel is ChainModel) {
+                              return Column(
+                                children: <Widget>[
+                                  Padding(
+                                    padding: EdgeInsets.only(bottom: 4),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: <Widget>[
+                                        Text(
+                                          _chainModel.chain.cooldown > 0 ? 'Cooldown ' : 'Chain ',
+                                          style: TextStyle(color: titleColor),
+                                        ),
+                                        Text(
+                                          '$_currentChainTimeString',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: _currentSecondsCounter > 0 &&
+                                                    _currentSecondsCounter < 60 &&
+                                                    _chainModel.chain.cooldown == 0
+                                                ? Colors.red
+                                                : titleColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  LinearPercentIndicator(
+                                    alignment: MainAxisAlignment.center,
+                                    width: 150,
+                                    lineHeight: 16,
+                                    backgroundColor: Colors.grey,
+                                    progressColor: _chainModel.chain.cooldown > 0
+                                        ? Colors.green[200]
+                                        : Colors.blue[200],
+                                    center: Text(
+                                      _chainModel.chain.cooldown > 0
+                                          ? '${_chainModel.chain.current} hits'
+                                          : '${_chainModel.chain.current}/${_chainModel.chain.max}',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    percent: _chainModel.chain.cooldown > 0
+                                        ? 1.0
+                                        : _chainModel.chain.current / _chainModel.chain.max,
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return Text(
+                                'Cannot retrieve chain details!',
+                                style: TextStyle(
+                                    fontStyle: FontStyle.italic, color: Colors.orange[800]),
+                              );
+                            }
+                          } else {
+                            return SizedBox(height: 30);
+                          }
+                        },
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(vertical: 2),
                       ),
-                      LinearPercentIndicator(
-                        alignment: MainAxisAlignment.center,
-                        width: 150,
-                        lineHeight: 3,
-                        backgroundColor: Colors.green[100],
-                        progressColor: Colors.green,
-                        percent: 1 - _barsModel.energy.ticktime / _barsModel.energy.interval,
+                      FutureBuilder(
+                        future: _finishedGettingBars,
+                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done) {
+                            if (_barsModel is BarsModel) {
+                              return Column(
+                                children: <Widget>[
+                                  LinearPercentIndicator(
+                                    alignment: MainAxisAlignment.center,
+                                    width: 150,
+                                    lineHeight: 16,
+                                    backgroundColor: Colors.green[100],
+                                    progressColor: Colors.green,
+                                    center: Text(
+                                      'E: ${_barsModel.energy.current}/${_barsModel.energy.maximum}',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
+                                    // Take drugs into account
+                                    percent:
+                                        (_barsModel.energy.current / _barsModel.energy.maximum) >
+                                                1.0
+                                            ? 1.0
+                                            : _barsModel.energy.current / _barsModel.energy.maximum,
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 2),
+                                  ),
+                                  LinearPercentIndicator(
+                                    alignment: MainAxisAlignment.center,
+                                    width: 150,
+                                    lineHeight: 3,
+                                    backgroundColor: Colors.green[100],
+                                    progressColor: Colors.green,
+                                    percent:
+                                        1 - _barsModel.energy.ticktime / _barsModel.energy.interval,
+                                  ),
+                                ],
+                              );
+                            } else {
+                              return SizedBox.shrink();
+                            }
+                          } else {
+                            return SizedBox.shrink();
+                          }
+                        },
                       ),
                     ],
-                  );
-                } else {
-                  return SizedBox.shrink();
-                }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-        ],
+                  ),
+                  SizedBox(width: 5),
+                  // Placeholder for another icon
+                  SizedBox(width: 40),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -296,7 +362,7 @@ class _ChainTimerState extends State<ChainTimer> {
     });
   }
 
-  void _autoDecreaseChainTimer() {
+  void _decreaseTimer() {
     if (_currentSecondsCounter > 0) {
       _currentSecondsCounter--;
     }
@@ -319,5 +385,41 @@ class _ChainTimerState extends State<ChainTimer> {
   void _getAllStatus() {
     _getChainStatus();
     _getEnergy();
+
+    if (_chainWatcherActive) {
+      _chainWatchCheck();
+    }
+  }
+
+  _assessChainBorderWidth() {
+    switch (_chainWatcherStatus) {
+      case ChainWatcherStatus.green:
+        return 20.0;
+        break;
+      case ChainWatcherStatus.orange:
+        return _chainBorderController.value * 20;
+        break;
+      case ChainWatcherStatus.red:
+        return _chainBorderController.value * 20;
+        break;
+    }
+  }
+
+  void _deactivateChainWatcher() {
+    setState(() {
+      _chainWatcherActive = false;
+      _chainBorderColor = Colors.transparent;
+      _chainBorderController.stop();
+    });
+  }
+
+  void _chainWatchCheck() {
+    setState(() {
+      _chainBorderColor = Colors.green;
+      _chainBorderController = new AnimationController(
+        vsync: this,
+        duration: new Duration(seconds: 5),
+      )..repeat();
+    });
   }
 }
