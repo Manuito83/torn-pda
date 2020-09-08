@@ -62,7 +62,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
 
   AudioCache audioCache = new AudioCache();
   var _chainWatcherActive = false;
-  var _chainWatcherStatus = ChainWatcherStatus.green1;
+  ChainWatcherStatus _chainWatcherStatus = ChainWatcherStatus.off;
   Color _chainBorderColor = Colors.transparent;
   AnimationController _chainBorderController;
 
