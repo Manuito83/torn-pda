@@ -11,6 +11,8 @@ class SharedPreferencesModel {
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kTargetSkipping = "pda_targetSkipping";
+  final String _kChainWatcherSound = "pda_chainWatcherSound";
+  final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kAttacksSort = "pda_attacksSort";
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
@@ -147,6 +149,26 @@ class SharedPreferencesModel {
   Future<bool> setTargetSkipping(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTargetSkipping, value);
+  }
+
+  Future<bool> getChainWatcherSound() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChainWatcherSound) ?? true;
+  }
+
+  Future<bool> setChainWatcherSound(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChainWatcherSound, value);
+  }
+
+  Future<bool> getChainWatcherVibration() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChainWatcherVibration) ?? true;
+  }
+
+  Future<bool> setChainWatcherVibration(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChainWatcherVibration, value);
   }
 
   /// ----------------------------

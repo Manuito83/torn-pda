@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -16,6 +17,7 @@ class TornWebViewAttack extends StatefulWidget {
   final List<String> attackNameList;
   final Function(List<String>) attacksCallback;
   final String userKey;
+
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
@@ -34,6 +36,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   WebViewController _webViewController;
 
   UserDetailsProvider _userProv;
+  ChainStatusProvider _chainStatusProvider;
 
   String _initialUrl = "";
   String _currentPageTitle = "";
@@ -61,6 +64,11 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         'ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
+
+    _chainStatusProvider = context.read<ChainStatusProvider>();
+    if (_chainStatusProvider.watcherActive) {
+      _chainWidgetController.expanded = true;
+    }
   }
 
   @override
@@ -80,7 +88,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 onPressed: () async {
                   // Normal behaviour is just to pop and go to previous page
                   if (_backButtonPopsContext) {
-                    widget.attacksCallback(_attackedIds);
+                    _willPopCallback();
                     Navigator.pop(context);
                   } else {
                     // But we can change and go back to previous page in certain
@@ -142,6 +150,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                       expanded: ChainTimer(
                         userKey: widget.userKey,
                         alwaysDarkBackground: true,
+                        chainTimerParent: ChainTimerParent.webView,
                       ),
                     ),
                     Expanded(
@@ -354,6 +363,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   Future<bool> _willPopCallback() async {
     widget.attacksCallback(_attackedIds);
+    _chainStatusProvider.watcherAssignParent(newParent: ChainTimerParent.targets);
     return true;
   }
 }

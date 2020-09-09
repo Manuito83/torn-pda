@@ -8,12 +8,13 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 
-enum ChainWatcherStatus {
+enum ChainWatcherColor {
   cooldown,
   green1,
   green2,
@@ -23,14 +24,21 @@ enum ChainWatcherStatus {
   off,
 }
 
+enum ChainTimerParent {
+  targets,
+  webView,
+}
+
 class ChainTimer extends StatefulWidget {
   final String userKey;
   final bool alwaysDarkBackground;
+  final ChainTimerParent chainTimerParent;
 
   ChainTimer({
     Key key,
     @required this.userKey,
     @required this.alwaysDarkBackground,
+    @required this.chainTimerParent,
   }) : super(key: key);
 
   @override
@@ -60,11 +68,11 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
 
   bool _wereWeChaining = false;
 
-  AudioCache audioCache = new AudioCache();
-  var _chainWatcherActive = false;
-  ChainWatcherStatus _chainWatcherStatus = ChainWatcherStatus.off;
+  ChainStatusProvider _chainStatusProvider;
+  ChainWatcherColor _chainWatcherColor = ChainWatcherColor.off;
   Color _chainBorderColor = Colors.transparent;
   AnimationController _chainBorderController;
+  AudioCache audioCache = new AudioCache();
 
   @override
   void initState() {
@@ -84,6 +92,14 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
       vsync: this,
       duration: new Duration(seconds: 1),
     );
+
+    // We assign the parent to this instance of the widget, so that we can prevent it from raising
+    // alerts if it's not visible (but active on the background)
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
+    _chainStatusProvider.watcherAssignParent(newParent: widget.chainTimerParent);
+    if (!_chainStatusProvider.preferencesLoaded) {
+      _chainStatusProvider.loadPreferences();
+    }
   }
 
   @override
@@ -99,6 +115,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+
     Color titleColor;
     if (widget.alwaysDarkBackground) {
       titleColor = Colors.white;
@@ -130,32 +147,19 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
                     child: !_modelError
                         ? IconButton(
                             icon: Icon(MdiIcons.eyeOutline),
-                            color: _chainWatcherActive
+                            color: _chainStatusProvider.watcherActive
                                 ? widget.alwaysDarkBackground
-                                  ? Colors.orange[700]
-                                  : Colors.orange[900]
+                                    ? Colors.orange[700]
+                                    : Colors.orange[900]
                                 : widget.alwaysDarkBackground
                                     ? Colors.grey
                                     : _themeProvider.mainText,
                             onPressed: () {
                               setState(() {
-                                if (_chainWatcherActive) {
+                                if (_chainStatusProvider.watcherActive) {
                                   _deactivateChainWatcher();
                                 } else {
-                                  _chainWatcherActive = true;
-                                  Wakelock.enable();
-                                  _chainWatchCheck();
-                                  BotToast.showText(
-                                    text: 'Chain watcher activated!\n\nYour phone screen will '
-                                        'remain on, consider plugging it in.',
-                                    textStyle: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.green[700],
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
+                                  _activateChainWatcher();
                                 }
                               });
                             },
@@ -292,10 +296,22 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
 
   Future<void> _getChainStatus() async {
     var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
+
     if (chainResponse is ChainModel) {
       _accumulatedErrors = 0;
       _chainModel = chainResponse;
       _modelError = false;
+
+      // For timer debugging
+      /*
+      _chainModel.chain
+        ..timeout = 115
+        ..current = 1800
+        ..max = 2500
+        ..start = 1230000
+        ..modifier = 1.23
+        ..cooldown = 0;
+      */
 
       // OPTION 1, NOT CHAINING
       if ((_chainModel.chain.current == 0 || _chainModel.chain.timeout == 0) &&
@@ -426,37 +442,65 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
   }
 
   _assessChainBorderWidth() {
-    switch (_chainWatcherStatus) {
-      case ChainWatcherStatus.cooldown:
+    switch (_chainWatcherColor) {
+      case ChainWatcherColor.cooldown:
         return 20.0;
         break;
-      case ChainWatcherStatus.green1:
+      case ChainWatcherColor.green1:
         return 20.0;
         break;
-      case ChainWatcherStatus.green2:
+      case ChainWatcherColor.green2:
         return 20.0;
         break;
-      case ChainWatcherStatus.orange1:
+      case ChainWatcherColor.orange1:
         return 20.0;
         break;
-      case ChainWatcherStatus.orange2:
+      case ChainWatcherColor.orange2:
         return _chainBorderController.value * 20;
         break;
-      case ChainWatcherStatus.red:
+      case ChainWatcherColor.red:
         return _chainBorderController.value * 20;
         break;
-      case ChainWatcherStatus.off:
+      case ChainWatcherColor.off:
         return _chainBorderController.value * 0;
         break;
     }
+  }
+
+  void _activateChainWatcher() {
+    if (widget.chainTimerParent == ChainTimerParent.targets) {
+      _chainStatusProvider.watcherAssignParent(
+        newParent: ChainTimerParent.targets,
+        activate: true,
+      );
+    } else if (widget.chainTimerParent == ChainTimerParent.webView) {
+      _chainStatusProvider.watcherAssignParent(
+        newParent: ChainTimerParent.webView,
+        activate: true,
+      );
+    }
+
+    Wakelock.enable();
+    _chainWatchCheck();
+    BotToast.showText(
+      text: 'Chain watcher activated!\n\nYour phone screen will '
+          'remain on, consider plugging it in.',
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green[700],
+      duration: Duration(seconds: 5),
+      contentPadding: EdgeInsets.all(10),
+    );
   }
 
   void _deactivateChainWatcher() {
     Wakelock.disable();
     _chainBorderController.stop();
     setState(() {
-      _chainWatcherActive = false;
-      _chainWatcherStatus = ChainWatcherStatus.off;
+      _chainStatusProvider.watcherDeactivate();
+      _chainWatcherColor = ChainWatcherColor.off;
       _chainBorderColor = Colors.transparent;
     });
     BotToast.showText(
@@ -472,28 +516,41 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
   }
 
   Future<void> _chainWatchCheck() async {
-    // Return in certain cases (inactive or chain model error)
-    if (_chainWatcherActive) {
-      if (_modelError) {
-        if (_chainWatcherStatus != ChainWatcherStatus.off) {
-          _chainBorderController.stop();
-          setState(() {
-            _chainWatcherStatus = ChainWatcherStatus.off;
-            _chainBorderColor = Colors.transparent;
-          });
-        }
-        return;
+    // Return if this is not the visible chain widget
+    if ((!_chainStatusProvider.watcherActiveTargets &&
+            widget.chainTimerParent == ChainTimerParent.targets) ||
+        (!_chainStatusProvider.watcherActiveWebView &&
+            widget.chainTimerParent == ChainTimerParent.webView)) {
+
+      if (_chainWatcherColor != ChainWatcherColor.off) {
+        _chainBorderController.stop();
+        setState(() {
+          _chainWatcherColor = ChainWatcherColor.off;
+          _chainBorderColor = Colors.transparent;
+        });
       }
-    } else {
+
+      return;
+    }
+
+    // Return if there is an error with the model
+    if (_modelError) {
+      if (_chainWatcherColor != ChainWatcherColor.off) {
+        _chainBorderController.stop();
+        setState(() {
+          _chainWatcherColor = ChainWatcherColor.off;
+          _chainBorderColor = Colors.transparent;
+        });
+      }
       return;
     }
 
     // If under cooldown, apply blue color and return
     if (_chainModel.chain.cooldown > 0) {
-      if (_chainWatcherStatus != ChainWatcherStatus.cooldown) {
+      if (_chainWatcherColor != ChainWatcherColor.cooldown) {
         _chainBorderController.stop();
         setState(() {
-          _chainWatcherStatus = ChainWatcherStatus.cooldown;
+          _chainWatcherColor = ChainWatcherColor.cooldown;
           _chainBorderColor = Colors.blue[200];
         });
       }
@@ -504,55 +561,81 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
       if (_currentSecondsCounter < 60) {
         // Checking if it's already assigned to a color, prevents the animation from resetting,
         // which looks like a glitch to the user
-        if (_chainWatcherStatus != ChainWatcherStatus.red) {
+        if (_chainWatcherColor != ChainWatcherColor.red) {
+          // We stop and restart the animation otherwise. This will continue and repeat until
+          // replaced by another animation
           _chainBorderController.stop();
           _chainBorderController =
               new AnimationController(vsync: this, duration: new Duration(milliseconds: 750))
                 ..repeat();
-          audioCache.play('../sounds/alerts/warning.wav');
-          _vibrate(3);
+          // If another chain widget already raised an alert (which is controlled by the provider),
+          // we won't raise it again. Otherwise, sound/vibrate as applicable.
+          if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.red) {
+            if (_chainStatusProvider.soundActive){
+              audioCache.play('../sounds/alerts/warning.wav');
+            }
+            if (_chainStatusProvider.vibrationActive) {
+              _vibrate(3);
+            }
+            _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.red;
+          }
+          // Update colors and borders in the animation
           setState(() {
-            _chainWatcherStatus = ChainWatcherStatus.red;
+            _chainWatcherColor = ChainWatcherColor.red;
             _chainBorderColor = Colors.red;
           });
         }
       } else if (_currentSecondsCounter >= 60 && _currentSecondsCounter < 120) {
-        if (_chainWatcherStatus != ChainWatcherStatus.orange2) {
+        if (_chainWatcherColor != ChainWatcherColor.orange2) {
           _chainBorderController.stop();
           _chainBorderController = new AnimationController(
             vsync: this,
-            duration: new Duration(seconds: 2),
+            duration: new Duration(milliseconds: 1500),
           )..repeat();
-          audioCache.play('../sounds/alerts/alert2.wav');
-          _vibrate(2);
+          if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.orange2) {
+            if (_chainStatusProvider.soundActive){
+              audioCache.play('../sounds/alerts/alert2.wav');
+            }
+            if (_chainStatusProvider.vibrationActive) {
+              _vibrate(2);
+            }
+            _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.orange2;
+          }
           setState(() {
-            _chainWatcherStatus = ChainWatcherStatus.orange2;
+            _chainWatcherColor = ChainWatcherColor.orange2;
             _chainBorderColor = Colors.orange;
           });
         }
       } else if (_currentSecondsCounter >= 120 && _currentSecondsCounter < 180) {
-        if (_chainWatcherStatus != ChainWatcherStatus.orange1) {
+        if (_chainWatcherColor != ChainWatcherColor.orange1) {
           _chainBorderController.stop();
-          audioCache.play('../sounds/alerts/alert1.wav');
+          if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.orange1) {
+            if (_chainStatusProvider.soundActive){
+              audioCache.play('../sounds/alerts/alert1.wav');
+            }
+            _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.orange1;
+          }
           setState(() {
-            _chainWatcherStatus = ChainWatcherStatus.orange1;
+            _chainWatcherColor = ChainWatcherColor.orange1;
             _chainBorderColor = Colors.orange;
           });
         }
       } else {
-        if (_chainWatcherStatus != ChainWatcherStatus.green2) {
+        if (_chainWatcherColor != ChainWatcherColor.green2) {
           _chainBorderController.stop();
+          _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.green2;
           setState(() {
-            _chainWatcherStatus = ChainWatcherStatus.green2;
+            _chainWatcherColor = ChainWatcherColor.green2;
             _chainBorderColor = Colors.green;
           });
         }
       }
     } else {
-      if (_chainWatcherStatus != ChainWatcherStatus.green1) {
+      if (_chainWatcherColor != ChainWatcherColor.green1) {
         _chainBorderController.stop();
+        _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.green1;
         setState(() {
-          _chainWatcherStatus = ChainWatcherStatus.green1;
+          _chainWatcherColor = ChainWatcherColor.green1;
           _chainBorderColor = Colors.green[200];
         });
       }
