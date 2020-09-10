@@ -504,11 +504,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
         String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
+        var formattedTime = TimeFormatter(
+          inputTime: dateTimeArrival,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+
         return Padding(
           padding: const EdgeInsets.only(top: 10),
-          child: Row(
-            children: <Widget>[
-              Text('Arriving in '),
+          child: Column(
+            children: [
               LinearPercentIndicator(
                 center: Text(
                   diff,
@@ -521,6 +526,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 progressColor: Colors.blue[200],
                 backgroundColor: Colors.grey,
                 percent: _getTravelPercentage(totalSeconds),
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Flexible(
+                    child: Text('Arriving in ${_user.travel.destination} at $formattedTime'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -1522,7 +1535,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size:18),
+                  child: Icon(MdiIcons.openInApp, size: 18),
                 ),
               )
             ],
