@@ -32,7 +32,7 @@ class TravelPage extends StatefulWidget {
   _TravelPageState createState() => _TravelPageState();
 }
 
-class _TravelPageState extends State<TravelPage> {
+class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   TravelModel _travelModel = TravelModel();
   Timer _ticker;
 
@@ -67,37 +67,25 @@ class _TravelPageState extends State<TravelPage> {
   @override
   void initState() {
     super.initState();
-
-    // This is commented because it's handled by Firebase messaging!
-    //_requestIOSPermissions();
-
+    WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
-
     _retrievePendingNotifications();
-
     _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
-
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'travel'});
   }
-
-  // This is commented because it's handled by Firebase messaging!
-  /*
-  void _requestIOSPermissions() {
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  }
-  */
 
   @override
   void dispose() {
     _ticker?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      _updateInformation();
+    }
   }
 
   @override
