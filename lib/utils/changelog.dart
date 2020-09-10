@@ -30,6 +30,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.8.3
+    var v1_8_3 = ChangeLogItem();
+    v1_8_3.version = 'Torn PDA v1.8.3';
+    String feat1_8_3_1 = "Profile: added travel arrival time information in the status card";
+    v1_8_3.features.add(feat1_8_3_1);
+
     // VERSION 1.8.2
     var v1_8_2 = ChangeLogItem();
     v1_8_2.version = 'Torn PDA v1.8.2';
@@ -212,6 +218,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_8_3);
     itemList.add(v1_8_2);
     itemList.add(v1_8_1);
     itemList.add(v1_8_0);

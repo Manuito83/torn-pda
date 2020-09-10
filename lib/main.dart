@@ -20,7 +20,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-final String appVersion = '1.8.2';
+final String appVersion = '1.8.3';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
