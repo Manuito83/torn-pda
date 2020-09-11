@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/nuke_revive/nuke_revive_model.dart';
 
 class NukeRevive {
@@ -20,7 +21,8 @@ class NukeRevive {
       ..uid = playerId
       ..player = playerName
       ..faction = playerFaction
-      ..country = playerLocation;
+      ..country = playerLocation
+      ..appInfo = "Torn PDA v$appVersion";
 
     var bodyOut = nukeReviveModelToJson(modelOut);
 
