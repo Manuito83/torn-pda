@@ -43,6 +43,7 @@ class SharedPreferencesModel {
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
+  final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
@@ -504,6 +505,16 @@ class SharedPreferencesModel {
   Future<bool> setProfileAlarmSound(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kProfileAlarmSound, value);
+  }
+
+  Future<bool> getUseNukeRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseNukeRevive) ?? true;
+  }
+
+  Future<bool> setUseNukeRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseNukeRevive, value);
   }
 
   /// ----------------------------
