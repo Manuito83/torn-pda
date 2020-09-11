@@ -19,7 +19,7 @@ class NukeRevive {
   Future<String> callMedic() async {
     var modelOut = NukeReviveModel()
       ..uid = playerId
-      ..player = playerName
+      ..player = "$playerName [$playerId]"
       ..faction = playerFaction
       ..country = playerLocation
       ..appInfo = "Torn PDA v$appVersion";
