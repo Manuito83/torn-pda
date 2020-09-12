@@ -33,8 +33,15 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 1.8.3
     var v1_8_3 = ChangeLogItem();
     v1_8_3.version = 'Torn PDA v1.8.3';
-    String feat1_8_3_1 = "Profile: added travel arrival time information in the status card";
+    String feat1_8_3_1 = "Chaining: added a chain watcher feature that can be activated both in "
+        "the targets screen and while chaining";
+    String feat1_8_3_2 = "Profile: when you are in hospital, you can now send Nuclear Central "
+        "Hospital a revive request by clicking a button. This is an optional feature and "
+        "a contract/payment will be required by them; Torn PDA does not get anything in return";
+    String feat1_8_3_3 = "Profile: added travel arrival time information in the status card";
     v1_8_3.features.add(feat1_8_3_1);
+    v1_8_3.features.add(feat1_8_3_2);
+    v1_8_3.features.add(feat1_8_3_3);
 
     // VERSION 1.8.2
     var v1_8_2 = ChangeLogItem();
