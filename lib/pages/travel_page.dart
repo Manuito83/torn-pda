@@ -1086,9 +1086,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
 
     if (timerAhead == '0') {
-      _travelTimerAhead = 20;
+      // Time left is recalculated each 10 seconds, so we give here 20 + 10 extra, as otherwise
+      // it's too tight. Worse case scenario: the user is quick and checks the travel screen when
+      // there are still 25-30 seconds to go. Best case, he still has 20 seconds to spare.
+      _travelTimerAhead = 30;
     } else if (timerAhead == '1') {
-      _travelTimerAhead = 40;
+      // Same as above but 40 + 5 seconds. Timer triggers between 35-45 seconds.
+      _travelTimerAhead = 45;
     } else if (timerAhead == '2') {
       _travelTimerAhead = 60;
     } else if (timerAhead == '3') {
