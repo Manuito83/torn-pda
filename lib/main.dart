@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
@@ -18,6 +19,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 final String appVersion = '1.8.3';
@@ -84,6 +86,7 @@ Future<void> main() async {
               FriendsProvider(userProvider.myUser),
         ),
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
       ],
       child: MyApp(),
     ),
