@@ -237,6 +237,7 @@ class _TargetsPageState extends State<TargetsPage> {
             ChainTimer(
               userKey: widget.userKey,
               alwaysDarkBackground: false,
+              chainTimerParent: ChainTimerParent.targets,
             ),
             Flexible(
               child: Consumer<TargetsProvider>(
