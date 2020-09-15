@@ -1,8 +1,10 @@
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/pages/chaining/yata/yata_targets_distribution.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -46,27 +48,26 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
           children: <Widget>[
             SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.only(
-                  top: 45,
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                ),
-                margin: EdgeInsets.only(top: 15),
-                decoration: new BoxDecoration(
-                  color: _themeProvider.background,
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10.0,
-                      offset: const Offset(0.0, 10.0),
-                    ),
-                  ],
-                ),
-                child: _dialogInit ? _dialogDistributionPhase() : _dialogImportingPhase()
-              ),
+                  padding: EdgeInsets.only(
+                    top: 45,
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                  ),
+                  margin: EdgeInsets.only(top: 15),
+                  decoration: new BoxDecoration(
+                    color: _themeProvider.background,
+                    shape: BoxShape.rectangle,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10.0,
+                        offset: const Offset(0.0, 10.0),
+                      ),
+                    ],
+                  ),
+                  child: _dialogInit ? _dialogDistributionPhase() : _dialogImportingPhase()),
             ),
             Positioned(
               left: 16,
@@ -94,6 +95,15 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
   }
 
   Widget _dialogDistributionPhase() {
+    bool somethingToImportFromYata = true;
+    bool somethingToExportToYata = true;
+    if (widget.onlyLocal.isEmpty && widget.bothSides.isEmpty) {
+      somethingToExportToYata = false;
+    }
+    if (widget.onlyYata.isEmpty && widget.bothSides.isEmpty) {
+      somethingToImportFromYata = false;
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min, // To make the card compact
       children: <Widget>[
@@ -172,59 +182,62 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
               ),
             ],
           ),
-          onPressed: () {
-            setState(() {
-              // Change dialog phase (clear most of the screen)
-              _dialogInit = false;
-              _startImport();
-            });
-          },
+          onPressed: somethingToImportFromYata
+              ? () {
+                  setState(() {
+                    // Change dialog phase (clear most of the screen)
+                    _dialogInit = false;
+                    _startImport();
+                  });
+                }
+              : null,
         ),
         SizedBox(height: 10),
         RaisedButton(
-          child: Column(
-            children: [
-              Text(
-                "EXPORT",
-                style: TextStyle(fontSize: 11),
-              ),
-              Text(
-                "TO YATA",
-                style: TextStyle(fontSize: 11),
-              ),
-            ],
-          ),
-          onPressed: () async {
-            Navigator.of(context).pop();
-            var exportResult = await _targetsProvider.postTargetsToYata(
-              onlyLocal: widget.onlyLocal,
-              bothSides: widget.bothSides,
-            );
-            if (exportResult == "") {
-              BotToast.showText(
-                text: "There was an error exporting!",
-                textStyle: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white,
+            child: Column(
+              children: [
+                Text(
+                  "EXPORT",
+                  style: TextStyle(fontSize: 11),
                 ),
-                contentColor: Colors.red[800],
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
-              );
-            } else {
-              BotToast.showText(
-                text: exportResult,
-                textStyle: TextStyle(
-                  fontSize: 13,
-                  color: Colors.white,
+                Text(
+                  "TO YATA",
+                  style: TextStyle(fontSize: 11),
                 ),
-                contentColor: Colors.green[800],
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
-              );
-            }
-          },
-        ),
+              ],
+            ),
+            onPressed: somethingToExportToYata
+                ? () async {
+                    Navigator.of(context).pop();
+                    var exportResult = await _targetsProvider.postTargetsToYata(
+                      onlyLocal: widget.onlyLocal,
+                      bothSides: widget.bothSides,
+                    );
+                    if (exportResult == "") {
+                      BotToast.showText(
+                        text: "There was an error exporting!",
+                        textStyle: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.red[800],
+                        duration: Duration(seconds: 5),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+                    } else {
+                      BotToast.showText(
+                        text: exportResult,
+                        textStyle: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.green[800],
+                        duration: Duration(seconds: 5),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+                    }
+                  }
+                : null),
         SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -251,6 +264,25 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
             style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
           ),
         ),
+        SizedBox(height: 18),
+        LinearPercentIndicator(
+          alignment: MainAxisAlignment.center,
+          width: 200,
+          lineHeight: 16,
+          progressColor: Colors.green[400],
+          backgroundColor: Colors.grey[400],
+          center: Text(
+            "${(_currentImportPercentage * 100).toInt()}%",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black),
+          ),
+          percent: _currentImportPercentage,
+        ),
+        SizedBox(height: 6),
+        Text(
+          _currentImportTarget,
+          style: TextStyle(fontSize: 13),
+        ),
+        SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
@@ -266,12 +298,56 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
     );
   }
 
-  void _startImport() {
+  void _startImport() async {
+    // We add all targets coming from YATA
+    for (var i = 0; i <= widget.onlyYata.length - 1; i++) {
+      if (mounted) {
+        var importResult = await _targetsProvider.addTarget(
+          widget.onlyYata[i].id,
+          notes: widget.onlyYata[i].noteYata,
+        );
+
+        if (importResult.success) {
+          if (mounted) {
+            setState(() {
+              _currentImportTarget = widget.onlyYata[i].name;
+              _currentImportPercentage = i / widget.onlyYata.length;
+            });
+          }
+        }
+        // Avoid issues with API limits
+        if (widget.onlyYata.length > 70) {
+          await Future.delayed(const Duration(seconds: 1), () {});
+        }
+      }
+    }
+
+    // Those target that we already have, only see their notes updated (keeping same color)
     if (mounted) {
+      for (var bothSidesTarget in widget.bothSides) {
+        for (var localTarget in _targetsProvider.allTargets) {
+          if (bothSidesTarget.id == localTarget.playerId.toString()) {
+            var currentColor = localTarget.personalNoteColor;
+            _targetsProvider.setTargetNote(localTarget, bothSidesTarget.noteYata, currentColor);
+            break;
+          }
+        }
+      }
+    }
 
+    // Only to look good
+    if (mounted) {
+      setState(() {
+        _currentImportTarget = "Updating notes...";
+        _currentImportPercentage = 1;
+      });
+      await Future.delayed(const Duration(seconds: 2), () {});
+    }
 
+    // Auto close at the end
+    if (mounted) {
+      Navigator.of(context).pop();
     }
   }
 
 }
-

@@ -159,10 +159,10 @@ class _TargetsPageState extends State<TargetsPage> {
               });
             },
           ),
-          IconButton(
-            icon: Icon(MdiIcons.alphaYCircleOutline),
-            onPressed: _yataButtonActive
-                ? () async {
+          _yataButtonActive
+              ? IconButton(
+                  icon: Icon(MdiIcons.alphaYCircleOutline),
+                  onPressed: () async {
                     setState(() {
                       _yataButtonActive = false;
                     });
@@ -190,9 +190,21 @@ class _TargetsPageState extends State<TargetsPage> {
                     setState(() {
                       _yataButtonActive = true;
                     });
-                  }
-                : null,
-          ),
+                  },
+                )
+              : Theme(
+                  data: Theme.of(context).copyWith(accentColor: Colors.white),
+                  child: SizedBox(
+                    width: 45,
+                    child: Center(
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  ),
+                ),
           PopupMenuButton<TargetSort>(
             icon: Icon(
               Icons.sort,

@@ -488,9 +488,17 @@ class TargetsProvider extends ChangeNotifier {
     
     var targets = Map<String, String>();
     for (var localTarget in onlyLocal) {
+      // Max chars in Yata notes is 128
+      if (localTarget.noteLocal.length > 128) {
+        localTarget.noteLocal = localTarget.noteLocal.substring(0, 127);
+      }
       targets.addAll({ localTarget.id : localTarget.noteLocal });
     }
     for (var bothSidesTarget in bothSides) {
+      // Max chars in Yata notes is 128
+      if (bothSidesTarget.noteLocal.length > 128) {
+        bothSidesTarget.noteLocal = bothSidesTarget.noteLocal.substring(0, 127);
+      }
       targets.addAll({ bothSidesTarget.id : bothSidesTarget.noteLocal });
     }
     modelOut.targets = targets;
