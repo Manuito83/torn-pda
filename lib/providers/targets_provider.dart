@@ -1,12 +1,16 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
+import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:http/http.dart' as http;
 
 class AddTargetResult {
   bool success;
@@ -14,11 +18,7 @@ class AddTargetResult {
   String targetId = "";
   String targetName = "";
 
-  AddTargetResult(
-      {@required this.success,
-      this.errorReason,
-      this.targetId,
-      this.targetName});
+  AddTargetResult({@required this.success, this.errorReason, this.targetId, this.targetName});
 }
 
 class UpdateTargetsResult {
@@ -27,15 +27,12 @@ class UpdateTargetsResult {
   int numberSuccessful;
 
   UpdateTargetsResult(
-      {@required this.success,
-      @required this.numberErrors,
-      @required this.numberSuccessful});
+      {@required this.success, @required this.numberErrors, @required this.numberSuccessful});
 }
 
 class TargetsProvider extends ChangeNotifier {
   List<TargetModel> _targets = [];
-  UnmodifiableListView<TargetModel> get allTargets =>
-      UnmodifiableListView(_targets);
+  UnmodifiableListView<TargetModel> get allTargets => UnmodifiableListView(_targets);
 
   List<TargetModel> _oldTargetsList = [];
 
@@ -64,12 +61,10 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewTargetModel =
-        await TornApiCaller.target(_userKey, targetId).getTarget;
+    dynamic myNewTargetModel = await TornApiCaller.target(_userKey, targetId).getTarget;
 
     if (myNewTargetModel is TargetModel) {
-      dynamic attacksFull =
-          await TornApiCaller.attacks(_userKey).getAttacksFull;
+      dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
       _getTargetRespect(attacksFull, myNewTargetModel);
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
@@ -119,16 +114,14 @@ class TargetsProvider extends ChangeNotifier {
 
           // Find out if this was won or successfully defended by the user
           if (myNewTargetModel.playerId == value.defenderId) {
-            if (value.result == Result.LOST ||
-                value.result == Result.STALEMATE) {
+            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
               // If we attacked and lost
               userWonOrDefended.add(false);
             } else {
               userWonOrDefended.add(true);
             }
           } else if (myNewTargetModel.playerId == value.attackerId) {
-            if (value.result == Result.LOST ||
-                value.result == Result.STALEMATE) {
+            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
               // If we were attacked and the attacker lost
               userWonOrDefended.add(true);
             } else {
@@ -158,11 +151,9 @@ class TargetsProvider extends ChangeNotifier {
 
     try {
       dynamic myUpdatedTargetModel =
-          await TornApiCaller.target(_userKey, oldTarget.playerId.toString())
-              .getTarget;
+          await TornApiCaller.target(_userKey, oldTarget.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
-        dynamic attacksFull =
-            await TornApiCaller.attacks(_userKey).getAttacksFull;
+        dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
         _getTargetRespect(attacksFull, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(oldTarget)] = myUpdatedTargetModel;
@@ -199,9 +190,8 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel = await TornApiCaller.target(
-                _userKey, _targets[i].playerId.toString())
-            .getTarget;
+        dynamic myUpdatedTargetModel =
+            await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
         if (myUpdatedTargetModel is TargetModel) {
           _getTargetRespect(attacksFull, myUpdatedTargetModel);
           _getTargetFaction(myUpdatedTargetModel);
@@ -251,16 +241,13 @@ class TargetsProvider extends ChangeNotifier {
             }
             try {
               dynamic myUpdatedTargetModel =
-                  await TornApiCaller.target(_userKey, tar.playerId.toString())
-                      .getTarget;
+                  await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
               if (myUpdatedTargetModel is TargetModel) {
-                dynamic attacksFull =
-                    await TornApiCaller.attacks(_userKey).getAttacksFull;
+                dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
                 _getTargetRespect(attacksFull, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
                 _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-                var newTarget =
-                    _targets[_targets.indexOf(myUpdatedTargetModel)];
+                var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
                 if (showUpdateAnimation) {
                   _updateResultAnimation(newTarget, true);
                 }
@@ -364,12 +351,10 @@ class TargetsProvider extends ChangeNotifier {
         _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
       case TargetSortType.nameDes:
-        _targets.sort(
-            (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        _targets.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
       case TargetSortType.nameAsc:
-        _targets.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
     }
     _saveSortSharedPrefs();
@@ -465,5 +450,75 @@ class TargetsProvider extends ChangeNotifier {
     }
     // Notification
     notifyListeners();
+  }
+
+  // YATA SYNC
+  Future<YataTargetsImportModel> getTargetsFromYata() async {
+    try {
+      var response = await http.get(
+        'https://yata.alwaysdata.net/target/targets/export/?key=$_userKey',
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return yataTargetsImportModelFromJson(response.body);
+      } else {
+        if (response.body.contains("Player not found")) {
+          return YataTargetsImportModel()..errorPlayer = true;
+        } else {
+          return YataTargetsImportModel()..errorConnection = true;
+        }
+      }
+    } catch (e) {
+      return YataTargetsImportModel()..errorConnection = true;
+    }
+  }
+
+  Future<String> postTargetsToYata({
+    @required Map<String, Map<String, String>> onlyLocal,
+    @required Map<String, Map<String, String>> bothSides,
+  }) async {
+
+    var modelOut = YataTargetsExportModel();
+    modelOut.api = _userKey;
+    
+    var targets = Map<String, String>();
+    onlyLocal.forEach((key, details) {
+      // Details is { name : notes } and we are only using notes
+      targets.addAll({ key : details.values.first });
+    });
+    bothSides.forEach((key, details) {
+      // Details is { name : notes } and we are only using notes
+      targets.addAll({ key : details.values.first});
+    });
+    modelOut.targets = targets;
+
+    var bodyOut = yataTargetsExportModelToJson(modelOut);
+
+    try {
+      var response = await http.post(
+        'https://yata.alwaysdata.net/target/targets/import/',
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: bodyOut,
+      );
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> result = json.decode(response.body);
+        var answer = result.values.first;
+        if (answer.contains("No targets have been added") || answer.contains("You added")) {
+          answer += ". Existing notes (if any) have been exported and overwritten in YATA";
+        }
+
+        return answer;
+      } else {
+        return "";
+      }
+    } catch (e) {
+      return "";
+    }
   }
 }
