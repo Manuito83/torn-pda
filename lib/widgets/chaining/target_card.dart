@@ -238,35 +238,43 @@ class _TargetCardState extends State<TargetCard> {
               Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
-                  children: <Widget>[
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: IconButton(
-                        padding: EdgeInsets.all(0),
-                        iconSize: 20,
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          _showNotesDialog();
-                        },
-                      ),
-                    ),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Flexible(
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.only(start: 8),
-                        child: Row(
-                          children: <Widget>[
-                            Text('Notes: '),
-                            Flexible(
-                              child: Text(
-                                '${_target.personalNote}',
-                                style: TextStyle(
-                                  color: _returnTargetNoteColor(),
-                                ),
+                      child: Row(
+                        children: <Widget>[
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: IconButton(
+                              padding: EdgeInsets.all(0),
+                              iconSize: 20,
+                              icon: Icon(Icons.edit),
+                              onPressed: () {
+                                _showNotesDialog();
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Notes: '),
+                          Flexible(
+                            child: Text(
+                              '${_target.personalNote}',
+                              style: TextStyle(
+                                color: _returnTargetNoteColor(),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      '${_targetsProvider.allTargets.indexOf(_target) + 1}'
+                      '/${_targetsProvider.allTargets.length}',
+                      style: TextStyle(
+                        color: Colors.brown[400],
+                        fontSize: 11,
                       ),
                     ),
                   ],
