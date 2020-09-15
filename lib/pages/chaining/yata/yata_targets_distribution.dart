@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 
 class YataTargetsDistribution extends StatefulWidget {
-  final Map<String, String> onlyYata;
-  final Map<String, Map<String, String>> onlyLocal;
-  final Map<String, Map<String, String>> bothSides;
+  final List<TargetsOnlyYata> onlyYata;
+  final List<TargetsOnlyLocal> onlyLocal;
+  final List<TargetsBothSides> bothSides;
 
   YataTargetsDistribution({
     @required this.bothSides,
@@ -105,14 +106,23 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   List<Widget> _returnTargetsOnlyInYata() {
     var itemList = List<Widget>();
 
-    widget.onlyYata.forEach((key, value) {
+    if (widget.onlyYata.isEmpty) {
       itemList.add(
         Text(
-          "$value [$key]",
-          style: TextStyle(fontSize: 12),
+          "none",
+          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
       );
-    });
+    } else {
+      for (var yataTarget in widget.onlyYata) {
+        itemList.add(
+          Text(
+            "${yataTarget.name} [${yataTarget.id}]",
+            style: TextStyle(fontSize: 12),
+          ),
+        );
+      }
+    }
 
     return itemList;
   }
@@ -120,14 +130,23 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   List<Widget> _returnTargetsBothSides() {
     var itemList = List<Widget>();
 
-    widget.bothSides.forEach((key, value) {
+    if (widget.bothSides.isEmpty) {
       itemList.add(
         Text(
-          "${value.keys.first} [$key]",
-          style: TextStyle(fontSize: 12),
+          "none",
+          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
       );
-    });
+    } else {
+      for (var bothSidesTarget in widget.bothSides) {
+        itemList.add(
+          Text(
+            "${bothSidesTarget.name} [${bothSidesTarget.id}]",
+            style: TextStyle(fontSize: 12),
+          ),
+        );
+      }
+    }
 
     return itemList;
   }
@@ -135,14 +154,23 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   List<Widget> _returnTargetsOnlyInTornPDA() {
     var itemList = List<Widget>();
 
-    widget.onlyLocal.forEach((key, value) {
+    if (widget.onlyLocal.isEmpty) {
       itemList.add(
         Text(
-          "${value.keys.first} [$key]",
-          style: TextStyle(fontSize: 12),
+          "none",
+          style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
       );
-    });
+    } else {
+      for (var localTarget in widget.onlyLocal) {
+        itemList.add(
+          Text(
+            "${localTarget.name} [${localTarget.id}]",
+            style: TextStyle(fontSize: 12),
+          ),
+        );
+      }
+    }
 
     return itemList;
   }

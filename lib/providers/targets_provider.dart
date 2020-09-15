@@ -5,6 +5,7 @@ import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -478,22 +479,20 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   Future<String> postTargetsToYata({
-    @required Map<String, Map<String, String>> onlyLocal,
-    @required Map<String, Map<String, String>> bothSides,
+    @required List<TargetsOnlyLocal> onlyLocal,
+    @required List<TargetsBothSides> bothSides,
   }) async {
 
     var modelOut = YataTargetsExportModel();
     modelOut.api = _userKey;
     
     var targets = Map<String, String>();
-    onlyLocal.forEach((key, details) {
-      // Details is { name : notes } and we are only using notes
-      targets.addAll({ key : details.values.first });
-    });
-    bothSides.forEach((key, details) {
-      // Details is { name : notes } and we are only using notes
-      targets.addAll({ key : details.values.first});
-    });
+    for (var localTarget in onlyLocal) {
+      targets.addAll({ localTarget.id : localTarget.noteLocal });
+    }
+    for (var bothSidesTarget in bothSides) {
+      targets.addAll({ bothSidesTarget.id : bothSidesTarget.noteLocal });
+    }
     modelOut.targets = targets;
 
     var bodyOut = yataTargetsExportModelToJson(modelOut);

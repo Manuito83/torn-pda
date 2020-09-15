@@ -1,19 +1,19 @@
 import 'dart:async';
-import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/pages/chaining/targets_options_page.dart';
-import 'package:torn_pda/pages/chaining/yata/yata_targets_distribution.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
+import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
 
 class TargetsOptions {
   String description;
@@ -526,58 +526,57 @@ class _TargetsPageState extends State<TargetsPage> {
   Future<void> _openYataDialog(YataTargetsImportModel importedTargets) {
     // Before opening the dialog, we'll see how many new targets we have, so that we can
     // show a count and some details before importing/exporting
-    Map<String, String> onlyYata = {};
-    // We are using Map<ID <Name, Notes>> for targets distribution and also for exporting
-    Map<String, Map<String, String>> onlyLocal = {};
-    Map<String, Map<String, String>> bothSides = {};
+    List<TargetsOnlyYata> onlyYata = [];
+    List<TargetsOnlyLocal> onlyLocal = [];
+    List<TargetsBothSides> bothSides = [];
     // If we have no targets locally, we'll import all incoming (we assume that [bothSides] and
     // [onlyLocal] are zero
     if (_targetsProvider.allTargets.isEmpty) {
-      importedTargets.targets.forEach((key, value) {
-        onlyYata.addAll({key: value.name});
+      importedTargets.targets.forEach((key, yataTarget) {
+        onlyYata.add(TargetsOnlyYata()
+          ..id = key
+          ..name = yataTarget.name
+          ..noteYata = yataTarget.note);
       });
     }
     // Otherwise, we'll see how many are new or only local
     else {
-      importedTargets.targets.forEach((key, value) {
+      importedTargets.targets.forEach((key, yataTarget) {
         bool foundLocally = false;
-        _targetsProvider.allTargets.forEach((element) {
+        _targetsProvider.allTargets.forEach((localTarget) {
           if (!foundLocally) {
-            if (key == element.playerId.toString()) {
-              bothSides.addAll(
-                {
-                  key: {
-                    // We use the Torn PDA note in case that we export (we'll export our note)
-                    value.name: element.personalNote,
-                  },
-                },
-              );
+            if (key == localTarget.playerId.toString()) {
+              bothSides.add(TargetsBothSides()
+                ..id = key
+                ..name = yataTarget.name
+                ..noteYata = yataTarget.note
+                ..noteLocal = localTarget.personalNote);
               foundLocally = true;
             }
           }
         });
         if (!foundLocally) {
-          onlyYata.addAll({key: value.name});
+          onlyYata.add(TargetsOnlyYata()
+            ..id = key
+            ..name = yataTarget.name
+            ..noteYata = yataTarget.note);
         }
       });
 
-      _targetsProvider.allTargets.forEach((element) {
+      _targetsProvider.allTargets.forEach((localTarget) {
         bool foundInYata = false;
-        importedTargets.targets.forEach((key, value) {
+        importedTargets.targets.forEach((key, yataTarget) {
           if (!foundInYata) {
-            if (element.playerId.toString() == key) {
+            if (localTarget.playerId.toString() == key) {
               foundInYata = true;
             }
           }
         });
         if (!foundInYata) {
-          onlyLocal.addAll(
-            {
-              element.playerId.toString(): {
-                element.name: element.personalNote,
-              },
-            },
-          );
+          onlyLocal.add(TargetsOnlyLocal()
+            ..id = localTarget.playerId.toString()
+            ..name = localTarget.name
+            ..noteLocal = localTarget.personalNote);
         }
       });
     }
@@ -586,199 +585,10 @@ class _TargetsPageState extends State<TargetsPage> {
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Flexible(
-                          child: Text(
-                            "TARGETS DISTRIBUTION",
-                            style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(width: 25),
-                              Column(
-                                children: [
-                                  Text(
-                                    "${onlyYata.length} only in YATA",
-                                    style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                                  ),
-                                  Text(
-                                    "${bothSides.length} common targets",
-                                    style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                                  ),
-                                  Text(
-                                    "${onlyLocal.length} only in Torn PDA",
-                                    style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(width: 10),
-                              OpenContainer(
-                                transitionDuration: Duration(milliseconds: 500),
-                                transitionType: ContainerTransitionType.fadeThrough,
-                                openBuilder: (BuildContext context, VoidCallback _) {
-                                  return YataTargetsDistribution(
-                                    bothSides: bothSides,
-                                    onlyYata: onlyYata,
-                                    onlyLocal: onlyLocal,
-                                  );
-                                },
-                                closedElevation: 0,
-                                closedShape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(56 / 2),
-                                  ),
-                                ),
-                                closedColor: Colors.transparent,
-                                closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                                  return SizedBox(
-                                    width: 20,
-                                    child: Icon(
-                                      Icons.info_outline,
-                                      size: 20,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Divider(),
-                        SizedBox(height: 5),
-                        RaisedButton(
-                          child: Column(
-                            children: [
-                              Text(
-                                "IMPORT",
-                                style: TextStyle(fontSize: 11),
-                              ),
-                              Text(
-                                "FROM YATA",
-                                style: TextStyle(fontSize: 11),
-                              ),
-                            ],
-                          ),
-                          onPressed: () {},
-                        ),
-                        SizedBox(height: 10),
-                        RaisedButton(
-                          child: Column(
-                            children: [
-                              Text(
-                                "EXPORT",
-                                style: TextStyle(fontSize: 11),
-                              ),
-                              Text(
-                                "TO YATA",
-                                style: TextStyle(fontSize: 11),
-                              ),
-                            ],
-                          ),
-                          onPressed: () async {
-                            Navigator.of(context).pop();
-                            var exportResult = await _targetsProvider.postTargetsToYata(
-                              onlyLocal: onlyLocal,
-                              bothSides: bothSides,
-                            );
-                            if (exportResult == "") {
-                              BotToast.showText(
-                                text: "There was an error exporting!",
-                                textStyle: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.red[800],
-                                duration: Duration(seconds: 5),
-                                contentPadding: EdgeInsets.all(10),
-                              );
-                            } else {
-                              BotToast.showText(
-                                text: exportResult,
-                                textStyle: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.green[800],
-                                duration: Duration(seconds: 5),
-                                contentPadding: EdgeInsets.all(10),
-                              );
-                            }
-                          },
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            FlatButton(
-                              child: Text("Cancel"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.background,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Image.asset(
-                          'images/icons/yata_logo.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return YataTargetsDialog(
+          bothSides: bothSides,
+          onlyYata: onlyYata,
+          onlyLocal: onlyLocal,
         );
       },
     );
@@ -832,7 +642,7 @@ class _TargetsPageState extends State<TargetsPage> {
                         Flexible(
                           child: Text(
                             "This will wipe all your targets (consider performing a backup or "
-                                "exporting to YATA).",
+                            "exporting to YATA).",
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
