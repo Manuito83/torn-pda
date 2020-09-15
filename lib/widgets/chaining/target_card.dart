@@ -68,24 +68,23 @@ class _TargetCardState extends State<TargetCard> {
       actionExtentRatio: 0.25,
       actions: <Widget>[
         IconSlideAction(
-            caption: 'Remove',
-            color: Colors.red,
-            icon: Icons.delete,
-            onTap: () {
-              Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
-              Scaffold.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Deleted ${_target.name}!'),
-                  action: SnackBarAction(
-                    label: 'UNDO',
-                    textColor: Colors.orange,
-                    onPressed: () {
-                      _targetsProvider.restoredDeleted();
-                    },
-                  ),
-                ),
-              );
-            }),
+          caption: 'Remove',
+          color: Colors.red,
+          icon: Icons.delete,
+          onTap: () {
+            Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
+            BotToast.showText(
+              text: 'Deleted ${_target.name}!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[800],
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
@@ -536,31 +535,31 @@ class _TargetCardState extends State<TargetCard> {
   Widget _travelIcon() {
     if (_target.status.color == "blue") {
       return Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-              borderRadius: BorderRadius.circular(100),
-              onTap: () {
-                BotToast.showText(
-                  text: _target.status.description,
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(right: 5),
-                child: Icon(
-                  Icons.airplanemode_active,
-                  color: Colors.blue,
-                  size: 16,
-                ),
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(100),
+          onTap: () {
+            BotToast.showText(
+              text: _target.status.description,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: Icon(
+              Icons.airplanemode_active,
+              color: Colors.blue,
+              size: 16,
             ),
-          );
+          ),
+        ),
+      );
     } else {
       return SizedBox.shrink();
     }
@@ -697,8 +696,8 @@ class _TargetCardState extends State<TargetCard> {
 
       if (_lifeTicker != null) {
         _lifeTicker.cancel();
-        _lifeTicker =
-            Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
+        _lifeTicker = Timer.periodic(
+            Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
       if (diff.inSeconds < 2) {
