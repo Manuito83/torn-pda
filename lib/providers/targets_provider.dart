@@ -328,6 +328,7 @@ class TargetsProvider extends ChangeNotifier {
   /// CAREFUL!
   void wipeAllTargets() {
     _targets.clear();
+    notifyListeners();
   }
 
   void setFilterText(String newFilter) {

@@ -27,6 +27,9 @@ class TargetsOptions {
       case "Backup":
         iconData = Icons.save;
         break;
+      case "Wipe":
+        iconData = Icons.delete_forever_outlined;
+        break;
     }
   }
 }
@@ -68,6 +71,7 @@ class _TargetsPageState extends State<TargetsPage> {
   final _popupOptionsChoices = <TargetsOptions>[
     TargetsOptions(description: "Options"),
     TargetsOptions(description: "Backup"),
+    TargetsOptions(description: "Wipe"),
   ];
 
   @override
@@ -513,6 +517,9 @@ class _TargetsPageState extends State<TargetsPage> {
           ),
         );
         break;
+      case "Wipe":
+        _openWipeDialog();
+        break;
     }
   }
 
@@ -576,207 +583,311 @@ class _TargetsPageState extends State<TargetsPage> {
     }
 
     return showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            content: SingleChildScrollView(
-              child: Stack(
-                children: <Widget>[
-                  SingleChildScrollView(
-                    child: Container(
-                      padding: EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: EdgeInsets.only(top: 15),
-                      decoration: new BoxDecoration(
-                        color: _themeProvider.background,
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: const Offset(0.0, 10.0),
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "TARGETS DISTRIBUTION",
+                            style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min, // To make the card compact
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "TARGETS DISTRIBUTION",
-                              style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Flexible(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(width: 25),
-                                Column(
-                                  children: [
-                                    Text(
-                                      "${onlyYata.length} only in YATA",
-                                      style:
-                                          TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                                    ),
-                                    Text(
-                                      "${bothSides.length} common targets",
-                                      style:
-                                          TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                                    ),
-                                    Text(
-                                      "${onlyLocal.length} only in Torn PDA",
-                                      style:
-                                          TextStyle(fontSize: 12, color: _themeProvider.mainText),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(width: 10),
-                                OpenContainer(
-                                  transitionDuration: Duration(milliseconds: 500),
-                                  transitionType: ContainerTransitionType.fadeThrough,
-                                  openBuilder: (BuildContext context, VoidCallback _) {
-                                    return YataTargetsDistribution(
-                                      bothSides: bothSides,
-                                      onlyYata: onlyYata,
-                                      onlyLocal: onlyLocal,
-                                    );
-                                  },
-                                  closedElevation: 0,
-                                  closedShape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(56 / 2),
-                                    ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(width: 25),
+                              Column(
+                                children: [
+                                  Text(
+                                    "${onlyYata.length} only in YATA",
+                                    style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                                   ),
-                                  closedColor: Colors.transparent,
-                                  closedBuilder:
-                                      (BuildContext context, VoidCallback openContainer) {
-                                    return SizedBox(
-                                      width: 20,
-                                      child: Icon(
-                                        Icons.info_outline,
-                                        size: 20,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Divider(),
-                          SizedBox(height: 5),
-                          RaisedButton(
-                            child: Column(
-                              children: [
-                                Text(
-                                  "IMPORT",
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                                Text(
-                                  "FROM YATA",
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                              ],
-                            ),
-                            onPressed: () {},
-                          ),
-                          SizedBox(height: 10),
-                          RaisedButton(
-                            child: Column(
-                              children: [
-                                Text(
-                                  "EXPORT",
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                                Text(
-                                  "TO YATA",
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                              ],
-                            ),
-                            onPressed: () async {
-                              Navigator.of(context).pop();
-                              var exportResult = await _targetsProvider.postTargetsToYata(
-                                onlyLocal: onlyLocal,
-                                bothSides: bothSides,
-                              );
-                              if (exportResult == "") {
-                                BotToast.showText(
-                                  text: "There was an error exporting!",
-                                  textStyle: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
+                                  Text(
+                                    "${bothSides.length} common targets",
+                                    style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                                   ),
-                                  contentColor: Colors.red[800],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
-                                );
-                              } else {
-                                BotToast.showText(
-                                  text: exportResult,
-                                  textStyle: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.white,
+                                  Text(
+                                    "${onlyLocal.length} only in Torn PDA",
+                                    style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                                   ),
-                                  contentColor: Colors.green[800],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
-                                );
-                              }
-                            },
-                          ),
-                          SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              FlatButton(
-                                child: Text("Cancel"),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
+                                ],
+                              ),
+                              SizedBox(width: 10),
+                              OpenContainer(
+                                transitionDuration: Duration(milliseconds: 500),
+                                transitionType: ContainerTransitionType.fadeThrough,
+                                openBuilder: (BuildContext context, VoidCallback _) {
+                                  return YataTargetsDistribution(
+                                    bothSides: bothSides,
+                                    onlyYata: onlyYata,
+                                    onlyLocal: onlyLocal,
+                                  );
+                                },
+                                closedElevation: 0,
+                                closedShape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(56 / 2),
+                                  ),
+                                ),
+                                closedColor: Colors.transparent,
+                                closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                                  return SizedBox(
+                                    width: 20,
+                                    child: Icon(
+                                      Icons.info_outline,
+                                      size: 20,
+                                    ),
+                                  );
                                 },
                               ),
                             ],
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 5),
+                        RaisedButton(
+                          child: Column(
+                            children: [
+                              Text(
+                                "IMPORT",
+                                style: TextStyle(fontSize: 11),
+                              ),
+                              Text(
+                                "FROM YATA",
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ],
+                          ),
+                          onPressed: () {},
+                        ),
+                        SizedBox(height: 10),
+                        RaisedButton(
+                          child: Column(
+                            children: [
+                              Text(
+                                "EXPORT",
+                                style: TextStyle(fontSize: 11),
+                              ),
+                              Text(
+                                "TO YATA",
+                                style: TextStyle(fontSize: 11),
+                              ),
+                            ],
+                          ),
+                          onPressed: () async {
+                            Navigator.of(context).pop();
+                            var exportResult = await _targetsProvider.postTargetsToYata(
+                              onlyLocal: onlyLocal,
+                              bothSides: bothSides,
+                            );
+                            if (exportResult == "") {
+                              BotToast.showText(
+                                text: "There was an error exporting!",
+                                textStyle: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.red[800],
+                                duration: Duration(seconds: 5),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                            } else {
+                              BotToast.showText(
+                                text: exportResult,
+                                textStyle: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.green[800],
+                                duration: Duration(seconds: 5),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                            }
+                          },
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Cancel"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
                     ),
                   ),
-                  Positioned(
-                    left: 16,
-                    right: 16,
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
                     child: CircleAvatar(
-                      radius: 26,
                       backgroundColor: _themeProvider.background,
-                      child: CircleAvatar(
-                        backgroundColor: _themeProvider.background,
-                        radius: 22,
-                        child: SizedBox(
-                          height: 34,
-                          width: 34,
-                          child: Image.asset(
-                            'images/icons/yata_logo.png',
-                          ),
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Image.asset(
+                          'images/icons/yata_logo.png',
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openWipeDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "CAUTION",
+                            style: TextStyle(fontSize: 13, color: Colors.red),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "This will wipe all your targets (consider performing a backup or "
+                                "exporting to YATA).",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "Are you sure?",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Wipe!"),
+                              onPressed: () {
+                                _targetsProvider.wipeAllTargets();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text("Oh no!"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(Icons.delete_forever_outlined),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
