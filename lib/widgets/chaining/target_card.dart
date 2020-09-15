@@ -39,7 +39,8 @@ class _TargetCardState extends State<TargetCard> {
   Timer _lifeTicker;
 
   String _currentLifeString = "";
-  String _lastUpdated;
+  String _lastUpdatedString;
+  int _lastUpdatedMinutes;
 
   @override
   void initState() {
@@ -217,7 +218,16 @@ class _TargetCardState extends State<TargetCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
-                          Text('Updated $_lastUpdated'),
+                          Text(
+                            'Updated $_lastUpdatedString',
+                            style: TextStyle(
+                              color: _lastUpdatedMinutes <= 120
+                                  ? _themeProvider.mainText
+                                  : Colors.deepOrangeAccent,
+                              fontStyle:
+                                  _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -580,20 +590,21 @@ class _TargetCardState extends State<TargetCard> {
 
   void _returnLastUpdated() {
     var timeDifference = DateTime.now().difference(_target.lastUpdated);
+    _lastUpdatedMinutes = timeDifference.inMinutes;
     if (timeDifference.inMinutes < 1) {
-      _lastUpdated = 'now';
+      _lastUpdatedString = 'now';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      _lastUpdated = '1 minute ago';
+      _lastUpdatedString = '1 minute ago';
     } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-      _lastUpdated = '${timeDifference.inMinutes} minutes ago';
+      _lastUpdatedString = '${timeDifference.inMinutes} minutes ago';
     } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      _lastUpdated = '1 hour ago';
+      _lastUpdatedString = '1 hour ago';
     } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      _lastUpdated = '${timeDifference.inHours} hours ago';
+      _lastUpdatedString = '${timeDifference.inHours} hours ago';
     } else if (timeDifference.inDays == 1) {
-      _lastUpdated = '1 day ago';
+      _lastUpdatedString = '1 day ago';
     } else {
-      _lastUpdated = '${timeDifference.inDays} days ago';
+      _lastUpdatedString = '${timeDifference.inDays} days ago';
     }
   }
 
