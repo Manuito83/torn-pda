@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
-import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/pages/chaining/yata/yata_targets_distribution.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -300,10 +299,12 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
 
   void _startImport() async {
     // We add all targets coming from YATA
+    dynamic attacksFull = await _targetsProvider.getAttacksFull();
     for (var i = 0; i <= widget.onlyYata.length - 1; i++) {
       if (mounted) {
         var importResult = await _targetsProvider.addTarget(
-          widget.onlyYata[i].id,
+          targetId: widget.onlyYata[i].id,
+          attacksFull: attacksFull,
           notes: widget.onlyYata[i].noteYata,
         );
 

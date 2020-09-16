@@ -51,8 +51,12 @@ class TargetsProvider extends ChangeNotifier {
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
-  Future<AddTargetResult> addTarget(String targetId,
-      {String notes = '', String notesColor = ''}) async {
+  Future<AddTargetResult> addTarget({
+    @required String targetId,
+    @required dynamic attacksFull,
+    String notes = '',
+    String notesColor = '',
+  }) async {
     for (var tar in _targets) {
       if (tar.playerId.toString() == targetId) {
         return AddTargetResult(
@@ -65,7 +69,6 @@ class TargetsProvider extends ChangeNotifier {
     dynamic myNewTargetModel = await TornApiCaller.target(_userKey, targetId).getTarget;
 
     if (myNewTargetModel is TargetModel) {
-      dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
       _getTargetRespect(attacksFull, myNewTargetModel);
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
@@ -88,6 +91,13 @@ class TargetsProvider extends ChangeNotifier {
         errorReason: myError.errorReason,
       );
     }
+  }
+
+  /// The result of this needs to be passed to several functions, so that we don't need
+  /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
+  /// the attackFull variable we provide is the same and we only requested it once.
+  dynamic getAttacksFull() async {
+    return await TornApiCaller.attacks(_userKey).getAttacksFull;
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
@@ -146,34 +156,36 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> updateTarget(TargetModel oldTarget) async {
-    oldTarget.isUpdating = true;
+  Future<bool> updateTarget({
+    @required TargetModel targetToUpdate,
+    @required dynamic attacksFull,
+  }) async {
+    targetToUpdate.isUpdating = true;
     notifyListeners();
 
     try {
       dynamic myUpdatedTargetModel =
-          await TornApiCaller.target(_userKey, oldTarget.playerId.toString()).getTarget;
+          await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
-        dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
         _getTargetRespect(attacksFull, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
-        _targets[_targets.indexOf(oldTarget)] = myUpdatedTargetModel;
+        _targets[_targets.indexOf(targetToUpdate)] = myUpdatedTargetModel;
         var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
         _updateResultAnimation(newTarget, true);
-        newTarget.personalNote = oldTarget.personalNote;
-        newTarget.personalNoteColor = oldTarget.personalNoteColor;
+        newTarget.personalNote = targetToUpdate.personalNote;
+        newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
         _saveTargetsSharedPrefs();
         return true;
       } else {
         // myUpdatedTargetModel is ApiError
-        oldTarget.isUpdating = false;
-        _updateResultAnimation(oldTarget, false);
+        targetToUpdate.isUpdating = false;
+        _updateResultAnimation(targetToUpdate, false);
         return false;
       }
     } catch (e) {
-      oldTarget.isUpdating = false;
-      _updateResultAnimation(oldTarget, false);
+      targetToUpdate.isUpdating = false;
+      _updateResultAnimation(targetToUpdate, false);
       return false;
     }
   }
@@ -230,7 +242,10 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks(List<String> targetsIds) async {
+  Future<void> updateTargetsAfterAttacks({@required List<String> targetsIds}) async {
+    // Get attacks full to use later
+    dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
+
     // Local function for the update of several targets after attacking
     void updatePass(bool showUpdateAnimation) async {
       for (var tar in _targets) {
@@ -244,7 +259,6 @@ class TargetsProvider extends ChangeNotifier {
               dynamic myUpdatedTargetModel =
                   await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
               if (myUpdatedTargetModel is TargetModel) {
-                dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
                 _getTargetRespect(attacksFull, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
                 _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
@@ -482,24 +496,23 @@ class TargetsProvider extends ChangeNotifier {
     @required List<TargetsOnlyLocal> onlyLocal,
     @required List<TargetsBothSides> bothSides,
   }) async {
-
     var modelOut = YataTargetsExportModel();
     modelOut.api = _userKey;
-    
+
     var targets = Map<String, String>();
     for (var localTarget in onlyLocal) {
       // Max chars in Yata notes is 128
       if (localTarget.noteLocal.length > 128) {
         localTarget.noteLocal = localTarget.noteLocal.substring(0, 127);
       }
-      targets.addAll({ localTarget.id : localTarget.noteLocal });
+      targets.addAll({localTarget.id: localTarget.noteLocal});
     }
     for (var bothSidesTarget in bothSides) {
       // Max chars in Yata notes is 128
       if (bothSidesTarget.noteLocal.length > 128) {
         bothSidesTarget.noteLocal = bothSidesTarget.noteLocal.substring(0, 127);
       }
-      targets.addAll({ bothSidesTarget.id : bothSidesTarget.noteLocal });
+      targets.addAll({bothSidesTarget.id: bothSidesTarget.noteLocal});
     }
     modelOut.targets = targets;
 

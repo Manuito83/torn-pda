@@ -655,7 +655,11 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateThisTarget() async {
-    bool updateWorked = await _targetsProvider.updateTarget(_target);
+    dynamic attacksFull = await _targetsProvider.getAttacksFull();
+    bool updateWorked = await _targetsProvider.updateTarget(
+      targetToUpdate: _target,
+      attacksFull: attacksFull,
+    );
     if (updateWorked) {
     } else {
       Scaffold.of(context).showSnackBar(
@@ -670,7 +674,7 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateSeveralTargets(List<String> attackedIds) async {
-    await _targetsProvider.updateTargetsAfterAttacks(attackedIds);
+    await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
   }
 
   void _timerUpdateInformation() {

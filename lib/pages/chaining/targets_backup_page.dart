@@ -409,9 +409,11 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
   Future<void> _importTargets() async {
     _importActive = true; // Show import status
     _importSuccessEvents = 0;
+    dynamic attacksFull = await _targetsProvider.getAttacksFull();
     for (var import in _tentativeImportModel.targetBackup) {
       var importResult = await _targetsProvider.addTarget(
-        import.id.toString(),
+        targetId: import.id.toString(),
+        attacksFull: attacksFull,
         notes: import.notes,
         notesColor: import.notesColor,
       );
