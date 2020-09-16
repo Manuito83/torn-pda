@@ -11,6 +11,7 @@ import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/pages/chaining/targets_options_page.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
@@ -49,6 +50,8 @@ class _TargetsPageState extends State<TargetsPage> {
 
   var _addFormKey = GlobalKey<FormState>();
 
+  Future _preferencesLoaded;
+
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
 
@@ -57,7 +60,11 @@ class _TargetsPageState extends State<TargetsPage> {
   Widget _appBarText = Text("Targets");
   var _focusSearch = new FocusNode();
 
-  bool _yataButtonActive = true;
+  /// Strictly whether we button is enabled in options
+  bool _yataButtonInProgress = true;
+  /// Dictates if it has been pressed and is showing a circular
+  /// progress indicator while fetching data from Yata
+  bool _yataButtonEnabled = true;
 
   final _popupSortChoices = <TargetSort>[
     TargetSort(type: TargetSortType.levelDes),
@@ -77,6 +84,7 @@ class _TargetsPageState extends State<TargetsPage> {
   @override
   void initState() {
     super.initState();
+    _preferencesLoaded = _restorePreferences();
     _searchController.addListener(onSearchInputTextChange);
     // Reset the filter so that we get all the targets
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -159,52 +167,68 @@ class _TargetsPageState extends State<TargetsPage> {
               });
             },
           ),
-          _yataButtonActive
-              ? IconButton(
-                  icon: Icon(MdiIcons.alphaYCircleOutline),
-                  onPressed: () async {
-                    setState(() {
-                      _yataButtonActive = false;
-                    });
-                    var yataTargets = await _targetsProvider.getTargetsFromYata();
-                    if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
-                      _openYataDialog(yataTargets);
-                    } else {
-                      String error;
-                      if (yataTargets.errorPlayer) {
-                        error = "We could not find your user in Yata, do you have an account?";
-                      } else {
-                        error = "There was an error contacting YATA, please try again later!";
-                      }
-                      BotToast.showText(
-                        text: error,
-                        textStyle: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white,
+          /// FutureBuilder for YATA button
+          FutureBuilder(
+            future: _preferencesLoaded,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_yataButtonEnabled) {
+                  if (_yataButtonInProgress) {
+                    return IconButton(
+                      icon: Icon(MdiIcons.alphaYCircleOutline),
+                      onPressed: () async {
+                        setState(() {
+                          _yataButtonInProgress = false;
+                        });
+                        var yataTargets = await _targetsProvider.getTargetsFromYata();
+                        if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
+                          _openYataDialog(yataTargets);
+                        } else {
+                          String error;
+                          if (yataTargets.errorPlayer) {
+                            error = "We could not find your user in Yata, do you have an account?";
+                          } else {
+                            error = "There was an error contacting YATA, please try again later!";
+                          }
+                          BotToast.showText(
+                            text: error,
+                            textStyle: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.red[800],
+                            duration: Duration(seconds: 5),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                        }
+                        setState(() {
+                          _yataButtonInProgress = true;
+                        });
+                      },
+                    );
+                  } else {
+                    return Theme(
+                      data: Theme.of(context).copyWith(accentColor: Colors.white),
+                      child: SizedBox(
+                        width: 45,
+                        child: Center(
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(),
+                          ),
                         ),
-                        contentColor: Colors.red[800],
-                        duration: Duration(seconds: 5),
-                        contentPadding: EdgeInsets.all(10),
-                      );
-                    }
-                    setState(() {
-                      _yataButtonActive = true;
-                    });
-                  },
-                )
-              : Theme(
-                  data: Theme.of(context).copyWith(accentColor: Colors.white),
-                  child: SizedBox(
-                    width: 45,
-                    child: Center(
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(),
                       ),
-                    ),
-                  ),
-                ),
+                    );
+                  }
+                } else {
+                  return SizedBox.shrink();
+                }
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
           PopupMenuButton<TargetSort>(
             icon: Icon(
               Icons.sort,
@@ -515,15 +539,18 @@ class _TargetsPageState extends State<TargetsPage> {
     );
   }
 
-  void _openOption(TargetsOptions choice) {
+  void _openOption(TargetsOptions choice) async {
     switch (choice.description) {
       case "Options":
-        Navigator.push(
+        TargetsOptionsReturn newOptions = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TargetsOptionsPage(),
           ),
         );
+        setState(() {
+          _yataButtonEnabled = newOptions.yataEnabled;
+        });
         break;
       case "Backup":
         Navigator.push(
@@ -715,5 +742,9 @@ class _TargetsPageState extends State<TargetsPage> {
         );
       },
     );
+  }
+
+  Future _restorePreferences() async {
+    _yataButtonEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
   }
 }
