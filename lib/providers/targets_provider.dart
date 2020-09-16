@@ -497,7 +497,7 @@ class TargetsProvider extends ChangeNotifier {
     @required List<TargetsBothSides> bothSides,
   }) async {
     var modelOut = YataTargetsExportModel();
-    modelOut.api = _userKey;
+    modelOut.key = _userKey;
 
     var targets = Map<String, String>();
     for (var localTarget in onlyLocal) {

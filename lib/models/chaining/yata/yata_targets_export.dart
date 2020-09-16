@@ -11,19 +11,19 @@ String yataTargetsExportModelToJson(YataTargetsExportModel data) => json.encode(
 class YataTargetsExportModel {
   YataTargetsExportModel({
     this.targets,
-    this.api,
+    this.key,
   });
 
   Map<String, String> targets;
-  String api;
+  String key;
 
   factory YataTargetsExportModel.fromJson(Map<String, dynamic> json) => YataTargetsExportModel(
     targets: json["targets"] == null ? null : Map.from(json["targets"]).map((k, v) => MapEntry<String, String>(k, v)),
-    api: json["api"] == null ? null : json["api"],
+    key: json["key"] == null ? null : json["key"],
   );
 
   Map<String, dynamic> toJson() => {
     "targets": targets == null ? null : Map.from(targets).map((k, v) => MapEntry<String, dynamic>(k, v)),
-    "api": api == null ? null : api,
+    "key": key == null ? null : key,
   };
 }
