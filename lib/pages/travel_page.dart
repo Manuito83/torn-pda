@@ -499,9 +499,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             },
           ),
         ];
-      } else if (_travelModel.destination != 'Torn' &&
-          _travelModel.timeLeft > 0 &&
-          _travelModel.timeLeft < 120) {
+      } else if (_travelModel.timeLeft > 0 && _travelModel.timeLeft < 120) {
         // We are about to reach another country
         return <Widget>[
           Padding(
@@ -596,6 +594,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               LinearPercentIndicator(
+                isRTL: _travelModel.destination == "Torn" ? true : false,
                 center: Text(
                   diff,
                   style: TextStyle(
@@ -1102,14 +1101,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
   }
 
-  String _formatTime (DateTime inputTime) {
+  String _formatTime(DateTime inputTime) {
     return TimeFormatter(
       inputTime: inputTime,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
   }
-
 
   _callBackFromTravelOptions() async {
     await _restorePreferences();

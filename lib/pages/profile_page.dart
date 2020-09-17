@@ -537,6 +537,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Column(
             children: [
               LinearPercentIndicator(
+                isRTL: _user.travel.destination == "Torn" ? true : false,
                 center: Text(
                   diff,
                   style: TextStyle(
