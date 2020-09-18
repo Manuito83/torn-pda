@@ -176,6 +176,20 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                               ],
                             ),
                           ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If enabled, you\'ll have access to a \'Y\' icon in the top bar from '
+                                  'where you can import and export to YATA. Please note that deletions '
+                                  'are not propagated between YATA and Torn PDA, but notes are '
+                                  'overwritten in either direction.',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 50),
                         ],
                       ),
