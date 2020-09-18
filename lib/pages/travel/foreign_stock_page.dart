@@ -641,15 +641,21 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         break;
     }
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(countryCode),
-        Image.asset(
-          flag,
-          width: 30,
-        ),
-      ],
+    return GestureDetector(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(countryCode),
+          Image.asset(
+            flag,
+            width: 30,
+          ),
+        ],
+      ),
+      onTap: () {
+        // Return true to signal that a flag has been tapped (to open travel page)
+        Navigator.pop(context, true);
+      },
     );
   }
 

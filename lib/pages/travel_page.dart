@@ -196,6 +196,30 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     Radius.circular(56 / 2),
                   ),
                 ),
+                onClosed: (bool flagPressed) async {
+                  if (flagPressed) {
+                    var browserType = _settingsProvider.currentBrowser;
+                    switch (browserType) {
+                      case BrowserSetting.app:
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => WebViewFull(
+                              customUrl: 'https://www.torn.com/travelagency.php',
+                              customTitle: '${_travelModel.destination}',
+                              customCallBack: _updateInformation,
+                            ),
+                          ),
+                        );
+                        break;
+                      case BrowserSetting.external:
+                        var url = 'https://www.torn.com/travelagency.php';
+                        if (await canLaunch(url)) {
+                          await launch(url, forceSafariVC: false);
+                        }
+                        break;
+                    }
+                  }
+                },
                 closedColor: Colors.orange,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
@@ -234,6 +258,30 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return ForeignStockPage(apiKey: _myCurrentKey);
+        },
+        onClosed: (bool flagPressed) async {
+          if (flagPressed) {
+            var browserType = _settingsProvider.currentBrowser;
+            switch (browserType) {
+              case BrowserSetting.app:
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (BuildContext context) => WebViewFull(
+                      customUrl: 'https://www.torn.com/travelagency.php',
+                      customTitle: '${_travelModel.destination}',
+                      customCallBack: _updateInformation,
+                    ),
+                  ),
+                );
+                break;
+              case BrowserSetting.external:
+                var url = 'https://www.torn.com/travelagency.php';
+                if (await canLaunch(url)) {
+                  await launch(url, forceSafariVC: false);
+                }
+                break;
+            }
+          }
         },
         closedElevation: 6.0,
         closedShape: CircleBorder(),
