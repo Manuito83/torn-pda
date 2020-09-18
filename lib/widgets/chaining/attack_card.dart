@@ -8,6 +8,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -204,7 +205,11 @@ class _AttackCardState extends State<AttackCard> {
           color: Colors.green,
         ),
         onPressed: () async {
-          AddTargetResult tryAddTarget = await targetsProvider.addTarget(_attack.targetId);
+          dynamic attacksFull = await targetsProvider.getAttacksFull();
+          AddTargetResult tryAddTarget = await targetsProvider.addTarget(
+            targetId: _attack.targetId,
+            attacksFull: attacksFull,
+          );
           if (tryAddTarget.success) {
             BotToast.showText(
               text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),

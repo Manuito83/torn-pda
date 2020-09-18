@@ -1,14 +1,20 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
+import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/pages/chaining/targets_options_page.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
+import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
 
 class TargetsOptions {
   String description;
@@ -21,6 +27,9 @@ class TargetsOptions {
         break;
       case "Backup":
         iconData = Icons.save;
+        break;
+      case "Wipe":
+        iconData = Icons.delete_forever_outlined;
         break;
     }
   }
@@ -41,6 +50,8 @@ class _TargetsPageState extends State<TargetsPage> {
 
   var _addFormKey = GlobalKey<FormState>();
 
+  Future _preferencesLoaded;
+
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
 
@@ -48,6 +59,12 @@ class _TargetsPageState extends State<TargetsPage> {
   Icon _searchIcon = Icon(Icons.search);
   Widget _appBarText = Text("Targets");
   var _focusSearch = new FocusNode();
+
+  /// Strictly whether we button is enabled in options
+  bool _yataButtonInProgress = true;
+  /// Dictates if it has been pressed and is showing a circular
+  /// progress indicator while fetching data from Yata
+  bool _yataButtonEnabled = true;
 
   final _popupSortChoices = <TargetSort>[
     TargetSort(type: TargetSortType.levelDes),
@@ -61,11 +78,13 @@ class _TargetsPageState extends State<TargetsPage> {
   final _popupOptionsChoices = <TargetsOptions>[
     TargetsOptions(description: "Options"),
     TargetsOptions(description: "Backup"),
+    TargetsOptions(description: "Wipe"),
   ];
 
   @override
   void initState() {
     super.initState();
+    _preferencesLoaded = _restorePreferences();
     _searchController.addListener(onSearchInputTextChange);
     // Reset the filter so that we get all the targets
     SchedulerBinding.instance.addPostFrameCallback((_) {
@@ -146,6 +165,68 @@ class _TargetsPageState extends State<TargetsPage> {
                   _appBarText = Text("Targets");
                 }
               });
+            },
+          ),
+          /// FutureBuilder for YATA button
+          FutureBuilder(
+            future: _preferencesLoaded,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_yataButtonEnabled) {
+                  if (_yataButtonInProgress) {
+                    return IconButton(
+                      icon: Icon(MdiIcons.alphaYCircleOutline),
+                      onPressed: () async {
+                        setState(() {
+                          _yataButtonInProgress = false;
+                        });
+                        var yataTargets = await _targetsProvider.getTargetsFromYata();
+                        if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
+                          _openYataDialog(yataTargets);
+                        } else {
+                          String error;
+                          if (yataTargets.errorPlayer) {
+                            error = "We could not find your user in Yata, do you have an account?";
+                          } else {
+                            error = "There was an error contacting YATA, please try again later!";
+                          }
+                          BotToast.showText(
+                            text: error,
+                            textStyle: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.red[800],
+                            duration: Duration(seconds: 5),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                        }
+                        setState(() {
+                          _yataButtonInProgress = true;
+                        });
+                      },
+                    );
+                  } else {
+                    return Theme(
+                      data: Theme.of(context).copyWith(accentColor: Colors.white),
+                      child: SizedBox(
+                        width: 45,
+                        child: Center(
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                } else {
+                  return SizedBox.shrink();
+                }
+              } else {
+                return SizedBox.shrink();
+              }
             },
           ),
           PopupMenuButton<TargetSort>(
@@ -340,8 +421,12 @@ class _TargetsPageState extends State<TargetsPage> {
                                       // does not appear again in case of failure
                                       var inputId = _addIdController.text;
                                       _addIdController.text = '';
+                                      dynamic attacksFull = await _targetsProvider.getAttacksFull();
                                       AddTargetResult tryAddTarget =
-                                          await targetsProvider.addTarget(inputId);
+                                          await targetsProvider.addTarget(
+                                        targetId: inputId,
+                                        attacksFull: attacksFull,
+                                      );
                                       if (tryAddTarget.success) {
                                         Scaffold.of(_).showSnackBar(
                                           SnackBar(
@@ -454,15 +539,18 @@ class _TargetsPageState extends State<TargetsPage> {
     );
   }
 
-  void _openOption(TargetsOptions choice) {
+  void _openOption(TargetsOptions choice) async {
     switch (choice.description) {
       case "Options":
-        Navigator.push(
+        TargetsOptionsReturn newOptions = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TargetsOptionsPage(),
           ),
         );
+        setState(() {
+          _yataButtonEnabled = newOptions.yataEnabled;
+        });
         break;
       case "Backup":
         Navigator.push(
@@ -472,8 +560,191 @@ class _TargetsPageState extends State<TargetsPage> {
           ),
         );
         break;
+      case "Wipe":
+        _openWipeDialog();
+        break;
     }
   }
+
+  Future<void> _openYataDialog(YataTargetsImportModel importedTargets) {
+    // Before opening the dialog, we'll see how many new targets we have, so that we can
+    // show a count and some details before importing/exporting
+    List<TargetsOnlyYata> onlyYata = [];
+    List<TargetsOnlyLocal> onlyLocal = [];
+    List<TargetsBothSides> bothSides = [];
+    // If we have no targets locally, we'll import all incoming (we assume that [bothSides] and
+    // [onlyLocal] are zero
+    if (_targetsProvider.allTargets.isEmpty) {
+      importedTargets.targets.forEach((key, yataTarget) {
+        onlyYata.add(TargetsOnlyYata()
+          ..id = key
+          ..name = yataTarget.name
+          ..noteYata = yataTarget.note);
+      });
+    }
+    // Otherwise, we'll see how many are new or only local
+    else {
+      importedTargets.targets.forEach((key, yataTarget) {
+        bool foundLocally = false;
+        _targetsProvider.allTargets.forEach((localTarget) {
+          if (!foundLocally) {
+            if (key == localTarget.playerId.toString()) {
+              bothSides.add(TargetsBothSides()
+                ..id = key
+                ..name = yataTarget.name
+                ..noteYata = yataTarget.note
+                ..noteLocal = localTarget.personalNote);
+              foundLocally = true;
+            }
+          }
+        });
+        if (!foundLocally) {
+          onlyYata.add(TargetsOnlyYata()
+            ..id = key
+            ..name = yataTarget.name
+            ..noteYata = yataTarget.note);
+        }
+      });
+
+      _targetsProvider.allTargets.forEach((localTarget) {
+        bool foundInYata = false;
+        importedTargets.targets.forEach((key, yataTarget) {
+          if (!foundInYata) {
+            if (localTarget.playerId.toString() == key) {
+              foundInYata = true;
+            }
+          }
+        });
+        if (!foundInYata) {
+          onlyLocal.add(TargetsOnlyLocal()
+            ..id = localTarget.playerId.toString()
+            ..name = localTarget.name
+            ..noteLocal = localTarget.personalNote);
+        }
+      });
+    }
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return YataTargetsDialog(
+          bothSides: bothSides,
+          onlyYata: onlyYata,
+          onlyLocal: onlyLocal,
+        );
+      },
+    );
+  }
+
+  Future<void> _openWipeDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "CAUTION",
+                            style: TextStyle(fontSize: 13, color: Colors.red),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "This will wipe all your targets (consider performing a backup or "
+                            "exporting to YATA).",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "Are you sure?",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Wipe!"),
+                              onPressed: () {
+                                _targetsProvider.wipeAllTargets();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text("Oh no!"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(Icons.delete_forever_outlined),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future _restorePreferences() async {
+    _yataButtonEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
+  }
 }
-
-

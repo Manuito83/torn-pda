@@ -19,7 +19,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 final String appVersion = '1.8.3';

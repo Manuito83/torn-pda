@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
+class TargetsOptionsReturn {
+  bool yataEnabled;
+}
+
 class TargetsOptionsPage extends StatefulWidget {
   @override
   _TargetsOptionsPageState createState() => _TargetsOptionsPageState();
@@ -16,6 +20,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Chain watcher
   bool _soundAlertsEnabled = true;
   bool _vibrationAlertsEnabled = true;
+
+  // Yata import
+  bool _yataTargetsEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -36,7 +43,6 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
             icon: new Icon(Icons.arrow_back),
             onPressed: () {
               _willPopCallback();
-              Navigator.of(context).pop();
             },
           ),
         ),
@@ -138,6 +144,52 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                               ],
                             ),
                           ),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 5),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'YATA',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text("Show YATA icon"),
+                                Switch(
+                                  value: _yataTargetsEnabled,
+                                  onChanged: (value) {
+                                    SharedPreferencesModel().setYataTargetsEnabled(value);
+                                    setState(() {
+                                      _yataTargetsEnabled = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If enabled, you\'ll have access to a \'Y\' icon in the top bar from '
+                                  'where you can import and export to YATA. Please note that deletions '
+                                  'are not propagated between YATA and Torn PDA, but notes are '
+                                  'overwritten in either direction.',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 50),
                         ],
                       ),
@@ -160,17 +212,22 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     var skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     var soundEnabled = await SharedPreferencesModel().getChainWatcherSound();
     var vibrationEnabled = await SharedPreferencesModel().getChainWatcherVibration();
+    var yataEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
 
     setState(() {
       _skippingEnabled = skippingEnabled;
       _soundAlertsEnabled = soundEnabled;
       _vibrationAlertsEnabled = vibrationEnabled;
+      _yataTargetsEnabled = yataEnabled;
     });
   }
 
   Future<bool> _willPopCallback() async {
     var chainStatusProvider = context.read<ChainStatusProvider>();
     chainStatusProvider.loadPreferences();
+    Navigator.of(context).pop(
+      TargetsOptionsReturn()..yataEnabled = _yataTargetsEnabled,
+    );
     return true;
   }
 }

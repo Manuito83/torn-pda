@@ -39,7 +39,8 @@ class _TargetCardState extends State<TargetCard> {
   Timer _lifeTicker;
 
   String _currentLifeString = "";
-  String _lastUpdated;
+  String _lastUpdatedString;
+  int _lastUpdatedMinutes;
 
   @override
   void initState() {
@@ -68,24 +69,23 @@ class _TargetCardState extends State<TargetCard> {
       actionExtentRatio: 0.25,
       actions: <Widget>[
         IconSlideAction(
-            caption: 'Remove',
-            color: Colors.red,
-            icon: Icons.delete,
-            onTap: () {
-              Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
-              Scaffold.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Deleted ${_target.name}!'),
-                  action: SnackBarAction(
-                    label: 'UNDO',
-                    textColor: Colors.orange,
-                    onPressed: () {
-                      _targetsProvider.restoredDeleted();
-                    },
-                  ),
-                ),
-              );
-            }),
+          caption: 'Remove',
+          color: Colors.red,
+          icon: Icons.delete,
+          onTap: () {
+            Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
+            BotToast.showText(
+              text: 'Deleted ${_target.name}!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[800],
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
@@ -218,7 +218,16 @@ class _TargetCardState extends State<TargetCard> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
-                          Text('Updated $_lastUpdated'),
+                          Text(
+                            'Updated $_lastUpdatedString',
+                            style: TextStyle(
+                              color: _lastUpdatedMinutes <= 120
+                                  ? _themeProvider.mainText
+                                  : Colors.deepOrangeAccent,
+                              fontStyle:
+                                  _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -229,35 +238,43 @@ class _TargetCardState extends State<TargetCard> {
               Padding(
                 padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
                 child: Row(
-                  children: <Widget>[
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: IconButton(
-                        padding: EdgeInsets.all(0),
-                        iconSize: 20,
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          _showNotesDialog();
-                        },
-                      ),
-                    ),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Flexible(
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.only(start: 8),
-                        child: Row(
-                          children: <Widget>[
-                            Text('Notes: '),
-                            Flexible(
-                              child: Text(
-                                '${_target.personalNote}',
-                                style: TextStyle(
-                                  color: _returnTargetNoteColor(),
-                                ),
+                      child: Row(
+                        children: <Widget>[
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: IconButton(
+                              padding: EdgeInsets.all(0),
+                              iconSize: 20,
+                              icon: Icon(Icons.edit),
+                              onPressed: () {
+                                _showNotesDialog();
+                              },
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Notes: '),
+                          Flexible(
+                            child: Text(
+                              '${_target.personalNote}',
+                              style: TextStyle(
+                                color: _returnTargetNoteColor(),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      '${_targetsProvider.allTargets.indexOf(_target) + 1}'
+                      '/${_targetsProvider.allTargets.length}',
+                      style: TextStyle(
+                        color: Colors.brown[400],
+                        fontSize: 11,
                       ),
                     ),
                   ],
@@ -536,31 +553,31 @@ class _TargetCardState extends State<TargetCard> {
   Widget _travelIcon() {
     if (_target.status.color == "blue") {
       return Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-              borderRadius: BorderRadius.circular(100),
-              onTap: () {
-                BotToast.showText(
-                  text: _target.status.description,
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(right: 5),
-                child: Icon(
-                  Icons.airplanemode_active,
-                  color: Colors.blue,
-                  size: 16,
-                ),
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(100),
+          onTap: () {
+            BotToast.showText(
+              text: _target.status.description,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: Icon(
+              Icons.airplanemode_active,
+              color: Colors.blue,
+              size: 16,
             ),
-          );
+          ),
+        ),
+      );
     } else {
       return SizedBox.shrink();
     }
@@ -581,20 +598,21 @@ class _TargetCardState extends State<TargetCard> {
 
   void _returnLastUpdated() {
     var timeDifference = DateTime.now().difference(_target.lastUpdated);
+    _lastUpdatedMinutes = timeDifference.inMinutes;
     if (timeDifference.inMinutes < 1) {
-      _lastUpdated = 'now';
+      _lastUpdatedString = 'now';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      _lastUpdated = '1 minute ago';
+      _lastUpdatedString = '1 minute ago';
     } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-      _lastUpdated = '${timeDifference.inMinutes} minutes ago';
+      _lastUpdatedString = '${timeDifference.inMinutes} minutes ago';
     } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      _lastUpdated = '1 hour ago';
+      _lastUpdatedString = '1 hour ago';
     } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      _lastUpdated = '${timeDifference.inHours} hours ago';
+      _lastUpdatedString = '${timeDifference.inHours} hours ago';
     } else if (timeDifference.inDays == 1) {
-      _lastUpdated = '1 day ago';
+      _lastUpdatedString = '1 day ago';
     } else {
-      _lastUpdated = '${timeDifference.inDays} days ago';
+      _lastUpdatedString = '${timeDifference.inDays} days ago';
     }
   }
 
@@ -637,7 +655,11 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateThisTarget() async {
-    bool updateWorked = await _targetsProvider.updateTarget(_target);
+    dynamic attacksFull = await _targetsProvider.getAttacksFull();
+    bool updateWorked = await _targetsProvider.updateTarget(
+      targetToUpdate: _target,
+      attacksFull: attacksFull,
+    );
     if (updateWorked) {
     } else {
       Scaffold.of(context).showSnackBar(
@@ -652,7 +674,7 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateSeveralTargets(List<String> attackedIds) async {
-    await _targetsProvider.updateTargetsAfterAttacks(attackedIds);
+    await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
   }
 
   void _timerUpdateInformation() {
@@ -697,8 +719,8 @@ class _TargetCardState extends State<TargetCard> {
 
       if (_lifeTicker != null) {
         _lifeTicker.cancel();
-        _lifeTicker =
-            Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
+        _lifeTicker = Timer.periodic(
+            Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
       if (diff.inSeconds < 2) {
