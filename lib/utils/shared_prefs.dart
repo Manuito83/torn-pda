@@ -33,6 +33,7 @@ class SharedPreferencesModel {
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
+  final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
   final String _kEnergyNotificationValue = "pda_energyNotificationValue";
   final String _kEnergyCustomOverride = "pda_energyCustomOverride";
@@ -409,6 +410,16 @@ class SharedPreferencesModel {
   /// ----------------------------
   /// Methods for notification types
   /// ----------------------------
+  Future<String> getTravelNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelNotificationType) ?? '0';
+  }
+
+  Future<bool> setTravelNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelNotificationType, value);
+  }
+
   Future<String> getEnergyNotificationType() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kEnergyNotificationType) ?? '0';

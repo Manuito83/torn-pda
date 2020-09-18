@@ -36,6 +36,7 @@ import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
 
 enum ProfileNotification {
+  travel,
   energy,
   nerve,
   life,
@@ -53,6 +54,9 @@ enum NotificationType {
 extension ProfileNotificationExtension on ProfileNotification {
   String get string {
     switch (this) {
+      case ProfileNotification.travel:
+        return 'travel';
+        break;
       case ProfileNotification.energy:
         return 'energy';
         break;
@@ -105,6 +109,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   ScrollController scrollController;
   bool dialVisible = true;
 
+  bool _travelAlarmSound = false;
+  bool _travelAlarmVibration = true;
+  int _travelNotificationAhead;
+  int _travelAlarmAhead;
+  int _travelTimerAhead;
+  String _travelNotificationTitle;
+  String _travelNotificationBody;
+
+  DateTime _travelNotificationTime;
   DateTime _energyNotificationTime;
   DateTime _nerveNotificationTime;
   DateTime _lifeNotificationTime;
@@ -112,6 +125,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _medicalNotificationTime;
   DateTime _boosterNotificationTime;
 
+  bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
   bool _nerveNotificationsPending = false;
   bool _lifeNotificationsPending = false;
@@ -119,6 +133,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _medicalNotificationsPending = false;
   bool _boosterNotificationsPending = false;
 
+  NotificationType _travelNotificationType;
   NotificationType _energyNotificationType;
   NotificationType _nerveNotificationType;
   NotificationType _lifeNotificationType;
@@ -132,6 +147,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _customEnergyMaxOverride = false;
   bool _customNerveMaxOverride = false;
 
+  IconData _travelNotificationIcon;
   IconData _energyNotificationIcon;
   IconData _nerveNotificationIcon;
   IconData _lifeNotificationIcon;
@@ -259,9 +275,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onPressed: () async {
               ProfileOptionsReturn newOptions = await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ProfileOptionsPage()
-                ),
+                MaterialPageRoute(builder: (context) => ProfileOptionsPage()),
               );
               setState(() {
                 _nukeReviveActive = newOptions.nukeReviveEnabled;
@@ -536,19 +550,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           padding: const EdgeInsets.only(top: 10),
           child: Column(
             children: [
-              LinearPercentIndicator(
-                isRTL: _user.travel.destination == "Torn" ? true : false,
-                center: Text(
-                  diff,
-                  style: TextStyle(
-                    color: Colors.black,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  LinearPercentIndicator(
+                    isRTL: _user.travel.destination == "Torn" ? true : false,
+                    center: Text(
+                      diff,
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
+                    width: 150,
+                    lineHeight: 18,
+                    progressColor: Colors.blue[200],
+                    backgroundColor: Colors.grey,
+                    percent: _getTravelPercentage(totalSeconds),
                   ),
-                ),
-                width: 150,
-                lineHeight: 18,
-                progressColor: Colors.blue[200],
-                backgroundColor: Colors.grey,
-                percent: _getTravelPercentage(totalSeconds),
+                  _notificationIcon(ProfileNotification.travel),
+                ],
               ),
               SizedBox(height: 10),
               Row(
@@ -908,6 +928,38 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     IconData notificationIcon;
 
     switch (profileNotification) {
+      case ProfileNotification.travel:
+        var timeArrival = new DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
+        var timeDifference = timeArrival.difference(DateTime.now());
+        secondsToGo = timeDifference.inSeconds;
+        notificationsPending = _travelNotificationsPending;
+        _travelNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
+
+        var formattedTimeNotification = TimeFormatter(
+          inputTime: _travelNotificationTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        var alarmTime = _travelNotificationTime.add(Duration(minutes: - _travelAlarmAhead));
+        var formattedTimeAlarm = TimeFormatter(
+          inputTime: alarmTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        var timerTime = _travelNotificationTime.add(Duration(seconds: - _travelTimerAhead));
+        var formattedTimeTimer = TimeFormatter(
+          inputTime: timerTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        notificationSetString = 'Travel notification set for $formattedTimeNotification';
+        notificationCancelString = 'Travel notification cancelled!';
+        alarmSetString = 'Travel alarm set for $formattedTimeAlarm';
+        timerSetString = 'Travel timer set for $formattedTimeTimer';
+        notificationType = _travelNotificationType;
+        notificationIcon = _travelNotificationIcon;
+        break;
+
       case ProfileNotification.energy:
         if (_user.energy.current < _user.energy.maximum) {
           if (_customEnergyTrigger < _user.energy.maximum) {
@@ -2313,6 +2365,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String notificationPayload = '';
 
     switch (profileNotification) {
+      case ProfileNotification.travel:
+        notificationId = 201;
+        secondsToNotification =
+            _travelNotificationTime.difference(DateTime.now()).inSeconds - _travelNotificationAhead;
+        channelTitle = 'Travel';
+        channelSubtitle = 'Travel Full';
+        channelDescription = 'Urgent notifications about arriving to destination';
+        notificationTitle = _travelNotificationTitle;
+        notificationSubtitle = _travelNotificationBody;
+        notificationPayload += 'travel';
+        break;
       case ProfileNotification.energy:
         notificationId = 101;
         secondsToNotification = _energyNotificationTime.difference(DateTime.now()).inSeconds;
@@ -2438,6 +2501,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
+    bool travel = false;
     bool energy = false;
     bool nerve = false;
     bool life = false;
@@ -2450,7 +2514,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (pendingNotificationRequests.length > 0) {
       for (var notification in pendingNotificationRequests) {
-        if (notification.payload.contains('energy')) {
+        if (notification.payload.contains('travel')) {
+          travel = true;
+        } else if (notification.payload.contains('energy')) {
           energy = true;
         } else if (notification.payload.contains('nerve')) {
           nerve = true;
@@ -2467,6 +2533,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     setState(() {
+      _travelNotificationsPending = travel;
       _energyNotificationsPending = energy;
       _nerveNotificationsPending = nerve;
       _lifeNotificationsPending = life;
@@ -2478,6 +2545,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _cancelNotifications(ProfileNotification profileNotification) async {
     switch (profileNotification) {
+      case ProfileNotification.travel:
+        await flutterLocalNotificationsPlugin.cancel(201);
+        break;
       case ProfileNotification.energy:
         await flutterLocalNotificationsPlugin.cancel(101);
         break;
@@ -2518,7 +2588,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // Don't take into account other kind of notifications,
       // as they don't have the same payload with timestamp
       if (notification.id == 999 ||
-          notification.id == 201 ||
           notification.payload.substring(0, 3).contains('400')) {
         continue;
       }
@@ -2743,6 +2812,68 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _loadPreferences() async {
+    // TRAVEL
+    var travel = await SharedPreferencesModel().getTravelNotificationType();
+    _travelNotificationTitle = await SharedPreferencesModel().getTravelNotificationTitle();
+    _travelNotificationBody = await SharedPreferencesModel().getTravelNotificationBody();
+    _travelAlarmSound = await SharedPreferencesModel().getTravelAlarmSound();
+    _travelAlarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
+    var travelNotificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
+    var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
+    var travelTimerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+
+    if (travelNotificationAhead == '0') {
+      _travelNotificationAhead = 20;
+    } else if (travelNotificationAhead == '1') {
+      _travelNotificationAhead = 40;
+    } else if (travelNotificationAhead == '2') {
+      _travelNotificationAhead = 60;
+    } else if (travelNotificationAhead == '3') {
+      _travelNotificationAhead = 120;
+    } else if (travelNotificationAhead == '4') {
+      _travelNotificationAhead = 300;
+    }
+
+    if (travelAlarmAhead == '0') {
+      _travelAlarmAhead = 0;
+    } else if (travelAlarmAhead == '1') {
+      _travelAlarmAhead = 1;
+    } else if (travelAlarmAhead == '2') {
+      _travelAlarmAhead = 2;
+    } else if (travelAlarmAhead == '3') {
+      _travelAlarmAhead = 5;
+    }
+
+    if (travelTimerAhead == '0') {
+      // Time left is recalculated each 10 seconds, so we give here 20 + 10 extra, as otherwise
+      // it's too tight. Worse case scenario: the user is quick and checks the travel screen when
+      // there are still 25-30 seconds to go. Best case, he still has 20 seconds to spare.
+      _travelTimerAhead = 30;
+    } else if (travelTimerAhead == '1') {
+      // Same as above but 40 + 5 seconds. Timer triggers between 35-45 seconds.
+      _travelTimerAhead = 45;
+    } else if (travelTimerAhead == '2') {
+      _travelTimerAhead = 60;
+    } else if (travelTimerAhead == '3') {
+      _travelTimerAhead = 120;
+    } else if (travelTimerAhead == '4') {
+      _travelTimerAhead = 300;
+    }
+
+    setState(() {
+      if (travel == '0') {
+        _travelNotificationType = NotificationType.notification;
+        _travelNotificationIcon = Icons.chat_bubble_outline;
+      } else if (travel == '1') {
+        _travelNotificationType = NotificationType.alarm;
+        _travelNotificationIcon = Icons.notifications_none;
+      } else if (travel == '2') {
+        _travelNotificationType = NotificationType.timer;
+        _travelNotificationIcon = Icons.timer;
+      }
+    });
+    // TRAVEL ENDS
+
     var energy = await SharedPreferencesModel().getEnergyNotificationType();
     _customEnergyTrigger = await SharedPreferencesModel().getEnergyNotificationValue();
     _customEnergyMaxOverride = await SharedPreferencesModel().getEnergyPercentageOverride();
@@ -2846,6 +2977,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String message;
 
     switch (profileNotification) {
+      case ProfileNotification.travel:
+        var alarmTime = _travelNotificationTime.add(Duration(minutes: -_travelAlarmAhead));
+        hour = alarmTime.hour;
+        minute = alarmTime.minute;
+        message = 'Torn PDA Travel';
+        break;
       case ProfileNotification.energy:
         hour = _energyNotificationTime.hour;
         minute = _energyNotificationTime.minute;
@@ -2878,11 +3015,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
     }
 
+    // Travel sound and vibration is configured from the travel section
     String thisSound;
-    if (_alarmSound) {
-      thisSound = '';
+    if (profileNotification == ProfileNotification.travel) {
+      if (_travelAlarmSound) {
+        thisSound = '';
+      } else {
+        thisSound = 'silent';
+      }
     } else {
-      thisSound = 'silent';
+      if (_alarmSound) {
+        thisSound = '';
+      } else {
+        thisSound = 'silent';
+      }
+    }
+
+    bool alarmVibration;
+    if (profileNotification == ProfileNotification.travel) {
+      if (_travelAlarmVibration) {
+        alarmVibration = true;
+      } else {
+        alarmVibration = false;
+      }
+    } else {
+      if (_alarmVibration) {
+        alarmVibration = true;
+      } else {
+        alarmVibration = false;
+      }
     }
 
     AndroidIntent intent = AndroidIntent(
@@ -2891,7 +3052,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.HOUR': hour,
         'android.intent.extra.alarm.MINUTES': minute,
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.VIBRATE': _alarmVibration,
+        'android.intent.extra.alarm.VIBRATE': alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
         'android.intent.extra.alarm.MESSAGE': message,
       },
@@ -2904,6 +3065,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String message;
 
     switch (profileNotification) {
+      case ProfileNotification.travel:
+        totalSeconds =
+            _travelNotificationTime.difference(DateTime.now()).inSeconds - _travelTimerAhead;
+        message = 'Torn PDA Travel';
+        break;
       case ProfileNotification.energy:
         totalSeconds = _energyNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Energy';

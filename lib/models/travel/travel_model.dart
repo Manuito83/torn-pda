@@ -22,7 +22,7 @@ class TravelModel {
   factory TravelModel.fromJson(Map<String, dynamic> json) {
     var destination = json['travel']['destination'];
     var timeLeft = json['travel']['time_left'];
-    var timeStamp = json['travel']['timestamp'];
+    var timestamp = json['travel']['timestamp'];
     var departed = json['travel']['departed'];
 
     bool active = false;
@@ -31,13 +31,13 @@ class TravelModel {
     }
 
     var timeArrival =
-        new DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000);
+        new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
 
     return TravelModel(
       travelling: active,
       destination: destination,
       timeLeft: timeLeft,
-      timeStamp: timeStamp,
+      timeStamp: timestamp,
       timeArrival: timeArrival,
       departed: departed,
     );

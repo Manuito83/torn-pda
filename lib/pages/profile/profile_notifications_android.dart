@@ -31,6 +31,7 @@ class _ProfileNotificationsAndroidState
   double _energyTrigger;
   double _nerveTrigger;
 
+  String _travelDropDownValue;
   String _energyDropDownValue;
   String _nerveDropDownValue;
   String _lifeDropDownValue;
@@ -143,6 +144,22 @@ class _ProfileNotificationsAndroidState
                               ],
                             ),
                           ),
+                          Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Not applicable to travel',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Row(
@@ -163,6 +180,21 @@ class _ProfileNotificationsAndroidState
                                 ),
                               ],
                             ),
+                          ),
+                          Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Not applicable to travel',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 50),
                         ],
@@ -188,6 +220,10 @@ class _ProfileNotificationsAndroidState
     ProfileNotification profileType;
     ProfileNotification.values.forEach((element) {
       switch (element) {
+        case ProfileNotification.travel:
+          typeString = 'Travel';
+          profileType = ProfileNotification.travel;
+          break;
         case ProfileNotification.energy:
           typeString = 'Energy';
           profileType = ProfileNotification.energy;
@@ -233,6 +269,25 @@ class _ProfileNotificationsAndroidState
           ),
         ),
       );
+
+      if (element == ProfileNotification.travel) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Text(
+              'Please note that the main configuration for travel notifications (such us the '
+                  'notification title, alarm sound or the alerting time before arrival) is '
+                  'taken from what you have selected in the Travel section',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
+      }
 
       if (element == ProfileNotification.energy) {
         types.add(
@@ -316,6 +371,9 @@ class _ProfileNotificationsAndroidState
   DropdownButton _typeDropDown(ProfileNotification notificationType) {
     String value;
     switch (notificationType) {
+      case ProfileNotification.travel:
+        value = _travelDropDownValue;
+        break;
       case ProfileNotification.energy:
         value = _energyDropDownValue;
         break;
@@ -381,6 +439,12 @@ class _ProfileNotificationsAndroidState
       ],
       onChanged: (value) {
         switch (notificationType) {
+          case ProfileNotification.travel:
+            SharedPreferencesModel().setTravelNotificationType(value);
+            setState(() {
+              _travelDropDownValue = value;
+            });
+            break;
           case ProfileNotification.energy:
             SharedPreferencesModel().setEnergyNotificationType(value);
             setState(() {
@@ -423,6 +487,8 @@ class _ProfileNotificationsAndroidState
   }
 
   Future _restorePreferences() async {
+    var travelType = await SharedPreferencesModel().getTravelNotificationType();
+
     var energyType = await SharedPreferencesModel().getEnergyNotificationType();
     var energyTrigger =
         await SharedPreferencesModel().getEnergyNotificationValue();
@@ -449,6 +515,8 @@ class _ProfileNotificationsAndroidState
         await SharedPreferencesModel().getProfileAlarmVibration();
 
     setState(() {
+      _travelDropDownValue = travelType;
+
       _energyDivisions = ((widget.energyMax - _energyMin) / 5).floor();
 
       _energyDropDownValue = energyType;
