@@ -10,6 +10,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class TornWebViewAttack extends StatefulWidget {
@@ -17,7 +18,6 @@ class TornWebViewAttack extends StatefulWidget {
   final List<String> attackNameList;
   final Function(List<String>) attacksCallback;
   final String userKey;
-
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
@@ -82,51 +82,108 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
-        appBar: AppBar(
-            leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () async {
-                  // Normal behaviour is just to pop and go to previous page
-                  if (_backButtonPopsContext) {
-                    _willPopCallback();
-                    Navigator.pop(context);
-                  } else {
-                    // But we can change and go back to previous page in certain
-                    // situations (e.g. when going for medical items during an
-                    // attack), in which case we need to return to previous target
-                    var backPossible = await _webViewController.canGoBack();
-                    if (backPossible) {
-                      _webViewController.goBack();
-                      setState(() {
-                        _currentPageTitle = _goBackTitle;
-                      });
-                    } else {
-                      Navigator.pop(context);
-                    }
-                    _backButtonPopsContext = true;
-                  }
-                }),
-            title: GestureDetector(
-              child: Text(_currentPageTitle),
-              onLongPress: () async {
-                var url = await _webViewController.currentUrl();
-                Clipboard.setData(ClipboardData(text: url));
-                if (url.length > 60) {
-                  url = url.substring(0, 60) + "...";
-                }
+        appBar: CustomAppBar(
+          onHorizontalDragEnd: (DragEndDetails details) async {
+            if (details.primaryVelocity < 0) {
+              var canForward = await _webViewController.canGoForward();
+              if (canForward) {
+                await _webViewController.goForward();
                 BotToast.showText(
-                  text: "Current URL copied to the clipboard [$url]",
+                  text: "Forward",
                   textStyle: TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.green,
-                  duration: Duration(seconds: 5),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
                   contentPadding: EdgeInsets.all(10),
                 );
-              },
-            ),
-            actions: _actionButtons()),
+              } else {
+                BotToast.showText(
+                  text: "Can\'t go forward!",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              }
+            } else if (details.primaryVelocity > 0) {
+              var canBack = await _webViewController.canGoBack();
+              if (canBack) {
+                await _webViewController.goBack();
+                BotToast.showText(
+                  text: "Back",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              } else {
+                BotToast.showText(
+                  text: "Can\'t go back!",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              }
+            }
+          },
+          appBar: AppBar(
+              leading: IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () async {
+                    // Normal behaviour is just to pop and go to previous page
+                    if (_backButtonPopsContext) {
+                      _willPopCallback();
+                      Navigator.pop(context);
+                    } else {
+                      // But we can change and go back to previous page in certain
+                      // situations (e.g. when going for medical items during an
+                      // attack), in which case we need to return to previous target
+                      var backPossible = await _webViewController.canGoBack();
+                      if (backPossible) {
+                        _webViewController.goBack();
+                        setState(() {
+                          _currentPageTitle = _goBackTitle;
+                        });
+                      } else {
+                        Navigator.pop(context);
+                      }
+                      _backButtonPopsContext = true;
+                    }
+                  }),
+              title: GestureDetector(
+                child: Text(_currentPageTitle),
+                onLongPress: () async {
+                  var url = await _webViewController.currentUrl();
+                  Clipboard.setData(ClipboardData(text: url));
+                  if (url.length > 60) {
+                    url = url.substring(0, 60) + "...";
+                  }
+                  BotToast.showText(
+                    text: "Current URL copied to the clipboard [$url]",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green,
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+              ),
+              actions: _actionButtons()),
+        ),
         body: Container(
           color: Colors.grey[900],
           child: SafeArea(

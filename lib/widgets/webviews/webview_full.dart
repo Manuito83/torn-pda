@@ -26,6 +26,7 @@ import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/widgets/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
+import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
 class WebViewFull extends StatefulWidget {
   final String customTitle;
@@ -78,47 +79,104 @@ class _WebViewFullState extends State<WebViewFull> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                if (widget.customCallBack != null) {
-                  widget.customCallBack();
-                }
-                Navigator.pop(context);
-              }),
-          title: GestureDetector(
-            child: Text(_pageTitle),
-            onLongPress: () {
-              Clipboard.setData(ClipboardData(text: _currentUrl));
-              if (_currentUrl.length > 60) {
-                _currentUrl = _currentUrl.substring(0, 60) + "...";
+        appBar: CustomAppBar(
+          onHorizontalDragEnd: (DragEndDetails details) async {
+            if (details.primaryVelocity < 0) {
+              var canForward = await webView.canGoForward();
+              if (canForward) {
+                await webView.goForward();
+                BotToast.showText(
+                  text: "Forward",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              } else {
+                BotToast.showText(
+                  text: "Can\'t go forward!",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
               }
-              BotToast.showText(
-                text: "Current URL copied to the clipboard [$_currentUrl]",
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.green,
-                duration: Duration(seconds: 5),
-                contentPadding: EdgeInsets.all(10),
-              );
-            },
-          ),
-          actions: <Widget>[
-            _travelHomeIcon(),
-            _crimesInfoIcon(),
-            _crimesMenuIcon(),
-            _tradesMenuIcon(),
-            _cityMenuIcon(),
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () async {
-                await webView.reload();
+            } else if (details.primaryVelocity > 0) {
+              var canBack = await webView.canGoBack();
+              if (canBack) {
+                await webView.goBack();
+                BotToast.showText(
+                  text: "Back",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              } else {
+                BotToast.showText(
+                  text: "Can\'t go back!",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              }
+            }
+          },
+          appBar: AppBar(
+            leading: IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (widget.customCallBack != null) {
+                    widget.customCallBack();
+                  }
+                  Navigator.pop(context);
+                }),
+            title: GestureDetector(
+              child: Text(_pageTitle),
+              onLongPress: () {
+                Clipboard.setData(ClipboardData(text: _currentUrl));
+                if (_currentUrl.length > 60) {
+                  _currentUrl = _currentUrl.substring(0, 60) + "...";
+                }
+                BotToast.showText(
+                  text: "Current URL copied to the clipboard [$_currentUrl]",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green,
+                  duration: Duration(seconds: 5),
+                  contentPadding: EdgeInsets.all(10),
+                );
               },
             ),
-          ],
+            actions: <Widget>[
+              _travelHomeIcon(),
+              _crimesInfoIcon(),
+              _crimesMenuIcon(),
+              _tradesMenuIcon(),
+              _cityMenuIcon(),
+              IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: () async {
+                  await webView.reload();
+                },
+              ),
+            ],
+          ),
         ),
         body: Container(
           color: Colors.grey[900],
