@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
@@ -67,6 +69,8 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityItemsFound = List<Item>();
   var _cityController = ExpandableController();
 
+  var _showOne = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -78,194 +82,178 @@ class _WebViewFullState extends State<WebViewFull> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: CustomAppBar(
-          onHorizontalDragEnd: (DragEndDetails details) async {
-            if (details.primaryVelocity < 0) {
-              var canForward = await webView.canGoForward();
-              if (canForward) {
-                await webView.goForward();
-                BotToast.showText(
-                  text: "Forward",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
+      child: BubbleShowcase(
+        // KEEP THIS UNIQUE
+        bubbleShowcaseId: 'webview_full_showcase',
+        // WILL SHOW IF VERSION CHANGED
+        bubbleShowcaseVersion: 1,
+        showCloseButton: false,
+        doNotReopenOnClose: true,
+        bubbleSlides: [
+          RelativeBubbleSlide(
+            widgetKey: _showOne,
+            child: RelativeBubbleSlideChild(
+              direction: AxisDirection.down,
+              widget: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SpeechBubble(
+                  nipLocation: NipLocation.TOP,
+                  color: Colors.blue,
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Text(
+                      'Did you know?\n\n'
+                          'Long press top bar to copy URL\n\n'
+                          'Swipe left/right to browse forward/back',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                  contentColor: Colors.grey[600],
-                  duration: Duration(seconds: 1),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              } else {
-                BotToast.showText(
-                  text: "Can\'t go forward!",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.grey[600],
-                  duration: Duration(seconds: 1),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              }
-            } else if (details.primaryVelocity > 0) {
-              var canBack = await webView.canGoBack();
-              if (canBack) {
-                await webView.goBack();
-                BotToast.showText(
-                  text: "Back",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.grey[600],
-                  duration: Duration(seconds: 1),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              } else {
-                BotToast.showText(
-                  text: "Can\'t go back!",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.grey[600],
-                  duration: Duration(seconds: 1),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              }
-            }
-          },
-          appBar: AppBar(
-            leading: IconButton(
-                icon: Icon(Icons.arrow_back),
-                onPressed: () {
-                  if (widget.customCallBack != null) {
-                    widget.customCallBack();
-                  }
-                  Navigator.pop(context);
-                }),
-            title: GestureDetector(
-              child: Text(_pageTitle),
-              onLongPress: () {
-                Clipboard.setData(ClipboardData(text: _currentUrl));
-                if (_currentUrl.length > 60) {
-                  _currentUrl = _currentUrl.substring(0, 60) + "...";
-                }
-                BotToast.showText(
-                  text: "Current URL copied to the clipboard [$_currentUrl]",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green,
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
+                ),
+              ),
             ),
-            actions: <Widget>[
-              _travelHomeIcon(),
-              _crimesInfoIcon(),
-              _crimesMenuIcon(),
-              _tradesMenuIcon(),
-              _cityMenuIcon(),
-              IconButton(
-                icon: Icon(Icons.refresh),
-                onPressed: () async {
-                  await webView.reload();
+          ),
+        ],
+        child: Scaffold(
+          appBar: CustomAppBar(
+            key: _showOne,
+            onHorizontalDragEnd: (DragEndDetails details) async {
+              await _goBackOrForward(details);
+            },
+            genericAppBar: AppBar(
+              leading: IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () {
+                    if (widget.customCallBack != null) {
+                      widget.customCallBack();
+                    }
+                    Navigator.pop(context);
+                  }),
+              title: GestureDetector(
+                child: Text(_pageTitle),
+                onLongPress: () {
+                  Clipboard.setData(ClipboardData(text: _currentUrl));
+                  if (_currentUrl.length > 60) {
+                    _currentUrl = _currentUrl.substring(0, 60) + "...";
+                  }
+                  BotToast.showText(
+                    text: "Current URL copied to the clipboard [$_currentUrl]",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green,
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
                 },
               ),
-            ],
-          ),
-        ),
-        body: Container(
-          color: Colors.grey[900],
-          child: SafeArea(
-            top: false,
-            left: false,
-            right: false,
-            bottom: true,
-            child: Column(
-              children: [
-                // Crimes widget
-                ExpandablePanel(
-                  theme: ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
-                  collapsed: SizedBox.shrink(),
-                  controller: _crimesController,
-                  header: SizedBox.shrink(),
-                  expanded: CrimesWidget(controller: webView),
-                ),
-                // Trades widget
-                _tradesExpandable,
-                // City widget
-                ExpandablePanel(
-                  theme: ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
-                  collapsed: SizedBox.shrink(),
-                  controller: _cityController,
-                  header: SizedBox.shrink(),
-                  expanded: CityWidget(
-                    controller: webView,
-                    cityItems: _cityItemsFound,
-                    error: _errorCityApi,
-                  ),
-                ),
-                // Actual WebView
-                Expanded(
-                  child: InAppWebView(
-                    initialUrl: _initialUrl,
-                    initialHeaders: {},
-                    initialOptions: InAppWebViewGroupOptions(
-                      crossPlatform: InAppWebViewOptions(
-                        debuggingEnabled: true,
-                        preferredContentMode: UserPreferredContentMode.DESKTOP,
-                      ),
-                      android: AndroidInAppWebViewOptions(
-                        useWideViewPort: true,
-                        loadWithOverviewMode: true,
-                        builtInZoomControls: true,
-                        displayZoomControls: true,
-                      ),
-                    ),
-                    onWebViewCreated: (InAppWebViewController c) {
-                      webView = c;
-                    },
-                    onLoadStop: (InAppWebViewController c, String url) {
-                      _currentUrl = url;
-
-                      _assessGeneral();
-                    },
-                    onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
-                      print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
-                      /// TRADES
-                      ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-                      ///     redirect both with console messages (all 'hash.step') for trades
-                      ///     identification, but also with _assessGeneral() so that we can remove
-                      ///     the widget when an unrelated page is visited. Console messages also
-                      ///     help with deletions updates when 'hash.step view' is shown.
-                      ///   - Android: onLoadStop works, but we still need to catch deletions,
-                      ///     so we only listen for 'hash.step view'.
-                      if (Platform.isIOS) {
-                        if (consoleMessage.message.contains('hash.step')) {
-                          _forceAssessTrades();
-                        }
-                      } else if (Platform.isAndroid) {
-                        if (consoleMessage.message.contains('hash.step view')) {
-                          _forceAssessTrades();
-                        }
-                      }
-                    },
-                  ),
+              actions: <Widget>[
+                _travelHomeIcon(),
+                _crimesInfoIcon(),
+                _crimesMenuIcon(),
+                _tradesMenuIcon(),
+                _cityMenuIcon(),
+                IconButton(
+                  icon: Icon(Icons.refresh),
+                  onPressed: () async {
+                    await webView.reload();
+                  },
                 ),
               ],
+            ),
+          ),
+          body: Container(
+            color: Colors.grey[900],
+            child: SafeArea(
+              top: false,
+              left: false,
+              right: false,
+              bottom: true,
+              child: Column(
+                children: [
+                  // Crimes widget
+                  ExpandablePanel(
+                    theme: ExpandableThemeData(
+                      hasIcon: false,
+                      tapBodyToCollapse: false,
+                      tapHeaderToExpand: false,
+                    ),
+                    collapsed: SizedBox.shrink(),
+                    controller: _crimesController,
+                    header: SizedBox.shrink(),
+                    expanded: CrimesWidget(controller: webView),
+                  ),
+                  // Trades widget
+                  _tradesExpandable,
+                  // City widget
+                  ExpandablePanel(
+                    theme: ExpandableThemeData(
+                      hasIcon: false,
+                      tapBodyToCollapse: false,
+                      tapHeaderToExpand: false,
+                    ),
+                    collapsed: SizedBox.shrink(),
+                    controller: _cityController,
+                    header: SizedBox.shrink(),
+                    expanded: CityWidget(
+                      controller: webView,
+                      cityItems: _cityItemsFound,
+                      error: _errorCityApi,
+                    ),
+                  ),
+                  // Actual WebView
+                  Expanded(
+                    child: InAppWebView(
+                      initialUrl: _initialUrl,
+                      initialHeaders: {},
+                      initialOptions: InAppWebViewGroupOptions(
+                        crossPlatform: InAppWebViewOptions(
+                          debuggingEnabled: true,
+                          preferredContentMode: UserPreferredContentMode.DESKTOP,
+                        ),
+                        android: AndroidInAppWebViewOptions(
+                          useWideViewPort: true,
+                          loadWithOverviewMode: false,
+                          builtInZoomControls: false,
+                          displayZoomControls: false,
+                        ),
+                      ),
+                      onWebViewCreated: (InAppWebViewController c) {
+                        webView = c;
+                      },
+                      onLoadStart: (InAppWebViewController c, String url) {
+                        _currentUrl = url;
+                        _assessGeneral();
+                      },
+                      onLoadStop: (InAppWebViewController c, String url) {
+                        _currentUrl = url;
+                        _assessGeneral();
+                      },
+                      onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+                        print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
+                        /// TRADES
+                        ///   - IOS: onLoadStop does not work inside of Trades, that is why we
+                        ///     redirect both with console messages (all 'hash.step') for trades
+                        ///     identification, but also with _assessGeneral() so that we can remove
+                        ///     the widget when an unrelated page is visited. Console messages also
+                        ///     help with deletions updates when 'hash.step view' is shown.
+                        ///   - Android: onLoadStop works, but we still need to catch deletions,
+                        ///     so we only listen for 'hash.step view'.
+                        if (Platform.isIOS) {
+                          if (consoleMessage.message.contains('hash.step')) {
+                            _forceAssessTrades();
+                          }
+                        } else if (Platform.isAndroid) {
+                          if (consoleMessage.message.contains('hash.step view')) {
+                            _forceAssessTrades();
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -273,13 +261,92 @@ class _WebViewFullState extends State<WebViewFull> {
     );
   }
 
+  Future _goBackOrForward(DragEndDetails details) async {
+    if (details.primaryVelocity < 0) {
+      var canForward = await webView.canGoForward();
+      if (canForward) {
+        await webView.goForward();
+        BotToast.showText(
+          text: "Forward",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 1),
+          contentPadding: EdgeInsets.all(10),
+        );
+      } else {
+        BotToast.showText(
+          text: "Can\'t go forward!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 1),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    } else if (details.primaryVelocity > 0) {
+      var canBack = await webView.canGoBack();
+      if (canBack) {
+        await webView.goBack();
+        BotToast.showText(
+          text: "Back",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 1),
+          contentPadding: EdgeInsets.all(10),
+        );
+      } else {
+        BotToast.showText(
+          text: "Can\'t go back!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 1),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+    }
+  }
+
   Future _assessGeneral() async {
     var html = await webView.getHtml();
     var document = parse(html);
+
+    // Assign page title
+    String pageTitle = _getPageTitle(document);
+
     _assessTravel(document);
-    _assessCrimes(document);
-    _assessTrades(document);
-    _assessCity(document);
+    _assessCrimes(document, pageTitle);
+    _assessTrades(document, pageTitle);
+    _assessCity(document, pageTitle);
+  }
+
+  String _getPageTitle(dom.Document document) {
+    var h4 = document.querySelector(".content-title > h4");
+    String pageTitle = '';
+    if (h4 != null) {
+      pageTitle = h4.innerHtml.substring(0).trim();
+      if (pageTitle.toLowerCase().contains('error') ||
+          pageTitle.toLowerCase().contains('please validate')) {
+        setState(() {
+          _pageTitle = 'Torn';
+        });
+      } else {
+        setState(() {
+          _pageTitle = pageTitle;
+        });
+      }
+    }
+    return pageTitle;
   }
 
   // TRAVEL
@@ -365,13 +432,8 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CRIMES
-  Future _assessCrimes(dom.Document document) async {
-    var h4 = document.querySelector(".content-title > h4");
-    var pageTitle = '';
-    if (h4 != null) {
-      pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
-    }
-
+  Future _assessCrimes(dom.Document document, String pageTitle) async {
+    pageTitle = pageTitle.toLowerCase();
     setState(() {
       if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
           !pageTitle.contains('please validate') &&
@@ -442,14 +504,13 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // TRADES
-  Future _assessTrades(dom.Document document) async {
+  Future _assessTrades(dom.Document document, String pageTitle) async {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
-    var h4 = document.querySelector(".content-title > h4");
-    if (h4 == null) {
+    if (pageTitle == '') {
       return;
     } else {
-      var pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+      pageTitle = pageTitle.toLowerCase();
       var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
       if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
         // Activate trades icon even before starting a trade, so that it can be deactivated
@@ -734,15 +795,16 @@ class _WebViewFullState extends State<WebViewFull> {
     _currentUrl = await webView.getUrl();
     var html = await webView.getHtml();
     var document = parse(html);
-    _assessTrades(document);
+
+    String pageTitle = _getPageTitle(document);
+
+    _assessTrades(document, pageTitle);
   }
 
   // CITY
-  Future _assessCity(dom.Document document) async {
-    var h4 = document.querySelector(".content-title > h4");
-    var pageTitle = '';
-    if (h4 != null) {
-      pageTitle = h4.innerHtml.substring(0).toLowerCase().trim();
+  Future _assessCity(dom.Document document, String pageTitle) async {
+    if (pageTitle != '') {
+      pageTitle = pageTitle.toLowerCase();
     }
 
     if (!_currentUrl.contains('https://www.torn.com/city.php') ||
