@@ -562,25 +562,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    widgetIndicator: _user.travel.destination == "Torn"
-                        // Not showing the aircraft until 'isRTL' is fixed
-                        ? SizedBox.shrink()
-                        : Opacity(
-                            opacity: 0.4,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 6, left: 11),
-                              child: RotatedBox(
-                                quarterTurns: _user.travel.destination == "Torn" ? 3 : 1,
-                                child: Icon(
-                                  Icons.airplanemode_active,
-                                  color: Colors.blue[900],
-                                ),
-                              ),
-                            ),
+                    widgetIndicator: Opacity(
+                      opacity: 0.5,
+                      child: Padding(
+                        padding: _user.travel.destination == "Torn"
+                            ? const EdgeInsets.only(top: 6, right: 6)
+                            : const EdgeInsets.only(top: 6, left: 10),
+                        child: RotatedBox(
+                          quarterTurns: _user.travel.destination == "Torn" ? 3 : 1,
+                          child: Icon(
+                            Icons.airplanemode_active,
+                            color: Colors.blue[900],
                           ),
+                        ),
+                      ),
+                    ),
                     animateFromLastPercent: true,
                     animation: true,
-                    width: 150,
+                    width: 180,
                     lineHeight: 18,
                     progressColor: Colors.blue[200],
                     backgroundColor: Colors.grey,

@@ -650,13 +650,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                widgetIndicator: _travelModel.destination == "Torn"
-                // Not showing the aircraft until 'isRTL' is fixed
-                    ? SizedBox.shrink()
-                    : Opacity(
-                  opacity: 0.4,
+                widgetIndicator: Opacity(
+                  opacity: 0.5,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 6, left: 11),
+                    padding: _travelModel.destination == "Torn"
+                        ? const EdgeInsets.only(top: 6, right: 6)
+                        : const EdgeInsets.only(top: 6, left: 10),
                     child: RotatedBox(
                       quarterTurns: _travelModel.destination == "Torn" ? 3 : 1,
                       child: Icon(
@@ -668,7 +667,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 ),
                 animateFromLastPercent: true,
                 animation: true,
-                width: 150,
+                width: 200,
                 lineHeight: 18,
                 progressColor: Colors.blue[200],
                 backgroundColor: Colors.grey,
