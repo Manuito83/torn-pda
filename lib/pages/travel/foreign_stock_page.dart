@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -124,8 +126,45 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 if (_apiSuccess) {
-                  return ListView(
-                    children: _stockItems(),
+                  return BubbleShowcase(
+                    // KEEP THIS UNIQUE
+                    bubbleShowcaseId: 'foreign_stock_showcase',
+                    // WILL SHOW IF VERSION CHANGED
+                    bubbleShowcaseVersion: 1,
+                    showCloseButton: false,
+                    doNotReopenOnClose: true,
+                    bubbleSlides: [
+                      AbsoluteBubbleSlide(
+                        positionCalculator: (size) => Position(
+                          top: 0,
+                          right: size.width,
+                          bottom: size.height,
+                          left: size.width,
+                        ),
+                        child: RelativeBubbleSlideChild(
+                          direction: AxisDirection.right,
+                          widget: Padding(
+                            padding: const EdgeInsets.only(right: 75),
+                            child: SpeechBubble(
+                              width: 200,
+                              nipLocation: NipLocation.RIGHT,
+                              color: Colors.blue,
+                              child: Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Text(
+                                  'Did you know?\n\n'
+                                      'You can click any flag to go directly to the travel agency!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    child: ListView(
+                      children: _stockItems(),
+                    ),
                   );
                 } else {
                   return Column(

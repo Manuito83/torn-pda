@@ -559,8 +559,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       diff,
                       style: TextStyle(
                         color: Colors.black,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    widgetIndicator: _user.travel.destination == "Torn"
+                        // Not showing the aircraft until 'isRTL' is fixed
+                        ? SizedBox.shrink()
+                        : Opacity(
+                            opacity: 0.4,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 6, left: 11),
+                              child: RotatedBox(
+                                quarterTurns: _user.travel.destination == "Torn" ? 3 : 1,
+                                child: Icon(
+                                  Icons.airplanemode_active,
+                                  color: Colors.blue[900],
+                                ),
+                              ),
+                            ),
+                          ),
+                    animateFromLastPercent: true,
+                    animation: true,
                     width: 150,
                     lineHeight: 18,
                     progressColor: Colors.blue[200],
@@ -940,13 +959,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        var alarmTime = _travelNotificationTime.add(Duration(minutes: - _travelAlarmAhead));
+        var alarmTime = _travelNotificationTime.add(Duration(minutes: -_travelAlarmAhead));
         var formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        var timerTime = _travelNotificationTime.add(Duration(seconds: - _travelTimerAhead));
+        var timerTime = _travelNotificationTime.add(Duration(seconds: -_travelTimerAhead));
         var formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -2587,8 +2606,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     for (var notification in pendingNotificationRequests) {
       // Don't take into account other kind of notifications,
       // as they don't have the same payload with timestamp
-      if (notification.id == 999 ||
-          notification.payload.substring(0, 3).contains('400')) {
+      if (notification.id == 999 || notification.payload.substring(0, 3).contains('400')) {
         continue;
       }
       var splitPayload = notification.payload.split('-');
