@@ -30,6 +30,24 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.8.4
+    var v1_8_4 = ChangeLogItem();
+    v1_8_4.version = 'Torn PDA v1.8.4';
+    String feat1_8_4_1 = "Chaining: you can now export and import all your targets to/from YATA, including personal notes";
+    String feat1_8_4_2 = "Chaining: there is a new option to wipe all your targets (use carefully)";
+    String feat1_8_4_3 = "Profile: you can now schedule travel notifications directly from the profile section";
+    String feat1_8_4_4 = "Browser: swipe left/right in the top bar to browse forward/back";
+    String feat1_8_4_5 = "Travel: while checking foreign stock, press any flag to access the travel agency directly";
+    String feat1_8_4_6 = "Visual enhancements to travel bar and chaining target's cards";
+    String feat1_8_4_7 = "Corrected several other issues";
+    v1_8_4.features.add(feat1_8_4_1);
+    v1_8_4.features.add(feat1_8_4_2);
+    v1_8_4.features.add(feat1_8_4_3);
+    v1_8_4.features.add(feat1_8_4_4);
+    v1_8_4.features.add(feat1_8_4_5);
+    v1_8_4.features.add(feat1_8_4_6);
+    v1_8_4.features.add(feat1_8_4_7);
+
     // VERSION 1.8.3
     var v1_8_3 = ChangeLogItem();
     v1_8_3.version = 'Torn PDA v1.8.3';
@@ -225,6 +243,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_8_4);
     itemList.add(v1_8_3);
     itemList.add(v1_8_2);
     itemList.add(v1_8_1);
