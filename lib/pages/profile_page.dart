@@ -563,7 +563,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                     ),
                     widgetIndicator: Opacity(
-                      opacity: 0.5,
+                      // Make icon transparent when about to pass over text
+                      opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
+                              _getTravelPercentage(totalSeconds) > 0.7
+                          ? 1
+                          : 0.3,
                       child: Padding(
                         padding: _user.travel.destination == "Torn"
                             ? const EdgeInsets.only(top: 6, right: 6)
