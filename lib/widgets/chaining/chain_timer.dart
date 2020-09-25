@@ -100,6 +100,11 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
     if (!_chainStatusProvider.preferencesLoaded) {
       _chainStatusProvider.loadPreferences();
     }
+    // If we exit the section and reenter, activate the wakelock if watcher is active
+    if (_chainStatusProvider.watcherActive) {
+      Wakelock.enable();
+      print('enabled!');
+    }
   }
 
   @override
