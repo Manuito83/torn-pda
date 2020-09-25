@@ -1593,8 +1593,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         isLast: loopCount == maxCount ? true : false,
         alignment: TimelineAlign.manual,
         indicatorStyle: iconBubble,
-        lineX: 0.25,
-        rightChild: Container(
+        lineXY: 0.25,
+        endChild: Container(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -1606,7 +1606,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
         ),
-        leftChild: Container(
+        startChild: Container(
           child: Padding(
             padding: const EdgeInsets.only(right: 5.0),
             child: Text(
