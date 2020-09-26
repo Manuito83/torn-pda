@@ -229,6 +229,11 @@ class _WebViewFullState extends State<WebViewFull> {
                         _currentUrl = url;
                         _assessGeneral();
                       },
+                      // Allows IOS to open links with target=_blank
+                      onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
+                        webView.loadUrl(url: req.url);
+                        return;
+                      },
                       onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
                         print("TORN PDA JS CONSOLE: " + consoleMessage.message);
 
