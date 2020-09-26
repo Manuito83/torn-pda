@@ -16,6 +16,7 @@
   "dependencies": {
     "firebase-admin": "^8.13.0",
     "firebase-functions": "^3.9.0",
+    "node-forge": "^0.10.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
   },
