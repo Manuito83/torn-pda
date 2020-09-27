@@ -74,6 +74,8 @@ class _TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.respectAsc),
     TargetSort(type: TargetSortType.nameDes),
     TargetSort(type: TargetSortType.nameAsc),
+    TargetSort(type: TargetSortType.colorAsc),
+    TargetSort(type: TargetSortType.colorDes),
   ];
 
   final _popupOptionsChoices = <TargetsOptions>[
@@ -240,7 +242,12 @@ class _TargetsPageState extends State<TargetsPage> {
               return _popupSortChoices.map((TargetSort choice) {
                 return PopupMenuItem<TargetSort>(
                   value: choice,
-                  child: Text(choice.description),
+                  child: Text(
+                    choice.description,
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                  ),
                 );
               }).toList();
             },
@@ -516,6 +523,12 @@ class _TargetsPageState extends State<TargetsPage> {
         break;
       case TargetSortType.nameAsc:
         _targetsProvider.sortTargets(TargetSortType.nameAsc);
+        break;
+      case TargetSortType.colorDes:
+        _targetsProvider.sortTargets(TargetSortType.colorDes);
+        break;
+      case TargetSortType.colorAsc:
+        _targetsProvider.sortTargets(TargetSortType.colorAsc);
         break;
     }
   }

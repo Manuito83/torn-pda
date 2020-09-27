@@ -373,6 +373,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.nameAsc:
         _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
+      case TargetSortType.colorDes:
+        _targets.sort((a, b) => b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
+        break;
+      case TargetSortType.colorAsc:
+        _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        break;
     }
     _saveSortSharedPrefs();
     _saveTargetsSharedPrefs();
@@ -423,6 +429,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case TargetSortType.nameAsc:
         sortToSave = 'nameDes';
+        break;
+      case TargetSortType.colorDes:
+        sortToSave = 'colorDes';
+        break;
+      case TargetSortType.colorAsc:
+        sortToSave = 'colorAsc';
         break;
     }
     SharedPreferencesModel().setTargetsSort(sortToSave);
