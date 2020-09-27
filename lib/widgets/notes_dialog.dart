@@ -121,19 +121,19 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                         ),
                         RawChip(
                           showCheckmark: true,
-                          selected: _myTempChosenColor == 'blue' ? true : false,
+                          selected: _myTempChosenColor == 'orange' ? true : false,
                           label: Text(''),
                           onSelected: (bool isSelected) {
                             setState(() {
                               if (isSelected) {
-                                _myTempChosenColor = 'blue';
+                                _myTempChosenColor = 'orange';
                               } else {
                                 _myTempChosenColor = '';
                               }
                             });
                           },
-                          selectedColor: Colors.blue,
-                          backgroundColor: Colors.blue,
+                          selectedColor: Colors.orange[600],
+                          backgroundColor: Colors.orange[600],
                           shape: StadiumBorder(
                             side: BorderSide(
                               width: 1,
