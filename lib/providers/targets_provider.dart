@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -498,21 +499,28 @@ class TargetsProvider extends ChangeNotifier {
   }) async {
     var modelOut = YataTargetsExportModel();
     modelOut.key = _userKey;
+    modelOut.user = "Torn PDA $appVersion";
 
-    var targets = Map<String, String>();
+    var targets = Map<String, YataExportTarget>();
     for (var localTarget in onlyLocal) {
       // Max chars in Yata notes is 128
       if (localTarget.noteLocal.length > 128) {
         localTarget.noteLocal = localTarget.noteLocal.substring(0, 127);
       }
-      targets.addAll({localTarget.id: localTarget.noteLocal});
+      var exportDetails = YataExportTarget()
+        ..note = localTarget.noteLocal
+        ..color = localTarget.colorLocal;
+      targets.addAll({localTarget.id: exportDetails});
     }
     for (var bothSidesTarget in bothSides) {
       // Max chars in Yata notes is 128
       if (bothSidesTarget.noteLocal.length > 128) {
         bothSidesTarget.noteLocal = bothSidesTarget.noteLocal.substring(0, 127);
       }
-      targets.addAll({bothSidesTarget.id: bothSidesTarget.noteLocal});
+      var exportDetails = YataExportTarget()
+        ..note = bothSidesTarget.noteLocal
+        ..color = bothSidesTarget.colorLocal;
+      targets.addAll({bothSidesTarget.id: exportDetails});
     }
     modelOut.targets = targets;
 

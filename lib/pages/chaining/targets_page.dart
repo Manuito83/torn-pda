@@ -62,6 +62,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   /// Strictly whether we button is enabled in options
   bool _yataButtonInProgress = true;
+
   /// Dictates if it has been pressed and is showing a circular
   /// progress indicator while fetching data from Yata
   bool _yataButtonEnabled = true;
@@ -167,6 +168,7 @@ class _TargetsPageState extends State<TargetsPage> {
               });
             },
           ),
+
           /// FutureBuilder for YATA button
           FutureBuilder(
             future: _preferencesLoaded,
@@ -579,7 +581,8 @@ class _TargetsPageState extends State<TargetsPage> {
         onlyYata.add(TargetsOnlyYata()
           ..id = key
           ..name = yataTarget.name
-          ..noteYata = yataTarget.note);
+          ..noteYata = yataTarget.note
+          ..colorYata = yataTarget.color);
       });
     }
     // Otherwise, we'll see how many are new or only local
@@ -593,7 +596,9 @@ class _TargetsPageState extends State<TargetsPage> {
                 ..id = key
                 ..name = yataTarget.name
                 ..noteYata = yataTarget.note
-                ..noteLocal = localTarget.personalNote);
+                ..noteLocal = localTarget.personalNote
+                ..colorLocal = _yataColorCode(localTarget.personalNoteColor)
+                ..colorYata = yataTarget.color);
               foundLocally = true;
             }
           }
@@ -602,7 +607,8 @@ class _TargetsPageState extends State<TargetsPage> {
           onlyYata.add(TargetsOnlyYata()
             ..id = key
             ..name = yataTarget.name
-            ..noteYata = yataTarget.note);
+            ..noteYata = yataTarget.note
+            ..colorYata = yataTarget.color);
         }
       });
 
@@ -619,7 +625,8 @@ class _TargetsPageState extends State<TargetsPage> {
           onlyLocal.add(TargetsOnlyLocal()
             ..id = localTarget.playerId.toString()
             ..name = localTarget.name
-            ..noteLocal = localTarget.personalNote);
+            ..noteLocal = localTarget.personalNote
+            ..colorLocal = _yataColorCode(localTarget.personalNoteColor));
         }
       });
     }
@@ -635,6 +642,24 @@ class _TargetsPageState extends State<TargetsPage> {
         );
       },
     );
+  }
+
+  int _yataColorCode(String colorString) {
+    switch (colorString) {
+      case "":
+        return 0;
+        break;
+      case "green":
+        return 1;
+        break;
+      case "orange":
+        return 2;
+        break;
+      case "red":
+        return 3;
+        break;
+    }
+    return 0;
   }
 
   Future<void> _openWipeDialog() {
