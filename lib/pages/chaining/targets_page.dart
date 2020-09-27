@@ -296,27 +296,29 @@ class _TargetsPageState extends State<TargetsPage> {
                     ),
                     onPressed: () async {
                       var updateResult = await _targetsProvider.updateAllTargets();
-                      if (updateResult.success) {
-                        Scaffold.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(updateResult.numberSuccessful > 0
-                                ? 'Successfully updated '
-                                    '${updateResult.numberSuccessful} '
-                                    'targets!'
-                                : 'No targets to update!'),
-                          ),
-                        );
-                      } else {
-                        Scaffold.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.red,
-                            content: Text(
-                              'Update with errors: ${updateResult.numberErrors} errors '
-                              'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                              'total targets!',
+                      if (mounted) {
+                        if (updateResult.success) {
+                          Scaffold.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(updateResult.numberSuccessful > 0
+                                  ? 'Successfully updated '
+                                  '${updateResult.numberSuccessful} '
+                                  'targets!'
+                                  : 'No targets to update!'),
                             ),
-                          ),
-                        );
+                          );
+                        } else {
+                          Scaffold.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: Colors.red,
+                              content: Text(
+                                'Update with errors: ${updateResult.numberErrors} errors '
+                                    'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                                    'total targets!',
+                              ),
+                            ),
+                          );
+                        }
                       }
                     },
                   ),
