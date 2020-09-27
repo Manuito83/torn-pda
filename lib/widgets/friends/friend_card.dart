@@ -602,8 +602,8 @@ class _FriendCardState extends State<FriendCard> {
       case 'red':
         return Colors.red;
         break;
-      case 'blue':
-        return Colors.blue;
+      case 'orange':
+        return Colors.orange[600];
         break;
       case 'green':
         return Colors.green;
