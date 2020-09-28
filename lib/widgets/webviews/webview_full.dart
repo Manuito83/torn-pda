@@ -103,7 +103,7 @@ class _WebViewFullState extends State<WebViewFull> {
                     padding: EdgeInsets.all(10),
                     child: Text(
                       'Did you know?\n\n'
-                          'Long press top bar to copy URL\n\n'
+                          'Long press section title to copy URL\n\n'
                           'Swipe left/right to browse forward/back',
                       style: TextStyle(color: Colors.white),
                     ),
