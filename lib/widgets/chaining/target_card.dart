@@ -249,7 +249,7 @@ class _TargetCardState extends State<TargetCard> {
                             child: IconButton(
                               padding: EdgeInsets.all(0),
                               iconSize: 20,
-                              icon: Icon(Icons.edit),
+                              icon: Icon(MdiIcons.notebookEditOutline),
                               onPressed: () {
                                 _showNotesDialog();
                               },
@@ -315,15 +315,21 @@ class _TargetCardState extends State<TargetCard> {
               }
               List<String> attacksIds = List<String>();
               List<String> attacksNames = List<String>();
+              List<String> attackNotes = List<String>();
+              List<String> attacksNotesColor = List<String>();
               for (var tar in myTargetList) {
                 attacksIds.add(tar.playerId.toString());
                 attacksNames.add(tar.name);
+                attackNotes.add(tar.personalNote);
+                attacksNotesColor.add(tar.personalNoteColor);
               }
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (BuildContext context) => TornWebViewAttack(
                     attackIdList: attacksIds,
                     attackNameList: attacksNames,
+                    attackNotesList: attackNotes,
+                    attackNotesColorList: attacksNotesColor,
                     attacksCallback: _updateSeveralTargets,
                     userKey: _userProvider.myUser.userApiKey,
                   ),
@@ -702,17 +708,19 @@ class _TargetCardState extends State<TargetCard> {
       int timerCadence = 1;
       if (diff.inSeconds > 80) {
         timerCadence = 20;
-        _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
         if (mounted) {
-          setState(() {});
+          setState(() {
+            _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
+          });
         }
       } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
         timerCadence = 1;
       } else {
         timerCadence = 1;
-        _currentLifeString = '$timeOutSec sec';
         if (mounted) {
-          setState(() {});
+          setState(() {
+            _currentLifeString = '$timeOutSec sec';
+          });
         }
       }
 
@@ -734,10 +742,9 @@ class _TargetCardState extends State<TargetCard> {
     if (_lifeTicker != null) {
       _lifeTicker.cancel();
     }
+    _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
-      setState(() {
-        _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      });
+      setState(() {});
     }
   }
 }

@@ -201,11 +201,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                       children: <Widget>[
                         FlatButton(
                           child: Text("Insert"),
-                          onPressed: () async {
-                            // Get rid of dialog first, so that it can't
-                            // be pressed twice
-                            Navigator.of(context).pop();
-
+                          onPressed: () {
                             if (widget.noteType == PersonalNoteType.target) {
                               _targetsProvider.setTargetNote(
                                   _target,
@@ -217,6 +213,8 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                                   _personalNotesController.text,
                                   _myTempChosenColor);
                             }
+
+                            Navigator.of(context).pop();
                           },
                         ),
                         FlatButton(

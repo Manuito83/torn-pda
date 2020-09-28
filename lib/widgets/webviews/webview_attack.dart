@@ -16,6 +16,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 class TornWebViewAttack extends StatefulWidget {
   final List<String> attackIdList;
   final List<String> attackNameList;
+  final List<String> attackNotesList;
+  final List<String> attackNotesColorList;
   final Function(List<String>) attacksCallback;
   final String userKey;
 
@@ -24,6 +26,8 @@ class TornWebViewAttack extends StatefulWidget {
   TornWebViewAttack({
     this.attackIdList = const [],
     this.attackNameList = const [],
+    this.attackNotesList = const [],
+    this.attackNotesColorList = const [],
     this.attacksCallback,
     @required this.userKey,
   });
@@ -42,6 +46,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   String _currentPageTitle = "";
 
   bool _skippingEnabled = true;
+  bool _showNotes = true;
   int _attackNumber = 0;
   List<String> _attackedIds = [];
 
@@ -49,6 +54,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   String _goBackTitle = '';
 
   var _chainWidgetController = ExpandableController();
+
+  bool _nextButtonPressed = false;
 
   final _popupChoices = <HealingPages>[
     HealingPages(description: "Personal"),
@@ -60,11 +67,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     super.initState();
     _loadPreferences();
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2'
-        'ID=${widget.attackIdList[0]}';
+    _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
-
     _chainStatusProvider = context.read<ChainStatusProvider>();
     if (_chainStatusProvider.watcherActive) {
       _chainWidgetController.expanded = true;
@@ -269,7 +274,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     return myButtons;
   }
 
-  bool _nextButtonPressed = false;
   Widget _nextAttackActionButton() {
     var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
     return IconButton(
@@ -383,6 +387,11 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               setState(() {
                 _nextButtonPressed = false;
               });
+
+              // Show note for next target
+              if (_showNotes && widget.attackNotesList[_attackNumber].isNotEmpty) {
+                _showNoteToast();
+              }
             },
     );
   }
@@ -419,8 +428,95 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
   }
 
+  void _showNoteToast() {
+    Color cardColor;
+    String noteColor;
+    switch (widget.attackNotesColorList[_attackNumber]) {
+      case '':
+        cardColor = Colors.grey[700];
+        noteColor = '';
+        break;
+      case 'green':
+        cardColor = Colors.green[900];
+        noteColor = '(GREEN)';
+        break;
+      case 'orange':
+        cardColor = Colors.orange[900];
+        noteColor = '(ORANGE)';
+        break;
+      case 'red':
+        cardColor = Colors.red[900];
+        noteColor = '(RED)';
+        break;
+    }
+
+    BotToast.showCustomText(
+      clickClose: true,
+      ignoreContentClick: true,
+      duration: Duration(seconds: 5),
+      toastBuilder: (textCancel) => Align(
+        alignment: Alignment(0, 0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Card(
+            color: cardColor,
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        MdiIcons.notebookOutline,
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Note for ${widget.attackNameList[_attackNumber]}',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 2),
+                  noteColor.isEmpty ?
+                      SizedBox.shrink() :
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        '$noteColor',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text('${widget.attackNotesList[_attackNumber]}'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future _loadPreferences() async {
     _skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
+    _showNotes = await SharedPreferencesModel().getShowTargetsNotes();
+
+    // This will show the note of the first target, if applicable
+    if (_showNotes) {
+      _showNoteToast();
+    }
   }
 
   Future<bool> _willPopCallback() async {
