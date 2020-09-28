@@ -47,8 +47,8 @@ Future<void> main() async {
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onSelectNotification: (String payload) async {
-    selectNotificationSubject.add(payload);
-  });
+        selectNotificationSubject.add(payload);
+      });
 
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
@@ -68,13 +68,13 @@ Future<void> main() async {
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
           create: (context) => TargetsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-                  TargetsProvider targetsProvider) =>
+              TargetsProvider targetsProvider) =>
               TargetsProvider(userProvider.myUser),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
           create: (context) => AttacksProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-                  AttacksProvider attacksProvider) =>
+              AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.myUser),
         ),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
@@ -82,7 +82,7 @@ Future<void> main() async {
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
           create: (context) => FriendsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-                  FriendsProvider friendsProvider) =>
+              FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
         ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
