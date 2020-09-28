@@ -306,6 +306,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
           targetId: widget.onlyYata[i].id,
           attacksFull: attacksFull,
           notes: widget.onlyYata[i].noteYata,
+          notesColor: _localColorCode(widget.onlyYata[i].colorYata),
         );
 
         if (importResult.success) {
@@ -323,13 +324,16 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
       }
     }
 
-    // Those target that we already have, only see their notes updated (keeping same color)
+    // Those target that we already have, only see their notes updated
     if (mounted) {
       for (var bothSidesTarget in widget.bothSides) {
         for (var localTarget in _targetsProvider.allTargets) {
           if (bothSidesTarget.id == localTarget.playerId.toString()) {
-            var currentColor = localTarget.personalNoteColor;
-            _targetsProvider.setTargetNote(localTarget, bothSidesTarget.noteYata, currentColor);
+            _targetsProvider.setTargetNote(
+              localTarget,
+              bothSidesTarget.noteYata,
+              _localColorCode(bothSidesTarget.colorYata),
+            );
             break;
           }
         }
@@ -351,4 +355,21 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
     }
   }
 
+  String _localColorCode(int colorInt) {
+    switch (colorInt) {
+      case 0:
+        return '';
+        break;
+      case 1:
+        return 'green';
+        break;
+      case 2:
+        return 'orange';
+        break;
+      case 3:
+        return 'red';
+        break;
+    }
+    return '';
+  }
 }

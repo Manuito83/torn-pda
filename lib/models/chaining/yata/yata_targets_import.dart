@@ -17,10 +17,10 @@ class YataTargetsImportModel {
   bool errorConnection = false;
   bool errorPlayer = false;
 
-  Map<String, YataTarget> targets;
+  Map<String, YataImportTarget> targets;
 
   factory YataTargetsImportModel.fromJson(Map<String, dynamic> json) => YataTargetsImportModel(
-    targets: json["targets"] == null ? null : Map.from(json["targets"]).map((k, v) => MapEntry<String, YataTarget>(k, YataTarget.fromJson(v))),
+    targets: json["targets"] == null ? null : Map.from(json["targets"]).map((k, v) => MapEntry<String, YataImportTarget>(k, YataImportTarget.fromJson(v))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -28,22 +28,26 @@ class YataTargetsImportModel {
   };
 }
 
-class YataTarget {
-  YataTarget({
+class YataImportTarget {
+  YataImportTarget({
     this.name,
     this.note,
+    this.color,
   });
 
   String name;
   String note;
+  int color;
 
-  factory YataTarget.fromJson(Map<String, dynamic> json) => YataTarget(
+  factory YataImportTarget.fromJson(Map<String, dynamic> json) => YataImportTarget(
     name: json["name"] == null ? null : json["name"],
     note: json["note"] == null ? null : json["note"],
+    color: json["color"] == null ? null : json["color"],
   );
 
   Map<String, dynamic> toJson() => {
     "name": name == null ? null : name,
     "note": note == null ? null : note,
+    "color": color == null ? null : color,
   };
 }

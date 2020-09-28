@@ -249,7 +249,7 @@ class _TargetCardState extends State<TargetCard> {
                             child: IconButton(
                               padding: EdgeInsets.all(0),
                               iconSize: 20,
-                              icon: Icon(Icons.edit),
+                              icon: Icon(MdiIcons.notebookEditOutline),
                               onPressed: () {
                                 _showNotesDialog();
                               },
@@ -315,15 +315,21 @@ class _TargetCardState extends State<TargetCard> {
               }
               List<String> attacksIds = List<String>();
               List<String> attacksNames = List<String>();
+              List<String> attackNotes = List<String>();
+              List<String> attacksNotesColor = List<String>();
               for (var tar in myTargetList) {
                 attacksIds.add(tar.playerId.toString());
                 attacksNames.add(tar.name);
+                attackNotes.add(tar.personalNote);
+                attacksNotesColor.add(tar.personalNoteColor);
               }
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (BuildContext context) => TornWebViewAttack(
                     attackIdList: attacksIds,
                     attackNameList: attacksNames,
+                    attackNotesList: attackNotes,
+                    attackNotesColorList: attacksNotesColor,
                     attacksCallback: _updateSeveralTargets,
                     userKey: _userProvider.myUser.userApiKey,
                   ),
@@ -619,13 +625,13 @@ class _TargetCardState extends State<TargetCard> {
   Color _returnTargetNoteColor() {
     switch (_target.personalNoteColor) {
       case 'red':
-        return Colors.red;
+        return Colors.red[600];
         break;
-      case 'blue':
-        return Colors.blue;
+      case 'orange':
+        return Colors.orange[600];
         break;
       case 'green':
-        return Colors.green;
+        return Colors.green[600];
         break;
       default:
         return _themeProvider.mainText;
@@ -678,9 +684,10 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _timerUpdateInformation() {
-    setState(() {
-      _returnLastUpdated();
-    });
+    _returnLastUpdated();
+    if (mounted){
+      setState(() {});
+    }
   }
 
   _refreshLifeClock(DateTime timeEnd) {
@@ -735,10 +742,9 @@ class _TargetCardState extends State<TargetCard> {
     if (_lifeTicker != null) {
       _lifeTicker.cancel();
     }
+    _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
-      setState(() {
-        _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
-      });
+      setState(() {});
     }
   }
 }

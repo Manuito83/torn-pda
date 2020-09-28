@@ -397,9 +397,11 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
     if (timeOut.inSeconds.remainder(60) < 10) {
       timeOutSec = '0$timeOutSec';
     }
-    setState(() {
-      _currentChainTimeString = '$timeOutMin:$timeOutSec';
-    });
+    if (mounted) {
+      setState(() {
+        _currentChainTimeString = '$timeOutMin:$timeOutSec';
+      });
+    }
   }
 
   void _refreshCooldownClock(int secondsRemaining) {

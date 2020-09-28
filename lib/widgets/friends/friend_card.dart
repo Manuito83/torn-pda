@@ -3,6 +3,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/pages/friends/friend_details_page.dart';
@@ -245,7 +246,7 @@ class _FriendCardState extends State<FriendCard> {
                       child: IconButton(
                         padding: EdgeInsets.all(0),
                         iconSize: 20,
-                        icon: Icon(Icons.edit),
+                        icon: Icon(MdiIcons.notebookEditOutline),
                         onPressed: () {
                           _showNotesDialog();
                         },
@@ -602,8 +603,8 @@ class _FriendCardState extends State<FriendCard> {
       case 'red':
         return Colors.red;
         break;
-      case 'blue':
-        return Colors.blue;
+      case 'orange':
+        return Colors.orange[600];
         break;
       case 'green':
         return Colors.green;

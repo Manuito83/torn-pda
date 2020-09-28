@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -149,11 +150,20 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void setTargetNote(TargetModel target, String note, String color) {
-    target.personalNote = note;
-    target.personalNoteColor = color;
-    _saveTargetsSharedPrefs();
-    notifyListeners();
+  void setTargetNote(TargetModel changedTarget, String note, String color) {
+    // We are not updating the target directly, but instead looping for the correct one because
+    // after an attack the targets get updated several times: if the user wants to change the note
+    // right after the attack, the good target might have been replaced and the note does not get
+    // updated. Therefore, we just loop whenever the user submits the new text.
+    for (var tar in _targets) {
+      if (tar.playerId == changedTarget.playerId) {
+        tar.personalNote = note;
+        tar.personalNoteColor = color;
+        _saveTargetsSharedPrefs();
+        notifyListeners();
+        break;
+      }
+    }
   }
 
   Future<bool> updateTarget({
@@ -372,6 +382,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.nameAsc:
         _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
+      case TargetSortType.colorDes:
+        _targets.sort((a, b) => b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
+        break;
+      case TargetSortType.colorAsc:
+        _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        break;
     }
     _saveSortSharedPrefs();
     _saveTargetsSharedPrefs();
@@ -422,6 +438,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case TargetSortType.nameAsc:
         sortToSave = 'nameDes';
+        break;
+      case TargetSortType.colorDes:
+        sortToSave = 'colorDes';
+        break;
+      case TargetSortType.colorAsc:
+        sortToSave = 'colorAsc';
         break;
     }
     SharedPreferencesModel().setTargetsSort(sortToSave);
@@ -498,21 +520,28 @@ class TargetsProvider extends ChangeNotifier {
   }) async {
     var modelOut = YataTargetsExportModel();
     modelOut.key = _userKey;
+    modelOut.user = "Torn PDA $appVersion";
 
-    var targets = Map<String, String>();
+    var targets = Map<String, YataExportTarget>();
     for (var localTarget in onlyLocal) {
       // Max chars in Yata notes is 128
       if (localTarget.noteLocal.length > 128) {
         localTarget.noteLocal = localTarget.noteLocal.substring(0, 127);
       }
-      targets.addAll({localTarget.id: localTarget.noteLocal});
+      var exportDetails = YataExportTarget()
+        ..note = localTarget.noteLocal
+        ..color = localTarget.colorLocal;
+      targets.addAll({localTarget.id: exportDetails});
     }
     for (var bothSidesTarget in bothSides) {
       // Max chars in Yata notes is 128
       if (bothSidesTarget.noteLocal.length > 128) {
         bothSidesTarget.noteLocal = bothSidesTarget.noteLocal.substring(0, 127);
       }
-      targets.addAll({bothSidesTarget.id: bothSidesTarget.noteLocal});
+      var exportDetails = YataExportTarget()
+        ..note = bothSidesTarget.noteLocal
+        ..color = bothSidesTarget.colorLocal;
+      targets.addAll({bothSidesTarget.id: exportDetails});
     }
     modelOut.targets = targets;
 

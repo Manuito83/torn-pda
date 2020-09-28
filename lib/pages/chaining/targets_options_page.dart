@@ -17,6 +17,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Skipping
   bool _skippingEnabled = true;
 
+  // Targets notes while chaining
+  bool _showTargetsNotes = true;
+
   // Chain watcher
   bool _soundAlertsEnabled = true;
   bool _vibrationAlertsEnabled = true;
@@ -59,7 +62,49 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          SizedBox(height: 10),
+                          SizedBox(height: 15),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'CHAINING',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text("Show targets notes"),
+                                Switch(
+                                  value: _showTargetsNotes,
+                                  onChanged: (value) {
+                                    SharedPreferencesModel().setShowTargetsNotes(value);
+                                    setState(() {
+                                      _showTargetsNotes = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If enabled, you will be shown the note you have saved for every '
+                                  'target and its color (if assigned) as you progress with the chain',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 15),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Row(
@@ -180,9 +225,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Text(
                               'If enabled, you\'ll have access to a \'Y\' icon in the top bar from '
-                                  'where you can import and export to YATA. Please note that deletions '
-                                  'are not propagated between YATA and Torn PDA, but notes are '
-                                  'overwritten in either direction.',
+                              'where you can import and export to YATA. Please note that deletions '
+                              'are not propagated between YATA and Torn PDA, but notes are '
+                              'overwritten in either direction.',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -209,12 +254,14 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   }
 
   Future _restorePreferences() async {
+    var showTargetsNotes = await SharedPreferencesModel().getShowTargetsNotes();
     var skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     var soundEnabled = await SharedPreferencesModel().getChainWatcherSound();
     var vibrationEnabled = await SharedPreferencesModel().getChainWatcherVibration();
     var yataEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
 
     setState(() {
+      _showTargetsNotes = showTargetsNotes;
       _skippingEnabled = skippingEnabled;
       _soundAlertsEnabled = soundEnabled;
       _vibrationAlertsEnabled = vibrationEnabled;
