@@ -430,23 +430,18 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   void _showNoteToast() {
     Color cardColor;
-    String noteColor;
     switch (widget.attackNotesColorList[_attackNumber]) {
       case '':
         cardColor = Colors.grey[700];
-        noteColor = '';
         break;
       case 'green':
         cardColor = Colors.green[900];
-        noteColor = '(GREEN)';
         break;
       case 'orange':
         cardColor = Colors.orange[900];
-        noteColor = '(ORANGE)';
         break;
       case 'red':
         cardColor = Colors.red[900];
-        noteColor = '(RED)';
         break;
     }
 
@@ -480,17 +475,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     ],
                   ),
                   SizedBox(height: 2),
-                  noteColor.isEmpty ?
-                      SizedBox.shrink() :
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        '$noteColor',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                    ],
-                  ),
                   SizedBox(height: 10),
                   Row(
                     mainAxisSize: MainAxisSize.min,

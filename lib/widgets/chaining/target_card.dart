@@ -625,13 +625,13 @@ class _TargetCardState extends State<TargetCard> {
   Color _returnTargetNoteColor() {
     switch (_target.personalNoteColor) {
       case 'red':
-        return Colors.red;
+        return Colors.red[600];
         break;
       case 'orange':
         return Colors.orange[600];
         break;
       case 'green':
-        return Colors.green;
+        return Colors.green[600];
         break;
       default:
         return _themeProvider.mainText;
