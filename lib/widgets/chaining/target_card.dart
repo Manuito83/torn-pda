@@ -678,9 +678,10 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _timerUpdateInformation() {
-    setState(() {
-      _returnLastUpdated();
-    });
+    _returnLastUpdated();
+    if (mounted){
+      setState(() {});
+    }
   }
 
   _refreshLifeClock(DateTime timeEnd) {
@@ -701,19 +702,17 @@ class _TargetCardState extends State<TargetCard> {
       int timerCadence = 1;
       if (diff.inSeconds > 80) {
         timerCadence = 20;
+        _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
         if (mounted) {
-          setState(() {
-            _currentLifeString = '${timeOut.inHours}h ${timeOutMin}m';
-          });
+          setState(() {});
         }
       } else if (diff.inSeconds > 59 && diff.inSeconds <= 80) {
         timerCadence = 1;
       } else {
         timerCadence = 1;
+        _currentLifeString = '$timeOutSec sec';
         if (mounted) {
-          setState(() {
-            _currentLifeString = '$timeOutSec sec';
-          });
+          setState(() {});
         }
       }
 
