@@ -202,6 +202,8 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                         FlatButton(
                           child: Text("Insert"),
                           onPressed: () {
+                            // Pop and then perform the work
+                            Navigator.of(context).pop();
                             if (widget.noteType == PersonalNoteType.target) {
                               _targetsProvider.setTargetNote(
                                   _target,
@@ -213,8 +215,6 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                                   _personalNotesController.text,
                                   _myTempChosenColor);
                             }
-
-                            Navigator.of(context).pop();
                           },
                         ),
                         FlatButton(

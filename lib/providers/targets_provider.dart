@@ -150,11 +150,20 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void setTargetNote(TargetModel target, String note, String color) {
-    target.personalNote = note;
-    target.personalNoteColor = color;
-    _saveTargetsSharedPrefs();
-    notifyListeners();
+  void setTargetNote(TargetModel changedTarget, String note, String color) {
+    // We are not updating the target directly, but instead looping for the correct one because
+    // after an attack the targets get updated several times: if the user wants to change the note
+    // right after the attack, the good target might have been replaced and the note does not get
+    // updated. Therefore, we just loop whenever the user submits the new text.
+    for (var tar in _targets) {
+      if (tar.playerId == changedTarget.playerId) {
+        tar.personalNote = note;
+        tar.personalNoteColor = color;
+        _saveTargetsSharedPrefs();
+        notifyListeners();
+        break;
+      }
+    }
   }
 
   Future<bool> updateTarget({
