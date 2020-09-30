@@ -456,9 +456,23 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     // Target list
+    bool needToSave = false;
     List<String> jsonTargets = await SharedPreferencesModel().getTargetsList();
     for (var jTar in jsonTargets) {
-      _targets.add(targetModelFromJson(jTar));
+      var thisTarget = targetModelFromJson(jTar);
+
+      // In v1.8.5 we change from blue to orange and we need to do the conversion
+      // here. This can be later removed safely at some point.
+      if (thisTarget.personalNoteColor == "blue") {
+        thisTarget.personalNoteColor = "orange";
+        needToSave = true;
+      }
+
+      _targets.add(thisTarget);
+    }
+
+    if (needToSave) {
+      _saveTargetsSharedPrefs();
     }
 
     // Target sort

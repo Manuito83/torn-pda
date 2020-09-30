@@ -307,9 +307,23 @@ class FriendsProvider extends ChangeNotifier {
 
   Future<void> restorePreferences() async {
     // Friends list
+    bool needToSave;
     List<String> jsonFriends = await SharedPreferencesModel().getFriendsList();
     for (var jFri in jsonFriends) {
-      _friends.add(friendModelFromJson(jFri));
+      var thisFriend = friendModelFromJson(jFri);
+
+      // In v1.8.5 we change from blue to orange and we need to do the conversion
+      // here. This can be later removed safely at some point.
+      if (thisFriend.personalNoteColor == "blue") {
+        thisFriend.personalNoteColor = "orange";
+        needToSave = true;
+      }
+
+      _friends.add(thisFriend);
+    }
+
+    if (needToSave) {
+      _saveFriendsSharedPrefs();
     }
 
     // Friends sort
