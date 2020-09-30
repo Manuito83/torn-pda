@@ -1565,6 +1565,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll('Please click here to continue.', '');
       message = message.replaceAll(' [view]', '.');
+      message = message.replaceAll(' [View]', '');
+      message = message.replaceAll(' Please click here.', '');
+
 
       Widget insideIcon = _eventsInsideIconCases(message);
 
@@ -1788,6 +1791,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             color: Colors.black,
           ),
         ),
+      );
+    } else if (message.contains('You came') ||
+        message.contains('race') ||
+        message.contains('Your best lap was')) {
+      insideIcon = Icon(
+        Icons.directions_car_outlined,
+        color: Colors.red[500],
+        size: 20,
       );
     } else {
       insideIcon = Container(
