@@ -96,7 +96,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Text(
                               'If enabled, you will be shown the note you have saved for every '
-                                  'target and its color (if assigned) as you progress with the chain',
+                                  'target and its color as you progress with the chain',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
