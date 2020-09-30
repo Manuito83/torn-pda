@@ -30,6 +30,18 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.8.5
+    var v1_8_5 = ChangeLogItem();
+    v1_8_5.version = 'Torn PDA v1.8.5';
+    String feat1_8_5_1 = "The colour of your targets' notes is now exported and imported to/from YATA (in the process, blue colour was transformed into orange for standardization)";
+    String feat1_8_5_2 = "While chaining, you'll be shown your note for each target before attacking, so that you can adjust your strategy accordingly (can be disabled)";
+    String feat1_8_5_3 = "You can now sort targets by note colour";
+    String feat1_8_5_4 = "Fixed an issue where the target note could not be updated right after attacking";
+    v1_8_5.features.add(feat1_8_5_1);
+    v1_8_5.features.add(feat1_8_5_2);
+    v1_8_5.features.add(feat1_8_5_3);
+    v1_8_5.features.add(feat1_8_5_4);
+
     // VERSION 1.8.4
     var v1_8_4 = ChangeLogItem();
     v1_8_4.version = 'Torn PDA v1.8.4';
@@ -243,6 +255,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_8_5);
     itemList.add(v1_8_4);
     itemList.add(v1_8_3);
     itemList.add(v1_8_2);
