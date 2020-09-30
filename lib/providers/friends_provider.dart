@@ -307,7 +307,7 @@ class FriendsProvider extends ChangeNotifier {
 
   Future<void> restorePreferences() async {
     // Friends list
-    bool needToSave;
+    bool needToSave = false;
     List<String> jsonFriends = await SharedPreferencesModel().getFriendsList();
     for (var jFri in jsonFriends) {
       var thisFriend = friendModelFromJson(jFri);
