@@ -19,9 +19,13 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Quick crimes option when you visit the crimes section. Just set up your preferred crimes and they'll appear in the top bar.
 
-* Automatic alerts for travel and energy
+* Trade calculator with total price calculation for cash, items and shares, plus the ability to copy total figures for a quick trading.
 
-* Follow your faction's chain live from the app, with instant energy updates.
+* Automatic city items finder in the map.
+
+* Automatic alerts for travel and energy.
+
+* Follow your faction's chain live from the app, with instant energy updates. Use the chain watcher feature to avoid surprises.
 
 * Create your own target list, adding your own comments and many other details. Chaining has never been easier.
 
@@ -29,9 +33,17 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Export targets as a backup or share them with other players
 
-* Create a friends list, with quick access to in-game messaging, trading and other important details. Also, add note to your friends' profiles. Backup functionality included.
+* Create your own target list, adding your own comments and many other details. Import and export your targets to/from YATA. While chaining, automatically skip targets that can't be attacked (hospitalised/jailed or in a different country). Chaining has never been easier.
+
+* Have a look at your last few attacks, with simple statistics so that you can decide when/who to add to your common chaining targets.
 
 * Activate alerts for NPC loot
+
+* Export targets as a backup or share them with other players
+
+* When in hospital, send Nuclear Central Hospital a revive request by clicking a button.
+
+* Create a friends list, with quick access to in-game messaging, trading and other important details. Also, add note to your friends' profiles. Backup functionality included.
 
 * Dark mode
 
