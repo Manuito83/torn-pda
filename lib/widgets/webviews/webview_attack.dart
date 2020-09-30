@@ -465,6 +465,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     children: [
                       Icon(
                         MdiIcons.notebookOutline,
+                        color: Colors.white,
                         size: 16,
                       ),
                       SizedBox(width: 5),
@@ -480,7 +481,12 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
-                        child: Text('${widget.attackNotesList[_attackNumber]}'),
+                        child: Text(
+                          '${widget.attackNotesList[_attackNumber]}',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ],
                   ),
