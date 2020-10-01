@@ -674,7 +674,7 @@ class SharedPreferencesModel {
 
   Future<bool> getTornTraderEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTornTraderEnabled) ?? true;
+    return prefs.getBool(_kTornTraderEnabled) ?? false;
   }
 
   Future<bool> setTornTraderEnabled(bool value) async {
