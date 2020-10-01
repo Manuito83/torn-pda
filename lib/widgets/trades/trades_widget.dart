@@ -272,7 +272,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         },
         icon: Icon(
           Icons.content_copy,
-          size: 15,
+          size: 20,
           color: Colors.grey,
         ),
       ),
@@ -379,7 +379,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     },
                     icon: Icon(
                       Icons.receipt_long_outlined,
-                      size: 15,
+                      size: 20,
                       color: ttColor,
                     ),
                   ),
@@ -396,7 +396,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                     },
                     icon: Icon(
                       Icons.message_outlined,
-                      size: 15,
+                      size: 20,
                       color: ttColor,
                     ),
                   ),
