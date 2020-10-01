@@ -29,7 +29,7 @@ dependencies:
   flutter_slidable: ^0.5.7
   provider: ^4.3.2+2
   percent_indicator: ^2.1.7+4
-  webview_flutter: ^0.3.24
+  webview_flutter: ^1.0.0
   share: ^0.6.5+2
   html: ^0.14.0+3
   sliding_up_panel: ^1.0.2
@@ -42,17 +42,17 @@ dependencies:
   flutter_inappwebview: ^4.0.0+4
   material_design_icons_flutter: ^4.0.5655
   firebase_core: ^0.5.0
-  firebase_messaging: ^7.0.0
-  firebase_analytics: ^6.0.0
+  firebase_messaging: ^7.0.1
+  firebase_analytics: ^6.0.1
   cloud_firestore: ^0.14.0+2
-  firebase_auth: ^0.18.0+1
-  firebase_crashlytics: ^0.2.0
+  firebase_auth: ^0.18.1
+  firebase_crashlytics: ^0.2.1
   easy_rich_text: ^0.5.1
   wakelock: ^0.1.4+2
   audioplayers: ^0.16.1
-  vibration: ^1.5.0
+  vibration: ^1.6.1
   bubble_showcase: ^0.2.0+4
-  speech_bubble: ^0.0.6
+  speech_bubble: ^0.0.7
   cupertino_icons: ^1.0.0
 
 dev_dependencies:
