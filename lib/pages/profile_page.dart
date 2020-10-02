@@ -1568,7 +1568,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll(' [View]', '');
       message = message.replaceAll(' Please click here.', '');
 
-
       Widget insideIcon = _eventsInsideIconCases(message);
 
       IndicatorStyle iconBubble;
@@ -1663,7 +1662,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   padding: const EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -1796,7 +1795,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message.contains('race') ||
         message.contains('Your best lap was')) {
       insideIcon = Icon(
-        Icons.directions_car_outlined,
+        MdiIcons.gauge,
         color: Colors.red[500],
         size: 20,
       );
@@ -1834,17 +1833,58 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _miscellaneous() {
     bool showMisc = false;
-    int linesSeparator = 0;
+    bool racingActive = false;
+    bool bankActive = false;
+    bool educationActive = false;
 
     if (_miscModel == null || _tornEducationModel == null) {
       return SizedBox.shrink();
+    }
+
+    // RACING
+    Widget racingWidget = SizedBox.shrink();
+    if (_user.icons.icon17 != null || _user.icons.icon18 != null) {
+      showMisc = true;
+      racingActive = true;
+      String racingString;
+      Color gaugeColor;
+      if (_user.icons.icon17 != null) {
+        racingString = _user.icons.icon17.replaceAll("Racing - ", '');
+        gaugeColor = Colors.green[700];
+      } else if (_user.icons.icon18 != null) {
+        racingString = _user.icons.icon18.replaceAll("Racing - ", '');
+        gaugeColor = Colors.red[700];
+      }
+
+      racingWidget = Row(
+        children: <Widget>[
+          Icon(MdiIcons.gauge, color: gaugeColor),
+          SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              racingString,
+              style: DefaultTextStyle.of(context).style,
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onTap: () {
+              _openTornBrowser("racing");
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 5),
+              child: Icon(MdiIcons.openInApp, size: 18),
+            ),
+          ),
+        ],
+      );
     }
 
     // BANK
     Widget bankWidget = SizedBox.shrink();
     if (_miscModel.cityBank.timeLeft > 0) {
       showMisc = true;
-      linesSeparator++;
+      bankActive = true;
       final moneyFormat = new NumberFormat("#,##0", "en_US");
       var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.cityBank.timeLeft));
       var timeDifference = timeExpiry.difference(DateTime.now());
@@ -1897,7 +1937,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     Widget educationWidget = SizedBox.shrink();
     if (_miscModel.educationTimeleft > 0) {
       showMisc = true;
-      linesSeparator++;
+      educationActive = true;
       var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.educationTimeleft));
       var timeDifference = timeExpiry.difference(DateTime.now());
       Color expiryColor = Colors.orange[800];
@@ -1958,7 +1998,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // If the number of courses studied and available are not the same, we have forgotten
       if (_miscModel.educationCompleted.length < _tornEducationModel.education.length) {
         showMisc = true;
-        linesSeparator++;
+        educationActive = true;
         educationWidget = Row(
           children: <Widget>[
             Icon(MdiIcons.schoolOutline),
@@ -1997,9 +2037,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
+                  child: racingWidget,
+                ),
+                if (racingActive && bankActive) SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
                   child: bankWidget,
                 ),
-                if (linesSeparator == 2) SizedBox(height: 10),
+                if ((racingActive || bankActive) && educationActive) SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: educationWidget,
@@ -2339,6 +2384,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case 'city':
         tornPage = 'https://www.torn.com/city.php';
+        break;
+      case 'racing':
+        tornPage = 'https://www.torn.com/loader.php?sid=racing';
         break;
     }
 

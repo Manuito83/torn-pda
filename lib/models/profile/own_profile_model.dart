@@ -46,6 +46,7 @@ class OwnProfileModel {
     this.cooldowns,
     this.events,
     this.travel,
+    this.icons,
   });
 
   // For state management
@@ -84,6 +85,7 @@ class OwnProfileModel {
   Cooldowns cooldowns;
   dynamic events;
   Travel travel;
+  TornIcons icons;
 
   factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
     userApiKey: json["userApiKey"] == null ? '' : json["userApiKey"],
@@ -121,6 +123,7 @@ class OwnProfileModel {
     cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
     events: json["events"],
     travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
+    icons: json["icons"] == null ? null : TornIcons.fromJson(json["icons"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -159,6 +162,7 @@ class OwnProfileModel {
     "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
     "events": events,
     "travel": travel == null ? null : travel.toJson(),
+    "icons": icons == null ? null : icons.toJson(),
   };
 }
 
@@ -563,5 +567,26 @@ class Travel {
     "timestamp": timestamp == null ? null : timestamp,
     "departed": departed == null ? null : departed,
     "time_left": timeLeft == null ? null : timeLeft,
+  };
+}
+
+class TornIcons {
+  TornIcons({
+    // Racing
+    this.icon17,
+    this.icon18,
+  });
+
+  String icon17;
+  String icon18;
+
+  factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
+    icon17: json["icon17"] == null ? null : json["icon17"],
+    icon18: json["icon18"] == null ? null : json["icon18"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "icon17": icon17 == null ? null : icon17,
+    "icon18": icon18 == null ? null : icon18,
   };
 }
