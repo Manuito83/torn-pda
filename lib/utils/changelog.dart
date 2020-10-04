@@ -30,6 +30,18 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.8.6
+    var v1_8_6 = ChangeLogItem();
+    v1_8_6.version = 'Torn PDA v1.8.6';
+    String feat1_8_6_1 = "Trading: if you are a professional trader and an user of Torn Trader, you can now activate a real time sync with your own prices, custom messages and receipt through the Trade Calculator (see options when in the Trade page in Torn to activate)";
+    String feat1_8_6_2 = "Trading: a new icon will redirect you directly to your personal, faction or company vault after a trade, so that you can keep your money safe from muggers";
+    String feat1_8_6_3 = "Profile: racing status added to the miscellaneous card";
+    String feat1_8_6_4 = "Minor bug fixes";
+    v1_8_6.features.add(feat1_8_6_1);
+    v1_8_6.features.add(feat1_8_6_2);
+    v1_8_6.features.add(feat1_8_6_3);
+    v1_8_6.features.add(feat1_8_6_4);
+
     // VERSION 1.8.5
     var v1_8_5 = ChangeLogItem();
     v1_8_5.version = 'Torn PDA v1.8.5';
@@ -255,6 +267,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_8_6);
     itemList.add(v1_8_5);
     itemList.add(v1_8_4);
     itemList.add(v1_8_3);
