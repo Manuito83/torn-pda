@@ -58,6 +58,7 @@ class SharedPreferencesModel {
   final String _kLootAlarmVibration = "pda_lootAlarmVibration";
   final String _kLootAlarmSound = "pda_lootAlarmSound";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
+  final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
 
 
@@ -669,6 +670,16 @@ class SharedPreferencesModel {
   Future<bool> setTradeCalculatorEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTradeCalculatorEnabled, value);
+  }
+
+  Future<bool> getTornTraderEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornTraderEnabled) ?? false;
+  }
+
+  Future<bool> setTornTraderEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornTraderEnabled, value);
   }
 
   /// ----------------------------

@@ -12,6 +12,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -46,8 +47,8 @@ Future<void> main() async {
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onSelectNotification: (String payload) async {
-    selectNotificationSubject.add(payload);
-  });
+        selectNotificationSubject.add(payload);
+      });
 
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
@@ -67,13 +68,13 @@ Future<void> main() async {
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
           create: (context) => TargetsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-                  TargetsProvider targetsProvider) =>
+              TargetsProvider targetsProvider) =>
               TargetsProvider(userProvider.myUser),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
           create: (context) => AttacksProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-                  AttacksProvider attacksProvider) =>
+              AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.myUser),
         ),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
@@ -81,11 +82,12 @@ Future<void> main() async {
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
           create: (context) => FriendsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-                  FriendsProvider friendsProvider) =>
+              FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
-        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
+        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
       ],
       child: MyApp(),
     ),
@@ -103,9 +105,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
-        brightness: _themeProvider.currentTheme == AppTheme.light
-            ? Brightness.light
-            : Brightness.dark,
+        brightness:
+            _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
       ),
       home: Container(
         color: Colors.black,

@@ -14,11 +14,10 @@ import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/city/city_options.dart';
@@ -61,6 +60,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
+  DateTime _lastTradeCall = DateTime.now();
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -70,6 +70,7 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityController = ExpandableController();
 
   var _showOne = GlobalKey();
+  UserDetailsProvider _userProvider;
 
   @override
   void initState() {
@@ -80,6 +81,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   @override
   Widget build(BuildContext context) {
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: BubbleShowcase(
@@ -247,11 +249,11 @@ class _WebViewFullState extends State<WebViewFull> {
                         ///     so we only listen for 'hash.step view'.
                         if (Platform.isIOS) {
                           if (consoleMessage.message.contains('hash.step')) {
-                            _forceAssessTrades();
+                            _decideIfCallTrades();
                           }
                         } else if (Platform.isAndroid) {
                           if (consoleMessage.message.contains('hash.step view')) {
-                            _forceAssessTrades();
+                            _decideIfCallTrades();
                           }
                         }
                       },
@@ -331,7 +333,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     _assessTravel(document);
     _assessCrimes(document, pageTitle);
-    _assessTrades(document, pageTitle);
+    _decideIfCallTrades();
     _assessCity(document, pageTitle);
   }
 
@@ -382,10 +384,8 @@ class _WebViewFullState extends State<WebViewFull> {
       try {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
-
-        var userDetailsProvider = Provider.of<UserDetailsProvider>(context, listen: false);
         var userProfile =
-            await TornApiCaller.ownProfile(userDetailsProvider.myUser.userApiKey).getOwnProfile;
+            await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey).getOwnProfile;
         if (userProfile is OwnProfileModel) {
           stockModel.authorName = userProfile.name;
           stockModel.authorId = userProfile.playerId;
@@ -522,13 +522,13 @@ class _WebViewFullState extends State<WebViewFull> {
         _tradesIconActive = true;
         if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
           if (_tradesFullActive) {
-            _toggleTradesExpandable(active: false);
+            _toggleTradesWidget(active: false);
           }
           return;
         }
       } else {
         if (_tradesFullActive) {
-          _toggleTradesExpandable(active: false);
+          _toggleTradesWidget(active: false);
         }
         _tradesIconActive = false;
         return;
@@ -543,21 +543,13 @@ class _WebViewFullState extends State<WebViewFull> {
     }
     if (!_tradeCalculatorEnabled) {
       if (_tradesFullActive) {
-        _toggleTradesExpandable(active: false);
+        _toggleTradesWidget(active: false);
       }
       return;
     }
 
-    // Final items
-    int leftMoney = 0;
-    var leftItems = List<TradeItem>();
-    var leftProperties = List<TradeItem>();
-    var leftShares = List<TradeItem>();
-    int rightMoney = 0;
-    var rightItems = List<TradeItem>();
-    var rightProperties = List<TradeItem>();
-    var rightShares = List<TradeItem>();
-
+    String sellerName;
+    int tradeId;
     // Element containers
     List<dom.Element> leftMoneyElements;
     List<dom.Element> leftItemsElements;
@@ -601,159 +593,53 @@ class _WebViewFullState extends State<WebViewFull> {
       return;
     }
 
-    // Color 1 is money
-    int colors1(List<dom.Element> sideMoneyElement) {
-      var row = sideMoneyElement[0];
-      RegExp regExp = new RegExp(r"([0-9][,]{0,3})+");
-      try {
-        var match = regExp.stringMatch(row.innerHtml);
-        return int.parse(match.replaceAll(",", ""));
-      } catch (e) {
-        return 0;
-      }
+    // Trade Id
+    try {
+      RegExp regId = new RegExp(r"(?:&ID=)([0-9]+)");
+      var matches = regId.allMatches(_currentUrl);
+      tradeId = int.parse(matches.elementAt(0).group(1));
+    } catch (e) {
+      tradeId = 0;
     }
 
-    if (leftMoneyElements.length > 0) {
-      leftMoney = colors1(leftMoneyElements);
-    }
-
-    if (rightMoneyElements.length > 0) {
-      rightMoney = colors1(rightMoneyElements);
-    }
-
-    // Color 2 is general items
-    void addColor2Items(dom.Element itemLine, ItemsModel allTornItems, List<TradeItem> sideItems) {
-      var thisItem = TradeItem();
-      var row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
-      thisItem.name = row.split(" x")[0].trim();
-      row.split(" x").length > 1
-          ? thisItem.quantity = int.parse(row.split(" x")[1])
-          : thisItem.quantity = 1;
-      allTornItems.items.forEach((key, value) {
-        if (thisItem.name == value.name) {
-          thisItem.priceUnit = value.marketValue;
-          thisItem.totalPrice = thisItem.priceUnit * thisItem.quantity;
-        }
-      });
-      sideItems.add(thisItem);
-    }
-
-    if (leftItemsElements.length > 0 || rightItemsElements.length > 0) {
-      var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-      var allTornItems = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
-      if (allTornItems is ApiError) {
-        return;
-      } else if (allTornItems is ItemsModel) {
-        // Loop left
-        for (var itemLine in leftItemsElements) {
-          addColor2Items(itemLine, allTornItems, leftItems);
-        }
-        // Loop right
-        for (var itemLine in rightItemsElements) {
-          addColor2Items(itemLine, allTornItems, rightItems);
-        }
-      }
-    }
-
-    // Color 3 is properties
-    void addColor3Items(dom.Element propertyLine, List<TradeItem> sideProperty) {
-      var thisProperty = TradeItem();
-      var row = pdaParser.HtmlParser.fix(propertyLine.innerHtml.trim());
-      thisProperty.name = row.split(" (")[0].trim();
-      RegExp regExp = new RegExp(r"[0-9]+ happiness");
-      try {
-        var match = regExp.stringMatch(propertyLine.innerHtml);
-        thisProperty.happiness = match.substring(0);
-      } catch (e) {
-        thisProperty.happiness = '';
-      }
-      sideProperty.add(thisProperty);
-    }
-
-    if (leftPropertyElements.length > 0 || rightPropertyElements.length > 0) {
-      for (var propertyLine in leftPropertyElements) {
-        addColor3Items(propertyLine, leftProperties);
-      }
-      for (var propertyLine in rightPropertyElements) {
-        addColor3Items(propertyLine, rightProperties);
-      }
-    }
-
-    // Color 4 is general items
-    void addColor4Items(dom.Element shareLine, List<TradeItem> sideShares) {
-      var thisShare = TradeItem();
-      var row = pdaParser.HtmlParser.fix(shareLine.innerHtml.trim());
-      thisShare.name = row.split(" x")[0].trim();
-
-      try {
-        RegExp regQuantity = new RegExp(
-            r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
-        var matches = regQuantity.allMatches(shareLine.innerHtml);
-        thisShare.name = matches.elementAt(0).group(1);
-        thisShare.quantity = int.parse(matches.elementAt(0).group(2));
-        var singlePriceSplit = matches.elementAt(0).group(3).split('.');
-        thisShare.shareUnit = double.parse(singlePriceSplit[0].replaceAll(',', '')) +
-            double.parse('0.${singlePriceSplit[1]}');
-        thisShare.totalPrice = int.parse(matches.elementAt(0).group(4).replaceAll(',', ''));
-      } catch (e) {
-        thisShare.quantity = 0;
-      }
-      sideShares.add(thisShare);
-    }
-
-    if (leftSharesElements.length > 0 || rightSharesElements.length > 0) {
-      for (var shareLine in leftSharesElements) {
-        addColor4Items(shareLine, leftShares);
-      }
-      for (var shareLine in rightSharesElements) {
-        addColor4Items(shareLine, rightShares);
-      }
+    // Name of seller
+    try {
+      sellerName = document.querySelector(".right .title-black").innerHtml;
+    } catch (e) {
+      sellerName = "";
     }
 
     // Activate trades widget
-    _toggleTradesExpandable(
-      active: true,
-      leftMoney: leftMoney,
-      leftItems: leftItems,
-      leftProperties: leftProperties,
-      leftShares: leftShares,
-      rightMoney: rightMoney,
-      rightItems: rightItems,
-      rightProperties: rightProperties,
-      rightShares: rightShares,
+    _toggleTradesWidget(active: true);
+
+    // Initialize trades provider, which in turn feeds the trades widget
+    var tradesProvider = Provider.of<TradesProvider>(context, listen: false);
+    tradesProvider.updateTrades(
+      userApiKey: _userProvider.myUser.userApiKey,
+      playerId: _userProvider.myUser.playerId,
+      sellerName: sellerName,
+      tradeId: tradeId,
+      leftMoneyElements: leftMoneyElements,
+      leftItemsElements: leftItemsElements,
+      leftPropertyElements: leftPropertyElements,
+      leftSharesElements: leftSharesElements,
+      rightMoneyElements: rightMoneyElements,
+      rightItemsElements: rightItemsElements,
+      rightPropertyElements: rightPropertyElements,
+      rightSharesElements: rightSharesElements,
     );
   }
 
-  /// Optional parameters required when [active] is true
-  void _toggleTradesExpandable({
-    @required bool active,
-    int leftMoney,
-    List<TradeItem> leftItems,
-    List<TradeItem> leftProperties,
-    List<TradeItem> leftShares,
-    int rightMoney,
-    List<TradeItem> rightItems,
-    List<TradeItem> rightProperties,
-    List<TradeItem> rightShares,
-  }) {
-    if (!active) {
+  _toggleTradesWidget({@required bool active}) {
+    if (active) {
       setState(() {
-        _tradesFullActive = false;
-        _tradesExpandable = SizedBox.shrink();
+        _tradesFullActive = true;
+        _tradesExpandable = TradesWidget();
       });
     } else {
       setState(() {
-        _tradesFullActive = true;
-        _tradesExpandable = TradesWidget(
-          leftMoney: leftMoney,
-          leftItems: leftItems,
-          leftProperties: leftProperties,
-          leftShares: leftShares,
-          rightMoney: rightMoney,
-          rightItems: rightItems,
-          rightProperties: rightProperties,
-          rightShares: rightShares,
-        );
+        _tradesFullActive = false;
+        _tradesExpandable = SizedBox.shrink();
       });
     }
   }
@@ -765,6 +651,7 @@ class _WebViewFullState extends State<WebViewFull> {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return TradesOptions(
+            playerId: _userProvider.myUser.playerId,
             callback: _tradesPreferencesLoad,
           );
         },
@@ -793,17 +680,24 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorEnabled = await SharedPreferencesModel().getTradeCalculatorEnabled();
-    _forceAssessTrades();
+    _decideIfCallTrades();
   }
 
-  Future _forceAssessTrades() async {
-    _currentUrl = await webView.getUrl();
-    var html = await webView.getHtml();
-    var document = parse(html);
+  // Avoid continuous calls to trades from different activators
+  Future _decideIfCallTrades() async {
+    var now = DateTime.now();
+    var diff = now.difference(_lastTradeCall);
+    if (diff.inSeconds > 1) {
+      _lastTradeCall = now;
 
-    String pageTitle = _getPageTitle(document);
-
-    _assessTrades(document, pageTitle);
+      // Call trades
+      _currentUrl = await webView.getUrl();
+      var html = await webView.getHtml();
+      var document = parse(html);
+      // Assign page title
+      String pageTitle = _getPageTitle(document);
+      _assessTrades(document, pageTitle);
+    }
   }
 
   // CITY
@@ -872,8 +766,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      var userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-      dynamic apiResponse = await TornApiCaller.items(userProvider.myUser.userApiKey).getItems;
+      dynamic apiResponse = await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
         var itemsFound = List<Item>();
