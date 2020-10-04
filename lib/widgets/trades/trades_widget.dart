@@ -254,11 +254,11 @@ class _TradesWidgetState extends State<TradesWidget> {
     }
 
     Widget clipboardIcon = SizedBox(
-      height: 20,
-      width: 20,
+      height: 23,
+      width: 23,
       child: IconButton(
         padding: EdgeInsets.all(0),
-        iconSize: 20,
+        iconSize: 23,
         onPressed: () {
           String amountCopied;
           if (_tradesProv.container.ttActive && side == 'right') {
@@ -272,7 +272,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         },
         icon: Icon(
           Icons.content_copy,
-          size: 20,
+          size: 23,
           color: Colors.grey,
         ),
       ),
@@ -367,36 +367,36 @@ class _TradesWidgetState extends State<TradesWidget> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon),
+                Padding(padding: const EdgeInsets.only(right: 10), child: clipboardIcon),
                 SizedBox(
-                  height: 20,
-                  width: 20,
+                  height: 23,
+                  width: 23,
                   child: IconButton(
                     padding: EdgeInsets.all(0),
-                    iconSize: 20,
+                    iconSize: 23,
                     onPressed: () {
                       _copyToClipboard(_tradesProv.container.ttUrl, "Receipt URL");
                     },
                     icon: Icon(
                       Icons.receipt_long_outlined,
-                      size: 20,
+                      size: 23,
                       color: ttColor,
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
+                SizedBox(width: 10),
                 SizedBox(
-                  height: 20,
-                  width: 20,
+                  height: 23,
+                  width: 23,
                   child: IconButton(
                     padding: EdgeInsets.all(0),
-                    iconSize: 20,
+                    iconSize: 23,
                     onPressed: () {
                       _copyTornTraderMessages();
                     },
                     icon: Icon(
                       Icons.message_outlined,
-                      size: 20,
+                      size: 23,
                       color: ttColor,
                     ),
                   ),
