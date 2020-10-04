@@ -235,7 +235,7 @@ class TargetsProvider extends ChangeNotifier {
           wasSuccessful = false;
         }
         // Wait for the API limit (100 calls/minute)
-        if (_targets.length > 90) {
+        if (_targets.length > 75) {
           await Future.delayed(const Duration(seconds: 1), () {});
         }
       } catch (e) {
@@ -293,7 +293,7 @@ class TargetsProvider extends ChangeNotifier {
               }
             }
             if (targetsIds.length > 75) {
-              await Future.delayed(const Duration(milliseconds: 750), () {});
+              await Future.delayed(const Duration(seconds: 1), () {});
             }
           }
         }
