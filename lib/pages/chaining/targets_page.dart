@@ -302,8 +302,8 @@ class _TargetsPageState extends State<TargetsPage> {
                             SnackBar(
                               content: Text(updateResult.numberSuccessful > 0
                                   ? 'Successfully updated '
-                                  '${updateResult.numberSuccessful} '
-                                  'targets!'
+                                      '${updateResult.numberSuccessful} '
+                                      'targets!'
                                   : 'No targets to update!'),
                             ),
                           );
@@ -313,8 +313,8 @@ class _TargetsPageState extends State<TargetsPage> {
                               backgroundColor: Colors.red,
                               content: Text(
                                 'Update with errors: ${updateResult.numberErrors} errors '
-                                    'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                                    'total targets!',
+                                'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                                'total targets!',
                               ),
                             ),
                           );
@@ -545,7 +545,7 @@ class _TargetsPageState extends State<TargetsPage> {
             value: choice,
             child: Row(
               children: [
-                Icon(choice.iconData, size: 20),
+                Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
                 SizedBox(width: 10),
                 Text(choice.description),
               ],
