@@ -29,6 +29,21 @@ import 'package:torn_pda/widgets/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
+class VaultsOptions {
+  String description;
+
+  VaultsOptions({this.description}) {
+    switch (description) {
+      case "Personal vault":
+        break;
+      case "Faction vault":
+        break;
+      case "Company vault":
+        break;
+    }
+  }
+}
+
 class WebViewFull extends StatefulWidget {
   final String customTitle;
   final String customUrl;
@@ -60,7 +75,12 @@ class _WebViewFullState extends State<WebViewFull> {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
+
   DateTime _lastTradeCall = DateTime.now();
+  // Sometimes the first call to trades will not detect that we are in, hence
+  // travel icon won't show and [_decideIfCallTrades] won't trigger again. This
+  // way we allow it to trigger again.
+  bool _lastTradeCallWasIn = false;
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -71,6 +91,12 @@ class _WebViewFullState extends State<WebViewFull> {
 
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
+
+  final _popupOptionsChoices = <VaultsOptions>[
+    VaultsOptions(description: "Personal vault"),
+    VaultsOptions(description: "Faction vault"),
+    VaultsOptions(description: "Company vault"),
+  ];
 
   @override
   void initState() {
@@ -153,6 +179,7 @@ class _WebViewFullState extends State<WebViewFull> {
                 _travelHomeIcon(),
                 _crimesInfoIcon(),
                 _crimesMenuIcon(),
+                _vaultsPopUpIcon(),
                 _tradesMenuIcon(),
                 _cityMenuIcon(),
                 IconButton(
@@ -520,6 +547,7 @@ class _WebViewFullState extends State<WebViewFull> {
       if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
         // Activate trades icon even before starting a trade, so that it can be deactivated
         _tradesIconActive = true;
+        _lastTradeCallWasIn = true;
         if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
           if (_tradesFullActive) {
             _toggleTradesWidget(active: false);
@@ -531,6 +559,7 @@ class _WebViewFullState extends State<WebViewFull> {
           _toggleTradesWidget(active: false);
         }
         _tradesIconActive = false;
+        _lastTradeCallWasIn = false;
         return;
       }
     }
@@ -644,6 +673,43 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  Widget _vaultsPopUpIcon() {
+    if (_tradesIconActive) {
+      return PopupMenuButton<VaultsOptions>(
+        icon: Icon(MdiIcons.cashUsdOutline),
+        onSelected: _openVaultsOptions,
+        itemBuilder: (BuildContext context) {
+          return _popupOptionsChoices.map((VaultsOptions choice) {
+            return PopupMenuItem<VaultsOptions>(
+              value: choice,
+              child: Row(
+                children: [
+                  Text(choice.description),
+                ],
+              ),
+            );
+          }).toList();
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  void _openVaultsOptions(VaultsOptions choice) async {
+    switch (choice.description) {
+      case "Personal vault":
+        webView.loadUrl(url: "https://www.torn.com/properties.php#/p=options&tab=vault");
+        break;
+      case "Faction vault":
+        webView.loadUrl(url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
+        break;
+      case "Company vault":
+        webView.loadUrl(url: "https://www.torn.com/companies.php#/option=funds");
+        break;
+    }
+  }
+
   Widget _tradesMenuIcon() {
     if (_tradesIconActive) {
       return OpenContainer(
@@ -687,7 +753,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _decideIfCallTrades() async {
     var now = DateTime.now();
     var diff = now.difference(_lastTradeCall);
-    if (diff.inSeconds > 1) {
+    if (diff.inSeconds > 1 || !_lastTradeCallWasIn) {
       _lastTradeCall = now;
 
       // Call trades
