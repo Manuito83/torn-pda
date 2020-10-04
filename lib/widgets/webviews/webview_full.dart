@@ -131,8 +131,8 @@ class _WebViewFullState extends State<WebViewFull> {
                     padding: EdgeInsets.all(10),
                     child: Text(
                       'Did you know?\n\n'
-                          'Long press section title to copy URL\n\n'
-                          'Swipe left/right to browse forward/back',
+                      'Long press section title to copy URL\n\n'
+                      'Swipe left/right to browse forward/back',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -539,29 +539,29 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _assessTrades(dom.Document document, String pageTitle) async {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
-    if (pageTitle == '') {
-      return;
-    } else {
-      pageTitle = pageTitle.toLowerCase();
-      var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
-      if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
-        // Activate trades icon even before starting a trade, so that it can be deactivated
+    pageTitle = pageTitle.toLowerCase();
+    var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+    if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
+      // Activate trades icon even before starting a trade, so that it can be deactivated
+      setState(() {
         _tradesIconActive = true;
-        _lastTradeCallWasIn = true;
-        if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
-          if (_tradesFullActive) {
-            _toggleTradesWidget(active: false);
-          }
-          return;
-        }
-      } else {
+      });
+      _lastTradeCallWasIn = true;
+      if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
         if (_tradesFullActive) {
           _toggleTradesWidget(active: false);
         }
-        _tradesIconActive = false;
-        _lastTradeCallWasIn = false;
         return;
       }
+    } else {
+      if (_tradesFullActive) {
+        _toggleTradesWidget(active: false);
+      }
+      setState(() {
+        _tradesIconActive = false;
+      });
+      _lastTradeCallWasIn = false;
+      return;
     }
 
     // We only get this once and if we are inside a trade
@@ -702,7 +702,8 @@ class _WebViewFullState extends State<WebViewFull> {
         webView.loadUrl(url: "https://www.torn.com/properties.php#/p=options&tab=vault");
         break;
       case "Faction vault":
-        webView.loadUrl(url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
+        webView.loadUrl(
+            url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
         break;
       case "Company vault":
         webView.loadUrl(url: "https://www.torn.com/companies.php#/option=funds");
