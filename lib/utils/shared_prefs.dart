@@ -50,6 +50,7 @@ class SharedPreferencesModel {
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kActiveCrimesList = "pda_activeCrimesList";
+  final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
   final String _kLootNotificationAhead = "pda_lootNotificationAhead";
@@ -589,6 +590,16 @@ class SharedPreferencesModel {
   /// ----------------------------  
   /// Methods for loot
   /// ----------------------------
+  Future<String> getLootYataCache() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootYataCache) ?? '';
+  }
+
+  Future<bool> setLootYataCache(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootYataCache, value);
+  }
+
   Future<String> getLootTimerType() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kLootTimerType) ?? 'timer';
