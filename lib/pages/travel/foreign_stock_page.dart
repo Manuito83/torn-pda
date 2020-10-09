@@ -445,8 +445,27 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   List<Widget> _stockItems() {
     var thisStockList = List<Widget>();
 
+    Widget lastUpdateDetails = Padding(
+      padding: EdgeInsets.fromLTRB(20, 15, 20, 10),
+      child: Row(
+        children: <Widget>[
+          Text(
+            'Last server update: ',
+            style: TextStyle(fontSize: 11),
+          ),
+          SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              _timeStampToString(_stocksYataModel.timestamp),
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
+
     Widget countriesFilterDetails = Padding(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
       child: Row(
         children: <Widget>[
           Text(
@@ -455,16 +474,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ),
           SizedBox(width: 6),
           Flexible(
-              child: Text(
-            _countriesFilteredText,
-            style: TextStyle(fontSize: 11),
-          )),
+            child: Text(
+              _countriesFilteredText,
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
         ],
       ),
     );
 
     Widget typesFilterDetails = Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 15),
       child: Row(
         children: <Widget>[
           Text(
@@ -473,14 +493,16 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ),
           SizedBox(width: 6),
           Flexible(
-              child: Text(
-            _typesFilteredText,
-            style: TextStyle(fontSize: 11),
-          )),
+            child: Text(
+              _typesFilteredText,
+              style: TextStyle(fontSize: 11),
+            ),
+          ),
         ],
       ),
     );
 
+    thisStockList.add(lastUpdateDetails);
     thisStockList.add(countriesFilterDetails);
     thisStockList.add(typesFilterDetails);
 
@@ -538,7 +560,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             ),
           ),
         ),
-        _returnLastUpdated(stock),
+        _returnLastUpdated(stock.timestamp),
       ],
     );
   }
@@ -798,9 +820,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
-  Row _returnLastUpdated(ForeignStock stock) {
-    var stockTime = DateTime.fromMillisecondsSinceEpoch(stock.timestamp * 1000);
-    var timeDifference = DateTime.now().difference(stockTime);
+  Row _returnLastUpdated(int timeStamp) {
+    var inputTime = DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000);
+    var timeDifference = DateTime.now().difference(inputTime);
     var timeString;
     var color;
     if (timeDifference.inMinutes < 1) {
@@ -1077,5 +1099,25 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     setState(() {
       _capacity = newCapacity;
     });
+  }
+
+  String _timeStampToString(int timeStamp) {
+    var inputTime = DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000);
+    var timeDifference = DateTime.now().difference(inputTime);
+    if (timeDifference.inMinutes < 1) {
+      return 'seconds ago';
+    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
+      return '1 minute ago';
+    } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
+      return '${timeDifference.inMinutes} minutes ago';
+    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+      return '1 hour ago';
+    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+      return '${timeDifference.inHours} hours ago';
+    } else if (timeDifference.inDays == 1) {
+      return '1 day ago';
+    } else {
+      return '${timeDifference.inDays} days ago';
+    }
   }
 }
