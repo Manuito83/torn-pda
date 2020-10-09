@@ -282,10 +282,10 @@ class TornApiCaller {
         url += '?selections=travel';
         break;
       case ApiSelection.ownProfile:
-        url += '?selections=profile,bars,networth,cooldowns,events,travel,icons';
+        url += '?selections=profile,bars,networth,cooldowns,events,travel,icons,money,education';
         break;
       case ApiSelection.ownProfileMisc:
-        url += '?selections=money,education';
+        url += '?selections=money,education,workstats,battlestats';
         break;
       case ApiSelection.target:
         url += '$prefix?selections=profile,discord';

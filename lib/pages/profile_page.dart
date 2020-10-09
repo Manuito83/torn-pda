@@ -333,6 +333,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                         child: _eventsTimeline(),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                        child: _playerStats(),
+                      ),
                       _miscellaneous(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
@@ -1567,6 +1571,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll(' [view]', '.');
       message = message.replaceAll(' [View]', '');
       message = message.replaceAll(' Please click here.', '');
+      message = message.replaceAll(' Please click here to collect your funds.', '');
 
       Widget insideIcon = _eventsInsideIconCases(message);
 
@@ -1746,7 +1751,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else if (message.contains('won') ||
         message.contains('lottery') ||
         message.contains('check has been credited to your') ||
-        message.contains('withdraw your check from the bank')) {
+        message.contains('withdraw your check from the bank') ||
+        message.contains('Your bank investment has ended')) {
       insideIcon = Icon(
         Icons.monetization_on,
         color: Colors.green,
@@ -1829,6 +1835,89 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       diff = '${timeDifference.inDays} days ago';
     }
     return diff;
+  }
+
+  Card _playerStats() {
+    // Currency configuration
+    final decimalFormat = new NumberFormat("#,##0", "en_US");
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Row(
+                children: [
+                  Text(
+                    'STATS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Rank: ${_user.rank}'),
+                  Text('Age: ${_user.age}'),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Row(
+                children: [
+                  Icon(MdiIcons.alphaPCircleOutline, color: Colors.blueAccent,),
+                  SizedBox(width: 5),
+                  Text('${_miscModel.points}'),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Strength: ${decimalFormat.format(_miscModel.strength)}'),
+                  Text('Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                  Text('Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                  Text('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                  SizedBox(
+                    width: 50,
+                    child: Divider(color: _themeProvider.mainText, thickness: 0.5),
+                  ),
+                  Text('Total: ${decimalFormat.format(_miscModel.total)}'),
+                ],
+              ),
+            ),
+            SizedBox(height: 15),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
+                  Text('Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
+                  Text('Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
+
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _miscellaneous() {
