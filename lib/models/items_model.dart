@@ -29,7 +29,7 @@ class Item {
   String description;
   String effect;
   Requirement requirement;
-  Type type;
+  ItemType type;
   WeaponType weaponType;
   int buyPrice;
   int sellPrice;
@@ -91,35 +91,35 @@ final requirementValues = EnumValues({
   "Under the effect of radiation poisoning.": Requirement.UNDER_THE_EFFECT_OF_RADIATION_POISONING
 });
 
-enum Type { MELEE, SECONDARY, PRIMARY, DEFENSIVE, CANDY, ELECTRONIC, CLOTHING, JEWELRY, OTHER, MEDICAL, VIRUS, COLLECTIBLE, CAR, FLOWER, BOOSTER, UNUSED, ALCOHOL, PLUSHIE, DRUG, TEMPORARY, SPECIAL, SUPPLY_PACK, ENHANCER, ARTIFACT, ENERGY_DRINK, BOOK }
+enum ItemType { MELEE, SECONDARY, PRIMARY, DEFENSIVE, CANDY, ELECTRONIC, CLOTHING, JEWELRY, OTHER, MEDICAL, VIRUS, COLLECTIBLE, CAR, FLOWER, BOOSTER, UNUSED, ALCOHOL, PLUSHIE, DRUG, TEMPORARY, SPECIAL, SUPPLY_PACK, ENHANCER, ARTIFACT, ENERGY_DRINK, BOOK }
 
 final typeValues = EnumValues({
-  "Alcohol": Type.ALCOHOL,
-  "Artifact": Type.ARTIFACT,
-  "Book": Type.BOOK,
-  "Booster": Type.BOOSTER,
-  "Candy": Type.CANDY,
-  "Car": Type.CAR,
-  "Clothing": Type.CLOTHING,
-  "Collectible": Type.COLLECTIBLE,
-  "Defensive": Type.DEFENSIVE,
-  "Drug": Type.DRUG,
-  "Electronic": Type.ELECTRONIC,
-  "Energy Drink": Type.ENERGY_DRINK,
-  "Enhancer": Type.ENHANCER,
-  "Flower": Type.FLOWER,
-  "Jewelry": Type.JEWELRY,
-  "Medical": Type.MEDICAL,
-  "Melee": Type.MELEE,
-  "Other": Type.OTHER,
-  "Plushie": Type.PLUSHIE,
-  "Primary": Type.PRIMARY,
-  "Secondary": Type.SECONDARY,
-  "Special": Type.SPECIAL,
-  "Supply Pack": Type.SUPPLY_PACK,
-  "Temporary": Type.TEMPORARY,
-  "Unused": Type.UNUSED,
-  "Virus": Type.VIRUS
+  "Alcohol": ItemType.ALCOHOL,
+  "Artifact": ItemType.ARTIFACT,
+  "Book": ItemType.BOOK,
+  "Booster": ItemType.BOOSTER,
+  "Candy": ItemType.CANDY,
+  "Car": ItemType.CAR,
+  "Clothing": ItemType.CLOTHING,
+  "Collectible": ItemType.COLLECTIBLE,
+  "Defensive": ItemType.DEFENSIVE,
+  "Drug": ItemType.DRUG,
+  "Electronic": ItemType.ELECTRONIC,
+  "Energy Drink": ItemType.ENERGY_DRINK,
+  "Enhancer": ItemType.ENHANCER,
+  "Flower": ItemType.FLOWER,
+  "Jewelry": ItemType.JEWELRY,
+  "Medical": ItemType.MEDICAL,
+  "Melee": ItemType.MELEE,
+  "Other": ItemType.OTHER,
+  "Plushie": ItemType.PLUSHIE,
+  "Primary": ItemType.PRIMARY,
+  "Secondary": ItemType.SECONDARY,
+  "Special": ItemType.SPECIAL,
+  "Supply Pack": ItemType.SUPPLY_PACK,
+  "Temporary": ItemType.TEMPORARY,
+  "Unused": ItemType.UNUSED,
+  "Virus": ItemType.VIRUS
 });
 
 enum WeaponType { CLUBBING, PIERCING, SLASHING, MECHANICAL, PISTOL, SHOTGUN, SMG, RIFLE, MACHINE_GUN, HEAVY_ARTILLERY, TEMPORARY }
