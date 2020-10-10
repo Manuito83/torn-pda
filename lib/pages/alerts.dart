@@ -111,6 +111,22 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.nerveNotification ?? false,
+                          title: Text("Nerve full"),
+                          subtitle: Text("Get notified once you reach full nerve"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.nerveNotification = value;
+                            });
+                            firestore.subscribeToNerveNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.hospitalNotification ?? false,
                           title: Text("Hospital admission and release"),
                           subtitle: Text("If you are offline, you'll be notified if you are "

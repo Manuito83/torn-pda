@@ -51,6 +51,57 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
+export async function sendNerveNotification(userStats: any, subscriber: any) {
+  const nerve = userStats.nerve;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      nerve.maximum === nerve.current && 
+      (subscriber.nerveLastCheckFull === false)
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          "Full Nerve Bar",
+          "Your nerve is full, go crazy!"
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            nerveLastCheckFull: true,
+          })
+      );
+    }
+
+    if (
+      nerve.current < nerve.maximum &&
+      (subscriber.nerveLastCheckFull === true)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            nerveLastCheckFull: false,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR NERVE");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
 export async function sendTravelNotification(userStats: any, subscriber: any) {
   const travel = userStats.travel;
   const promises: Promise<any>[] = [];
@@ -59,11 +110,10 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
   const currentDateInMillis = Date.now();
 
   try {
-
     if (
       travel.time_left > 0 &&
-      travel.time_left <= 180 &&
-      currentDateInMillis - lastTravelNotificationSent > 180 * 1000
+      travel.time_left <= 240 &&
+      currentDateInMillis - lastTravelNotificationSent > 300 * 1000
     ) {
       promises.push(
         sendNotificationToUser(
@@ -108,7 +158,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
 
     // If we have just been hospitalised (stay > 180 seconds)
     if (
-      hospitalTimeToRelease > 180 && hospitalLastStatus !== 'in'
+      hospitalTimeToRelease > 240 && hospitalLastStatus !== 'in'
     ) {
       promises.push(
         admin
@@ -133,7 +183,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
 
     // If we are about to be released and last time we checked we were in hospital
     else if (
-      hospitalTimeToRelease > 0 && hospitalTimeToRelease <= 180 &&
+      hospitalTimeToRelease > 0 && hospitalTimeToRelease <= 240 &&
       hospitalLastStatus === 'in'
     ) {
     

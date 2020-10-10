@@ -17,7 +17,7 @@ export const staleGroup = {
           .firestore()
           .collection("players")
           .where("active", "==", true)
-          .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 7)
+          .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 6)
           .get()
       ).docs.map((d) => d.data());
 

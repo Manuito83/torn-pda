@@ -54,6 +54,12 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToNerveNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "nerveNotification": subscribe,
+    });
+  }
+
   Future<void> subscribeToHospitalNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "hospitalNotification": subscribe,

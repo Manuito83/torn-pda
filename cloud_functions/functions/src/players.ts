@@ -41,6 +41,10 @@ export const playersGroup = {
         promises.push(manageStats("energyNotification", -1));
       }
 
+      if (beforeStat.nerveNotification) {
+        promises.push(manageStats("nerveNotification", -1));
+      }
+
       if (beforeStat.travelNotification) {
         promises.push(manageStats("travelNotification", -1));
       }
@@ -81,6 +85,12 @@ export const playersGroup = {
           manageStats("energyNotification", afterStat.energyNotification ? 1 : -1
         )
       );
+
+      if (beforeStat.nerveNotification !== afterStat.nerveNotification)
+        promises.push(
+          manageStats("nerveNotification", afterStat.nerveNotification ? 1 : -1
+        )
+      );
       
       if (beforeStat.travelNotification !== afterStat.travelNotification)
         promises.push(
@@ -96,6 +106,7 @@ export const playersGroup = {
 
       if (
         !afterStat.energyNotification &&
+        !afterStat.nerveNotification &&
         !afterStat.travelNotification &&
         !afterStat.hospitalNotification &&
         afterStat.alertsEnabled
@@ -111,7 +122,8 @@ export const playersGroup = {
         );
 
       if (
-        (afterStat.energyNotification 
+        (afterStat.energyNotification
+         || afterStat.nerveNotification 
          || afterStat.travelNotification
          || afterStat.hospitalNotification) 
          && !afterStat.alertsEnabled
