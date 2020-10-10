@@ -67,6 +67,8 @@ class _WebViewFullState extends State<WebViewFull> {
   String _pageTitle = "";
   String _currentUrl = '';
 
+  bool _backButtonPopsContext = true;
+
   var _travelActive = false;
 
   var _crimesActive = false;
@@ -165,12 +167,26 @@ class _WebViewFullState extends State<WebViewFull> {
               },
               genericAppBar: AppBar(
                 leading: IconButton(
-                    icon: Icon(Icons.arrow_back),
-                    onPressed: () {
-                      if (widget.customCallBack != null) {
-                        widget.customCallBack();
+                    icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+                    onPressed: () async {
+                      // Normal behaviour is just to pop and go to previous page
+                      if (_backButtonPopsContext) {
+                        if (widget.customCallBack != null) {
+                          widget.customCallBack();
+                        }
+                        Navigator.pop(context);
+                      } else {
+                        // But we can change and go back to previous page in certain
+                        // situations (e.g. when going for the vault while trading),
+                        // in which case we need to return to previous target
+                        var backPossible = await webView.canGoBack();
+                        if (backPossible) {
+                          webView.goBack();
+                        } else {
+                          Navigator.pop(context);
+                        }
+                        _backButtonPopsContext = true;
                       }
-                      Navigator.pop(context);
                     }),
                 title: GestureDetector(
                   child: Text(_pageTitle),
@@ -371,11 +387,31 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Assign page title
     String pageTitle = _getPageTitle(document);
-
+    _assessBackButtonBehaviour();
     _assessTravel(document);
     _assessCrimes(document, pageTitle);
     _decideIfCallTrades();
     _assessCity(document, pageTitle);
+  }
+
+  void _assessBackButtonBehaviour() async {
+    // If we are NOT moving to a place with a vault, we show an X and close upon button press
+    if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
+        !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
+        !_currentUrl.contains('companies.php#/option=funds')) {
+      _backButtonPopsContext = true;
+    }
+    // However, if we are in a place with a vault AND we come from Trades, we'll change
+    // the back button behaviour to ensure we are returning to Trades
+    else {
+      var history = await webView.getCopyBackForwardList();
+      // Check if we have more than a single page in history (otherwise we don't come from Trades)
+      if (history.currentIndex > 0) {
+        if (history.list[history.currentIndex - 1].url.contains('trade.php')) {
+          _backButtonPopsContext = false;
+        }
+      }
+    }
   }
 
   String _getPageTitle(dom.Document document) {
