@@ -212,3 +212,60 @@ String highlightCityItemsJS() {
     highlightItems();
   ''';
 }
+
+String addBazaarFillButtonsJS() {
+  return '''
+    // ADD
+    var doc = document;
+    var bazaar = doc.querySelectorAll(".clearfix.no-mods");
+    
+    var needToAdd = true;
+    for(let item of bazaar){
+      let fill = item.querySelector(".torn-btn");
+      
+      // Are the buttons already active?
+      if (fill != null) {
+          needToAdd = false;
+        }	
+    } 
+    
+    if (needToAdd) {
+      for(let item of bazaar){
+        let qtyBox = item.querySelector(".amount .clear-all");
+        
+        let fillButton = doc.createElement('a');
+        fillButton.innerHTML = '<button class="torn-btn">FILL</button>';
+        qtyBox.parentElement.appendChild(fillButton);
+  
+        fillButton.addEventListener("click", function(event){
+        event.stopPropagation();
+        
+        var inventoryQuantity;
+        var tryFindItemNumber = fillButton.parentElement.parentElement.parentElement.parentElement.querySelector(".t-show");
+        if (tryFindItemNumber != null) {
+          inventoryQuantity = tryFindItemNumber.innerText.replace(/,/g, "").replace("x", "");
+        } else {
+          inventoryQuantity = 1;
+        }
+            
+        qtyBox.value = inventoryQuantity;
+        qtyBox.dispatchEvent(new Event("input", { bubbles: true }));	
+        });
+      }
+    }
+  ''';
+}
+
+String removeBazaarFillButtonsJS() {
+  return '''
+    var doc = document;
+    var bazaar = doc.querySelectorAll(".clearfix.no-mods");
+
+    for(let item of bazaar){
+      let fill = item.querySelector(".torn-btn");
+      if (fill != null) {
+        fill.remove();
+      }
+    }
+  ''';
+}

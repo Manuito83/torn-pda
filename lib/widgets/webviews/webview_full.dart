@@ -93,6 +93,9 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityItemsFound = List<Item>();
   var _cityController = ExpandableController();
 
+  var _bazaarActive = false;
+  var _bazaarFillActive = false;
+
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
 
@@ -214,6 +217,7 @@ class _WebViewFullState extends State<WebViewFull> {
                   _vaultsPopUpIcon(),
                   _tradesMenuIcon(),
                   _cityMenuIcon(),
+                  _bazaarFillIcon(),
                   IconButton(
                     icon: Icon(Icons.refresh),
                     onPressed: () async {
@@ -269,6 +273,7 @@ class _WebViewFullState extends State<WebViewFull> {
                   initialHeaders: {},
                   initialOptions: InAppWebViewGroupOptions(
                     crossPlatform: InAppWebViewOptions(
+                      useShouldInterceptAjaxRequest: true,
                       debuggingEnabled: true,
                       preferredContentMode: UserPreferredContentMode.DESKTOP,
                     ),
@@ -279,6 +284,24 @@ class _WebViewFullState extends State<WebViewFull> {
                       displayZoomControls: false,
                     ),
                   ),
+                  shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+                    // This will intercept ajax calls performed when the bazaar reached 100 items
+                    // and needs to be reloaded, so that we can remove and add again the fill buttons
+                    if (x == null) return;
+                    if (x.data == null) return;
+                    if (x.url == null) return;
+
+                    if (x.data.contains("step=getList&type=All&start=") &&
+                        x.url.contains('inventory.php') &&
+                        _bazaarActive &&
+                        _bazaarFillActive) {
+                      webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                      Future.delayed(const Duration(seconds: 2)).then((value) {
+                        webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+                      });
+                    }
+                    return;
+                  },
                   onWebViewCreated: (InAppWebViewController c) {
                     webView = c;
                   },
@@ -392,6 +415,7 @@ class _WebViewFullState extends State<WebViewFull> {
     _assessCrimes(document, pageTitle);
     _decideIfCallTrades();
     _assessCity(document, pageTitle);
+    _assessBazaar(document);
   }
 
   void _assessBackButtonBehaviour() async {
@@ -942,6 +966,40 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _cityPreferencesLoad() async {
     _cityEnabled = await SharedPreferencesModel().getCityEnabled();
     await webView.reload();
+  }
+
+  // BAZAAR
+  Future _assessBazaar(dom.Document document) async {
+    var easyUrl = _currentUrl.replaceAll('#', '');
+    if (easyUrl.contains('bazaar.php/add')) {
+      _bazaarActive = true;
+    } else {
+      _bazaarActive = false;
+    }
+  }
+
+  Widget _bazaarFillIcon() {
+    if (_bazaarActive) {
+      return FlatButton(
+        onPressed: () async {
+          _bazaarFillActive
+              ? await webView.evaluateJavascript(source: removeBazaarFillButtonsJS())
+              : await webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+
+          setState(() {
+            _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
+          });
+        },
+        child: Text(
+          "FILL",
+          style: TextStyle(
+            color: _bazaarFillActive ? Colors.yellow[600] : Colors.white,
+          ),
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   // UTILS
