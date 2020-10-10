@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:io';
 import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/cupertino.dart';
@@ -12,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
@@ -25,6 +27,7 @@ import 'package:torn_pda/utils/external/nuke_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
@@ -164,6 +167,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   bool _nukeReviveActive = false;
 
+  var _showOne = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -291,59 +296,92 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (_apiGoodData) {
-                return SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-                        child: Column(
-                          children: <Widget>[
-                            Text(
-                              '${_user.name} [${_user.playerId}]',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                return BubbleShowcase(
+                  // KEEP THIS UNIQUE
+                  bubbleShowcaseId: 'profile_showcase',
+                  // WILL SHOW IF VERSION CHANGED
+                  bubbleShowcaseVersion: 1,
+                  showCloseButton: false,
+                  doNotReopenOnClose: false,
+                  bubbleSlides: [
+                    RelativeBubbleSlide(
+                      shape: Rectangle(spreadRadius: 10),
+                      widgetKey: _showOne,
+                      child: RelativeBubbleSlideChild(
+                        direction: AxisDirection.down,
+                        widget: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: SpeechBubble(
+                            nipLocation: NipLocation.TOP,
+                            color: Colors.blue,
+                            child: Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Text(
+                                'Did you know?\n\n'
+                                    'You can tap the energy or nerve bars to open a '
+                                    'quick dialog straight to the gym or crimes!',
+                                style: TextStyle(color: Colors.white),
                               ),
                             ),
-                            SizedBox(height: 5),
-                            Text(
-                              'Level ${_user.level}',
-                            ),
-                            Text(
-                              _user.lastAction.relative[0] == '0'
-                                  ? 'Online now'
-                                  : 'Online ${_user.lastAction.relative}',
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                        child: _playerStatus(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                        child: _basicBars(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                        child: _coolDowns(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                        child: _eventsTimeline(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                        child: _playerStats(),
-                      ),
-                      _miscellaneous(),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
-                        child: _netWorth(),
-                      ),
-                      SizedBox(height: 50),
-                    ],
+                    ),
+                  ],
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+                          child: Column(
+                            children: <Widget>[
+                              Text(
+                                '${_user.name} [${_user.playerId}]',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Level ${_user.level}',
+                              ),
+                              Text(
+                                _user.lastAction.relative[0] == '0'
+                                    ? 'Online now'
+                                    : 'Online ${_user.lastAction.relative}',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                          child: _playerStatus(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: _basicBars(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: _coolDowns(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: _eventsTimeline(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: _playerStats(),
+                        ),
+                        _miscellaneous(),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
+                          child: _netWorth(),
+                        ),
+                        SizedBox(height: 50),
+                      ],
+                    ),
                   ),
                 );
               } else {
@@ -722,18 +760,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             child: Text('Energy'),
                           ),
                           SizedBox(width: 10),
-                          LinearPercentIndicator(
-                            width: 150,
-                            lineHeight: 20,
-                            progressColor: Colors.green,
-                            backgroundColor: Colors.grey,
-                            center: Text(
-                              '${_user.energy.current}',
-                              style: TextStyle(color: Colors.black),
+                          GestureDetector(
+                            key: _showOne,
+                            onTap: () async {
+                              await _openBrowserDialog(
+                                context,
+                                'https://www.torn.com/gym.php',
+                              );
+                            },
+                            child: LinearPercentIndicator(
+                              width: 150,
+                              lineHeight: 20,
+                              progressColor: Colors.green,
+                              backgroundColor: Colors.grey,
+                              center: Text(
+                                '${_user.energy.current}',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              percent: _user.energy.current / _user.energy.maximum > 1.0
+                                  ? 1.0
+                                  : _user.energy.current / _user.energy.maximum,
                             ),
-                            percent: _user.energy.current / _user.energy.maximum > 1.0
-                                ? 1.0
-                                : _user.energy.current / _user.energy.maximum,
                           ),
                         ],
                       ),
@@ -759,18 +806,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             child: Text('Nerve'),
                           ),
                           SizedBox(width: 10),
-                          LinearPercentIndicator(
-                            width: 150,
-                            lineHeight: 20,
-                            progressColor: Colors.redAccent,
-                            backgroundColor: Colors.grey,
-                            center: Text(
-                              '${_user.nerve.current}',
-                              style: TextStyle(color: Colors.black),
+                          GestureDetector(
+                            onTap: () async {
+                              await _openBrowserDialog(
+                                context,
+                                'https://www.torn.com/crimes.php#/step=main',
+                              );
+                            },
+                            child: LinearPercentIndicator(
+                              width: 150,
+                              lineHeight: 20,
+                              progressColor: Colors.redAccent,
+                              backgroundColor: Colors.grey,
+                              center: Text(
+                                '${_user.nerve.current}',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              percent: _user.nerve.current / _user.nerve.maximum > 1.0
+                                  ? 1.0
+                                  : _user.nerve.current / _user.nerve.maximum,
                             ),
-                            percent: _user.nerve.current / _user.nerve.maximum > 1.0
-                                ? 1.0
-                                : _user.nerve.current / _user.nerve.maximum,
                           ),
                         ],
                       ),
@@ -1876,7 +1931,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8.0),
               child: Row(
                 children: [
-                  Icon(MdiIcons.alphaPCircleOutline, color: Colors.blueAccent,),
+                  Icon(
+                    MdiIcons.alphaPCircleOutline,
+                    color: Colors.blueAccent,
+                  ),
                   SizedBox(width: 5),
                   Text('${_miscModel.points}'),
                 ],
@@ -1909,7 +1967,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Text('Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
                   Text('Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
                   Text('Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
-
                 ],
               ),
             ),
@@ -3287,200 +3344,213 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _checkIfNotificationsAreCurrent();
   }
 
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return WebViewDialog(
+          initUrl: initUrl,
+        );
+      },
+    );
+  }
+
   Future<void> _openNukeReviveDialog(BuildContext _) {
     return showDialog<void>(
-        context: _,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            content: SingleChildScrollView(
-              child: Stack(
-                children: <Widget>[
-                  SingleChildScrollView(
-                    child: Container(
-                      padding: EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: EdgeInsets.only(top: 15),
-                      decoration: new BoxDecoration(
-                        color: _themeProvider.background,
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: const Offset(0.0, 10.0),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min, // To make the card compact
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    "REQUEST A REVIVE FROM NUKE",
-                                    style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                                  ),
+      context: _,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  "REQUEST A REVIVE FROM NUKE",
+                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
                                 ),
-                              ],
-                            ),
-                          ),
-                          Flexible(
-                            child: EasyRichText(
-                              "Nuke is a premium Torn reviving service consisting in more than "
-                              "300 revivers. You can find more information in the forums or "
-                              "in the Central Hospital Discord server.",
-                              defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                              patternList: [
-                                EasyRichTextPattern(
-                                  targetString: 'forums',
-                                  style: TextStyle(color: Colors.blue),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () async {
-                                      var targetUrl =
-                                          'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0';
-                                      var browserType = _settingsProvider.currentBrowser;
-                                      switch (browserType) {
-                                        case BrowserSetting.app:
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (BuildContext context) => WebViewFull(
-                                                customTitle: 'Forums',
-                                                customUrl: targetUrl,
-                                              ),
-                                            ),
-                                          );
-                                          break;
-                                        case BrowserSetting.external:
-                                          if (await canLaunch(targetUrl)) {
-                                            await launch(targetUrl, forceSafariVC: false);
-                                          }
-                                          break;
-                                      }
-                                    },
-                                ),
-                                EasyRichTextPattern(
-                                  targetString: 'Central Hospital',
-                                  style: TextStyle(color: Colors.blue),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () async {
-                                      var url = 'https://discord.gg/qSHjTXx';
-                                      if (await canLaunch(url)) {
-                                        await launch(url, forceSafariVC: false);
-                                      }
-                                    },
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Flexible(
-                            child: Text(
-                              "Each revive must be paid directly to the reviver (unless under a "
-                              "contract with Nuke) and costs \$1 million or 1 Xanax.",
-                              style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Flexible(
-                            child: Text(
-                              "Please keep in mind if you don't pay for the requested revive, "
-                              "you risk getting blocked from Nuke!",
-                              style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                            ),
-                          ),
-                          SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              FlatButton(
-                                child: Text("Medic!"),
-                                onPressed: () async {
-                                  var nuke = NukeRevive(
-                                    playerId: _user.playerId.toString(),
-                                    playerName: _user.name,
-                                    playerFaction: _user.faction.factionName,
-                                    playerLocation: _user.travel.destination,
-                                  );
-                                  nuke.callMedic().then((value) {
-                                    if (value.isNotEmpty) {
-                                      BotToast.showText(
-                                        text: value,
-                                        textStyle: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.green[800],
-                                        duration: Duration(seconds: 5),
-                                        contentPadding: EdgeInsets.all(10),
-                                      );
-                                    } else {
-                                      BotToast.showText(
-                                        text: 'There was an error contacting Nuke, try again later '
-                                            'or contact them through Central Hospital\'s Discord '
-                                            'server!',
-                                        textStyle: TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.red[800],
-                                        duration: Duration(seconds: 5),
-                                        contentPadding: EdgeInsets.all(10),
-                                      );
-                                    }
-                                  });
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              FlatButton(
-                                child: Text("Cancel"),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
                               ),
                             ],
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                        Flexible(
+                          child: EasyRichText(
+                            "Nuke is a premium Torn reviving service consisting in more than "
+                            "300 revivers. You can find more information in the forums or "
+                            "in the Central Hospital Discord server.",
+                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                            patternList: [
+                              EasyRichTextPattern(
+                                targetString: 'forums',
+                                style: TextStyle(color: Colors.blue),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () async {
+                                    var targetUrl =
+                                        'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0';
+                                    var browserType = _settingsProvider.currentBrowser;
+                                    switch (browserType) {
+                                      case BrowserSetting.app:
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (BuildContext context) => WebViewFull(
+                                              customTitle: 'Forums',
+                                              customUrl: targetUrl,
+                                            ),
+                                          ),
+                                        );
+                                        break;
+                                      case BrowserSetting.external:
+                                        if (await canLaunch(targetUrl)) {
+                                          await launch(targetUrl, forceSafariVC: false);
+                                        }
+                                        break;
+                                    }
+                                  },
+                              ),
+                              EasyRichTextPattern(
+                                targetString: 'Central Hospital',
+                                style: TextStyle(color: Colors.blue),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () async {
+                                    var url = 'https://discord.gg/qSHjTXx';
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                  },
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "Each revive must be paid directly to the reviver (unless under a "
+                            "contract with Nuke) and costs \$1 million or 1 Xanax.",
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "Please keep in mind if you don't pay for the requested revive, "
+                            "you risk getting blocked from Nuke!",
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Medic!"),
+                              onPressed: () async {
+                                var nuke = NukeRevive(
+                                  playerId: _user.playerId.toString(),
+                                  playerName: _user.name,
+                                  playerFaction: _user.faction.factionName,
+                                  playerLocation: _user.travel.destination,
+                                );
+                                nuke.callMedic().then((value) {
+                                  if (value.isNotEmpty) {
+                                    BotToast.showText(
+                                      text: value,
+                                      textStyle: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.green[800],
+                                      duration: Duration(seconds: 5),
+                                      contentPadding: EdgeInsets.all(10),
+                                    );
+                                  } else {
+                                    BotToast.showText(
+                                      text: 'There was an error contacting Nuke, try again later '
+                                          'or contact them through Central Hospital\'s Discord '
+                                          'server!',
+                                      textStyle: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.red[800],
+                                      duration: Duration(seconds: 5),
+                                      contentPadding: EdgeInsets.all(10),
+                                    );
+                                  }
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text("Cancel"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
                     ),
                   ),
-                  Positioned(
-                    left: 16,
-                    right: 16,
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
                     child: CircleAvatar(
-                      radius: 26,
                       backgroundColor: _themeProvider.background,
-                      child: CircleAvatar(
-                        backgroundColor: _themeProvider.background,
-                        radius: 22,
-                        child: SizedBox(
-                          height: 34,
-                          width: 34,
-                          child: Image.asset(
-                            'images/icons/nuke-revive.png',
-                          ),
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Image.asset(
+                          'images/icons/nuke-revive.png',
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }

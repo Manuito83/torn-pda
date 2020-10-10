@@ -48,11 +48,13 @@ class WebViewFull extends StatefulWidget {
   final String customTitle;
   final String customUrl;
   final Function customCallBack;
+  final bool dialog;
 
   WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
     this.customCallBack,
+    this.dialog = false,
   });
 
   @override
@@ -110,185 +112,197 @@ class _WebViewFullState extends State<WebViewFull> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: BubbleShowcase(
-        // KEEP THIS UNIQUE
-        bubbleShowcaseId: 'webview_full_showcase',
-        // WILL SHOW IF VERSION CHANGED
-        bubbleShowcaseVersion: 1,
-        showCloseButton: false,
-        doNotReopenOnClose: true,
-        bubbleSlides: [
-          RelativeBubbleSlide(
-            widgetKey: _showOne,
-            child: RelativeBubbleSlideChild(
-              direction: AxisDirection.down,
-              widget: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SpeechBubble(
-                  nipLocation: NipLocation.TOP,
-                  color: Colors.blue,
-                  child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Text(
-                      'Did you know?\n\n'
-                      'Long press section title to copy URL\n\n'
-                      'Swipe left/right to browse forward/back',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-        child: Scaffold(
-          appBar: CustomAppBar(
-            key: _showOne,
-            onHorizontalDragEnd: (DragEndDetails details) async {
-              await _goBackOrForward(details);
-            },
-            genericAppBar: AppBar(
-              leading: IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () {
-                    if (widget.customCallBack != null) {
-                      widget.customCallBack();
-                    }
-                    Navigator.pop(context);
-                  }),
-              title: GestureDetector(
-                child: Text(_pageTitle),
-                onLongPress: () {
-                  Clipboard.setData(ClipboardData(text: _currentUrl));
-                  if (_currentUrl.length > 60) {
-                    _currentUrl = _currentUrl.substring(0, 60) + "...";
-                  }
-                  BotToast.showText(
-                    text: "Current URL copied to the clipboard [$_currentUrl]",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.green,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-              ),
-              actions: <Widget>[
-                _travelHomeIcon(),
-                _crimesInfoIcon(),
-                _crimesMenuIcon(),
-                _vaultsPopUpIcon(),
-                _tradesMenuIcon(),
-                _cityMenuIcon(),
-                IconButton(
-                  icon: Icon(Icons.refresh),
-                  onPressed: () async {
-                    await webView.reload();
-                  },
-                ),
-              ],
-            ),
-          ),
-          body: Container(
-            color: Colors.grey[900],
-            child: SafeArea(
-              top: false,
-              left: false,
-              right: false,
-              bottom: true,
-              child: Column(
-                children: [
-                  // Crimes widget
-                  ExpandablePanel(
-                    theme: ExpandableThemeData(
-                      hasIcon: false,
-                      tapBodyToCollapse: false,
-                      tapHeaderToExpand: false,
-                    ),
-                    collapsed: SizedBox.shrink(),
-                    controller: _crimesController,
-                    header: SizedBox.shrink(),
-                    expanded: CrimesWidget(controller: webView),
-                  ),
-                  // Trades widget
-                  _tradesExpandable,
-                  // City widget
-                  ExpandablePanel(
-                    theme: ExpandableThemeData(
-                      hasIcon: false,
-                      tapBodyToCollapse: false,
-                      tapHeaderToExpand: false,
-                    ),
-                    collapsed: SizedBox.shrink(),
-                    controller: _cityController,
-                    header: SizedBox.shrink(),
-                    expanded: CityWidget(
-                      controller: webView,
-                      cityItems: _cityItemsFound,
-                      error: _errorCityApi,
-                    ),
-                  ),
-                  // Actual WebView
-                  Expanded(
-                    child: InAppWebView(
-                      initialUrl: _initialUrl,
-                      initialHeaders: {},
-                      initialOptions: InAppWebViewGroupOptions(
-                        crossPlatform: InAppWebViewOptions(
-                          debuggingEnabled: true,
-                          preferredContentMode: UserPreferredContentMode.DESKTOP,
-                        ),
-                        android: AndroidInAppWebViewOptions(
-                          useWideViewPort: true,
-                          loadWithOverviewMode: false,
-                          builtInZoomControls: false,
-                          displayZoomControls: false,
+      // If we are launching from a dialog, it's important not to add the show case, in
+      // case this is the first time, as there is no appBar to be found and it would
+      // failed to open
+      child: widget.dialog
+          ? buildScaffold(context)
+          : BubbleShowcase(
+              // KEEP THIS UNIQUE
+              bubbleShowcaseId: 'webview_full_showcase',
+              // WILL SHOW IF VERSION CHANGED
+              bubbleShowcaseVersion: 1,
+              showCloseButton: false,
+              doNotReopenOnClose: true,
+              bubbleSlides: [
+                RelativeBubbleSlide(
+                  widgetKey: _showOne,
+                  child: RelativeBubbleSlideChild(
+                    direction: AxisDirection.down,
+                    widget: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SpeechBubble(
+                        nipLocation: NipLocation.TOP,
+                        color: Colors.blue,
+                        child: Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Text(
+                            'Did you know?\n\n'
+                            'Long press section title to copy URL\n\n'
+                            'Swipe left/right to browse forward/back',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
-                      onWebViewCreated: (InAppWebViewController c) {
-                        webView = c;
-                      },
-                      onLoadStart: (InAppWebViewController c, String url) {
-                        _currentUrl = url;
-                        _assessGeneral();
-                      },
-                      onLoadStop: (InAppWebViewController c, String url) {
-                        _currentUrl = url;
-                        _assessGeneral();
-                      },
-                      // Allows IOS to open links with target=_blank
-                      onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
-                        webView.loadUrl(url: req.url);
-                        return;
-                      },
-                      onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
-                        print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
-                        /// TRADES
-                        ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-                        ///     redirect both with console messages (all 'hash.step') for trades
-                        ///     identification, but also with _assessGeneral() so that we can remove
-                        ///     the widget when an unrelated page is visited. Console messages also
-                        ///     help with deletions updates when 'hash.step view' is shown.
-                        ///   - Android: onLoadStop works, but we still need to catch deletions,
-                        ///     so we only listen for 'hash.step view'.
-                        if (Platform.isIOS) {
-                          if (consoleMessage.message.contains('hash.step')) {
-                            _decideIfCallTrades();
-                          }
-                        } else if (Platform.isAndroid) {
-                          if (consoleMessage.message.contains('hash.step view')) {
-                            _decideIfCallTrades();
-                          }
-                        }
-                      },
                     ),
+                  ),
+                ),
+              ],
+              child: buildScaffold(context),
+            ),
+    );
+  }
+
+  Scaffold buildScaffold(BuildContext context) {
+    return Scaffold(
+      appBar: widget.dialog
+          // Show appBar only if we are not showing the webView in a dialog
+          ? null
+          : CustomAppBar(
+              key: _showOne,
+              onHorizontalDragEnd: (DragEndDetails details) async {
+                await _goBackOrForward(details);
+              },
+              genericAppBar: AppBar(
+                leading: IconButton(
+                    icon: Icon(Icons.arrow_back),
+                    onPressed: () {
+                      if (widget.customCallBack != null) {
+                        widget.customCallBack();
+                      }
+                      Navigator.pop(context);
+                    }),
+                title: GestureDetector(
+                  child: Text(_pageTitle),
+                  onLongPress: () {
+                    Clipboard.setData(ClipboardData(text: _currentUrl));
+                    if (_currentUrl.length > 60) {
+                      _currentUrl = _currentUrl.substring(0, 60) + "...";
+                    }
+                    BotToast.showText(
+                      text: "Current URL copied to the clipboard [$_currentUrl]",
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green,
+                      duration: Duration(seconds: 5),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                ),
+                actions: <Widget>[
+                  _travelHomeIcon(),
+                  _crimesInfoIcon(),
+                  _crimesMenuIcon(),
+                  _vaultsPopUpIcon(),
+                  _tradesMenuIcon(),
+                  _cityMenuIcon(),
+                  IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: () async {
+                      await webView.reload();
+                    },
                   ),
                 ],
               ),
             ),
+      body: Container(
+        color: Colors.grey[900],
+        child: SafeArea(
+          top: false,
+          left: false,
+          right: false,
+          bottom: true,
+          child: Column(
+            children: [
+              // Crimes widget
+              ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _crimesController,
+                header: SizedBox.shrink(),
+                expanded: CrimesWidget(controller: webView),
+              ),
+              // Trades widget
+              _tradesExpandable,
+              // City widget
+              ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _cityController,
+                header: SizedBox.shrink(),
+                expanded: CityWidget(
+                  controller: webView,
+                  cityItems: _cityItemsFound,
+                  error: _errorCityApi,
+                ),
+              ),
+              // Actual WebView
+              Expanded(
+                child: InAppWebView(
+                  initialUrl: _initialUrl,
+                  initialHeaders: {},
+                  initialOptions: InAppWebViewGroupOptions(
+                    crossPlatform: InAppWebViewOptions(
+                      debuggingEnabled: true,
+                      preferredContentMode: UserPreferredContentMode.DESKTOP,
+                    ),
+                    android: AndroidInAppWebViewOptions(
+                      useWideViewPort: true,
+                      loadWithOverviewMode: false,
+                      builtInZoomControls: false,
+                      displayZoomControls: false,
+                    ),
+                  ),
+                  onWebViewCreated: (InAppWebViewController c) {
+                    webView = c;
+                  },
+                  onLoadStart: (InAppWebViewController c, String url) {
+                    _currentUrl = url;
+                    _assessGeneral();
+                  },
+                  onLoadStop: (InAppWebViewController c, String url) {
+                    _currentUrl = url;
+                    _assessGeneral();
+                  },
+                  // Allows IOS to open links with target=_blank
+                  onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
+                    webView.loadUrl(url: req.url);
+                    return;
+                  },
+                  onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+                    print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
+                    /// TRADES
+                    ///   - IOS: onLoadStop does not work inside of Trades, that is why we
+                    ///     redirect both with console messages (all 'hash.step') for trades
+                    ///     identification, but also with _assessGeneral() so that we can remove
+                    ///     the widget when an unrelated page is visited. Console messages also
+                    ///     help with deletions updates when 'hash.step view' is shown.
+                    ///   - Android: onLoadStop works, but we still need to catch deletions,
+                    ///     so we only listen for 'hash.step view'.
+                    if (Platform.isIOS) {
+                      if (consoleMessage.message.contains('hash.step')) {
+                        _decideIfCallTrades();
+                      }
+                    } else if (Platform.isAndroid) {
+                      if (consoleMessage.message.contains('hash.step view')) {
+                        _decideIfCallTrades();
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
