@@ -93,7 +93,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           },
           genericAppBar: AppBar(
             leading: IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
                 onPressed: () async {
                   // Normal behaviour is just to pop and go to previous page
                   if (_backButtonPopsContext) {
