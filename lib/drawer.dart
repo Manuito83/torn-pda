@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/about.dart';
@@ -59,6 +61,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   int _activeDrawerIndex = 0;
   int _selected = 0;
 
+  Timer _tenSecTimer;
+  DateTime _currentTctTime = DateTime.now().toUtc();
+
   @override
   void initState() {
     super.initState();
@@ -88,12 +93,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return showNotification(message);
       },
     );
+
+    _tenSecTimer = new Timer.periodic(Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
 
   @override
   void dispose() {
     selectNotificationSubject.close();
     WidgetsBinding.instance.removeObserver(this);
+    _tenSecTimer.cancel();
     super.dispose();
   }
 
@@ -299,38 +307,63 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
               Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    Flexible(
-                      child: Text(
-                        _themeProvider.currentTheme == AppTheme.light
-                            ? 'Light'
-                            : 'Dark',
-                      ),
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          _themeProvider.currentTheme == AppTheme.light
+                              ? 'Light'
+                              : 'Dark',
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                        ),
+                        Switch(
+                          value: _themeProvider.currentTheme == AppTheme.dark
+                              ? true
+                              : false,
+                          onChanged: (bool value) {
+                            if (value) {
+                              _themeProvider.changeTheme = AppTheme.dark;
+                            } else {
+                              _themeProvider.changeTheme = AppTheme.light;
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 20),
-                    ),
-                    Flexible(
-                      child: Switch(
-                        value: _themeProvider.currentTheme == AppTheme.dark
-                            ? true
-                            : false,
-                        onChanged: (bool value) {
-                          if (value) {
-                            _themeProvider.changeTheme = AppTheme.dark;
-                          } else {
-                            _themeProvider.changeTheme = AppTheme.light;
-                          }
-                        },
-                      ),
-                    ),
+                    _tctClock(),
                   ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _tctClock() {
+    TimeFormatSetting timePrefs = _settingsProvider.currentTimeFormat;
+    DateFormat formatter;
+    switch (timePrefs) {
+      case TimeFormatSetting.h24:
+        formatter = DateFormat('HH:mm');
+        break;
+      case TimeFormatSetting.h12:
+        formatter = DateFormat('hh:mm a');
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(formatter.format(_currentTctTime)),
+          Text('TCT'),
+        ],
       ),
     );
   }
@@ -548,5 +581,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return ChangeLog();
       },
     );
+  }
+
+  void _refreshTctClock() {
+    if (mounted) {
+      setState(() {
+        _currentTctTime = DateTime.now().toUtc();
+      });
+    }
   }
 }
