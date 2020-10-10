@@ -302,7 +302,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   // WILL SHOW IF VERSION CHANGED
                   bubbleShowcaseVersion: 1,
                   showCloseButton: false,
-                  doNotReopenOnClose: false,
+                  doNotReopenOnClose: true,
                   bubbleSlides: [
                     RelativeBubbleSlide(
                       shape: Rectangle(spreadRadius: 10),
