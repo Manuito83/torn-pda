@@ -318,8 +318,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               padding: EdgeInsets.all(6),
                               child: Text(
                                 'Did you know?\n\n'
-                                    'You can tap the energy or nerve bars to open a '
-                                    'quick dialog straight to the gym or crimes!',
+                                'You can tap the energy or nerve bars to open a '
+                                'quick dialog straight to the gym or crimes!',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
@@ -1896,6 +1896,126 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Currency configuration
     final decimalFormat = new NumberFormat("#,##0", "en_US");
 
+    // Strength modifiers
+    bool strengthModified = false;
+    Color strengthColor = Colors.white;
+    int strengthTotal = 0;
+    String strengthString = '';
+    for (var strengthMod in _miscModel.strengthInfo) {
+      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      var matches = strRaw.allMatches(strengthMod);
+      if (matches.length > 0) {
+        strengthModified = true;
+        for (var match in matches) {
+          var change = match.group(2);
+          if (match.group(1) == '-') {
+            strengthTotal -= int.parse(change);
+          } else if (match.group(1) == '+') {
+            strengthTotal += int.parse(change);
+          }
+        }
+      }
+    }
+    if (strengthModified) {
+      if (strengthTotal < 0) {
+        strengthString = "($strengthTotal%)";
+        strengthColor = Colors.red;
+      } else {
+        strengthString = "(+$strengthTotal%)";
+        strengthColor = Colors.green;
+      }
+    }
+
+    // Defense modifiers
+    bool defenseModified = false;
+    Color defenseColor = Colors.white;
+    int defenseTotal = 0;
+    String defenseString = '';
+    for (var defenseMod in _miscModel.defenseInfo) {
+      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      var matches = strRaw.allMatches(defenseMod);
+      if (matches.length > 0) {
+        defenseModified = true;
+        for (var match in matches) {
+          var change = match.group(2);
+          if (match.group(1) == '-') {
+            defenseTotal -= int.parse(change);
+          } else if (match.group(1) == '+') {
+            defenseTotal += int.parse(change);
+          }
+        }
+      }
+    }
+    if (defenseModified) {
+      if (defenseTotal < 0) {
+        defenseString = "($defenseTotal%)";
+        defenseColor = Colors.red;
+      } else {
+        defenseString = "(+$defenseTotal%)";
+        defenseColor = Colors.green;
+      }
+    }
+
+    // Speed modifiers
+    bool speedModified = false;
+    Color speedColor = Colors.white;
+    int speedTotal = 0;
+    String speedString = '';
+    for (var speedMod in _miscModel.speedInfo) {
+      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      var matches = strRaw.allMatches(speedMod);
+      if (matches.length > 0) {
+        speedModified = true;
+        for (var match in matches) {
+          var change = match.group(2);
+          if (match.group(1) == '-') {
+            speedTotal -= int.parse(change);
+          } else if (match.group(1) == '+') {
+            speedTotal += int.parse(change);
+          }
+        }
+      }
+    }
+    if (speedModified) {
+      if (speedTotal < 0) {
+        speedString = "($speedTotal%)";
+        speedColor = Colors.red;
+      } else {
+        speedString = "(+$speedTotal%)";
+        speedColor = Colors.green;
+      }
+    }
+
+    // Dex modifiers
+    bool dexModified = false;
+    Color dexColor = Colors.white;
+    int dexTotal = 0;
+    String dexString = '';
+    for (var dexMod in _miscModel.dexterityInfo) {
+      RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+      var matches = strRaw.allMatches(dexMod);
+      if (matches.length > 0) {
+        dexModified = true;
+        for (var match in matches) {
+          var change = match.group(2);
+          if (match.group(1) == '-') {
+            dexTotal -= int.parse(change);
+          } else if (match.group(1) == '+') {
+            dexTotal += int.parse(change);
+          }
+        }
+      }
+    }
+    if (dexModified) {
+      if (dexTotal < 0) {
+        dexString = "($dexTotal%)";
+        dexColor = Colors.red;
+      } else {
+        dexString = "(+$dexTotal%)";
+        dexColor = Colors.green;
+      }
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -1946,10 +2066,50 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Strength: ${decimalFormat.format(_miscModel.strength)}'),
-                  Text('Defense: ${decimalFormat.format(_miscModel.defense)}'),
-                  Text('Speed: ${decimalFormat.format(_miscModel.speed)}'),
-                  Text('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                  Row(
+                    children: [
+                      Text('Strength: ${decimalFormat.format(_miscModel.strength)}'),
+                      strengthModified
+                          ? Text(
+                              " $strengthString",
+                              style: TextStyle(color: strengthColor, fontSize: 12),
+                            )
+                          : SizedBox.shrink(),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text('Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                      defenseModified
+                          ? Text(
+                              " $defenseString",
+                              style: TextStyle(color: defenseColor, fontSize: 12),
+                            )
+                          : SizedBox.shrink(),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text('Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                      speedModified
+                          ? Text(
+                              " $speedString",
+                              style: TextStyle(color: speedColor, fontSize: 12),
+                            )
+                          : SizedBox.shrink(),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                      dexModified
+                          ? Text(
+                              " $dexString",
+                              style: TextStyle(color: dexColor, fontSize: 12),
+                            )
+                          : SizedBox.shrink(),
+                    ],
+                  ),
                   SizedBox(
                     width: 50,
                     child: Divider(color: _themeProvider.mainText, thickness: 0.5),
