@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:torn_pda/main.dart';
 
@@ -20,6 +21,25 @@ Future showNotificationBoth(Map payload) async {
   vibrationPattern[7] = 1000;
 
   if (Platform.isAndroid) {
+    String title = payload["notification"]["body"];
+    String notificationIcon = "notification_icon";
+    Color notificationColor = Colors.grey;
+    if (title.contains("energy is full")) {
+      notificationIcon = "notification_energy";
+      notificationColor = Colors.green;
+    } else if (title.contains("nerve is full")) {
+      notificationIcon = "notification_nerve";
+      notificationColor = Colors.red;
+    } else if (title.contains("about to land")) {
+      notificationIcon = "notification_travel";
+      notificationColor = Colors.blue;
+    } else if (title.contains("been hospitalised") ||
+        title.contains("released from hospital") ||
+        title.contains("left hospital earlier") ) {
+      notificationIcon = "notification_hospital";
+      notificationColor = Colors.orange;
+    }
+
     var platformChannelSpecifics = NotificationDetails(
         AndroidNotificationDetails(
           "Automatic alerts",
@@ -30,7 +50,8 @@ Future showNotificationBoth(Map payload) async {
           visibility: NotificationVisibility.Public,
           autoCancel: true,
           channelShowBadge: true,
-          icon: 'notification_icon',
+          icon: notificationIcon,
+          color: notificationColor,
           sound: RawResourceAndroidNotificationSound('slow_spring_board'),
           vibrationPattern: vibrationPattern,
           enableLights: true,

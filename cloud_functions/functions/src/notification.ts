@@ -13,7 +13,9 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
         sendNotificationToUser(
           subscriber.token,
           "Full Energy Bar",
-          "Your energy is full, go spend on something!"
+          "Your energy is full, go spend on something!",
+          "notification_energy",
+          "#00FF00"
         )
       );
       promises.push(
@@ -64,7 +66,9 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
         sendNotificationToUser(
           subscriber.token,
           "Full Nerve Bar",
-          "Your nerve is full, go crazy!"
+          "Your nerve is full, go crazy!",
+          "notification_nerve",
+          "#FF0000"
         )
       );
       promises.push(
@@ -119,7 +123,9 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
         sendNotificationToUser(
           subscriber.token,
           `Approaching ${travel.destination}!`,
-          `You are about to land in ${travel.destination}!`
+          `You are about to land in ${travel.destination}!`,
+          "notification_travel",
+          "#0000FF"
         )
       );
       promises.push(
@@ -175,7 +181,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           sendNotificationToUser(
             subscriber.token,
             `Hospital admission`,
-            `You have been hospitalised!`
+            `You have been hospitalised!`,
+            'notification_hospital',
+            '#FFFF00'
           )
         );
       }
@@ -203,7 +211,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           sendNotificationToUser(
             subscriber.token,
             `Hospital time ending`,
-            `You are about to be released from hospital, grab your things!`
+            `You are about to be released from hospital, grab your things!`,
+            'notification_hospital',
+            '#FFFF00'
           )
         );
       }
@@ -230,7 +240,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           sendNotificationToUser(
             subscriber.token,
             `You are out of hospital!`,
-            `You left hospital earlier than expected!`
+            `You left hospital earlier than expected!`,
+            'notification_hospital',
+            '#FFFF00'
           )
         );
       }
@@ -264,13 +276,17 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
 export async function sendNotificationToUser(
   token: string,
   title: string,
-  body: string
+  body: string,
+  icon: string,
+  color: string,
 ): Promise<any> {
   
   const payload = {
     notification: {
       title: title,
-      body: body
+      body: body,
+      icon: icon,
+      color: color,
     },
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",

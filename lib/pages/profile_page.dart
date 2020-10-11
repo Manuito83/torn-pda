@@ -2747,6 +2747,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String notificationTitle;
     String notificationSubtitle;
     int notificationId;
+    String notificationIconAndroid = "notification_icon";
+    Color notificationIconColor = Colors.grey;
 
     // We will add the timestamp to the payload
     String notificationPayload = '';
@@ -2762,6 +2764,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationTitle = _travelNotificationTitle;
         notificationSubtitle = _travelNotificationBody;
         notificationPayload += 'travel';
+        notificationIconAndroid = "notification_travel";
+        notificationIconColor = Colors.blue;
         break;
       case ProfileNotification.energy:
         notificationId = 101;
@@ -2773,6 +2777,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle = 'Here is your energy reminder!';
         var myTimeStamp = (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        notificationIconAndroid = "notification_energy";
+        notificationIconColor = Colors.green;
         break;
       case ProfileNotification.nerve:
         notificationId = 102;
@@ -2784,6 +2790,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle = 'Here is your nerve reminder!';
         var myTimeStamp = (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        notificationIconAndroid = "notification_nerve";
+        notificationIconColor = Colors.red;
         break;
       case ProfileNotification.life:
         notificationId = 103;
@@ -2852,11 +2860,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       importance: Importance.Max,
       priority: Priority.High,
       visibility: NotificationVisibility.Public,
-      icon: 'notification_icon',
+      icon: notificationIconAndroid,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: vibrationPattern,
       enableLights: true,
-      //color: const Color.fromARGB(255, 255, 0, 0),
+      color: notificationIconColor,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
       ledOnMs: 1000,
       ledOffMs: 500,
