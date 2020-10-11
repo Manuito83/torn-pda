@@ -33,6 +33,7 @@ class _FirestoreHelper {
         "life": profile.life.current,
         "playerId": profile.playerId,
         "energyLastCheckFull": true,
+        "nerveLastCheckFull": true,
         "platform": platform,
 
         /// This is a unique identifier to identify this user and target notification
@@ -57,6 +58,10 @@ class _FirestoreHelper {
   Future<void> subscribeToNerveNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "nerveNotification": subscribe,
+      // Nerve was implemented in v1.8.7, so we need to manually create this field and set it
+      // to TRUE for users that were already in the DB. New users (or upon API reload) will have
+      // the field created normally
+      "nerveLastCheckFull": true,
     });
   }
 
@@ -77,7 +82,8 @@ class _FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel> getUserProfile() async {
     if (_firebaseUserModel != null) return _firebaseUserModel;
-    return _firebaseUserModel = FirebaseUserModel.fromMap((await _firestore.collection("players").doc(_uid).get()).data());
+    return _firebaseUserModel =
+        FirebaseUserModel.fromMap((await _firestore.collection("players").doc(_uid).get()).data());
   }
 
   Future deleteUserProfile() async {
