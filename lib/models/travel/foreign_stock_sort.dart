@@ -2,6 +2,7 @@ enum StockSortType {
   country,
   name,
   type,
+  quantity,
   price,
   value,
   profit,
@@ -21,6 +22,9 @@ class StockSort {
         break;
       case StockSortType.type:
         description = 'Sort by type';
+        break;
+      case StockSortType.quantity:
+        description = 'Sort by quantity';
         break;
       case StockSortType.price:
         description = 'Sort by price';

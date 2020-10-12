@@ -86,6 +86,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.country),
     StockSort(type: StockSortType.name),
     StockSort(type: StockSortType.type),
+    StockSort(type: StockSortType.quantity),
     StockSort(type: StockSortType.price),
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
@@ -115,7 +116,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               return _popupChoices.map((StockSort choice) {
                 return PopupMenuItem<StockSort>(
                   value: choice,
-                  child: Text(choice.description),
+                  child: Text(
+                    choice.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
                 );
               }).toList();
             },
@@ -1026,6 +1032,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               .sort((a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
           SharedPreferencesModel().setStockSort('type');
           break;
+        case StockSortType.quantity:
+          _filteredStocksCards
+              .sort((a, b) => b.quantity.compareTo(a.quantity));
+          SharedPreferencesModel().setStockSort('quantity');
+          break;
         case StockSortType.price:
           _filteredStocksCards.sort((a, b) => b.cost.compareTo(a.cost));
           SharedPreferencesModel().setStockSort('price');
@@ -1061,6 +1072,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       sortType = StockSortType.name;
     } else if (sortString == 'type') {
       sortType = StockSortType.type;
+    } else if (sortString == 'quantity') {
+      sortType = StockSortType.quantity;
     } else if (sortString == 'price') {
       sortType = StockSortType.price;
     } else if (sortString == 'value') {
