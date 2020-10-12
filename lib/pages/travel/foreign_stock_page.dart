@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/inventory_model.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -56,6 +58,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   bool _inventoryEnabled = true;
   InventoryModel _inventory;
+
+  OwnProfileMiscModel _profileMisc;
 
   int _capacity;
 
@@ -150,7 +154,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                     // KEEP THIS UNIQUE
                     bubbleShowcaseId: 'foreign_stock_showcase',
                     // WILL SHOW IF VERSION CHANGED
-                    bubbleShowcaseVersion: 1,
+                    bubbleShowcaseVersion: 2,
                     showCloseButton: false,
                     doNotReopenOnClose: true,
                     bubbleSlides: [
@@ -173,7 +177,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                                 padding: EdgeInsets.all(10),
                                 child: Text(
                                   'Did you know?\n\n'
-                                  'You can click any flag to go directly to the travel agency!',
+                                  'Click any flag to go directly to the travel agency and '
+                                  'get a check on how much money you need for that particular '
+                                  'item (based on your preset capacity)!',
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -749,6 +755,34 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         ],
       ),
       onTap: () {
+        // Currency configuration
+        final costCurrency = new NumberFormat("#,##0", "en_US");
+
+        var moneyOnHand = _profileMisc.moneyOnhand;
+        String moneyToBuy = '';
+        Color moneyToBuyColor = Colors.grey;
+        if (moneyOnHand > stock.cost * _capacity) {
+          moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * _capacity)} necessary to '
+              'buy $_capacity ${stock.name}';
+          moneyToBuyColor = Colors.green;
+        } else {
+          moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost * _capacity)} '
+              'necessary to buy $_capacity ${stock.name}. Add another '
+              '\$${costCurrency.format((stock.cost * _capacity) - moneyOnHand)}';
+          moneyToBuyColor = Colors.red;
+        }
+
+        BotToast.showText(
+          text: moneyToBuy,
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: moneyToBuyColor,
+          duration: Duration(seconds: 6),
+          contentPadding: EdgeInsets.all(10),
+        );
+
         // Return true to signal that a flag has been tapped (to open travel page)
         Navigator.pop(context, true);
       },
@@ -758,8 +792,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Future<void> _fetchApiInformation() async {
     try {
       // Get from YATA
-      String urlDB = 'https://yata.alwaysdata.net/api/v0/travel/export/';
-      final responseDB = await http.get(urlDB).timeout(Duration(seconds: 10));
+      String yataURL = 'https://yata.alwaysdata.net/api/v0/travel/export/';
+      final responseDB = await http.get(yataURL).timeout(Duration(seconds: 10));
       if (responseDB.statusCode == 200) {
         _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
         _apiSuccess = true;
@@ -768,6 +802,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
       _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
       _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
+      _profileMisc = await TornApiCaller.ownProfileMisc(widget.apiKey).getOwnProfileMisc;
 
       // We need to calculate several additional values (stock value, profit, country, type and
       // timestamp) before sorting the list for the first time, as this values don't come straight
