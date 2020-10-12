@@ -6,8 +6,13 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class StocksOptionsDialog extends StatefulWidget {
   final int capacity;
   final Function callBack;
+  final bool inventoryEnabled;
 
-  StocksOptionsDialog({@required this.capacity, @required this.callBack});
+  StocksOptionsDialog({
+    @required this.capacity,
+    @required this.callBack,
+    @required this.inventoryEnabled,
+  });
 
   @override
   _StocksOptionsDialogState createState() => _StocksOptionsDialogState();
@@ -17,11 +22,13 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   ThemeProvider _themeProvider;
 
   int _capacity;
+  bool _inventoryEnabled;
 
   @override
   void initState() {
     super.initState();
     _capacity = widget.capacity;
+    _inventoryEnabled = widget.inventoryEnabled;
   }
 
   @override
@@ -54,6 +61,42 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min, // To make the card compact
                 children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Show inventory quantities",
+                          style: TextStyle(
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _inventoryEnabled,
+                        onChanged: (value) {
+                          setState(() {
+                            _inventoryEnabled = value;
+                          });
+                          _callBackValues();
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'If active, you\'ll be shown the quantity of each item you '
+                    'already possess in your inventory',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Divider(),
+                  SizedBox(height: 10),
                   Text(
                     'Set your item capacity (affects profit per hour calculation)',
                     style: TextStyle(
@@ -77,7 +120,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       setState(() {
                         _capacity = newCapacity.round();
                       });
-                      _callBackValue();
+                      _callBackValues();
                     },
                   ),
                   Row(
@@ -120,8 +163,9 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     );
   }
 
-  void _callBackValue() {
-    widget.callBack(_capacity);
+  void _callBackValues() {
+    widget.callBack(_capacity, _inventoryEnabled);
     SharedPreferencesModel().setStockCapacity(_capacity);
+    SharedPreferencesModel().setShowForeignInventory(_inventoryEnabled);
   }
 }

@@ -8,6 +8,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
+import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -29,6 +30,7 @@ enum ApiSelection {
   chainStatus,
   bars,
   items,
+  inventory,
   education,
   friends,
 }
@@ -95,6 +97,7 @@ class TornApiCaller {
   TornApiCaller.chain(this.apiKey);
   TornApiCaller.bars(this.apiKey);
   TornApiCaller.items(this.apiKey);
+  TornApiCaller.inventory(this.apiKey);
   TornApiCaller.education(this.apiKey);
   TornApiCaller.friends(this.apiKey, this.queryId);
 
@@ -227,6 +230,23 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getInventory async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.inventory)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return InventoryModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> get getEducation async {
     dynamic apiResult;
     await _apiCall(ApiType.torn, apiSelection: ApiSelection.education)
@@ -304,6 +324,9 @@ class TornApiCaller {
         break;
       case ApiSelection.items:
         url += '?selections=items';
+        break;
+      case ApiSelection.inventory:
+        url += '?selections=inventory';
         break;
       case ApiSelection.education:
         url += '?selections=education';

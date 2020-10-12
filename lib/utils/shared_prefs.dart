@@ -35,6 +35,7 @@ class SharedPreferencesModel {
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
+  final String _kShowForeignInventory = "pda_showForeignInventory";
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
   final String _kEnergyNotificationValue = "pda_energyNotificationValue";
@@ -429,6 +430,16 @@ class SharedPreferencesModel {
   Future<bool> setStockCapacity(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kStockCapacity, value);
+  }
+
+  Future<bool> getShowForeignInventory() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowForeignInventory) ?? true;
+  }
+
+  Future<bool> setShowForeignInventory(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowForeignInventory, value);
   }
 
   /// ----------------------------

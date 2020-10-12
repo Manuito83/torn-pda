@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:speech_bubble/speech_bubble.dart';
+import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -52,6 +53,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   var _stocksYataModel = ForeignStockInModel();
   // This is the official items model from Torn
   ItemsModel _allTornItems;
+
+  bool _inventoryEnabled = true;
+  InventoryModel _inventory;
 
   int _capacity;
 
@@ -543,15 +547,38 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Row _firstRow(ForeignStock stock) {
+    var invQuantity = 0;
+    if (_inventoryEnabled) {
+      for (var invItem in _inventory.inventory) {
+        if (invItem.id == stock.id) {
+          invQuantity = invItem.quantity;
+          break;
+        }
+      }
+    }
+
     return Row(
       children: <Widget>[
         Image.asset('images/torn_items/small/${stock.id}_small.png'),
         Padding(
           padding: EdgeInsets.only(right: 10),
         ),
-        SizedBox(
-          width: 100,
-          child: Text(stock.name),
+        Column(
+          children: [
+            SizedBox(
+              width: 100,
+              child: Text(stock.name),
+            ),
+            _inventoryEnabled
+                ? SizedBox(
+                    width: 100,
+                    child: Text(
+                      "(inv: x$invQuantity)",
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  )
+                : SizedBox.shrink(),
+          ],
         ),
         Padding(
           padding: EdgeInsets.only(right: 15),
@@ -740,6 +767,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         _apiSuccess = false;
       }
       _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
+      _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
 
       // We need to calculate several additional values (stock value, profit, country, type and
       // timestamp) before sorting the list for the first time, as this values don't come straight
@@ -1033,8 +1061,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           SharedPreferencesModel().setStockSort('type');
           break;
         case StockSortType.quantity:
-          _filteredStocksCards
-              .sort((a, b) => b.quantity.compareTo(a.quantity));
+          _filteredStocksCards.sort((a, b) => b.quantity.compareTo(a.quantity));
           SharedPreferencesModel().setStockSort('quantity');
           break;
         case StockSortType.price:
@@ -1084,6 +1111,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _currentSort = StockSort(type: sortType);
 
     _capacity = await SharedPreferencesModel().getStockCapacity();
+    _inventoryEnabled = await SharedPreferencesModel().getShowForeignInventory();
   }
 
   Future<void> _showOptionsDialog() {
@@ -1101,6 +1129,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             child: StocksOptionsDialog(
               capacity: _capacity,
               callBack: _onCapacityChanged,
+              inventoryEnabled: _inventoryEnabled,
             ),
           ),
         );
@@ -1108,9 +1137,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onCapacityChanged(int newCapacity) {
+  void _onCapacityChanged(int newCapacity, bool inventoryEnabled) {
     setState(() {
       _capacity = newCapacity;
+      _inventoryEnabled = inventoryEnabled;
     });
   }
 
