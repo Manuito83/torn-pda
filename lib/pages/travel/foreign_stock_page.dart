@@ -114,6 +114,13 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Foreign Stock"),
+        leading: new IconButton(
+          icon: new Icon(Icons.arrow_back),
+          onPressed: () {
+            // Returning 'false' to indicate we did not press a flag
+            Navigator.pop(context, false);
+          },
+        ),
         actions: <Widget>[
           PopupMenuButton<StockSort>(
             icon: Icon(
@@ -791,18 +798,32 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future<void> _fetchApiInformation() async {
     try {
-      // Get from YATA
-      String yataURL = 'https://yata.alwaysdata.net/api/v0/travel/export/';
-      final responseDB = await http.get(yataURL).timeout(Duration(seconds: 10));
-      if (responseDB.statusCode == 200) {
-        _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
-        _apiSuccess = true;
-      } else {
-        _apiSuccess = false;
+
+      Future yataAPI() async {
+        String yataURL = 'https://yata.alwaysdata.net/api/v0/travel/export/';
+        var responseDB = await http.get(yataURL).timeout(Duration(seconds: 10));
+        if (responseDB.statusCode == 200) {
+          _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
+          _apiSuccess = true;
+        } else {
+          _apiSuccess = false;
+        }
       }
-      _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
-      _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
-      _profileMisc = await TornApiCaller.ownProfileMisc(widget.apiKey).getOwnProfileMisc;
+
+      Future tornItems() async {
+        _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
+      }
+
+      Future inventory() async {
+        _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
+      }
+
+      Future profileMisc() async {
+        _profileMisc = await TornApiCaller.ownProfileMisc(widget.apiKey).getOwnProfileMisc;
+      }
+
+      // Get all APIs at the same time
+      await Future.wait<void>([yataAPI(), tornItems(), inventory(), profileMisc()]);
 
       // We need to calculate several additional values (stock value, profit, country, type and
       // timestamp) before sorting the list for the first time, as this values don't come straight
