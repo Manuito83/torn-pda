@@ -75,7 +75,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
-        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home'),
+        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
       ]);
 
       quickActions.initialize((String shortcutType) async {
