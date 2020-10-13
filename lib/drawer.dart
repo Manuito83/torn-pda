@@ -27,6 +27,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:quick_actions/quick_actions.dart';
 import 'main.dart';
 
 class DrawerPage extends StatefulWidget {
@@ -67,11 +68,52 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+
+    // STARTS QUICK ACTIONS
+    final QuickActions quickActions = QuickActions();
+
+    _asyncOpenTorn() async {
+      var browserType = _settingsProvider.currentBrowser;
+      switch (browserType) {
+        case BrowserSetting.app:
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (BuildContext context) => WebViewFull(
+                customUrl: 'https://www.torn.com',
+                customTitle: 'Torn',
+              ),
+            ),
+          );
+          break;
+        case BrowserSetting.external:
+          var url = 'https://www.torn.com';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+
+    quickActions.setShortcutItems(<ShortcutItem>[
+      // NOTE: keep the same file name for both platforms
+      const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: 'action_torn'),
+    ]);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      quickActions.initialize((String shortcutType) {
+        if (shortcutType == 'open_torn') {
+          _asyncOpenTorn();
+        }
+      });
+    });
+    // ENDS QUICK ACTIONS
+
     WidgetsBinding.instance.addObserver(this);
     _allowSectionsWithoutKey = [
       _settingsPosition,
       _aboutPosition,
     ];
+
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
     _configureSelectNotificationSubject();
@@ -107,7 +149,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if(state == AppLifecycleState.resumed){
+    if (state == AppLifecycleState.resumed) {
       _updateLastActiveTime();
     }
   }
@@ -312,17 +354,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     Row(
                       children: <Widget>[
                         Text(
-                          _themeProvider.currentTheme == AppTheme.light
-                              ? 'Light'
-                              : 'Dark',
+                          _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
                         ),
                         Padding(
                           padding: EdgeInsets.only(left: 10),
                         ),
                         Switch(
-                          value: _themeProvider.currentTheme == AppTheme.dark
-                              ? true
-                              : false,
+                          value: _themeProvider.currentTheme == AppTheme.dark ? true : false,
                           onChanged: (bool value) {
                             if (value) {
                               _themeProvider.changeTheme = AppTheme.dark;
@@ -379,16 +417,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             selectedColor: Colors.red,
             iconColor: _themeProvider.mainText,
             child: Ink(
-              color:
-                  position == _selected ? Colors.grey[300] : Colors.transparent,
+              color: position == _selected ? Colors.grey[300] : Colors.transparent,
               child: ListTile(
                 leading: _returnDrawerIcons(drawerPosition: position),
                 title: Text(
                   _drawerItemsList[position],
                   style: TextStyle(
-                    fontWeight: position == _selected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: position == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: position == _selected,
@@ -416,8 +451,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 title: Text(
                   _drawerItemsList[i],
                   style: TextStyle(
-                    fontWeight:
-                        i == _selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: i == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: i == _selected,
@@ -530,8 +564,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         User mFirebaseUser = await firebaseAuth.signInAnon();
         firestore.setUID(mFirebaseUser.uid);
         await firestore.uploadUsersProfileDetail(_userProvider.myUser);
-        await firestore
-            .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+        await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
       } else {
         var uid = await firebaseAuth.getUID();
         firestore.setUID(uid);
