@@ -69,41 +69,39 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
 
-    // STARTS QUICK ACTIONS
-    final QuickActions quickActions = QuickActions();
-
-    _asyncOpenTorn() async {
-      var browserType = _settingsProvider.currentBrowser;
-      switch (browserType) {
-        case BrowserSetting.app:
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => WebViewFull(
-                customUrl: 'https://www.torn.com',
-                customTitle: 'Torn',
-              ),
-            ),
-          );
-          break;
-        case BrowserSetting.external:
-          var url = 'https://www.torn.com';
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
-    }
-
-    quickActions.setShortcutItems(<ShortcutItem>[
-      // NOTE: keep the same file name for both platforms
-      const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: 'action_torn'),
-    ]);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      quickActions.initialize((String shortcutType) {
+      // STARTS QUICK ACTIONS
+      final QuickActions quickActions = QuickActions();
+
+      quickActions.setShortcutItems(<ShortcutItem>[
+        // NOTE: keep the same file name for both platforms
+        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home'),
+      ]);
+
+      quickActions.initialize((String shortcutType) async {
+        print(shortcutType);
+
         if (shortcutType == 'open_torn') {
-          _asyncOpenTorn();
-        }
+          var browserType = _settingsProvider.currentBrowser;
+          switch (browserType) {
+            case BrowserSetting.app:
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => WebViewFull(
+                    customUrl: 'https://www.torn.com',
+                    customTitle: 'Torn',
+                  ),
+                ),
+              );
+              break;
+            case BrowserSetting.external:
+              var url = 'https://www.torn.com';
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+              break;
+            }
+          }
       });
     });
     // ENDS QUICK ACTIONS
