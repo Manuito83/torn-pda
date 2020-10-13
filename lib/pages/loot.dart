@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
+import 'package:torn_pda/models/loot/loot_model_yata.dart';
 import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -36,8 +37,9 @@ class LootPage extends StatefulWidget {
 class _LootPageState extends State<LootPage> {
   final _npcIds = [4, 15, 19];
 
-  Map<String, LootModel> _lootMap;
-  Future _getLootInfoFromYata;
+  Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
+  YataLootModel _yataLootInfo;
+  Future _getInitialLootInformation;
   bool _apiSuccess = false;
 
   SettingsProvider _settingsProvider;
@@ -46,7 +48,6 @@ class _LootPageState extends State<LootPage> {
 
   bool _firstLoad = true;
   int _tornTicks = 0;
-  int _yataTicks = 0;
   Timer _tickerUpdateTimes;
 
   LootTimeType _lootTimeType;
@@ -65,11 +66,11 @@ class _LootPageState extends State<LootPage> {
     super.initState();
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
 
-    _getLootInfoFromYata = _updateTimes();
+    _getInitialLootInformation = _getLoot();
 
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
 
-    _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _updateTimes());
+    _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
 
   @override
@@ -133,61 +134,62 @@ class _LootPageState extends State<LootPage> {
               : SizedBox.shrink(),
           _apiSuccess && Platform.isIOS
               ? IconButton(
-            icon: Icon(
-              Icons.alarm_on,
-              color: _themeProvider.buttonText,
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) {
-                    return LootNotificationsIOS(
-                      callback: _callBackFromNotificationOptions,
+                  icon: Icon(
+                    Icons.alarm_on,
+                    color: _themeProvider.buttonText,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return LootNotificationsIOS(
+                            callback: _callBackFromNotificationOptions,
+                          );
+                        },
+                      ),
                     );
                   },
-                ),
-              );
-            },
-          )
+                )
               : SizedBox.shrink()
         ],
       ),
       body: FutureBuilder(
-          future: _getLootInfoFromYata,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (_apiSuccess) {
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: _returnNpcCards(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15, top: 5),
-                        child: Text(
-                          'Loot times calculation thanks to YATA.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 13,
-                          ),
+        future: _getInitialLootInformation,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (_apiSuccess) {
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: _returnNpcCards(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15, top: 5),
+                      child: Text(
+                        'Loot times calculation thanks to YATA.',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
                         ),
                       ),
-                      SizedBox(height: 20),
-                    ],
-                  ),
-                );
-              } else {
-                return _connectError();
-              }
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                ),
+              );
             } else {
-              return Center(child: CircularProgressIndicator());
+              return _connectError();
             }
-          }),
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 
@@ -220,7 +222,7 @@ class _LootPageState extends State<LootPage> {
     // Loop every NPC
     var npcModels = List<LootModel>();
 
-    _lootMap.forEach((npcId, npcDetails) {
+    _mainLootInfo.forEach((npcId, npcDetails) {
       // Get npcLevels in a column and format them
       int thisIndex = 1;
       var npcLevels = List<Widget>();
@@ -549,32 +551,71 @@ class _LootPageState extends State<LootPage> {
     return npcWidget;
   }
 
-  Future _updateTimes() async {
+  Future _getLoot() async {
     var tsNow = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
-    // On start, get both API and compare if Torn has more up to date info
     if (_firstLoad) {
       _firstLoad = false;
+      // Load notifications preferences
       await _loadPreferences();
+      // See if there is any pending notification (to paint the icon in green)
       await _retrievePendingNotifications();
-      // Fill in YATA information
-      await _fetchYataApi();
-      // Get Torn API so that we can compare
-      await _fetchCompareTornApi(tsNow);
-    }
-    // If it's not the first execution, fetch YATA every 5 minutes and Torn
-    // every 30 seconds
-    else {
-      _yataTicks++;
-      _tornTicks++;
 
-      if (_yataTicks >= 300) {
-        await _fetchYataApi();
-        _yataTicks = 0;
+      // On start, get what's saved from YATA and see if it's current, or otherwise fetch YATA
+      var needToGetYata = false;
+      dynamic cached;
+      try {
+        cached = yataLootModelFromJson(await SharedPreferencesModel().getLootYataCache());
+      } catch (e) {
+        cached = false;
       }
+
+      if (cached is YataLootModel) {
+        if (cached.nextUpdate < tsNow) {
+          needToGetYata = true;
+        } else {
+          _yataLootInfo = cached;
+          SharedPreferencesModel().setLootYataCache(yataLootModelToJson(cached));
+        }
+      } else {
+        needToGetYata = true;
+      }
+
+      if (needToGetYata) {
+        var yataFetch = await _fetchYataApi();
+        if (yataFetch is YataLootModel) {
+          _yataLootInfo = yataFetch;
+          SharedPreferencesModel().setLootYataCache(yataLootModelToJson(yataFetch));
+        } else {
+          return;
+        }
+      }
+
+      // Get Torn API
+      var fillWithTornSuccess = await _fetchTornApi(tsNow);
+      if (fillWithTornSuccess) {
+        _apiSuccess = true;
+      }
+    }
+    // If it's not the first execution, fetch only when needed
+    else {
+      // We update YATA whenever there is a new update
+      if (_yataLootInfo.nextUpdate < tsNow) {
+        var yataFetch = await _fetchYataApi();
+        if (yataFetch is YataLootModel) {
+          _yataLootInfo = yataFetch;
+          SharedPreferencesModel().setLootYataCache(yataLootModelToJson(yataFetch));
+        } else {
+          _apiSuccess = false;
+          return;
+        }
+      }
+
+      // We update Torn every 30 seconds, in case there are some changes
+      _tornTicks++;
       if (_tornTicks > 30) {
         await _cancelPassedNotifications();
-        await _fetchCompareTornApi(tsNow);
+        await _fetchTornApi(tsNow);
         _tornTicks = 0;
       }
     }
@@ -582,7 +623,7 @@ class _LootPageState extends State<LootPage> {
     // We need to ensure that we keep all times updated
     if (mounted) {
       setState(() {
-        for (var npc in _lootMap.values) {
+        for (var npc in _mainLootInfo.values) {
           // Update main timing values comparing stored TS with current time
           var timingsList = List<Timing>();
           npc.timings.forEach((key, value) {
@@ -590,7 +631,6 @@ class _LootPageState extends State<LootPage> {
             timingsList.add(Timing(
               due: value.due,
               ts: value.ts,
-              pro: value.pro,
             ));
           });
           // Make sure to advance levels if the times comes in between updates
@@ -613,63 +653,98 @@ class _LootPageState extends State<LootPage> {
     }
   }
 
-  Future _fetchYataApi() async {
+  Future<dynamic> _fetchYataApi() async {
     try {
       // Database API
-      String url = 'https://yata.alwaysdata.net/loot/timings/';
+      String url = 'https://yata.alwaysdata.net/api/v1/loot/';
       final response = await http.get(url).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
-        _lootMap = lootModelFromJson(response.body);
-        _lootMap.length >= 1 ? _apiSuccess = true : _apiSuccess = false;
-      } else {
-        _apiSuccess = false;
+        var result = yataLootModelFromJson(response.body);
+        if (result is YataLootModel) {
+          return result;
+        }
       }
     } catch (e) {
-      _apiSuccess = false;
+      return false;
     }
+    return false;
   }
 
-  Future _fetchCompareTornApi(int tsNow) async {
-    // Get Torn API so that we can compare
-    for (var id in _npcIds) {
-      var tornTarget = await TornApiCaller.target(
-        _userProvider.myUser.userApiKey,
-        id.toString(),
-      ).getTarget;
-      // If the tornTarget is in hospital as per Torn, we might need to
-      // correct times that come from YATA
-      if (tornTarget is TargetModel) {
-        _lootMap.forEach((key, value) {
-          // Look for our tornTarget
-          if (key == id.toString()) {
-            if (tornTarget.status.state == 'Hospital') {
+  Future<bool> _fetchTornApi(int tsNow) async {
+    try {
+      for (var id in _npcIds) {
+        // Get each target from our static list from Torn
+        var tornTarget = await TornApiCaller.target(
+          _userProvider.myUser.userApiKey,
+          id.toString(),
+        ).getTarget;
+
+        var newNpcLoot = LootModel();
+        if (tornTarget is TargetModel) {
+          _yataLootInfo.hospOut.forEach((yataId, yataHospOut) {
+            // Look for our tornTarget
+            if (yataId == id.toString()) {
+              newNpcLoot.name = tornTarget.name;
+
               // If Torn gives a more up to date hospital out value
-              if (tornTarget.status.until - 60 > value.hospout) {
-                value.hospout = tornTarget.status.until;
-                value.levels.current = 0;
-                value.levels.next = 1;
-                value.status = "hospitalized";
-                value.update = tsNow;
-                // Generate updated timings
-                var newTimingMap = Map<String, Timing>();
-                var lootDelays = [0, 30 * 60, 90 * 60, 210 * 60, 450 * 60];
-                for (var i = 0; i < lootDelays.length; i++) {
-                  var thisLevel = Timing(
-                    due: value.hospout + lootDelays[i] - tsNow,
-                    ts: value.hospout + lootDelays[i],
-                    pro: 0,
-                  );
-                  newTimingMap.addAll({(i + 1).toString(): thisLevel});
-                }
-                value.timings = newTimingMap;
+              if (tornTarget.status.until - 60 > yataHospOut) {
+                newNpcLoot.hospout = tornTarget.status.until;
+              } else {
+                newNpcLoot.hospout = yataHospOut;
               }
-            } else {
-              value.status = "loot";
+
+              newNpcLoot.levels = Levels();
+              if (tornTarget.status.state == 'Hospital') {
+                newNpcLoot.levels.current = 0;
+                newNpcLoot.levels.next = 1;
+                newNpcLoot.status = "hospitalized";
+              } else {
+                newNpcLoot.status = "loot";
+                switch (tornTarget.status.details) {
+                  case ('Loot level I'):
+                    newNpcLoot.levels.current = 1;
+                    newNpcLoot.levels.next = 2;
+                    break;
+                  case ('Loot level II'):
+                    newNpcLoot.levels.current = 2;
+                    newNpcLoot.levels.next = 3;
+                    break;
+                  case ('Loot level III'):
+                    newNpcLoot.levels.current = 3;
+                    newNpcLoot.levels.next = 4;
+                    break;
+                  case ('Loot level IV'):
+                    newNpcLoot.levels.current = 4;
+                    newNpcLoot.levels.next = 5;
+                    break;
+                  case ('Loot level V'):
+                    newNpcLoot.levels.current = 5;
+                    newNpcLoot.levels.next = 5;
+                    break;
+                }
+              }
+
+              // Generate updated timings from hosp out
+              var newTimingMap = Map<String, Timing>();
+              var lootDelays = [0, 30 * 60, 90 * 60, 210 * 60, 450 * 60];
+              for (var i = 0; i < lootDelays.length; i++) {
+                var thisLevel = Timing(
+                  due: newNpcLoot.hospout + lootDelays[i] - tsNow,
+                  ts: newNpcLoot.hospout + lootDelays[i],
+                );
+                newTimingMap.addAll({(i + 1).toString(): thisLevel});
+              }
+              newNpcLoot.timings = newTimingMap;
+
+              _mainLootInfo.addAll({yataId: newNpcLoot});
             }
-          }
-        });
+          });
+        }
       }
+    } catch (e) {
+      return false;
     }
+    return true;
   }
 
   String _formatDuration(Duration duration) {
@@ -834,7 +909,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   void _setAlarm(DateTime alarmTime, String title) {
-    alarmTime = alarmTime.add(Duration(minutes: - _lootAlarmAhead));
+    alarmTime = alarmTime.add(Duration(minutes: -_lootAlarmAhead));
     int hour = alarmTime.hour;
     int minute = alarmTime.minute;
     String message = title;

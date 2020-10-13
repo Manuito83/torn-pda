@@ -35,6 +35,7 @@ class SharedPreferencesModel {
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
+  final String _kShowForeignInventory = "pda_showForeignInventory";
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
   final String _kEnergyNotificationValue = "pda_energyNotificationValue";
@@ -50,6 +51,7 @@ class SharedPreferencesModel {
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kActiveCrimesList = "pda_activeCrimesList";
+  final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
   final String _kLootNotificationAhead = "pda_lootNotificationAhead";
@@ -430,6 +432,16 @@ class SharedPreferencesModel {
     return prefs.setInt(_kStockCapacity, value);
   }
 
+  Future<bool> getShowForeignInventory() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowForeignInventory) ?? true;
+  }
+
+  Future<bool> setShowForeignInventory(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowForeignInventory, value);
+  }
+
   /// ----------------------------
   /// Methods for notification types
   /// ----------------------------
@@ -589,6 +601,16 @@ class SharedPreferencesModel {
   /// ----------------------------  
   /// Methods for loot
   /// ----------------------------
+  Future<String> getLootYataCache() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLootYataCache) ?? '';
+  }
+
+  Future<bool> setLootYataCache(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLootYataCache, value);
+  }
+
   Future<String> getLootTimerType() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kLootTimerType) ?? 'timer';
