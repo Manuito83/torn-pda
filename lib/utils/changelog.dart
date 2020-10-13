@@ -30,6 +30,30 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.0
+    var v1_9_0 = ChangeLogItem();
+    v1_9_0.version = 'Torn PDA v1.9.0';
+    String feat1_9_0_1 = "Alerts: added nerve to automatic alerts";
+    String feat1_9_0_2 = "Quick actions: long press app icon (supported devices) to launch Torn from home screen";
+    String feat1_9_0_3 = "Profile: tapping your energy or nerve bars will open a small browser to the gym or crimes, easier than ever";
+    String feat1_9_0_4 = "Profile: added stats, points and other useful information";
+    String feat1_9_0_5 = "Travel: you can now sort by quantity and see how many items of each type you already possess (can be disabled)";
+    String feat1_9_0_6 = "Travel: when you click a flag, you'll also get a check on if you have sufficient money on hand to fill your capacity with the item you selected";
+    String feat1_9_0_7 = "Bazaar: added button to fill maximum quantities automatically";
+    String feat1_9_0_8 = "Browser: changed top-left icon to better show if the browser is going to close (X) or go back (arrow). If visiting a vault after a trade, it now goes back to Trades.";
+    String feat1_9_0_9 = "Added TCT clock to main menu";
+    String feat1_9_0_10 = "Improved API integration with YATA";
+    v1_9_0.features.add(feat1_9_0_1);
+    v1_9_0.features.add(feat1_9_0_2);
+    v1_9_0.features.add(feat1_9_0_3);
+    v1_9_0.features.add(feat1_9_0_4);
+    v1_9_0.features.add(feat1_9_0_5);
+    v1_9_0.features.add(feat1_9_0_6);
+    v1_9_0.features.add(feat1_9_0_7);
+    v1_9_0.features.add(feat1_9_0_8);
+    v1_9_0.features.add(feat1_9_0_9);
+    v1_9_0.features.add(feat1_9_0_10);
+
     // VERSION 1.8.6
     var v1_8_6 = ChangeLogItem();
     v1_8_6.version = 'Torn PDA v1.8.6';
@@ -267,6 +291,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_0);
     itemList.add(v1_8_6);
     itemList.add(v1_8_5);
     itemList.add(v1_8_4);
