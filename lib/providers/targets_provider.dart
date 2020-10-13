@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -508,7 +507,7 @@ class TargetsProvider extends ChangeNotifier {
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
       var response = await http.get(
-        'https://yata.alwaysdata.net/target/targets/export/?key=$_userKey',
+        'https://yata.alwaysdata.net/api/v1/targets/export/?key=$_userKey',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -534,7 +533,7 @@ class TargetsProvider extends ChangeNotifier {
   }) async {
     var modelOut = YataTargetsExportModel();
     modelOut.key = _userKey;
-    modelOut.user = "Torn PDA $appVersion";
+    //modelOut.user = "Torn PDA $appVersion";
 
     var targets = Map<String, YataExportTarget>();
     for (var localTarget in onlyLocal) {
@@ -563,7 +562,7 @@ class TargetsProvider extends ChangeNotifier {
 
     try {
       var response = await http.post(
-        'https://yata.alwaysdata.net/target/targets/import/',
+        'https://yata.alwaysdata.net/api/v1/targets/import/',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -573,8 +572,8 @@ class TargetsProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);
         var answer = result.values.first;
-        if (answer.contains("No targets have been added") || answer.contains("You added")) {
-          answer += ". Existing notes (if any) have been exported and overwritten in YATA";
+        if (answer.contains("No new targets added") || answer.contains("You added")) {
+          answer += ". Any existing notes and colors have been exported and overwritten in YATA";
         }
 
         return answer;

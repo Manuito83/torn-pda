@@ -12,23 +12,23 @@ class YataTargetsExportModel {
   YataTargetsExportModel({
     this.targets,
     this.key,
-    this.user,
+    //this.user,
   });
 
   Map<String, YataExportTarget> targets;
   String key;
-  String user;
+  //String user;
 
   factory YataTargetsExportModel.fromJson(Map<String, dynamic> json) => YataTargetsExportModel(
     targets: json["targets"] == null ? null : Map.from(json["targets"]).map((k, v) => MapEntry<String, YataExportTarget>(k, YataExportTarget.fromJson(v))),
     key: json["key"] == null ? null : json["key"],
-    user: json["user"] == null ? null : json["user"],
+    //user: json["user"] == null ? null : json["user"],
   );
 
   Map<String, dynamic> toJson() => {
     "targets": targets == null ? null : Map.from(targets).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
     "key": key == null ? null : key,
-    "user": user == null ? null : user,
+    //"user": user == null ? null : user,
   };
 }
 
