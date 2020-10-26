@@ -278,10 +278,11 @@ class _WebViewFullState extends State<WebViewFull> {
                       preferredContentMode: UserPreferredContentMode.DESKTOP,
                     ),
                     android: AndroidInAppWebViewOptions(
-                      useWideViewPort: true,
-                      loadWithOverviewMode: false,
                       builtInZoomControls: false,
-                      displayZoomControls: false,
+                      useHybridComposition: true,
+                      //useWideViewPort: false,
+                      //loadWithOverviewMode: true,
+                      //displayZoomControls: true,
                     ),
                   ),
                   shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {

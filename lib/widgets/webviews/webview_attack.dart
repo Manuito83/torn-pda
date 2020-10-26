@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +67,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   @override
   void initState() {
     super.initState();
+
+    // Enable hybrid composition
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+
     _loadPreferences();
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';

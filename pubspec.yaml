@@ -39,7 +39,6 @@ dependencies:
   flutter_speed_dial: ^1.2.5
   animations: ^1.1.2
   bot_toast: ^3.0.4
-  flutter_inappwebview: ^4.0.0+4
   material_design_icons_flutter: ^4.0.5655
   firebase_core: ^0.5.0
   firebase_messaging: ^7.0.2
@@ -55,6 +54,10 @@ dependencies:
   speech_bubble: ^0.0.7
   cupertino_icons: ^1.0.0
   quick_actions: ^0.4.0+9
+  flutter_inappwebview:
+    git:
+      url: https://github.com/pichillilorenzo/flutter_inappwebview.git
+      ref: master
 
 dev_dependencies:
   flutter_test:
