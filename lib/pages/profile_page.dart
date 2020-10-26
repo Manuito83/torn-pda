@@ -1807,7 +1807,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message.contains('lottery') ||
         message.contains('check has been credited to your') ||
         message.contains('withdraw your check from the bank') ||
-        message.contains('Your bank investment has ended')) {
+        message.contains('Your bank investment has ended') ||
+        message.contains('You were given \$')) {
       insideIcon = Icon(
         Icons.monetization_on,
         color: Colors.green,
@@ -1857,6 +1858,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message.contains('Your best lap was')) {
       insideIcon = Icon(
         MdiIcons.gauge,
+        color: Colors.red[500],
+        size: 20,
+      );
+    } else if (message.contains('You can begin programming a new virus')) {
+      insideIcon = Icon(
+        MdiIcons.virusOutline,
         color: Colors.red[500],
         size: 20,
       );
