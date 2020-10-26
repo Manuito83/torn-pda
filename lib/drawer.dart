@@ -65,6 +65,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   Timer _tenSecTimer;
   DateTime _currentTctTime = DateTime.now().toUtc();
 
+  bool _changelogIsActive = false;
+
   @override
   void initState() {
     super.initState();
@@ -100,8 +102,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 await launch(url, forceSafariVC: false);
               }
               break;
-            }
           }
+        }
       });
     });
     // ENDS QUICK ACTIONS
@@ -292,7 +294,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
+        if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
           return Scaffold(
             body: _getPages(),
             drawer: Drawer(
@@ -600,18 +602,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
       */
 
+      _changelogIsActive = true;
       _showChangeLogDialog(context);
     }
   }
 
-  void _showChangeLogDialog(BuildContext context) {
-    showDialog(
+  void _showChangeLogDialog(BuildContext context) async {
+    await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return ChangeLog();
       },
     );
+
+    setState(() {
+      _changelogIsActive = false;
+    });
+
   }
 
   void _refreshTctClock() {
