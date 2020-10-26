@@ -105,6 +105,10 @@ class _WebViewFullState extends State<WebViewFull> {
     VaultsOptions(description: "Company vault"),
   ];
 
+  bool _scrollAfterLoad = false;
+  int _scrollY = 0;
+  int _scrollX = 0;
+
   @override
   void initState() {
     super.initState();
@@ -221,7 +225,10 @@ class _WebViewFullState extends State<WebViewFull> {
                   IconButton(
                     icon: Icon(Icons.refresh),
                     onPressed: () async {
+                      _scrollX = await webView.getScrollX();
+                      _scrollY = await webView.getScrollY();
                       await webView.reload();
+                      _scrollAfterLoad = true;
                     },
                   ),
                 ],
@@ -313,6 +320,14 @@ class _WebViewFullState extends State<WebViewFull> {
                   onLoadStop: (InAppWebViewController c, String url) {
                     _currentUrl = url;
                     _assessGeneral();
+
+                    // This is used in case the user presses reload. We need to wait for the page
+                    // load to be finished in order to scroll
+                    if (_scrollAfterLoad) {
+                      webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                      _scrollAfterLoad = false;
+                    }
+
                   },
                   // Allows IOS to open links with target=_blank
                   onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
