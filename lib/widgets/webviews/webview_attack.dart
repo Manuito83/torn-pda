@@ -395,7 +395,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               });
 
               // Show note for next target
-              if (_showNotes && widget.attackNotesList[_attackNumber].isNotEmpty) {
+              if (_showNotes) {
                 _showNoteToast();
               }
             },
@@ -435,6 +435,11 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   void _showNoteToast() {
+    // Do nothing if note is empty
+    if (widget.attackNotesList[_attackNumber].isEmpty) {
+      return;
+    }
+
     Color cardColor;
     switch (widget.attackNotesColorList[_attackNumber]) {
       case '':
