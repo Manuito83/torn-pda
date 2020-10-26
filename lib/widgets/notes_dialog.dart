@@ -177,6 +177,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                         fontSize: 14,
                         color: _themeProvider.mainText,
                       ),
+                      textCapitalization: TextCapitalization.sentences,
                       controller: _personalNotesController,
                       maxLength: 200,
                       minLines: 1,
