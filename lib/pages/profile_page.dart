@@ -300,9 +300,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   // KEEP THIS UNIQUE
                   bubbleShowcaseId: 'profile_showcase',
                   // WILL SHOW IF VERSION CHANGED
-                  bubbleShowcaseVersion: 1,
+                  bubbleShowcaseVersion: 2,
                   showCloseButton: false,
-                  doNotReopenOnClose: true,
+                  doNotReopenOnClose: false,
                   bubbleSlides: [
                     RelativeBubbleSlide(
                       shape: Rectangle(spreadRadius: 10),
@@ -322,6 +322,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 'quick dialog straight to the gym or crimes!',
                                 style: TextStyle(color: Colors.white),
                               ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    AbsoluteBubbleSlide(
+                      positionCalculator: (size) => Position(
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                      ),
+                      child: AbsoluteBubbleSlideChild(
+                        positionCalculator: (size) => Position(
+                          top: size.height / 2,
+                          left: (size.width - 200) / 2,
+                        ),
+                        widget: SpeechBubble(
+                          width: 200,
+                          nipLocation: NipLocation.BOTTOM,
+                          nipHeight: 0,
+                          color: Colors.blue,
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text(
+                               'Tap the points icon below to open the Points Building!',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
                         ),
@@ -2058,9 +2085,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8.0),
               child: Row(
                 children: [
-                  Icon(
-                    MdiIcons.alphaPCircleOutline,
-                    color: Colors.blueAccent,
+                  GestureDetector(
+                    onTap: () async {
+                      await _openBrowserDialog(
+                        context,
+                        'https://www.torn.com/points.php',
+                      );
+                    },
+                    child: Icon(
+                      MdiIcons.alphaPCircleOutline,
+                      color: Colors.blueAccent,
+                    ),
                   ),
                   SizedBox(width: 5),
                   Text('${_miscModel.points}'),
