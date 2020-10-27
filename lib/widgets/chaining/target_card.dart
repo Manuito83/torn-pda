@@ -558,6 +558,32 @@ class _TargetCardState extends State<TargetCard> {
 
   Widget _travelIcon() {
     if (_target.status.color == "blue") {
+      var destination = _target.status.description;
+      var flag = '';
+      if (destination.contains('Japan')) {
+        flag = 'images/flags/stock/japan.png';
+      } else if (destination.contains('Hawaii')) {
+        flag = 'images/flags/stock/hawaii.png';
+      } else if (destination.contains('China')) {
+        flag = 'images/flags/stock/china.png';
+      } else if (destination.contains('Argentina')) {
+        flag = 'images/flags/stock/argentina.png';
+      } else if (destination.contains('United Kingdom')) {
+        flag = 'images/flags/stock/uk.png';
+      } else if (destination.contains('Cayman')) {
+        flag = 'images/flags/stock/cayman.png';
+      } else if (destination.contains('South Africa')) {
+        flag = 'images/flags/stock/south-africa.png';
+      } else if (destination.contains('Switzerland')) {
+        flag = 'images/flags/stock/switzerland.png';
+      } else if (destination.contains('Mexico')) {
+        flag = 'images/flags/stock/Mexico.png';
+      } else if (destination.contains('UAE')) {
+        flag = 'images/flags/stock/uae.png';
+      } else if (destination.contains('Canada')) {
+        flag = 'images/flags/stock/Canada.png';
+      }
+
       return Material(
         type: MaterialType.transparency,
         child: InkWell(
@@ -574,13 +600,33 @@ class _TargetCardState extends State<TargetCard> {
               contentPadding: EdgeInsets.all(10),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.only(right: 5),
-            child: Icon(
-              Icons.airplanemode_active,
-              color: Colors.blue,
-              size: 16,
-            ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 3),
+                child: RotatedBox(
+                  quarterTurns: _target.status.description.contains('Traveling to ')
+                      ? 1       // If traveling to another country
+                      : _target.status.description.contains('Returning ')
+                          ? 3   // If returning to Torn
+                          : 0,  // If staying abroad (blue but not moving)
+                  child: Icon(
+                    _target.status.description.contains('In ')
+                        ? Icons.location_city_outlined
+                        : Icons.airplanemode_active,
+                    color: Colors.blue,
+                    size: 16,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Image.asset(
+                  flag,
+                  width: 16,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -685,7 +731,7 @@ class _TargetCardState extends State<TargetCard> {
 
   void _timerUpdateInformation() {
     _returnLastUpdated();
-    if (mounted){
+    if (mounted) {
       setState(() {});
     }
   }
