@@ -40,6 +40,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   int _aboutPosition = 7;
   var _allowSectionsWithoutKey = [];
 
+  // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
+  // via callback, as it might need to be changed as well
   final _drawerItemsList = [
     "Profile",
     "Travel",
@@ -468,7 +470,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   Widget _getPages() {
     switch (_activeDrawerIndex) {
       case 0:
-        return ProfilePage();
+        return ProfilePage(
+          callBackSection: _callSectionFromOutside,
+        );
         break;
       case 1:
         return TravelPage();
@@ -628,5 +632,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         _currentTctTime = DateTime.now().toUtc();
       });
     }
+  }
+
+  void _callSectionFromOutside(int section) {
+    setState(() {
+      _selected = section;
+      _activeDrawerIndex = section;
+    });
+    _getPages();
   }
 }

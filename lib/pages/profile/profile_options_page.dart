@@ -3,6 +3,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
   bool nukeReviveEnabled;
+  bool warnAboutChainsEnabled;
 }
 
 class ProfileOptionsPage extends StatefulWidget {
@@ -12,6 +13,7 @@ class ProfileOptionsPage extends StatefulWidget {
 
 class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _nukeReviveEnabled = true;
+  bool _warnAboutChainsEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -83,6 +85,40 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               ),
                             ),
                           ),
+                          SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text("Warn about chains"),
+                                Switch(
+                                  value: _warnAboutChainsEnabled,
+                                  onChanged: (value) {
+                                    SharedPreferencesModel().setWarnAboutChains(value);
+                                    setState(() {
+                                      _warnAboutChainsEnabled = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'If active, you\'ll get a message and a chain icon to the side of '
+                              'the energy bar, so that you avoid spending energy in the gym '
+                              'if you are unaware that your faction is chaining',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 50),
                         ],
                       ),
@@ -103,15 +139,19 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   Future _restorePreferences() async {
     var useNuke = await SharedPreferencesModel().getUseNukeRevive();
+    var warnChains = await SharedPreferencesModel().getWarnAboutChains();
 
     setState(() {
       _nukeReviveEnabled = useNuke;
+      _warnAboutChainsEnabled = warnChains;
     });
   }
 
   Future<bool> _willPopCallback() async {
     Navigator.of(context).pop(
-      ProfileOptionsReturn()..nukeReviveEnabled = _nukeReviveEnabled,
+      ProfileOptionsReturn()
+        ..nukeReviveEnabled = _nukeReviveEnabled
+        ..warnAboutChainsEnabled = _warnAboutChainsEnabled,
     );
     return true;
   }

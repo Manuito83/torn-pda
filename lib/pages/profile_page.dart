@@ -15,6 +15,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -85,6 +86,10 @@ extension ProfileNotificationExtension on ProfileNotification {
 }
 
 class ProfilePage extends StatefulWidget {
+  final Function callBackSection;
+
+  ProfilePage({@required this.callBackSection});
+
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
@@ -166,6 +171,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   TornEducationModel _tornEducationModel;
 
   bool _nukeReviveActive = false;
+  bool _warnAboutChains = false;
+
+  ChainModel _chainModel;
 
   var _showOne = GlobalKey();
 
@@ -284,6 +292,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               );
               setState(() {
                 _nukeReviveActive = newOptions.nukeReviveEnabled;
+                _warnAboutChains = newOptions.warnAboutChainsEnabled;
               });
             },
           )
@@ -777,6 +786,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.only(left: 8),
               child: Column(
                 children: <Widget>[
+                  if (_warnAboutChains &&
+                      _chainModel.chain.current > 10 &&
+                      _chainModel.chain.cooldown == 0)
+                    Row(
+                      children: [
+                        SizedBox(width: 65),
+                        Text(
+                          'CHAINING (${_chainModel.chain.current}/${_chainModel.chain.max})',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    SizedBox.shrink(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -790,6 +817,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           GestureDetector(
                             key: _showOne,
                             onTap: () async {
+                              if (_warnAboutChains &&
+                                  _chainModel.chain.current > 10 &&
+                                  _chainModel.chain.cooldown == 0) {
+                                BotToast.showText(
+                                  text: 'Caution: your faction is chaining!',
+                                  align: Alignment(0, 0),
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.blue,
+                                  duration: Duration(seconds: 2),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              }
+
                               await _openBrowserDialog(
                                 context,
                                 'https://www.torn.com/gym.php',
@@ -809,6 +852,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   : _user.energy.current / _user.energy.maximum,
                             ),
                           ),
+                          if (_warnAboutChains &&
+                              _chainModel.chain.current > 10 &&
+                              _chainModel.chain.cooldown == 0)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 5),
+                              child: GestureDetector(
+                                onTap: () {
+                                  // Open chaining section
+                                  widget.callBackSection(2);
+                                },
+                                child: Icon(
+                                  MdiIcons.linkVariant,
+                                  color: Colors.blue,
+                                  size: 22,
+                                ),
+                              ),
+                            )
+                          else
+                            SizedBox.shrink(),
                         ],
                       ),
                       _notificationIcon(ProfileNotification.energy),
@@ -2641,6 +2703,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _fetchApi() async {
     var apiResponse = await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey).getOwnProfile;
+    var apiChain = await TornApiCaller.chain(_userProvider.myUser.userApiKey).getChainStatus;
 
     setState(() {
       if (apiResponse is OwnProfileModel) {
@@ -2657,6 +2720,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (_customNerveTrigger > _user.nerve.maximum || _customNerveTrigger == 0) {
           _customNerveTrigger = _user.nerve.maximum;
           SharedPreferencesModel().setNerveNotificationValue(_customNerveTrigger);
+        }
+
+        if (apiChain is ChainModel) {
+          _chainModel = apiChain;
         }
 
         _checkIfNotificationsAreCurrent();
@@ -2798,6 +2865,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           backgroundColor: Colors.green[400],
           onTap: () async {
+            if (_warnAboutChains &&
+                _chainModel.chain.current > 10 &&
+                _chainModel.chain.cooldown == 0) {
+              BotToast.showText(
+                text: 'Caution: your faction is chaining!',
+                align: Alignment(0, 0),
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: Duration(seconds: 2),
+                contentPadding: EdgeInsets.all(10),
+              );
+            }
+
             _openTornBrowser('gym');
           },
           label: 'GYM',
@@ -3445,6 +3528,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _alarmVibration = await SharedPreferencesModel().getProfileAlarmVibration();
 
     _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
+    _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
 
     setState(() {
       if (energy == '0') {
