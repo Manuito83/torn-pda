@@ -318,8 +318,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               padding: EdgeInsets.all(6),
                               child: Text(
                                 'Did you know?\n\n'
-                                'You can tap the energy or nerve bars to open a '
-                                'quick dialog straight to the gym or crimes!',
+                                'You can tap any of the bars to open a '
+                                'quick dialog straight to the gym, crimes or items sections!',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
@@ -347,7 +347,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Padding(
                             padding: EdgeInsets.all(10),
                             child: Text(
-                               'Tap the points icon below to open the Points Building!',
+                              'Tap the points icon below to open the Points Building!',
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -875,18 +875,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         child: Text('Happy'),
                       ),
                       SizedBox(width: 10),
-                      LinearPercentIndicator(
-                        width: 150,
-                        lineHeight: 20,
-                        progressColor: Colors.amber,
-                        backgroundColor: Colors.grey,
-                        center: Text(
-                          '${_user.happy.current}',
-                          style: TextStyle(color: Colors.black),
+                      GestureDetector(
+                        onTap: () async {
+                          await _openBrowserDialog(
+                            context,
+                            'https://www.torn.com/item.php#candy-items',
+                          );
+                        },
+                        child: LinearPercentIndicator(
+                          width: 150,
+                          lineHeight: 20,
+                          progressColor: Colors.amber,
+                          backgroundColor: Colors.grey,
+                          center: Text(
+                            '${_user.happy.current}',
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          percent: _user.happy.current / _user.happy.maximum > 1.0
+                              ? 1.0
+                              : _user.happy.current / _user.happy.maximum,
                         ),
-                        percent: _user.happy.current / _user.happy.maximum > 1.0
-                            ? 1.0
-                            : _user.happy.current / _user.happy.maximum,
                       ),
                     ],
                   ),
@@ -910,18 +918,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             child: Text('Life'),
                           ),
                           SizedBox(width: 10),
-                          LinearPercentIndicator(
-                            width: 150,
-                            lineHeight: 20,
-                            progressColor: Colors.blue,
-                            backgroundColor: Colors.grey,
-                            center: Text(
-                              '${_user.life.current}',
-                              style: TextStyle(color: Colors.black),
+                          GestureDetector(
+                            onTap: () async {
+                              await _openBrowserDialog(
+                                context,
+                                'https://www.torn.com/item.php#medical-items',
+                              );
+                            },
+                            child: LinearPercentIndicator(
+                              width: 150,
+                              lineHeight: 20,
+                              progressColor: Colors.blue,
+                              backgroundColor: Colors.grey,
+                              center: Text(
+                                '${_user.life.current}',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                              percent: _user.life.current / _user.life.maximum > 1.0
+                                  ? 1.0
+                                  : _user.life.current / _user.life.maximum,
                             ),
-                            percent: _user.life.current / _user.life.maximum > 1.0
-                                ? 1.0
-                                : _user.life.current / _user.life.maximum,
                           ),
                           _user.status.state == "Hospital"
                               ? Icon(
@@ -1933,7 +1949,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Strength modifiers
     bool strengthModified = false;
     Color strengthColor = Colors.white;
-    int strengthTotal = 0;
+    int strengthModifier = 0;
+    double strengthModifiedTotal = _miscModel.strength.toDouble();
     String strengthString = '';
     for (var strengthMod in _miscModel.strengthInfo) {
       RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
@@ -1943,19 +1960,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         for (var match in matches) {
           var change = match.group(2);
           if (match.group(1) == '-') {
-            strengthTotal -= int.parse(change);
+            strengthModifier -= int.parse(change);
           } else if (match.group(1) == '+') {
-            strengthTotal += int.parse(change);
+            strengthModifier += int.parse(change);
           }
         }
       }
     }
     if (strengthModified) {
-      if (strengthTotal < 0) {
-        strengthString = "($strengthTotal%)";
+      strengthModifiedTotal += strengthModifiedTotal * strengthModifier / 100;
+      if (strengthModifier < 0) {
+        strengthString = "($strengthModifier%)";
         strengthColor = Colors.red;
       } else {
-        strengthString = "(+$strengthTotal%)";
+        strengthString = "(+$strengthModifier%)";
         strengthColor = Colors.green;
       }
     }
@@ -1963,7 +1981,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Defense modifiers
     bool defenseModified = false;
     Color defenseColor = Colors.white;
-    int defenseTotal = 0;
+    int defenseModifier = 0;
+    double defenseModifiedTotal = _miscModel.defense.toDouble();
     String defenseString = '';
     for (var defenseMod in _miscModel.defenseInfo) {
       RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
@@ -1973,19 +1992,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         for (var match in matches) {
           var change = match.group(2);
           if (match.group(1) == '-') {
-            defenseTotal -= int.parse(change);
+            defenseModifier -= int.parse(change);
           } else if (match.group(1) == '+') {
-            defenseTotal += int.parse(change);
+            defenseModifier += int.parse(change);
           }
         }
       }
     }
     if (defenseModified) {
-      if (defenseTotal < 0) {
-        defenseString = "($defenseTotal%)";
+      defenseModifiedTotal += defenseModifiedTotal * defenseModifier / 100;
+      if (defenseModifier < 0) {
+        defenseString = "($defenseModifier%)";
         defenseColor = Colors.red;
       } else {
-        defenseString = "(+$defenseTotal%)";
+        defenseString = "(+$defenseModifier%)";
         defenseColor = Colors.green;
       }
     }
@@ -1993,7 +2013,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Speed modifiers
     bool speedModified = false;
     Color speedColor = Colors.white;
-    int speedTotal = 0;
+    int speedModifier = 0;
+    double speedModifiedTotal = _miscModel.speed.toDouble();
     String speedString = '';
     for (var speedMod in _miscModel.speedInfo) {
       RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
@@ -2003,19 +2024,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         for (var match in matches) {
           var change = match.group(2);
           if (match.group(1) == '-') {
-            speedTotal -= int.parse(change);
+            speedModifier -= int.parse(change);
           } else if (match.group(1) == '+') {
-            speedTotal += int.parse(change);
+            speedModifier += int.parse(change);
           }
         }
       }
     }
     if (speedModified) {
-      if (speedTotal < 0) {
-        speedString = "($speedTotal%)";
+      speedModifiedTotal += speedModifiedTotal * speedModifier / 100;
+      if (speedModifier < 0) {
+        speedString = "($speedModifier%)";
         speedColor = Colors.red;
       } else {
-        speedString = "(+$speedTotal%)";
+        speedString = "(+$speedModifier%)";
         speedColor = Colors.green;
       }
     }
@@ -2023,7 +2045,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Dex modifiers
     bool dexModified = false;
     Color dexColor = Colors.white;
-    int dexTotal = 0;
+    int dexModifier = 0;
+    double dexModifiedTotal = _miscModel.dexterity.toDouble();
     String dexString = '';
     for (var dexMod in _miscModel.dexterityInfo) {
       RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
@@ -2033,19 +2056,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         for (var match in matches) {
           var change = match.group(2);
           if (match.group(1) == '-') {
-            dexTotal -= int.parse(change);
+            dexModifier -= int.parse(change);
           } else if (match.group(1) == '+') {
-            dexTotal += int.parse(change);
+            dexModifier += int.parse(change);
           }
         }
       }
     }
     if (dexModified) {
-      if (dexTotal < 0) {
-        dexString = "($dexTotal%)";
+      dexModifiedTotal += dexModifiedTotal * dexModifier / 100;
+      if (dexModifier < 0) {
+        dexString = "($dexModifier%)";
         dexColor = Colors.red;
       } else {
-        dexString = "(+$dexTotal%)";
+        dexString = "(+$dexModifier%)";
         dexColor = Colors.green;
       }
     }
@@ -2061,7 +2085,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Row(
                 children: [
                   Text(
-                    'STATS',
+                    'BASIC INFO',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -2102,7 +2126,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Row(
+                children: [
+                  Text(
+                    'BATTLE STATS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: Column(
@@ -2111,6 +2149,70 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Row(
                     children: [
                       Text('Strength: ${decimalFormat.format(_miscModel.strength)}'),
+                      Text(
+                        " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text('Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                      Text(
+                        " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text('Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                      Text(
+                        " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                      Text(
+                        " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    width: 50,
+                    child: Divider(color: _themeProvider.mainText, thickness: 0.5),
+                  ),
+                  Text('Total: ${decimalFormat.format(_miscModel.total)}'),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Row(
+                children: [
+                  Text(
+                    'EFFECTIVE STATS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
                       strengthModified
                           ? Text(
                               " $strengthString",
@@ -2121,7 +2223,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   Row(
                     children: [
-                      Text('Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                      Text('Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
                       defenseModified
                           ? Text(
                               " $defenseString",
@@ -2132,7 +2234,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   Row(
                     children: [
-                      Text('Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                      Text('Speed: ${decimalFormat.format(speedModifiedTotal)}'),
                       speedModified
                           ? Text(
                               " $speedString",
@@ -2143,7 +2245,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   Row(
                     children: [
-                      Text('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                      Text('Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
                       dexModified
                           ? Text(
                               " $dexString",
@@ -2156,11 +2258,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     width: 50,
                     child: Divider(color: _themeProvider.mainText, thickness: 0.5),
                   ),
-                  Text('Total: ${decimalFormat.format(_miscModel.total)}'),
+                  Text(
+                    'Total: ${decimalFormat.format(strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal)}',
+                  ),
                 ],
               ),
             ),
-            SizedBox(height: 15),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Row(
+                children: [
+                  Text(
+                    'WORK STATS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: Column(
