@@ -9,6 +9,7 @@ import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/pages/chaining/targets_options_page.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -54,6 +55,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
 
   // For appBar search
   Icon _searchIcon = Icon(Icons.search);
@@ -87,6 +89,7 @@ class _TargetsPageState extends State<TargetsPage> {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
     _searchController.addListener(onSearchInputTextChange);
     // Reset the filter so that we get all the targets
@@ -101,160 +104,13 @@ class _TargetsPageState extends State<TargetsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        title: _appBarText,
-        leading: new IconButton(
-          icon: new Icon(Icons.menu),
-          onPressed: () {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: _searchIcon,
-            onPressed: () {
-              setState(() {
-                Color myColor = Colors.white;
-                if (_searchController.text != '') {
-                  myColor = Colors.orange[500];
-                }
-                if (_searchIcon.icon == Icons.search) {
-                  _searchIcon = Icon(
-                    Icons.cancel,
-                    color: myColor,
-                  );
-                  _appBarText = Form(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                          child: Row(
-                            children: <Widget>[
-                              Flexible(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextField(
-                                    controller: _searchController,
-                                    focusNode: _focusSearch,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: "search targets",
-                                      hintStyle: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          color: Colors.grey[300],
-                                          fontSize: 12),
-                                    ),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                  _focusSearch.requestFocus();
-                } else {
-                  _searchIcon = Icon(
-                    Icons.search,
-                    color: myColor,
-                  );
-                  _appBarText = Text("Targets");
-                }
-              });
-            },
-          ),
-
-          /// FutureBuilder for YATA button
-          FutureBuilder(
-            future: _preferencesLoaded,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_yataButtonEnabled) {
-                  if (_yataButtonInProgress) {
-                    return IconButton(
-                      icon: Icon(MdiIcons.alphaYCircleOutline),
-                      onPressed: () async {
-                        setState(() {
-                          _yataButtonInProgress = false;
-                        });
-                        var yataTargets = await _targetsProvider.getTargetsFromYata();
-                        if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
-                          _openYataDialog(yataTargets);
-                        } else {
-                          String error;
-                          if (yataTargets.errorPlayer) {
-                            error = "We could not find your user in Yata, do you have an account?";
-                          } else {
-                            error = "There was an error contacting YATA, please try again later!";
-                          }
-                          BotToast.showText(
-                            text: error,
-                            textStyle: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white,
-                            ),
-                            contentColor: Colors.red[800],
-                            duration: Duration(seconds: 5),
-                            contentPadding: EdgeInsets.all(10),
-                          );
-                        }
-                        setState(() {
-                          _yataButtonInProgress = true;
-                        });
-                      },
-                    );
-                  } else {
-                    return Theme(
-                      data: Theme.of(context).copyWith(accentColor: Colors.white),
-                      child: SizedBox(
-                        width: 45,
-                        child: Center(
-                          child: Container(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                } else {
-                  return SizedBox.shrink();
-                }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-          PopupMenuButton<TargetSort>(
-            icon: Icon(
-              Icons.sort,
-            ),
-            onSelected: _selectSortPopup,
-            itemBuilder: (BuildContext context) {
-              return _popupSortChoices.map((TargetSort choice) {
-                return PopupMenuItem<TargetSort>(
-                  value: choice,
-                  child: Text(
-                    choice.description,
-                    style: TextStyle(
-                      fontSize: 13,
-                    ),
-                  ),
-                );
-              }).toList();
-            },
-          ),
-          _optionsPopUp(),
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
@@ -341,6 +197,163 @@ class _TargetsPageState extends State<TargetsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: _appBarText,
+      leading: new IconButton(
+        icon: new Icon(Icons.menu),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
+      actions: <Widget>[
+        IconButton(
+          icon: _searchIcon,
+          onPressed: () {
+            setState(() {
+              Color myColor = Colors.white;
+              if (_searchController.text != '') {
+                myColor = Colors.orange[500];
+              }
+              if (_searchIcon.icon == Icons.search) {
+                _searchIcon = Icon(
+                  Icons.cancel,
+                  color: myColor,
+                );
+                _appBarText = Form(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                        child: Row(
+                          children: <Widget>[
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextField(
+                                  controller: _searchController,
+                                  focusNode: _focusSearch,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: "search targets",
+                                    hintStyle: TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.grey[300],
+                                        fontSize: 12),
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                _focusSearch.requestFocus();
+              } else {
+                _searchIcon = Icon(
+                  Icons.search,
+                  color: myColor,
+                );
+                _appBarText = Text("Targets");
+              }
+            });
+          },
+        ),
+
+        /// FutureBuilder for YATA button
+        FutureBuilder(
+          future: _preferencesLoaded,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_yataButtonEnabled) {
+                if (_yataButtonInProgress) {
+                  return IconButton(
+                    icon: Icon(MdiIcons.alphaYCircleOutline),
+                    onPressed: () async {
+                      setState(() {
+                        _yataButtonInProgress = false;
+                      });
+                      var yataTargets = await _targetsProvider.getTargetsFromYata();
+                      if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
+                        _openYataDialog(yataTargets);
+                      } else {
+                        String error;
+                        if (yataTargets.errorPlayer) {
+                          error = "We could not find your user in Yata, do you have an account?";
+                        } else {
+                          error = "There was an error contacting YATA, please try again later!";
+                        }
+                        BotToast.showText(
+                          text: error,
+                          textStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.red[800],
+                          duration: Duration(seconds: 5),
+                          contentPadding: EdgeInsets.all(10),
+                        );
+                      }
+                      setState(() {
+                        _yataButtonInProgress = true;
+                      });
+                    },
+                  );
+                } else {
+                  return Theme(
+                    data: Theme.of(context).copyWith(accentColor: Colors.white),
+                    child: SizedBox(
+                      width: 45,
+                      child: Center(
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              } else {
+                return SizedBox.shrink();
+              }
+            } else {
+              return SizedBox.shrink();
+            }
+          },
+        ),
+        PopupMenuButton<TargetSort>(
+          icon: Icon(
+            Icons.sort,
+          ),
+          onSelected: _selectSortPopup,
+          itemBuilder: (BuildContext context) {
+            return _popupSortChoices.map((TargetSort choice) {
+              return PopupMenuItem<TargetSort>(
+                value: choice,
+                child: Text(
+                  choice.description,
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+        ),
+        _optionsPopUp(),
+      ],
     );
   }
 

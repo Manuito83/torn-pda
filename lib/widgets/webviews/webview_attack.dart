@@ -8,6 +8,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -43,6 +44,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   UserDetailsProvider _userProv;
   ChainStatusProvider _chainStatusProvider;
+  SettingsProvider _settingsProvider;
 
   String _initialUrl = "";
   String _currentPageTitle = "";
@@ -67,6 +69,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     // Enable hybrid composition
     if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
@@ -92,100 +95,113 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: CustomAppBar(
-          onHorizontalDragEnd: (DragEndDetails details) async {
-            await _goBackOrForward(details);
-          },
-          genericAppBar: AppBar(
-            leading: IconButton(
-                icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
-                onPressed: () async {
-                  // Normal behaviour is just to pop and go to previous page
-                  if (_backButtonPopsContext) {
-                    _willPopCallback();
-                    Navigator.pop(context);
-                  } else {
-                    // But we can change and go back to previous page in certain
-                    // situations (e.g. when going for medical items during an
-                    // attack), in which case we need to return to previous target
-                    var backPossible = await _webViewController.canGoBack();
-                    if (backPossible) {
-                      _webViewController.goBack();
-                      setState(() {
-                        _currentPageTitle = _goBackTitle;
-                      });
-                    } else {
-                      Navigator.pop(context);
-                    }
-                    _backButtonPopsContext = true;
-                  }
-                }),
-            title: GestureDetector(
-              child: Text(_currentPageTitle),
-              onLongPress: () async {
-                var url = await _webViewController.currentUrl();
-                Clipboard.setData(ClipboardData(text: url));
-                if (url.length > 60) {
-                  url = url.substring(0, 60) + "...";
+      child: SafeArea(
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildCustomAppBar(),
+                )
+              : null,
+          body: Container(
+            color: Colors.grey[900],
+            child: SafeArea(
+              top: false,
+              right: false,
+              left: false,
+              bottom: true,
+              child: Builder(
+                builder: (BuildContext context) {
+                  return Column(
+                    children: [
+                      ExpandablePanel(
+                        theme: ExpandableThemeData(
+                          hasIcon: false,
+                          tapBodyToCollapse: false,
+                          tapHeaderToExpand: false,
+                        ),
+                        collapsed: SizedBox.shrink(),
+                        controller: _chainWidgetController,
+                        header: SizedBox.shrink(),
+                        expanded: ChainTimer(
+                          userKey: widget.userKey,
+                          alwaysDarkBackground: true,
+                          chainTimerParent: ChainTimerParent.webView,
+                        ),
+                      ),
+                      Expanded(
+                        child: WebView(
+                          initialUrl: _initialUrl,
+                          javascriptMode: JavascriptMode.unrestricted,
+                          onWebViewCreated: (WebViewController c) {
+                            _webViewController = c;
+                          },
+                          gestureNavigationEnabled: true,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  CustomAppBar buildCustomAppBar() {
+    return CustomAppBar(
+      onHorizontalDragEnd: (DragEndDetails details) async {
+        await _goBackOrForward(details);
+      },
+      genericAppBar: AppBar(
+        leading: IconButton(
+            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+            onPressed: () async {
+              // Normal behaviour is just to pop and go to previous page
+              if (_backButtonPopsContext) {
+                _willPopCallback();
+                Navigator.pop(context);
+              } else {
+                // But we can change and go back to previous page in certain
+                // situations (e.g. when going for medical items during an
+                // attack), in which case we need to return to previous target
+                var backPossible = await _webViewController.canGoBack();
+                if (backPossible) {
+                  _webViewController.goBack();
+                  setState(() {
+                    _currentPageTitle = _goBackTitle;
+                  });
+                } else {
+                  Navigator.pop(context);
                 }
-                BotToast.showText(
-                  text: "Current URL copied to the clipboard [$url]",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green,
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
-            ),
-            actions: _actionButtons(),
-          ),
+                _backButtonPopsContext = true;
+              }
+            }),
+        title: GestureDetector(
+          child: Text(_currentPageTitle),
+          onLongPress: () async {
+            var url = await _webViewController.currentUrl();
+            Clipboard.setData(ClipboardData(text: url));
+            if (url.length > 60) {
+              url = url.substring(0, 60) + "...";
+            }
+            BotToast.showText(
+              text: "Current URL copied to the clipboard [$url]",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.green,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
         ),
-        body: Container(
-          color: Colors.grey[900],
-          child: SafeArea(
-            top: false,
-            right: false,
-            left: false,
-            bottom: true,
-            child: Builder(
-              builder: (BuildContext context) {
-                return Column(
-                  children: [
-                    ExpandablePanel(
-                      theme: ExpandableThemeData(
-                        hasIcon: false,
-                        tapBodyToCollapse: false,
-                        tapHeaderToExpand: false,
-                      ),
-                      collapsed: SizedBox.shrink(),
-                      controller: _chainWidgetController,
-                      header: SizedBox.shrink(),
-                      expanded: ChainTimer(
-                        userKey: widget.userKey,
-                        alwaysDarkBackground: true,
-                        chainTimerParent: ChainTimerParent.webView,
-                      ),
-                    ),
-                    Expanded(
-                      child: WebView(
-                        initialUrl: _initialUrl,
-                        javascriptMode: JavascriptMode.unrestricted,
-                        onWebViewCreated: (WebViewController c) {
-                          _webViewController = c;
-                        },
-                        gestureNavigationEnabled: true,
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ),
+        actions: _actionButtons(),
       ),
     );
   }

@@ -67,6 +67,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
@@ -91,69 +92,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.dehaze),
-          onPressed: () {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        title: Text('Travel'),
-        actions: <Widget>[
-          if (Platform.isAndroid)
-            IconButton(
-              icon: Icon(
-                Icons.alarm_on,
-                color: _themeProvider.buttonText,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return TravelOptionsAndroid(
-                        callback: _callBackFromTravelOptions,
-                      );
-                    },
-                  ),
-                );
-              },
-            )
-          else if (Platform.isIOS)
-            IconButton(
-              icon: Icon(
-                Icons.alarm_on,
-                color: _themeProvider.buttonText,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return TravelOptionsIOS(
-                        callback: _callBackFromTravelOptions,
-                      );
-                    },
-                  ),
-                );
-              },
-            )
-          else
-            SizedBox.shrink(),
-          IconButton(
-            icon: Icon(Icons.textsms),
-            onPressed: () {
-              _notificationTitleController.text = _notificationTitle;
-              _notificationBodyController.text = _notificationBody;
-              _showNotificationTextDialog(context);
-            },
-          ),
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+        height: AppBar().preferredSize.height,
+        child: buildAppBar(),
+      )
+          : null,
       body: Center(
         child: SingleChildScrollView(
           child: FutureBuilder(
@@ -240,6 +187,69 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           }
         },
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: Icon(Icons.dehaze),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
+      title: Text('Travel'),
+      actions: <Widget>[
+        if (Platform.isAndroid)
+          IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return TravelOptionsAndroid(
+                      callback: _callBackFromTravelOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
+        else if (Platform.isIOS)
+          IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return TravelOptionsIOS(
+                      callback: _callBackFromTravelOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
+        else
+          SizedBox.shrink(),
+        IconButton(
+          icon: Icon(Icons.textsms),
+          onPressed: () {
+            _notificationTitleController.text = _notificationTitle;
+            _notificationBodyController.text = _notificationBody;
+            _showNotificationTextDialog(context);
+          },
+        ),
+      ],
     );
   }
 

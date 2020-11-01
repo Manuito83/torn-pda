@@ -5,6 +5,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 
@@ -16,6 +17,7 @@ class FriendsBackupPage extends StatefulWidget {
 class _FriendsBackupPageState extends State<FriendsBackupPage> {
   FriendsProvider _friendsProvider;
   ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
 
   FriendsBackupModel _tentativeImportModel;
 
@@ -25,13 +27,11 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   final _importFormKey = GlobalKey<FormState>();
   final _importInputController = new TextEditingController();
 
-  String _exportInfo =
-      "In order to export & backup your friends, you can either copy/paste "
+  String _exportInfo = "In order to export & backup your friends, you can either copy/paste "
       "to a text file manually, or share and save it at your desired location. "
       "In any case, please keep the text original structure.";
 
-  String _importInfo =
-      "In order to import friends, please paste here the string that "
+  String _importInfo = "In order to import friends, please paste here the string that "
       "you exported in the past. You can make changes outside of Torn PDA, "
       "but ensure that the main structure is kept!";
 
@@ -44,47 +44,79 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   FontWeight _importHintWeight = FontWeight.normal;
 
   @override
+  void initState() {
+    super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _importHintStyle = _themeProvider.mainText;
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Import & Export"),
-        ),
-        body: Builder(builder: (BuildContext context) {
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-            child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
-                    child: Text(
-                      "HOW TO EXPORT friends",
-                      style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
-                    child: Text(
-                      _exportInfo,
-                      style: TextStyle(
-                        fontSize: 12,
+    return SafeArea(
+      bottom: true,
+      child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(builder: (BuildContext context) {
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
+                      child: Text(
+                        "HOW TO EXPORT friends",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    direction: Axis.horizontal,
-                    children: <Widget>[
-                      Padding(
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                      child: Text(
+                        _exportInfo,
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      direction: Axis.horizontal,
+                      children: <Widget>[
+                        Padding(
+                            padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                            child: RaisedButton.icon(
+                              icon: Icon(Icons.share),
+                              label: Text("Export"),
+                              onPressed: () async {
+                                var export = _friendsProvider.exportFriends();
+                                if (export == '') {
+                                  Scaffold.of(context).showSnackBar(
+                                    SnackBar(
+                                      duration: Duration(seconds: 5),
+                                      content: Text(
+                                        'No friends to export!',
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  Share.share(export);
+                                }
+                              },
+                            )),
+                        Padding(
                           padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
                           child: RaisedButton.icon(
-                            icon: Icon(Icons.share),
-                            label: Text("Export"),
+                            icon: Icon(Icons.content_copy),
+                            label: Text("Clipboard"),
                             onPressed: () async {
                               var export = _friendsProvider.exportFriends();
                               if (export == '') {
@@ -97,128 +129,112 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                                   ),
                                 );
                               } else {
-                                Share.share(export);
+                                Clipboard.setData(ClipboardData(text: export));
+                                Scaffold.of(context).showSnackBar(
+                                  SnackBar(
+                                    duration: Duration(seconds: 5),
+                                    content: Text(
+                                      "${_friendsProvider.getFriendNumber()} "
+                                      "Friends copied to clipboard!",
+                                    ),
+                                  ),
+                                );
                               }
                             },
-                          )),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                        child: RaisedButton.icon(
-                          icon: Icon(Icons.content_copy),
-                          label: Text("Clipboard"),
-                          onPressed: () async {
-                            var export = _friendsProvider.exportFriends();
-                            if (export == '') {
-                              Scaffold.of(context).showSnackBar(
-                                SnackBar(
-                                  duration: Duration(seconds: 5),
-                                  content: Text(
-                                    'No friends to export!',
-                                  ),
-                                ),
-                              );
-                            } else {
-                              Clipboard.setData(ClipboardData(text: export));
-                              Scaffold.of(context).showSnackBar(
-                                SnackBar(
-                                  duration: Duration(seconds: 5),
-                                  content: Text(
-                                    "${_friendsProvider.getFriendNumber()} "
-                                        "Friends copied to clipboard!",
-                                  ),
-                                ),
-                              );
-                            }
-                          },
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
+                      child: Divider(),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
+                      child: Text(
+                        "HOW TO IMPORT friends",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                      child: Text(
+                        _importInfo,
+                        style: TextStyle(
+                          fontSize: 12,
                         ),
                       ),
-                    ],
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
-                    child: Divider(),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
-                    child: Text(
-                      "HOW TO IMPORT friends",
-                      style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
-                    child: Text(
-                      _importInfo,
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  _importProgressWidget(),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
-                    child: Form(
-                      key: _importFormKey,
-                      child: Column(
-                        children: <Widget>[
-                          TextFormField(
-                            controller: _importInputController,
-                            maxLines: 6,
-                            style: TextStyle(fontSize: 12),
-                            decoration: InputDecoration(
-                              counterText: "",
-                              border: OutlineInputBorder(),
-                              hintText: _importHintText,
-                              hintStyle: TextStyle(
-                                color: _importHintStyle,
-                                fontWeight: _importHintWeight,
+                    _importProgressWidget(),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                      child: Form(
+                        key: _importFormKey,
+                        child: Column(
+                          children: <Widget>[
+                            TextFormField(
+                              controller: _importInputController,
+                              maxLines: 6,
+                              style: TextStyle(fontSize: 12),
+                              decoration: InputDecoration(
+                                counterText: "",
+                                border: OutlineInputBorder(),
+                                hintText: _importHintText,
+                                hintStyle: TextStyle(
+                                  color: _importHintStyle,
+                                  fontWeight: _importHintWeight,
+                                ),
                               ),
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Cannot be empty!";
-                              }
-                              return null;
-                            },
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                            child: RaisedButton.icon(
-                              icon: Icon(Icons.file_download),
-                              label: Text("Import"),
-                              onPressed: () {
-                                if (_importFormKey.currentState.validate()) {
-                                  var numberImported = _importChecker();
-                                  if (numberImported == 0) {
-                                    Scaffold.of(context).showSnackBar(
-                                      SnackBar(
-                                        duration: Duration(seconds: 5),
-                                        content: Text(
-                                          'No friends to import! '
-                                              'Is the file structure correct?',
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    FocusScope.of(context)
-                                        .requestFocus(new FocusNode());
-                                    _showImportDialog();
-                                  }
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return "Cannot be empty!";
                                 }
+                                return null;
                               },
                             ),
-                          ),
-                        ],
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                              child: RaisedButton.icon(
+                                icon: Icon(Icons.file_download),
+                                label: Text("Import"),
+                                onPressed: () {
+                                  if (_importFormKey.currentState.validate()) {
+                                    var numberImported = _importChecker();
+                                    if (numberImported == 0) {
+                                      Scaffold.of(context).showSnackBar(
+                                        SnackBar(
+                                          duration: Duration(seconds: 5),
+                                          content: Text(
+                                            'No friends to import! '
+                                            'Is the file structure correct?',
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      FocusScope.of(context).requestFocus(new FocusNode());
+                                      _showImportDialog();
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 50),
-                ],
+                    SizedBox(height: 50),
+                  ],
+                ),
               ),
-            ),
-          );
-        }));
+            );
+          })),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text("Import & Export"),
+    );
   }
 
   @override
@@ -243,8 +259,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
           '$_importSuccessEvents/${_tentativeImportModel.friendBackup.length}',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        percent:
-        _importSuccessEvents / _tentativeImportModel.friendBackup.length,
+        percent: _importSuccessEvents / _tentativeImportModel.friendBackup.length,
       ),
     );
   }
@@ -260,9 +275,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
         if (tar.notesColor.length > 200) {
           tar.notesColor = tar.notesColor.substring(0, 199);
         }
-        if (tar.notesColor != "red" &&
-            tar.notesColor != "green" &&
-            tar.notesColor != "blue") {
+        if (tar.notesColor != "red" && tar.notesColor != "green" && tar.notesColor != "blue") {
           tar.notesColor = "";
         }
       }
@@ -312,15 +325,14 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
                       "How would you like to import?",
-                      style:
-                      TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(30, 10, 30, 20),
                     child: Text(
                       "${_tentativeImportModel.friendBackup.length} "
-                          "new friends were found, " +
+                              "new friends were found, " +
                           _importChoiceString,
                       style: TextStyle(
                         fontSize: 12,

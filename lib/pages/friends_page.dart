@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/friends/friends_list.dart';
 import 'package:torn_pda/pages/friends/friends_backup_page.dart';
@@ -18,6 +19,7 @@ class FriendsPage extends StatefulWidget {
 class _FriendsPageState extends State<FriendsPage> {
   ThemeProvider _themeProvider;
   FriendsProvider _friendsProvider;
+  SettingsProvider _settingsProvider;
 
   final _searchController = new TextEditingController();
   final _addIdController = new TextEditingController();
@@ -41,14 +43,13 @@ class _FriendsPageState extends State<FriendsPage> {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _searchController.addListener(onSearchInputTextChange);
     // Reset the filter so that we get all the targets
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': 'friends'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'friends'});
   }
 
   @override
@@ -57,104 +58,13 @@ class _FriendsPageState extends State<FriendsPage> {
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        title: _appBarText,
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: _searchIcon,
-            onPressed: () {
-              setState(() {
-                Color myColor = Colors.white;
-                if (_searchController.text != '') {
-                  myColor = Colors.orange[500];
-                }
-
-                if (_searchIcon.icon == Icons.search) {
-                  _searchIcon = Icon(
-                    Icons.cancel,
-                    color: myColor,
-                  );
-                  _appBarText = Form(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                          child: Row(
-                            children: <Widget>[
-                              Flexible(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextField(
-                                    controller: _searchController,
-                                    focusNode: _focusSearch,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      hintText: "search friends",
-                                      hintStyle: TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          color: Colors.grey[300],
-                                          fontSize: 12),
-                                    ),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                  _focusSearch.requestFocus();
-                } else {
-                  _searchIcon = Icon(
-                    Icons.search,
-                    color: myColor,
-                  );
-                  _appBarText = Text("Friends");
-                }
-              });
-            },
-          ),
-          PopupMenuButton<FriendSort>(
-            icon: Icon(
-              Icons.sort,
-            ),
-            onSelected: _selectSortPopup,
-            itemBuilder: (BuildContext context) {
-              return _popupChoices.map((FriendSort choice) {
-                return PopupMenuItem<FriendSort>(
-                  value: choice,
-                  child: Text(choice.description),
-                );
-              }).toList();
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FriendsBackupPage(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
@@ -195,8 +105,7 @@ class _FriendsPageState extends State<FriendsPage> {
                       size: 20,
                     ),
                     onPressed: () async {
-                      var updateResult =
-                          await _friendsProvider.updateAllFriends();
+                      var updateResult = await _friendsProvider.updateAllFriends();
                       if (updateResult.success) {
                         Scaffold.of(context).showSnackBar(
                           SnackBar(
@@ -235,6 +144,106 @@ class _FriendsPageState extends State<FriendsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: _appBarText,
+      leading: IconButton(
+        icon: Icon(Icons.menu),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
+      actions: <Widget>[
+        IconButton(
+          icon: _searchIcon,
+          onPressed: () {
+            setState(() {
+              Color myColor = Colors.white;
+              if (_searchController.text != '') {
+                myColor = Colors.orange[500];
+              }
+
+              if (_searchIcon.icon == Icons.search) {
+                _searchIcon = Icon(
+                  Icons.cancel,
+                  color: myColor,
+                );
+                _appBarText = Form(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                        child: Row(
+                          children: <Widget>[
+                            Flexible(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: TextField(
+                                  controller: _searchController,
+                                  focusNode: _focusSearch,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: "search friends",
+                                    hintStyle: TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        color: Colors.grey[300],
+                                        fontSize: 12),
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                _focusSearch.requestFocus();
+              } else {
+                _searchIcon = Icon(
+                  Icons.search,
+                  color: myColor,
+                );
+                _appBarText = Text("Friends");
+              }
+            });
+          },
+        ),
+        PopupMenuButton<FriendSort>(
+          icon: Icon(
+            Icons.sort,
+          ),
+          onSelected: _selectSortPopup,
+          itemBuilder: (BuildContext context) {
+            return _popupChoices.map((FriendSort choice) {
+              return PopupMenuItem<FriendSort>(
+                value: choice,
+                child: Text(choice.description),
+              );
+            }).toList();
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.save),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FriendsBackupPage(),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -284,8 +293,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     child: Form(
                       key: _addFormKey,
                       child: Column(
-                        mainAxisSize:
-                            MainAxisSize.min, // To make the card compact
+                        mainAxisSize: MainAxisSize.min, // To make the card compact
                         children: <Widget>[
                           TextFormField(
                             style: TextStyle(fontSize: 14),
@@ -328,8 +336,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                     var inputId = _addIdController.text;
                                     _addIdController.text = '';
                                     AddFriendResult tryAddFriend =
-                                        await friendsProvider
-                                            .addFriend(inputId);
+                                        await friendsProvider.addFriend(inputId);
                                     if (tryAddFriend.success) {
                                       Scaffold.of(_).showSnackBar(
                                         SnackBar(
@@ -393,8 +400,7 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void onSearchInputTextChange() {
-    Provider.of<FriendsProvider>(context, listen: false)
-        .setFilterText(_searchController.text);
+    Provider.of<FriendsProvider>(context, listen: false).setFilterText(_searchController.text);
 
     setState(() {
       if (_searchController.text != '') {
@@ -423,7 +429,6 @@ class _FriendsPageState extends State<FriendsPage> {
         }
       }
     });
-
   }
 
   void _selectSortPopup(FriendSort choice) {

@@ -239,65 +239,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
       drawer: new Drawer(),
-      appBar: AppBar(
-        title: Text('Profile'),
-        leading: new IconButton(
-          icon: new Icon(Icons.menu),
-          onPressed: () {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        actions: <Widget>[
-          _apiGoodData ? _tctClock() : SizedBox.shrink(),
-          _apiGoodData
-              ? IconButton(
-                  icon: Icon(
-                    Icons.alarm_on,
-                    color: _themeProvider.buttonText,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          if (Platform.isAndroid) {
-                            return ProfileNotificationsAndroid(
-                              energyMax: _user.energy.maximum,
-                              nerveMax: _user.nerve.maximum,
-                              callback: _callBackFromNotificationOptions,
-                            );
-                          } else {
-                            return ProfileNotificationsIOS(
-                              energyMax: _user.energy.maximum,
-                              nerveMax: _user.nerve.maximum,
-                              callback: _callBackFromNotificationOptions,
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  },
-                )
-              : SizedBox.shrink(),
-          IconButton(
-            icon: Icon(
-              Icons.settings,
-              color: _themeProvider.buttonText,
-            ),
-            onPressed: () async {
-              ProfileOptionsReturn newOptions = await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileOptionsPage()),
-              );
-              setState(() {
-                _nukeReviveActive = newOptions.nukeReviveEnabled;
-                _warnAboutChains = newOptions.warnAboutChainsEnabled;
-              });
-            },
-          )
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       floatingActionButton: buildSpeedDial(),
       body: Container(
         child: FutureBuilder(
@@ -460,6 +408,68 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           },
         ),
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text('Profile'),
+      leading: new IconButton(
+        icon: new Icon(Icons.menu),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
+      actions: <Widget>[
+        _apiGoodData ? _tctClock() : SizedBox.shrink(),
+        _apiGoodData
+            ? IconButton(
+                icon: Icon(
+                  Icons.alarm_on,
+                  color: _themeProvider.buttonText,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        if (Platform.isAndroid) {
+                          return ProfileNotificationsAndroid(
+                            energyMax: _user.energy.maximum,
+                            nerveMax: _user.nerve.maximum,
+                            callback: _callBackFromNotificationOptions,
+                          );
+                        } else {
+                          return ProfileNotificationsIOS(
+                            energyMax: _user.energy.maximum,
+                            nerveMax: _user.nerve.maximum,
+                            callback: _callBackFromNotificationOptions,
+                          );
+                        }
+                      },
+                    ),
+                  );
+                },
+              )
+            : SizedBox.shrink(),
+        IconButton(
+          icon: Icon(
+            Icons.settings,
+            color: _themeProvider.buttonText,
+          ),
+          onPressed: () async {
+            ProfileOptionsReturn newOptions = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProfileOptionsPage()),
+            );
+            setState(() {
+              _nukeReviveActive = newOptions.nukeReviveEnabled;
+              _warnAboutChains = newOptions.warnAboutChainsEnabled;
+            });
+          },
+        )
+      ],
     );
   }
 

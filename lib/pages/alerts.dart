@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/firestore.dart';
 
 import '../main.dart';
@@ -14,141 +16,147 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
   Future _firestoreProfileReceived;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _firestoreProfileReceived = firestore.getUserProfile();
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Banner(
-      location: BannerLocation.bottomEnd,
-      message: 'BETA',
-      color: Colors.red.withOpacity(0.8),
-      textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.0, letterSpacing: 1.6),
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Alerts'),
-          leading: new IconButton(
-            icon: new Icon(Icons.menu),
-            onPressed: () {
-              final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-              scaffoldState.openDrawer();
-            },
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(
-                Icons.info_outline,
-              ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return _alertsInfoDialog();
-                  },
+    return Scaffold(
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
+      body: FutureBuilder(
+          future: _firestoreProfileReceived,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.data is FirebaseUserModel) {
+                _firebaseUserModel = snapshot.data;
+                return Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Text(
+                        "Alerts are automatic notifications that you only "
+                        "need to activate once. However, you will be notified "
+                        "earlier than with manual notifications.",
+                        style: Theme.of(context).textTheme.bodyText2.copyWith(
+                              height: 1.3,
+                            ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.travelNotification ?? false,
+                        title: Text("Travel"),
+                        subtitle: Text("Get notified just before you arrive"),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.travelNotification = value;
+                          });
+                          firestore.subscribeToTravelNotification(value);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.energyNotification ?? false,
+                        title: Text("Energy full"),
+                        subtitle: Text("Get notified once you reach full energy"),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.energyNotification = value;
+                          });
+                          firestore.subscribeToEnergyNotification(value);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.nerveNotification ?? false,
+                        title: Text("Nerve full"),
+                        subtitle: Text("Get notified once you reach full nerve"),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.nerveNotification = value;
+                          });
+                          firestore.subscribeToNerveNotification(value);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.hospitalNotification ?? false,
+                        title: Text("Hospital admission and release"),
+                        subtitle: Text("If you are offline, you'll be notified if you are "
+                            "hospitalised, revived or out of hospital"),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.hospitalNotification = value;
+                          });
+                          firestore.subscribeToHospitalNotification(value);
+                        },
+                      ),
+                    ),
+                  ],
                 );
-              },
-            ),
-          ],
-        ),
-        body: FutureBuilder(
-            future: _firestoreProfileReceived,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.data is FirebaseUserModel) {
-                  _firebaseUserModel = snapshot.data;
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Text(
-                          "Alerts are automatic notifications that you only "
-                          "need to activate once. However, you will be notified "
-                          "earlier than with manual notifications.",
-                          style: Theme.of(context).textTheme.bodyText2.copyWith(
-                                height: 1.3,
-                              ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.travelNotification ?? false,
-                          title: Text("Travel"),
-                          subtitle: Text("Get notified just before you arrive"),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.travelNotification = value;
-                            });
-                            firestore.subscribeToTravelNotification(value);
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.energyNotification ?? false,
-                          title: Text("Energy full"),
-                          subtitle: Text("Get notified once you reach full energy"),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.energyNotification = value;
-                            });
-                            firestore.subscribeToEnergyNotification(value);
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.nerveNotification ?? false,
-                          title: Text("Nerve full"),
-                          subtitle: Text("Get notified once you reach full nerve"),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.nerveNotification = value;
-                            });
-                            firestore.subscribeToNerveNotification(value);
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.hospitalNotification ?? false,
-                          title: Text("Hospital admission and release"),
-                          subtitle: Text("If you are offline, you'll be notified if you are "
-                              "hospitalised, revived or out of hospital"),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.hospitalNotification = value;
-                            });
-                            firestore.subscribeToHospitalNotification(value);
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  return _connectError();
-                }
               } else {
-                return Center(child: CircularProgressIndicator());
+                return _connectError();
               }
-            }),
+            } else {
+              return Center(child: CircularProgressIndicator());
+            }
+          }),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text('Alerts'),
+      leading: new IconButton(
+        icon: new Icon(Icons.menu),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
       ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(
+            Icons.info_outline,
+          ),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return _alertsInfoDialog();
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 

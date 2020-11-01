@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsIOS extends StatefulWidget {
@@ -17,9 +19,12 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
 
   Future _preferencesLoaded;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
   }
 
@@ -27,49 +32,62 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Loot options"),
-          leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              widget.callback();
-              Navigator.of(context).pop();
+      child: SafeArea(
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: FutureBuilder(
+                  future: _preferencesLoaded,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text('Here you can specify your preferred notification'
+                                  ' launch time before the loot level is reached'),
+                            ),
+                            _rowsWithTypes(),
+                            SizedBox(height: 50),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
+                ),
+              );
             },
           ),
         ),
-        body: Builder(
-          builder: (BuildContext context) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: FutureBuilder(
-                future: _preferencesLoaded,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Text('Here you can specify your preferred notification'
-                                ' launch time before the loot level is reached'),
-                          ),
-                          _rowsWithTypes(),
-                          SizedBox(height: 50),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
-              ),
-            );
-          },
-        ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text("Loot options"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          widget.callback();
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

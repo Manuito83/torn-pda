@@ -24,6 +24,7 @@ class SharedPreferencesModel {
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
+  final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
   final String _kTravelNotificationAhead = "pda_travelNotificationAhead";
@@ -312,6 +313,19 @@ class SharedPreferencesModel {
   Future<bool> setDefaultTimeZone(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultTimeZone, value);
+  }
+
+  /// ----------------------------
+  /// Methods for appBar position
+  /// ----------------------------
+  Future<String> getAppBarPosition() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAppBarPosition) ?? 'top';
+  }
+
+  Future<bool> setAppBarPosition(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAppBarPosition, value);
   }
 
   /// ----------------------------

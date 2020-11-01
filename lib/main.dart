@@ -98,6 +98,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    var _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
     return MaterialApp(
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],
@@ -111,7 +112,7 @@ class MyApp extends StatelessWidget {
       home: Container(
         color: Colors.black,
         child: SafeArea(
-          top: false,
+          top: _settingsProvider.appBarTop ? false : true,
           right: false,
           left: false,
           bottom: true,

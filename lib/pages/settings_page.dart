@@ -15,7 +15,6 @@ import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 
-
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
 
@@ -46,34 +45,29 @@ class _SettingsPageState extends State<SettingsPage> {
 
   var _apiKeyInputController = TextEditingController();
 
+  String _appBarPosition = "top";
+
   @override
   void initState() {
     super.initState();
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _restorePreferences();
-    _ticker = new Timer.periodic(
-        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': 'settings'});
+    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'settings'});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: new Drawer(),
-      appBar: AppBar(
-        title: Text('Settings'),
-        leading: new IconButton(
-          icon: new Icon(Icons.menu),
-          onPressed: () {
-            final ScaffoldState scaffoldState =
-                context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
@@ -82,8 +76,7 @@ class _SettingsPageState extends State<SettingsPage> {
               children: <Widget>[
                 _apiKeyWidget(),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 20, top: 10, right: 20, bottom: 5),
+                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -102,8 +95,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 20, top: 5, right: 20, bottom: 10),
+                  padding: const EdgeInsets.only(left: 20, top: 5, right: 20, bottom: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -138,8 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 20, top: 10, right: 20, bottom: 5),
+                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -158,8 +149,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 20, top: 10, right: 20, bottom: 5),
+                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -178,9 +168,43 @@ class _SettingsPageState extends State<SettingsPage> {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "App bar position",
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 20),
+                      ),
+                      Flexible(
+                        flex: 2,
+                        child: _appBarPositionDropdown(),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           )),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      toolbarHeight: 50,
+      title: Text('Settings'),
+      leading: new IconButton(
+        icon: new Icon(Icons.menu),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
     );
   }
 
@@ -255,8 +279,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               RaisedButton(
                                 child: Text("Reload"),
                                 onPressed: () {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
+                                  FocusScope.of(context).requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
@@ -269,8 +292,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               RaisedButton(
                                 child: Text("Remove"),
                                 onPressed: () async {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
+                                  FocusScope.of(context).requestFocus(new FocusNode());
                                   // Removes the form error
                                   _formKey.currentState.reset();
                                   _apiKeyInputController.clear();
@@ -355,8 +377,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               RaisedButton(
                                 child: Text("Load"),
                                 onPressed: () {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
+                                  FocusScope.of(context).requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
@@ -684,10 +705,53 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  DropdownButton _appBarPositionDropdown() {
+    return DropdownButton<String>(
+      value: _appBarPosition,
+      items: [
+        DropdownMenuItem(
+          value: "top",
+          child: SizedBox(
+            width: 50,
+            child: Text(
+              "Top",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "bottom",
+          child: SizedBox(
+            width: 50,
+            child: Text(
+              "Bottom",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == "top") {
+          _settingsProvider.changeAppBarTop = true;
+        } else {
+          _settingsProvider.changeAppBarTop = false;
+        }
+        setState(() {
+          _appBarPosition = value;
+        });
+      },
+    );
+  }
+
   void _getApiDetails({@required bool userTriggered}) async {
     try {
-      dynamic myProfile =
-      await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
+      dynamic myProfile = await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
       if (myProfile is OwnProfileModel) {
         setState(() {
           _apiIsLoading = false;
@@ -780,6 +844,12 @@ class _SettingsPageState extends State<SettingsPage> {
     await SharedPreferencesModel().getDefaultSection().then((onValue) {
       setState(() {
         _openSectionValue = onValue;
+      });
+    });
+
+    await SharedPreferencesModel().getAppBarPosition().then((onValue) {
+      setState(() {
+        _appBarPosition = onValue;
       });
     });
   }
