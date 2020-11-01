@@ -315,9 +315,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   child: SingleChildScrollView(
                     child: Column(
                       children: <Widget>[
-                        !_settingsProvider.appBarTop
-                            ? SizedBox(height: AppBar().preferredSize.height)
-                            : SizedBox.shrink(),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
                           child: Column(

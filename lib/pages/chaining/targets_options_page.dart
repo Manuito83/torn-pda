@@ -66,9 +66,6 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            !_settingsProvider.appBarTop
-                                ? SizedBox(height: AppBar().preferredSize.height)
-                                : SizedBox.shrink(),
                             SizedBox(height: 15),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,

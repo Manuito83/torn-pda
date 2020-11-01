@@ -70,9 +70,6 @@ class _AttacksPageState extends State<AttacksPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  !_settingsProvider.appBarTop
-                      ? SizedBox(height: AppBar().preferredSize.height)
-                      : SizedBox.shrink(),
                   Padding(
                     padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
                     child: Row(

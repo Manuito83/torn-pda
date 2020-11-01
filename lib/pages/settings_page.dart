@@ -74,9 +74,6 @@ class _SettingsPageState extends State<SettingsPage> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
-                !_settingsProvider.appBarTop
-                    ? SizedBox(height: AppBar().preferredSize.height)
-                    : SizedBox.shrink(),
                 _apiKeyWidget(),
                 Padding(
                   padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),

@@ -201,11 +201,6 @@ class _WebViewFullState extends State<WebViewFull> {
             bottom: true,
             child: Column(
               children: [
-                widget.dialog
-                    ? SizedBox.shrink()
-                    : !_settingsProvider.appBarTop
-                        ? SizedBox(height: 0)
-                        : SizedBox.shrink(),
                 // Crimes widget
                 ExpandablePanel(
                   theme: ExpandableThemeData(

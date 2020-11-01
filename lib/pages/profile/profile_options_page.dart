@@ -55,9 +55,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            !_settingsProvider.appBarTop
-                                ? SizedBox(height: AppBar().preferredSize.height)
-                                : SizedBox.shrink(),
                             SizedBox(height: 10),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 15),

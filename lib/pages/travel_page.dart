@@ -517,9 +517,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       // If we have reached another country
       if (_travelModel.destination != 'Torn' && _travelModel.timeLeft < 15) {
         return <Widget>[
-          !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height)
-              : SizedBox.shrink(),
           Padding(
             padding: EdgeInsetsDirectional.only(bottom: 60),
             child: _flagImage(),
@@ -563,9 +560,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       } else if (_travelModel.timeLeft > 0 && _travelModel.timeLeft < 120) {
         // We are about to reach another country
         return <Widget>[
-          !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height)
-              : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.only(bottom: 60),
             child: Image.asset(
@@ -630,9 +624,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return <Widget>[
-          !_settingsProvider.appBarTop
-              ? SizedBox(height: AppBar().preferredSize.height)
-              : SizedBox.shrink(),
           Padding(
             padding: EdgeInsetsDirectional.only(bottom: 30),
             child: _flagImage(),
@@ -703,9 +694,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     } else {
       // We are in Torn, not travelling
       return <Widget>[
-        !_settingsProvider.appBarTop
-            ? SizedBox(height: AppBar().preferredSize.height)
-            : SizedBox.shrink(),
         Column(
           children: <Widget>[
             Padding(

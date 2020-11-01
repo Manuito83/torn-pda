@@ -71,9 +71,6 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
-                    !_settingsProvider.appBarTop
-                        ? SizedBox(height: AppBar().preferredSize.height)
-                        : SizedBox.shrink(),
                     Padding(
                       padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                       child: Text(

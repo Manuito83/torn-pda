@@ -41,9 +41,6 @@ class _AboutPageState extends State<AboutPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            !_settingsProvider.appBarTop
-                ? SizedBox(height: AppBar().preferredSize.height)
-                : SizedBox.shrink(),
             Padding(
               padding: EdgeInsets.fromLTRB(20, 50, 30, 10),
               child: Image(

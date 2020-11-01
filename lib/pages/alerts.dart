@@ -44,9 +44,6 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                 _firebaseUserModel = snapshot.data;
                 return Column(
                   children: [
-                    !_settingsProvider.appBarTop
-                        ? SizedBox(height: AppBar().preferredSize.height)
-                        : SizedBox.shrink(),
                     Padding(
                       padding: EdgeInsets.all(20),
                       child: Text(

@@ -62,9 +62,6 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                       return SingleChildScrollView(
                         child: Column(
                           children: <Widget>[
-                            !_settingsProvider.appBarTop
-                                ? SizedBox(height: AppBar().preferredSize.height)
-                                : SizedBox.shrink(),
                             Padding(
                               padding: const EdgeInsets.all(20.0),
                               child: Text('Here you can specify your preferred alerting '

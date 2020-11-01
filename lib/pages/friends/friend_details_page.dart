@@ -47,9 +47,6 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: <Widget>[
-                  !_settingsProvider.appBarTop
-                      ? SizedBox(height: AppBar().preferredSize.height)
-                      : SizedBox.shrink(),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

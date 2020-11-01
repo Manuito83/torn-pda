@@ -116,9 +116,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 builder: (BuildContext context) {
                   return Column(
                     children: [
-                      !_settingsProvider.appBarTop
-                          ? SizedBox(height: 0)
-                          : SizedBox.shrink(),
                       ExpandablePanel(
                         theme: ExpandableThemeData(
                           hasIcon: false,

@@ -97,9 +97,6 @@ class _LootPageState extends State<LootPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    !_settingsProvider.appBarTop
-                        ? SizedBox(height: AppBar().preferredSize.height)
-                        : SizedBox.shrink(),
                     Padding(
                       padding: const EdgeInsets.all(5),
                       child: _returnNpcCards(),

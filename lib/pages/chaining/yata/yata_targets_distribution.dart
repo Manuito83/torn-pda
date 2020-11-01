@@ -46,9 +46,6 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: <Widget>[
-                  !_settingsProvider.appBarTop
-                      ? SizedBox(height: AppBar().preferredSize.height)
-                      : SizedBox.shrink(),
                   Text(
                     'TARGETS ONLY IN YATA',
                     style: TextStyle(

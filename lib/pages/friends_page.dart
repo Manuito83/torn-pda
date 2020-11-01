@@ -70,9 +70,6 @@ class _FriendsPageState extends State<FriendsPage> {
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
         child: Column(
           children: <Widget>[
-            !_settingsProvider.appBarTop
-                ? SizedBox(height: AppBar().preferredSize.height)
-                : SizedBox.shrink(),
             SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

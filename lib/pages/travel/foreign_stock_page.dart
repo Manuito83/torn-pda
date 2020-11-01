@@ -180,9 +180,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          !_settingsProvider.appBarTop
-                              ? SizedBox(height: AppBar().preferredSize.height)
-                              : SizedBox.shrink(),
                           Text(
                             'OPS!',
                             style:
@@ -203,9 +200,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          !_settingsProvider.appBarTop
-                              ? SizedBox(height: AppBar().preferredSize.height)
-                              : SizedBox.shrink(),
                           Text('Fetching data...'),
                           SizedBox(height: 30),
                           CircularProgressIndicator(),
@@ -492,12 +486,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   List<Widget> _stockItems() {
     var thisStockList = List<Widget>();
-
-    thisStockList.add(
-      !_settingsProvider.appBarTop
-          ? SizedBox(height: AppBar().preferredSize.height)
-          : SizedBox.shrink(),
-    );
 
     Widget lastUpdateDetails = Padding(
       padding: EdgeInsets.fromLTRB(20, 15, 20, 10),
