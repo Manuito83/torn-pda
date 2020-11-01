@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
@@ -18,10 +19,12 @@ class TargetDetailsPage extends StatefulWidget {
 
 class _TargetDetailsPageState extends State<TargetDetailsPage> {
   UserDetailsProvider _userDetails;
+  SettingsProvider _settingsProvider;
 
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
   }
 
@@ -29,21 +32,22 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        title: Text('${widget.target.name}'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: <Widget>[
+                !_settingsProvider.appBarTop
+                    ? SizedBox(height: AppBar().preferredSize.height)
+                    : SizedBox.shrink(),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -63,7 +67,8 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                           icon: Icon(Icons.content_copy),
                           iconSize: 20,
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(text: widget.target.playerId.toString()));
+                            Clipboard.setData(
+                                ClipboardData(text: widget.target.playerId.toString()));
                             BotToast.showText(
                               text: "Your target's ID [${widget.target.playerId}] has been "
                                   "copied to the clipboard!",
@@ -110,6 +115,18 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text('${widget.target.name}'),
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

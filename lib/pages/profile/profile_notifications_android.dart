@@ -1,7 +1,9 @@
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileNotificationsAndroid extends StatefulWidget {
@@ -16,13 +18,10 @@ class ProfileNotificationsAndroid extends StatefulWidget {
   });
 
   @override
-  _ProfileNotificationsAndroidState createState() =>
-      _ProfileNotificationsAndroidState();
+  _ProfileNotificationsAndroidState createState() => _ProfileNotificationsAndroidState();
 }
 
-class _ProfileNotificationsAndroidState
-    extends State<ProfileNotificationsAndroid> {
-
+class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
@@ -44,9 +43,12 @@ class _ProfileNotificationsAndroidState
 
   Future _preferencesLoaded;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
   }
 
@@ -55,16 +57,13 @@ class _ProfileNotificationsAndroidState
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("Profile options"),
-          leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              widget.callback();
-              Navigator.of(context).pop();
-            },
-          ),
-        ),
+        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+        bottomNavigationBar: !_settingsProvider.appBarTop
+            ? SizedBox(
+                height: AppBar().preferredSize.height,
+                child: buildAppBar(),
+              )
+            : null,
         body: Builder(
           builder: (BuildContext context) {
             return GestureDetector(
@@ -72,16 +71,17 @@ class _ProfileNotificationsAndroidState
               onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
               child: FutureBuilder(
                 future: _preferencesLoaded,
-                builder:
-                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     return SingleChildScrollView(
                       child: Column(
                         children: <Widget>[
+                          !_settingsProvider.appBarTop
+                              ? SizedBox(height: AppBar().preferredSize.height)
+                              : SizedBox.shrink(),
                           Padding(
                             padding: const EdgeInsets.all(20.0),
-                            child: Text(
-                                'Here you can specify your preferred alerting '
+                            child: Text('Here you can specify your preferred alerting '
                                 'method for each type of event.'),
                           ),
                           _rowsWithTypes(),
@@ -96,8 +96,7 @@ class _ProfileNotificationsAndroidState
                             padding: const EdgeInsets.all(20),
                             child: RichText(
                               text: TextSpan(
-                                text:
-                                    'Note: some Android clock applications do not work well '
+                                text: 'Note: some Android clock applications do not work well '
                                     'with more than 1 timer or do not allow to choose '
                                     'between sound and vibration for alarms. If you experience '
                                     'any issue, it is recommended to install ',
@@ -135,8 +134,7 @@ class _ProfileNotificationsAndroidState
                                     setState(() {
                                       _alarmSound = value;
                                     });
-                                    SharedPreferencesModel()
-                                        .setProfileAlarmSound(value);
+                                    SharedPreferencesModel().setProfileAlarmSound(value);
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
                                   activeColor: Colors.green,
@@ -172,8 +170,7 @@ class _ProfileNotificationsAndroidState
                                     setState(() {
                                       _alarmVibration = value;
                                     });
-                                    SharedPreferencesModel()
-                                        .setProfileAlarmVibration(value);
+                                    SharedPreferencesModel().setProfileAlarmVibration(value);
                                   },
                                   activeTrackColor: Colors.lightGreenAccent,
                                   activeColor: Colors.green,
@@ -210,6 +207,19 @@ class _ProfileNotificationsAndroidState
             );
           },
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text("Profile options"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          widget.callback();
+          Navigator.of(context).pop();
+        },
       ),
     );
   }
@@ -276,8 +286,8 @@ class _ProfileNotificationsAndroidState
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Text(
               'Please note that the main configuration for travel notifications (such us the '
-                  'notification title, alarm sound or the alerting time before arrival) is '
-                  'taken from what you have selected in the Travel section',
+              'notification title, alarm sound or the alerting time before arrival) is '
+              'taken from what you have selected in the Travel section',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 12,
@@ -314,8 +324,7 @@ class _ProfileNotificationsAndroidState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel()
-                            .setEnergyNotificationValue(finalValue.floor());
+                        SharedPreferencesModel().setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -350,8 +359,7 @@ class _ProfileNotificationsAndroidState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel()
-                            .setNerveNotificationValue(finalValue.floor());
+                        SharedPreferencesModel().setNerveNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -490,18 +498,16 @@ class _ProfileNotificationsAndroidState
     var travelType = await SharedPreferencesModel().getTravelNotificationType();
 
     var energyType = await SharedPreferencesModel().getEnergyNotificationType();
-    var energyTrigger =
-        await SharedPreferencesModel().getEnergyNotificationValue();
+    var energyTrigger = await SharedPreferencesModel().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax ) {
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
       energyTrigger = widget.energyMax;
     }
 
     var nerveType = await SharedPreferencesModel().getNerveNotificationType();
-    var nerveTrigger =
-        await SharedPreferencesModel().getNerveNotificationValue();
+    var nerveTrigger = await SharedPreferencesModel().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax ) {
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
       nerveTrigger = widget.nerveMax;
     }
 
@@ -511,8 +517,7 @@ class _ProfileNotificationsAndroidState
     var boosterType = await SharedPreferencesModel().getBoosterNotificationType();
 
     var alarmSound = await SharedPreferencesModel().getProfileAlarmSound();
-    var alarmVibration =
-        await SharedPreferencesModel().getProfileAlarmVibration();
+    var alarmVibration = await SharedPreferencesModel().getProfileAlarmVibration();
 
     setState(() {
       _travelDropDownValue = travelType;

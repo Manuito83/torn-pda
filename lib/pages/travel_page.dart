@@ -67,6 +67,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
@@ -91,69 +92,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(Icons.dehaze),
-          onPressed: () {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        title: Text('Travel'),
-        actions: <Widget>[
-          if (Platform.isAndroid)
-            IconButton(
-              icon: Icon(
-                Icons.alarm_on,
-                color: _themeProvider.buttonText,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return TravelOptionsAndroid(
-                        callback: _callBackFromTravelOptions,
-                      );
-                    },
-                  ),
-                );
-              },
-            )
-          else if (Platform.isIOS)
-            IconButton(
-              icon: Icon(
-                Icons.alarm_on,
-                color: _themeProvider.buttonText,
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return TravelOptionsIOS(
-                        callback: _callBackFromTravelOptions,
-                      );
-                    },
-                  ),
-                );
-              },
-            )
-          else
-            SizedBox.shrink(),
-          IconButton(
-            icon: Icon(Icons.textsms),
-            onPressed: () {
-              _notificationTitleController.text = _notificationTitle;
-              _notificationBodyController.text = _notificationBody;
-              _showNotificationTextDialog(context);
-            },
-          ),
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+        height: AppBar().preferredSize.height,
+        child: buildAppBar(),
+      )
+          : null,
       body: Center(
         child: SingleChildScrollView(
           child: FutureBuilder(
@@ -240,6 +187,69 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           }
         },
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: Icon(Icons.dehaze),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
+      title: Text('Travel'),
+      actions: <Widget>[
+        if (Platform.isAndroid)
+          IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return TravelOptionsAndroid(
+                      callback: _callBackFromTravelOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
+        else if (Platform.isIOS)
+          IconButton(
+            icon: Icon(
+              Icons.alarm_on,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return TravelOptionsIOS(
+                      callback: _callBackFromTravelOptions,
+                    );
+                  },
+                ),
+              );
+            },
+          )
+        else
+          SizedBox.shrink(),
+        IconButton(
+          icon: Icon(Icons.textsms),
+          onPressed: () {
+            _notificationTitleController.text = _notificationTitle;
+            _notificationBodyController.text = _notificationBody;
+            _showNotificationTextDialog(context);
+          },
+        ),
+      ],
     );
   }
 
@@ -507,6 +517,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       // If we have reached another country
       if (_travelModel.destination != 'Torn' && _travelModel.timeLeft < 15) {
         return <Widget>[
+          !_settingsProvider.appBarTop
+              ? SizedBox(height: AppBar().preferredSize.height)
+              : SizedBox.shrink(),
           Padding(
             padding: EdgeInsetsDirectional.only(bottom: 60),
             child: _flagImage(),
@@ -550,6 +563,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       } else if (_travelModel.timeLeft > 0 && _travelModel.timeLeft < 120) {
         // We are about to reach another country
         return <Widget>[
+          !_settingsProvider.appBarTop
+              ? SizedBox(height: AppBar().preferredSize.height)
+              : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.only(bottom: 60),
             child: Image.asset(
@@ -614,6 +630,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return <Widget>[
+          !_settingsProvider.appBarTop
+              ? SizedBox(height: AppBar().preferredSize.height)
+              : SizedBox.shrink(),
           Padding(
             padding: EdgeInsetsDirectional.only(bottom: 30),
             child: _flagImage(),
@@ -684,6 +703,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     } else {
       // We are in Torn, not travelling
       return <Widget>[
+        !_settingsProvider.appBarTop
+            ? SizedBox(height: AppBar().preferredSize.height)
+            : SizedBox.shrink(),
         Column(
           children: <Widget>[
             Padding(

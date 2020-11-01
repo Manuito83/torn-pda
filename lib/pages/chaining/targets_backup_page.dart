@@ -5,6 +5,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -16,6 +17,7 @@ class TargetsBackupPage extends StatefulWidget {
 class _TargetsBackupPageState extends State<TargetsBackupPage> {
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
 
   TargetsBackupModel _tentativeImportModel;
 
@@ -44,14 +46,24 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
   FontWeight _importHintWeight = FontWeight.normal;
 
   @override
+  void initState() {
+    super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _importHintStyle = _themeProvider.mainText;
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Import & Export"),
-        ),
+        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+        bottomNavigationBar: !_settingsProvider.appBarTop
+            ? SizedBox(
+          height: AppBar().preferredSize.height,
+          child: buildAppBar(),
+        )
+            : null,
         body: Builder(builder: (BuildContext context) {
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -59,6 +71,9 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
             child: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
+                  !_settingsProvider.appBarTop
+                      ? SizedBox(height: AppBar().preferredSize.height)
+                      : SizedBox.shrink(),
                   Padding(
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
@@ -219,6 +234,12 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
             ),
           );
         }));
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+        title: Text("Import & Export"),
+      );
   }
 
   @override

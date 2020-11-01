@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TargetsOptionsReturn {
@@ -29,9 +30,12 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   Future _preferencesLoaded;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
   }
 
@@ -40,15 +44,13 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("Chaining Options"),
-          leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              _willPopCallback();
-            },
-          ),
-        ),
+        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+        bottomNavigationBar: !_settingsProvider.appBarTop
+            ? SizedBox(
+                height: AppBar().preferredSize.height,
+                child: buildAppBar(),
+              )
+            : null,
         body: Builder(
           builder: (BuildContext context) {
             return GestureDetector(
@@ -62,6 +64,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
+                          !_settingsProvider.appBarTop
+                              ? SizedBox(height: AppBar().preferredSize.height)
+                              : SizedBox.shrink(),
                           SizedBox(height: 15),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -96,7 +101,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 15),
                             child: Text(
                               'If enabled, you will be shown the note you have saved for every '
-                                  'target and its color as you progress with the chain',
+                              'target and its color as you progress with the chain',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 12,
@@ -249,6 +254,18 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text("Chaining Options"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          _willPopCallback();
+        },
       ),
     );
   }

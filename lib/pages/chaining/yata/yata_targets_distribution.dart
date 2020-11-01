@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 
 class YataTargetsDistribution extends StatefulWidget {
   final List<TargetsOnlyYata> onlyYata;
@@ -17,25 +19,34 @@ class YataTargetsDistribution extends StatefulWidget {
 }
 
 class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
+  SettingsProvider _settingsProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        title: Text('YATA targets'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: <Widget>[
+                !_settingsProvider.appBarTop
+                    ? SizedBox(height: AppBar().preferredSize.height)
+                    : SizedBox.shrink(),
                 Text(
                   'TARGETS ONLY IN YATA',
                   style: TextStyle(
@@ -99,6 +110,18 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text('YATA targets'),
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

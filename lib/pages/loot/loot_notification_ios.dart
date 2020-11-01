@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsIOS extends StatefulWidget {
@@ -17,9 +19,12 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
 
   Future _preferencesLoaded;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
   }
 
@@ -28,16 +33,13 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("Loot options"),
-          leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              widget.callback();
-              Navigator.of(context).pop();
-            },
-          ),
-        ),
+        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+        bottomNavigationBar: !_settingsProvider.appBarTop
+            ? SizedBox(
+                height: AppBar().preferredSize.height,
+                child: buildAppBar(),
+              )
+            : null,
         body: Builder(
           builder: (BuildContext context) {
             return GestureDetector(
@@ -50,6 +52,9 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
                     return SingleChildScrollView(
                       child: Column(
                         children: <Widget>[
+                          !_settingsProvider.appBarTop
+                              ? SizedBox(height: AppBar().preferredSize.height)
+                              : SizedBox.shrink(),
                           Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: Text('Here you can specify your preferred notification'
@@ -70,6 +75,19 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text("Loot options"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          widget.callback();
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

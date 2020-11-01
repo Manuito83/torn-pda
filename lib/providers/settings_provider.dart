@@ -17,7 +17,6 @@ enum TimeZoneSetting {
 }
 
 class SettingsProvider extends ChangeNotifier {
-
   int lastAppUse;
 
   var _currentBrowser = BrowserSetting.app;
@@ -48,6 +47,14 @@ class SettingsProvider extends ChangeNotifier {
   TimeZoneSetting get currentTimeZone => _currentTimeZone;
   set changeTimeZone(TimeZoneSetting timeZoneSetting) {
     _currentTimeZone = timeZoneSetting;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
+  var _appBarTop = true;
+  bool get appBarTop => _appBarTop;
+  set changeAppBarTop(bool value) {
+    _appBarTop = value;
     _saveSettingsSharedPrefs();
     notifyListeners();
   }
@@ -87,6 +94,10 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
     SharedPreferencesModel().setDefaultTimeZone(timeZoneSave);
+
+    _appBarTop
+        ? SharedPreferencesModel().setAppBarPosition('top')
+        : SharedPreferencesModel().setAppBarPosition('bottom');
   }
 
   void updateLastUsed(int timeStamp) {
@@ -110,8 +121,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
 
-    String restoredTimeFormat =
-        await SharedPreferencesModel().getDefaultTimeFormat();
+    String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
     switch (restoredTimeFormat) {
       case '24':
         _currentTimeFormat = TimeFormatSetting.h24;
@@ -121,8 +131,7 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    String restoredTimeZone =
-        await SharedPreferencesModel().getDefaultTimeZone();
+    String restoredTimeZone = await SharedPreferencesModel().getDefaultTimeZone();
     switch (restoredTimeZone) {
       case 'local':
         _currentTimeZone = TimeZoneSetting.localTime;
@@ -131,6 +140,9 @@ class SettingsProvider extends ChangeNotifier {
         _currentTimeZone = TimeZoneSetting.tornTime;
         break;
     }
+
+    String restoredAppBar = await SharedPreferencesModel().getAppBarPosition();
+    restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
 
     notifyListeners();
   }

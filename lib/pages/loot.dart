@@ -64,12 +64,10 @@ class _LootPageState extends State<LootPage> {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-
     _getInitialLootInformation = _getLoot();
-
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
-
     _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
 
@@ -81,79 +79,15 @@ class _LootPageState extends State<LootPage> {
 
   @override
   Widget build(BuildContext context) {
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Loot'),
-        leading: new IconButton(
-          icon: new Icon(Icons.menu),
-          onPressed: () {
-            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
-            scaffoldState.openDrawer();
-          },
-        ),
-        actions: <Widget>[
-          _apiSuccess
-              ? IconButton(
-                  icon: Icon(
-                    MdiIcons.timerSandEmpty,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      if (_lootTimeType == LootTimeType.timer) {
-                        _lootTimeType = LootTimeType.dateTime;
-                        SharedPreferencesModel().setLootTimerType('dateTime');
-                      } else {
-                        _lootTimeType = LootTimeType.timer;
-                        SharedPreferencesModel().setLootTimerType('timer');
-                      }
-                    });
-                  },
-                )
-              : SizedBox.shrink(),
-          _apiSuccess && Platform.isAndroid
-              ? IconButton(
-                  icon: Icon(
-                    Icons.alarm_on,
-                    color: _themeProvider.buttonText,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return LootNotificationsAndroid(
-                            callback: _callBackFromNotificationOptions,
-                          );
-                        },
-                      ),
-                    );
-                  },
-                )
-              : SizedBox.shrink(),
-          _apiSuccess && Platform.isIOS
-              ? IconButton(
-                  icon: Icon(
-                    Icons.alarm_on,
-                    color: _themeProvider.buttonText,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) {
-                          return LootNotificationsIOS(
-                            callback: _callBackFromNotificationOptions,
-                          );
-                        },
-                      ),
-                    );
-                  },
-                )
-              : SizedBox.shrink()
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: FutureBuilder(
         future: _getInitialLootInformation,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -163,6 +97,9 @@ class _LootPageState extends State<LootPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
+                    !_settingsProvider.appBarTop
+                        ? SizedBox(height: AppBar().preferredSize.height)
+                        : SizedBox.shrink(),
                     Padding(
                       padding: const EdgeInsets.all(5),
                       child: _returnNpcCards(),
@@ -190,6 +127,79 @@ class _LootPageState extends State<LootPage> {
           }
         },
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text('Loot'),
+      leading: new IconButton(
+        icon: new Icon(Icons.menu),
+        onPressed: () {
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          scaffoldState.openDrawer();
+        },
+      ),
+      actions: <Widget>[
+        _apiSuccess
+            ? IconButton(
+                icon: Icon(
+                  MdiIcons.timerSandEmpty,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (_lootTimeType == LootTimeType.timer) {
+                      _lootTimeType = LootTimeType.dateTime;
+                      SharedPreferencesModel().setLootTimerType('dateTime');
+                    } else {
+                      _lootTimeType = LootTimeType.timer;
+                      SharedPreferencesModel().setLootTimerType('timer');
+                    }
+                  });
+                },
+              )
+            : SizedBox.shrink(),
+        _apiSuccess && Platform.isAndroid
+            ? IconButton(
+                icon: Icon(
+                  Icons.alarm_on,
+                  color: _themeProvider.buttonText,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return LootNotificationsAndroid(
+                          callback: _callBackFromNotificationOptions,
+                        );
+                      },
+                    ),
+                  );
+                },
+              )
+            : SizedBox.shrink(),
+        _apiSuccess && Platform.isIOS
+            ? IconButton(
+                icon: Icon(
+                  Icons.alarm_on,
+                  color: _themeProvider.buttonText,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return LootNotificationsIOS(
+                          callback: _callBackFromNotificationOptions,
+                        );
+                      },
+                    ),
+                  );
+                },
+              )
+            : SizedBox.shrink()
+      ],
     );
   }
 

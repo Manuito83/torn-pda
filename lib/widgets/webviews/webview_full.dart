@@ -15,6 +15,7 @@ import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -109,9 +110,12 @@ class _WebViewFullState extends State<WebViewFull> {
   int _scrollY = 0;
   int _scrollX = 0;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
   }
@@ -134,23 +138,30 @@ class _WebViewFullState extends State<WebViewFull> {
               showCloseButton: false,
               doNotReopenOnClose: true,
               bubbleSlides: [
-                RelativeBubbleSlide(
-                  widgetKey: _showOne,
-                  child: RelativeBubbleSlideChild(
-                    direction: AxisDirection.down,
-                    widget: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SpeechBubble(
-                        nipLocation: NipLocation.TOP,
-                        color: Colors.blue,
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Text(
-                            'Did you know?\n\n'
-                            'Long press section title to copy URL\n\n'
-                            'Swipe left/right to browse forward/back',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                AbsoluteBubbleSlide(
+                  positionCalculator: (size) => Position(
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                  ),
+                  child: AbsoluteBubbleSlideChild(
+                    positionCalculator: (size) => Position(
+                      top: size.height / 2,
+                      left: (size.width - 200) / 2,
+                    ),
+                    widget: SpeechBubble(
+                      width: 200,
+                      nipLocation: NipLocation.BOTTOM,
+                      nipHeight: 0,
+                      color: Colors.blue,
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Text(
+                          'Did you know?\n\n'
+                          'Long press section title to copy URL\n\n'
+                          'Swipe left/right to browse forward/back',
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ),
@@ -167,73 +178,18 @@ class _WebViewFullState extends State<WebViewFull> {
       appBar: widget.dialog
           // Show appBar only if we are not showing the webView in a dialog
           ? null
-          : CustomAppBar(
-              key: _showOne,
-              onHorizontalDragEnd: (DragEndDetails details) async {
-                await _goBackOrForward(details);
-              },
-              genericAppBar: AppBar(
-                leading: IconButton(
-                    icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
-                    onPressed: () async {
-                      // Normal behaviour is just to pop and go to previous page
-                      if (_backButtonPopsContext) {
-                        if (widget.customCallBack != null) {
-                          widget.customCallBack();
-                        }
-                        Navigator.pop(context);
-                      } else {
-                        // But we can change and go back to previous page in certain
-                        // situations (e.g. when going for the vault while trading),
-                        // in which case we need to return to previous target
-                        var backPossible = await webView.canGoBack();
-                        if (backPossible) {
-                          webView.goBack();
-                        } else {
-                          Navigator.pop(context);
-                        }
-                        _backButtonPopsContext = true;
-                      }
-                    }),
-                title: GestureDetector(
-                  child: Text(_pageTitle),
-                  onLongPress: () {
-                    Clipboard.setData(ClipboardData(text: _currentUrl));
-                    if (_currentUrl.length > 60) {
-                      _currentUrl = _currentUrl.substring(0, 60) + "...";
-                    }
-                    BotToast.showText(
-                      text: "Current URL copied to the clipboard [$_currentUrl]",
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: Colors.green,
-                      duration: Duration(seconds: 5),
-                      contentPadding: EdgeInsets.all(10),
-                    );
-                  },
-                ),
-                actions: <Widget>[
-                  _travelHomeIcon(),
-                  _crimesInfoIcon(),
-                  _crimesMenuIcon(),
-                  _vaultsPopUpIcon(),
-                  _tradesMenuIcon(),
-                  _cityMenuIcon(),
-                  _bazaarFillIcon(),
-                  IconButton(
-                    icon: Icon(Icons.refresh),
-                    onPressed: () async {
-                      _scrollX = await webView.getScrollX();
-                      _scrollY = await webView.getScrollY();
-                      await webView.reload();
-                      _scrollAfterLoad = true;
-                    },
-                  ),
-                ],
-              ),
-            ),
+          : _settingsProvider.appBarTop
+              ? buildCustomAppBar()
+              : null,
+      bottomNavigationBar: widget.dialog
+          // Show appBar only if we are not showing the webView in a dialog
+          ? null
+          : !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildCustomAppBar(),
+                )
+              : null,
       body: Container(
         color: Colors.grey[900],
         child: SafeArea(
@@ -243,6 +199,11 @@ class _WebViewFullState extends State<WebViewFull> {
           bottom: true,
           child: Column(
             children: [
+              widget.dialog
+                  ? SizedBox.shrink()
+                  : !_settingsProvider.appBarTop
+                      ? SizedBox(height: AppBar().preferredSize.height)
+                      : SizedBox.shrink(),
               // Crimes widget
               ExpandablePanel(
                 theme: ExpandableThemeData(
@@ -327,7 +288,6 @@ class _WebViewFullState extends State<WebViewFull> {
                       webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                       _scrollAfterLoad = false;
                     }
-
                   },
                   // Allows IOS to open links with target=_blank
                   onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
@@ -360,6 +320,76 @@ class _WebViewFullState extends State<WebViewFull> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  CustomAppBar buildCustomAppBar() {
+    return CustomAppBar(
+      key: _showOne,
+      onHorizontalDragEnd: (DragEndDetails details) async {
+        await _goBackOrForward(details);
+      },
+      genericAppBar: AppBar(
+        leading: IconButton(
+            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+            onPressed: () async {
+              // Normal behaviour is just to pop and go to previous page
+              if (_backButtonPopsContext) {
+                if (widget.customCallBack != null) {
+                  widget.customCallBack();
+                }
+                Navigator.pop(context);
+              } else {
+                // But we can change and go back to previous page in certain
+                // situations (e.g. when going for the vault while trading),
+                // in which case we need to return to previous target
+                var backPossible = await webView.canGoBack();
+                if (backPossible) {
+                  webView.goBack();
+                } else {
+                  Navigator.pop(context);
+                }
+                _backButtonPopsContext = true;
+              }
+            }),
+        title: GestureDetector(
+          child: Text(_pageTitle),
+          onLongPress: () {
+            Clipboard.setData(ClipboardData(text: _currentUrl));
+            if (_currentUrl.length > 60) {
+              _currentUrl = _currentUrl.substring(0, 60) + "...";
+            }
+            BotToast.showText(
+              text: "Current URL copied to the clipboard [$_currentUrl]",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.green,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
+        actions: <Widget>[
+          _travelHomeIcon(),
+          _crimesInfoIcon(),
+          _crimesMenuIcon(),
+          _vaultsPopUpIcon(),
+          _tradesMenuIcon(),
+          _cityMenuIcon(),
+          _bazaarFillIcon(),
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () async {
+              _scrollX = await webView.getScrollX();
+              _scrollY = await webView.getScrollY();
+              await webView.reload();
+              _scrollAfterLoad = true;
+            },
+          ),
+        ],
       ),
     );
   }

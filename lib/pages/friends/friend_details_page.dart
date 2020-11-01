@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
@@ -18,10 +19,12 @@ class FriendDetailsPage extends StatefulWidget {
 
 class _FriendDetailsPageState extends State<FriendDetailsPage> {
   UserDetailsProvider _userDetails;
+  SettingsProvider _settingsProvider;
 
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
   }
 
@@ -29,21 +32,22 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(),
-      appBar: AppBar(
-        title: Text('${widget.friend.name}'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: <Widget>[
+                !_settingsProvider.appBarTop
+                    ? SizedBox(height: AppBar().preferredSize.height)
+                    : SizedBox.shrink(),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -63,7 +67,8 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                           icon: Icon(Icons.content_copy),
                           iconSize: 20,
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(text: widget.friend.playerId.toString()));
+                            Clipboard.setData(
+                                ClipboardData(text: widget.friend.playerId.toString()));
                             BotToast.showText(
                               text: "Your friend's ID [${widget.friend.playerId}] has been "
                                   "copied to the clipboard!",
@@ -110,6 +115,18 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text('${widget.friend.name}'),
+      leading: IconButton(
+        icon: Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
       ),
     );
   }
@@ -203,9 +220,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         width: 13,
         height: 13,
         decoration: BoxDecoration(
-            color: stateColor,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.black)),
+            color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
       ),
     );
 
@@ -222,8 +237,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
     if (widget.friend.faction.factionId != 0) {
       return Column(
         children: <Widget>[
-          Text(
-              'Faction: ${HtmlParser.fix(widget.friend.faction.factionName)}'),
+          Text('Faction: ${HtmlParser.fix(widget.friend.faction.factionName)}'),
           Text('Position: ${widget.friend.faction.position}'),
           Text('Joined: ${widget.friend.faction.daysInFaction} days ago'),
         ],
@@ -261,11 +275,9 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                 icon: Icon(Icons.content_copy),
                 iconSize: 20,
                 onPressed: () {
-                  Clipboard.setData(
-                      ClipboardData(text: widget.friend.discord.discordId));
+                  Clipboard.setData(ClipboardData(text: widget.friend.discord.discordId));
                   BotToast.showText(
-                    text:
-                        "Your friend's Discord ID (${widget.friend.discord.discordId}) has been "
+                    text: "Your friend's Discord ID (${widget.friend.discord.discordId}) has been "
                         "copied to the clipboard!",
                     textStyle: TextStyle(
                       fontSize: 14,

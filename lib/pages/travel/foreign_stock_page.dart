@@ -11,6 +11,7 @@ import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -38,6 +39,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   double _panelHeightClosed = 75.0;
 
   ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
 
   Future _apiCalled;
   bool _apiSuccess;
@@ -103,6 +105,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
     _apiCalled = _fetchApiInformation();
     _restoreSharedPreferences();
@@ -112,43 +115,13 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Foreign Stock"),
-        leading: new IconButton(
-          icon: new Icon(Icons.arrow_back),
-          onPressed: () {
-            // Returning 'false' to indicate we did not press a flag
-            Navigator.pop(context, false);
-          },
-        ),
-        actions: <Widget>[
-          PopupMenuButton<StockSort>(
-            icon: Icon(
-              Icons.sort,
-            ),
-            onSelected: _sortStocks,
-            itemBuilder: (BuildContext context) {
-              return _popupChoices.map((StockSort choice) {
-                return PopupMenuItem<StockSort>(
-                  value: choice,
-                  child: Text(
-                    choice.description,
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
-                );
-              }).toList();
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              _showOptionsDialog();
-            },
-          ),
-        ],
-      ),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
       body: Stack(
         alignment: Alignment.topCenter,
         children: <Widget>[
@@ -203,6 +176,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
+                      !_settingsProvider.appBarTop
+                          ? SizedBox(height: AppBar().preferredSize.height)
+                          : SizedBox.shrink(),
                       Text(
                         'OPS!',
                         style:
@@ -223,6 +199,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
+                      !_settingsProvider.appBarTop
+                          ? SizedBox(height: AppBar().preferredSize.height)
+                          : SizedBox.shrink(),
                       Text('Fetching data...'),
                       SizedBox(height: 30),
                       CircularProgressIndicator(),
@@ -294,6 +273,46 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ),
         ],
       ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text("Foreign Stock"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          // Returning 'false' to indicate we did not press a flag
+          Navigator.pop(context, false);
+        },
+      ),
+      actions: <Widget>[
+        PopupMenuButton<StockSort>(
+          icon: Icon(
+            Icons.sort,
+          ),
+          onSelected: _sortStocks,
+          itemBuilder: (BuildContext context) {
+            return _popupChoices.map((StockSort choice) {
+              return PopupMenuItem<StockSort>(
+                value: choice,
+                child: Text(
+                  choice.description,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.settings),
+          onPressed: () {
+            _showOptionsDialog();
+          },
+        ),
+      ],
     );
   }
 
@@ -467,6 +486,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   List<Widget> _stockItems() {
     var thisStockList = List<Widget>();
+
+    thisStockList.add(
+      !_settingsProvider.appBarTop
+          ? SizedBox(height: AppBar().preferredSize.height)
+          : SizedBox.shrink(),
+    );
 
     Widget lastUpdateDetails = Padding(
       padding: EdgeInsets.fromLTRB(20, 15, 20, 10),
@@ -798,7 +823,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future<void> _fetchApiInformation() async {
     try {
-
       Future yataAPI() async {
         String yataURL = 'https://yata.alwaysdata.net/api/v1/travel/export/';
         var responseDB = await http.get(yataURL).timeout(Duration(seconds: 10));

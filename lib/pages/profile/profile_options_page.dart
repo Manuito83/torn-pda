@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
@@ -17,9 +19,12 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   Future _preferencesLoaded;
 
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
   }
 
@@ -28,15 +33,13 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("Profile Options"),
-          leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              _willPopCallback();
-            },
-          ),
-        ),
+        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+        bottomNavigationBar: !_settingsProvider.appBarTop
+            ? SizedBox(
+          height: AppBar().preferredSize.height,
+          child: buildAppBar(),
+        )
+            : null,
         body: Builder(
           builder: (BuildContext context) {
             return GestureDetector(
@@ -50,6 +53,9 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
+                          !_settingsProvider.appBarTop
+                              ? SizedBox(height: AppBar().preferredSize.height)
+                              : SizedBox.shrink(),
                           SizedBox(height: 10),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -135,6 +141,18 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ),
     );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+        title: Text("Profile Options"),
+        leading: new IconButton(
+          icon: new Icon(Icons.arrow_back),
+          onPressed: () {
+            _willPopCallback();
+          },
+        ),
+      );
   }
 
   Future _restorePreferences() async {
