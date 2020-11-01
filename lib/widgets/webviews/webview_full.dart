@@ -173,151 +173,154 @@ class _WebViewFullState extends State<WebViewFull> {
     );
   }
 
-  Scaffold buildScaffold(BuildContext context) {
-    return Scaffold(
-      appBar: widget.dialog
-          // Show appBar only if we are not showing the webView in a dialog
-          ? null
-          : _settingsProvider.appBarTop
-              ? buildCustomAppBar()
-              : null,
-      bottomNavigationBar: widget.dialog
-          // Show appBar only if we are not showing the webView in a dialog
-          ? null
-          : !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildCustomAppBar(),
-                )
-              : null,
-      body: Container(
-        color: Colors.grey[900],
-        child: SafeArea(
-          top: false,
-          left: false,
-          right: false,
-          bottom: true,
-          child: Column(
-            children: [
-              widget.dialog
-                  ? SizedBox.shrink()
-                  : !_settingsProvider.appBarTop
-                      ? SizedBox(height: AppBar().preferredSize.height)
-                      : SizedBox.shrink(),
-              // Crimes widget
-              ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
-                collapsed: SizedBox.shrink(),
-                controller: _crimesController,
-                header: SizedBox.shrink(),
-                expanded: CrimesWidget(controller: webView),
-              ),
-              // Trades widget
-              _tradesExpandable,
-              // City widget
-              ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
-                collapsed: SizedBox.shrink(),
-                controller: _cityController,
-                header: SizedBox.shrink(),
-                expanded: CityWidget(
-                  controller: webView,
-                  cityItems: _cityItemsFound,
-                  error: _errorCityApi,
-                ),
-              ),
-              // Actual WebView
-              Expanded(
-                child: InAppWebView(
-                  initialUrl: _initialUrl,
-                  initialHeaders: {},
-                  initialOptions: InAppWebViewGroupOptions(
-                    crossPlatform: InAppWebViewOptions(
-                      useShouldInterceptAjaxRequest: true,
-                      debuggingEnabled: true,
-                      preferredContentMode: UserPreferredContentMode.DESKTOP,
-                    ),
-                    android: AndroidInAppWebViewOptions(
-                      builtInZoomControls: false,
-                      useHybridComposition: true,
-                      //useWideViewPort: false,
-                      //loadWithOverviewMode: true,
-                      //displayZoomControls: true,
-                    ),
+  SafeArea buildScaffold(BuildContext context) {
+    return SafeArea(
+      bottom: true,
+      child: Scaffold(
+        appBar: widget.dialog
+            // Show appBar only if we are not showing the webView in a dialog
+            ? null
+            : _settingsProvider.appBarTop
+                ? buildCustomAppBar()
+                : null,
+        bottomNavigationBar: widget.dialog
+            // Show appBar only if we are not showing the webView in a dialog
+            ? null
+            : !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildCustomAppBar(),
+                  )
+                : null,
+        body: Container(
+          color: Colors.grey[900],
+          child: SafeArea(
+            top: false,
+            left: false,
+            right: false,
+            bottom: true,
+            child: Column(
+              children: [
+                widget.dialog
+                    ? SizedBox.shrink()
+                    : !_settingsProvider.appBarTop
+                        ? SizedBox(height: 0)
+                        : SizedBox.shrink(),
+                // Crimes widget
+                ExpandablePanel(
+                  theme: ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
                   ),
-                  shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-                    // This will intercept ajax calls performed when the bazaar reached 100 items
-                    // and needs to be reloaded, so that we can remove and add again the fill buttons
-                    if (x == null) return;
-                    if (x.data == null) return;
-                    if (x.url == null) return;
-
-                    if (x.data.contains("step=getList&type=All&start=") &&
-                        x.url.contains('inventory.php') &&
-                        _bazaarActive &&
-                        _bazaarFillActive) {
-                      webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                      Future.delayed(const Duration(seconds: 2)).then((value) {
-                        webView.evaluateJavascript(source: addBazaarFillButtonsJS());
-                      });
-                    }
-                    return;
-                  },
-                  onWebViewCreated: (InAppWebViewController c) {
-                    webView = c;
-                  },
-                  onLoadStart: (InAppWebViewController c, String url) {
-                    _currentUrl = url;
-                    _assessGeneral();
-                  },
-                  onLoadStop: (InAppWebViewController c, String url) {
-                    _currentUrl = url;
-                    _assessGeneral();
-
-                    // This is used in case the user presses reload. We need to wait for the page
-                    // load to be finished in order to scroll
-                    if (_scrollAfterLoad) {
-                      webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
-                      _scrollAfterLoad = false;
-                    }
-                  },
-                  // Allows IOS to open links with target=_blank
-                  onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
-                    webView.loadUrl(url: req.url);
-                    return;
-                  },
-                  onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
-                    print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
-                    /// TRADES
-                    ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-                    ///     redirect both with console messages (all 'hash.step') for trades
-                    ///     identification, but also with _assessGeneral() so that we can remove
-                    ///     the widget when an unrelated page is visited. Console messages also
-                    ///     help with deletions updates when 'hash.step view' is shown.
-                    ///   - Android: onLoadStop works, but we still need to catch deletions,
-                    ///     so we only listen for 'hash.step view'.
-                    if (Platform.isIOS) {
-                      if (consoleMessage.message.contains('hash.step')) {
-                        _decideIfCallTrades();
-                      }
-                    } else if (Platform.isAndroid) {
-                      if (consoleMessage.message.contains('hash.step view')) {
-                        _decideIfCallTrades();
-                      }
-                    }
-                  },
+                  collapsed: SizedBox.shrink(),
+                  controller: _crimesController,
+                  header: SizedBox.shrink(),
+                  expanded: CrimesWidget(controller: webView),
                 ),
-              ),
-            ],
+                // Trades widget
+                _tradesExpandable,
+                // City widget
+                ExpandablePanel(
+                  theme: ExpandableThemeData(
+                    hasIcon: false,
+                    tapBodyToCollapse: false,
+                    tapHeaderToExpand: false,
+                  ),
+                  collapsed: SizedBox.shrink(),
+                  controller: _cityController,
+                  header: SizedBox.shrink(),
+                  expanded: CityWidget(
+                    controller: webView,
+                    cityItems: _cityItemsFound,
+                    error: _errorCityApi,
+                  ),
+                ),
+                // Actual WebView
+                Expanded(
+                  child: InAppWebView(
+                    initialUrl: _initialUrl,
+                    initialHeaders: {},
+                    initialOptions: InAppWebViewGroupOptions(
+                      crossPlatform: InAppWebViewOptions(
+                        useShouldInterceptAjaxRequest: true,
+                        debuggingEnabled: true,
+                        preferredContentMode: UserPreferredContentMode.DESKTOP,
+                      ),
+                      android: AndroidInAppWebViewOptions(
+                        builtInZoomControls: false,
+                        useHybridComposition: true,
+                        //useWideViewPort: false,
+                        //loadWithOverviewMode: true,
+                        //displayZoomControls: true,
+                      ),
+                    ),
+                    shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+                      // This will intercept ajax calls performed when the bazaar reached 100 items
+                      // and needs to be reloaded, so that we can remove and add again the fill buttons
+                      if (x == null) return;
+                      if (x.data == null) return;
+                      if (x.url == null) return;
+
+                      if (x.data.contains("step=getList&type=All&start=") &&
+                          x.url.contains('inventory.php') &&
+                          _bazaarActive &&
+                          _bazaarFillActive) {
+                        webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                        Future.delayed(const Duration(seconds: 2)).then((value) {
+                          webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+                        });
+                      }
+                      return;
+                    },
+                    onWebViewCreated: (InAppWebViewController c) {
+                      webView = c;
+                    },
+                    onLoadStart: (InAppWebViewController c, String url) {
+                      _currentUrl = url;
+                      _assessGeneral();
+                    },
+                    onLoadStop: (InAppWebViewController c, String url) {
+                      _currentUrl = url;
+                      _assessGeneral();
+
+                      // This is used in case the user presses reload. We need to wait for the page
+                      // load to be finished in order to scroll
+                      if (_scrollAfterLoad) {
+                        webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                        _scrollAfterLoad = false;
+                      }
+                    },
+                    // Allows IOS to open links with target=_blank
+                    onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
+                      webView.loadUrl(url: req.url);
+                      return;
+                    },
+                    onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+                      print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
+                      /// TRADES
+                      ///   - IOS: onLoadStop does not work inside of Trades, that is why we
+                      ///     redirect both with console messages (all 'hash.step') for trades
+                      ///     identification, but also with _assessGeneral() so that we can remove
+                      ///     the widget when an unrelated page is visited. Console messages also
+                      ///     help with deletions updates when 'hash.step view' is shown.
+                      ///   - Android: onLoadStop works, but we still need to catch deletions,
+                      ///     so we only listen for 'hash.step view'.
+                      if (Platform.isIOS) {
+                        if (consoleMessage.message.contains('hash.step')) {
+                          _decideIfCallTrades();
+                        }
+                      } else if (Platform.isAndroid) {
+                        if (consoleMessage.message.contains('hash.step view')) {
+                          _decideIfCallTrades();
+                        }
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

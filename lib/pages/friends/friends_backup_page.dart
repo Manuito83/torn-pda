@@ -54,49 +54,72 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _importHintStyle = _themeProvider.mainText;
-    return Scaffold(
-        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-        bottomNavigationBar: !_settingsProvider.appBarTop
-            ? SizedBox(
-                height: AppBar().preferredSize.height,
-                child: buildAppBar(),
-              )
-            : null,
-        body: Builder(builder: (BuildContext context) {
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-            child: SingleChildScrollView(
-              child: Column(
-                children: <Widget>[
-                  !_settingsProvider.appBarTop
-                      ? SizedBox(height: AppBar().preferredSize.height)
-                      : SizedBox.shrink(),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
-                    child: Text(
-                      "HOW TO EXPORT friends",
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
-                    child: Text(
-                      _exportInfo,
-                      style: TextStyle(
-                        fontSize: 12,
+    return SafeArea(
+      bottom: true,
+      child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(builder: (BuildContext context) {
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    !_settingsProvider.appBarTop
+                        ? SizedBox(height: AppBar().preferredSize.height)
+                        : SizedBox.shrink(),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
+                      child: Text(
+                        "HOW TO EXPORT friends",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    direction: Axis.horizontal,
-                    children: <Widget>[
-                      Padding(
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                      child: Text(
+                        _exportInfo,
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      direction: Axis.horizontal,
+                      children: <Widget>[
+                        Padding(
+                            padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
+                            child: RaisedButton.icon(
+                              icon: Icon(Icons.share),
+                              label: Text("Export"),
+                              onPressed: () async {
+                                var export = _friendsProvider.exportFriends();
+                                if (export == '') {
+                                  Scaffold.of(context).showSnackBar(
+                                    SnackBar(
+                                      duration: Duration(seconds: 5),
+                                      content: Text(
+                                        'No friends to export!',
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  Share.share(export);
+                                }
+                              },
+                            )),
+                        Padding(
                           padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
                           child: RaisedButton.icon(
-                            icon: Icon(Icons.share),
-                            label: Text("Export"),
+                            icon: Icon(Icons.content_copy),
+                            label: Text("Clipboard"),
                             onPressed: () async {
                               var export = _friendsProvider.exportFriends();
                               if (export == '') {
@@ -109,126 +132,106 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                                   ),
                                 );
                               } else {
-                                Share.share(export);
+                                Clipboard.setData(ClipboardData(text: export));
+                                Scaffold.of(context).showSnackBar(
+                                  SnackBar(
+                                    duration: Duration(seconds: 5),
+                                    content: Text(
+                                      "${_friendsProvider.getFriendNumber()} "
+                                      "Friends copied to clipboard!",
+                                    ),
+                                  ),
+                                );
                               }
                             },
-                          )),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                        child: RaisedButton.icon(
-                          icon: Icon(Icons.content_copy),
-                          label: Text("Clipboard"),
-                          onPressed: () async {
-                            var export = _friendsProvider.exportFriends();
-                            if (export == '') {
-                              Scaffold.of(context).showSnackBar(
-                                SnackBar(
-                                  duration: Duration(seconds: 5),
-                                  content: Text(
-                                    'No friends to export!',
-                                  ),
-                                ),
-                              );
-                            } else {
-                              Clipboard.setData(ClipboardData(text: export));
-                              Scaffold.of(context).showSnackBar(
-                                SnackBar(
-                                  duration: Duration(seconds: 5),
-                                  content: Text(
-                                    "${_friendsProvider.getFriendNumber()} "
-                                    "Friends copied to clipboard!",
-                                  ),
-                                ),
-                              );
-                            }
-                          },
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
+                      child: Divider(),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
+                      child: Text(
+                        "HOW TO IMPORT friends",
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
+                      child: Text(
+                        _importInfo,
+                        style: TextStyle(
+                          fontSize: 12,
                         ),
                       ),
-                    ],
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 30, 0, 30),
-                    child: Divider(),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
-                    child: Text(
-                      "HOW TO IMPORT friends",
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(30, 10, 30, 15),
-                    child: Text(
-                      _importInfo,
-                      style: TextStyle(
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  _importProgressWidget(),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
-                    child: Form(
-                      key: _importFormKey,
-                      child: Column(
-                        children: <Widget>[
-                          TextFormField(
-                            controller: _importInputController,
-                            maxLines: 6,
-                            style: TextStyle(fontSize: 12),
-                            decoration: InputDecoration(
-                              counterText: "",
-                              border: OutlineInputBorder(),
-                              hintText: _importHintText,
-                              hintStyle: TextStyle(
-                                color: _importHintStyle,
-                                fontWeight: _importHintWeight,
+                    _importProgressWidget(),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(20, 10, 20, 20),
+                      child: Form(
+                        key: _importFormKey,
+                        child: Column(
+                          children: <Widget>[
+                            TextFormField(
+                              controller: _importInputController,
+                              maxLines: 6,
+                              style: TextStyle(fontSize: 12),
+                              decoration: InputDecoration(
+                                counterText: "",
+                                border: OutlineInputBorder(),
+                                hintText: _importHintText,
+                                hintStyle: TextStyle(
+                                  color: _importHintStyle,
+                                  fontWeight: _importHintWeight,
+                                ),
                               ),
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Cannot be empty!";
-                              }
-                              return null;
-                            },
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                            child: RaisedButton.icon(
-                              icon: Icon(Icons.file_download),
-                              label: Text("Import"),
-                              onPressed: () {
-                                if (_importFormKey.currentState.validate()) {
-                                  var numberImported = _importChecker();
-                                  if (numberImported == 0) {
-                                    Scaffold.of(context).showSnackBar(
-                                      SnackBar(
-                                        duration: Duration(seconds: 5),
-                                        content: Text(
-                                          'No friends to import! '
-                                          'Is the file structure correct?',
-                                        ),
-                                      ),
-                                    );
-                                  } else {
-                                    FocusScope.of(context).requestFocus(new FocusNode());
-                                    _showImportDialog();
-                                  }
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return "Cannot be empty!";
                                 }
+                                return null;
                               },
                             ),
-                          ),
-                        ],
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
+                              child: RaisedButton.icon(
+                                icon: Icon(Icons.file_download),
+                                label: Text("Import"),
+                                onPressed: () {
+                                  if (_importFormKey.currentState.validate()) {
+                                    var numberImported = _importChecker();
+                                    if (numberImported == 0) {
+                                      Scaffold.of(context).showSnackBar(
+                                        SnackBar(
+                                          duration: Duration(seconds: 5),
+                                          content: Text(
+                                            'No friends to import! '
+                                            'Is the file structure correct?',
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      FocusScope.of(context).requestFocus(new FocusNode());
+                                      _showImportDialog();
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 50),
-                ],
+                    SizedBox(height: 50),
+                  ],
+                ),
               ),
-            ),
-          );
-        }));
+            );
+          })),
+    );
   }
 
   AppBar buildAppBar() {

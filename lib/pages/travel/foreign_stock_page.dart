@@ -114,164 +114,170 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return Scaffold(
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
-          : null,
-      body: Stack(
-        alignment: Alignment.topCenter,
-        children: <Widget>[
-          FutureBuilder(
-            future: _apiCalled,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiSuccess) {
-                  return BubbleShowcase(
-                    // KEEP THIS UNIQUE
-                    bubbleShowcaseId: 'foreign_stock_showcase',
-                    // WILL SHOW IF VERSION CHANGED
-                    bubbleShowcaseVersion: 2,
-                    showCloseButton: false,
-                    doNotReopenOnClose: true,
-                    bubbleSlides: [
-                      AbsoluteBubbleSlide(
-                        positionCalculator: (size) => Position(
-                          top: 0,
-                          right: size.width,
-                          bottom: size.height,
-                          left: size.width,
-                        ),
-                        child: RelativeBubbleSlideChild(
-                          direction: AxisDirection.right,
-                          widget: Padding(
-                            padding: const EdgeInsets.only(right: 75),
-                            child: SpeechBubble(
-                              width: 200,
-                              nipLocation: NipLocation.RIGHT,
-                              color: Colors.blue,
-                              child: Padding(
-                                padding: EdgeInsets.all(10),
-                                child: Text(
-                                  'Did you know?\n\n'
-                                  'Click any flag to go directly to the travel agency and '
-                                  'get a check on how much money you need for that particular '
-                                  'item (based on your preset capacity)!',
-                                  style: TextStyle(color: Colors.white),
+    return Container(
+      color: Colors.black,
+      child: SafeArea(
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Stack(
+            alignment: Alignment.topCenter,
+            children: <Widget>[
+              FutureBuilder(
+                future: _apiCalled,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (_apiSuccess) {
+                      return BubbleShowcase(
+                        // KEEP THIS UNIQUE
+                        bubbleShowcaseId: 'foreign_stock_showcase',
+                        // WILL SHOW IF VERSION CHANGED
+                        bubbleShowcaseVersion: 2,
+                        showCloseButton: false,
+                        doNotReopenOnClose: true,
+                        bubbleSlides: [
+                          AbsoluteBubbleSlide(
+                            positionCalculator: (size) => Position(
+                              top: 0,
+                              right: size.width,
+                              bottom: size.height,
+                              left: size.width,
+                            ),
+                            child: RelativeBubbleSlideChild(
+                              direction: AxisDirection.right,
+                              widget: Padding(
+                                padding: const EdgeInsets.only(right: 75),
+                                child: SpeechBubble(
+                                  width: 200,
+                                  nipLocation: NipLocation.RIGHT,
+                                  color: Colors.blue,
+                                  child: Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: Text(
+                                      'Did you know?\n\n'
+                                      'Click any flag to go directly to the travel agency and '
+                                      'get a check on how much money you need for that particular '
+                                      'item (based on your preset capacity)!',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+                        ],
+                        child: ListView(
+                          children: _stockItems(),
                         ),
+                      );
+                    } else {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          !_settingsProvider.appBarTop
+                              ? SizedBox(height: AppBar().preferredSize.height)
+                              : SizedBox.shrink(),
+                          Text(
+                            'OPS!',
+                            style:
+                                TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                            child: Text(
+                              'There was an error getting the information, please '
+                              'try again later!',
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  } else {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          !_settingsProvider.appBarTop
+                              ? SizedBox(height: AppBar().preferredSize.height)
+                              : SizedBox.shrink(),
+                          Text('Fetching data...'),
+                          SizedBox(height: 30),
+                          CircularProgressIndicator(),
+                        ],
                       ),
-                    ],
-                    child: ListView(
-                      children: _stockItems(),
-                    ),
-                  );
-                } else {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      !_settingsProvider.appBarTop
-                          ? SizedBox(height: AppBar().preferredSize.height)
-                          : SizedBox.shrink(),
-                      Text(
-                        'OPS!',
-                        style:
-                            TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                        child: Text(
-                          'There was an error getting the information, please '
-                          'try again later!',
+                    );
+                  }
+                },
+              ),
+
+              // Sliding panel
+              FutureBuilder(
+                future: _apiCalled,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (_apiSuccess) {
+                      return SlidingUpPanel(
+                        controller: _pc,
+                        maxHeight: _panelHeightOpen,
+                        minHeight: _panelHeightClosed,
+                        renderPanelSheet: false,
+                        backdropEnabled: true,
+                        parallaxEnabled: true,
+                        parallaxOffset: .5,
+                        panelBuilder: (sc) => _bottomPanel(sc),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(18.0),
+                          topRight: Radius.circular(18.0),
                         ),
-                      ),
-                    ],
-                  );
-                }
-              } else {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      !_settingsProvider.appBarTop
-                          ? SizedBox(height: AppBar().preferredSize.height)
-                          : SizedBox.shrink(),
-                      Text('Fetching data...'),
-                      SizedBox(height: 30),
-                      CircularProgressIndicator(),
-                    ],
-                  ),
-                );
-              }
-            },
-          ),
+                        onPanelSlide: (double pos) => setState(() {
+                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                        }),
+                      );
+                    } else {
+                      return SizedBox.shrink();
+                    }
+                  } else {
+                    return SizedBox.shrink();
+                  }
+                },
+              ),
 
-          // Sliding panel
-          FutureBuilder(
-            future: _apiCalled,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiSuccess) {
-                  return SlidingUpPanel(
-                    controller: _pc,
-                    maxHeight: _panelHeightOpen,
-                    minHeight: _panelHeightClosed,
-                    renderPanelSheet: false,
-                    backdropEnabled: true,
-                    parallaxEnabled: true,
-                    parallaxOffset: .5,
-                    panelBuilder: (sc) => _bottomPanel(sc),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(18.0),
-                      topRight: Radius.circular(18.0),
-                    ),
-                    onPanelSlide: (double pos) => setState(() {
-                      _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                    }),
-                  );
-                } else {
-                  return SizedBox.shrink();
-                }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
+              // FAB
+              FutureBuilder(
+                future: _apiCalled,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (_apiSuccess) {
+                      return Positioned(
+                        right: 35.0,
+                        bottom: _fabHeight,
+                        child: FloatingActionButton.extended(
+                          icon: Icon(Icons.filter_list),
+                          label: Text("Filter"),
+                          elevation: 4,
+                          onPressed: () {
+                            _pc.isPanelOpen ? _pc.close() : _pc.open();
+                          },
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    } else {
+                      return SizedBox.shrink();
+                    }
+                  } else {
+                    return SizedBox.shrink();
+                  }
+                },
+              ),
+            ],
           ),
-
-          // FAB
-          FutureBuilder(
-            future: _apiCalled,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiSuccess) {
-                  return Positioned(
-                    right: 35.0,
-                    bottom: _fabHeight,
-                    child: FloatingActionButton.extended(
-                      icon: Icon(Icons.filter_list),
-                      label: Text("Filter"),
-                      elevation: 4,
-                      onPressed: () {
-                        _pc.isPanelOpen ? _pc.close() : _pc.open();
-                      },
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                } else {
-                  return SizedBox.shrink();
-                }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-        ],
+        ),
       ),
     );
   }

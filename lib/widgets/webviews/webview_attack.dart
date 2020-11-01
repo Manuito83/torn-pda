@@ -95,56 +95,59 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
-        bottomNavigationBar: !_settingsProvider.appBarTop
-            ? SizedBox(
-                height: AppBar().preferredSize.height,
-                child: buildCustomAppBar(),
-              )
-            : null,
-        body: Container(
-          color: Colors.grey[900],
-          child: SafeArea(
-            top: false,
-            right: false,
-            left: false,
-            bottom: true,
-            child: Builder(
-              builder: (BuildContext context) {
-                return Column(
-                  children: [
-                    !_settingsProvider.appBarTop
-                        ? SizedBox(height: AppBar().preferredSize.height)
-                        : SizedBox.shrink(),
-                    ExpandablePanel(
-                      theme: ExpandableThemeData(
-                        hasIcon: false,
-                        tapBodyToCollapse: false,
-                        tapHeaderToExpand: false,
+      child: SafeArea(
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildCustomAppBar(),
+                )
+              : null,
+          body: Container(
+            color: Colors.grey[900],
+            child: SafeArea(
+              top: false,
+              right: false,
+              left: false,
+              bottom: true,
+              child: Builder(
+                builder: (BuildContext context) {
+                  return Column(
+                    children: [
+                      !_settingsProvider.appBarTop
+                          ? SizedBox(height: 0)
+                          : SizedBox.shrink(),
+                      ExpandablePanel(
+                        theme: ExpandableThemeData(
+                          hasIcon: false,
+                          tapBodyToCollapse: false,
+                          tapHeaderToExpand: false,
+                        ),
+                        collapsed: SizedBox.shrink(),
+                        controller: _chainWidgetController,
+                        header: SizedBox.shrink(),
+                        expanded: ChainTimer(
+                          userKey: widget.userKey,
+                          alwaysDarkBackground: true,
+                          chainTimerParent: ChainTimerParent.webView,
+                        ),
                       ),
-                      collapsed: SizedBox.shrink(),
-                      controller: _chainWidgetController,
-                      header: SizedBox.shrink(),
-                      expanded: ChainTimer(
-                        userKey: widget.userKey,
-                        alwaysDarkBackground: true,
-                        chainTimerParent: ChainTimerParent.webView,
+                      Expanded(
+                        child: WebView(
+                          initialUrl: _initialUrl,
+                          javascriptMode: JavascriptMode.unrestricted,
+                          onWebViewCreated: (WebViewController c) {
+                            _webViewController = c;
+                          },
+                          gestureNavigationEnabled: true,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: WebView(
-                        initialUrl: _initialUrl,
-                        javascriptMode: JavascriptMode.unrestricted,
-                        onWebViewCreated: (WebViewController c) {
-                          _webViewController = c;
-                        },
-                        gestureNavigationEnabled: true,
-                      ),
-                    ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),

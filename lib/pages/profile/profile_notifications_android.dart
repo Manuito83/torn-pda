@@ -56,156 +56,159 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-        bottomNavigationBar: !_settingsProvider.appBarTop
-            ? SizedBox(
-                height: AppBar().preferredSize.height,
-                child: buildAppBar(),
-              )
-            : null,
-        body: Builder(
-          builder: (BuildContext context) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: FutureBuilder(
-                future: _preferencesLoaded,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          !_settingsProvider.appBarTop
-                              ? SizedBox(height: AppBar().preferredSize.height)
-                              : SizedBox.shrink(),
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Text('Here you can specify your preferred alerting '
-                                'method for each type of event.'),
-                          ),
-                          _rowsWithTypes(),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 50,
-                              vertical: 20,
+      child: SafeArea(
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: FutureBuilder(
+                  future: _preferencesLoaded,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            !_settingsProvider.appBarTop
+                                ? SizedBox(height: AppBar().preferredSize.height)
+                                : SizedBox.shrink(),
+                            Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text('Here you can specify your preferred alerting '
+                                  'method for each type of event.'),
                             ),
-                            child: Divider(),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: RichText(
-                              text: TextSpan(
-                                text: 'Note: some Android clock applications do not work well '
-                                    'with more than 1 timer or do not allow to choose '
-                                    'between sound and vibration for alarms. If you experience '
-                                    'any issue, it is recommended to install ',
-                                style: DefaultTextStyle.of(context).style,
-                                children: <TextSpan>[
-                                  TextSpan(
-                                    text: 'Google\'s Clock application',
-                                    style: TextStyle(color: Colors.blue),
-                                    recognizer: TapGestureRecognizer()
-                                      ..onTap = () async {
-                                        AndroidIntent intent = AndroidIntent(
-                                          action: 'action_view',
-                                          data: 'https://play.google.com/store'
-                                              '/apps/details?id=com.google.android.deskclock',
-                                        );
-                                        await intent.launch();
-                                      },
-                                  ),
-                                  TextSpan(
-                                    text: '.',
+                            _rowsWithTypes(),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 50,
+                                vertical: 20,
+                              ),
+                              child: Divider(),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: RichText(
+                                text: TextSpan(
+                                  text: 'Note: some Android clock applications do not work well '
+                                      'with more than 1 timer or do not allow to choose '
+                                      'between sound and vibration for alarms. If you experience '
+                                      'any issue, it is recommended to install ',
+                                  style: DefaultTextStyle.of(context).style,
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                      text: 'Google\'s Clock application',
+                                      style: TextStyle(color: Colors.blue),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () async {
+                                          AndroidIntent intent = AndroidIntent(
+                                            action: 'action_view',
+                                            data: 'https://play.google.com/store'
+                                                '/apps/details?id=com.google.android.deskclock',
+                                          );
+                                          await intent.launch();
+                                        },
+                                    ),
+                                    TextSpan(
+                                      text: '.',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Alarm sound"),
+                                  Switch(
+                                    value: _alarmSound,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _alarmSound = value;
+                                      });
+                                      SharedPreferencesModel().setProfileAlarmSound(value);
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Alarm sound"),
-                                Switch(
-                                  value: _alarmSound,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _alarmSound = value;
-                                    });
-                                    SharedPreferencesModel().setProfileAlarmSound(value);
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'Not applicable to travel',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'Not applicable to travel',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
+                            SizedBox(height: 10),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Alarm vibration"),
+                                  Switch(
+                                    value: _alarmVibration,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _alarmVibration = value;
+                                      });
+                                      SharedPreferencesModel().setProfileAlarmVibration(value);
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
-                          SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Alarm vibration"),
-                                Switch(
-                                  value: _alarmVibration,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _alarmVibration = value;
-                                    });
-                                    SharedPreferencesModel().setProfileAlarmVibration(value);
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
+                            ),
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'Not applicable to travel',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'Not applicable to travel',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 50),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
-              ),
-            );
-          },
+                            SizedBox(height: 50),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

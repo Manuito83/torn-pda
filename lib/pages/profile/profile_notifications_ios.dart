@@ -46,57 +46,60 @@ class _ProfileNotificationsIOSState
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-        bottomNavigationBar: !_settingsProvider.appBarTop
-            ? SizedBox(
-          height: AppBar().preferredSize.height,
-          child: buildAppBar(),
-        )
-            : null,
-        body: Builder(
-          builder: (BuildContext context) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: FutureBuilder(
-                future: _preferencesLoaded,
-                builder:
-                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          !_settingsProvider.appBarTop
-                              ? SizedBox(height: AppBar().preferredSize.height)
-                              : SizedBox.shrink(),
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Text(
-                                'Here you can specify your preferred alerting '
-                                'values for each type of event.'),
-                          ),
-                          _rowsWithTypes(),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 50,
-                              vertical: 20,
+      child: SafeArea(
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+            height: AppBar().preferredSize.height,
+            child: buildAppBar(),
+          )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: FutureBuilder(
+                  future: _preferencesLoaded,
+                  builder:
+                      (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            !_settingsProvider.appBarTop
+                                ? SizedBox(height: AppBar().preferredSize.height)
+                                : SizedBox.shrink(),
+                            Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text(
+                                  'Here you can specify your preferred alerting '
+                                  'values for each type of event.'),
                             ),
-                            child: Divider(),
-                          ),
-                          SizedBox(height: 50),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
-              ),
-            );
-          },
+                            _rowsWithTypes(),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 50,
+                                vertical: 20,
+                              ),
+                              child: Divider(),
+                            ),
+                            SizedBox(height: 50),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
