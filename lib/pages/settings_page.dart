@@ -849,6 +849,12 @@ class _SettingsPageState extends State<SettingsPage> {
         _openSectionValue = onValue;
       });
     });
+
+    await SharedPreferencesModel().getAppBarPosition().then((onValue) {
+      setState(() {
+        _appBarPosition = onValue;
+      });
+    });
   }
 
   void _timerUpdateInformation() {
