@@ -575,18 +575,39 @@ class TornIcons {
     // Racing
     this.icon17,
     this.icon18,
+    // Addiction
+    this.icon57,
+    this.icon58,
+    this.icon59,
+    this.icon60,
+    this.icon61,
   });
 
   String icon17;
   String icon18;
+  String icon57;
+  String icon58;
+  String icon59;
+  String icon60;
+  String icon61;
 
   factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
     icon17: json["icon17"] == null ? null : json["icon17"],
     icon18: json["icon18"] == null ? null : json["icon18"],
+    icon57: json["icon57"] == null ? null : json["icon57"],
+    icon58: json["icon58"] == null ? null : json["icon58"],
+    icon59: json["icon59"] == null ? null : json["icon59"],
+    icon60: json["icon60"] == null ? null : json["icon60"],
+    icon61: json["icon61"] == null ? null : json["icon61"],
   );
 
   Map<String, dynamic> toJson() => {
     "icon17": icon17 == null ? null : icon17,
     "icon18": icon18 == null ? null : icon18,
+    "icon57": icon57 == null ? null : icon57,
+    "icon58": icon58 == null ? null : icon58,
+    "icon59": icon59 == null ? null : icon59,
+    "icon60": icon60 == null ? null : icon60,
+    "icon61": icon61 == null ? null : icon61,
   };
 }

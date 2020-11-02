@@ -2371,12 +2371,62 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Widget _miscellaneous() {
     bool showMisc = false;
+    bool addictionActive = false;
     bool racingActive = false;
     bool bankActive = false;
     bool educationActive = false;
 
+    // DEBUG ******************************
+    //_user.icons.icon57 = "Test addiction -" + " long string " * 6;
+    //_user.icons.icon17 = "Test racing -" + " long string " * 6;
+    //_miscModel.cityBank.timeLeft = 6000;
+    //_miscModel.educationTimeleft = 6000;
+    // DEBUG ******************************
+
     if (_miscModel == null || _tornEducationModel == null) {
       return SizedBox.shrink();
+    }
+
+    // ADDICTION
+    Widget addictionWidget = SizedBox.shrink();
+    if (_user.icons.icon57 != null ||
+        _user.icons.icon58 != null ||
+        _user.icons.icon59 != null ||
+        _user.icons.icon60 != null ||
+        _user.icons.icon61 != null) {
+      showMisc = true;
+      addictionActive = true;
+      String addictionString;
+      Color brainColor;
+      if (_user.icons.icon57 != null) {
+        addictionString = _user.icons.icon57;
+        brainColor = Colors.grey;
+      } else if (_user.icons.icon58 != null) {
+        addictionString = _user.icons.icon58;
+        brainColor = Colors.brown[300];
+      } else if (_user.icons.icon59 != null) {
+        addictionString = _user.icons.icon59;
+        brainColor = Colors.deepOrange[700];
+      } else if (_user.icons.icon60 != null) {
+        addictionString = _user.icons.icon60;
+        brainColor = Colors.amber[900];
+      } else if (_user.icons.icon61 != null) {
+        addictionString = _user.icons.icon61;
+        brainColor = Colors.red[600];
+      }
+
+      addictionWidget = Row(
+        children: <Widget>[
+          Icon(MdiIcons.brain, color: brainColor),
+          SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              addictionString,
+              style: DefaultTextStyle.of(context).style,
+            ),
+          ),
+        ],
+      );
     }
 
     // RACING
@@ -2575,14 +2625,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
+                  child: addictionWidget,
+                ),
+                if (addictionActive && racingActive) SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
                   child: racingWidget,
                 ),
-                if (racingActive && bankActive) SizedBox(height: 10),
+                if ((addictionActive || racingActive) && bankActive) SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: bankWidget,
                 ),
-                if ((racingActive || bankActive) && educationActive) SizedBox(height: 10),
+                if ((addictionActive || racingActive || bankActive) && educationActive)
+                  SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: educationWidget,
