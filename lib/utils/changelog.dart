@@ -30,6 +30,34 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.1
+    var v1_9_1 = ChangeLogItem();
+    v1_9_1.version = 'Torn PDA v1.9.1';
+    String feat1_9_1_1 = "Profile: added several additional quick browser triggers (tap on the happy bar, life bar or the points icon)";
+    String feat1_9_1_2 = "Profile: added addiction icon and information to miscellaneous";
+    String feat1_9_1_3 = "Profile: added effective battle stats calculation";
+    String feat1_9_1_4 = "Profile: added chain information and warning (in case you are heading to the gym and unaware of the chain)";
+    String feat1_9_1_5 = "Chaining: added flags and travel direction for your targets";
+    String feat1_9_1_6 = "Settings: you can now place the application bar at the bottom of the screen";
+    String feat1_9_1_7 = "Fixed screen issues in several devices (wrong tap location, zoomed-in screen, loading times)";
+    String feat1_9_1_8 = "Fixed scroll not returning to the correct place after refreshing a page in the browser";
+    String feat1_9_1_9 = "Fixed issues with some devices and keyboards (special chars and autocorrect not displaying)";
+    String feat1_9_1_10 = "Fixed dropdown menus not opening in some tablets";
+    String feat1_9_1_11 = "Fixed empty notes being shown when attacking";
+    String feat1_9_1_12 = "Fixed capitalization when adding notes";
+    v1_9_1.features.add(feat1_9_1_1);
+    v1_9_1.features.add(feat1_9_1_2);
+    v1_9_1.features.add(feat1_9_1_3);
+    v1_9_1.features.add(feat1_9_1_4);
+    v1_9_1.features.add(feat1_9_1_5);
+    v1_9_1.features.add(feat1_9_1_6);
+    v1_9_1.features.add(feat1_9_1_7);
+    v1_9_1.features.add(feat1_9_1_8);
+    v1_9_1.features.add(feat1_9_1_9);
+    v1_9_1.features.add(feat1_9_1_10);
+    v1_9_1.features.add(feat1_9_1_11);
+    v1_9_1.features.add(feat1_9_1_12);
+
     // VERSION 1.9.0
     var v1_9_0 = ChangeLogItem();
     v1_9_0.version = 'Torn PDA v1.9.0';
@@ -291,6 +319,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_1);
     itemList.add(v1_9_0);
     itemList.add(v1_8_6);
     itemList.add(v1_8_5);
