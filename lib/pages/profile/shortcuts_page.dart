@@ -143,10 +143,14 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
               //shrinkWrap: true,
               //physics: NeverScrollableScrollPhysics(),
               onReorder: (int oldIndex, int newIndex) {
+                if (oldIndex < newIndex) {
+                  // removing the item at oldIndex will shorten the list by 1
+                  newIndex -= 1;
+                }
                 _shortcutsProvider.reorderShortcut(
                   _shortcutsProvider.activeShortcuts[oldIndex],
                   oldIndex,
-                  newIndex - 1,
+                  newIndex,
                 );
               },
               children: activeShortcuts,

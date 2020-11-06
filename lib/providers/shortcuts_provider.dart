@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ShortcutsProvider extends ChangeNotifier {
   List<Shortcut> _allShortcuts = [];
@@ -16,23 +17,45 @@ class ShortcutsProvider extends ChangeNotifier {
 
   ShortcutsProvider() {
     _allShortcuts = _initializeShortcuts();
+    _loadSavedShortcuts();
   }
 
   void activateShortcut(Shortcut activeShortcut) {
     activeShortcut.active = true;
     _activeShortcuts.add(activeShortcut);
+    _saveListAfterChanges();
     notifyListeners();
   }
 
   void deactivateShortcut(Shortcut inactiveShortcut) {
     inactiveShortcut.active = false;
     _activeShortcuts.remove(inactiveShortcut);
+    _saveListAfterChanges();
     notifyListeners();
   }
 
   void reorderShortcut(Shortcut movedShortcut, int oldIndex, int newIndex) {
     _activeShortcuts.removeAt(oldIndex);
     _activeShortcuts.insert(newIndex, movedShortcut);
+    _saveListAfterChanges();
+    notifyListeners();
+  }
+
+  void _saveListAfterChanges() {
+    var saveList = List<String>();
+    for (var short in activeShortcuts) {
+      var save = shortcutToJson(short);
+      saveList.add(save);
+    }
+    SharedPreferencesModel().setActiveShortcutsList(saveList);
+  }
+
+  Future<void> _loadSavedShortcuts() async {
+    // Load crimes from shared preferences
+    var rawLoad = await SharedPreferencesModel().getActiveShortcutsList();
+    for (var rawShort in rawLoad) {
+      _activeShortcuts.add(shortcutFromJson(rawShort));
+    }
     notifyListeners();
   }
 
@@ -51,4 +74,5 @@ class ShortcutsProvider extends ChangeNotifier {
     });
     return stockShortcuts;
   }
+
 }
