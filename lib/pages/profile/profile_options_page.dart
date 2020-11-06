@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -117,6 +118,38 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 'If active, you\'ll get a message and a chain icon to the side of '
                                 'the energy bar, so that you avoid spending energy in the gym '
                                 'if you are unaware that your faction is chaining',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Configure shortcuts"),
+                                  IconButton(
+                                    icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                    onPressed: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (BuildContext context) => ShortcutsPage(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Tip: short-press shortcuts to open a small browser window, '
+                                'long-press to open a full browser with app bar',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
