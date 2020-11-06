@@ -12,12 +12,11 @@ class ShortcutsProvider extends ChangeNotifier {
   UnmodifiableListView<Shortcut> get activeShortcuts =>
       UnmodifiableListView(_activeShortcuts);
 
-  String _currentFilter = '';
-  String get currentFilter => _currentFilter;
+  bool _loadCompleted = false;
+  bool get loadCompleted => _loadCompleted;
 
   ShortcutsProvider() {
-    _allShortcuts = _initializeShortcuts();
-    _loadSavedShortcuts();
+    _initializeStockShortcuts().then((value) => _loadCompleted = true);
   }
 
   void activateShortcut(Shortcut activeShortcut) {
@@ -50,18 +49,8 @@ class ShortcutsProvider extends ChangeNotifier {
     SharedPreferencesModel().setActiveShortcutsList(saveList);
   }
 
-  Future<void> _loadSavedShortcuts() async {
-    // Load crimes from shared preferences
-    var rawLoad = await SharedPreferencesModel().getActiveShortcutsList();
-    for (var rawShort in rawLoad) {
-      _activeShortcuts.add(shortcutFromJson(rawShort));
-    }
-    notifyListeners();
-  }
-
-  List<Shortcut> _initializeShortcuts() {
-    var stockShortcuts = List<Shortcut>();
-    stockShortcuts.addAll({
+  Future _initializeStockShortcuts() async {
+    _allShortcuts.addAll({
       Shortcut()
         ..name = "Casino: Russian Roulette"
         ..nickname = "Russian Roulette"
@@ -72,7 +61,19 @@ class ShortcutsProvider extends ChangeNotifier {
         ..url = "url 2"
         ..iconUrl = "images/flags/stock/china.png",
     });
-    return stockShortcuts;
+
+    // In order to properly reconnect saved shortcuts with the stock ones (so that
+    // one is a reference of the other), once we load from shared preferences,
+    // we look for the stock counterpart and activate it from scratch
+    var savedLoad = await SharedPreferencesModel().getActiveShortcutsList();
+    for (var savedShortRaw in savedLoad) {
+      var savedShort = shortcutFromJson(savedShortRaw);
+      for (var stockShort in _allShortcuts) {
+        if (savedShort.name == stockShort.name) {
+          activateShortcut(stockShort);
+        }
+      }
+    }
   }
 
 }

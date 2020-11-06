@@ -22,7 +22,6 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
-import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -114,6 +113,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
+  ShortcutsProvider _shortcuts;
 
   // For dial FAB
   ScrollController scrollController;
@@ -195,6 +195,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       });
 
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _shortcuts = context.read<ShortcutsProvider>();
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -516,10 +517,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _shortcutsCarrousel() {
-    var shortcuts = context.read<ShortcutsProvider>();
+
     return SizedBox(
       height: 60,
-      child: shortcuts.activeShortcuts.length == 0
+      child: _shortcuts.activeShortcuts.length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -543,9 +544,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             )
           : ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: shortcuts.activeShortcuts.length,
+              itemCount: _shortcuts.activeShortcuts.length,
               itemBuilder: (context, index) {
-                var thisShortcut = shortcuts.activeShortcuts[index];
+                var thisShortcut = _shortcuts.activeShortcuts[index];
                 return InkWell(
                   onLongPress: () {
                     _openTornBrowser(thisShortcut.url);
