@@ -53,6 +53,7 @@ class SharedPreferencesModel {
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
+  final String _kShortcutTile = "pda_shortcutTile";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kLootYataCache = "pda_lootYataCache";
@@ -625,6 +626,16 @@ class SharedPreferencesModel {
   /// ----------------------------
   /// Methods for shortcuts
   /// ----------------------------
+  Future<String> getShortcutTile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kShortcutTile) ?? 'both';
+  }
+
+  Future<bool> setShortcutTile(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kShortcutTile, value);
+  }
+
   Future<List<String>> getActiveShortcutsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getStringList(_kActiveShortcutsList) ?? List<String>();

@@ -12,11 +12,11 @@ class ShortcutsProvider extends ChangeNotifier {
   UnmodifiableListView<Shortcut> get activeShortcuts =>
       UnmodifiableListView(_activeShortcuts);
 
-  bool _loadCompleted = false;
-  bool get loadCompleted => _loadCompleted;
+  String _shortcutTile = 'both';
+  String get shortcutTile => _shortcutTile;
 
   ShortcutsProvider() {
-    _initializeStockShortcuts().then((value) => _loadCompleted = true);
+    _initializeStockShortcuts();
   }
 
   void activateShortcut(Shortcut activeShortcut) {
@@ -40,6 +40,12 @@ class ShortcutsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void changeShortcutTile(String choice) {
+    _shortcutTile = choice;
+    SharedPreferencesModel().setShortcutTile(choice);
+    notifyListeners();
+  }
+
   void _saveListAfterChanges() {
     var saveList = List<String>();
     for (var short in activeShortcuts) {
@@ -50,6 +56,8 @@ class ShortcutsProvider extends ChangeNotifier {
   }
 
   Future _initializeStockShortcuts() async {
+    _shortcutTile = await SharedPreferencesModel().getShortcutTile();
+
     _allShortcuts.addAll({
       Shortcut()
         ..name = "Casino: Russian Roulette"
@@ -58,6 +66,7 @@ class ShortcutsProvider extends ChangeNotifier {
         ..iconUrl = "images/icons/faction.png",
       Shortcut()
         ..name = "shortcut 2"
+        ..nickname = "Test"
         ..url = "url 2"
         ..iconUrl = "images/flags/stock/china.png",
     });

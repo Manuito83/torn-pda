@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 
@@ -41,27 +39,73 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  SizedBox(height: 10),
+                  SizedBox(height: 20),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text("Active shortcuts (swipe to remove??)"),
+                        Flexible(
+                          child: Text(
+                            "Shortcut tile",
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 20),
+                        ),
+                        Flexible(
+                          flex: 2,
+                          child: _shortcutTileDropdown(),
+                        ),
                       ],
                     ),
                   ),
+                  SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: SizedBox(
+                      width: 200,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text("Active shortcuts"),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: Text(
+                              'SWIPE TO REMOVE',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: Text(
+                              'LONG-PRESS TO SORT',
+                              style: TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   SizedBox(height: 10),
-                  _activeCardsList(),
+                  if (_shortcutsProvider.activeShortcuts.length == 0)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                        child: Text(
+                        'No active shortcuts, add some below!',
+                        style: TextStyle(
+                          color: Colors.orange[800],
+                          fontStyle: FontStyle.italic,
+                          fontSize: 13,
+                        ),
+                    ),
+                      )
+                    else
+                      _activeCardsList(),
                   SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text("All shortcuts"),
-                      ],
-                    ),
+                    child: Text("All shortcuts"),
                   ),
                   SizedBox(height: 10),
                   _allCardsList(),
@@ -227,6 +271,58 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           _willPopCallback();
         },
       ),
+    );
+  }
+
+  DropdownButton _shortcutTileDropdown() {
+    return DropdownButton<String>(
+      value: _shortcutsProvider.shortcutTile,
+      items: [
+        DropdownMenuItem(
+          value: "both",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Icon and text",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "icon",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Only icon",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "text",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "Only text",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _shortcutsProvider.changeShortcutTile(value);
+        });
+      },
     );
   }
 

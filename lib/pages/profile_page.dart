@@ -517,9 +517,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _shortcutsCarrousel() {
-
     return SizedBox(
-      height: 60,
+      height: _shortcuts.shortcutTile == 'both' ? 60 : 40,
       child: _shortcuts.activeShortcuts.length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -560,28 +559,53 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       borderRadius: BorderRadius.circular(4.0),
                     ),
                     elevation: 2,
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: 26,
-                          child: Image.asset(
-                            thisShortcut.iconUrl,
-                            width: 16,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: SizedBox(
-                            width: 50,
-                            child: Text(
-                              thisShortcut.nickname.toUpperCase(),
-                              style: TextStyle(fontSize: 9),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: _shortcuts.shortcutTile == 'both'
+                        ? Column(
+                            children: [
+                              SizedBox(
+                                height: 26,
+                                child: Image.asset(
+                                  thisShortcut.iconUrl,
+                                  width: 16,
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4),
+                                child: SizedBox(
+                                  width: 55,
+                                  child: Text(
+                                    thisShortcut.nickname.toUpperCase(),
+                                    style: TextStyle(fontSize: 9),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : _shortcuts.shortcutTile == 'icon'
+                            ? SizedBox(
+                                height: 30,
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Image.asset(
+                                    thisShortcut.iconUrl,
+                                    width: 16,
+                                  ),
+                                ),
+                              )
+                            : Padding(
+                                padding: EdgeInsets.all(0),
+                                child: SizedBox(
+                                  width: 55,
+                                  child: Center(
+                                    child: Text(
+                                      thisShortcut.nickname.toUpperCase(),
+                                      style: TextStyle(fontSize: 9),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ),
                   ),
                 );
               },
