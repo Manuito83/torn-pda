@@ -50,6 +50,7 @@ class SharedPreferencesModel {
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
+  final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kActiveCrimesList = "pda_activeCrimesList";
@@ -588,6 +589,16 @@ class SharedPreferencesModel {
   Future<bool> setProfileAlarmSound(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kProfileAlarmSound, value);
+  }
+
+  Future<bool> getEnableShortcuts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kEnableShortcuts) ?? true;
+  }
+
+  Future<bool> setEnableShortcuts(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kEnableShortcuts, value);
   }
 
   Future<bool> getUseNukeRevive() async {

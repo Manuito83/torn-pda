@@ -22,6 +22,7 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
+import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -173,6 +174,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   bool _nukeReviveActive = false;
   bool _warnAboutChains = false;
+  bool _shortcutsEnabled = false;
 
   ChainModel _chainModel;
 
@@ -344,10 +346,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ],
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                          child: _favouritesCarrousel(),
-                        ),
+                        if (_shortcutsEnabled)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                            child: _shortcutsCarrousel(),
+                          ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
                           child: _playerStatus(),
@@ -480,6 +483,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             setState(() {
               _nukeReviveActive = newOptions.nukeReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
+              _shortcutsEnabled = newOptions.shortcutsEnabled;
             });
           },
         )
@@ -511,53 +515,76 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _favouritesCarrousel() {
+  Widget _shortcutsCarrousel() {
     var shortcuts = context.read<ShortcutsProvider>();
     return SizedBox(
       height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: shortcuts.activeShortcuts.length,
-        itemBuilder: (context, index) {
-          var thisShortcut = shortcuts.activeShortcuts[index];
-          return InkWell(
-            onLongPress: () {
-              _openTornBrowser(thisShortcut.url);
-            },
-            onTap: () {
-              _openBrowserDialog(context, thisShortcut.url);
-            },
-            child: Card(
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: Colors.grey, width: 1.5),
-                borderRadius: BorderRadius.circular(4.0),
-              ),
-              elevation: 2,
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: 26,
-                    child: Image.asset(
-                      thisShortcut.iconUrl,
-                      width: 16,
+      child: shortcuts.activeShortcuts.length == 0
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'No shortcuts configured, add some!',
+                  style: TextStyle(
+                    color: Colors.brown,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13,
+                  ),
+                ),
+                Text(
+                  'TAP OPTIONS BUTTON TO CONFIGURE',
+                  style: TextStyle(
+                    color: Colors.brown,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            )
+          : ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: shortcuts.activeShortcuts.length,
+              itemBuilder: (context, index) {
+                var thisShortcut = shortcuts.activeShortcuts[index];
+                return InkWell(
+                  onLongPress: () {
+                    _openTornBrowser(thisShortcut.url);
+                  },
+                  onTap: () {
+                    _openBrowserDialog(context, thisShortcut.url);
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.grey, width: 1.5),
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                    elevation: 2,
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 26,
+                          child: Image.asset(
+                            thisShortcut.iconUrl,
+                            width: 16,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: SizedBox(
+                            width: 50,
+                            child: Text(
+                              thisShortcut.nickname.toUpperCase(),
+                              style: TextStyle(fontSize: 9),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: SizedBox(
-                      width: 50,
-                      child: Text(
-                        thisShortcut.nickname.toUpperCase(),
-                        style: TextStyle(fontSize: 9),textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 
@@ -3790,6 +3817,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
     _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
+    _shortcutsEnabled = await SharedPreferencesModel().getEnableShortcuts();
 
     setState(() {
       if (energy == '0') {
