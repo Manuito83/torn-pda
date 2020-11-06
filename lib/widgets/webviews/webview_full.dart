@@ -489,13 +489,17 @@ class _WebViewFullState extends State<WebViewFull> {
       pageTitle = h4.innerHtml.substring(0).trim();
       if (pageTitle.toLowerCase().contains('error') ||
           pageTitle.toLowerCase().contains('please validate')) {
-        setState(() {
-          _pageTitle = 'Torn';
-        });
+        if (mounted) {
+          setState(() {
+            _pageTitle = 'Torn';
+          });
+        }
       } else {
-        setState(() {
-          _pageTitle = pageTitle;
-        });
+        if (mounted) {
+          setState(() {
+            _pageTitle = pageTitle;
+          });
+        }
       }
     }
     return pageTitle;
@@ -508,13 +512,18 @@ class _WebViewFullState extends State<WebViewFull> {
     if (query.length > 0) {
       _insertTravelFillMaxButtons();
       _sendStockInformation(document);
-      setState(() {
-        _travelActive = true;
-      });
+      if (mounted){
+        setState(() {
+          _travelActive = true;
+        });
+      }
     } else {
-      setState(() {
-        _travelActive = false;
-      });
+      if (mounted){
+        setState(() {
+          _travelActive = false;
+        });
+      }
+
     }
   }
 
@@ -584,18 +593,20 @@ class _WebViewFullState extends State<WebViewFull> {
   // CRIMES
   Future _assessCrimes(dom.Document document, String pageTitle) async {
     pageTitle = pageTitle.toLowerCase();
-    setState(() {
-      if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
-          !pageTitle.contains('please validate') &&
-          !pageTitle.contains('error') &&
-          pageTitle.contains('crimes')) {
-        _crimesController.expanded = true;
-        _crimesActive = true;
-      } else {
-        _crimesController.expanded = false;
-        _crimesActive = false;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
+            !pageTitle.contains('please validate') &&
+            !pageTitle.contains('error') &&
+            pageTitle.contains('crimes')) {
+          _crimesController.expanded = true;
+          _crimesActive = true;
+        } else {
+          _crimesController.expanded = false;
+          _crimesActive = false;
+        }
+      });
+    }
   }
 
   Widget _crimesInfoIcon() {
@@ -661,9 +672,11 @@ class _WebViewFullState extends State<WebViewFull> {
     var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
-      setState(() {
-        _tradesIconActive = true;
-      });
+      if (mounted) {
+        setState(() {
+          _tradesIconActive = true;
+        });
+      }
       _lastTradeCallWasIn = true;
       if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
         if (_tradesFullActive) {
@@ -675,9 +688,11 @@ class _WebViewFullState extends State<WebViewFull> {
       if (_tradesFullActive) {
         _toggleTradesWidget(active: false);
       }
-      setState(() {
-        _tradesIconActive = false;
-      });
+      if (mounted) {
+        setState(() {
+          _tradesIconActive = false;
+        });
+      }
       _lastTradeCallWasIn = false;
       return;
     }
@@ -779,15 +794,19 @@ class _WebViewFullState extends State<WebViewFull> {
 
   _toggleTradesWidget({@required bool active}) {
     if (active) {
-      setState(() {
-        _tradesFullActive = true;
-        _tradesExpandable = TradesWidget();
-      });
+      if (mounted) {
+        setState(() {
+          _tradesFullActive = true;
+          _tradesExpandable = TradesWidget();
+        });
+      }
     } else {
-      setState(() {
-        _tradesFullActive = false;
-        _tradesExpandable = SizedBox.shrink();
-      });
+      if (mounted) {
+        setState(() {
+          _tradesFullActive = false;
+          _tradesExpandable = SizedBox.shrink();
+        });
+      }
     }
   }
 
@@ -895,16 +914,21 @@ class _WebViewFullState extends State<WebViewFull> {
         !pageTitle.contains('city') ||
         pageTitle.contains('please validate') ||
         pageTitle.contains('error')) {
-      setState(() {
-        _cityIconActive = false;
-        _cityController.expanded = false;
-      });
+
+      if (mounted) {
+        setState(() {
+          _cityIconActive = false;
+          _cityController.expanded = false;
+        });
+      }
       return;
     }
 
-    setState(() {
-      _cityIconActive = true;
-    });
+    if (mounted) {
+      setState(() {
+        _cityIconActive = true;
+      });
+    }
 
     // We only get this once and if we are inside the city
     // It's also in the callback from city options
@@ -932,13 +956,15 @@ class _WebViewFullState extends State<WebViewFull> {
     // Assess if we need to show the widget, now that we are in the city
     // By placing this check here, we also avoid showing the widget if we entered via Quick Links
     // in the city
-    setState(() {
-      if (!_cityEnabled) {
-        _cityController.expanded = false;
-        return;
-      }
-      _cityController.expanded = true;
-    });
+    if (mounted) {
+      setState(() {
+        if (!_cityEnabled) {
+          _cityController.expanded = false;
+          return;
+        }
+        _cityController.expanded = true;
+      });
+    }
 
     var mapItemsList = List<String>();
     for (var mapFind in query) {
@@ -959,15 +985,19 @@ class _WebViewFullState extends State<WebViewFull> {
           Item itemMatch = tornItems[int.parse(mapItem) - 1];
           itemsFound.add(itemMatch);
         }
-        setState(() {
-          _cityItemsFound = itemsFound;
-          _errorCityApi = false;
-        });
+        if (mounted) {
+          setState(() {
+            _cityItemsFound = itemsFound;
+            _errorCityApi = false;
+          });
+        }
         webView.evaluateJavascript(source: highlightCityItemsJS());
       } else {
-        setState(() {
-          _errorCityApi = true;
-        });
+        if (mounted) {
+          setState(() {
+            _errorCityApi = true;
+          });
+        }
       }
     } catch (e) {
       return;
@@ -1030,9 +1060,11 @@ class _WebViewFullState extends State<WebViewFull> {
               ? await webView.evaluateJavascript(source: removeBazaarFillButtonsJS())
               : await webView.evaluateJavascript(source: addBazaarFillButtonsJS());
 
-          setState(() {
-            _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
-          });
+          if (mounted) {
+            setState(() {
+              _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
+            });
+          }
         },
         child: Text(
           "FILL",
