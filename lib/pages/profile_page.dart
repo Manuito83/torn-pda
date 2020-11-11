@@ -555,18 +555,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   },
                   child: Card(
                     shape: RoundedRectangleBorder(
-                      side: BorderSide(color: Colors.grey, width: 1.5),
+                      side: BorderSide(color: thisShortcut.color, width: 1.5),
                       borderRadius: BorderRadius.circular(4.0),
                     ),
                     elevation: 2,
                     child: _shortcuts.shortcutTile == 'both'
                         ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SizedBox(
                                 height: 26,
                                 child: Image.asset(
                                   thisShortcut.iconUrl,
                                   width: 16,
+                                  color: _themeProvider.mainText,
                                 ),
                               ),
                               Padding(

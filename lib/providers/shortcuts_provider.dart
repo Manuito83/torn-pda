@@ -16,6 +16,10 @@ class ShortcutsProvider extends ChangeNotifier {
   String get shortcutTile => _shortcutTile;
 
   ShortcutsProvider() {
+    // CLEAN LIST, only for debug
+    SharedPreferencesModel().setActiveShortcutsList([]);
+    //////////////////////////////////////////////////////
+
     _initializeStockShortcuts();
   }
 
@@ -58,18 +62,7 @@ class ShortcutsProvider extends ChangeNotifier {
   Future _initializeStockShortcuts() async {
     _shortcutTile = await SharedPreferencesModel().getShortcutTile();
 
-    _allShortcuts.addAll({
-      Shortcut()
-        ..name = "Casino: Russian Roulette"
-        ..nickname = "Russian Roulette"
-        ..url = "https://www.torn.com/page.php?sid=russianRoulette#"
-        ..iconUrl = "images/icons/faction.png",
-      Shortcut()
-        ..name = "shortcut 2"
-        ..nickname = "Test"
-        ..url = "url 2"
-        ..iconUrl = "images/flags/stock/china.png",
-    });
+    _configureStockShortcuts();
 
     // In order to properly reconnect saved shortcuts with the stock ones (so that
     // one is a reference of the other), once we load from shared preferences,
@@ -85,4 +78,80 @@ class ShortcutsProvider extends ChangeNotifier {
     }
   }
 
+  void _configureStockShortcuts() {
+    _allShortcuts.addAll({
+      Shortcut()
+        ..name = "Casino"
+        ..nickname = "Casino"
+        ..url = "https://www.torn.com/casino.php"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Slots"
+        ..nickname = "Slots"
+        ..url = "https://www.torn.com/loader.php?sid=slots"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Roulette"
+        ..nickname = "Roulette"
+        ..url = "https://www.torn.com/loader.php?sid=roulette"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: High-Low"
+        ..nickname = "High-low"
+        ..url = "https://www.torn.com/loader.php?sid=highlow"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Keno"
+        ..nickname = "Keno"
+        ..url = "https://www.torn.com/loader.php?sid=keno"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Craps"
+        ..nickname = "Craps"
+        ..url = "https://www.torn.com/loader.php?sid=craps"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Bookie"
+        ..nickname = "Bookie"
+        ..url = "https://www.torn.com/bookies.php"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Lottery"
+        ..nickname = "Lottery"
+        ..url = "https://www.torn.com/loader.php?sid=lottery"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Blackjack"
+        ..nickname = "Blackjack"
+        ..url = "https://www.torn.com/loader.php?sid=blackjack"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Poker"
+        ..nickname = "Poker"
+        ..url = "https://www.torn.com/loader.php?sid=holdem"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Russian Roulette"
+        ..nickname = "Russian Roulette"
+        ..url = "https://www.torn.com/page.php?sid=russianRoulette"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Casino: Spin the wheel"
+        ..nickname = "Wheel"
+        ..url = "https://www.torn.com/loader.php?sid=spinTheWheel"
+        ..iconUrl = "images/icons/map/casino.png"
+        ..color = Colors.green[200],
+    });
+  }
 }

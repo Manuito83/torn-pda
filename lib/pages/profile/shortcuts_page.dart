@@ -3,6 +3,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class ShortcutsPage extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class ShortcutsPage extends StatefulWidget {
 class _ShortcutsPageState extends State<ShortcutsPage> {
   SettingsProvider _settingsProvider;
   ShortcutsProvider _shortcutsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -22,6 +24,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
 
   @override
   Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
@@ -89,19 +92,19 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   ),
                   SizedBox(height: 10),
                   if (_shortcutsProvider.activeShortcuts.length == 0)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
-                        child: Text(
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                      child: Text(
                         'No active shortcuts, add some below!',
                         style: TextStyle(
                           color: Colors.orange[800],
                           fontStyle: FontStyle.italic,
                           fontSize: 13,
                         ),
-                    ),
-                      )
-                    else
-                      _activeCardsList(),
+                      ),
+                    )
+                  else
+                    _activeCardsList(),
                   SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -109,6 +112,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   ),
                   SizedBox(height: 10),
                   _allCardsList(),
+                  SizedBox(height: 40),
                 ],
               ),
             ),
@@ -142,15 +146,21 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                 child: Container(
                   height: 50,
                   child: Card(
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: short.color, width: 1.5),
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                       child: Row(
                         children: [
                           Padding(
                             padding: EdgeInsets.all(2),
                             child: Image.asset(
                               short.iconUrl,
-                              width: 16,
+                              width: 18,
+                              color: _themeProvider.mainText,
                             ),
                           ),
                           SizedBox(width: 10),
@@ -212,45 +222,70 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
         builder: (context, shortcutProvider, child) {
           var allShortcuts = List<Widget>();
           for (var short in shortcutProvider.allShortcuts) {
-            allShortcuts.add(Card(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(2),
-                      child: Image.asset(
-                        short.iconUrl,
-                        width: 16,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(child: Text(short.name)),
-                          Switch(
-                            value: short.active,
-                            onChanged: (active) {
-                              setState(() {
-                                if (active) {
-                                  shortcutProvider.activateShortcut(short);
-                                } else {
-                                  shortcutProvider.deactivateShortcut(short);
-                                }
-                              });
-                            },
-                            activeTrackColor: Colors.lightGreenAccent,
-                            activeColor: Colors.green,
+            allShortcuts.add(
+              // Don't show those that are active
+              !short.active
+                  ? AnimatedOpacity(
+                      opacity: short.visible ? 1 : 0,
+                      duration: Duration(milliseconds: 300),
+                      child: Container(
+                        height: 50,
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            side: BorderSide(color: short.color, width: 1.5),
+                            borderRadius: BorderRadius.circular(4.0),
                           ),
-                        ],
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(2),
+                                  child: Image.asset(
+                                    short.iconUrl,
+                                    width: 18,
+                                    color: _themeProvider.mainText,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(child: Text(short.name)),
+                                      TextButton(
+                                        onPressed: () async {
+                                          // Start animation
+                                          setState(() {
+                                            short.visible = false;
+                                          });
+
+                                          await Future.delayed(
+                                              Duration(milliseconds: 300));
+
+                                          setState(() {
+                                            shortcutProvider
+                                                .activateShortcut(short);
+                                          });
+
+                                          // Reset visibility after animation
+                                          short.visible = true;
+
+                                        },
+                                        child: Text('ADD'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ));
+                    )
+                  : SizedBox(),
+            );
           }
           return ListView(
             shrinkWrap: true,

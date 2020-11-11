@@ -86,6 +86,8 @@ flutter:
     - images/flags/travel/
     - images/icons/
     - images/icons/cooldowns/
+    - images/icons/map/
+    - images/icons/inventory/
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/
