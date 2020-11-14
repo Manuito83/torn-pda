@@ -71,8 +71,10 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
-    _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'travel'});
+    _ticker = new Timer.periodic(
+        Duration(seconds: 10), (Timer t) => _updateInformation());
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'travel'});
   }
 
   @override
@@ -97,9 +99,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
-        height: AppBar().preferredSize.height,
-        child: buildAppBar(),
-      )
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
           : null,
       body: Center(
         child: SingleChildScrollView(
@@ -151,7 +153,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (BuildContext context) => WebViewFull(
-                              customUrl: 'https://www.torn.com/travelagency.php',
+                              customUrl:
+                                  'https://www.torn.com/travelagency.php',
                               customTitle: '${_travelModel.destination}',
                               customCallBack: _updateInformation,
                             ),
@@ -168,7 +171,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   }
                 },
                 closedColor: Colors.orange,
-                closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                closedBuilder:
+                    (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     height: 56,
                     width: 56,
@@ -195,7 +199,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -620,8 +625,10 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         var dateTimeArrival = _travelModel.timeArrival;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        String twoDigitMinutes =
+            twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff =
+            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return <Widget>[
           Padding(
@@ -663,7 +670,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 widgetIndicator: Opacity(
                   // Make icon transparent when about to pass over text
                   opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                      _getTravelPercentage(totalSeconds) > 0.7
+                          _getTravelPercentage(totalSeconds) > 0.7
                       ? 1
                       : 0.3,
                   child: Padding(
@@ -905,26 +912,36 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                               FlatButton(
                                 child: Text("Change"),
                                 onPressed: () async {
-                                  if (_notificationFormKey.currentState.validate()) {
+                                  if (_notificationFormKey.currentState
+                                      .validate()) {
                                     // Get rid of dialog first, so that it can't
                                     // be pressed twice
                                     Navigator.of(context).pop();
                                     // Copy controller's text ot local variable
                                     // early and delete the global, so that text
                                     // does not appear again in case of failure
-                                    _notificationTitle = _notificationTitleController.text;
-                                    _notificationBody = _notificationBodyController.text;
+                                    _notificationTitle =
+                                        _notificationTitleController.text;
+                                    _notificationBody =
+                                        _notificationBodyController.text;
                                     SharedPreferencesModel()
-                                        .setTravelNotificationTitle(_notificationTitle);
+                                        .setTravelNotificationTitle(
+                                            _notificationTitle);
                                     SharedPreferencesModel()
-                                        .setTravelNotificationBody(_notificationBody);
-                                    Scaffold.of(_).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Notification details changed!',
-                                        ),
+                                        .setTravelNotificationBody(
+                                            _notificationBody);
+
+                                    BotToast.showText(
+                                      text: "Notification details changed!",
+                                      textStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
                                       ),
+                                      contentColor: Colors.green,
+                                      duration: Duration(seconds: 3),
+                                      contentPadding: EdgeInsets.all(10),
                                     );
+
                                   }
                                 },
                               ),
@@ -973,7 +990,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   void _updateInformation() {
     DateTime now = DateTime.now();
     // We avoid calling the API unnecessarily
-    if (now.isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
+    if (now
+        .isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
       _fetchTornApi();
     }
     _retrievePendingNotifications();
@@ -1009,8 +1027,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime =
-        _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
+    var scheduledNotificationDateTime = _travelModel.timeArrival
+        .subtract(Duration(seconds: _travelNotificationAhead));
     var vibrationPattern = Int64List(8);
     vibrationPattern[0] = 0;
     vibrationPattern[1] = 400;
@@ -1025,9 +1043,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       'Travel',
       'Travel Full',
       'Urgent notifications about arriving to destination',
-      importance: Importance.Max,
-      priority: Priority.High,
-      visibility: NotificationVisibility.Public,
+      importance: Importance.max,
+      priority: Priority.high,
+      visibility: NotificationVisibility.public,
       icon: 'notification_travel',
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: vibrationPattern,
@@ -1042,10 +1060,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics =
-        NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
 
-    await flutterLocalNotificationsPlugin.schedule(
+    await flutterLocalNotificationsPlugin.zonedSchedule(
       201,
       _notificationTitle,
       _notificationBody,
@@ -1054,6 +1074,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     _retrievePendingNotifications();
@@ -1085,7 +1106,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setAlarm() async {
-    var alarmTime = _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
+    var alarmTime =
+        _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
     int hour = alarmTime.hour;
     int minute = alarmTime.minute;
 
@@ -1115,7 +1137,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - _travelTimerAhead,
+        'android.intent.extra.alarm.LENGTH':
+            _travelModel.timeLeft - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
@@ -1123,7 +1146,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
     intent.launch();
 
-    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
+    return DateTime.now()
+        .add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
   }
 
   Future _restorePreferences() async {
@@ -1132,13 +1156,16 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
-    _notificationTitle = await SharedPreferencesModel().getTravelNotificationTitle();
-    _notificationBody = await SharedPreferencesModel().getTravelNotificationBody();
+    _notificationTitle =
+        await SharedPreferencesModel().getTravelNotificationTitle();
+    _notificationBody =
+        await SharedPreferencesModel().getTravelNotificationBody();
     _alarmSound = await SharedPreferencesModel().getTravelAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
 
     // Ahead timers
-    var notificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
+    var notificationAhead =
+        await SharedPreferencesModel().getTravelNotificationAhead();
     var alarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
     var timerAhead = await SharedPreferencesModel().getTravelTimerAhead();
 

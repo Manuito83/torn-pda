@@ -30,7 +30,8 @@ final FirebaseAnalytics analytics = FirebaseAnalytics();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
+final BehaviorSubject<String> selectNotificationSubject =
+    BehaviorSubject<String>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,13 +44,15 @@ Future<void> main() async {
     requestSoundPermission: true,
   );
 
-  var initializationSettings =
-      InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+  var initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+  );
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onSelectNotification: (String payload) async {
-        selectNotificationSubject.add(payload);
-      });
+    selectNotificationSubject.add(payload);
+  });
 
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
@@ -65,31 +68,38 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         // UserDetailsProvider has to go first to initialize the others!
-        ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
+        ChangeNotifierProvider<UserDetailsProvider>(
+            create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
           create: (context) => TargetsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-              TargetsProvider targetsProvider) =>
+                  TargetsProvider targetsProvider) =>
               TargetsProvider(userProvider.myUser),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
           create: (context) => AttacksProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-              AttacksProvider attacksProvider) =>
+                  AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.myUser),
         ),
-        ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
+        ChangeNotifierProvider<ThemeProvider>(
+            create: (context) => ThemeProvider()),
+        ChangeNotifierProvider<SettingsProvider>(
+            create: (context) => SettingsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
           create: (context) => FriendsProvider(OwnProfileModel()),
           update: (BuildContext context, UserDetailsProvider userProvider,
-              FriendsProvider friendsProvider) =>
+                  FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.myUser),
         ),
-        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
-        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
-        ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
-        ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
+        ChangeNotifierProvider<ChainStatusProvider>(
+            create: (context) => ChainStatusProvider()),
+        ChangeNotifierProvider<CrimesProvider>(
+            create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<TradesProvider>(
+            create: (context) => TradesProvider()),
+        ChangeNotifierProvider<ShortcutsProvider>(
+            create: (context) => ShortcutsProvider()),
       ],
       child: MyApp(),
     ),
@@ -100,7 +110,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    var _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
+    var _settingsProvider =
+        Provider.of<SettingsProvider>(context, listen: true);
     return MaterialApp(
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],
@@ -108,8 +119,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
-        brightness:
-            _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+        brightness: _themeProvider.currentTheme == AppTheme.light
+            ? Brightness.light
+            : Brightness.dark,
       ),
       home: Container(
         color: Colors.black,

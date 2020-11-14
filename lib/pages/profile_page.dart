@@ -3381,9 +3381,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       channelTitle,
       channelSubtitle,
       channelDescription,
-      importance: Importance.Max,
-      priority: Priority.High,
-      visibility: NotificationVisibility.Public,
+      importance: Importance.max,
+      priority: Priority.high,
+      visibility: NotificationVisibility.public,
       icon: notificationIconAndroid,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: vibrationPattern,
@@ -3399,9 +3399,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
 
     var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
 
-    await flutterLocalNotificationsPlugin.schedule(
+    await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
       notificationTitle,
       notificationSubtitle,
@@ -3410,6 +3412,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG

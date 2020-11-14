@@ -41,13 +41,13 @@ Future showNotificationBoth(Map payload) async {
     }
 
     var platformChannelSpecifics = NotificationDetails(
-        AndroidNotificationDetails(
+        android: AndroidNotificationDetails(
           "Automatic alerts",
           "Alerts Full",
           "Automatic alerts chosen by the user",
-          importance: Importance.Max,
-          priority: Priority.High,
-          visibility: NotificationVisibility.Public,
+          importance: Importance.max,
+          priority: Priority.high,
+          visibility: NotificationVisibility.public,
           autoCancel: true,
           channelShowBadge: true,
           icon: notificationIcon,
@@ -60,7 +60,7 @@ Future showNotificationBoth(Map payload) async {
           ledOffMs: 500,
           ticker: payload["notification"]["title"],
         ),
-      null,
+      iOS: null,
     );
 
     await flutterLocalNotificationsPlugin.show(
@@ -74,8 +74,8 @@ Future showNotificationBoth(Map payload) async {
 
   } else if (Platform.isIOS) {
     var platformChannelSpecifics = NotificationDetails(
-      null,
-      IOSNotificationDetails(
+      android: null,
+      iOS: IOSNotificationDetails(
         sound: 'slow_spring_board.aiff',
       ),
     );

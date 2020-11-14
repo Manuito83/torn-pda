@@ -714,14 +714,18 @@ class _TargetCardState extends State<TargetCard> {
     );
     if (updateWorked) {
     } else {
-      Scaffold.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            'Error updating ${_target.name}!',
-          ),
+
+      BotToast.showText(
+        text: "Error updating ${_target.name}!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
         ),
+        contentColor: Colors.red,
+        duration: Duration(seconds: 3),
+        contentPadding: EdgeInsets.all(10),
       );
+
     }
   }
 
