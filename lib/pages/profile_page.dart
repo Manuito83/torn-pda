@@ -39,6 +39,8 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter/rendering.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
+import 'package:timezone/timezone.dart' as tz;
+
 
 enum ProfileNotification {
   travel,
@@ -3407,8 +3409,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      DateTime.now().add(Duration(seconds: secondsToNotification)),
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time

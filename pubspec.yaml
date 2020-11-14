@@ -54,6 +54,7 @@ dependencies:
   speech_bubble: ^0.0.7
   cupertino_icons: ^1.0.0
   quick_actions: ^0.4.0+10
+  timezone: ^0.5.9
   flutter_inappwebview:
     git:
       url: https://github.com/pichillilorenzo/flutter_inappwebview.git

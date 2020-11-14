@@ -23,6 +23,7 @@ import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 enum LootTimeType {
   dateTime,
@@ -888,8 +889,8 @@ class _LootPageState extends State<LootPage> {
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      notificationTime.subtract(Duration(seconds: _lootNotificationAhead)),
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.now(tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time

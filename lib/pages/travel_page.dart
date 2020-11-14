@@ -24,6 +24,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:animations/animations.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);
@@ -1069,8 +1070,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       201,
       _notificationTitle,
       _notificationBody,
-      //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      scheduledNotificationDateTime,
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.from(scheduledNotificationDateTime, tz.local),
       platformChannelSpecifics,
       payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time

@@ -21,6 +21,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:timezone/data/latest.dart' as tz;
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 final String appVersion = '1.9.1';
@@ -35,6 +36,8 @@ final BehaviorSubject<String> selectNotificationSubject =
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  tz.initializeTimeZones();
 
   var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
 
