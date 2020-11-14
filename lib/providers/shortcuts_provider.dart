@@ -152,6 +152,12 @@ class ShortcutsProvider extends ChangeNotifier {
         ..iconUrl = "images/icons/map/hospital.png"
         ..color = Colors.grey[600],
       Shortcut()
+        ..name = "Laptop"
+        ..nickname = "Laptop"
+        ..url = "https://www.torn.com/laptop.php"
+        ..iconUrl = "images/icons/home/laptop.png"
+        ..color = Colors.grey[600],
+      Shortcut()
         ..name = "Forums"
         ..nickname = "Forums"
         ..url = "https://www.torn.com/forums.php"
@@ -498,6 +504,108 @@ class ShortcutsProvider extends ChangeNotifier {
         ..url = "https://www.torn.com/loader.php?sid=spinTheWheel"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
+      Shortcut()
+        ..name = "Auction House"
+        ..nickname = "Auction"
+        ..url = "https://www.torn.com/amarket.php"
+        ..iconUrl = "images/icons/map/auction_house.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Big Al's Gun Shop"
+        ..nickname = "Gun Shop"
+        ..url = "https://www.torn.com/bigalgunshop.php"
+        ..iconUrl = "images/icons/map/gun_shop.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Bits 'n' Bobs"
+        ..nickname = "Bits Bobs"
+        ..url = "https://www.torn.com/shops.php?step=bitsnbobs"
+        ..iconUrl = "images/icons/map/bits_bobs.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Cyber Force"
+        ..nickname = "Cyber"
+        ..url = "https://www.torn.com/shops.php?step=cyberforce"
+        ..iconUrl = "images/icons/map/cyber_force.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Docks"
+        ..nickname = "Docks"
+        ..url = "https://www.torn.com/shops.php?step=docks"
+        ..iconUrl = "images/icons/map/docks.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Estate Agents"
+        ..nickname = "Estate"
+        ..url = "https://www.torn.com/estateagents.php"
+        ..iconUrl = "images/icons/map/estate_agents.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Item Market"
+        ..nickname = "Market"
+        ..url = "https://www.torn.com/imarket.php"
+        ..iconUrl = "images/icons/map/item_market.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Jewelry Store"
+        ..nickname = "Jewelry"
+        ..url = "https://www.torn.com/shops.php?step=jewelry"
+        ..iconUrl = "images/icons/map/jewelry_store.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Pawn Shop"
+        ..nickname = "Pawn"
+        ..url = "https://www.torn.com/shops.php?step=pawnshop"
+        ..iconUrl = "images/icons/map/pawn_shop.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Pharmacy"
+        ..nickname = "Pharmacy"
+        ..url = "https://www.torn.com/shops.php?step=pharmacy"
+        ..iconUrl = "images/icons/map/pharmacy.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Points Building"
+        ..nickname = "Building"
+        ..url = "https://www.torn.com/shops.php?step=pharmacy"
+        ..iconUrl = "images/icons/map/points_building.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Points Market"
+        ..nickname = "Market"
+        ..url = "https://www.torn.com/pmarket.php"
+        ..iconUrl = "images/icons/map/points_market.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Post Office"
+        ..nickname = "Post"
+        ..url = "https://www.torn.com/shops.php?step=postoffice"
+        ..iconUrl = "images/icons/map/post_office.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Super Store"
+        ..nickname = "Super"
+        ..url = "https://www.torn.com/shops.php?step=super"
+        ..iconUrl = "images/icons/map/super_store.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Sweet Shop"
+        ..nickname = "Sweets"
+        ..url = "https://www.torn.com/shops.php?step=candy"
+        ..iconUrl = "images/icons/map/sweet_shop.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "TC Clothing"
+        ..nickname = "Clothing"
+        ..url = "https://www.torn.com/shops.php?step=clothes"
+        ..iconUrl = "images/icons/map/tc_clothing.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Token Shop"
+        ..nickname = "Token"
+        ..url = "https://www.torn.com/token_shop.php"
+        ..iconUrl = "images/icons/map/token_shop.png"
+        ..color = Colors.yellow[700],
     });
   }
 }
