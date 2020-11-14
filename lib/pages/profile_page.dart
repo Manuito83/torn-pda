@@ -564,13 +564,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SizedBox(
-                                height: 26,
+                                height: 18,
                                 child: Image.asset(
                                   thisShortcut.iconUrl,
                                   width: 16,
                                   color: _themeProvider.mainText,
                                 ),
                               ),
+                              SizedBox(height: 2),
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 4),
                                 child: SizedBox(
@@ -586,7 +587,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           )
                         : _shortcuts.shortcutTile == 'icon'
                             ? SizedBox(
-                                height: 30,
+                                height: 18,
                                 child: Padding(
                                   padding: EdgeInsets.all(8.0),
                                   child: Image.asset(

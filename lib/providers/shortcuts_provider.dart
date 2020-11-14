@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -15,9 +16,11 @@ class ShortcutsProvider extends ChangeNotifier {
   String _shortcutTile = 'both';
   String get shortcutTile => _shortcutTile;
 
+  OwnProfileModel _userDetails;
+
   ShortcutsProvider() {
     // CLEAN LIST, only for debug
-    SharedPreferencesModel().setActiveShortcutsList([]);
+    // SharedPreferencesModel().setActiveShortcutsList([]);
     //////////////////////////////////////////////////////
 
     _initializeStockShortcuts();
@@ -61,6 +64,8 @@ class ShortcutsProvider extends ChangeNotifier {
 
   Future _initializeStockShortcuts() async {
     _shortcutTile = await SharedPreferencesModel().getShortcutTile();
+    _userDetails =
+        ownProfileModelFromJson(await SharedPreferencesModel().getOwnDetails());
 
     _configureStockShortcuts();
 
@@ -80,6 +85,347 @@ class ShortcutsProvider extends ChangeNotifier {
 
   void _configureStockShortcuts() {
     _allShortcuts.addAll({
+      Shortcut()
+        ..name = "Home"
+        ..nickname = "Home"
+        ..url = "https://www.torn.com/"
+        ..iconUrl = "images/icons/home/home.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "City"
+        ..nickname = "City"
+        ..url = "https://www.torn.com/city.php"
+        ..iconUrl = "images/icons/home/city.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Job"
+        ..nickname = "Job"
+        ..url = "https://www.torn.com/jobs.php"
+        ..iconUrl = "images/icons/home/job.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Gym"
+        ..nickname = "Gym"
+        ..url = "https://www.torn.com/gym.php"
+        ..iconUrl = "images/icons/map/gym.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Property"
+        ..nickname = "Property"
+        ..url = "https://www.torn.com/properties.php"
+        ..iconUrl = "images/icons/map/property.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Education"
+        ..nickname = "Education"
+        ..url = "https://www.torn.com/education.php"
+        ..iconUrl = "images/icons/map/education.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Crimes"
+        ..nickname = "Crimes"
+        ..url = "https://www.torn.com/crimes.php#/step=main"
+        ..iconUrl = "images/icons/home/crimes.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Missions"
+        ..nickname = "Missions"
+        ..url = "https://www.torn.com/loader.php?sid=missions"
+        ..iconUrl = "images/icons/home/missions.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Newspaper"
+        ..nickname = "Newspaper"
+        ..url = "https://www.torn.com/newspaper.php"
+        ..iconUrl = "images/icons/home/newspaper.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Jail"
+        ..nickname = "Jail"
+        ..url = "https://www.torn.com/jailview.php"
+        ..iconUrl = "images/icons/map/jail.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Hospital"
+        ..nickname = "Hospital"
+        ..url = "https://www.torn.com/hospitalview.php"
+        ..iconUrl = "images/icons/map/hospital.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums"
+        ..nickname = "Forums"
+        ..url = "https://www.torn.com/forums.php"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: General"
+        ..nickname = "General"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=2&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Own posts"
+        ..nickname = "Own"
+        ..url =
+            "https://www.torn.com/forums.php#!p=search&q=by:${_userDetails.playerId}&f=0&y=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: My faction"
+        ..nickname = "Faction"
+        ..url =
+            "https://www.torn.com/forums.php?p=forums&f=999&b=1&a=${_userDetails.faction.factionId}"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: My company"
+        ..nickname = "Company"
+        ..url =
+            "https://www.torn.com/forums.php?p=forums&f=999&b=2&a=${_userDetails.job.companyId}"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Donator"
+        ..nickname = "Donator"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=8&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Questions and answers"
+        ..nickname = "Q&A"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=3&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Trading"
+        ..nickname = "Trading"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=10&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Faction recruitment"
+        ..nickname = "Factions"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=24&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Company recruitment"
+        ..nickname = "Companies"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=46&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Tools"
+        ..nickname = "Tools"
+        ..url = "https://www.torn.com/forums.php?p=forums&f=67&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Forums: Torn PDA"
+        ..nickname = "Torn PDA"
+        ..url =
+            "https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0"
+        ..iconUrl = "images/icons/home/forums.png"
+        ..color = Colors.orange[200],
+      Shortcut()
+        ..name = "Hall of Fame"
+        ..nickname = "HoF"
+        ..url = "https://www.torn.com/halloffame.php"
+        ..iconUrl = "images/icons/home/hall_fame.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Faction"
+        ..nickname = "Faction"
+        ..url = "https://www.torn.com/factions.php?step=your"
+        ..iconUrl = "images/icons/home/faction.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Friends"
+        ..nickname = "Friends"
+        ..url = "https://www.torn.com/friendlist.php"
+        ..iconUrl = "images/icons/home/friends.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Enemies"
+        ..nickname = "Enemies"
+        ..url = "https://www.torn.com/blacklist.php"
+        ..iconUrl = "images/icons/home/enemies.png"
+        ..color = Colors.grey[600],
+      Shortcut()
+        ..name = "Vault: Property"
+        ..nickname = "Property"
+        ..url = "https://www.torn.com/properties.php#/p=options&tab=vault"
+        ..iconUrl = "images/icons/home/vault.png"
+        ..color = Colors.blue[200],
+      Shortcut()
+        ..name = "Vault: Company"
+        ..nickname = "Company"
+        ..url = "https://www.torn.com/companies.php#/option=funds"
+        ..iconUrl = "images/icons/home/vault.png"
+        ..color = Colors.blue[200],
+      Shortcut()
+        ..name = "Vault: Faction"
+        ..nickname = "Faction"
+        ..url =
+            "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate"
+        ..iconUrl = "images/icons/home/vault.png"
+        ..color = Colors.blue[200],
+      Shortcut()
+        ..name = "Items"
+        ..nickname = "Items"
+        ..url = "https://www.torn.com/item.php"
+        ..iconUrl = "images/icons/home/items.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Primary weapon"
+        ..nickname = "Primary"
+        ..url = "https://www.torn.com/item.php#primary-items"
+        ..iconUrl = "images/icons/inventory/primary.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Secondary weapon"
+        ..nickname = "Secondary"
+        ..url = "https://www.torn.com/item.php#secondary-items"
+        ..iconUrl = "images/icons/inventory/secondary.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Melee weapon"
+        ..nickname = "Melee"
+        ..url = "https://www.torn.com/item.php#melee-items"
+        ..iconUrl = "images/icons/inventory/melee.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Temporary weapon"
+        ..nickname = "Temporary"
+        ..url = "https://www.torn.com/item.php#temporary-items"
+        ..iconUrl = "images/icons/inventory/temporary.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Armor"
+        ..nickname = "Armor"
+        ..url = "https://www.torn.com/item.php#armour-items"
+        ..iconUrl = "images/icons/inventory/armor.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Clothing"
+        ..nickname = "Clothing"
+        ..url = "https://www.torn.com/item.php#clothes-items"
+        ..iconUrl = "images/icons/inventory/clothing.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Medical"
+        ..nickname = "Medical"
+        ..url = "https://www.torn.com/item.php#medical-items"
+        ..iconUrl = "images/icons/inventory/medical.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Drugs"
+        ..nickname = "Drugs"
+        ..url = "https://www.torn.com/item.php#drugs-items"
+        ..iconUrl = "images/icons/inventory/drugs.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Energy drink"
+        ..nickname = "Energy"
+        ..url = "https://www.torn.com/item.php#energy-d-items"
+        ..iconUrl = "images/icons/inventory/energy.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Alcohol"
+        ..nickname = "Alcohol"
+        ..url = "https://www.torn.com/item.php#alcohol-items"
+        ..iconUrl = "images/icons/inventory/alcohol.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Candy"
+        ..nickname = "Candy"
+        ..url = "https://www.torn.com/item.php#candy-items"
+        ..iconUrl = "images/icons/inventory/candy.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Boosters"
+        ..nickname = "Boosters"
+        ..url = "https://www.torn.com/item.php#boosters-items"
+        ..iconUrl = "images/icons/inventory/boosters.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Enhancer"
+        ..nickname = "Enhancer"
+        ..url = "https://www.torn.com/item.php#enhancers-items"
+        ..iconUrl = "images/icons/inventory/enhancer.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Supply packs"
+        ..nickname = "Supply"
+        ..url = "https://www.torn.com/item.php#supply-pck-items"
+        ..iconUrl = "images/icons/inventory/supply_packs.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Electronics"
+        ..nickname = "Elec"
+        ..url = "https://www.torn.com/item.php#electrical-items"
+        ..iconUrl = "images/icons/inventory/electronics.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Jewelry"
+        ..nickname = "Jewelry"
+        ..url = "https://www.torn.com/item.php#jewelry-items"
+        ..iconUrl = "images/icons/inventory/jewelry.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Flowers"
+        ..nickname = "Flowers"
+        ..url = "https://www.torn.com/item.php#flowers-items"
+        ..iconUrl = "images/icons/inventory/flowers.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Plushies"
+        ..nickname = "Plushies"
+        ..url = "https://www.torn.com/item.php#plushies-items"
+        ..iconUrl = "images/icons/inventory/plushies.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Viruses"
+        ..nickname = "Viruses"
+        ..url = "https://www.torn.com/item.php#viruses-items"
+        ..iconUrl = "images/icons/inventory/viruses.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Artifacts"
+        ..nickname = "Artifacts"
+        ..url = "https://www.torn.com/item.php#artifacts-items"
+        ..iconUrl = "images/icons/inventory/artifacts.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Books"
+        ..nickname = "Books"
+        ..url = "https://www.torn.com/item.php#books-items"
+        ..iconUrl = "images/icons/inventory/books.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Special"
+        ..nickname = "Special"
+        ..url = "https://www.torn.com/item.php#special-items"
+        ..iconUrl = "images/icons/inventory/special.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Miscellaneous"
+        ..nickname = "Misc"
+        ..url = "https://www.torn.com/item.php#miscellaneous-items"
+        ..iconUrl = "images/icons/inventory/misc.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Cars"
+        ..nickname = "Cars"
+        ..url = "https://www.torn.com/item.php#cars-item"
+        ..iconUrl = "images/icons/inventory/cars.png"
+        ..color = Colors.purple[200],
+      Shortcut()
+        ..name = "Items: Collectibles"
+        ..nickname = "Collect"
+        ..url = "https://www.torn.com/item.php#collectibles-items"
+        ..iconUrl = "images/icons/inventory/collectibles.png"
+        ..color = Colors.purple[200],
       Shortcut()
         ..name = "Casino"
         ..nickname = "Casino"

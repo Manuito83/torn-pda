@@ -160,6 +160,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             child: Image.asset(
                               short.iconUrl,
                               width: 18,
+                              height: 18,
                               color: _themeProvider.mainText,
                             ),
                           ),
@@ -244,6 +245,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   child: Image.asset(
                                     short.iconUrl,
                                     width: 18,
+                                    height: 18,
                                     color: _themeProvider.mainText,
                                   ),
                                 ),
@@ -271,9 +273,12 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
 
                                           // Reset visibility after animation
                                           short.visible = true;
-
                                         },
-                                        child: Text('ADD'),
+                                        child: Text(
+                                          'ADD',
+                                          style: TextStyle(
+                                              color: Colors.green[500]),
+                                        ),
                                       ),
                                     ],
                                   ),
