@@ -573,7 +573,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   color: _themeProvider.mainText,
                                 ),
                               ),
-                              SizedBox(height: 2),
+                              SizedBox(height: 3),
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 4),
                                 child: SizedBox(
