@@ -6,6 +6,7 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:flutter/services.dart';
 
 class ShortcutsPage extends StatefulWidget {
   @override
@@ -139,7 +140,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           for (var short in shortcutProvider.activeShortcuts) {
             activeShortcuts.add(
               Slidable(
-                key: ValueKey(short.name),
+                key: UniqueKey(),
                 actionPane: SlidableDrawerActionPane(),
                 actionExtentRatio: 0.25,
                 actions: <Widget>[
@@ -626,44 +627,57 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                           ),
                         ),
                         SizedBox(height: 15),
-                        Form(
-                          key: _customURLKey,
-                          child: Column(
-                            mainAxisSize:
-                                MainAxisSize.min, // To make the card compact
-                            children: <Widget>[
-                              TextFormField(
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: _themeProvider.mainText,
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Form(
+                                key: _customURLKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize
+                                      .min, // To make the card compact
+                                  children: <Widget>[
+                                    TextFormField(
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: _themeProvider.mainText,
+                                      ),
+                                      controller: _customURLController,
+                                      maxLength: 300,
+                                      maxLines: 1,
+                                      decoration: InputDecoration(
+                                        counterText: "",
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        labelText: 'URL',
+                                      ),
+                                      validator: (value) {
+                                        if (value.replaceAll(' ', '').isEmpty) {
+                                          return "Cannot be empty!";
+                                        }
+                                        if (!value
+                                            .toLowerCase()
+                                            .contains('https://')) {
+                                          if (value
+                                              .toLowerCase()
+                                              .contains('http://')) {
+                                            return "Invalid, HTTPS needed!";
+                                          }
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                controller: _customURLController,
-                                maxLength: 300,
-                                maxLines: 1,
-                                decoration: InputDecoration(
-                                  counterText: "",
-                                  isDense: true,
-                                  border: OutlineInputBorder(),
-                                  labelText: 'URL',
-                                ),
-                                validator: (value) {
-                                  if (value.replaceAll(' ', '').isEmpty) {
-                                    return "Cannot be empty!";
-                                  }
-                                  if (!value
-                                      .toLowerCase()
-                                      .contains('https://')) {
-                                    if (value
-                                        .toLowerCase()
-                                        .contains('http://')) {
-                                      return "Invalid, HTTPS needed!";
-                                    }
-                                  }
-                                  return null;
-                                },
                               ),
-                            ],
-                          ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.paste),
+                              onPressed: () async {
+                                ClipboardData data = await Clipboard.getData('text/plain');
+                                _customURLController.text = data.text;
+                              },
+                            ),
+                          ],
                         ),
                         SizedBox(height: 8),
                         Row(
@@ -687,43 +701,19 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   ..color = Colors.orange[500]
                                   ..isCustom = true;
 
-                                // Make sure we are not adding a shortcut with a
-                                // duplicated name, as keys are based on name
-                                // (and it would not make sense, anyway)
-                                var existing = false;
-                                for (var short
-                                    in _shortcutsProvider.activeShortcuts) {
-                                  if (short.name.toLowerCase() ==
-                                      customShortcut.name.toLowerCase()) {
-                                    BotToast.showText(
-                                      text:
-                                          'There is another shortcut active with '
-                                          'that name!',
-                                      textStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.orange[800],
-                                      duration: Duration(seconds: 3),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                    existing = true;
-                                    break;
-                                  }
-                                }
-                                if (!existing) {
-                                  _shortcutsProvider
-                                      .activateShortcut(customShortcut);
-                                  Navigator.of(context).pop();
-                                  _customNameController.text = '';
-                                  _customURLController.text = '';
-                                }
+                                _shortcutsProvider
+                                    .activateShortcut(customShortcut);
+                                Navigator.of(context).pop();
+                                _customNameController.text = '';
+                                _customURLController.text = '';
                               },
                             ),
                             FlatButton(
                               child: Text("Close"),
                               onPressed: () {
                                 Navigator.of(context).pop();
+                                _customNameController.text = '';
+                                _customURLController.text = '';
                               },
                             ),
                           ],
