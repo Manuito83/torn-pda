@@ -243,7 +243,7 @@ class _WebViewFullState extends State<WebViewFull> {
                         preferredContentMode: UserPreferredContentMode.DESKTOP,
                       ),
                       android: AndroidInAppWebViewOptions(
-                        builtInZoomControls: false,
+                        //builtInZoomControls: false,
                         useHybridComposition: true,
                         //useWideViewPort: false,
                         //loadWithOverviewMode: true,
