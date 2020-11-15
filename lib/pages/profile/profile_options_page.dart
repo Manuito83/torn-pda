@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -84,11 +85,24 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   Switch(
                                     value: _shortcutsEnabled,
                                     onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setEnableShortcuts(value);
-                                      setState(() {
-                                        _shortcutsEnabled = value;
-                                      });
+                                      // If user wants to disable and there are
+                                      // active shortcuts, open dialog and offer
+                                      // a second opportunity. Also might be good
+                                      // to reset the lists if there are issues.
+                                      if (!value &&
+                                          context
+                                                  .read<ShortcutsProvider>()
+                                                  .activeShortcuts
+                                                  .length >
+                                              0) {
+                                        _shortcutsDisableConfirmationDialog();
+                                      } else {
+                                        SharedPreferencesModel()
+                                            .setEnableShortcuts(value);
+                                        setState(() {
+                                          _shortcutsEnabled = value;
+                                        });
+                                      }
                                     },
                                     activeTrackColor: Colors.lightGreenAccent,
                                     activeColor: Colors.green,
@@ -288,6 +302,108 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
     });
+  }
+
+  Future<void> _shortcutsDisableConfirmationDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "Caution: you have active shortcuts, if you disable this "
+                            "feature you will erase the list as well. Are you sure?",
+                            style: TextStyle(
+                                fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Disable!"),
+                              onPressed: () {
+                                context
+                                    .read<ShortcutsProvider>()
+                                    .wipeAllShortcuts();
+                                SharedPreferencesModel()
+                                    .setEnableShortcuts(false);
+                                setState(() {
+                                  _shortcutsEnabled = false;
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text("Oh no!"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(Icons.delete_forever_outlined),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<bool> _willPopCallback() async {
