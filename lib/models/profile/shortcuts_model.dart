@@ -18,6 +18,7 @@ class Shortcut {
     this.url = '',
     this.iconUrl = '',
     this.color = Colors.grey,
+    this.isCustom = false,
   });
 
   bool active;
@@ -27,6 +28,7 @@ class Shortcut {
   String url;
   String iconUrl;
   Color color;
+  bool isCustom;
 
   factory Shortcut.fromJson(Map<String, dynamic> json) => Shortcut(
     active: json["active"] == null ? null : json["active"],
@@ -36,6 +38,7 @@ class Shortcut {
     url: json["url"] == null ? null : json["url"],
     iconUrl: json["iconUrl"] == null ? null : json["iconUrl"],
     color: json["color"] == null ? null : Color(int.parse(json["color"].split('(0x')[1].split(')')[0], radix: 16)),
+    isCustom: json["isCustom"] == null ? null : json["isCustom"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -46,5 +49,6 @@ class Shortcut {
     "url": url == null ? null : url,
     "iconUrl": iconUrl == null ? null : iconUrl,
     "color": color == null ? null : color.toString(),
+    "isCustom": isCustom == null ? null : isCustom,
   };
 }
