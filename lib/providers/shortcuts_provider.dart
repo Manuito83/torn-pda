@@ -40,6 +40,16 @@ class ShortcutsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void wipeAllShortcuts() {
+    for (var short in activeShortcuts) {
+      short.active = false;
+      //_activeShortcuts.remove(short);
+    }
+    _activeShortcuts.clear();
+    _saveListAfterChanges();
+    notifyListeners();
+  }
+
   void reorderShortcut(Shortcut movedShortcut, int oldIndex, int newIndex) {
     _activeShortcuts.removeAt(oldIndex);
     _activeShortcuts.insert(newIndex, movedShortcut);
@@ -606,6 +616,114 @@ class ShortcutsProvider extends ChangeNotifier {
         ..url = "https://www.torn.com/token_shop.php"
         ..iconUrl = "images/icons/map/token_shop.png"
         ..color = Colors.yellow[700],
+      Shortcut()
+        ..name = "Church"
+        ..nickname = "Church"
+        ..url = "https://www.torn.com/church.php"
+        ..iconUrl = "images/icons/map/church.png"
+        ..color = Colors.purple[700],
+      Shortcut()
+        ..name = "Dump"
+        ..nickname = "Dump"
+        ..url = "https://www.torn.com/dump.php"
+        ..iconUrl = "images/icons/map/dump.png"
+        ..color = Colors.purple[700],
+      Shortcut()
+        ..name = "Loan Shark"
+        ..nickname = "Loan Shark"
+        ..url = "https://www.torn.com/loan.php"
+        ..iconUrl = "images/icons/map/loan_shark.png"
+        ..color = Colors.purple[700],
+      Shortcut()
+        ..name = "Travel Agency"
+        ..nickname = "Travel"
+        ..url = "https://www.torn.com/travelagency.php"
+        ..iconUrl = "images/icons/map/travel_agency.png"
+        ..color = Colors.purple[700],
+      Shortcut()
+        ..name = "Chronicle Archives"
+        ..nickname = "Chronicle Archives"
+        ..url = "https://www.torn.com/archives.php"
+        ..iconUrl = "images/icons/map/chronicle_archives.png"
+        ..color = Colors.green[700],
+      Shortcut()
+        ..name = "Community Center"
+        ..nickname = "Community Center"
+        ..url = "https://www.torn.com/fans.php"
+        ..iconUrl = "images/icons/map/community_center.png"
+        ..color = Colors.green[700],
+      Shortcut()
+        ..name = "Museum"
+        ..nickname = "Museum"
+        ..url = "https://www.torn.com/museum.php"
+        ..iconUrl = "images/icons/map/community_center.png"
+        ..color = Colors.green[700],
+      Shortcut()
+        ..name = "Race Track"
+        ..nickname = "Race Track"
+        ..url = "https://www.torn.com/loader.php?sid=racing"
+        ..iconUrl = "images/icons/map/race_track.png"
+        ..color = Colors.green[700],
+      Shortcut()
+        ..name = "Nikeh Sports Shop"
+        ..nickname = "Sports Shop"
+        ..url = "https://www.torn.com/shops.php?step=pharmacy"
+        ..iconUrl = "images/icons/map/sports_shop.png"
+        ..color = Colors.green[700],
+      Shortcut()
+        ..name = "Bank"
+        ..nickname = "Bank"
+        ..url = "https://www.torn.com/bank.php"
+        ..iconUrl = "images/icons/map/bank.png"
+        ..color = Colors.blue[700],
+      Shortcut()
+        ..name = "Donator House"
+        ..nickname = "Donator House"
+        ..url = "https://www.torn.com/donator.php"
+        ..iconUrl = "images/icons/map/donator_house.png"
+        ..color = Colors.blue[700],
+      Shortcut()
+        ..name = "Msg Inc"
+        ..nickname = "Msg Inc"
+        ..url = "https://www.torn.com/messageinc.php"
+        ..iconUrl = "images/icons/map/msg_inc.png"
+        ..color = Colors.blue[700],
+      Shortcut()
+        ..name = "Stock Exchange"
+        ..nickname = "Stock Exchange"
+        ..url = "https://www.torn.com/stockexchange.php"
+        ..iconUrl = "images/icons/map/stock_exchange.png"
+        ..color = Colors.blue[700],
+      Shortcut()
+        ..name = "Stock Exchange: Portfolio"
+        ..nickname = "Portfolio"
+        ..url = "https://www.torn.com/stockexchange.php?step=portfolio"
+        ..iconUrl = "images/icons/map/stock_exchange.png"
+        ..color = Colors.blue[700],
+      Shortcut()
+        ..name = "City Hall"
+        ..nickname = "City Hall"
+        ..url = "https://www.torn.com/citystats.php"
+        ..iconUrl = "images/icons/map/city_hall.png"
+        ..color = Colors.red[200],
+      Shortcut()
+        ..name = "Committee"
+        ..nickname = "Committee"
+        ..url = "https://www.torn.com/committee.php"
+        ..iconUrl = "images/icons/map/committee.png"
+        ..color = Colors.red[200],
+      Shortcut()
+        ..name = "Staff"
+        ..nickname = "Staff"
+        ..url = "https://www.torn.com/staff.php"
+        ..iconUrl = "images/icons/map/staff.png"
+        ..color = Colors.red[200],
+      Shortcut()
+        ..name = "Visitor Center"
+        ..nickname = "Visitor Center"
+        ..url = "https://www.torn.com/wiki"
+        ..iconUrl = "images/icons/map/visitor_center.png"
+        ..color = Colors.red[200],
     });
   }
 }

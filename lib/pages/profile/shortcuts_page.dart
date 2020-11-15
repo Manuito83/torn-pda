@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
@@ -19,11 +20,11 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
   }
 
   @override
   Widget build(BuildContext context) {
+    _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
@@ -71,7 +72,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text("Active shortcuts"),
+                          Text("ACTIVE SHORTCUTS"),
                           Padding(
                             padding: const EdgeInsets.only(left: 10),
                             child: Text(
@@ -108,7 +109,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Text("All shortcuts"),
+                    child: Text("ALL SHORTCUTS"),
                   ),
                   SizedBox(height: 10),
                   _allCardsList(),
@@ -257,23 +258,26 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                     children: [
                                       Flexible(child: Text(short.name)),
                                       TextButton(
-                                        onPressed: () async {
-                                          // Start animation
-                                          setState(() {
-                                            short.visible = false;
-                                          });
+                                        onPressed: !short.visible
+                                            // Avoid double press
+                                            ? null
+                                            : () async {
+                                                // Start animation
+                                                setState(() {
+                                                  short.visible = false;
+                                                });
 
-                                          await Future.delayed(
-                                              Duration(milliseconds: 300));
+                                                await Future.delayed(Duration(
+                                                    milliseconds: 300));
 
-                                          setState(() {
-                                            shortcutProvider
-                                                .activateShortcut(short);
-                                          });
+                                                setState(() {
+                                                  shortcutProvider
+                                                      .activateShortcut(short);
+                                                });
 
-                                          // Reset visibility after animation
-                                          short.visible = true;
-                                        },
+                                                // Reset visibility after animation
+                                                short.visible = true;
+                                              },
                                         child: Text(
                                           'ADD',
                                           style: TextStyle(
@@ -311,6 +315,30 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           _willPopCallback();
         },
       ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(
+            Icons.delete,
+            color: _themeProvider.buttonText,
+          ),
+          onPressed: () async {
+            if (_shortcutsProvider.activeShortcuts.length == 0) {
+              BotToast.showText(
+                text: 'You have no active shortcuts, activate some!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[800],
+                duration: Duration(seconds: 2),
+                contentPadding: EdgeInsets.all(10),
+              );
+            } else {
+              _openWipeDialog();
+            }
+          },
+        ),
+      ],
     );
   }
 
@@ -362,6 +390,101 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
         setState(() {
           _shortcutsProvider.changeShortcutTile(value);
         });
+      },
+    );
+  }
+
+  Future<void> _openWipeDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "This will reset all your active shortcuts and order, "
+                            "are you sure?",
+                            style: TextStyle(
+                                fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Reset!"),
+                              onPressed: () {
+                                _shortcutsProvider.wipeAllShortcuts();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text("Oh no!"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(Icons.delete_forever_outlined),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }
