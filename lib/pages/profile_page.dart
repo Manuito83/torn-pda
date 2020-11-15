@@ -562,31 +562,39 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     elevation: 2,
                     child: _shortcuts.shortcutTile == 'both'
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                height: 18,
-                                child: Image.asset(
-                                  thisShortcut.iconUrl,
-                                  width: 16,
-                                  color: _themeProvider.mainText,
-                                ),
-                              ),
-                              SizedBox(height: 3),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 4),
-                                child: SizedBox(
-                                  width: 55,
-                                  child: Text(
-                                    thisShortcut.nickname.toUpperCase(),
-                                    style: TextStyle(fontSize: 9),
-                                    textAlign: TextAlign.center,
+                        ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  height: 18,
+                                  child: Image.asset(
+                                    thisShortcut.iconUrl,
+                                    width: 16,
+                                    color: _themeProvider.mainText,
                                   ),
                                 ),
-                              ),
-                            ],
-                          )
+                                SizedBox(height: 3),
+                                Flexible(
+                                  child: Container(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 4),
+                                      child: SizedBox(
+                                        width: 55,
+                                        child: Text(
+                                          thisShortcut.nickname.toUpperCase(),
+                                          style: TextStyle(fontSize: 9),
+                                          textAlign: TextAlign.center,
+                                          overflow: TextOverflow.fade,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        )
                         : _shortcuts.shortcutTile == 'icon'
                             ? SizedBox(
                                 height: 18,
@@ -599,14 +607,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ),
                               )
                             : Padding(
-                                padding: EdgeInsets.all(0),
+                                padding: EdgeInsets.all(2),
                                 child: SizedBox(
                                   width: 55,
                                   child: Center(
-                                    child: Text(
-                                      thisShortcut.nickname.toUpperCase(),
-                                      style: TextStyle(fontSize: 9),
-                                      textAlign: TextAlign.center,
+                                    child: Container(
+                                      child: Text(
+                                        thisShortcut.nickname.toUpperCase(),
+                                        style: TextStyle(fontSize: 9),
+                                        textAlign: TextAlign.center,
+                                        overflow: TextOverflow.fade,
+                                      ),
                                     ),
                                   ),
                                 ),
