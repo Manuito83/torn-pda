@@ -110,6 +110,8 @@ class _WebViewFullState extends State<WebViewFull> {
   int _scrollY = 0;
   int _scrollX = 0;
 
+  double progress = 0;
+
   SettingsProvider _settingsProvider;
 
   @override
@@ -201,18 +203,35 @@ class _WebViewFullState extends State<WebViewFull> {
             bottom: true,
             child: Column(
               children: [
-                // Crimes widget
-                ExpandablePanel(
-                  theme: ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
-                  collapsed: SizedBox.shrink(),
-                  controller: _crimesController,
-                  header: SizedBox.shrink(),
-                  expanded: CrimesWidget(controller: webView),
-                ),
+                _settingsProvider.loadBarBrowser
+                    ? Container(
+                        height: 2,
+                        child: progress < 1.0
+                            ? LinearProgressIndicator(
+                                value: progress,
+                                backgroundColor: Colors.blueGrey[100],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.deepOrange[300]),
+                              )
+                            : Container(height: 2),
+                      )
+                    : SizedBox.shrink(),
+                // Crimes widget. NOTE: this one will open at the bottom if
+                // appBar is at the bottom, so it's duplicated below the actual
+                // webView widget
+                _settingsProvider.appBarTop
+                    ? ExpandablePanel(
+                        theme: ExpandableThemeData(
+                          hasIcon: false,
+                          tapBodyToCollapse: false,
+                          tapHeaderToExpand: false,
+                        ),
+                        collapsed: SizedBox.shrink(),
+                        controller: _crimesController,
+                        header: SizedBox.shrink(),
+                        expanded: CrimesWidget(controller: webView),
+                      )
+                    : SizedBox.shrink(),
                 // Trades widget
                 _tradesExpandable,
                 // City widget
@@ -243,14 +262,15 @@ class _WebViewFullState extends State<WebViewFull> {
                         preferredContentMode: UserPreferredContentMode.DESKTOP,
                       ),
                       android: AndroidInAppWebViewOptions(
-                        builtInZoomControls: false,
+                        //builtInZoomControls: false,
                         useHybridComposition: true,
                         //useWideViewPort: false,
                         //loadWithOverviewMode: true,
                         //displayZoomControls: true,
                       ),
                     ),
-                    shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+                    shouldInterceptAjaxRequest:
+                        (InAppWebViewController c, AjaxRequest x) async {
                       // This will intercept ajax calls performed when the bazaar reached 100 items
                       // and needs to be reloaded, so that we can remove and add again the fill buttons
                       if (x == null) return;
@@ -261,12 +281,21 @@ class _WebViewFullState extends State<WebViewFull> {
                           x.url.contains('inventory.php') &&
                           _bazaarActive &&
                           _bazaarFillActive) {
-                        webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                        Future.delayed(const Duration(seconds: 2)).then((value) {
-                          webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+                        webView.evaluateJavascript(
+                            source: removeBazaarFillButtonsJS());
+                        Future.delayed(const Duration(seconds: 2))
+                            .then((value) {
+                          webView.evaluateJavascript(
+                              source: addBazaarFillButtonsJS());
                         });
                       }
                       return;
+                    },
+                    onProgressChanged:
+                        (InAppWebViewController c, int progress) {
+                      setState(() {
+                        this.progress = progress / 100;
+                      });
                     },
                     onWebViewCreated: (InAppWebViewController c) {
                       webView = c;
@@ -282,16 +311,19 @@ class _WebViewFullState extends State<WebViewFull> {
                       // This is used in case the user presses reload. We need to wait for the page
                       // load to be finished in order to scroll
                       if (_scrollAfterLoad) {
-                        webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                        webView.scrollTo(
+                            x: _scrollX, y: _scrollY, animated: false);
                         _scrollAfterLoad = false;
                       }
                     },
                     // Allows IOS to open links with target=_blank
-                    onCreateWindow: (InAppWebViewController c, CreateWindowRequest req) {
+                    onCreateWindow:
+                        (InAppWebViewController c, CreateWindowRequest req) {
                       webView.loadUrl(url: req.url);
                       return;
                     },
-                    onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+                    onConsoleMessage:
+                        (InAppWebViewController c, consoleMessage) async {
                       print("TORN PDA JS CONSOLE: " + consoleMessage.message);
 
                       /// TRADES
@@ -314,6 +346,19 @@ class _WebViewFullState extends State<WebViewFull> {
                     },
                   ),
                 ),
+                !_settingsProvider.appBarTop
+                    ? ExpandablePanel(
+                        theme: ExpandableThemeData(
+                          hasIcon: false,
+                          tapBodyToCollapse: false,
+                          tapHeaderToExpand: false,
+                        ),
+                        collapsed: SizedBox.shrink(),
+                        controller: _crimesController,
+                        header: SizedBox.shrink(),
+                        expanded: CrimesWidget(controller: webView),
+                      )
+                    : SizedBox.shrink(),
               ],
             ),
           ),
@@ -330,7 +375,9 @@ class _WebViewFullState extends State<WebViewFull> {
       },
       genericAppBar: AppBar(
         leading: IconButton(
-            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+            icon: _backButtonPopsContext
+                ? Icon(Icons.close)
+                : Icon(Icons.arrow_back_ios),
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
@@ -465,7 +512,8 @@ class _WebViewFullState extends State<WebViewFull> {
   void _assessBackButtonBehaviour() async {
     // If we are NOT moving to a place with a vault, we show an X and close upon button press
     if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
-        !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
+        !_currentUrl.contains(
+            'factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
         !_currentUrl.contains('companies.php#/option=funds')) {
       _backButtonPopsContext = true;
     }
@@ -489,13 +537,17 @@ class _WebViewFullState extends State<WebViewFull> {
       pageTitle = h4.innerHtml.substring(0).trim();
       if (pageTitle.toLowerCase().contains('error') ||
           pageTitle.toLowerCase().contains('please validate')) {
-        setState(() {
-          _pageTitle = 'Torn';
-        });
+        if (mounted) {
+          setState(() {
+            _pageTitle = 'Torn';
+          });
+        }
       } else {
-        setState(() {
-          _pageTitle = pageTitle;
-        });
+        if (mounted) {
+          setState(() {
+            _pageTitle = pageTitle;
+          });
+        }
       }
     }
     return pageTitle;
@@ -508,13 +560,17 @@ class _WebViewFullState extends State<WebViewFull> {
     if (query.length > 0) {
       _insertTravelFillMaxButtons();
       _sendStockInformation(document);
-      setState(() {
-        _travelActive = true;
-      });
+      if (mounted) {
+        setState(() {
+          _travelActive = true;
+        });
+      }
     } else {
-      setState(() {
-        _travelActive = false;
-      });
+      if (mounted) {
+        setState(() {
+          _travelActive = false;
+        });
+      }
     }
   }
 
@@ -530,7 +586,8 @@ class _WebViewFullState extends State<WebViewFull> {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
         var userProfile =
-            await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey).getOwnProfile;
+            await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey)
+                .getOwnProfile;
         if (userProfile is OwnProfileModel) {
           stockModel.authorName = userProfile.name;
           stockModel.authorId = userProfile.playerId;
@@ -546,11 +603,16 @@ class _WebViewFullState extends State<WebViewFull> {
         RegExp expId = new RegExp(r"[0-9]+");
         for (var el in elements) {
           var stockItem = ForeignStockOutItem();
-          stockItem.id = int.parse(expId.firstMatch(el.querySelector('[id^=item]').id)[0]);
-          stockItem.quantity = int.parse(
-              el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
-          stockItem.cost =
-              int.parse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.id =
+              int.parse(expId.firstMatch(el.querySelector('[id^=item]').id)[0]);
+          stockItem.quantity = int.parse(el
+              .querySelector(".stck-amount")
+              .innerHtml
+              .replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.cost = int.parse(el
+              .querySelector(".c-price")
+              .innerHtml
+              .replaceAll(RegExp(r"[^0-9]"), ""));
           stockModel.items.add(stockItem);
         }
 
@@ -584,18 +646,20 @@ class _WebViewFullState extends State<WebViewFull> {
   // CRIMES
   Future _assessCrimes(dom.Document document, String pageTitle) async {
     pageTitle = pageTitle.toLowerCase();
-    setState(() {
-      if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
-          !pageTitle.contains('please validate') &&
-          !pageTitle.contains('error') &&
-          pageTitle.contains('crimes')) {
-        _crimesController.expanded = true;
-        _crimesActive = true;
-      } else {
-        _crimesController.expanded = false;
-        _crimesActive = false;
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
+            !pageTitle.contains('please validate') &&
+            !pageTitle.contains('error') &&
+            pageTitle.contains('crimes')) {
+          _crimesController.expanded = true;
+          _crimesActive = true;
+        } else {
+          _crimesController.expanded = false;
+          _crimesActive = false;
+        }
+      });
+    }
   }
 
   Widget _crimesInfoIcon() {
@@ -658,14 +722,18 @@ class _WebViewFullState extends State<WebViewFull> {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
     pageTitle = pageTitle.toLowerCase();
-    var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+    var easyUrl =
+        _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
-      setState(() {
-        _tradesIconActive = true;
-      });
+      if (mounted) {
+        setState(() {
+          _tradesIconActive = true;
+        });
+      }
       _lastTradeCallWasIn = true;
-      if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
+      if (!easyUrl[0].contains('step=initiateTrade') &&
+          !easyUrl[0].contains('step=view')) {
         if (_tradesFullActive) {
           _toggleTradesWidget(active: false);
         }
@@ -675,9 +743,11 @@ class _WebViewFullState extends State<WebViewFull> {
       if (_tradesFullActive) {
         _toggleTradesWidget(active: false);
       }
-      setState(() {
-        _tradesIconActive = false;
-      });
+      if (mounted) {
+        setState(() {
+          _tradesIconActive = false;
+        });
+      }
       _lastTradeCallWasIn = false;
       return;
     }
@@ -709,32 +779,47 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Because only the frame reloads, if we can't find anything
     // we'll wait 1 second, get the html again and query again
-    var totalFinds = document
-        .querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
+    var totalFinds = document.querySelectorAll(
+        ".color1 .left , .color2 .left , .color1 .right , .color2 .right");
 
     try {
       if (totalFinds.length == 0) {
         await Future.delayed(const Duration(seconds: 1));
         var updatedHtml = await webView.getHtml();
         var updatedDoc = parse(updatedHtml);
-        leftMoneyElements = updatedDoc.querySelectorAll("#trade-container .left .color1 .name");
-        leftItemsElements = updatedDoc.querySelectorAll("#trade-container .left .color2 .name");
-        leftPropertyElements = updatedDoc.querySelectorAll("#trade-container .left .color3 .name");
-        leftSharesElements = updatedDoc.querySelectorAll("#trade-container .left .color4 .name");
-        rightMoneyElements = updatedDoc.querySelectorAll("#trade-container .right .color1 .name");
-        rightItemsElements = updatedDoc.querySelectorAll("#trade-container .right .color2 .name");
-        rightPropertyElements =
-            updatedDoc.querySelectorAll("#trade-container .right .color3 .name");
-        rightSharesElements = updatedDoc.querySelectorAll("#trade-container .right .color4 .name");
+        leftMoneyElements =
+            updatedDoc.querySelectorAll("#trade-container .left .color1 .name");
+        leftItemsElements =
+            updatedDoc.querySelectorAll("#trade-container .left .color2 .name");
+        leftPropertyElements =
+            updatedDoc.querySelectorAll("#trade-container .left .color3 .name");
+        leftSharesElements =
+            updatedDoc.querySelectorAll("#trade-container .left .color4 .name");
+        rightMoneyElements = updatedDoc
+            .querySelectorAll("#trade-container .right .color1 .name");
+        rightItemsElements = updatedDoc
+            .querySelectorAll("#trade-container .right .color2 .name");
+        rightPropertyElements = updatedDoc
+            .querySelectorAll("#trade-container .right .color3 .name");
+        rightSharesElements = updatedDoc
+            .querySelectorAll("#trade-container .right .color4 .name");
       } else {
-        leftMoneyElements = document.querySelectorAll("#trade-container .left .color1 .name");
-        leftItemsElements = document.querySelectorAll("#trade-container .left .color2 .name");
-        leftPropertyElements = document.querySelectorAll("#trade-container .left .color3 .name");
-        leftSharesElements = document.querySelectorAll("#trade-container .left .color4 .name");
-        rightMoneyElements = document.querySelectorAll("#trade-container .right .color1 .name");
-        rightItemsElements = document.querySelectorAll("#trade-container .right .color2 .name");
-        rightPropertyElements = document.querySelectorAll("#trade-container .right .color3 .name");
-        rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
+        leftMoneyElements =
+            document.querySelectorAll("#trade-container .left .color1 .name");
+        leftItemsElements =
+            document.querySelectorAll("#trade-container .left .color2 .name");
+        leftPropertyElements =
+            document.querySelectorAll("#trade-container .left .color3 .name");
+        leftSharesElements =
+            document.querySelectorAll("#trade-container .left .color4 .name");
+        rightMoneyElements =
+            document.querySelectorAll("#trade-container .right .color1 .name");
+        rightItemsElements =
+            document.querySelectorAll("#trade-container .right .color2 .name");
+        rightPropertyElements =
+            document.querySelectorAll("#trade-container .right .color3 .name");
+        rightSharesElements =
+            document.querySelectorAll("#trade-container .right .color4 .name");
       }
     } catch (e) {
       return;
@@ -779,15 +864,19 @@ class _WebViewFullState extends State<WebViewFull> {
 
   _toggleTradesWidget({@required bool active}) {
     if (active) {
-      setState(() {
-        _tradesFullActive = true;
-        _tradesExpandable = TradesWidget();
-      });
+      if (mounted) {
+        setState(() {
+          _tradesFullActive = true;
+          _tradesExpandable = TradesWidget();
+        });
+      }
     } else {
-      setState(() {
-        _tradesFullActive = false;
-        _tradesExpandable = SizedBox.shrink();
-      });
+      if (mounted) {
+        setState(() {
+          _tradesFullActive = false;
+          _tradesExpandable = SizedBox.shrink();
+        });
+      }
     }
   }
 
@@ -817,14 +906,17 @@ class _WebViewFullState extends State<WebViewFull> {
   void _openVaultsOptions(VaultsOptions choice) async {
     switch (choice.description) {
       case "Personal vault":
-        webView.loadUrl(url: "https://www.torn.com/properties.php#/p=options&tab=vault");
+        webView.loadUrl(
+            url: "https://www.torn.com/properties.php#/p=options&tab=vault");
         break;
       case "Faction vault":
         webView.loadUrl(
-            url: "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
+            url:
+                "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
         break;
       case "Company vault":
-        webView.loadUrl(url: "https://www.torn.com/companies.php#/option=funds");
+        webView.loadUrl(
+            url: "https://www.torn.com/companies.php#/option=funds");
         break;
     }
   }
@@ -864,7 +956,8 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _tradesPreferencesLoad() async {
-    _tradeCalculatorEnabled = await SharedPreferencesModel().getTradeCalculatorEnabled();
+    _tradeCalculatorEnabled =
+        await SharedPreferencesModel().getTradeCalculatorEnabled();
     _decideIfCallTrades();
   }
 
@@ -895,16 +988,20 @@ class _WebViewFullState extends State<WebViewFull> {
         !pageTitle.contains('city') ||
         pageTitle.contains('please validate') ||
         pageTitle.contains('error')) {
-      setState(() {
-        _cityIconActive = false;
-        _cityController.expanded = false;
-      });
+      if (mounted) {
+        setState(() {
+          _cityIconActive = false;
+          _cityController.expanded = false;
+        });
+      }
       return;
     }
 
-    setState(() {
-      _cityIconActive = true;
-    });
+    if (mounted) {
+      setState(() {
+        _cityIconActive = true;
+      });
+    }
 
     // We only get this once and if we are inside the city
     // It's also in the callback from city options
@@ -932,18 +1029,21 @@ class _WebViewFullState extends State<WebViewFull> {
     // Assess if we need to show the widget, now that we are in the city
     // By placing this check here, we also avoid showing the widget if we entered via Quick Links
     // in the city
-    setState(() {
-      if (!_cityEnabled) {
-        _cityController.expanded = false;
-        return;
-      }
-      _cityController.expanded = true;
-    });
+    if (mounted) {
+      setState(() {
+        if (!_cityEnabled) {
+          _cityController.expanded = false;
+          return;
+        }
+        _cityController.expanded = true;
+      });
+    }
 
     var mapItemsList = List<String>();
     for (var mapFind in query) {
       mapFind.attributes.forEach((key, value) {
-        if (key == "src" && value.contains("https://www.torn.com/images/items/")) {
+        if (key == "src" &&
+            value.contains("https://www.torn.com/images/items/")) {
           mapItemsList.add(value.split("items/")[1].split("/")[0]);
         }
       });
@@ -951,7 +1051,8 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      dynamic apiResponse = await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
+      dynamic apiResponse =
+          await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
         var itemsFound = List<Item>();
@@ -959,15 +1060,19 @@ class _WebViewFullState extends State<WebViewFull> {
           Item itemMatch = tornItems[int.parse(mapItem) - 1];
           itemsFound.add(itemMatch);
         }
-        setState(() {
-          _cityItemsFound = itemsFound;
-          _errorCityApi = false;
-        });
+        if (mounted) {
+          setState(() {
+            _cityItemsFound = itemsFound;
+            _errorCityApi = false;
+          });
+        }
         webView.evaluateJavascript(source: highlightCityItemsJS());
       } else {
-        setState(() {
-          _errorCityApi = true;
-        });
+        if (mounted) {
+          setState(() {
+            _errorCityApi = true;
+          });
+        }
       }
     } catch (e) {
       return;
@@ -1027,12 +1132,18 @@ class _WebViewFullState extends State<WebViewFull> {
       return FlatButton(
         onPressed: () async {
           _bazaarFillActive
-              ? await webView.evaluateJavascript(source: removeBazaarFillButtonsJS())
-              : await webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+              ? await webView.evaluateJavascript(
+                  source: removeBazaarFillButtonsJS())
+              : await webView.evaluateJavascript(
+                  source: addBazaarFillButtonsJS());
 
-          setState(() {
-            _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
-          });
+          if (mounted) {
+            setState(() {
+              _bazaarFillActive
+                  ? _bazaarFillActive = false
+                  : _bazaarFillActive = true;
+            });
+          }
         },
         child: Text(
           "FILL",

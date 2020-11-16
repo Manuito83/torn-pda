@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -49,7 +50,8 @@ class _FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'friends'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'friends'});
   }
 
   @override
@@ -105,27 +107,38 @@ class _FriendsPageState extends State<FriendsPage> {
                       size: 20,
                     ),
                     onPressed: () async {
-                      var updateResult = await _friendsProvider.updateAllFriends();
+                      var updateResult =
+                          await _friendsProvider.updateAllFriends();
                       if (updateResult.success) {
-                        Scaffold.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(updateResult.numberSuccessful > 0
-                                ? 'Successfully updated '
-                                    '${updateResult.numberSuccessful} '
-                                    'friends!'
-                                : 'No friends to update!'),
+                        BotToast.showText(
+                          text: updateResult.numberSuccessful > 0
+                              ? 'Successfully updated '
+                                  '${updateResult.numberSuccessful} '
+                                  'friends!'
+                              : 'No friends to update!',
+                          textStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
                           ),
+                          contentColor: updateResult.numberSuccessful > 0
+                              ? Colors.green
+                              : Colors.red,
+                          duration: Duration(seconds: 3),
+                          contentPadding: EdgeInsets.all(10),
                         );
                       } else {
-                        Scaffold.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.red,
-                            content: Text(
+                        BotToast.showText(
+                          text:
                               'Update with errors: ${updateResult.numberErrors} errors '
                               'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
                               'total friends!',
-                            ),
+                          textStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
                           ),
+                          contentColor: Colors.red,
+                          duration: Duration(seconds: 3),
+                          contentPadding: EdgeInsets.all(10),
                         );
                       }
                     },
@@ -153,7 +166,8 @@ class _FriendsPageState extends State<FriendsPage> {
       leading: IconButton(
         icon: Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -293,7 +307,8 @@ class _FriendsPageState extends State<FriendsPage> {
                     child: Form(
                       key: _addFormKey,
                       child: Column(
-                        mainAxisSize: MainAxisSize.min, // To make the card compact
+                        mainAxisSize:
+                            MainAxisSize.min, // To make the card compact
                         children: <Widget>[
                           TextFormField(
                             style: TextStyle(fontSize: 14),
@@ -336,25 +351,32 @@ class _FriendsPageState extends State<FriendsPage> {
                                     var inputId = _addIdController.text;
                                     _addIdController.text = '';
                                     AddFriendResult tryAddFriend =
-                                        await friendsProvider.addFriend(inputId);
+                                        await friendsProvider
+                                            .addFriend(inputId);
                                     if (tryAddFriend.success) {
-                                      Scaffold.of(_).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
+                                      BotToast.showText(
+                                        text:
                                             'Added ${tryAddFriend.friendName} '
                                             '[${tryAddFriend.friendId}]',
-                                          ),
+                                        textStyle: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
                                         ),
+                                        contentColor: Colors.green,
+                                        duration: Duration(seconds: 3),
+                                        contentPadding: EdgeInsets.all(10),
                                       );
                                     } else if (!tryAddFriend.success) {
-                                      Scaffold.of(_).showSnackBar(
-                                        SnackBar(
-                                          backgroundColor: Colors.red,
-                                          content: Text(
-                                            'Error adding $inputId.'
+                                      BotToast.showText(
+                                        text: 'Error adding $inputId.'
                                             ' ${tryAddFriend.errorReason}',
-                                          ),
+                                        textStyle: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
                                         ),
+                                        contentColor: Colors.red,
+                                        duration: Duration(seconds: 3),
+                                        contentPadding: EdgeInsets.all(10),
                                       );
                                     }
                                   }
@@ -400,7 +422,8 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void onSearchInputTextChange() {
-    Provider.of<FriendsProvider>(context, listen: false).setFilterText(_searchController.text);
+    Provider.of<FriendsProvider>(context, listen: false)
+        .setFilterText(_searchController.text);
 
     setState(() {
       if (_searchController.text != '') {

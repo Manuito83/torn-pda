@@ -23,6 +23,7 @@ import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 enum LootTimeType {
   dateTime,
@@ -67,8 +68,10 @@ class _LootPageState extends State<LootPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
-    _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'loot'});
+    _tickerUpdateTimes =
+        new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
 
   @override
@@ -133,7 +136,8 @@ class _LootPageState extends State<LootPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -240,7 +244,8 @@ class _LootPageState extends State<LootPage> {
 
       npcDetails.timings.forEach((levelNumber, levelDetails) {
         // Time formatting
-        var levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
+        var levelDateTime =
+            DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
         var time = TimeFormatter(
           inputTime: levelDateTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -320,7 +325,8 @@ class _LootPageState extends State<LootPage> {
             child: Icon(
               iconData,
               size: 20,
-              color: _lootNotificationType == NotificationType.notification && isPending
+              color: _lootNotificationType == NotificationType.notification &&
+                      isPending
                   ? Colors.green
                   : null,
             ),
@@ -333,13 +339,14 @@ class _LootPageState extends State<LootPage> {
                     });
                     await flutterLocalNotificationsPlugin
                         .cancel(int.parse('400$npcId$levelNumber'));
-                    _activeNotificationsIds
-                        .removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds.removeWhere((element) =>
+                        element == int.parse('400$npcId$levelNumber'));
                   } else {
                     setState(() {
                       isPending = true;
                     });
-                    _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
+                    _activeNotificationsIds
+                        .add(int.parse('400$npcId$levelNumber'));
                     _scheduleNotification(
                       levelDateTime,
                       int.parse('400$npcId$levelNumber'),
@@ -470,7 +477,9 @@ class _LootPageState extends State<LootPage> {
       knifeIcon = IconButton(
         icon: Icon(
           MdiIcons.knifeMilitary,
-          color: npcDetails.levels.current >= 4 ? Colors.red : _themeProvider.mainText,
+          color: npcDetails.levels.current >= 4
+              ? Colors.red
+              : _themeProvider.mainText,
         ),
         onPressed: () async {
           var browserType = _settingsProvider.currentBrowser;
@@ -479,14 +488,16 @@ class _LootPageState extends State<LootPage> {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (BuildContext context) => WebViewFull(
-                    customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
+                    customUrl:
+                        'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
                     customTitle: npcDetails.name,
                   ),
                 ),
               );
               break;
             case BrowserSetting.external:
-              var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+              var url =
+                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               if (await canLaunch(url)) {
                 await launch(url, forceSafariVC: false);
               }
@@ -572,7 +583,8 @@ class _LootPageState extends State<LootPage> {
       var needToGetYata = false;
       dynamic cached;
       try {
-        cached = yataLootModelFromJson(await SharedPreferencesModel().getLootYataCache());
+        cached = yataLootModelFromJson(
+            await SharedPreferencesModel().getLootYataCache());
       } catch (e) {
         cached = false;
       }
@@ -582,7 +594,8 @@ class _LootPageState extends State<LootPage> {
           needToGetYata = true;
         } else {
           _yataLootInfo = cached;
-          SharedPreferencesModel().setLootYataCache(yataLootModelToJson(cached));
+          SharedPreferencesModel()
+              .setLootYataCache(yataLootModelToJson(cached));
         }
       } else {
         needToGetYata = true;
@@ -592,7 +605,8 @@ class _LootPageState extends State<LootPage> {
         var yataFetch = await _fetchYataApi();
         if (yataFetch is YataLootModel) {
           _yataLootInfo = yataFetch;
-          SharedPreferencesModel().setLootYataCache(yataLootModelToJson(yataFetch));
+          SharedPreferencesModel()
+              .setLootYataCache(yataLootModelToJson(yataFetch));
         } else {
           return;
         }
@@ -611,7 +625,8 @@ class _LootPageState extends State<LootPage> {
         var yataFetch = await _fetchYataApi();
         if (yataFetch is YataLootModel) {
           _yataLootInfo = yataFetch;
-          SharedPreferencesModel().setLootYataCache(yataLootModelToJson(yataFetch));
+          SharedPreferencesModel()
+              .setLootYataCache(yataLootModelToJson(yataFetch));
         } else {
           _apiSuccess = false;
           return;
@@ -768,7 +783,8 @@ class _LootPageState extends State<LootPage> {
         : _lootTimeType = LootTimeType.dateTime;
 
     var notification = await SharedPreferencesModel().getLootNotificationType();
-    var notificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
+    var notificationAhead =
+        await SharedPreferencesModel().getLootNotificationAhead();
     var alarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
     var timerAhead = await SharedPreferencesModel().getLootTimerAhead();
     _alarmSound = await SharedPreferencesModel().getLootAlarmSound();
@@ -847,9 +863,9 @@ class _LootPageState extends State<LootPage> {
       channelTitle,
       channelSubtitle,
       channelDescription,
-      importance: Importance.Max,
-      priority: Priority.High,
-      visibility: NotificationVisibility.Public,
+      importance: Importance.max,
+      priority: Priority.high,
+      visibility: NotificationVisibility.public,
       icon: 'notification_loot',
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: vibrationPattern,
@@ -864,18 +880,21 @@ class _LootPageState extends State<LootPage> {
       sound: 'slow_spring_board.aiff',
     );
 
-    var platformChannelSpecifics =
-        NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
 
-    await flutterLocalNotificationsPlugin.schedule(
+    await flutterLocalNotificationsPlugin.zonedSchedule(
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      //DateTime.now().add(Duration(seconds: 10)), // DEBUG 10 SECONDS
-      notificationTime.subtract(Duration(seconds: _lootNotificationAhead)),
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      tz.TZDateTime.now(tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime
     );
   }
 

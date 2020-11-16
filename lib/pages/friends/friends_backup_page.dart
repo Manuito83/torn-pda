@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -27,11 +28,13 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   final _importFormKey = GlobalKey<FormState>();
   final _importInputController = new TextEditingController();
 
-  String _exportInfo = "In order to export & backup your friends, you can either copy/paste "
+  String _exportInfo =
+      "In order to export & backup your friends, you can either copy/paste "
       "to a text file manually, or share and save it at your desired location. "
       "In any case, please keep the text original structure.";
 
-  String _importInfo = "In order to import friends, please paste here the string that "
+  String _importInfo =
+      "In order to import friends, please paste here the string that "
       "you exported in the past. You can make changes outside of Torn PDA, "
       "but ensure that the main structure is kept!";
 
@@ -75,7 +78,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                       padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                       child: Text(
                         "HOW TO EXPORT friends",
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
@@ -99,13 +103,15 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                               onPressed: () async {
                                 var export = _friendsProvider.exportFriends();
                                 if (export == '') {
-                                  Scaffold.of(context).showSnackBar(
-                                    SnackBar(
-                                      duration: Duration(seconds: 5),
-                                      content: Text(
-                                        'No friends to export!',
-                                      ),
+                                  BotToast.showText(
+                                    text: 'No friends to export!',
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
                                     ),
+                                    contentColor: Colors.red,
+                                    duration: Duration(seconds: 3),
+                                    contentPadding: EdgeInsets.all(10),
                                   );
                                 } else {
                                   Share.share(export);
@@ -120,24 +126,28 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                             onPressed: () async {
                               var export = _friendsProvider.exportFriends();
                               if (export == '') {
-                                Scaffold.of(context).showSnackBar(
-                                  SnackBar(
-                                    duration: Duration(seconds: 5),
-                                    content: Text(
-                                      'No friends to export!',
-                                    ),
+                                BotToast.showText(
+                                  text: 'No friends to export!',
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
+                                  contentColor: Colors.red,
+                                  duration: Duration(seconds: 3),
+                                  contentPadding: EdgeInsets.all(10),
                                 );
                               } else {
                                 Clipboard.setData(ClipboardData(text: export));
-                                Scaffold.of(context).showSnackBar(
-                                  SnackBar(
-                                    duration: Duration(seconds: 5),
-                                    content: Text(
-                                      "${_friendsProvider.getFriendNumber()} "
+                                BotToast.showText(
+                                  text: "${_friendsProvider.getFriendNumber()} "
                                       "Friends copied to clipboard!",
-                                    ),
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
+                                  contentColor: Colors.green,
+                                  duration: Duration(seconds: 3),
+                                  contentPadding: EdgeInsets.all(10),
                                 );
                               }
                             },
@@ -153,7 +163,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                       padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
                       child: Text(
                         "HOW TO IMPORT friends",
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
@@ -201,17 +212,20 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                                   if (_importFormKey.currentState.validate()) {
                                     var numberImported = _importChecker();
                                     if (numberImported == 0) {
-                                      Scaffold.of(context).showSnackBar(
-                                        SnackBar(
-                                          duration: Duration(seconds: 5),
-                                          content: Text(
-                                            'No friends to import! '
+                                      BotToast.showText(
+                                        text: 'No friends to import! '
                                             'Is the file structure correct?',
-                                          ),
+                                        textStyle: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
                                         ),
+                                        contentColor: Colors.red,
+                                        duration: Duration(seconds: 3),
+                                        contentPadding: EdgeInsets.all(10),
                                       );
                                     } else {
-                                      FocusScope.of(context).requestFocus(new FocusNode());
+                                      FocusScope.of(context)
+                                          .requestFocus(new FocusNode());
                                       _showImportDialog();
                                     }
                                   }
@@ -259,7 +273,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
           '$_importSuccessEvents/${_tentativeImportModel.friendBackup.length}',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        percent: _importSuccessEvents / _tentativeImportModel.friendBackup.length,
+        percent:
+            _importSuccessEvents / _tentativeImportModel.friendBackup.length,
       ),
     );
   }
@@ -275,7 +290,9 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
         if (tar.notesColor.length > 200) {
           tar.notesColor = tar.notesColor.substring(0, 199);
         }
-        if (tar.notesColor != "red" && tar.notesColor != "green" && tar.notesColor != "blue") {
+        if (tar.notesColor != "red" &&
+            tar.notesColor != "green" &&
+            tar.notesColor != "blue") {
           tar.notesColor = "";
         }
       }
@@ -325,7 +342,8 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
                       "How would you like to import?",
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(

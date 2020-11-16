@@ -33,12 +33,12 @@ class ChainDetails {
   int start;
 
   ChainDetails({
-    this.current,
-    this.max,
-    this.timeout,
-    this.modifier,
-    this.cooldown,
-    this.start,
+    this.current = 0,
+    this.max = 0,
+    this.timeout = 0,
+    this.modifier= 0,
+    this.cooldown = 0,
+    this.start = 0,
   });
 
   factory ChainDetails.fromJson(Map<String, dynamic> json) => ChainDetails(

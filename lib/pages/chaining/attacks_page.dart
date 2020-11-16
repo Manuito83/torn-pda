@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
@@ -133,11 +134,18 @@ class _AttacksPageState extends State<AttacksPage> {
           ),
           onPressed: () async {
             _attacksProvider.initializeAttacks();
-            Scaffold.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Updated with latest attacks!'),
+
+            BotToast.showText(
+              text: 'Updated with latest attacks!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
               ),
+              contentColor: Colors.green,
+              duration: Duration(seconds: 3),
+              contentPadding: EdgeInsets.all(10),
             );
+
           },
         ),
         IconButton(
@@ -148,25 +156,33 @@ class _AttacksPageState extends State<AttacksPage> {
             if (filterType == AttackTypeFilter.all) {
               _attacksProvider.setFilterType(AttackTypeFilter.unknownTargets);
               _changeFilterColorAndText();
-              Scaffold.of(context).showSnackBar(
-                SnackBar(
-                  duration: Duration(seconds: 2),
-                  content: Text(
-                    'Hiding people already added to the target list!',
-                  ),
+
+              BotToast.showText(
+                text: 'Hiding people already added to the target list!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
                 ),
+                contentColor: Colors.green,
+                duration: Duration(seconds: 3),
+                contentPadding: EdgeInsets.all(10),
               );
+
             } else {
               _attacksProvider.setFilterType(AttackTypeFilter.all);
               _changeFilterColorAndText();
-              Scaffold.of(context).showSnackBar(
-                SnackBar(
-                  duration: Duration(seconds: 2),
-                  content: Text(
-                    'Showing all recent attacks!',
-                  ),
+
+              BotToast.showText(
+                text: 'Showing all recent attacks!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
                 ),
+                contentColor: Colors.green,
+                duration: Duration(seconds: 3),
+                contentPadding: EdgeInsets.all(10),
               );
+
             }
           },
         ),

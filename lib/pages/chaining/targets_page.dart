@@ -151,28 +151,38 @@ class _TargetsPageState extends State<TargetsPage> {
                       size: 20,
                     ),
                     onPressed: () async {
-                      var updateResult = await _targetsProvider.updateAllTargets();
+                      var updateResult =
+                          await _targetsProvider.updateAllTargets();
                       if (mounted) {
                         if (updateResult.success) {
-                          Scaffold.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(updateResult.numberSuccessful > 0
-                                  ? 'Successfully updated '
-                                      '${updateResult.numberSuccessful} '
-                                      'targets!'
-                                  : 'No targets to update!'),
+                          BotToast.showText(
+                            text: updateResult.numberSuccessful > 0
+                                ? 'Successfully updated '
+                                    '${updateResult.numberSuccessful} targets!'
+                                : 'No targets to update!',
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
+                            contentColor: updateResult.numberSuccessful > 0
+                                ? Colors.green
+                                : Colors.red,
+                            duration: Duration(seconds: 3),
+                            contentPadding: EdgeInsets.all(10),
                           );
                         } else {
-                          Scaffold.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.red,
-                              content: Text(
+                          BotToast.showText(
+                            text:
                                 'Update with errors: ${updateResult.numberErrors} errors '
                                 'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
                                 'total targets!',
-                              ),
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
                             ),
+                            contentColor: Colors.red,
+                            duration: Duration(seconds: 3),
+                            contentPadding: EdgeInsets.all(10),
                           );
                         }
                       }
@@ -206,7 +216,8 @@ class _TargetsPageState extends State<TargetsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -284,15 +295,19 @@ class _TargetsPageState extends State<TargetsPage> {
                       setState(() {
                         _yataButtonInProgress = false;
                       });
-                      var yataTargets = await _targetsProvider.getTargetsFromYata();
-                      if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
+                      var yataTargets =
+                          await _targetsProvider.getTargetsFromYata();
+                      if (!yataTargets.errorConnection &&
+                          !yataTargets.errorPlayer) {
                         _openYataDialog(yataTargets);
                       } else {
                         String error;
                         if (yataTargets.errorPlayer) {
-                          error = "We could not find your user in Yata, do you have an account?";
+                          error =
+                              "We could not find your user in Yata, do you have an account?";
                         } else {
-                          error = "There was an error contacting YATA, please try again later!";
+                          error =
+                              "There was an error contacting YATA, please try again later!";
                         }
                         BotToast.showText(
                           text: error,
@@ -403,7 +418,8 @@ class _TargetsPageState extends State<TargetsPage> {
                       child: Form(
                         key: _addFormKey,
                         child: Column(
-                          mainAxisSize: MainAxisSize.min, // To make the card compact
+                          mainAxisSize:
+                              MainAxisSize.min, // To make the card compact
                           children: <Widget>[
                             TextFormField(
                               style: TextStyle(fontSize: 14),
@@ -445,30 +461,38 @@ class _TargetsPageState extends State<TargetsPage> {
                                       // does not appear again in case of failure
                                       var inputId = _addIdController.text;
                                       _addIdController.text = '';
-                                      dynamic attacksFull = await _targetsProvider.getAttacksFull();
+                                      dynamic attacksFull =
+                                          await _targetsProvider
+                                              .getAttacksFull();
                                       AddTargetResult tryAddTarget =
                                           await targetsProvider.addTarget(
                                         targetId: inputId,
                                         attacksFull: attacksFull,
                                       );
                                       if (tryAddTarget.success) {
-                                        Scaffold.of(_).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
+                                        BotToast.showText(
+                                          text:
                                               'Added ${tryAddTarget.targetName} '
                                               '[${tryAddTarget.targetId}]',
-                                            ),
+                                          textStyle: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white,
                                           ),
+                                          contentColor: Colors.green,
+                                          duration: Duration(seconds: 3),
+                                          contentPadding: EdgeInsets.all(10),
                                         );
                                       } else if (!tryAddTarget.success) {
-                                        Scaffold.of(_).showSnackBar(
-                                          SnackBar(
-                                            backgroundColor: Colors.red,
-                                            content: Text(
-                                              'Error adding $inputId.'
+                                        BotToast.showText(
+                                          text: 'Error adding $inputId.'
                                               ' ${tryAddTarget.errorReason}',
-                                            ),
+                                          textStyle: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.white,
                                           ),
+                                          contentColor: Colors.green,
+                                          duration: Duration(seconds: 3),
+                                          contentPadding: EdgeInsets.all(10),
                                         );
                                       }
                                     }
@@ -516,7 +540,8 @@ class _TargetsPageState extends State<TargetsPage> {
   }
 
   void onSearchInputTextChange() {
-    Provider.of<TargetsProvider>(context, listen: false).setFilterText(_searchController.text);
+    Provider.of<TargetsProvider>(context, listen: false)
+        .setFilterText(_searchController.text);
   }
 
   void _selectSortPopup(TargetSort choice) {
@@ -726,7 +751,8 @@ class _TargetsPageState extends State<TargetsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
@@ -739,14 +765,16 @@ class _TargetsPageState extends State<TargetsPage> {
                           child: Text(
                             "This will wipe all your targets (consider performing a backup or "
                             "exporting to YATA).",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(
+                                fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
-                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(
+                                fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),

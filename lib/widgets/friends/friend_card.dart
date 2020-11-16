@@ -67,17 +67,15 @@ class _FriendCardState extends State<FriendCard> {
             icon: Icons.delete,
             onTap: () {
               Provider.of<FriendsProvider>(context, listen: false).deleteFriend(_friend);
-              Scaffold.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Deleted ${_friend.name}!'),
-                  action: SnackBarAction(
-                    label: 'UNDO',
-                    textColor: Colors.orange,
-                    onPressed: () {
-                      _friendsProvider.restoredDeleted();
-                    },
-                  ),
+              BotToast.showText(
+                text: 'Deleted ${_friend.name}!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
                 ),
+                contentColor: Colors.orange[800],
+                duration: Duration(seconds: 3),
+                contentPadding: EdgeInsets.all(10),
               );
             }),
       ],
@@ -640,14 +638,18 @@ class _FriendCardState extends State<FriendCard> {
     bool updateWorked = await _friendsProvider.updateFriend(_friend);
     if (updateWorked) {
     } else {
-      Scaffold.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            'Error updating ${_friend.name}!',
-          ),
+
+      BotToast.showText(
+        text: "Error updating ${_friend.name}!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
         ),
+        contentColor: Colors.red,
+        duration: Duration(seconds: 3),
+        contentPadding: EdgeInsets.all(10),
       );
+
     }
   }
 

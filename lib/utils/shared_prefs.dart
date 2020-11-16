@@ -21,6 +21,7 @@ class SharedPreferencesModel {
   final String _kTheme = "pda_theme";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
@@ -50,8 +51,11 @@ class SharedPreferencesModel {
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
+  final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
+  final String _kShortcutTile = "pda_shortcutTile";
+  final String _kActiveShortcutsList = "pda_activeShortcutsList";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
@@ -274,6 +278,16 @@ class SharedPreferencesModel {
   Future<bool> setDefaultBrowser(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultBrowser, value);
+  }
+
+  Future<bool> getLoadBarBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kLoadBarBrowser) ?? true;
+  }
+
+  Future<bool> setLoadBarBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kLoadBarBrowser, value);
   }
 
   /// ----------------------------
@@ -590,6 +604,16 @@ class SharedPreferencesModel {
     return prefs.setBool(_kProfileAlarmSound, value);
   }
 
+  Future<bool> getEnableShortcuts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kEnableShortcuts) ?? true;
+  }
+
+  Future<bool> setEnableShortcuts(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kEnableShortcuts, value);
+  }
+
   Future<bool> getUseNukeRevive() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kUseNukeRevive) ?? true;
@@ -608,6 +632,29 @@ class SharedPreferencesModel {
   Future<bool> setWarnAboutChains(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kWarnAboutChains, value);
+  }
+
+  /// ----------------------------
+  /// Methods for shortcuts
+  /// ----------------------------
+  Future<String> getShortcutTile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kShortcutTile) ?? 'both';
+  }
+
+  Future<bool> setShortcutTile(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kShortcutTile, value);
+  }
+
+  Future<List<String>> getActiveShortcutsList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kActiveShortcutsList) ?? List<String>();
+  }
+
+  Future<bool> setActiveShortcutsList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kActiveShortcutsList, value);
   }
 
   /// ----------------------------

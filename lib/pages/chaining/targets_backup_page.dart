@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -62,9 +63,9 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
-            height: AppBar().preferredSize.height,
-            child: buildAppBar(),
-          )
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
               : null,
           body: Builder(builder: (BuildContext context) {
             return GestureDetector(
@@ -77,8 +78,8 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                       padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                       child: Text(
                         "HOW TO EXPORT TARGETS",
-                        style:
-                            TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
@@ -102,13 +103,15 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                               onPressed: () async {
                                 var export = _targetsProvider.exportTargets();
                                 if (export == '') {
-                                  Scaffold.of(context).showSnackBar(
-                                    SnackBar(
-                                      duration: Duration(seconds: 5),
-                                      content: Text(
-                                        'No targets to export!',
-                                      ),
+                                  BotToast.showText(
+                                    text: "No targets to export!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
                                     ),
+                                    contentColor: Colors.red,
+                                    duration: Duration(seconds: 3),
+                                    contentPadding: EdgeInsets.all(10),
                                   );
                                 } else {
                                   Share.share(export);
@@ -123,24 +126,28 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                             onPressed: () async {
                               var export = _targetsProvider.exportTargets();
                               if (export == '') {
-                                Scaffold.of(context).showSnackBar(
-                                  SnackBar(
-                                    duration: Duration(seconds: 5),
-                                    content: Text(
-                                      'No targets to export!',
-                                    ),
+                                BotToast.showText(
+                                  text: "No targets to export!",
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
+                                  contentColor: Colors.red,
+                                  duration: Duration(seconds: 3),
+                                  contentPadding: EdgeInsets.all(10),
                                 );
                               } else {
                                 Clipboard.setData(ClipboardData(text: export));
-                                Scaffold.of(context).showSnackBar(
-                                  SnackBar(
-                                    duration: Duration(seconds: 5),
-                                    content: Text(
-                                      "${_targetsProvider.getTargetNumber()} "
+                                BotToast.showText(
+                                  text: "${_targetsProvider.getTargetNumber()} "
                                       "targets copied to clipboard!",
-                                    ),
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
+                                  contentColor: Colors.green,
+                                  duration: Duration(seconds: 3),
+                                  contentPadding: EdgeInsets.all(10),
                                 );
                               }
                             },
@@ -156,8 +163,8 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                       padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
                       child: Text(
                         "HOW TO IMPORT TARGETS",
-                        style:
-                            TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold),
                       ),
                     ),
                     Padding(
@@ -205,14 +212,16 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                                   if (_importFormKey.currentState.validate()) {
                                     var numberImported = _importChecker();
                                     if (numberImported == 0) {
-                                      Scaffold.of(context).showSnackBar(
-                                        SnackBar(
-                                          duration: Duration(seconds: 5),
-                                          content: Text(
-                                            'No targets to import! '
+                                      BotToast.showText(
+                                        text: 'No targets to import! '
                                             'Is the file structure correct?',
-                                          ),
+                                        textStyle: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
                                         ),
+                                        contentColor: Colors.red,
+                                        duration: Duration(seconds: 3),
+                                        contentPadding: EdgeInsets.all(10),
                                       );
                                     } else {
                                       FocusScope.of(context)
@@ -238,8 +247,8 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-        title: Text("Import & Export"),
-      );
+      title: Text("Import & Export"),
+    );
   }
 
   @override

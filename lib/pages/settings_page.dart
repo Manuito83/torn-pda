@@ -33,8 +33,11 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _apiIsLoading = false;
   OwnProfileModel _userProfile;
 
+  Future _preferencesRestored;
+
   String _openSectionValue;
   String _openBrowserValue;
+  bool _loadBarBrowser;
   String _timeFormatValue;
   String _timeZoneValue;
 
@@ -52,9 +55,11 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _restorePreferences();
-    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'settings'});
+    _preferencesRestored = _restorePreferences();
+    _ticker = new Timer.periodic(
+        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'settings'});
   }
 
   @override
@@ -68,129 +73,212 @@ class _SettingsPageState extends State<SettingsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                _apiKeyWidget(),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: FutureBuilder(
+        future: _preferencesRestored,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () =>
+                    FocusScope.of(context).requestFocus(new FocusNode()),
+                child: SingleChildScrollView(
+                  child: Column(
                     children: <Widget>[
-                      Flexible(
-                        child: Text(
-                          "Default launch section",
+                      _apiKeyWidget(),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Default launch section",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _openSectionDropdown(),
+                            ),
+                          ],
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20),
-                      ),
-                      Flexible(
-                        child: _openSectionDropdown(),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 5, right: 20, bottom: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
                       Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Flexible(
-                            child: Text(
-                              "Web browser",
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.info_outline),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return BrowserInfoDialog();
-                                },
-                              );
-                            },
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'BROWSER',
+                            style: TextStyle(fontSize: 10),
                           ),
                         ],
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 20),
-                      ),
-                      Flexible(
-                        child: _openBrowserDropdown(),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Flexible(
-                        child: Text(
-                          "Time format",
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 0, right: 20, bottom: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Text(
+                                    "Web browser",
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.info_outline),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return BrowserInfoDialog();
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _openBrowserDropdown(),
+                            ),
+                          ],
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("Show load bar"),
+                            Switch(
+                              value: _loadBarBrowser,
+                              onChanged: (value) {
+                                _settingsProvider.changeLoadBarBrowser = value;
+                                setState(() {
+                                  _loadBarBrowser = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
                       ),
-                      Flexible(
-                        child: _timeFormatDropdown(),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'TIME',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Flexible(
-                        child: Text(
-                          "Time zone",
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 0, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Time format",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _timeFormatDropdown(),
+                            ),
+                          ],
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 20),
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Time zone",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _timeZoneDropdown(),
+                            ),
+                          ],
+                        ),
                       ),
-                      Flexible(
-                        flex: 2,
-                        child: _timeZoneDropdown(),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'MISC',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Flexible(
-                        child: Text(
-                          "App bar position",
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "App bar position",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _appBarPositionDropdown(),
+                            ),
+                          ],
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.only(left: 20),
-                      ),
-                      Flexible(
-                        flex: 2,
-                        child: _appBarPositionDropdown(),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Note: this will affect other quick access items such as '
+                          'the quick crimes bar in the browser',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          )),
+                ));
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 
@@ -201,7 +289,8 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -279,7 +368,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               RaisedButton(
                                 child: Text("Reload"),
                                 onPressed: () {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
@@ -292,7 +382,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               RaisedButton(
                                 child: Text("Remove"),
                                 onPressed: () async {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
                                   // Removes the form error
                                   _formKey.currentState.reset();
                                   _apiKeyInputController.clear();
@@ -377,7 +468,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               RaisedButton(
                                 child: Text("Load"),
                                 onPressed: () {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
+                                  FocusScope.of(context)
+                                      .requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
@@ -751,7 +843,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _getApiDetails({@required bool userTriggered}) async {
     try {
-      dynamic myProfile = await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
+      dynamic myProfile =
+          await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
       if (myProfile is OwnProfileModel) {
         setState(() {
           _apiIsLoading = false;
@@ -768,8 +861,10 @@ class _SettingsPageState extends State<SettingsPage> {
         if (userTriggered) {
           User mFirebaseUser = await firebaseAuth.signInAnon();
           firestore.setUID(mFirebaseUser.uid);
-          await firestore.uploadUsersProfileDetail(myProfile, forceUpdate: true);
-          await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+          await firestore.uploadUsersProfileDetail(myProfile,
+              forceUpdate: true);
+          await firestore
+              .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
         }
       } else if (myProfile is ApiError) {
         setState(() {
@@ -787,13 +882,20 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
-          "Error: $e. Stack: $stack");
+      FirebaseCrashlytics.instance
+          .log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+              "Error: $e. Stack: $stack");
       FirebaseCrashlytics.instance.recordError(e, null);
     }
   }
 
-  void _restorePreferences() async {
+  Future _restorePreferences() async {
+    await SharedPreferencesModel().getDefaultSection().then((onValue) {
+      setState(() {
+        _openSectionValue = onValue;
+      });
+    });
+
     if (_userProvider.myUser.userApiKeyValid) {
       setState(() {
         _apiKeyInputController.text = _userProvider.myUser.userApiKey;
@@ -841,16 +943,13 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     });
 
-    await SharedPreferencesModel().getDefaultSection().then((onValue) {
-      setState(() {
-        _openSectionValue = onValue;
-      });
+    var appBarPosition = _settingsProvider.appBarTop;
+    setState(() {
+      appBarPosition ? _appBarPosition = 'top' : _appBarPosition = 'bottom';
     });
 
-    await SharedPreferencesModel().getAppBarPosition().then((onValue) {
-      setState(() {
-        _appBarPosition = onValue;
-      });
+    setState(() {
+      _loadBarBrowser = _settingsProvider.loadBarBrowser;
     });
   }
 

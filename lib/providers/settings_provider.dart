@@ -59,6 +59,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _loadBarBrowser = true;
+  bool get loadBarBrowser => _loadBarBrowser;
+  set changeLoadBarBrowser(bool value) {
+    _loadBarBrowser = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   void _saveSettingsSharedPrefs() {
     String browserSave;
     switch (_currentBrowser) {
@@ -70,6 +78,8 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
     SharedPreferencesModel().setDefaultBrowser(browserSave);
+
+    SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
 
     SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
 
@@ -120,6 +130,8 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
+
+    _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
 
     String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
     switch (restoredTimeFormat) {
