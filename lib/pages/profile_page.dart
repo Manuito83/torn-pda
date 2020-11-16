@@ -528,7 +528,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Text(
                   'No shortcuts configured, add some!',
                   style: TextStyle(
-                    color: Colors.brown,
+                    color: Colors.orange[900],
                     fontStyle: FontStyle.italic,
                     fontSize: 13,
                   ),
@@ -536,7 +536,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Text(
                   'TAP OPTIONS BUTTON TO CONFIGURE',
                   style: TextStyle(
-                    color: Colors.brown,
+                    color: Colors.orange[900],
                     fontStyle: FontStyle.italic,
                     fontSize: 10,
                   ),
