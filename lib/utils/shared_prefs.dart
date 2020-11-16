@@ -21,6 +21,7 @@ class SharedPreferencesModel {
   final String _kTheme = "pda_theme";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
@@ -277,6 +278,16 @@ class SharedPreferencesModel {
   Future<bool> setDefaultBrowser(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultBrowser, value);
+  }
+
+  Future<bool> getLoadBarBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kLoadBarBrowser) ?? true;
+  }
+
+  Future<bool> setLoadBarBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kLoadBarBrowser, value);
   }
 
   /// ----------------------------

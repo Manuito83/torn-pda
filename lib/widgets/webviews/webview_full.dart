@@ -203,16 +203,18 @@ class _WebViewFullState extends State<WebViewFull> {
             bottom: true,
             child: Column(
               children: [
-                Container(
-                  //padding: EdgeInsets.all(10.0),
-                  child: progress < 1.0
-                      ? LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.blueGrey[100],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blueGrey),
-                        )
-                      : Container(),
-                ),
+                _settingsProvider.loadBarBrowser
+                    ? Container(
+                        child: progress < 1.0
+                            ? LinearProgressIndicator(
+                                value: progress,
+                                backgroundColor: Colors.blueGrey[100],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.blueGrey),
+                              )
+                            : SizedBox.shrink(),
+                      )
+                    : SizedBox.shrink(),
                 // Crimes widget. NOTE: this one will open at the bottom if
                 // appBar is at the bottom, so it's duplicated below the actual
                 // webView widget
