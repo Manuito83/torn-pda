@@ -3002,6 +3002,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         if (apiChain is ChainModel) {
           _chainModel = apiChain;
+        } else {
+          // Default to empty chain, with all parameters at 0
+          _chainModel = ChainModel();
+          _chainModel.chain = ChainDetails();
         }
 
         _checkIfNotificationsAreCurrent();
