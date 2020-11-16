@@ -110,6 +110,8 @@ class _WebViewFullState extends State<WebViewFull> {
   int _scrollY = 0;
   int _scrollX = 0;
 
+  double progress = 0;
+
   SettingsProvider _settingsProvider;
 
   @override
@@ -201,6 +203,16 @@ class _WebViewFullState extends State<WebViewFull> {
             bottom: true,
             child: Column(
               children: [
+                Container(
+                  //padding: EdgeInsets.all(10.0),
+                  child: progress < 1.0
+                      ? LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.blueGrey[100],
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blueGrey),
+                        )
+                      : Container(),
+                ),
                 // Crimes widget. NOTE: this one will open at the bottom if
                 // appBar is at the bottom, so it's duplicated below the actual
                 // webView widget
@@ -275,6 +287,12 @@ class _WebViewFullState extends State<WebViewFull> {
                         });
                       }
                       return;
+                    },
+                    onProgressChanged:
+                        (InAppWebViewController c, int progress) {
+                      setState(() {
+                        this.progress = progress / 100;
+                      });
                     },
                     onWebViewCreated: (InAppWebViewController c) {
                       webView = c;
