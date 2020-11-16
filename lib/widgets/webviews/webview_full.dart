@@ -205,6 +205,7 @@ class _WebViewFullState extends State<WebViewFull> {
               children: [
                 _settingsProvider.loadBarBrowser
                     ? Container(
+                        height: 2,
                         child: progress < 1.0
                             ? LinearProgressIndicator(
                                 value: progress,
@@ -212,7 +213,7 @@ class _WebViewFullState extends State<WebViewFull> {
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                     Colors.blueGrey),
                               )
-                            : SizedBox.shrink(),
+                            : Container(height: 2),
                       )
                     : SizedBox.shrink(),
                 // Crimes widget. NOTE: this one will open at the bottom if
