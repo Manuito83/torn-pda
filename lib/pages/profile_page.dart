@@ -41,7 +41,6 @@ import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-
 enum ProfileNotification {
   travel,
   energy,
@@ -563,8 +562,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     elevation: 2,
                     child: _shortcuts.shortcutTile == 'both'
                         ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Column(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 SizedBox(
@@ -579,7 +578,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 Flexible(
                                   child: Container(
                                     child: Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 4),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 4),
                                       child: SizedBox(
                                         width: 55,
                                         child: Text(
@@ -594,7 +594,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ),
                               ],
                             ),
-                        )
+                          )
                         : _shortcuts.shortcutTile == 'icon'
                             ? SizedBox(
                                 height: 18,
@@ -2015,7 +2015,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onTap: () {
-                  _openTornBrowser("events");
+                  _openBrowserDialog(
+                    context,
+                    "https://www.torn.com/events.php#/step=all",
+                  );
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -3429,7 +3432,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
