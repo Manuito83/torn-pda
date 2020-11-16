@@ -211,7 +211,7 @@ class _WebViewFullState extends State<WebViewFull> {
                                 value: progress,
                                 backgroundColor: Colors.blueGrey[100],
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.blueGrey),
+                                    Colors.deepOrange[300]),
                               )
                             : Container(height: 2),
                       )
