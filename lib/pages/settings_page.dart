@@ -85,29 +85,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     children: <Widget>[
                       _apiKeyWidget(),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 10, right: 20, bottom: 5),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Flexible(
-                              child: Text(
-                                "Default launch section",
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 20),
-                            ),
-                            Flexible(
-                              child: _openSectionDropdown(),
-                            ),
-                          ],
-                        ),
-                      ),
                       SizedBox(height: 15),
-                      Divider(),
-                      SizedBox(height: 5),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -271,6 +249,27 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Default launch section",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _openSectionDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 50),
                     ],
                   ),
                 ));
