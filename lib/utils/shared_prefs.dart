@@ -52,10 +52,14 @@ class SharedPreferencesModel {
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
-  final String _kUseNukeRevive = "pda_useNukeRevive";
-  final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
+  final String _kUseNukeRevive = "pda_useNukeRevive";
+  final String _kWarnAboutChains = "pda_warnAboutChains";
+  final String _kExpandEvents = "pda_ExpandEvents";
+  final String _kExpandMessages = "pda_ExpandMessages";
+  final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
+  final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
@@ -632,6 +636,46 @@ class SharedPreferencesModel {
   Future<bool> setWarnAboutChains(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kWarnAboutChains, value);
+  }
+
+  Future<bool> getExpandEvents() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExpandEvents) ?? false;
+  }
+
+  Future<bool> setExpandEvents(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExpandEvents, value);
+  }
+
+  Future<bool> getExpandMessages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExpandMessages) ?? false;
+  }
+
+  Future<bool> setExpandMessages(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExpandMessages, value);
+  }
+
+  Future<bool> getExpandBasicInfo() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExpandBasicInfo) ?? false;
+  }
+
+  Future<bool> setExpandBasicInfo(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExpandBasicInfo, value);
+  }
+
+  Future<bool> getExpandNetworth() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExpandNetworth) ?? false;
+  }
+
+  Future<bool> setExpandNetworth(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExpandNetworth, value);
   }
 
   /// ----------------------------

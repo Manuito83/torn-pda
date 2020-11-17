@@ -179,6 +179,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   ChainModel _chainModel;
 
+  var _eventsExpController = ExpandableController();
+  var _messagesExpController = ExpandableController();
+  var _basicInfoExpController = ExpandableController();
+  var _networthExpController = ExpandableController();
+
   var _showOne = GlobalKey();
 
   @override
@@ -490,6 +495,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _nukeReviveActive = newOptions.nukeReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
+              _eventsExpController.expanded = newOptions.expandEvents;
+              _messagesExpController.expanded = newOptions.expandMessages;
+              _basicInfoExpController.expanded = newOptions.expandBasicInfo;
+              _networthExpController.expanded = newOptions.expandNetworth;
             });
           },
         )
@@ -2021,6 +2030,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        controller: _eventsExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
@@ -2420,6 +2430,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        controller: _messagesExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
@@ -2683,6 +2694,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        controller: _basicInfoExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
@@ -3345,6 +3357,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        controller: _networthExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Text(
@@ -4352,6 +4365,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _boosterNotificationType = NotificationType.timer;
         _boosterNotificationIcon = Icons.timer;
       }
+    });
+
+    var expandEvents = await SharedPreferencesModel().getExpandEvents();
+    var expandMessages = await SharedPreferencesModel().getExpandMessages();
+    var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
+    var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
+    setState(() {
+      _eventsExpController.expanded = expandEvents;
+      _messagesExpController.expanded = expandMessages;
+      _basicInfoExpController.expanded = expandBasicInfo;
+      _networthExpController.expanded = expandNetworth;
     });
   }
 

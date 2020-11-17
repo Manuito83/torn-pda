@@ -10,6 +10,10 @@ class ProfileOptionsReturn {
   bool nukeReviveEnabled;
   bool warnAboutChainsEnabled;
   bool shortcutsEnabled;
+  bool expandEvents;
+  bool expandMessages;
+  bool expandBasicInfo;
+  bool expandNetworth;
 }
 
 class ProfileOptionsPage extends StatefulWidget {
@@ -21,6 +25,10 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _nukeReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
   bool _shortcutsEnabled = true;
+  bool _expandEvents = false;
+  bool _expandMessages = false;
+  bool _expandBasicInfo = false;
+  bool _expandNetworth = false;
 
   Future _preferencesLoaded;
 
@@ -261,6 +269,125 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 ),
                               ),
                             ),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'EXPANDABLE PANELS',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 8),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              child: Text(
+                                'Choose whether you want to automatically expand '
+                                'or collapse certain sections. You can always '
+                                'toggle manually by tapping on the section card.',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Expand events"),
+                                  Switch(
+                                    value: _expandEvents,
+                                    onChanged: (value) {
+                                      SharedPreferencesModel()
+                                          .setExpandEvents(value);
+                                      setState(() {
+                                        _expandEvents = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Expand messages"),
+                                  Switch(
+                                    value: _expandMessages,
+                                    onChanged: (value) {
+                                      SharedPreferencesModel()
+                                          .setExpandMessages(value);
+                                      setState(() {
+                                        _expandMessages = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Expand basic info"),
+                                  Switch(
+                                    value: _expandBasicInfo,
+                                    onChanged: (value) {
+                                      SharedPreferencesModel()
+                                          .setExpandBasicInfo(value);
+                                      setState(() {
+                                        _expandBasicInfo = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Expand networth"),
+                                  Switch(
+                                    value: _expandNetworth,
+                                    onChanged: (value) {
+                                      SharedPreferencesModel()
+                                          .setExpandNetworth(value);
+                                      setState(() {
+                                        _expandNetworth = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
                             SizedBox(height: 50),
                           ],
                         ),
@@ -296,11 +423,19 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var useNuke = await SharedPreferencesModel().getUseNukeRevive();
     var warnChains = await SharedPreferencesModel().getWarnAboutChains();
     var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
+    var expandEvents = await SharedPreferencesModel().getExpandEvents();
+    var expandMessages = await SharedPreferencesModel().getExpandMessages();
+    var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
+    var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
 
     setState(() {
       _nukeReviveEnabled = useNuke;
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
+      _expandEvents = expandEvents;
+      _expandMessages = expandMessages;
+      _expandBasicInfo = expandBasicInfo;
+      _expandNetworth = expandNetworth;
     });
   }
 
@@ -411,7 +546,11 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       ProfileOptionsReturn()
         ..nukeReviveEnabled = _nukeReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
-        ..shortcutsEnabled = _shortcutsEnabled,
+        ..shortcutsEnabled = _shortcutsEnabled
+        ..expandEvents = _expandEvents
+        ..expandMessages = _expandMessages
+        ..expandBasicInfo = _expandBasicInfo
+        ..expandNetworth = _expandNetworth,
     );
     return true;
   }
