@@ -4535,12 +4535,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog<void>(
+    return showDialog(
       context: _,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return WebViewDialog(
-          initUrl: initUrl,
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewDialog(
+              initUrl: initUrl,
+            ),
+          ),
         );
       },
     );

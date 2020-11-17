@@ -39,7 +39,8 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat1_9_2_4 = "Profile: the Basic Information card can now be collapsed";
     String feat1_9_2_5 = "Browser: added loading progress bar (can be disabled)";
     String feat1_9_2_6 = "Browser: quick crimes are now placed at the bottom when using a bottom app bar";
-    String feat1_9_2_7 = "Fixed error with chaining indications for players with no faction";
+    String feat1_9_2_7 = "Increased size of quick browser";
+    String feat1_9_2_8 = "Fixed error with chaining indications for players with no faction";
     v1_9_2.features.add(feat1_9_2_1);
     v1_9_2.features.add(feat1_9_2_2);
     v1_9_2.features.add(feat1_9_2_3);
@@ -47,6 +48,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_9_2.features.add(feat1_9_2_5);
     v1_9_2.features.add(feat1_9_2_6);
     v1_9_2.features.add(feat1_9_2_7);
+    v1_9_2.features.add(feat1_9_2_8);
 
     // VERSION 1.9.1
     var v1_9_1 = ChangeLogItem();
