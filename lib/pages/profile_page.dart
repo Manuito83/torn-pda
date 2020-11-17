@@ -371,6 +371,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                          child: _messagesTimeline(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                           child: _playerStats(),
                         ),
                         _miscellaneous(),
@@ -1971,7 +1975,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Padding(
             padding: const EdgeInsets.only(right: 5.0),
             child: Text(
-              _eventsTimeFormatted(eventTime),
+              _occurrenceTimeFormatted(eventTime),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: e.seen == 0 ? FontWeight.bold : FontWeight.normal,
@@ -1987,6 +1991,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       }
       loopCount++;
+    }
+
+    if (_user.events.length > 20) {
+      timeline.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Center(
+            child: Text(
+              "(Showing last 20 events)",
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     var unreadString = '';
@@ -2183,9 +2204,327 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return insideIcon;
   }
 
-  String _eventsTimeFormatted(DateTime eventTime) {
+  Card _messagesTimeline() {
+    const maxToShow = 20;
+
+    // Some users might an empty messages map. This is why we have the events parameters as dynamic
+    // in OwnProfile Model. We need to check if it contains several elements, in which case we
+    // create a map in a new variable. Otherwise, we return an empty Card.
+    var messages = Map<String, TornMessage>();
+    if (_user.messages.length > 0) {
+      messages = Map.from(_user.messages).map(
+          (k, v) => MapEntry<String, TornMessage>(k, TornMessage.fromJson(v)));
+    } else {
+      return Card(
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: Text(
+                    'MESSAGES',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+                  child: Text(
+                    "You have no unread messages",
+                    style: TextStyle(color: Colors.green),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    var timeline = List<Widget>();
+
+    // Get total of unread messages
+    int unreadTotalCount = 0;
+    messages.forEach((key, value) {
+      if (value.read == 0) {
+        unreadTotalCount++;
+      }
+    });
+
+    // Get unread within limits (only recent)
+    int unreadRecentCount = 0;
+    int loopCount = 1;
+    int maxCount;
+
+    if (messages.length > maxToShow) {
+      maxCount = maxToShow;
+    } else {
+      maxCount = messages.length;
+    }
+
+    for (var i = 0; i < maxToShow; i++) {
+      var msg = messages.values.elementAt(i);
+
+      if (msg.read == 0) {
+        unreadRecentCount++;
+      }
+
+      String title = HtmlParser.fix(msg.title);
+      Widget insideIcon = _messagesInsideIconCases(msg.type);
+
+      IndicatorStyle iconBubble;
+      iconBubble = IndicatorStyle(
+        width: 30,
+        height: 30,
+        drawGap: true,
+        indicator: Container(
+          decoration: const BoxDecoration(
+            border: Border.fromBorderSide(
+              BorderSide(
+                color: Colors.grey,
+              ),
+            ),
+            shape: BoxShape.rectangle,
+          ),
+          child: insideIcon,
+        ),
+      );
+
+      var messageTime =
+          DateTime.fromMillisecondsSinceEpoch(msg.timestamp * 1000);
+
+      var messageRow = TimelineTile(
+        isFirst: loopCount == 1 ? true : false,
+        isLast: loopCount == maxCount ? true : false,
+        alignment: TimelineAlign.manual,
+        indicatorStyle: iconBubble,
+        lineXY: 0.25,
+        endChild: Container(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        msg.name,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 10),
+                msg.read == 0
+                    ? GestureDetector(
+                        child: Icon(Icons.markunread, color: Colors.green[600]),
+                        onTap: () {
+                          _openBrowserDialog(
+                            context,
+                            "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                          );
+                        },
+                      )
+                    : GestureDetector(
+                        child: Icon(Icons.mark_as_unread),
+                        onTap: () {
+                          _openBrowserDialog(
+                            context,
+                            "https://www.torn.com/messages.php#/p=read&ID="
+                            "${messages.keys.elementAt(i)}&suffix=inbox",
+                          );
+                        },
+                      ),
+              ],
+            ),
+          ),
+        ),
+        startChild: Container(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 5.0),
+            child: Text(
+              _occurrenceTimeFormatted(messageTime),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: msg.seen == 0 ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      timeline.add(messageRow);
+
+      if (loopCount == maxCount) {
+        break;
+      }
+      loopCount++;
+    }
+
+    if (_user.events.length > maxToShow) {
+      timeline.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Center(
+            child: Text(
+              "(Showing last $maxToShow messages)",
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    var unreadRecentString = '';
+    if (unreadRecentCount == 0) {
+      unreadRecentString = 'No unread messages (recent)';
+    } else if (unreadRecentCount == 1) {
+      unreadRecentString = "1 unread message (recent)";
+    } else {
+      unreadRecentString = '$unreadRecentCount unread messages (recent)';
+    }
+
+    var unreadTotalString = '';
+    var lastMessageDate = DateTime.fromMillisecondsSinceEpoch(
+        messages.values.last.timestamp * 1000);
+    if (unreadTotalCount == 0) {
+      unreadTotalString = 'No unread messages '
+          '(since ${_occurrenceTimeFormatted(lastMessageDate)})';
+    } else if (unreadTotalCount == 1) {
+      unreadTotalString = '1 unread message '
+          '(since ${_occurrenceTimeFormatted(lastMessageDate)})';
+    } else {
+      unreadTotalString = '$unreadTotalCount unread messages '
+          '(since ${_occurrenceTimeFormatted(lastMessageDate)})';
+    }
+
+    return Card(
+      child: ExpandablePanel(
+        header: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Row(
+            children: [
+              Text(
+                'MESSAGES',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(width: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onTap: () {
+                  _openBrowserDialog(
+                    context,
+                    "https://www.torn.com/messages.php",
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: Icon(MdiIcons.openInApp, size: 18),
+                ),
+              ),
+            ],
+          ),
+        ),
+        collapsed: Padding(
+          padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                unreadRecentString,
+                style: TextStyle(
+                  color: unreadRecentCount == 0 ? Colors.green : Colors.red,
+                  fontWeight: unreadRecentCount == 0
+                      ? FontWeight.normal
+                      : FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4),
+              if (unreadTotalCount > 0 && unreadTotalCount > unreadRecentCount)
+                Text(
+                  '$unreadTotalString',
+                  style: TextStyle(
+                    fontSize: 11,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        expanded: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: timeline,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _messagesInsideIconCases(String type) {
+    Widget insideIcon;
+    if (type.contains('Company newsletter')) {
+      insideIcon = Icon(
+        Icons.work,
+        color: Colors.brown[300],
+        size: 20,
+      );
+    } else if (type.contains('Faction newsletter')) {
+      insideIcon = Center(
+        child: Image.asset(
+          'images/icons/faction.png',
+          color: Colors.deepOrange[700],
+          width: 14,
+          height: 14,
+        ),
+      );
+    } else if (type.contains('User message')) {
+      insideIcon = Center(
+        child: Icon(
+          MdiIcons.accountDetails,
+          color: Colors.blueGrey[500],
+          size: 20,
+        ),
+      );
+    } else {
+      insideIcon = Container(
+        child: Center(
+          child: Text(
+            'T',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+          ),
+        ),
+      );
+    }
+    return insideIcon;
+  }
+
+  String _occurrenceTimeFormatted(DateTime occurrenceTime) {
     String diff;
-    var timeDifference = _serverTime.difference(eventTime);
+    var timeDifference = _serverTime.difference(occurrenceTime);
     if (timeDifference.inMinutes < 1) {
       diff = 'Seconds ago';
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {

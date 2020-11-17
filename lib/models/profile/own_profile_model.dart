@@ -45,6 +45,7 @@ class OwnProfileModel {
     this.networth,
     this.cooldowns,
     this.events,
+    this.messages,
     this.travel,
     this.icons,
   });
@@ -84,6 +85,7 @@ class OwnProfileModel {
   Map<String, double> networth;
   Cooldowns cooldowns;
   dynamic events;
+  dynamic messages;
   Travel travel;
   TornIcons icons;
 
@@ -122,6 +124,7 @@ class OwnProfileModel {
     networth: json["networth"] == null ? null : Map.from(json["networth"]).map((k, v) => MapEntry<String, double>(k, v.toDouble())),
     cooldowns: json["cooldowns"] == null ? null : Cooldowns.fromJson(json["cooldowns"]),
     events: json["events"],
+    messages: json["messages"],
     travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
     icons: json["icons"] == null ? null : TornIcons.fromJson(json["icons"]),
   );
@@ -161,6 +164,7 @@ class OwnProfileModel {
     "networth": networth == null ? null : Map.from(networth).map((k, v) => MapEntry<String, dynamic>(k, v)),
     "cooldowns": cooldowns == null ? null : cooldowns.toJson(),
     "events": events,
+    "messages": messages,
     "travel": travel == null ? null : travel.toJson(),
     "icons": icons == null ? null : icons.toJson(),
   };
@@ -387,6 +391,46 @@ class Event {
     "timestamp": timestamp == null ? null : timestamp,
     "event": event == null ? null : event,
     "seen": seen == null ? null : seen,
+  };
+}
+
+class TornMessage {
+  TornMessage({
+    this.timestamp,
+    this.id,
+    this.name,
+    this.type,
+    this.title,
+    this.seen,
+    this.read,
+  });
+
+  int timestamp;
+  int id;
+  String name;
+  String type;
+  String title;
+  int seen;
+  int read;
+
+  factory TornMessage.fromJson(Map<String, dynamic> json) => TornMessage(
+    timestamp: json["timestamp"] == null ? null : json["timestamp"],
+    id: json["ID"] == null ? null : json["ID"],
+    name: json["name"] == null ? null : json["name"],
+    type: json["type"] == null ? null : json["type"],
+    title: json["title"] == null ? null : json["title"],
+    seen: json["seen"] == null ? null : json["seen"],
+    read: json["read"] == null ? null : json["read"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "timestamp": timestamp == null ? null : timestamp,
+    "ID": id == null ? null : id,
+    "name": name == null ? null : name,
+    "type": type == null ? null : type,
+    "title": title == null ? null : title,
+    "seen": seen == null ? null : seen,
+    "read": read == null ? null : read,
   };
 }
 
