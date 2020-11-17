@@ -30,6 +30,24 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.2
+    var v1_9_2 = ChangeLogItem();
+    v1_9_2.version = 'Torn PDA v1.9.2';
+    String feat1_9_2_1 = "Profile: new shortcuts to your preferred game sections. Use the existing ones or configure your own. Short/long tap to open a quick or full browser";
+    String feat1_9_2_2 = "Profile: added a new card for received messages";
+    String feat1_9_2_3 = "Profile: added option to configure which cards are expanded or collapsed by default";
+    String feat1_9_2_4 = "Profile: the Basic Information card can now be collapsed";
+    String feat1_9_2_5 = "Browser: added loading progress bar (can be disabled)";
+    String feat1_9_2_6 = "Browser: quick crimes are now placed at the bottom when using a bottom app bar";
+    String feat1_9_2_7 = "Fixed error with chaining indications for players with no faction";
+    v1_9_2.features.add(feat1_9_2_1);
+    v1_9_2.features.add(feat1_9_2_2);
+    v1_9_2.features.add(feat1_9_2_3);
+    v1_9_2.features.add(feat1_9_2_4);
+    v1_9_2.features.add(feat1_9_2_5);
+    v1_9_2.features.add(feat1_9_2_6);
+    v1_9_2.features.add(feat1_9_2_7);
+
     // VERSION 1.9.1
     var v1_9_1 = ChangeLogItem();
     v1_9_1.version = 'Torn PDA v1.9.1';
@@ -319,6 +337,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_2);
     itemList.add(v1_9_1);
     itemList.add(v1_9_0);
     itemList.add(v1_8_6);
