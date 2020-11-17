@@ -673,11 +673,24 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             IconButton(
                               icon: Icon(Icons.paste),
                               onPressed: () async {
-                                ClipboardData data = await Clipboard.getData('text/plain');
+                                ClipboardData data =
+                                    await Clipboard.getData('text/plain');
                                 _customURLController.text = data.text;
                               },
                             ),
                           ],
+                        ),
+                        SizedBox(height: 8),
+                        Flexible(
+                          child: Text(
+                            "Tip: long-press the app bar in the browser to copy the "
+                            "current URL you are visiting. Then paste it here.",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey[600],
+                            ),
+                          ),
                         ),
                         SizedBox(height: 8),
                         Row(
