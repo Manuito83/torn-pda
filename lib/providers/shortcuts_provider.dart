@@ -257,7 +257,7 @@ class ShortcutsProvider extends ChangeNotifier {
         ..color = Colors.brown,
       Shortcut()
         ..name = "Forums: Own posts"
-        ..nickname = "Own"
+        ..nickname = "Own Posts"
         ..url =
             "https://www.torn.com/forums.php#!p=search&q=by:${_userDetails.playerId}&f=0&y=0"
         ..iconUrl = "images/icons/home/forums.png"
@@ -376,13 +376,13 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Faction: Cesium"
         ..nickname = "Faction Cesium"
-        ..url = "https://www.torn.com/factions.php?step=your#armoury-cesium"
+        ..url = "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=cesium"
         ..iconUrl = "images/icons/home/faction.png"
         ..color = Colors.blueGrey,
       Shortcut()
         ..name = "Faction: Points"
         ..nickname = "Faction Points"
-        ..url = "https://www.torn.com/factions.php?step=your#armoury-points"
+        ..url = "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=points"
         ..iconUrl = "images/icons/home/faction.png"
         ..color = Colors.blueGrey,
       Shortcut()
@@ -391,7 +391,6 @@ class ShortcutsProvider extends ChangeNotifier {
         ..url = "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate"
         ..iconUrl = "images/icons/home/faction.png"
         ..color = Colors.blueGrey,
-
       Shortcut()
         ..name = "Vault: Property"
         ..nickname = "Property"
@@ -664,8 +663,8 @@ class ShortcutsProvider extends ChangeNotifier {
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()
-        ..name = "Casino: Spin the wheel"
-        ..nickname = "Wheel"
+        ..name = "Casino: Spin the Wheel"
+        ..nickname = "Spin Wheel"
         ..url = "https://www.torn.com/loader.php?sid=spinTheWheel"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
@@ -732,7 +731,7 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Points Building"
         ..nickname = "Building"
-        ..url = "https://www.torn.com/shops.php?step=pharmacy"
+        ..url = "https://www.torn.com/points.php"
         ..iconUrl = "images/icons/map/points_building.png"
         ..color = Colors.yellow[700],
       Shortcut()
@@ -767,7 +766,7 @@ class ShortcutsProvider extends ChangeNotifier {
         ..color = Colors.yellow[700],
       Shortcut()
         ..name = "Token Shop"
-        ..nickname = "Token"
+        ..nickname = "Token Shop"
         ..url = "https://www.torn.com/token_shop.php"
         ..iconUrl = "images/icons/map/token_shop.png"
         ..color = Colors.yellow[700],
