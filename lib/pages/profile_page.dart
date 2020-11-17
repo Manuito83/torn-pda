@@ -2673,40 +2673,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    double totalEffective = strengthModifiedTotal +
+        speedModifiedTotal +
+        defenseModifiedTotal +
+        dexModifiedTotal;
+
+    int totalEffectiveModifier =
+        ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: Row(
-                children: [
-                  Text(
-                    'BASIC INFO',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+      child: ExpandablePanel(
+        header: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Row(
+            children: [
+              Text(
+                'BASIC INFO',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Rank: ${_user.rank}'),
-                  Text('Age: ${_user.age}'),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Row(
+            ],
+          ),
+        ),
+        collapsed: Padding(
+          padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
                   GestureDetector(
                     onTap: () async {
@@ -2724,187 +2720,257 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Text('${_miscModel.points}'),
                 ],
               ),
-            ),
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: Row(
+              SizedBox(height: 8),
+              Text('Battle: ${decimalFormat.format(_miscModel.total)}'),
+              SizedBox(height: 2),
+              Row(
                 children: [
                   Text(
-                    'BATTLE STATS',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                    'Battle (effective): ${decimalFormat.format(totalEffective)}',
+                  ),
+                  if (totalEffectiveModifier < 0)
+                    Text(
+                      ' ($totalEffectiveModifier%)',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    )
+                  else if (totalEffectiveModifier > 0)
+                    Text(
+                      ' (+$totalEffectiveModifier%)',
+                      style: TextStyle(
+                        color: Colors.green,
+                      ),
+                    )
+                ],
+              ),
+              SizedBox(height: 8),
+              Text('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
+              Text('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
+              Text('END: ${decimalFormat.format(_miscModel.endurance)}'),
+            ],
+          ),
+        ),
+        expanded: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Rank: ${_user.rank}'),
+                    Text('Age: ${_user.age}'),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        await _openBrowserDialog(
+                          context,
+                          'https://www.torn.com/points.php',
+                        );
+                      },
+                      child: Icon(
+                        MdiIcons.alphaPCircleOutline,
+                        color: Colors.blueAccent,
+                      ),
                     ),
-                  ),
-                ],
+                    SizedBox(width: 5),
+                    Text('${_miscModel.points}'),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                          'Strength: ${decimalFormat.format(_miscModel.strength)}'),
-                      Text(
-                        " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
-                        style: TextStyle(fontSize: 12),
+              SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Row(
+                  children: [
+                    Text(
+                      'BATTLE STATS',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                          'Defense: ${decimalFormat.format(_miscModel.defense)}'),
-                      Text(
-                        " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text('Speed: ${decimalFormat.format(_miscModel.speed)}'),
-                      Text(
-                        " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                          'Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
-                      Text(
-                        " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    width: 50,
-                    child:
-                        Divider(color: _themeProvider.mainText, thickness: 0.5),
-                  ),
-                  Text('Total: ${decimalFormat.format(_miscModel.total)}'),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: Row(
-                children: [
-                  Text(
-                    'EFFECTIVE STATS',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                          'Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
-                      strengthModified
-                          ? Text(
-                              " $strengthString",
-                              style:
-                                  TextStyle(color: strengthColor, fontSize: 12),
-                            )
-                          : SizedBox.shrink(),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                          'Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
-                      defenseModified
-                          ? Text(
-                              " $defenseString",
-                              style:
-                                  TextStyle(color: defenseColor, fontSize: 12),
-                            )
-                          : SizedBox.shrink(),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                          'Speed: ${decimalFormat.format(speedModifiedTotal)}'),
-                      speedModified
-                          ? Text(
-                              " $speedString",
-                              style: TextStyle(color: speedColor, fontSize: 12),
-                            )
-                          : SizedBox.shrink(),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                          'Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
-                      dexModified
-                          ? Text(
-                              " $dexString",
-                              style: TextStyle(color: dexColor, fontSize: 12),
-                            )
-                          : SizedBox.shrink(),
-                    ],
-                  ),
-                  SizedBox(
-                    width: 50,
-                    child:
-                        Divider(color: _themeProvider.mainText, thickness: 0.5),
-                  ),
-                  Text(
-                    'Total: ${decimalFormat.format(strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal)}',
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 5),
-              child: Row(
-                children: [
-                  Text(
-                    'WORK STATS',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                            'Strength: ${decimalFormat.format(_miscModel.strength)}'),
+                        Text(
+                          " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    Row(
+                      children: [
+                        Text(
+                            'Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                        Text(
+                          " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                            'Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                        Text(
+                          " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                            'Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                        Text(
+                          " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 50,
+                      child: Divider(
+                          color: _themeProvider.mainText, thickness: 0.5),
+                    ),
+                    Text('Total: ${decimalFormat.format(_miscModel.total)}'),
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                      'Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
-                  Text(
-                      'Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
-                  Text(
-                      'Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
-                ],
+              SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Row(
+                  children: [
+                    Text(
+                      'EFFECTIVE STATS',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 10),
-          ],
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                            'Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
+                        strengthModified
+                            ? Text(
+                                " $strengthString",
+                                style: TextStyle(
+                                    color: strengthColor, fontSize: 12),
+                              )
+                            : SizedBox.shrink(),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                            'Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
+                        defenseModified
+                            ? Text(
+                                " $defenseString",
+                                style: TextStyle(
+                                    color: defenseColor, fontSize: 12),
+                              )
+                            : SizedBox.shrink(),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                            'Speed: ${decimalFormat.format(speedModifiedTotal)}'),
+                        speedModified
+                            ? Text(
+                                " $speedString",
+                                style:
+                                    TextStyle(color: speedColor, fontSize: 12),
+                              )
+                            : SizedBox.shrink(),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                            'Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
+                        dexModified
+                            ? Text(
+                                " $dexString",
+                                style: TextStyle(color: dexColor, fontSize: 12),
+                              )
+                            : SizedBox.shrink(),
+                      ],
+                    ),
+                    SizedBox(
+                      width: 50,
+                      child: Divider(
+                          color: _themeProvider.mainText, thickness: 0.5),
+                    ),
+                    Text(
+                      'Total: ${decimalFormat.format(totalEffective)}',
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Row(
+                  children: [
+                    Text(
+                      'WORK STATS',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        'Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
+                    Text(
+                        'Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
+                    Text(
+                        'Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );
