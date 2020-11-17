@@ -288,7 +288,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               child: Text(
                                 'Choose whether you want to automatically expand '
                                 'or collapse certain sections. You can always '
-                                'toggle manually by tapping on the section card.',
+                                'toggle manually by tapping.',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
