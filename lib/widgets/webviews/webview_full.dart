@@ -969,12 +969,14 @@ class _WebViewFullState extends State<WebViewFull> {
       _lastTradeCall = now;
 
       // Call trades
-      _currentUrl = await webView.getUrl();
-      var html = await webView.getHtml();
-      var document = parse(html);
-      // Assign page title
-      String pageTitle = _getPageTitle(document);
-      _assessTrades(document, pageTitle);
+      if (mounted) {
+        _currentUrl = await webView.getUrl();
+        var html = await webView.getHtml();
+        var document = parse(html);
+        // Assign page title
+        String pageTitle = _getPageTitle(document);
+        _assessTrades(document, pageTitle);
+      }
     }
   }
 
