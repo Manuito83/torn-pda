@@ -30,6 +30,14 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.3
+    var v1_9_3 = ChangeLogItem();
+    v1_9_3.version = 'Torn PDA v1.9.3';
+    String feat1_9_3_1 = "Fixed error with messages titles, preventing some users from loading the Profile section entirely";
+    String feat1_9_3_2 = "Corrected emojis representation in message titles";
+    v1_9_3.features.add(feat1_9_3_1);
+    v1_9_3.features.add(feat1_9_3_2);
+
     // VERSION 1.9.2
     var v1_9_2 = ChangeLogItem();
     v1_9_2.version = 'Torn PDA v1.9.2';
@@ -339,6 +347,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_3);
     itemList.add(v1_9_2);
     itemList.add(v1_9_1);
     itemList.add(v1_9_0);

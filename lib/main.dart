@@ -24,7 +24,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:timezone/data/latest.dart' as tz;
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-final String appVersion = '1.9.2';
+final String appVersion = '1.9.3';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
