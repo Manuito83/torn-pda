@@ -409,7 +409,7 @@ class TornMessage {
   int id;
   String name;
   String type;
-  String title;
+  dynamic title;
   int seen;
   int read;
 
@@ -418,7 +418,7 @@ class TornMessage {
     id: json["ID"] == null ? null : json["ID"],
     name: json["name"] == null ? null : json["name"],
     type: json["type"] == null ? null : json["type"],
-    title: json["title"] == null ? null : json["title"],
+    title: json["title"],
     seen: json["seen"] == null ? null : json["seen"],
     read: json["read"] == null ? null : json["read"],
   );
@@ -428,7 +428,7 @@ class TornMessage {
     "ID": id == null ? null : id,
     "name": name == null ? null : name,
     "type": type == null ? null : type,
-    "title": title == null ? null : title,
+    "title": title,
     "seen": seen == null ? null : seen,
     "read": read == null ? null : read,
   };

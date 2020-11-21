@@ -27,6 +27,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/external/nuke_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
@@ -2283,7 +2284,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         unreadRecentCount++;
       }
 
-      String title = HtmlParser.fix(msg.title);
+      // This is important, as title is dynamic (for some reason, Torn API return
+      // and int if the title is only a number...
+      if (msg.title is int) {
+        msg.title = msg.title.toString();
+      }
+
+      String title = EmojiParser.fix(msg.title);
       Widget insideIcon = _messagesInsideIconCases(msg.type);
 
       IndicatorStyle iconBubble;
