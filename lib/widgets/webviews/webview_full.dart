@@ -257,7 +257,9 @@ class _WebViewFullState extends State<WebViewFull> {
                     initialHeaders: {},
                     initialOptions: InAppWebViewGroupOptions(
                       crossPlatform: InAppWebViewOptions(
-                        useShouldInterceptAjaxRequest: true,
+                        // This is deactivated as it interferes with hospital timer,
+                        // company applications, etc.
+                        //useShouldInterceptAjaxRequest: true,
                         debuggingEnabled: true,
                         preferredContentMode: UserPreferredContentMode.DESKTOP,
                       ),
@@ -269,13 +271,14 @@ class _WebViewFullState extends State<WebViewFull> {
                         //displayZoomControls: true,
                       ),
                     ),
+                    /*
                     shouldInterceptAjaxRequest:
                         (InAppWebViewController c, AjaxRequest x) async {
                       // This will intercept ajax calls performed when the bazaar reached 100 items
                       // and needs to be reloaded, so that we can remove and add again the fill buttons
-                      if (x == null) return;
-                      if (x.data == null) return;
-                      if (x.url == null) return;
+                      if (x == null) return x;
+                      if (x.data == null) return x;
+                      if (x.url == null) return x;
 
                       if (x.data.contains("step=getList&type=All&start=") &&
                           x.url.contains('inventory.php') &&
@@ -289,8 +292,9 @@ class _WebViewFullState extends State<WebViewFull> {
                               source: addBazaarFillButtonsJS());
                         });
                       }
-                      return;
+                      return x;
                     },
+                    */
                     onProgressChanged:
                         (InAppWebViewController c, int progress) {
                       setState(() {
