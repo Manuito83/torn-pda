@@ -53,6 +53,7 @@ class SharedPreferencesModel {
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShortcutTile = "pda_shortcutTile";
+  final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
@@ -689,6 +690,16 @@ class SharedPreferencesModel {
   Future<bool> setShortcutTile(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kShortcutTile, value);
+  }
+
+  Future<String> getShortcutMenu() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kShortcutMenu) ?? 'carousel';
+  }
+
+  Future<bool> setShortcutMenu(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kShortcutMenu, value);
   }
 
   Future<List<String>> getActiveShortcutsList() async {

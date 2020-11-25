@@ -41,6 +41,7 @@ import 'package:flutter/rendering.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/profile/shortcuts_model.dart';
 
 enum ProfileNotification {
   travel,
@@ -532,8 +533,133 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _shortcutsCarrousel() {
+    // Returns Main individual tile
+    Widget shortcutTile(Shortcut thisShortcut) {
+      Widget tile;
+      if (_shortcuts.shortcutTile == "both") {
+        tile = Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 18,
+                child: Image.asset(
+                  thisShortcut.iconUrl,
+                  width: 16,
+                  color: _themeProvider.mainText,
+                ),
+              ),
+              SizedBox(height: 3),
+              Flexible(
+                child: Container(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: SizedBox(
+                      width: 55,
+                      child: Text(
+                        thisShortcut.nickname.toUpperCase(),
+                        style: TextStyle(fontSize: 9),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.fade,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (_shortcuts.shortcutTile == "icon") {
+        tile = SizedBox(
+          height: 18,
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Image.asset(
+              thisShortcut.iconUrl,
+              width: 16,
+            ),
+          ),
+        );
+      } else {
+        // Only text
+        tile = Padding(
+          padding: EdgeInsets.all(2),
+          child: SizedBox(
+            width: 55,
+            child: Center(
+              child: Container(
+                child: Text(
+                  thisShortcut.nickname.toUpperCase(),
+                  style: TextStyle(fontSize: 9),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.fade,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      return InkWell(
+        onLongPress: () {
+          _openTornBrowser(thisShortcut.url);
+        },
+        onTap: () {
+          _openBrowserDialog(context, thisShortcut.url);
+        },
+        child: Card(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: thisShortcut.color, width: 1.5),
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          elevation: 2,
+          child: tile,
+        ),
+      );
+    }
+
+    // Main menu, returns either slidable list or wrap (grid)
+    Widget shortcutMenu() {
+      if (_shortcuts.shortcutMenu == "carousel") {
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _shortcuts.activeShortcuts.length,
+          itemBuilder: (context, index) {
+            var thisShortcut = _shortcuts.activeShortcuts[index];
+            return shortcutTile(thisShortcut);
+          },
+        );
+      } else {
+        var wrapItems = List<Widget>();
+        for (var thisShortcut in _shortcuts.activeShortcuts) {
+          double h = 60;
+          double w = 70;
+          if (_shortcuts.shortcutMenu == "grid") {
+            if (_shortcuts.shortcutTile == "icon") {
+              h = 40;
+              w = 40;
+            }
+            if (_shortcuts.shortcutTile == "text") {
+              h = 40;
+              w = 70;
+            }
+          }
+          wrapItems.add(
+            Container(height: h, width: w, child: shortcutTile(thisShortcut)),
+          );
+        }
+        return Wrap(children: wrapItems);
+      }
+    }
+
     return SizedBox(
-      height: _shortcuts.shortcutTile == 'both' ? 60 : 40,
+      // We only need a SizedBox height for the listView, the wrap will expand
+      height: _shortcuts.shortcutMenu == "grid"
+          ? null
+          : _shortcuts.shortcutTile == 'both'
+              ? 60
+              : 40,
       child: _shortcuts.activeShortcuts.length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -556,90 +682,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ],
             )
-          : ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _shortcuts.activeShortcuts.length,
-              itemBuilder: (context, index) {
-                var thisShortcut = _shortcuts.activeShortcuts[index];
-                return InkWell(
-                  onLongPress: () {
-                    _openTornBrowser(thisShortcut.url);
-                  },
-                  onTap: () {
-                    _openBrowserDialog(context, thisShortcut.url);
-                  },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(color: thisShortcut.color, width: 1.5),
-                      borderRadius: BorderRadius.circular(4.0),
-                    ),
-                    elevation: 2,
-                    child: _shortcuts.shortcutTile == 'both'
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  height: 18,
-                                  child: Image.asset(
-                                    thisShortcut.iconUrl,
-                                    width: 16,
-                                    color: _themeProvider.mainText,
-                                  ),
-                                ),
-                                SizedBox(height: 3),
-                                Flexible(
-                                  child: Container(
-                                    child: Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 4),
-                                      child: SizedBox(
-                                        width: 55,
-                                        child: Text(
-                                          thisShortcut.nickname.toUpperCase(),
-                                          style: TextStyle(fontSize: 9),
-                                          textAlign: TextAlign.center,
-                                          overflow: TextOverflow.fade,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _shortcuts.shortcutTile == 'icon'
-                            ? SizedBox(
-                                height: 18,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Image.asset(
-                                    thisShortcut.iconUrl,
-                                    width: 16,
-                                  ),
-                                ),
-                              )
-                            : Padding(
-                                padding: EdgeInsets.all(2),
-                                child: SizedBox(
-                                  width: 55,
-                                  child: Center(
-                                    child: Container(
-                                      child: Text(
-                                        thisShortcut.nickname.toUpperCase(),
-                                        style: TextStyle(fontSize: 9),
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                  ),
-                );
-              },
-            ),
+          : shortcutMenu(),
     );
   }
 
