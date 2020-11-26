@@ -273,6 +273,112 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
   return Promise.all(promises);
 }
 
+export async function sendDrugsNotification(userStats: any, subscriber: any) {
+  const cooldowns = userStats.cooldowns;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      cooldowns.drug === 0 && 
+      (subscriber.drugsInfluence === true)
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          "Drug cooldown expired",
+          "Hey junkie! Your drugs cooldown has expired, go get some more!",
+          "notification_drugs",
+          "#FF00c3"
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            drugsInfluence: false,
+          })
+      );
+    }
+
+    if (
+      cooldowns.drug > 0 &&
+      (subscriber.drugsInfluence === false)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            drugsInfluence: true,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR DRUGS");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
+export async function sendRacingNotification(userStats: any, subscriber: any) {
+  const icons = userStats.icons;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      icons.icon18 && 
+      subscriber.racingSent === false
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          "Race finished",
+          `Get in there ${userStats.name}!`,
+          "notification_racing",
+          "#FF9900"
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            racingSent: true,
+          })
+      );
+    }
+
+    if (
+      !icons.icon18 && 
+      (subscriber.racingSent === true)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            racingSent: false,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR RACING");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
 export async function sendNotificationToUser(
   token: string,
   title: string,

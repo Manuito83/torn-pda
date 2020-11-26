@@ -1,7 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendEnergyNotification, sendNerveNotification, 
-  sendTravelNotification, sendHospitalNotification } from "./notification";
+  sendTravelNotification, sendHospitalNotification, 
+  sendDrugsNotification, sendRacingNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
 export const alertsGroup = {
@@ -36,6 +37,10 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
         promises.push(sendTravelNotification(userStats, subscriber));
       if (subscriber.hospitalNotification)
         promises.push(sendHospitalNotification(userStats, subscriber));
+      if (subscriber.drugsNotification)
+        promises.push(sendDrugsNotification(userStats, subscriber));
+      if (subscriber.racingNotification)
+        promises.push(sendRacingNotification(userStats, subscriber));
     }
   } catch (e) {
     console.log("ERROR ALERTS");

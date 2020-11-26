@@ -23,7 +23,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _firestoreProfileReceived = firestore.getUserProfile();
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
   }
 
   @override
@@ -56,7 +57,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                       child: CheckboxListTile(
                         checkColor: Colors.white,
                         activeColor: Colors.blueGrey,
@@ -72,13 +73,14 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                       child: CheckboxListTile(
                         checkColor: Colors.white,
                         activeColor: Colors.blueGrey,
                         value: _firebaseUserModel.energyNotification ?? false,
                         title: Text("Energy full"),
-                        subtitle: Text("Get notified once you reach full energy"),
+                        subtitle:
+                            Text("Get notified once you reach full energy"),
                         onChanged: (value) {
                           setState(() {
                             _firebaseUserModel?.energyNotification = value;
@@ -88,13 +90,14 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                       child: CheckboxListTile(
                         checkColor: Colors.white,
                         activeColor: Colors.blueGrey,
                         value: _firebaseUserModel.nerveNotification ?? false,
                         title: Text("Nerve full"),
-                        subtitle: Text("Get notified once you reach full nerve"),
+                        subtitle:
+                            Text("Get notified once you reach full nerve"),
                         onChanged: (value) {
                           setState(() {
                             _firebaseUserModel?.nerveNotification = value;
@@ -104,19 +107,53 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                       child: CheckboxListTile(
                         checkColor: Colors.white,
                         activeColor: Colors.blueGrey,
                         value: _firebaseUserModel.hospitalNotification ?? false,
                         title: Text("Hospital admission and release"),
-                        subtitle: Text("If you are offline, you'll be notified if you are "
+                        subtitle: Text(
+                            "If you are offline, you'll be notified if you are "
                             "hospitalised, revived or out of hospital"),
                         onChanged: (value) {
                           setState(() {
                             _firebaseUserModel?.hospitalNotification = value;
                           });
                           firestore.subscribeToHospitalNotification(value);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.drugsNotification ?? false,
+                        title: Text("Drugs cooldown"),
+                        subtitle: Text("Get notified when your drugs cooldown "
+                            "has expired"),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.drugsNotification = value;
+                          });
+                          firestore.subscribeToDrugsNotification(value);
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.racingNotification ?? false,
+                        title: Text("Racing"),
+                        subtitle: Text("Get notified when your cross the finish line"),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.racingNotification = value;
+                          });
+                          firestore.subscribeToRacingNotification(value);
                         },
                       ),
                     ),
@@ -138,7 +175,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),

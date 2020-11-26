@@ -34,6 +34,7 @@ class _FirestoreHelper {
         "playerId": profile.playerId,
         "energyLastCheckFull": true,
         "nerveLastCheckFull": true,
+        "drugsInfluence": false,
         "platform": platform,
 
         /// This is a unique identifier to identify this user and target notification
@@ -62,6 +63,22 @@ class _FirestoreHelper {
       // to TRUE for users that were already in the DB. New users (or upon API reload) will have
       // the field created normally
       "nerveLastCheckFull": true,
+    });
+  }
+
+  Future<void> subscribeToDrugsNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "drugsNotification": subscribe,
+      // Same reason for this than in Nerve (see comment)
+      "drugsInfluence": false,
+    });
+  }
+
+  Future<void> subscribeToRacingNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "racingNotification": subscribe,
+      // Same reason for this than in Nerve (see comment)
+      "racingSent": false,
     });
   }
 
