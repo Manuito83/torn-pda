@@ -126,6 +126,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       alert: true,
       provisional: false,
     ));
+
     _messaging.configure(
       onResume: (message) {
         return _fireLaunchResumeNotifications(message);
@@ -157,24 +158,44 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   // TODO Missing bits:
+  // IMPORTANT: onResume/Launch only trigger with "FLUTTER_NOTIFICATION_CLICK"
+  // from Functions, but not directly from Firebase's Messaging console.
   //  - Join all notifications in one file
-  //  - Firebase onResume/Launch notification for energy is not configured,
-  //    so nothing happens (the APP just opens). This behaviour is different
-  //    to what happens now with standard scheduled notifications
+  //  - Firebase onResume/Launch notification for energy and other is not
+  //    configured. Give the option to choose different places? Like in nerve,
+  //    crimes vs jail. Energy: gym vs dump vs do not open.
   //  - Firebase with 'showNotification' does not have a payload in show(),
   //    so we don't do anything if triggered while app is open
 
   Future<void> _fireLaunchResumeNotifications(Map message) async {
     bool travel = false;
+    bool racing = false;
+    //bool nerve = false;
 
     if (Platform.isIOS) {
       if (message["message"].contains("about to land")) {
         travel = true;
       }
+      if (message["message"].contains("Get in there")) {
+        racing = true;
+      }
+      /*
+      if (message["message"].contains("Your nerve is full")) {
+        nerve = true;
+      }
+      */
     } else if (Platform.isAndroid) {
       if (message["data"]["message"].contains("about to land")) {
         travel = true;
       }
+      if (message["data"]["message"].contains("Get in there")) {
+        racing = true;
+      }
+      /*
+      if (message["data"]["message"].contains("Your nerve is full")) {
+        nerve = true;
+      }
+      */
     }
 
     if (travel) {
@@ -184,12 +205,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       var browserType = await SharedPreferencesModel().getDefaultBrowser();
       switch (browserType) {
         case 'app':
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => WebViewFull(
-                customTitle: 'Travel',
-              ),
-            ),
+          _openBrowserDialog(
+            context,
+            "https://www.torn.com",
           );
           break;
         case 'external':
@@ -200,6 +218,51 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           break;
       }
     }
+
+    if (racing) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          _openBrowserDialog(
+            context,
+            "https://www.torn.com/loader.php?sid=racing",
+          );
+          break;
+        case 'external':
+          var url = 'https://www.torn.com/loader.php?sid=racing';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+
+    /*
+    if (nerve) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          _openBrowserDialog(
+            context,
+            "https://www.torn.com/crimes.php",
+          );
+          break;
+        case 'external':
+          var url = 'https://www.torn.com/crimes.php';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+    */
+
   }
 
   Future<void> _configureSelectNotificationSubject() async {
@@ -640,5 +703,27 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _activeDrawerIndex = section;
     });
     _getPages();
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(
+                customUrl: initUrl,
+                dialog: true
+            ),
+          ),
+        );
+      },
+    );
   }
 }

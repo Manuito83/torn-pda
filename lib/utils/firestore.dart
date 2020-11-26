@@ -35,6 +35,7 @@ class _FirestoreHelper {
         "energyLastCheckFull": true,
         "nerveLastCheckFull": true,
         "drugsInfluence": false,
+        "racingSent": true,
         "platform": platform,
 
         /// This is a unique identifier to identify this user and target notification
@@ -78,7 +79,7 @@ class _FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({
       "racingNotification": subscribe,
       // Same reason for this than in Nerve (see comment)
-      "racingSent": false,
+      "racingSent": true,
     });
   }
 
