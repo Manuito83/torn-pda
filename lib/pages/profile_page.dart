@@ -30,7 +30,6 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
@@ -4596,8 +4595,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: WebViewDialog(
-              initUrl: initUrl,
+            child: WebViewFull(
+              customUrl: initUrl,
+              dialog: true
             ),
           ),
         );

@@ -18,6 +18,7 @@ import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -113,6 +114,7 @@ class _WebViewFullState extends State<WebViewFull> {
   double progress = 0;
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -125,6 +127,7 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   Widget build(BuildContext context) {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
       // If we are launching from a dialog, it's important not to add the show case, in
@@ -201,173 +204,250 @@ class _WebViewFullState extends State<WebViewFull> {
             left: false,
             right: false,
             bottom: true,
-            child: Column(
-              children: [
-                _settingsProvider.loadBarBrowser
-                    ? Container(
-                        height: 2,
-                        child: progress < 1.0
-                            ? LinearProgressIndicator(
-                                value: progress,
-                                backgroundColor: Colors.blueGrey[100],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.deepOrange[300]),
-                              )
-                            : Container(height: 2),
-                      )
-                    : SizedBox.shrink(),
-                // Crimes widget. NOTE: this one will open at the bottom if
-                // appBar is at the bottom, so it's duplicated below the actual
-                // webView widget
-                _settingsProvider.appBarTop
-                    ? ExpandablePanel(
-                        theme: ExpandableThemeData(
-                          hasIcon: false,
-                          tapBodyToCollapse: false,
-                          tapHeaderToExpand: false,
+            child: widget.dialog
+                ? Column(
+                    children: [
+                      Expanded(child: mainWebViewColumn()),
+                      Container(
+                        color: _themeProvider.currentTheme == AppTheme.light
+                            ? Colors.white
+                            : _themeProvider.background,
+                        height: 38,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 80,
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_back_ios_outlined,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        tryGoBack();
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_forward_ios_outlined,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        tryGoForward();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: FlatButton(
+                                  child: Text("Close"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.refresh),
+                                    onPressed: () async {
+                                      _scrollX = await webView.getScrollX();
+                                      _scrollY = await webView.getScrollY();
+                                      await webView.reload();
+                                      _scrollAfterLoad = true;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        collapsed: SizedBox.shrink(),
-                        controller: _crimesController,
-                        header: SizedBox.shrink(),
-                        expanded: CrimesWidget(controller: webView),
-                      )
-                    : SizedBox.shrink(),
-                // Trades widget
-                _tradesExpandable,
-                // City widget
-                ExpandablePanel(
-                  theme: ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
-                  collapsed: SizedBox.shrink(),
-                  controller: _cityController,
-                  header: SizedBox.shrink(),
-                  expanded: CityWidget(
-                    controller: webView,
-                    cityItems: _cityItemsFound,
-                    error: _errorCityApi,
-                  ),
-                ),
-                // Actual WebView
-                Expanded(
-                  child: InAppWebView(
-                    initialUrl: _initialUrl,
-                    initialHeaders: {},
-                    initialOptions: InAppWebViewGroupOptions(
-                      crossPlatform: InAppWebViewOptions(
-                        // This is deactivated as it interferes with hospital timer,
-                        // company applications, etc.
-                        //useShouldInterceptAjaxRequest: true,
-                        debuggingEnabled: true,
-                        preferredContentMode: UserPreferredContentMode.DESKTOP,
                       ),
-                      android: AndroidInAppWebViewOptions(
-                        //builtInZoomControls: false,
-                        useHybridComposition: true,
-                        //useWideViewPort: false,
-                        //loadWithOverviewMode: true,
-                        //displayZoomControls: true,
-                      ),
-                    ),
-                    /*
-                    shouldInterceptAjaxRequest:
-                        (InAppWebViewController c, AjaxRequest x) async {
-                      // This will intercept ajax calls performed when the bazaar reached 100 items
-                      // and needs to be reloaded, so that we can remove and add again the fill buttons
-                      if (x == null) return x;
-                      if (x.data == null) return x;
-                      if (x.url == null) return x;
-
-                      if (x.data.contains("step=getList&type=All&start=") &&
-                          x.url.contains('inventory.php') &&
-                          _bazaarActive &&
-                          _bazaarFillActive) {
-                        webView.evaluateJavascript(
-                            source: removeBazaarFillButtonsJS());
-                        Future.delayed(const Duration(seconds: 2))
-                            .then((value) {
-                          webView.evaluateJavascript(
-                              source: addBazaarFillButtonsJS());
-                        });
-                      }
-                      return x;
-                    },
-                    */
-                    onProgressChanged:
-                        (InAppWebViewController c, int progress) {
-                      setState(() {
-                        this.progress = progress / 100;
-                      });
-                    },
-                    onWebViewCreated: (InAppWebViewController c) {
-                      webView = c;
-                    },
-                    onLoadStart: (InAppWebViewController c, String url) {
-                      _currentUrl = url;
-                      _assessGeneral();
-                    },
-                    onLoadStop: (InAppWebViewController c, String url) {
-                      _currentUrl = url;
-                      _assessGeneral();
-
-                      // This is used in case the user presses reload. We need to wait for the page
-                      // load to be finished in order to scroll
-                      if (_scrollAfterLoad) {
-                        webView.scrollTo(
-                            x: _scrollX, y: _scrollY, animated: false);
-                        _scrollAfterLoad = false;
-                      }
-                    },
-                    // Allows IOS to open links with target=_blank
-                    onCreateWindow:
-                        (InAppWebViewController c, CreateWindowRequest req) {
-                      webView.loadUrl(url: req.url);
-                      return;
-                    },
-                    onConsoleMessage:
-                        (InAppWebViewController c, consoleMessage) async {
-                      print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
-                      /// TRADES
-                      ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-                      ///     redirect both with console messages (all 'hash.step') for trades
-                      ///     identification, but also with _assessGeneral() so that we can remove
-                      ///     the widget when an unrelated page is visited. Console messages also
-                      ///     help with deletions updates when 'hash.step view' is shown.
-                      ///   - Android: onLoadStop works, but we still need to catch deletions,
-                      ///     so we only listen for 'hash.step view'.
-                      if (Platform.isIOS) {
-                        if (consoleMessage.message.contains('hash.step')) {
-                          _decideIfCallTrades();
-                        }
-                      } else if (Platform.isAndroid) {
-                        if (consoleMessage.message.contains('hash.step view')) {
-                          _decideIfCallTrades();
-                        }
-                      }
-                    },
-                  ),
-                ),
-                !_settingsProvider.appBarTop
-                    ? ExpandablePanel(
-                        theme: ExpandableThemeData(
-                          hasIcon: false,
-                          tapBodyToCollapse: false,
-                          tapHeaderToExpand: false,
-                        ),
-                        collapsed: SizedBox.shrink(),
-                        controller: _crimesController,
-                        header: SizedBox.shrink(),
-                        expanded: CrimesWidget(controller: webView),
-                      )
-                    : SizedBox.shrink(),
-              ],
-            ),
+                    ],
+                  )
+                : mainWebViewColumn(),
           ),
         ),
       ),
+    );
+  }
+
+  Column mainWebViewColumn() {
+    return Column(
+      children: [
+        _settingsProvider.loadBarBrowser
+            ? Container(
+                height: 2,
+                child: progress < 1.0
+                    ? LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.blueGrey[100],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.deepOrange[300]),
+                      )
+                    : Container(height: 2),
+              )
+            : SizedBox.shrink(),
+        // Crimes widget. NOTE: this one will open at the bottom if
+        // appBar is at the bottom, so it's duplicated below the actual
+        // webView widget
+        _settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _crimesController,
+                header: SizedBox.shrink(),
+                expanded: CrimesWidget(controller: webView),
+              )
+            : SizedBox.shrink(),
+        // Trades widget
+        _tradesExpandable,
+        // City widget
+        ExpandablePanel(
+          theme: ExpandableThemeData(
+            hasIcon: false,
+            tapBodyToCollapse: false,
+            tapHeaderToExpand: false,
+          ),
+          collapsed: SizedBox.shrink(),
+          controller: _cityController,
+          header: SizedBox.shrink(),
+          expanded: CityWidget(
+            controller: webView,
+            cityItems: _cityItemsFound,
+            error: _errorCityApi,
+          ),
+        ),
+        // Actual WebView
+        Expanded(
+          child: InAppWebView(
+            initialUrl: _initialUrl,
+            initialHeaders: {},
+            initialOptions: InAppWebViewGroupOptions(
+              crossPlatform: InAppWebViewOptions(
+                // This is deactivated as it interferes with hospital timer,
+                // company applications, etc.
+                //useShouldInterceptAjaxRequest: true,
+                debuggingEnabled: true,
+                preferredContentMode: UserPreferredContentMode.DESKTOP,
+              ),
+              android: AndroidInAppWebViewOptions(
+                //builtInZoomControls: false,
+                useHybridComposition: true,
+                //useWideViewPort: false,
+                //loadWithOverviewMode: true,
+                //displayZoomControls: true,
+              ),
+            ),
+            /*
+                  shouldInterceptAjaxRequest:
+                      (InAppWebViewController c, AjaxRequest x) async {
+                    // This will intercept ajax calls performed when the bazaar reached 100 items
+                    // and needs to be reloaded, so that we can remove and add again the fill buttons
+                    if (x == null) return x;
+                    if (x.data == null) return x;
+                    if (x.url == null) return x;
+
+                    if (x.data.contains("step=getList&type=All&start=") &&
+                        x.url.contains('inventory.php') &&
+                        _bazaarActive &&
+                        _bazaarFillActive) {
+                      webView.evaluateJavascript(
+                          source: removeBazaarFillButtonsJS());
+                      Future.delayed(const Duration(seconds: 2))
+                          .then((value) {
+                        webView.evaluateJavascript(
+                            source: addBazaarFillButtonsJS());
+                      });
+                    }
+                    return x;
+                  },
+                  */
+            onProgressChanged: (InAppWebViewController c, int progress) {
+              setState(() {
+                this.progress = progress / 100;
+              });
+            },
+            onWebViewCreated: (InAppWebViewController c) {
+              webView = c;
+            },
+            onLoadStart: (InAppWebViewController c, String url) {
+              _currentUrl = url;
+              _assessGeneral();
+            },
+            onLoadStop: (InAppWebViewController c, String url) {
+              _currentUrl = url;
+              _assessGeneral();
+
+              // This is used in case the user presses reload. We need to wait for the page
+              // load to be finished in order to scroll
+              if (_scrollAfterLoad) {
+                webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                _scrollAfterLoad = false;
+              }
+            },
+            // Allows IOS to open links with target=_blank
+            onCreateWindow:
+                (InAppWebViewController c, CreateWindowRequest req) {
+              webView.loadUrl(url: req.url);
+              return;
+            },
+            onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+              print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
+              /// TRADES
+              ///   - IOS: onLoadStop does not work inside of Trades, that is why we
+              ///     redirect both with console messages (all 'hash.step') for trades
+              ///     identification, but also with _assessGeneral() so that we can remove
+              ///     the widget when an unrelated page is visited. Console messages also
+              ///     help with deletions updates when 'hash.step view' is shown.
+              ///   - Android: onLoadStop works, but we still need to catch deletions,
+              ///     so we only listen for 'hash.step view'.
+              if (Platform.isIOS) {
+                if (consoleMessage.message.contains('hash.step')) {
+                  _decideIfCallTrades();
+                }
+              } else if (Platform.isAndroid) {
+                if (consoleMessage.message.contains('hash.step view')) {
+                  _decideIfCallTrades();
+                }
+              }
+            },
+          ),
+        ),
+        !_settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _crimesController,
+                header: SizedBox.shrink(),
+                expanded: CrimesWidget(controller: webView),
+              )
+            : SizedBox.shrink(),
+      ],
     );
   }
 
@@ -445,57 +525,65 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _goBackOrForward(DragEndDetails details) async {
     if (details.primaryVelocity < 0) {
-      var canForward = await webView.canGoForward();
-      if (canForward) {
-        await webView.goForward();
-        BotToast.showText(
-          text: "Forward",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go forward!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await tryGoForward();
     } else if (details.primaryVelocity > 0) {
-      var canBack = await webView.canGoBack();
-      if (canBack) {
-        await webView.goBack();
-        BotToast.showText(
-          text: "Back",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go back!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await tryGoBack();
+    }
+  }
+
+  Future tryGoBack() async {
+    var canBack = await webView.canGoBack();
+    if (canBack) {
+      await webView.goBack();
+      BotToast.showText(
+        text: "Back",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go back!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Future tryGoForward() async {
+    var canForward = await webView.canGoForward();
+    if (canForward) {
+      await webView.goForward();
+      BotToast.showText(
+        text: "Forward",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go forward!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
     }
   }
 
