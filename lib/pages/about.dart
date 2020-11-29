@@ -21,7 +21,8 @@ class _AboutPageState extends State<AboutPage> {
   @override
   void initState() {
     super.initState();
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'about'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'about'});
   }
 
   @override
@@ -101,15 +102,20 @@ class _AboutPageState extends State<AboutPage> {
                       children: <TextSpan>[
                         TextSpan(
                             text: 'Discord channel',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                // Only option for external browser, or
-                                // Discord won't open
-                                var url = 'https://discord.gg/vyP23kJ';
-                                if (await canLaunch(url)) {
-                                  await launch(url, forceSafariVC: false);
-                                }
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        WebViewFull(
+                                      customTitle: 'Discord',
+                                      customUrl: 'https://discord.gg/vyP23kJ',
+                                    ),
+                                  ),
+                                );
                               }),
                         TextSpan(
                             text: ' and offer suggestions for new '
@@ -137,15 +143,19 @@ class _AboutPageState extends State<AboutPage> {
                         children: <TextSpan>[
                           TextSpan(
                             text: 'Torn Forums',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType = _settingsProvider.currentBrowser;
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
                                 switch (browserType) {
                                   case BrowserSetting.app:
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) => WebViewFull(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
                                           customTitle: 'Forums',
                                           customUrl:
                                               'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0',
@@ -197,23 +207,29 @@ class _AboutPageState extends State<AboutPage> {
                         children: <TextSpan>[
                           TextSpan(
                             text: 'Github',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType = _settingsProvider.currentBrowser;
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
                                 switch (browserType) {
                                   case BrowserSetting.app:
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) => WebViewFull(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
                                           customTitle: 'Github',
-                                          customUrl: 'https://github.com/Manuito83/torn-pda',
+                                          customUrl:
+                                              'https://github.com/Manuito83/torn-pda',
                                         ),
                                       ),
                                     );
                                     break;
                                   case BrowserSetting.external:
-                                    var url = 'https://github.com/Manuito83/torn-pda';
+                                    var url =
+                                        'https://github.com/Manuito83/torn-pda';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
@@ -253,15 +269,19 @@ class _AboutPageState extends State<AboutPage> {
                         children: <TextSpan>[
                           TextSpan(
                             text: 'donation in game',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType = _settingsProvider.currentBrowser;
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
                                 switch (browserType) {
                                   case BrowserSetting.app:
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) => WebViewFull(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
                                           customTitle: 'Donate to Manuito',
                                           customUrl:
                                               'https://www.torn.com/trade.php#step=start&userID=2225097',
@@ -351,15 +371,19 @@ class _AboutPageState extends State<AboutPage> {
                         children: <TextSpan>[
                           TextSpan(
                             text: 'Manuito [2225097]',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType = _settingsProvider.currentBrowser;
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
                                 switch (browserType) {
                                   case BrowserSetting.app:
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) => WebViewFull(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
                                           customUrl:
                                               'https://www.torn.com/profiles.php?XID=2225097',
                                           customTitle: 'Manuito',
@@ -368,7 +392,8 @@ class _AboutPageState extends State<AboutPage> {
                                     );
                                     break;
                                   case BrowserSetting.external:
-                                    var url = 'https://www.torn.com/profiles.php?XID=2225097';
+                                    var url =
+                                        'https://www.torn.com/profiles.php?XID=2225097';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
@@ -396,15 +421,19 @@ class _AboutPageState extends State<AboutPage> {
                         children: <TextSpan>[
                           TextSpan(
                             text: 'Phillip_J_Fry [2184575]',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType = _settingsProvider.currentBrowser;
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
                                 switch (browserType) {
                                   case BrowserSetting.app:
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) => WebViewFull(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
                                           customTitle: 'Phillip_J_Fry',
                                           customUrl:
                                               'https://www.torn.com/profiles.php?XID=2184575',
@@ -413,7 +442,8 @@ class _AboutPageState extends State<AboutPage> {
                                     );
                                     break;
                                   case BrowserSetting.external:
-                                    var url = 'https://www.torn.com/profiles.php?XID=2184575';
+                                    var url =
+                                        'https://www.torn.com/profiles.php?XID=2184575';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
@@ -441,15 +471,19 @@ class _AboutPageState extends State<AboutPage> {
                         children: <TextSpan>[
                           TextSpan(
                             text: 'Kivou [2000607]',
-                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType = _settingsProvider.currentBrowser;
+                                var browserType =
+                                    _settingsProvider.currentBrowser;
                                 switch (browserType) {
                                   case BrowserSetting.app:
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) => WebViewFull(
+                                        builder: (BuildContext context) =>
+                                            WebViewFull(
                                           customTitle: 'Kivou',
                                           customUrl:
                                               'https://www.torn.com/profiles.php?XID=2000607',
@@ -458,7 +492,8 @@ class _AboutPageState extends State<AboutPage> {
                                     );
                                     break;
                                   case BrowserSetting.external:
-                                    var url = 'https://www.torn.com/profiles.php?XID=2000607';
+                                    var url =
+                                        'https://www.torn.com/profiles.php?XID=2000607';
                                     if (await canLaunch(url)) {
                                       await launch(url, forceSafariVC: false);
                                     }
@@ -498,7 +533,8 @@ class _AboutPageState extends State<AboutPage> {
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
-          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState =
+              context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
