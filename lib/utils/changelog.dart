@@ -35,6 +35,15 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.5
+    var v1_9_5 = ChangeLogItem();
+    v1_9_5.main.version = 'Torn PDA v1.9.5';
+    v1_9_5.main.date = '30 NOV 2020';
+    String feat1_9_5_1 = "Fixed shortcuts menu persistence after app is closed";
+    String feat1_9_5_2 = "Fixed Discord link in About section";
+    v1_9_5.features.add(feat1_9_5_1);
+    v1_9_5.features.add(feat1_9_5_2);
+
     // VERSION 1.9.4
     var v1_9_4 = ChangeLogItem();
     v1_9_4.main.version = 'Torn PDA v1.9.4';
@@ -367,6 +376,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_5);
     itemList.add(v1_9_4);
     itemList.add(v1_9_3);
     itemList.add(v1_9_2);
