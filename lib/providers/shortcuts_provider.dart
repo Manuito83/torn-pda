@@ -83,6 +83,7 @@ class ShortcutsProvider extends ChangeNotifier {
 
   Future _initializeStockShortcuts() async {
     _shortcutTile = await SharedPreferencesModel().getShortcutTile();
+    _shortcutMenu = await SharedPreferencesModel().getShortcutMenu();
     _userDetails =
         ownProfileModelFromJson(await SharedPreferencesModel().getOwnDetails());
 
