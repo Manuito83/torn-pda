@@ -43,121 +43,124 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.data is FirebaseUserModel) {
                 _firebaseUserModel = snapshot.data;
-                return Column(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text(
-                        "Alerts are automatic notifications that you only "
-                        "need to activate once. However, you will be notified "
-                        "earlier than with manual notifications.",
-                        style: Theme.of(context).textTheme.bodyText2.copyWith(
-                              height: 1.3,
-                            ),
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Text(
+                          "Alerts are automatic notifications that you only "
+                          "need to activate once. However, you will be notified "
+                          "earlier than with manual notifications.",
+                          style: Theme.of(context).textTheme.bodyText2.copyWith(
+                                height: 1.3,
+                              ),
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.travelNotification ?? false,
-                        title: Text("Travel"),
-                        subtitle: Text("Get notified just before you arrive"),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.travelNotification = value;
-                          });
-                          firestore.subscribeToTravelNotification(value);
-                        },
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.travelNotification ?? false,
+                          title: Text("Travel"),
+                          subtitle: Text("Get notified just before you arrive"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.travelNotification = value;
+                            });
+                            firestore.subscribeToTravelNotification(value);
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.energyNotification ?? false,
-                        title: Text("Energy full"),
-                        subtitle:
-                            Text("Get notified once you reach full energy"),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.energyNotification = value;
-                          });
-                          firestore.subscribeToEnergyNotification(value);
-                        },
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.energyNotification ?? false,
+                          title: Text("Energy full"),
+                          subtitle:
+                              Text("Get notified once you reach full energy"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.energyNotification = value;
+                            });
+                            firestore.subscribeToEnergyNotification(value);
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.nerveNotification ?? false,
-                        title: Text("Nerve full"),
-                        subtitle:
-                            Text("Get notified once you reach full nerve"),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.nerveNotification = value;
-                          });
-                          firestore.subscribeToNerveNotification(value);
-                        },
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.nerveNotification ?? false,
+                          title: Text("Nerve full"),
+                          subtitle:
+                              Text("Get notified once you reach full nerve"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.nerveNotification = value;
+                            });
+                            firestore.subscribeToNerveNotification(value);
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.hospitalNotification ?? false,
-                        title: Text("Hospital admission and release"),
-                        subtitle: Text(
-                            "If you are offline, you'll be notified if you are "
-                            "hospitalised, revived or out of hospital"),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.hospitalNotification = value;
-                          });
-                          firestore.subscribeToHospitalNotification(value);
-                        },
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.hospitalNotification ?? false,
+                          title: Text("Hospital admission and release"),
+                          subtitle: Text(
+                              "If you are offline, you'll be notified if you are "
+                              "hospitalised, revived or out of hospital"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.hospitalNotification = value;
+                            });
+                            firestore.subscribeToHospitalNotification(value);
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.drugsNotification ?? false,
-                        title: Text("Drugs cooldown"),
-                        subtitle: Text("Get notified when your drugs cooldown "
-                            "has expired"),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.drugsNotification = value;
-                          });
-                          firestore.subscribeToDrugsNotification(value);
-                        },
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.drugsNotification ?? false,
+                          title: Text("Drugs cooldown"),
+                          subtitle: Text("Get notified when your drugs cooldown "
+                              "has expired"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.drugsNotification = value;
+                            });
+                            firestore.subscribeToDrugsNotification(value);
+                          },
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.racingNotification ?? false,
-                        title: Text("Racing"),
-                        subtitle: Text("Get notified when your cross the finish line"),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.racingNotification = value;
-                          });
-                          firestore.subscribeToRacingNotification(value);
-                        },
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.racingNotification ?? false,
+                          title: Text("Racing"),
+                          subtitle: Text("Get notified when your cross the finish line"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.racingNotification = value;
+                            });
+                            firestore.subscribeToRacingNotification(value);
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 40),
+                    ],
+                  ),
                 );
               } else {
                 return _connectError();
