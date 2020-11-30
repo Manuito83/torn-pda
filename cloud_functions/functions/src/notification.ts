@@ -393,6 +393,9 @@ export async function sendNotificationToUser(
       body: body,
       icon: icon,
       color: color,
+      sound: "default",
+      badge: "1",
+      priority: "high",
     },
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",
