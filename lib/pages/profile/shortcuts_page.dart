@@ -478,7 +478,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
         DropdownMenuItem(
           value: "carousel",
           child: SizedBox(
-            width: 60,
+            width: 67,
             child: Text(
               "Carousel",
               textAlign: TextAlign.right,
@@ -491,7 +491,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
         DropdownMenuItem(
           value: "grid",
           child: SizedBox(
-            width: 60,
+            width: 67,
             child: Text(
               "Grid",
               textAlign: TextAlign.right,
