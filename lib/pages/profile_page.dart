@@ -2741,6 +2741,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int totalEffectiveModifier =
         ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
 
+    final moneyFormat = new NumberFormat("#,##0", "en_US");
+
     return Card(
       child: ExpandablePanel(
         controller: _basicInfoExpController,
@@ -2763,6 +2765,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_user.networth["wallet"] != null)
+                Row(children: [
+                  GestureDetector(
+                    onTap: () async {
+                      _openWalletDialog(context);
+                    },
+                    child: Icon(
+                      MdiIcons.cashUsdOutline,
+                      color: Colors.green,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Text('\$${moneyFormat.format(_user.networth["wallet"])}')
+                ])
+              else
+                SizedBox.shrink(),
+              SizedBox(height: 4),
               Row(
                 children: [
                   GestureDetector(
@@ -4595,10 +4614,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(
-              customUrl: initUrl,
-              dialog: true
-            ),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
           ),
         );
       },
@@ -4800,6 +4816,169 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         width: 34,
                         child: Image.asset(
                           'images/icons/nuke-revive.png',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openWalletDialog(BuildContext _) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                      padding: EdgeInsets.only(
+                        top: 45,
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                      ),
+                      margin: EdgeInsets.only(top: 15),
+                      decoration: new BoxDecoration(
+                        color: _themeProvider.background,
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10.0,
+                            offset: const Offset(0.0, 10.0),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: RaisedButton(
+                              child: SizedBox(
+                                width: 130,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'images/icons/home/vault.png',
+                                      width: 15,
+                                      height: 15,
+                                      color: Colors.black,
+                                    ),
+                                    SizedBox(width: 15),
+                                    Text("Personal vault"),
+                                  ],
+                                ),
+                              ),
+                              onPressed: () async {
+                                await _openBrowserDialog(
+                                  context,
+                                  'https://www.torn.com/properties.php#/p=options&tab=vault',
+                                );
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: RaisedButton(
+                              child: SizedBox(
+                                width: 130,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'images/icons/faction.png',
+                                      width: 15,
+                                      height: 15,
+                                      color: Colors.black,
+                                    ),
+                                    SizedBox(width: 15),
+                                    Text("Faction vault"),
+                                  ],
+                                ),
+                              ),
+                              onPressed: () async {
+                                await _openBrowserDialog(
+                                  context,
+                                  'https://www.torn.com/factions.php?step=your#/tab=armoury',
+                                );
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: RaisedButton(
+                              child: SizedBox(
+                                width: 130,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset(
+                                      'images/icons/home/job.png',
+                                      width: 15,
+                                      height: 15,
+                                      color: Colors.black,
+                                    ),
+                                    SizedBox(width: 15),
+                                    Text("Company vault"),
+                                  ],
+                                ),
+                              ),
+                              onPressed: () async {
+                                await _openBrowserDialog(
+                                  context,
+                                  'https://www.torn.com/companies.php#/option=funds',
+                                );
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          FlatButton(
+                            child: Text("Cancel"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      )),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(
+                          MdiIcons.cashUsdOutline,
+                          color: Colors.green,
                         ),
                       ),
                     ),
