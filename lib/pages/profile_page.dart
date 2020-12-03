@@ -4870,22 +4870,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                             child: RaisedButton(
-                              child: SizedBox(
-                                width: 130,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'images/icons/home/vault.png',
-                                      width: 15,
-                                      height: 15,
-                                      color: Colors.black,
-                                    ),
-                                    SizedBox(width: 15),
-                                    Text("Personal vault"),
-                                  ],
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/home/vault.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 15),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text("Personal vault"),
+                                  ),
+                                ],
                               ),
                               onPressed: () async {
                                 await _openBrowserDialog(
@@ -4899,22 +4899,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                             child: RaisedButton(
-                              child: SizedBox(
-                                width: 130,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'images/icons/faction.png',
-                                      width: 15,
-                                      height: 15,
-                                      color: Colors.black,
-                                    ),
-                                    SizedBox(width: 15),
-                                    Text("Faction vault"),
-                                  ],
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/faction.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 15),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text("Faction vault"),
+                                  ),
+                                ],
                               ),
                               onPressed: () async {
                                 await _openBrowserDialog(
@@ -4928,22 +4928,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                             child: RaisedButton(
-                              child: SizedBox(
-                                width: 130,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'images/icons/home/job.png',
-                                      width: 15,
-                                      height: 15,
-                                      color: Colors.black,
-                                    ),
-                                    SizedBox(width: 15),
-                                    Text("Company vault"),
-                                  ],
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/home/job.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 15),
+                                  SizedBox(
+                                    width: 100,
+                                    child: Text("Company vault"),
+                                  ),
+                                ],
                               ),
                               onPressed: () async {
                                 await _openBrowserDialog(
