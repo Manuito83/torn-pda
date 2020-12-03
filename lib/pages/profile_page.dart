@@ -835,42 +835,46 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  LinearPercentIndicator(
-                    isRTL: _user.travel.destination == "Torn" ? true : false,
-                    center: Text(
-                      diff,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onLongPress:  () => _openTornBrowser('home'),
+                    onTap: () => _openBrowserDialog(context, 'https://www.torn.com'),
+                    child: LinearPercentIndicator(
+                      isRTL: _user.travel.destination == "Torn" ? true : false,
+                      center: Text(
+                        diff,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    widgetIndicator: Opacity(
-                      // Make icon transparent when about to pass over text
-                      opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                              _getTravelPercentage(totalSeconds) > 0.7
-                          ? 1
-                          : 0.3,
-                      child: Padding(
-                        padding: _user.travel.destination == "Torn"
-                            ? const EdgeInsets.only(top: 6, right: 6)
-                            : const EdgeInsets.only(top: 6, left: 10),
-                        child: RotatedBox(
-                          quarterTurns:
-                              _user.travel.destination == "Torn" ? 3 : 1,
-                          child: Icon(
-                            Icons.airplanemode_active,
-                            color: Colors.blue[900],
+                      widgetIndicator: Opacity(
+                        // Make icon transparent when about to pass over text
+                        opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
+                                _getTravelPercentage(totalSeconds) > 0.7
+                            ? 1
+                            : 0.3,
+                        child: Padding(
+                          padding: _user.travel.destination == "Torn"
+                              ? const EdgeInsets.only(top: 6, right: 6)
+                              : const EdgeInsets.only(top: 6, left: 10),
+                          child: RotatedBox(
+                            quarterTurns:
+                                _user.travel.destination == "Torn" ? 3 : 1,
+                            child: Icon(
+                              Icons.airplanemode_active,
+                              color: Colors.blue[900],
+                            ),
                           ),
                         ),
                       ),
+                      animateFromLastPercent: true,
+                      animation: true,
+                      width: 180,
+                      lineHeight: 18,
+                      progressColor: Colors.blue[200],
+                      backgroundColor: Colors.grey,
+                      percent: _getTravelPercentage(totalSeconds),
                     ),
-                    animateFromLastPercent: true,
-                    animation: true,
-                    width: 180,
-                    lineHeight: 18,
-                    progressColor: Colors.blue[200],
-                    backgroundColor: Colors.grey,
-                    percent: _getTravelPercentage(totalSeconds),
                   ),
                   _notificationIcon(ProfileNotification.travel),
                 ],

@@ -659,41 +659,67 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              LinearPercentIndicator(
-                isRTL: _travelModel.destination == "Torn" ? true : false,
-                center: Text(
-                  diff,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+              GestureDetector(
+                onLongPress: () async {
+                  var browserType = _settingsProvider.currentBrowser;
+                  switch (browserType) {
+                    case BrowserSetting.app:
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => WebViewFull(
+                            customUrl: 'https://www.torn.com',
+                            customTitle: 'Traveling',
+                          ),
+                        ),
+                      );
+                      break;
+                    case BrowserSetting.external:
+                      var url = 'https://www.torn.com';
+                      if (await canLaunch(url)) {
+                        await launch(url, forceSafariVC: false);
+                      }
+                      break;
+                  }
+                },
+                onTap: () =>
+                    _openBrowserDialog(context, 'https://www.torn.com'),
+                child: LinearPercentIndicator(
+                  isRTL: _travelModel.destination == "Torn" ? true : false,
+                  center: Text(
+                    diff,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                widgetIndicator: Opacity(
-                  // Make icon transparent when about to pass over text
-                  opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                          _getTravelPercentage(totalSeconds) > 0.7
-                      ? 1
-                      : 0.3,
-                  child: Padding(
-                    padding: _travelModel.destination == "Torn"
-                        ? const EdgeInsets.only(top: 6, right: 6)
-                        : const EdgeInsets.only(top: 6, left: 10),
-                    child: RotatedBox(
-                      quarterTurns: _travelModel.destination == "Torn" ? 3 : 1,
-                      child: Icon(
-                        Icons.airplanemode_active,
-                        color: Colors.blue[900],
+                  widgetIndicator: Opacity(
+                    // Make icon transparent when about to pass over text
+                    opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
+                            _getTravelPercentage(totalSeconds) > 0.7
+                        ? 1
+                        : 0.3,
+                    child: Padding(
+                      padding: _travelModel.destination == "Torn"
+                          ? const EdgeInsets.only(top: 6, right: 6)
+                          : const EdgeInsets.only(top: 6, left: 10),
+                      child: RotatedBox(
+                        quarterTurns:
+                            _travelModel.destination == "Torn" ? 3 : 1,
+                        child: Icon(
+                          Icons.airplanemode_active,
+                          color: Colors.blue[900],
+                        ),
                       ),
                     ),
                   ),
+                  animateFromLastPercent: true,
+                  animation: true,
+                  width: 200,
+                  lineHeight: 18,
+                  progressColor: Colors.blue[200],
+                  backgroundColor: Colors.grey,
+                  percent: _getTravelPercentage(totalSeconds),
                 ),
-                animateFromLastPercent: true,
-                animation: true,
-                width: 200,
-                lineHeight: 18,
-                progressColor: Colors.blue[200],
-                backgroundColor: Colors.grey,
-                percent: _getTravelPercentage(totalSeconds),
               ),
             ],
           ),
@@ -942,7 +968,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                                       duration: Duration(seconds: 3),
                                       contentPadding: EdgeInsets.all(10),
                                     );
-
                                   }
                                 },
                               ),
@@ -1075,7 +1100,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     _retrievePendingNotifications();
@@ -1219,6 +1245,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   _callBackFromTravelOptions() async {
     await _restorePreferences();
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
+          ),
+        );
+      },
+    );
   }
 }
 
