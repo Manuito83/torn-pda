@@ -4872,7 +4872,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             child: RaisedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Image.asset(
                                     'images/icons/home/vault.png',
@@ -4881,10 +4880,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     color: Colors.black,
                                   ),
                                   SizedBox(width: 15),
-                                  SizedBox(
-                                    width: 100,
-                                    child: Text("Personal vault"),
-                                  ),
+                                  Text("Personal vault"),
                                 ],
                               ),
                               onPressed: () async {
@@ -4901,7 +4897,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             child: RaisedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Image.asset(
                                     'images/icons/faction.png',
@@ -4910,10 +4905,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     color: Colors.black,
                                   ),
                                   SizedBox(width: 15),
-                                  SizedBox(
-                                    width: 100,
-                                    child: Text("Faction vault"),
-                                  ),
+                                  Text("Faction vault"),
                                 ],
                               ),
                               onPressed: () async {
@@ -4930,7 +4922,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             child: RaisedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Image.asset(
                                     'images/icons/home/job.png',
@@ -4939,10 +4930,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     color: Colors.black,
                                   ),
                                   SizedBox(width: 15),
-                                  SizedBox(
-                                    width: 100,
-                                    child: Text("Company vault"),
-                                  ),
+                                  Text("Company vault"),
                                 ],
                               ),
                               onPressed: () async {
