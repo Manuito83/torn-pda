@@ -36,7 +36,7 @@ class LootPage extends StatefulWidget {
 }
 
 class _LootPageState extends State<LootPage> {
-  final _npcIds = [4, 15, 19];
+  final _npcIds = [4, 10, 15, 19];
 
   Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
   YataLootModel _yataLootInfo;
@@ -454,7 +454,7 @@ class _LootPageState extends State<LootPage> {
       } else {
         shadow = null;
       }
-      if (npcId == '4' || npcId == '15' || npcId == '19') {
+      if (npcId == '4' || npcId == '10' || npcId == '15' || npcId == '19') {
         npcImage = Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
