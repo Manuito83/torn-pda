@@ -803,7 +803,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "top",
           child: SizedBox(
-            width: 50,
+            width: 58,
             child: Text(
               "Top",
               textAlign: TextAlign.right,
@@ -816,7 +816,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "bottom",
           child: SizedBox(
-            width: 50,
+            width: 58,
             child: Text(
               "Bottom",
               textAlign: TextAlign.right,
