@@ -1,43 +1,56 @@
 import 'package:torn_pda/private/yata_config.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'dart:io';
 
 class YataComm {
+  static String _url = YataConfig.url;
+  static String _user = YataConfig.user;
+  static String _pass = YataConfig.pass;
 
-  static String url = YataConfig.url;
-  static String user = YataConfig.user;
-  static String pass = YataConfig.pass;
+  static var _authUrl = Uri.parse('$_url/api/v1/auth/');
+  static var _awardsUrl = Uri.parse('$_url/awards/');
 
-  static Future<String> getAwards (String apiKey) async {
+  static CookieJar _cj = CookieJar();
+  static HttpClient _client = HttpClient();
 
-    var csrf = await _getAuth(apiKey);
+  static Future<String> getAwards(String apiKey) async {
+    Map<String, String> headers = {
+      "referer": _url,
+    };
 
-    var awardsResponse = await http.post(
-      '$url/awards/',
-      headers: {
-        "referer": url,
-        'X-CSRFToken': csrf.split(';')[0].split('=')[1],
-        'cookie': csrf,
-      },
-    );
+    // TODO: sessionId expiry
+    print(_cj.loadForRequest(_authUrl).length);
+    print(_cj.loadForRequest(_authUrl));
+    // 2 cookies, for CSRF and SessionId
+    if (_cj.loadForRequest(_authUrl).length < 2) {
+      await _getAuth(apiKey);
+      print('No valid sessionId, going to auth');
+    }
+    print(_cj.loadForRequest(_authUrl).length);
+    print(_cj.loadForRequest(_authUrl));
 
-    return awardsResponse.body;
+    var awardsRequest = await _client.getUrl(_awardsUrl);
+    awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
+    headers.forEach((key, value) => awardsRequest.headers.add(key, value));
+    headers["referer"] = _authUrl.toString();
+    var awardsResponse = await awardsRequest.close();
+
+    return await awardsResponse.transform(utf8.decoder).join();
   }
 
-  static Future<String> _getAuth (String apiKey) async {
-    var basicAuth = 'Basic ' + base64Encode(utf8.encode('$user:$pass'));
-    var authResponse = await http.get(
-      '$url/api/v1/auth/',
-      headers: {
-        'authorization': basicAuth,
-        "referer": url,
-        "api-key": apiKey,
-      },
-    );
+  static Future _getAuth(String apiKey) async {
+    Map<String, String> headers = {
+      "authorization": 'Basic ' + base64Encode(utf8.encode('$_user:$_pass')),
+      "referer": _url,
+      "api-key": apiKey,
+    };
 
-    var csrf = authResponse.headers['set-cookie'];
-    return csrf;
-
+    var authRequest = await _client.getUrl(_authUrl);
+    headers.forEach((key, value) => authRequest.headers.add(key, value));
+    var authResponse = await authRequest.close();
+    _cj.saveFromResponse(_authUrl, authResponse.cookies);
   }
 
 }
