@@ -40,8 +40,8 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_9_6.main.version = 'Torn PDA v1.9.6';
     v1_9_6.main.date = '06 DEC 2020';
     String feat1_9_6_1 = "Loot: added Scrooge (NPC)";
-    String feat1_9_6_2 = "Profile: added wallet money to the Basic Info card. Tap to access your vaults";
-    String feat1_9_6_3 = "Short/long tap the travel bar (in Profile & Travel) to launch the browser to Torn";
+    String feat1_9_6_2 = "Profile: added wallet money to the Basic Info card. Short/long tap to access your vaults with quick or full browser";
+    String feat1_9_6_3 = "Short or long tap the travel bar (in Profile & Travel) to launch the quick or full browser to Torn";
     String feat1_9_6_4 = "Alerts section can now be correctly scrolled in smaller screens";
     String feat1_9_6_5 = "Fixed other issues reported by users";
     v1_9_6.features.add(feat1_9_6_1);

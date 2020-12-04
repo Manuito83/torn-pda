@@ -836,8 +836,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onLongPress:  () => _openTornBrowser('home'),
-                    onTap: () => _openBrowserDialog(context, 'https://www.torn.com'),
+                    onLongPress: () => _openTornBrowser('home'),
+                    onTap: () =>
+                        _openBrowserDialog(context, 'https://www.torn.com'),
                     child: LinearPercentIndicator(
                       isRTL: _user.travel.destination == "Torn" ? true : false,
                       center: Text(
@@ -2772,8 +2773,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               if (_user.networth["wallet"] != null)
                 Row(children: [
                   GestureDetector(
+                    onLongPress: () async {
+                      _openWalletDialog(context, longPress: true);
+                    },
                     onTap: () async {
-                      _openWalletDialog(context);
+                      _openWalletDialog(context, longPress: false);
                     },
                     child: Icon(
                       MdiIcons.cashUsdOutline,
@@ -4833,7 +4837,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _openWalletDialog(BuildContext _) {
+  Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
     return showDialog<void>(
       context: _,
       barrierDismissible: false, // user must tap button!
@@ -4888,11 +4892,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                await _openBrowserDialog(
-                                  context,
-                                  'https://www.torn.com/properties.php#/p=options&tab=vault',
-                                );
-                                Navigator.of(context).pop();
+                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _openTornBrowser(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _openBrowserDialog(context, url);
+                                }
                               },
                             ),
                           ),
@@ -4913,11 +4920,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                await _openBrowserDialog(
-                                  context,
-                                  'https://www.torn.com/factions.php?step=your#/tab=armoury',
-                                );
-                                Navigator.of(context).pop();
+                                var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _openTornBrowser(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _openBrowserDialog(context, url);
+                                }
                               },
                             ),
                           ),
@@ -4938,11 +4948,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                await _openBrowserDialog(
-                                  context,
-                                  'https://www.torn.com/companies.php#/option=funds',
-                                );
-                                Navigator.of(context).pop();
+                                var url = 'https://www.torn.com/companies.php#/option=funds';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _openTornBrowser(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _openBrowserDialog(context, url);
+                                }
+
                               },
                             ),
                           ),
