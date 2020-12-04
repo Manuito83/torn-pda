@@ -35,6 +35,21 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.6
+    var v1_9_6 = ChangeLogItem();
+    v1_9_6.main.version = 'Torn PDA v1.9.6';
+    v1_9_6.main.date = '06 DEC 2020';
+    String feat1_9_6_1 = "Loot: added Scrooge (NPC)";
+    String feat1_9_6_2 = "Profile: added wallet money to the Basic Info card. Tap to access your vaults";
+    String feat1_9_6_3 = "Short/long tap the travel bar (in Profile & Travel) to launch the browser to Torn";
+    String feat1_9_6_4 = "Alerts section can now be correctly scrolled in smaller screens";
+    String feat1_9_6_5 = "Fixed other issues reported by users";
+    v1_9_6.features.add(feat1_9_6_1);
+    v1_9_6.features.add(feat1_9_6_2);
+    v1_9_6.features.add(feat1_9_6_3);
+    v1_9_6.features.add(feat1_9_6_4);
+    v1_9_6.features.add(feat1_9_6_5);
+
     // VERSION 1.9.5
     var v1_9_5 = ChangeLogItem();
     v1_9_5.main.version = 'Torn PDA v1.9.5';
@@ -376,6 +391,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_6);
     itemList.add(v1_9_5);
     itemList.add(v1_9_4);
     itemList.add(v1_9_3);
