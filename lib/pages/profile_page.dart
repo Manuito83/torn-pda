@@ -2746,8 +2746,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int totalEffectiveModifier =
         ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
 
-    final moneyFormat = new NumberFormat("#,##0", "en_US");
-
     return Card(
       child: ExpandablePanel(
         controller: _basicInfoExpController,
@@ -2770,25 +2768,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_user.networth["wallet"] != null)
-                Row(children: [
-                  GestureDetector(
-                    onLongPress: () async {
-                      _openWalletDialog(context, longPress: true);
-                    },
-                    onTap: () async {
-                      _openWalletDialog(context, longPress: false);
-                    },
-                    child: Icon(
-                      MdiIcons.cashUsdOutline,
-                      color: Colors.green,
-                    ),
-                  ),
-                  SizedBox(width: 5),
-                  Text('\$${moneyFormat.format(_user.networth["wallet"])}')
-                ])
-              else
-                SizedBox.shrink(),
+              _cashWallet(),
               SizedBox(height: 4),
               Row(
                 children: [
@@ -2855,6 +2835,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ),
               SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: _cashWallet(),
+              ),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
                 child: Row(
@@ -3062,6 +3046,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  Widget _cashWallet() {
+    if (_user.networth["wallet"] != null) {
+      final moneyFormat = new NumberFormat("#,##0", "en_US");
+      return Row(children: [
+        GestureDetector(
+          onLongPress: () async {
+            _openWalletDialog(context, longPress: true);
+          },
+          onTap: () async {
+            _openWalletDialog(context, longPress: false);
+          },
+          child: Icon(
+            MdiIcons.cashUsdOutline,
+            color: Colors.green,
+          ),
+        ),
+        SizedBox(width: 5),
+        Text('\$${moneyFormat.format(_user.networth["wallet"])}')
+      ]);
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   Widget _miscellaneous() {
@@ -4892,7 +4900,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                var url =
+                                    "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _openTornBrowser(url);
@@ -4920,7 +4929,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                                var url =
+                                    'https://www.torn.com/factions.php?step=your#/tab=armoury';
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _openTornBrowser(url);
@@ -4948,7 +4958,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                var url = 'https://www.torn.com/companies.php#/option=funds';
+                                var url =
+                                    'https://www.torn.com/companies.php#/option=funds';
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _openTornBrowser(url);
@@ -4956,7 +4967,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   Navigator.of(context).pop();
                                   await _openBrowserDialog(context, url);
                                 }
-
                               },
                             ),
                           ),
