@@ -3,6 +3,11 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'dart:io';
+import 'package:torn_pda/models/awards/awards_model.dart';
+
+class YataError {
+  String reason;
+}
 
 class YataComm {
   static String _url = YataConfig.url;
@@ -15,29 +20,28 @@ class YataComm {
   static CookieJar _cj = CookieJar();
   static HttpClient _client = HttpClient();
 
-  static Future<String> getAwards(String apiKey) async {
+  static Future<dynamic> getAwards(String apiKey) async {
     Map<String, String> headers = {
       "referer": _url,
     };
 
-    // TODO: sessionId expiry
-    print(_cj.loadForRequest(_authUrl).length);
-    print(_cj.loadForRequest(_authUrl));
     // 2 cookies, for CSRF and SessionId
     if (_cj.loadForRequest(_authUrl).length < 2) {
+      // No valid sessionId, calling auth!
       await _getAuth(apiKey);
-      print('No valid sessionId, going to auth');
     }
-    print(_cj.loadForRequest(_authUrl).length);
-    print(_cj.loadForRequest(_authUrl));
 
-    var awardsRequest = await _client.getUrl(_awardsUrl);
-    awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
-    headers.forEach((key, value) => awardsRequest.headers.add(key, value));
-    headers["referer"] = _authUrl.toString();
-    var awardsResponse = await awardsRequest.close();
-
-    return await awardsResponse.transform(utf8.decoder).join();
+    try {
+      var awardsRequest = await _client.getUrl(_awardsUrl);
+      awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
+      headers.forEach((key, value) => awardsRequest.headers.add(key, value));
+      headers["referer"] = _authUrl.toString();
+      var awardsResponse = await awardsRequest.close();
+      var awardsJson = await awardsResponse.transform(utf8.decoder).join();
+      return yataAwardsFromJson(awardsJson);
+    } catch (e) {
+      return YataError();
+    }
   }
 
   static Future _getAuth(String apiKey) async {
