@@ -3940,7 +3940,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // DEBUG
     //print('Notification $notificationTitle @ '
-    //    '${DateTime.now().add(Duration(seconds: secondsToNotification))}');
+    //    '${tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification))}');
 
     _retrievePendingNotifications();
   }

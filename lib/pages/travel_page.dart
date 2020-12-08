@@ -1104,6 +1104,10 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           UILocalNotificationDateInterpretation.absoluteTime,
     );
 
+    // DEBUG
+    //print('Notification for travel @ '
+    //    '${tz.TZDateTime.from(scheduledNotificationDateTime, tz.local)}');
+
     _retrievePendingNotifications();
     return scheduledNotificationDateTime;
   }

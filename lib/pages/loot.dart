@@ -890,12 +890,17 @@ class _LootPageState extends State<LootPage> {
       notificationTitle,
       notificationSubtitle,
       //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-      tz.TZDateTime.now(tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
+      tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime
     );
+
+    // DEBUG
+    //print('Notification for $notificationTitle @ '
+    //    '${tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead))}');
+
   }
 
   Future _retrievePendingNotifications() async {
