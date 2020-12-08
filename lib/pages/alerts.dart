@@ -149,7 +149,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.racingNotification ?? false,
                           title: Text("Racing"),
-                          subtitle: Text("Get notified when your cross the finish line"),
+                          subtitle: Text("Get notified when you cross the finish line"),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.racingNotification = value;
