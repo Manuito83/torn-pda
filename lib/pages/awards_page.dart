@@ -13,16 +13,18 @@ class Award {
   Award({
     this.name = "",
     this.description = "",
+    this.category = "",
     this.type = "",
-    this.image = "",
+    this.image,
     this.achieve = 0,
     this.daysLeft = 0,
   });
 
   String name;
   String description;
+  String category;
   String type;
-  String image;
+  Image image;
   double achieve;
   double daysLeft;
 }
@@ -155,8 +157,21 @@ class _AwardsPageState extends State<AwardsPage> {
         borderColor = Colors.blue;
       }
 
-      awardsCards.add(
-        Card(
+      Row detailsRow = Row(
+        children: [
+          Text("${(award.achieve * 100).round()}%"),
+          SizedBox(width: 10),
+
+          // TODO: show awarded time instead, if already achieved
+          award.daysLeft != null
+              ? Text("${(award.daysLeft).round()} days")
+              : SizedBox.shrink(),
+        ],
+      );
+
+      Card mainCard;
+      if (award.type == "Honor") {
+        mainCard = Card(
           shape: RoundedRectangleBorder(
             side: BorderSide(color: borderColor, width: 1.5),
             borderRadius: BorderRadius.circular(4.0),
@@ -165,23 +180,39 @@ class _AwardsPageState extends State<AwardsPage> {
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Column(
               children: [
-                Text(award.name),
-                Row(
-                  children: [
-                    Text("${(award.achieve * 100).round()}%"),
-                    SizedBox(width: 10),
-
-                    // TODO: show awarded time instead, if already achieved
-                    award.daysLeft != null
-                        ? Text("${(award.daysLeft).round()} days")
-                        : SizedBox.shrink(),
-                  ],
+                award.image,
+                SizedBox(height: 8),
+                detailsRow,
+              ],
+            ),
+          ),
+        );
+      } else {
+        mainCard = Card(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: borderColor, width: 1.5),
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: Row(
+              children: [
+                award.image,
+                SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    children: [
+                      detailsRow,
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      );
+        );
+      }
+
+      awardsCards.add(mainCard);
     }
 
     return awardsCards;
@@ -200,16 +231,42 @@ class _AwardsPageState extends State<AwardsPage> {
   _populateInfo(yata.YataAwards awardsModel) {
     var awardsMap = awardsModel.awards.toJson();
 
-    awardsMap.forEach((awardsType, awardValues) {
+    awardsMap.forEach((awardsCategory, awardValues) {
       var awardsMap = awardValues as Map;
 
       awardsMap.forEach((key, value) {
         try {
+          Image image;
+          if (value["awardType"] == "Medal") {
+            image = Image.asset(
+              'images/awards/medals/${value["img"]}.png',
+              errorBuilder: (
+                BuildContext context,
+                Object exception,
+                StackTrace stackTrace,
+              ) {
+                return SizedBox.shrink();
+              },
+            );
+          } else {
+            image = Image.asset(
+              'images/awards/honors/${value["img"]}.png',
+              errorBuilder: (
+                BuildContext context,
+                Object exception,
+                StackTrace stackTrace,
+              ) {
+                return SizedBox.shrink();
+              },
+            );
+          }
+
           var singleAward = Award(
-            type: awardsType,
+            category: awardsCategory,
             name: value["name"],
             description: value["description"],
-            image: value["img"] == null ? null : value["img"],
+            type: value["awardType"],
+            image: image,
             achieve: value["achieve"].toDouble(),
             daysLeft: value["left"] == null
                 ? null
