@@ -7,6 +7,9 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/models/awards/awards_model.dart' as yata;
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
+import 'package:intl/intl.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class Award {
@@ -17,7 +20,14 @@ class Award {
     this.type = "",
     this.image,
     this.achieve = 0,
+    this.circulation = 0,
+    this.rScore = 0,
+    this.rarity = "",
+    this.goal = 0,
+    this.current = 0,
+    this.dateAwarded = 0,
     this.daysLeft = 0,
+    this.comment = "",
   });
 
   String name;
@@ -26,7 +36,14 @@ class Award {
   String type;
   Image image;
   double achieve;
+  double circulation;
+  double rScore;
+  String rarity;
+  double goal;
+  double current;
+  double dateAwarded;
   double daysLeft;
+  String comment;
 }
 
 class AwardsPage extends StatefulWidget {
@@ -74,20 +91,22 @@ class _AwardsPageState extends State<AwardsPage> {
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_apiSuccess) {
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15, top: 5),
-                      child: ListView(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        children: _allAwardsCards(),
+              return Scrollbar(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15, top: 5),
+                        child: ListView(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          children: _allAwardsCards(),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 20),
-                  ],
+                      SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               );
             } else {
@@ -157,19 +176,160 @@ class _AwardsPageState extends State<AwardsPage> {
         borderColor = Colors.blue;
       }
 
-      Row detailsRow = Row(
+      Row descriptionRow = Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text("${(award.achieve * 100).round()}%"),
-          SizedBox(width: 10),
-
-          // TODO: show awarded time instead, if already achieved
-          award.daysLeft != null
-              ? Text("${(award.daysLeft).round()} days")
-              : SizedBox.shrink(),
+          Flexible(
+            child: Text(
+              '(${award.description})',
+              style: TextStyle(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
         ],
       );
 
-      Card mainCard;
+      Widget commentIconRow = SizedBox.shrink();
+      if (award.comment != null) {
+        award.comment = HtmlParser.fix(
+            award.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
+        commentIconRow = Row(
+          children: [
+            SizedBox(width: 4),
+            GestureDetector(
+              onTap: () {
+                BotToast.showText(
+                  text: award.comment,
+                  textStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[800],
+                  duration: Duration(seconds: 6),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+              child: Icon(
+                Icons.info_outline,
+                size: 20,
+              ),
+            ),
+          ],
+        );
+      }
+
+      var achievedPercentage = (award.achieve * 100).round();
+      final decimalFormat = new NumberFormat("#,##0", "en_US");
+      final rarityFormat = new NumberFormat("##0.0000", "en_US");
+      Widget detailsRow = Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "$achievedPercentage%",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: achievedPercentage == 100
+                            ? Colors.green
+                            : _themeProvider.mainText,
+                      ),
+                    ),
+                    Text(
+                      ' (${award.current.ceil()}/${award.goal.ceil()})',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    award.daysLeft != null
+                        ? award.daysLeft > 0
+                            ? Text(
+                                " - ${decimalFormat.format(award.daysLeft.round())} "
+                                "days",
+                                style: TextStyle(fontSize: 13),
+                              )
+                            : award.daysLeft == 0
+                                ? Text(
+                                    " - ${(DateFormat('yyyy-MM-dd').format(
+                                      DateTime.fromMillisecondsSinceEpoch(
+                                          award.dateAwarded.round() * 1000),
+                                    ))}",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.grey,
+                                    ),
+                                  )
+                                : Row(
+                                    children: [
+                                      Text(' - '),
+                                      Icon(Icons.all_inclusive, size: 20),
+                                    ],
+                                  )
+                        : SizedBox.shrink(),
+                    commentIconRow,
+                  ],
+                ),
+                Container(width: 10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      "R: ${decimalFormat.format(award.circulation)}",
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    SizedBox(width: 5),
+                    GestureDetector(
+                      onTap: () {
+                        BotToast.showText(
+                          text:
+                              "Circulation: ${decimalFormat.format(award.circulation)}\n\n "
+                              "Rarity: ${award.rarity}\n\n"
+                              "Score: ${rarityFormat.format(award.rScore)}%",
+                          textStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.grey[800],
+                          duration: Duration(seconds: 6),
+                          contentPadding: EdgeInsets.all(10),
+                        );
+                      },
+                      child: Icon(
+                        Icons.info_outline,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+
+      ConstrainedBox category = ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: 50),
+        child: RotatedBox(
+          quarterTurns: 3,
+          child: Text(
+            award.category.toUpperCase(),
+            softWrap: true,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: TextStyle(
+              fontSize: 7,
+            ),
+          ),
+        ),
+      );
+
+      Widget mainCard;
       if (award.type == "Honor") {
         mainCard = Card(
           shape: RoundedRectangleBorder(
@@ -177,31 +337,19 @@ class _AwardsPageState extends State<AwardsPage> {
             borderRadius: BorderRadius.circular(4.0),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Column(
-              children: [
-                award.image,
-                SizedBox(height: 8),
-                detailsRow,
-              ],
-            ),
-          ),
-        );
-      } else {
-        mainCard = Card(
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: borderColor, width: 1.5),
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
             child: Row(
               children: [
-                award.image,
-                SizedBox(width: 15),
+                category,
+                SizedBox(width: 10),
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      award.image,
+                      SizedBox(height: 5),
+                      descriptionRow,
+                      SizedBox(height: 5),
                       detailsRow,
                     ],
                   ),
@@ -210,6 +358,38 @@ class _AwardsPageState extends State<AwardsPage> {
             ),
           ),
         );
+      } else if (award.type == "Medal") {
+        mainCard = Card(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: borderColor, width: 1.5),
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+            child: Row(
+              children: [
+                category,
+                SizedBox(width: 5),
+                award.image,
+                SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(award.name),
+                      SizedBox(height: 5),
+                      descriptionRow,
+                      SizedBox(height: 5),
+                      detailsRow,
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        mainCard = SizedBox.shrink();
       }
 
       awardsCards.add(mainCard);
@@ -268,12 +448,20 @@ class _AwardsPageState extends State<AwardsPage> {
             type: value["awardType"],
             image: image,
             achieve: value["achieve"].toDouble(),
+            circulation: value["circulation"].toDouble(),
+            rScore: value["rScore"] == null ? 0 : value["rScore"].toDouble(),
+            rarity: value["rarity"],
+            goal: value["goal"].toDouble(),
+            current: value["current"].toDouble(),
+            dateAwarded: value["awarded_time"].toDouble(),
             daysLeft: value["left"] == null
                 ? null
                 : value["left"] is String
                     ? double.parse(value["left"])
                     : value["left"].toDouble(),
+            comment: value["comment"],
           );
+
           _allAwards.add(singleAward);
         } catch (e) {
           // TODO activate and delete print
