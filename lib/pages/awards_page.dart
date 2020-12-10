@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -28,6 +29,10 @@ class Award {
     this.dateAwarded = 0,
     this.daysLeft = 0,
     this.comment = "",
+    this.pinned,
+    this.doubleMerit,
+    this.tripleMerit,
+    this.nextCrime,
   });
 
   String name;
@@ -44,6 +49,10 @@ class Award {
   double dateAwarded;
   double daysLeft;
   String comment;
+  bool pinned;
+  bool doubleMerit;
+  bool tripleMerit;
+  bool nextCrime;
 }
 
 class AwardsPage extends StatefulWidget {
@@ -131,7 +140,27 @@ class _AwardsPageState extends State<AwardsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      title: Text('Awards'),
+      title: Row(
+        children: [
+          Text('Awards'),
+          SizedBox(width: 8),
+          GestureDetector(
+              onTap: () {
+                BotToast.showText(
+                  text: "This section is part of YATA's mobile interface, all details "
+                      "information and actions are directly linked to your YATA account.",
+                  textStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green[800],
+                  duration: Duration(seconds: 6),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+              child: Image.asset('images/icons/yata_logo.png', height: 28)),
+        ],
+      ),
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
@@ -175,6 +204,64 @@ class _AwardsPageState extends State<AwardsPage> {
       } else if (award.achieve > 0.80 && award.achieve < 1) {
         borderColor = Colors.blue;
       }
+
+      Row titleRow = Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          award.type == "Honor" ? award.image : Text(award.name),
+          Row(
+            children: [
+              award.doubleMerit != null ||
+                      award.tripleMerit != null ||
+                      award.nextCrime != null
+                  ? GestureDetector(
+                      onTap: () {
+                        String special = "";
+
+                        if (award.nextCrime != null) {
+                          special = "Next crime to do!";
+                        } else if (award.tripleMerit != null) {
+                          special = "Triple merit!";
+                        } else if (award.doubleMerit != null) {
+                          special = "Double merit!";
+                        }
+
+                        BotToast.showText(
+                          text: special,
+                          textStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.green[800],
+                          duration: Duration(seconds: 6),
+                          contentPadding: EdgeInsets.all(10),
+                        );
+                      },
+                      child: Image.asset(
+                        award.nextCrime != null
+                            ? 'images/awards/trophy.png'
+                            : award.tripleMerit != null
+                                ? 'images/awards/triple_merit.png'
+                                : 'images/awards/double_merit.png',
+                        height: 18,
+                      ),
+                    )
+                  : SizedBox.shrink(),
+              SizedBox(width: 8),
+              award.pinned
+                  ? Icon(
+                      MdiIcons.pin,
+                      color: Colors.green,
+                      size: 20,
+                    )
+                  : Icon(
+                      MdiIcons.pinOutline,
+                      size: 20,
+                    ),
+            ],
+          )
+        ],
+      );
 
       Row descriptionRow = Row(
         mainAxisSize: MainAxisSize.min,
@@ -329,7 +416,8 @@ class _AwardsPageState extends State<AwardsPage> {
         ),
       );
 
-      Widget mainCard;
+      // MAIN CARD
+      Widget mainCard = SizedBox.shrink();
       if (award.type == "Honor") {
         mainCard = Card(
           shape: RoundedRectangleBorder(
@@ -346,7 +434,7 @@ class _AwardsPageState extends State<AwardsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      award.image,
+                      titleRow,
                       SizedBox(height: 5),
                       descriptionRow,
                       SizedBox(height: 5),
@@ -376,7 +464,7 @@ class _AwardsPageState extends State<AwardsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(award.name),
+                      titleRow,
                       SizedBox(height: 5),
                       descriptionRow,
                       SizedBox(height: 5),
@@ -388,8 +476,6 @@ class _AwardsPageState extends State<AwardsPage> {
             ),
           ),
         );
-      } else {
-        mainCard = SizedBox.shrink();
       }
 
       awardsCards.add(mainCard);
@@ -408,8 +494,12 @@ class _AwardsPageState extends State<AwardsPage> {
     }
   }
 
-  _populateInfo(yata.YataAwards awardsModel) {
-    var awardsMap = awardsModel.awards.toJson();
+  _populateInfo(Map awardsJson) {
+    // Check for pinned awards
+    var pinMap = awardsJson["pinnedAwards"];
+
+    // Populate all awards
+    var awardsMap = awardsJson["awards"];
 
     awardsMap.forEach((awardsCategory, awardValues) {
       var awardsMap = awardValues as Map;
@@ -441,6 +531,13 @@ class _AwardsPageState extends State<AwardsPage> {
             );
           }
 
+          bool isPinned = false;
+          pinMap.forEach((pinKey, pinValue) {
+            if (key == pinKey) {
+              isPinned = true;
+            }
+          });
+
           var singleAward = Award(
             category: awardsCategory,
             name: value["name"],
@@ -460,6 +557,10 @@ class _AwardsPageState extends State<AwardsPage> {
                     ? double.parse(value["left"])
                     : value["left"].toDouble(),
             comment: value["comment"],
+            pinned: isPinned,
+            doubleMerit: value["double"] ?? null,
+            tripleMerit: value["triple"] ?? null,
+            nextCrime: value["next"] ?? null,
           );
 
           _allAwards.add(singleAward);
