@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'dart:io';
-import 'package:torn_pda/models/awards/awards_model.dart';
 
 class YataError {
   String reason;
@@ -38,7 +37,7 @@ class YataComm {
       headers["referer"] = _authUrl.toString();
       var awardsResponse = await awardsRequest.close();
       var awardsJson = await awardsResponse.transform(utf8.decoder).join();
-      return yataAwardsFromJson(awardsJson);
+      return json.decode(awardsJson);
     } catch (e) {
       return YataError();
     }
