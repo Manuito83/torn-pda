@@ -147,7 +147,8 @@ class _AwardsPageState extends State<AwardsPage> {
           GestureDetector(
               onTap: () {
                 BotToast.showText(
-                  text: "This section is part of YATA's mobile interface, all details "
+                  text:
+                      "This section is part of YATA's mobile interface, all details "
                       "information and actions are directly linked to your YATA account.",
                   textStyle: TextStyle(
                     fontSize: 13,
@@ -268,7 +269,7 @@ class _AwardsPageState extends State<AwardsPage> {
         children: [
           Flexible(
             child: Text(
-              '(${award.description})',
+              '${award.description}',
               style: TextStyle(
                 fontSize: 12,
                 fontStyle: FontStyle.italic,
@@ -300,7 +301,7 @@ class _AwardsPageState extends State<AwardsPage> {
               },
               child: Icon(
                 Icons.info_outline,
-                size: 20,
+                size: 19,
               ),
             ),
           ],
@@ -322,22 +323,23 @@ class _AwardsPageState extends State<AwardsPage> {
                     Text(
                       "$achievedPercentage%",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: achievedPercentage == 100
                             ? Colors.green
                             : _themeProvider.mainText,
                       ),
                     ),
                     Text(
-                      ' (${award.current.ceil()}/${award.goal.ceil()})',
-                      style: TextStyle(fontSize: 13),
+                      ' - ${decimalFormat.format(award.current.ceil())}'
+                      '/${decimalFormat.format(award.goal.ceil())}',
+                      style: TextStyle(fontSize: 12),
                     ),
                     award.daysLeft != null
                         ? award.daysLeft > 0
                             ? Text(
                                 " - ${decimalFormat.format(award.daysLeft.round())} "
                                 "days",
-                                style: TextStyle(fontSize: 13),
+                                style: TextStyle(fontSize: 12),
                               )
                             : award.daysLeft == 0
                                 ? Text(
@@ -346,7 +348,7 @@ class _AwardsPageState extends State<AwardsPage> {
                                           award.dateAwarded.round() * 1000),
                                     ))}",
                                     style: TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 12,
                                       fontStyle: FontStyle.italic,
                                       color: Colors.grey,
                                     ),
@@ -354,7 +356,7 @@ class _AwardsPageState extends State<AwardsPage> {
                                 : Row(
                                     children: [
                                       Text(' - '),
-                                      Icon(Icons.all_inclusive, size: 20),
+                                      Icon(Icons.all_inclusive, size: 19),
                                     ],
                                   )
                         : SizedBox.shrink(),
@@ -367,8 +369,8 @@ class _AwardsPageState extends State<AwardsPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      "R: ${decimalFormat.format(award.circulation)}",
-                      style: TextStyle(fontSize: 13),
+                      "${decimalFormat.format(award.circulation)}",
+                      style: TextStyle(fontSize: 12),
                     ),
                     SizedBox(width: 5),
                     GestureDetector(
@@ -389,7 +391,7 @@ class _AwardsPageState extends State<AwardsPage> {
                       },
                       child: Icon(
                         Icons.info_outline,
-                        size: 20,
+                        size: 19,
                       ),
                     ),
                   ],
