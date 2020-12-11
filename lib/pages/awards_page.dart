@@ -6,7 +6,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/external/yata_comm.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/models/awards/awards_model.dart' as yata;
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
 import 'package:intl/intl.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -17,7 +17,8 @@ class Award {
   Award({
     this.name = "",
     this.description = "",
-    this.category = "",
+    this.category = '',
+    this.subCategory = "",
     this.type = "",
     this.image,
     this.achieve = 0,
@@ -38,6 +39,7 @@ class Award {
   String name;
   String description;
   String category;
+  String subCategory;
   String type;
   Image image;
   double achieve;
@@ -63,6 +65,11 @@ class AwardsPage extends StatefulWidget {
 class _AwardsPageState extends State<AwardsPage> {
   // Main list with all awards
   var _allAwards = List<Award>();
+  var _allAwardsCards = List<Widget>();
+  var _allCategories = Map<String, String>();
+
+  // Active categories
+  var _hiddenCategories = List<String>();
 
   Future _getAwardsPayload;
   bool _apiSuccess = false;
@@ -71,11 +78,18 @@ class _AwardsPageState extends State<AwardsPage> {
   UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
 
+  PanelController _pc = new PanelController();
+  final double _initFabHeight = 25.0;
+  double _fabHeight;
+  double _panelHeightOpen = 300;
+  double _panelHeightClosed = 75.0;
+
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataApi();
   }
 
@@ -95,45 +109,159 @@ class _AwardsPageState extends State<AwardsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-        future: _getAwardsPayload,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_apiSuccess) {
-              return Scrollbar(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15, top: 5),
-                        child: ListView(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          children: _allAwardsCards(),
-                        ),
+      body: Stack(
+        alignment: Alignment.topCenter,
+        children: <Widget>[
+          // Main body
+          FutureBuilder(
+            future: _getAwardsPayload,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_apiSuccess) {
+                  return Scrollbar(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15, top: 5),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: _allAwardsCards.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                if (!_hiddenCategories.contains(_allAwards[index].category)) {
+                                  return _allAwardsCards[index];
+                                } else {
+                                  return SizedBox.shrink();
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                        ],
                       ),
-                      SizedBox(height: 20),
+                    ),
+                  );
+                } else {
+                  return _connectError();
+                }
+              } else {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text('Fetching data...'),
+                      SizedBox(height: 30),
+                      FlippingYata(),
                     ],
                   ),
-                ),
-              );
-            } else {
-              return _connectError();
-            }
-          } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('Fetching data...'),
-                  SizedBox(height: 30),
-                  FlippingYata(),
-                ],
+                );
+              }
+            },
+          ),
+
+          // Sliding panel
+          FutureBuilder(
+            future: _getAwardsPayload,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_apiSuccess) {
+                  return SlidingUpPanel(
+                    controller: _pc,
+                    maxHeight: _panelHeightOpen,
+                    minHeight: _panelHeightClosed,
+                    renderPanelSheet: false,
+                    backdropEnabled: true,
+                    parallaxEnabled: true,
+                    parallaxOffset: .5,
+                    panelBuilder: (sc) => _bottomPanel(sc),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(18.0),
+                      topRight: Radius.circular(18.0),
+                    ),
+                    onPanelSlide: (double pos) => setState(() {
+                      _fabHeight =
+                          pos * (_panelHeightOpen - _panelHeightClosed) +
+                              _initFabHeight;
+                    }),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
+
+          // FAB
+          FutureBuilder(
+            future: _getAwardsPayload,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_apiSuccess) {
+                  return Positioned(
+                    right: 35.0,
+                    bottom: _fabHeight,
+                    child: FloatingActionButton.extended(
+                      icon: Icon(Icons.filter_list),
+                      label: Text("Filter"),
+                      elevation: 4,
+                      onPressed: () {
+                        _pc.isPanelOpen ? _pc.close() : _pc.open();
+                      },
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bottomPanel(ScrollController sc) {
+    return Container(
+      decoration: BoxDecoration(
+          color: _themeProvider.background,
+          borderRadius: BorderRadius.all(Radius.circular(24.0)),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 2.0,
+              color: Colors.orange[800],
+            ),
+          ]),
+      margin: const EdgeInsets.all(24.0),
+      child: Column(
+        children: <Widget>[
+          SizedBox(
+            height: 12.0,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                width: 30,
+                height: 5,
+                decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
               ),
-            );
-          }
-        },
+            ],
+          ),
+          SizedBox(height: 40.0),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: SizedBox(height: 70, child: _categoryFilter()),
+          ),
+        ],
       ),
     );
   }
@@ -195,10 +323,9 @@ class _AwardsPageState extends State<AwardsPage> {
     );
   }
 
-  List<Widget> _allAwardsCards() {
-    var awardsCards = List<Widget>();
-
+  void _fillAllAwardsCards() {
     for (var award in _allAwards) {
+
       Color borderColor = Colors.transparent;
       if (award.achieve == 1) {
         borderColor = Colors.green;
@@ -407,7 +534,7 @@ class _AwardsPageState extends State<AwardsPage> {
         child: RotatedBox(
           quarterTurns: 3,
           child: Text(
-            award.category.toUpperCase(),
+            award.subCategory.toUpperCase(),
             softWrap: true,
             textAlign: TextAlign.center,
             maxLines: 2,
@@ -480,10 +607,89 @@ class _AwardsPageState extends State<AwardsPage> {
         );
       }
 
-      awardsCards.add(mainCard);
+      _allAwardsCards.add(mainCard);
+    }
+  }
+
+  Widget _categoryFilter() {
+    var catChips = List<Widget>();
+    for (var cat in _allCategories.keys) {
+      Widget catIcon = SizedBox.shrink();
+      String catStats = "";
+      switch (cat) {
+        case "crimes":
+          catIcon = Image.asset(
+            'images/awards/categories/fingerprint.png',
+            height: 16,
+          );
+          catStats = _allCategories["crimes"];
+          break;
+        case "drugs":
+          break;
+        case "attacks":
+          break;
+        case "faction":
+          break;
+        case "items":
+          break;
+        case "travel":
+          break;
+        case "work":
+          break;
+        case "gym":
+          break;
+        case "money":
+          break;
+        case "competitions":
+          break;
+        case "commitment":
+          break;
+        case "miscellaneous":
+          break;
+      }
+
+      catChips.add(
+        GestureDetector(
+          child: Chip(
+            side: BorderSide(
+                color: _hiddenCategories.contains(cat)
+                    ? Colors.grey[800]
+                    : Colors.green,
+                width: 1.5),
+            avatar: catIcon,
+            label: Text(catStats, style: TextStyle(fontSize: 12)),
+          ),
+          onTap: () {
+
+            String action = "";
+            if (_hiddenCategories.contains(cat)) {
+              action = "Added $cat";
+              _hiddenCategories.remove(cat);
+            } else {
+              action = "Removed $cat";
+              _hiddenCategories.add(cat);
+            }
+
+            BotToast.showText(
+              text: action,
+              textStyle: TextStyle(
+                fontSize: 13,
+                color: Colors.white,
+              ),
+              contentColor: Colors.green[800],
+              duration: Duration(seconds: 2),
+              contentPadding: EdgeInsets.all(10),
+            );
+
+          },
+        ),
+      );
     }
 
-    return awardsCards;
+    return Wrap(
+      spacing: 5,
+      children: catChips,
+    );
   }
 
   Future _fetchYataApi() async {
@@ -492,7 +698,9 @@ class _AwardsPageState extends State<AwardsPage> {
       // TODO
     } else {
       await _populateInfo(reply);
-      _apiSuccess = true;
+      setState(() {
+        _apiSuccess = true;
+      });
     }
   }
 
@@ -503,7 +711,7 @@ class _AwardsPageState extends State<AwardsPage> {
     // Populate all awards
     var awardsMap = awardsJson["awards"];
 
-    awardsMap.forEach((awardsCategory, awardValues) {
+    awardsMap.forEach((awardsSubcategory, awardValues) {
       var awardsMap = awardValues as Map;
 
       awardsMap.forEach((key, value) {
@@ -541,7 +749,8 @@ class _AwardsPageState extends State<AwardsPage> {
           });
 
           var singleAward = Award(
-            category: awardsCategory,
+            category: value["category"],
+            subCategory: awardsSubcategory,
             name: value["name"],
             description: value["description"],
             type: value["awardType"],
@@ -565,15 +774,46 @@ class _AwardsPageState extends State<AwardsPage> {
             nextCrime: value["next"] ?? null,
           );
 
+          // Populate main lists
           _allAwards.add(singleAward);
+
+          // Populate categories (for filtering) only if the category has not
+          // been seen yet. Later we will add current/max to each category
+          // in _populateCategoryValues()
+          if (!_allCategories.containsKey(singleAward.category)) {
+            _allCategories.addAll({singleAward.category: ""});
+          }
+
         } catch (e) {
           // TODO activate and delete print
           print(e);
-          /*          FirebaseCrashlytics.instance
+          /*
+          FirebaseCrashlytics.instance
               .log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
-          FirebaseCrashlytics.instance.recordError(e, null);*/
+          FirebaseCrashlytics.instance.recordError(e, null);
+          */
         }
-      });
+      }); // FINISH FOR EACH SINGLE-AWARD
+    }); // FINISH FOR EACH SUBCATEGORY
+
+    _fillAllAwardsCards();
+    _populateCategoryValues(awardsJson["summaryByType"]);
+  }
+
+  void _populateCategoryValues(Map catJson) {
+    var statModel = Map<String, String>();
+    for (var stats in catJson.entries) {
+      var catName = stats.key;
+      var catStats = "${stats.value["nAwarded"]}\/${stats.value["nAwards"]}";
+      statModel.addAll({catName: catStats});
+    }
+
+    _allCategories.forEach((key, value) {
+      for (var catStats in statModel.entries) {
+        if (key.toLowerCase() == catStats.key.toLowerCase()) {
+          _allCategories.update(key, (value) => catStats.value);
+        }
+      }
     });
   }
 }
