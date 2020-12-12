@@ -8,7 +8,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'file:///D:/PROGRAMACION/torn_pda/lib/widgets/awards/award_card.dart';
+import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
