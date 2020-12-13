@@ -10,6 +10,7 @@ import 'package:torn_pda/widgets/other/flipping_yata.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
+import 'package:torn_pda/models/awards/awards_sort.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class AwardsPage extends StatefulWidget {
@@ -36,8 +37,21 @@ class _AwardsPageState extends State<AwardsPage> {
   PanelController _pc = new PanelController();
   final double _initFabHeight = 25.0;
   double _fabHeight;
-  double _panelHeightOpen = 300;
+  double _panelHeightOpen = 330;
   double _panelHeightClosed = 75.0;
+
+  final _popupSortChoices = <AwardsSort>[
+    AwardsSort(type: AwardsSortType.percentageDes),
+    AwardsSort(type: AwardsSortType.percentageAsc),
+    AwardsSort(type: AwardsSortType.categoryDes),
+    AwardsSort(type: AwardsSortType.categoryAsc),
+    AwardsSort(type: AwardsSortType.nameDes),
+    AwardsSort(type: AwardsSortType.nameAsc),
+    AwardsSort(type: AwardsSortType.rarityAsc),
+    AwardsSort(type: AwardsSortType.rarityDesc),
+    AwardsSort(type: AwardsSortType.daysAsc),
+    AwardsSort(type: AwardsSortType.daysDes),
+  ];
 
   @override
   void initState() {
@@ -45,7 +59,7 @@ class _AwardsPageState extends State<AwardsPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
-    _getAwardsPayload = _fetchYataApi();
+    _getAwardsPayload = _fetchYataAndPopulate();
   }
 
   @override
@@ -73,28 +87,14 @@ class _AwardsPageState extends State<AwardsPage> {
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 if (_apiSuccess) {
-                  return Scrollbar(
-                    child: SingleChildScrollView(
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 15, top: 5),
+                    child: Scrollbar(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.only(left: 15, top: 5),
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: _allAwardsCards.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                if (!_hiddenCategories
-                                    .contains(_allAwards[index].category)) {
-                                  return _allAwardsCards[index];
-                                } else {
-                                  return SizedBox.shrink();
-                                }
-                              },
-                            ),
+                        children: [
+                          Expanded(
+                            child: _awardsListView(),
                           ),
-                          SizedBox(height: 20),
                         ],
                       ),
                     ),
@@ -183,6 +183,29 @@ class _AwardsPageState extends State<AwardsPage> {
     );
   }
 
+  ListView _awardsListView() {
+    return ListView.builder(
+      // We need to paint more pixels in advance for to avoid jerks in the scrollbar
+      cacheExtent: 5000,
+      itemCount: _allAwardsCards.length,
+      itemBuilder: (BuildContext context, int index) {
+        // Because we are adding a header and a footer that are standard widgets
+        // and not awards, we don't check for category the first or last items
+        if (index != 0 && index != _allAwardsCards.length - 1) {
+          // We need to decrease _allAwards by 1, because the header moves the
+          // list one position compared to the _allAwardsCards list
+          if (!_hiddenCategories.contains(_allAwards[index - 1].category)) {
+            return _allAwardsCards[index];
+          } else {
+            return SizedBox.shrink();
+          }
+        }
+        // This return is for the header and footer
+        return _allAwardsCards[index];
+      },
+    );
+  }
+
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
@@ -215,7 +238,7 @@ class _AwardsPageState extends State<AwardsPage> {
           SizedBox(height: 40.0),
           Padding(
             padding: const EdgeInsets.all(10),
-            child: _categoryFilter(),
+            child: _categoryFilterWrap(),
           ),
         ],
       ),
@@ -254,6 +277,27 @@ class _AwardsPageState extends State<AwardsPage> {
           scaffoldState.openDrawer();
         },
       ),
+      actions: [
+        PopupMenuButton<AwardsSort>(
+          icon: Icon(
+            Icons.sort,
+          ),
+          onSelected: _selectSortPopup,
+          itemBuilder: (BuildContext context) {
+            return _popupSortChoices.map((AwardsSort choice) {
+              return PopupMenuItem<AwardsSort>(
+                value: choice,
+                child: Text(
+                  choice.description,
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+        ),
+      ],
     );
   }
 
@@ -279,7 +323,7 @@ class _AwardsPageState extends State<AwardsPage> {
     );
   }
 
-  Widget _categoryFilter() {
+  Widget _categoryFilterWrap() {
     var catChips = List<Widget>();
     for (var cat in _allCategories.keys) {
       Widget catIcon = SizedBox.shrink();
@@ -425,7 +469,7 @@ class _AwardsPageState extends State<AwardsPage> {
     );
   }
 
-  Future _fetchYataApi() async {
+  Future _fetchYataAndPopulate() async {
     var reply = await YataComm.getAwards(_userProvider.myUser.userApiKey);
     if (reply is YataError) {
       // TODO
@@ -496,7 +540,7 @@ class _AwardsPageState extends State<AwardsPage> {
             current: value["current"].toDouble(),
             dateAwarded: value["awarded_time"].toDouble(),
             daysLeft: value["left"] == null
-                ? null
+                ? -99 // Means no time
                 : value["left"] is String
                     ? double.parse(value["left"])
                     : value["left"].toDouble(),
@@ -507,8 +551,10 @@ class _AwardsPageState extends State<AwardsPage> {
             nextCrime: value["next"] ?? null,
           );
 
-          // Populate main lists
-          _allAwards.add(singleAward);
+          // Assign maxFinite so that they appear first if sorted by days left
+          if (singleAward.daysLeft == -1) {
+            singleAward.daysLeft = double.maxFinite;
+          }
 
           // Populate categories (for filtering) only if the category has not
           // been seen yet. Later we will add current/max to each category
@@ -517,7 +563,9 @@ class _AwardsPageState extends State<AwardsPage> {
             _allCategories.addAll({singleAward.category: ""});
           }
 
-          _allAwardsCards.add(AwardCard(award: singleAward));
+          // Populate models list
+          _allAwards.add(singleAward);
+
         } catch (e) {
           // TODO activate and delete print
           print(e);
@@ -530,8 +578,31 @@ class _AwardsPageState extends State<AwardsPage> {
       }); // FINISH FOR EACH SINGLE-AWARD
     }); // FINISH FOR EACH SUBCATEGORY
 
-    //_fillAllAwardsCards();
+    _buildAwardsWidgetList();
     _populateCategoryValues(awardsJson["summaryByType"]);
+  }
+
+
+  /// As we are using a ListView.builder, we cannot change order of items
+  /// to sort on the move. Instead, we use this method to regenerate the whole
+  /// _allAwardsCards list based on the _allAwards (models) list, plus we
+  /// add an extra header and footer (first and last items)
+  void _buildAwardsWidgetList() {
+    Widget header = Text('HEADER');
+    Widget footer = SizedBox(height: 90);
+
+    var newList = List<Widget>();
+    newList.add(header);
+
+    for (var award in _allAwards) {
+      newList.add(AwardCard(award: award));
+    }
+
+    newList.add(footer);
+
+    setState(() {
+      _allAwardsCards = List<Widget>.from(newList);
+    });
   }
 
   void _populateCategoryValues(Map catJson) {
@@ -549,5 +620,50 @@ class _AwardsPageState extends State<AwardsPage> {
         }
       }
     });
+  }
+
+  void _selectSortPopup(AwardsSort choice) {
+    switch (choice.type) {
+      case AwardsSortType.percentageDes:
+        _allAwards.sort((a, b) => b.achieve.compareTo(a.achieve));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.percentageAsc:
+        _allAwards.sort((a, b) => a.achieve.compareTo(b.achieve));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.categoryDes:
+        _allAwards.sort((a, b) => b.subCategory.compareTo(a.subCategory));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.categoryAsc:
+        _allAwards.sort((a, b) => a.subCategory.compareTo(b.subCategory));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.nameDes:
+        _allAwards.sort((a, b) => b.name.trim().compareTo(a.name.trim()));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.nameAsc:
+        _allAwards.sort((a, b) => a.name.trim().compareTo(b.name.trim()));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.rarityAsc:
+        _allAwards.sort((a, b) => b.rarity.compareTo(a.rarity));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.rarityDesc:
+        _allAwards.sort((a, b) => a.rarity.compareTo(b.rarity));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.daysAsc:
+        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
+        _buildAwardsWidgetList();
+        break;
+      case AwardsSortType.daysDes:
+        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        _buildAwardsWidgetList();
+        break;
+    }
   }
 }
