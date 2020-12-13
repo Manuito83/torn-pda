@@ -72,6 +72,7 @@ class SharedPreferencesModel {
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
+  final String _kAwardsSort = "pda_awardsSort";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -831,6 +832,19 @@ class SharedPreferencesModel {
   Future<bool> setCityEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kCityFinderEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Awards
+  /// ----------------------------
+  Future<String> getAwardsSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAwardsSort) ?? '';
+  }
+
+  Future<bool> setAwardsSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAwardsSort, value);
   }
 
 

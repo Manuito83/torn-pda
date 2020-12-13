@@ -11,6 +11,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/models/awards/awards_sort.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class AwardsPage extends StatefulWidget {
@@ -282,7 +283,7 @@ class _AwardsPageState extends State<AwardsPage> {
           icon: Icon(
             Icons.sort,
           ),
-          onSelected: _selectSortPopup,
+          onSelected: _sortAwards,
           itemBuilder: (BuildContext context) {
             return _popupSortChoices.map((AwardsSort choice) {
               return PopupMenuItem<AwardsSort>(
@@ -481,7 +482,7 @@ class _AwardsPageState extends State<AwardsPage> {
     }
   }
 
-  _populateInfo(Map awardsJson) {
+  _populateInfo(Map awardsJson) async {
     // Check for pinned awards
     var pinMap = awardsJson["pinnedAwards"];
 
@@ -580,6 +581,46 @@ class _AwardsPageState extends State<AwardsPage> {
 
     _buildAwardsWidgetList();
     _populateCategoryValues(awardsJson["summaryByType"]);
+
+    // Sort for the first time
+    String savedSort = await SharedPreferencesModel().getAwardsSort();
+    var awardsSort = AwardsSort();
+    switch (savedSort) {
+      case '':
+        awardsSort.type = AwardsSortType.nameAsc;
+        break;
+      case 'percentageDes':
+        awardsSort.type = AwardsSortType.percentageDes;
+        break;
+      case 'percentageAsc':
+        awardsSort.type = AwardsSortType.percentageAsc;
+        break;
+      case 'categoryDes':
+        awardsSort.type = AwardsSortType.categoryDes;
+        break;
+      case 'categoryAsc':
+        awardsSort.type = AwardsSortType.categoryAsc;
+        break;
+      case 'nameDes':
+        awardsSort.type = AwardsSortType.nameDes;
+        break;
+      case 'nameAsc':
+        awardsSort.type = AwardsSortType.nameAsc;
+        break;
+      case 'rarityAsc':
+        awardsSort.type = AwardsSortType.rarityAsc;
+        break;
+      case 'rarityDesc':
+        awardsSort.type = AwardsSortType.rarityDesc;
+        break;
+      case 'daysAsc':
+        awardsSort.type = AwardsSortType.daysAsc;
+        break;
+      case 'daysDes':
+        awardsSort.type = AwardsSortType.daysDes;
+        break;
+    }
+    _sortAwards(awardsSort, initialLoad: true);
   }
 
 
@@ -622,48 +663,64 @@ class _AwardsPageState extends State<AwardsPage> {
     });
   }
 
-  void _selectSortPopup(AwardsSort choice) {
+  void _sortAwards(AwardsSort choice, {bool initialLoad = false}) {
+    String sortToSave;
     switch (choice.type) {
       case AwardsSortType.percentageDes:
         _allAwards.sort((a, b) => b.achieve.compareTo(a.achieve));
         _buildAwardsWidgetList();
+        sortToSave = 'percentageDes';
         break;
       case AwardsSortType.percentageAsc:
         _allAwards.sort((a, b) => a.achieve.compareTo(b.achieve));
         _buildAwardsWidgetList();
+        sortToSave = 'percentageAsc';
         break;
       case AwardsSortType.categoryDes:
         _allAwards.sort((a, b) => b.subCategory.compareTo(a.subCategory));
         _buildAwardsWidgetList();
+        sortToSave = 'categoryDes';
         break;
       case AwardsSortType.categoryAsc:
         _allAwards.sort((a, b) => a.subCategory.compareTo(b.subCategory));
         _buildAwardsWidgetList();
+        sortToSave = 'categoryAsc';
         break;
       case AwardsSortType.nameDes:
         _allAwards.sort((a, b) => b.name.trim().compareTo(a.name.trim()));
         _buildAwardsWidgetList();
+        sortToSave = 'nameDes';
         break;
       case AwardsSortType.nameAsc:
         _allAwards.sort((a, b) => a.name.trim().compareTo(b.name.trim()));
         _buildAwardsWidgetList();
+        sortToSave = 'nameAsc';
         break;
       case AwardsSortType.rarityAsc:
         _allAwards.sort((a, b) => b.rarity.compareTo(a.rarity));
         _buildAwardsWidgetList();
+        sortToSave = 'rarityAsc';
         break;
       case AwardsSortType.rarityDesc:
         _allAwards.sort((a, b) => a.rarity.compareTo(b.rarity));
         _buildAwardsWidgetList();
+        sortToSave = 'rarityDesc';
         break;
       case AwardsSortType.daysAsc:
         _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
         _buildAwardsWidgetList();
+        sortToSave = 'daysAsc';
         break;
       case AwardsSortType.daysDes:
         _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
         _buildAwardsWidgetList();
+        sortToSave = 'daysDes';
         break;
     }
+    // Only save if we are not loading from shared prefs on init
+    if (!initialLoad) {
+      SharedPreferencesModel().setAwardsSort(sortToSave);
+    }
   }
+
 }
