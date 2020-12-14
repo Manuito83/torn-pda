@@ -38,8 +38,13 @@ class _AwardsPageState extends State<AwardsPage> {
   PanelController _pc = new PanelController();
   final double _initFabHeight = 25.0;
   double _fabHeight;
-  double _panelHeightOpen = 330;
+  double _panelHeightOpen = 360;
   double _panelHeightClosed = 75.0;
+
+  // Saved prefs
+  String _savedSort = "";
+  bool _showAchievedAwards = false;
+
 
   final _popupSortChoices = <AwardsSort>[
     AwardsSort(type: AwardsSortType.percentageDes),
@@ -187,7 +192,7 @@ class _AwardsPageState extends State<AwardsPage> {
   ListView _awardsListView() {
     return ListView.builder(
       // We need to paint more pixels in advance for to avoid jerks in the scrollbar
-      cacheExtent: 5000,
+      cacheExtent: 10000,
       itemCount: _allAwardsCards.length,
       itemBuilder: (BuildContext context, int index) {
         // Because we are adding a header and a footer that are standard widgets
@@ -195,11 +200,17 @@ class _AwardsPageState extends State<AwardsPage> {
         if (index != 0 && index != _allAwardsCards.length - 1) {
           // We need to decrease _allAwards by 1, because the header moves the
           // list one position compared to the _allAwardsCards list
-          if (!_hiddenCategories.contains(_allAwards[index - 1].category)) {
-            return _allAwardsCards[index];
-          } else {
+
+          if (!_showAchievedAwards && _allAwards[index - 1].achieve*100.truncate() == 100) {
             return SizedBox.shrink();
           }
+
+          if (!_hiddenCategories.contains(_allAwards[index - 1].category)) {
+            return _allAwardsCards[index];
+          }
+
+          return SizedBox.shrink();
+
         }
         // This return is for the header and footer
         return _allAwardsCards[index];
@@ -238,7 +249,26 @@ class _AwardsPageState extends State<AwardsPage> {
           ),
           SizedBox(height: 40.0),
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              children: <Widget>[
+                Text("Show achieved awards"),
+                Switch(
+                  value: _showAchievedAwards,
+                  onChanged: (value) {
+                    SharedPreferencesModel().setShowAchievedAwards(value);
+                    setState(() {
+                      _showAchievedAwards = value;
+                    });
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: _categoryFilterWrap(),
           ),
         ],
@@ -471,6 +501,8 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Future _fetchYataAndPopulate() async {
+    await _restorePrefs();
+
     var reply = await YataComm.getAwards(_userProvider.myUser.userApiKey);
     if (reply is YataError) {
       // TODO
@@ -566,7 +598,6 @@ class _AwardsPageState extends State<AwardsPage> {
 
           // Populate models list
           _allAwards.add(singleAward);
-
         } catch (e) {
           // TODO activate and delete print
           print(e);
@@ -583,9 +614,8 @@ class _AwardsPageState extends State<AwardsPage> {
     _populateCategoryValues(awardsJson["summaryByType"]);
 
     // Sort for the first time
-    String savedSort = await SharedPreferencesModel().getAwardsSort();
     var awardsSort = AwardsSort();
-    switch (savedSort) {
+    switch (_savedSort) {
       case '':
         awardsSort.type = AwardsSortType.nameAsc;
         break;
@@ -622,7 +652,6 @@ class _AwardsPageState extends State<AwardsPage> {
     }
     _sortAwards(awardsSort, initialLoad: true);
   }
-
 
   /// As we are using a ListView.builder, we cannot change order of items
   /// to sort on the move. Instead, we use this method to regenerate the whole
@@ -721,6 +750,11 @@ class _AwardsPageState extends State<AwardsPage> {
     if (!initialLoad) {
       SharedPreferencesModel().setAwardsSort(sortToSave);
     }
+  }
+
+  _restorePrefs () async {
+    _savedSort = await SharedPreferencesModel().getAwardsSort();
+    _showAchievedAwards = await SharedPreferencesModel().getShowAchievedAwards();
   }
 
 }
