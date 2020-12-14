@@ -135,7 +135,7 @@ class _AwardCardState extends State<AwardCard> {
       );
     }
 
-    var achievedPercentage = (award.achieve * 100).round();
+    var achievedPercentage = (award.achieve * 100).truncate();
     final decimalFormat = new NumberFormat("#,##0", "en_US");
     final rarityFormat = new NumberFormat("##0.0000", "en_US");
     Widget detailsRow = Row(
