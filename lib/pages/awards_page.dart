@@ -479,6 +479,8 @@ class _AwardsPageState extends State<AwardsPage> {
               }
             });
 
+            SharedPreferencesModel().setHiddenAwardCategories(_hiddenCategories);
+
             BotToast.showText(
               text: action,
               textStyle: TextStyle(
@@ -755,6 +757,7 @@ class _AwardsPageState extends State<AwardsPage> {
   _restorePrefs () async {
     _savedSort = await SharedPreferencesModel().getAwardsSort();
     _showAchievedAwards = await SharedPreferencesModel().getShowAchievedAwards();
+    _hiddenCategories = await SharedPreferencesModel().getHiddenAwardCategories();
   }
 
 }
