@@ -14,6 +14,17 @@ import 'package:torn_pda/models/awards/awards_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
+class AwardsHeaderInfo {
+  var headerInfo = Map<String, String>();
+  double playerScore = 0;
+  int achievedAwards = 0;
+  int totalAwards = 0;
+  int achievedHonors = 0;
+  int totalHonors = 0;
+  int achievedMedals = 0;
+  int totalMedals = 0;
+}
+
 class AwardsPage extends StatefulWidget {
   @override
   _AwardsPageState createState() => _AwardsPageState();
@@ -45,6 +56,7 @@ class _AwardsPageState extends State<AwardsPage> {
   String _savedSort = "";
   bool _showAchievedAwards = false;
 
+  var _headerInfo = AwardsHeaderInfo();
 
   final _popupSortChoices = <AwardsSort>[
     AwardsSort(type: AwardsSortType.percentageDes),
@@ -189,6 +201,49 @@ class _AwardsPageState extends State<AwardsPage> {
     );
   }
 
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.all(15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Your rarity score: '
+                  '${double.parse((_headerInfo.playerScore / 10000).toStringAsFixed(2))}'),
+              SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  String achievement = "Achieved ${_headerInfo.achievedAwards}"
+                      "/${_headerInfo.totalAwards} awards\n\n"
+                      "Medals ${_headerInfo.achievedMedals}"
+                      "/${_headerInfo.totalMedals}\n"
+                      "Honors ${_headerInfo.achievedHonors}"
+                      "/${_headerInfo.totalHonors}";
+
+                  BotToast.showText(
+                    text: achievement,
+                    textStyle: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[700],
+                    duration: Duration(seconds: 6),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+                child: Icon(
+                  Icons.info_outline,
+                  size: 19,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   ListView _awardsListView() {
     return ListView.builder(
       // We need to paint more pixels in advance for to avoid jerks in the scrollbar
@@ -201,7 +256,8 @@ class _AwardsPageState extends State<AwardsPage> {
           // We need to decrease _allAwards by 1, because the header moves the
           // list one position compared to the _allAwardsCards list
 
-          if (!_showAchievedAwards && _allAwards[index - 1].achieve*100.truncate() == 100) {
+          if (!_showAchievedAwards &&
+              _allAwards[index - 1].achieve * 100.truncate() == 100) {
             return SizedBox.shrink();
           }
 
@@ -210,7 +266,6 @@ class _AwardsPageState extends State<AwardsPage> {
           }
 
           return SizedBox.shrink();
-
         }
         // This return is for the header and footer
         return _allAwardsCards[index];
@@ -479,7 +534,8 @@ class _AwardsPageState extends State<AwardsPage> {
               }
             });
 
-            SharedPreferencesModel().setHiddenAwardCategories(_hiddenCategories);
+            SharedPreferencesModel()
+                .setHiddenAwardCategories(_hiddenCategories);
 
             BotToast.showText(
               text: action,
@@ -612,8 +668,11 @@ class _AwardsPageState extends State<AwardsPage> {
       }); // FINISH FOR EACH SINGLE-AWARD
     }); // FINISH FOR EACH SUBCATEGORY
 
-    _buildAwardsWidgetList();
+    // Get information needed for header
+    _headerInfo.playerScore = awardsJson["player"]["awardsScor"].toDouble();
+
     _populateCategoryValues(awardsJson["summaryByType"]);
+    _buildAwardsWidgetList();
 
     // Sort for the first time
     var awardsSort = AwardsSort();
@@ -660,7 +719,7 @@ class _AwardsPageState extends State<AwardsPage> {
   /// _allAwardsCards list based on the _allAwards (models) list, plus we
   /// add an extra header and footer (first and last items)
   void _buildAwardsWidgetList() {
-    Widget header = Text('HEADER');
+    Widget header = _header();
     Widget footer = SizedBox(height: 90);
 
     var newList = List<Widget>();
@@ -678,6 +737,16 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   void _populateCategoryValues(Map catJson) {
+    // Fill info for the header
+    _headerInfo
+      ..achievedAwards = catJson['AllAwards']['nAwarded']
+      ..totalAwards = catJson['AllAwards']['nAwards']
+      ..achievedHonors = catJson['AllHonors']['nAwarded']
+      ..totalHonors = catJson['AllHonors']['nAwards']
+      ..achievedMedals = catJson['AllMedals']['nAwarded']
+      ..totalMedals = catJson['AllMedals']['nAwards'];
+
+    // Then fill rest of categories in _allCategories list
     var statModel = Map<String, String>();
     for (var stats in catJson.entries) {
       var catName = stats.key;
@@ -754,10 +823,11 @@ class _AwardsPageState extends State<AwardsPage> {
     }
   }
 
-  _restorePrefs () async {
+  _restorePrefs() async {
     _savedSort = await SharedPreferencesModel().getAwardsSort();
-    _showAchievedAwards = await SharedPreferencesModel().getShowAchievedAwards();
-    _hiddenCategories = await SharedPreferencesModel().getHiddenAwardCategories();
+    _showAchievedAwards =
+        await SharedPreferencesModel().getShowAchievedAwards();
+    _hiddenCategories =
+        await SharedPreferencesModel().getHiddenAwardCategories();
   }
-
 }
