@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
+import 'package:torn_pda/providers/pinned_awards_provider.dart';
 
 class AwardCard extends StatefulWidget {
-  AwardCard({@required this.award});
+  AwardCard({@required this.award, @required this.pinConditionChange});
 
   final Award award;
+  final Function pinConditionChange;
 
   @override
   _AwardCardState createState() => _AwardCardState();
@@ -18,10 +20,12 @@ class AwardCard extends StatefulWidget {
 
 class _AwardCardState extends State<AwardCard> {
   ThemeProvider _themeProvider;
+  PinnedAwardsProvider _pinProvider;
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _pinProvider = Provider.of<PinnedAwardsProvider>(context, listen: true);
 
     var award = widget.award;
 
@@ -38,54 +42,81 @@ class _AwardCardState extends State<AwardCard> {
         award.type == "Honor" ? award.image : Text(award.name.trim()),
         Row(
           children: [
-            award.doubleMerit != null ||
-                    award.tripleMerit != null ||
-                    award.nextCrime != null
-                ? GestureDetector(
-                    onTap: () {
-                      String special = "";
+            if (award.doubleMerit != null ||
+                award.tripleMerit != null ||
+                award.nextCrime != null)
+              GestureDetector(
+                onTap: () {
+                  String special = "";
 
-                      if (award.nextCrime != null) {
-                        special = "Next crime to do!";
-                      } else if (award.tripleMerit != null) {
-                        special = "Triple merit!";
-                      } else if (award.doubleMerit != null) {
-                        special = "Double merit!";
-                      }
+                  if (award.nextCrime != null) {
+                    special = "Next crime to do!";
+                  } else if (award.tripleMerit != null) {
+                    special = "Triple merit!";
+                  } else if (award.doubleMerit != null) {
+                    special = "Double merit!";
+                  }
 
-                      BotToast.showText(
-                        text: special,
-                        textStyle: TextStyle(
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.green[800],
-                        duration: Duration(seconds: 6),
-                        contentPadding: EdgeInsets.all(10),
-                      );
-                    },
-                    child: Image.asset(
-                      award.nextCrime != null
-                          ? 'images/awards/trophy.png'
-                          : award.tripleMerit != null
-                              ? 'images/awards/triple_merit.png'
-                              : 'images/awards/double_merit.png',
-                      color: _themeProvider.mainText,
-                      height: 18,
+                  BotToast.showText(
+                    text: special,
+                    textStyle: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white,
                     ),
-                  )
-                : SizedBox.shrink(),
-            SizedBox(width: 8),
-            award.pinned
-                ? Icon(
-                    MdiIcons.pin,
-                    color: Colors.green,
-                    size: 20,
-                  )
-                : Icon(
-                    MdiIcons.pinOutline,
-                    size: 20,
-                  ),
+                    contentColor: Colors.green[800],
+                    duration: Duration(seconds: 6),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+                child: Image.asset(
+                  award.nextCrime != null
+                      ? 'images/awards/trophy.png'
+                      : award.tripleMerit != null
+                          ? 'images/awards/triple_merit.png'
+                          : 'images/awards/double_merit.png',
+                  color: _themeProvider.mainText,
+                  height: 18,
+                ),
+              )
+            else
+              SizedBox.shrink(),
+            if (award.achieve < 1)
+              _pinProvider.pinnedNames.contains(award.name)
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            award.pinned = false;
+                          });
+                          _pinProvider.removePinned(award);
+                          widget.pinConditionChange();
+                        },
+                        child: Icon(
+                          MdiIcons.pin,
+                          color: Colors.green,
+                          size: 20,
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            award.pinned = true;
+                          });
+                          _pinProvider.addPinned(award);
+                          widget.pinConditionChange();
+                        },
+                        child: Icon(
+                          MdiIcons.pinOutline,
+                          size: 20,
+                        ),
+                      ),
+                    )
+            else
+              SizedBox.shrink()
           ],
         )
       ],
@@ -161,32 +192,33 @@ class _AwardCardState extends State<AwardCard> {
                     '/${decimalFormat.format(award.goal.ceil())}',
                     style: TextStyle(fontSize: 12),
                   ),
-                  award.daysLeft != -99 // Means no time
-                      ? award.daysLeft > 0 && award.daysLeft < double.maxFinite
-                          ? Text(
-                              " - ${decimalFormat.format(award.daysLeft.round())} "
-                              "days",
-                              style: TextStyle(fontSize: 12),
-                            )
-                          : award.daysLeft == double.maxFinite
-                              ? Row(
-                                  children: [
-                                    Text(' - '),
-                                    Icon(Icons.all_inclusive, size: 19),
-                                  ],
-                                )
-                              : Text(
-                                  " - ${(DateFormat('yyyy-MM-dd').format(
-                                    DateTime.fromMillisecondsSinceEpoch(
-                                        award.dateAwarded.round() * 1000),
-                                  ))}",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                    color: Colors.grey,
-                                  ),
-                                )
-                      : SizedBox.shrink(),
+                  if (award.daysLeft != -99)
+                    award.daysLeft > 0 && award.daysLeft < double.maxFinite
+                        ? Text(
+                            " - ${decimalFormat.format(award.daysLeft.round())} "
+                            "days",
+                            style: TextStyle(fontSize: 12),
+                          )
+                        : award.daysLeft == double.maxFinite
+                            ? Row(
+                                children: [
+                                  Text(' - '),
+                                  Icon(Icons.all_inclusive, size: 19),
+                                ],
+                              )
+                            : Text(
+                                " - ${(DateFormat('yyyy-MM-dd').format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      award.dateAwarded.round() * 1000),
+                                ))}",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey,
+                                ),
+                              )
+                  else
+                    SizedBox.shrink(),
                   commentIconRow,
                 ],
               ),

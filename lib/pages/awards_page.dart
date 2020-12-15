@@ -12,6 +12,10 @@ import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/models/awards/awards_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/providers/pinned_awards_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:torn_pda/utils/html_parser.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class AwardsHeaderInfo {
@@ -45,6 +49,7 @@ class _AwardsPageState extends State<AwardsPage> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
+  PinnedAwardsProvider _pinProvider;
 
   PanelController _pc = new PanelController();
   final double _initFabHeight = 25.0;
@@ -76,6 +81,7 @@ class _AwardsPageState extends State<AwardsPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _pinProvider = Provider.of<PinnedAwardsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
   }
@@ -105,16 +111,13 @@ class _AwardsPageState extends State<AwardsPage> {
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 if (_apiSuccess) {
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 15, top: 5),
-                    child: Scrollbar(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: _awardsListView(),
-                          ),
-                        ],
-                      ),
+                  return Scrollbar(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: _awardsListView(),
+                        ),
+                      ],
                     ),
                   );
                 } else {
@@ -202,43 +205,179 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Widget _header() {
+    var pinnedCards = List<Widget>();
+    for (var pinned in _pinProvider.pinnedAwards) {
+      Widget commentIconRow = SizedBox.shrink();
+      if (pinned.comment != null && pinned.comment.trim() != "") {
+        pinned.comment = HtmlParser.fix(
+            pinned.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
+        commentIconRow = Row(
+          children: [
+            SizedBox(width: 4),
+            GestureDetector(
+              onTap: () {
+                BotToast.showText(
+                  text: pinned.comment,
+                  textStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[700],
+                  duration: Duration(seconds: 6),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+              child: Icon(
+                Icons.info_outline,
+                size: 19,
+              ),
+            ),
+          ],
+        );
+      }
+
+      var achievedPercentage = (pinned.achieve * 100).truncate();
+      final decimalFormat = new NumberFormat("#,##0", "en_US");
+      Widget pinDetails = Row(
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "$achievedPercentage%",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: achievedPercentage == 100
+                      ? Colors.green
+                      : _themeProvider.mainText,
+                ),
+              ),
+              Text(
+                ' - ${decimalFormat.format(pinned.current.ceil())}'
+                '/${decimalFormat.format(pinned.goal.ceil())}',
+                style: TextStyle(fontSize: 12),
+              ),
+              if (pinned.daysLeft != -99)
+                pinned.daysLeft > 0 && pinned.daysLeft < double.maxFinite
+                    ? Text(
+                        " - ${decimalFormat.format(pinned.daysLeft.round())} "
+                        "days",
+                        style: TextStyle(fontSize: 12),
+                      )
+                    : pinned.daysLeft == double.maxFinite
+                        ? Row(
+                            children: [
+                              Text(' - '),
+                              Icon(Icons.all_inclusive, size: 19),
+                            ],
+                          )
+                        : Text(
+                            " - ${(DateFormat('yyyy-MM-dd').format(
+                              DateTime.fromMillisecondsSinceEpoch(
+                                  pinned.dateAwarded.round() * 1000),
+                            ))}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey,
+                            ),
+                          )
+              else
+                SizedBox.shrink(),
+              commentIconRow,
+            ],
+          ),
+        ],
+      );
+
+      pinnedCards.add(
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(pinned.name),
+                    GestureDetector(
+                      onTap: () {
+                        _pinProvider.removePinned(pinned);
+                        _buildAwardsWidgetList();
+                      },
+                      child: Icon(
+                        MdiIcons.pin,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                    ),
+                  ],
+                ),
+                pinDetails,
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    Widget pinnedSection = Column(children: pinnedCards);
+
     return Padding(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text('Your rarity score: '
-                  '${double.parse((_headerInfo.playerScore / 10000).toStringAsFixed(2))}'),
-              SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  String achievement = "Achieved ${_headerInfo.achievedAwards}"
-                      "/${_headerInfo.totalAwards} awards\n\n"
-                      "Medals ${_headerInfo.achievedMedals}"
-                      "/${_headerInfo.totalMedals}\n"
-                      "Honors ${_headerInfo.achievedHonors}"
-                      "/${_headerInfo.totalHonors}";
+          Padding(
+            padding: const EdgeInsets.only(left: 15, top: 15),
+            child: Row(
+              children: [
+                Text('Your rarity score: '
+                    '${double.parse((_headerInfo.playerScore / 10000).toStringAsFixed(2))}'),
+                SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    String achievement =
+                        "Achieved ${_headerInfo.achievedAwards}"
+                        "/${_headerInfo.totalAwards} awards\n\n"
+                        "Medals ${_headerInfo.achievedMedals}"
+                        "/${_headerInfo.totalMedals}\n"
+                        "Honors ${_headerInfo.achievedHonors}"
+                        "/${_headerInfo.totalHonors}";
 
-                  BotToast.showText(
-                    text: achievement,
-                    textStyle: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.green[700],
-                    duration: Duration(seconds: 6),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-                child: Icon(
-                  Icons.info_outline,
-                  size: 19,
+                    BotToast.showText(
+                      text: achievement,
+                      textStyle: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.green[700],
+                      duration: Duration(seconds: 6),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                  child: Icon(
+                    Icons.info_outline,
+                    size: 19,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          if (_pinProvider.pinnedAwards.length > 0)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 20),
+                Text('PINNED AWARDS',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 4),
+                pinnedSection,
+              ],
+            ),
+          SizedBox(height: 20),
+          Text('AWARDS LIST', style: TextStyle(fontWeight: FontWeight.bold)),
+          SizedBox(height: 4),
         ],
       ),
     );
@@ -654,6 +793,11 @@ class _AwardsPageState extends State<AwardsPage> {
             _allCategories.addAll({singleAward.category: ""});
           }
 
+          // Add to pinned list
+          if (singleAward.pinned) {
+            _pinProvider.addPinned(singleAward);
+          }
+
           // Populate models list
           _allAwards.add(singleAward);
         } catch (e) {
@@ -726,7 +870,12 @@ class _AwardsPageState extends State<AwardsPage> {
     newList.add(header);
 
     for (var award in _allAwards) {
-      newList.add(AwardCard(award: award));
+      newList.add(
+        AwardCard(
+          award: award,
+          pinConditionChange: _onPinnedConditionChange,
+        ),
+      );
     }
 
     newList.add(footer);
@@ -829,5 +978,9 @@ class _AwardsPageState extends State<AwardsPage> {
         await SharedPreferencesModel().getShowAchievedAwards();
     _hiddenCategories =
         await SharedPreferencesModel().getHiddenAwardCategories();
+  }
+
+  _onPinnedConditionChange() {
+    _buildAwardsWidgetList();
   }
 }
