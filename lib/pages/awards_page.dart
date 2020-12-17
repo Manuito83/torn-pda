@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/pinned_awards_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class AwardsHeaderInfo {
@@ -45,6 +46,7 @@ class _AwardsPageState extends State<AwardsPage> {
 
   Future _getAwardsPayload;
   bool _apiSuccess = false;
+  String _errorReason = "";
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
@@ -527,25 +529,88 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Widget _connectError() {
-    return Padding(
-      padding: const EdgeInsets.all(30),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'There was an error contacting with Yata!',
-            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 20),
-          Text(
-            'Please try again later.',
-          ),
-          SizedBox(height: 20),
-          Text('If this problem reoccurs, please let us know!'),
-        ],
-      ),
-    );
+    if (_errorReason == "user") {
+      return Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'There was an error with YATA!',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Please make sure you have a valid account with YATA  in order to '
+              'use this section. ',
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _openBrowserDialog(context, 'https://yata.alwaysdata.net/');
+                  },
+                  child: Image.asset('images/icons/yata_logo.png', height: 35),
+                ),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                      'Don\'t have one? Have you changed your API key recently? '
+                      'Login here with YATA (tap the icon) and then reload this section!'),
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                RaisedButton(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.refresh),
+                      SizedBox(width: 6),
+                      Text('Reload'),
+                    ],
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _getAwardsPayload = _fetchYataAndPopulate();
+                    });
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 30),
+            Text(
+                'Otherwise, there might be a problem signing in with YATA, please '
+                'try again later!'),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'There was an error contacting with YATA!',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            Text(
+              'Please try again later.',
+            ),
+            SizedBox(height: 20),
+            Text('If this problem reoccurs, please let us know!'),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _categoryFilterWrap() {
@@ -702,7 +767,7 @@ class _AwardsPageState extends State<AwardsPage> {
 
     var reply = await YataComm.getAwards(_userProvider.myUser.userApiKey);
     if (reply is YataError) {
-      // TODO
+      _errorReason = reply.reason;
     } else {
       await _populateInfo(reply);
       setState(() {
@@ -766,7 +831,8 @@ class _AwardsPageState extends State<AwardsPage> {
             circulation: value["circulation"].toDouble(),
             rScore: value["rScore"] == null ? 0 : value["rScore"].toDouble(),
             rarity: value["rarity"],
-            goal: value["goal"].toDouble(),
+            // Goal might be null sometimes (e.g. travel awards for < level 15)
+            goal: value["goal"] == null ? 0 : value["goal"].toDouble(),
             current: value["current"].toDouble(),
             dateAwarded: value["awarded_time"].toDouble(),
             daysLeft: value["left"] == null
@@ -774,7 +840,8 @@ class _AwardsPageState extends State<AwardsPage> {
                 : value["left"] is String
                     ? double.parse(value["left"])
                     : value["left"].toDouble(),
-            comment: value["comment"],
+            // Avoid lists in comments (due to bug in imports from YATA)
+            comment: value["comment"] is List<dynamic> ? "" : value["comment"],
             pinned: isPinned,
             doubleMerit: value["double"] ?? null,
             tripleMerit: value["triple"] ?? null,
@@ -982,5 +1049,26 @@ class _AwardsPageState extends State<AwardsPage> {
 
   _onPinnedConditionChange() {
     _buildAwardsWidgetList();
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewDialog(
+              initUrl: initUrl,
+            ),
+          ),
+        );
+      },
+    );
   }
 }

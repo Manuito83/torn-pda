@@ -27,7 +27,12 @@ class YataComm {
     // 2 cookies, for CSRF and SessionId
     if (_cj.loadForRequest(_authUrl).length < 2) {
       // No valid sessionId, calling auth!
-      await _getAuth(apiKey);
+      var result = await _getAuth(apiKey);
+      if (result is YataError) {
+        if (result.reason == "user") {
+          return result;
+        }
+      }
     }
 
     try {
@@ -53,6 +58,11 @@ class YataComm {
     var authRequest = await _client.getUrl(_authUrl);
     headers.forEach((key, value) => authRequest.headers.add(key, value));
     var authResponse = await authRequest.close();
+
+    if (authResponse.statusCode == 400 && authResponse.reasonPhrase == "Bad Request") {
+      return YataError()..reason = "user";
+    }
+
     _cj.saveFromResponse(_authUrl, authResponse.cookies);
   }
 
