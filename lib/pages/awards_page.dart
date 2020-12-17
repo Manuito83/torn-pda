@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 class AwardsHeaderInfo {
@@ -40,6 +41,7 @@ class _AwardsPageState extends State<AwardsPage> {
   var _allAwards = List<Award>();
   var _allAwardsCards = List<Widget>();
   var _allCategories = Map<String, String>();
+  List<dynamic> _allAwardsGraphs;
 
   // Active categories
   var _hiddenCategories = List<String>();
@@ -86,11 +88,6 @@ class _AwardsPageState extends State<AwardsPage> {
     _pinProvider = Provider.of<PinnedAwardsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -506,6 +503,37 @@ class _AwardsPageState extends State<AwardsPage> {
       ),
       actions: [
         _apiSuccess
+            ? IconButton(
+                icon: Icon(
+                  Icons.bar_chart_outlined,
+                  color: _themeProvider.buttonText,
+                ),
+                onPressed: () async {
+
+                  // Only pass awards that are being shown in the active list
+                  var graphsToPass = List<dynamic>();
+                  for (var awardGraph in _allAwardsGraphs) {
+                    for (var award in _allAwards) {
+                      if (awardGraph[0] == award.name) {
+                        if (!_hiddenCategories.contains(award.category)) {
+                          graphsToPass.add(awardGraph);
+                        }
+                      }
+                    }
+                  }
+
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AwardsGraphs(
+                        graphInfo: graphsToPass,
+                      ),
+                    ),
+                  );
+                },
+              )
+            : SizedBox.shrink(),
+        _apiSuccess
             ? PopupMenuButton<AwardsSort>(
                 icon: Icon(
                   Icons.sort,
@@ -779,6 +807,9 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   _populateInfo(Map awardsJson) async {
+    // Copy graphs for later use
+    _allAwardsGraphs = awardsJson["graph"];
+
     // Check for pinned awards
     var pinMap = awardsJson["pinnedAwards"];
 
