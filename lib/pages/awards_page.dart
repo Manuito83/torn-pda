@@ -505,25 +505,27 @@ class _AwardsPageState extends State<AwardsPage> {
         },
       ),
       actions: [
-        PopupMenuButton<AwardsSort>(
-          icon: Icon(
-            Icons.sort,
-          ),
-          onSelected: _sortAwards,
-          itemBuilder: (BuildContext context) {
-            return _popupSortChoices.map((AwardsSort choice) {
-              return PopupMenuItem<AwardsSort>(
-                value: choice,
-                child: Text(
-                  choice.description,
-                  style: TextStyle(
-                    fontSize: 13,
-                  ),
+        _apiSuccess
+            ? PopupMenuButton<AwardsSort>(
+                icon: Icon(
+                  Icons.sort,
                 ),
-              );
-            }).toList();
-          },
-        ),
+                onSelected: _sortAwards,
+                itemBuilder: (BuildContext context) {
+                  return _popupSortChoices.map((AwardsSort choice) {
+                    return PopupMenuItem<AwardsSort>(
+                      value: choice,
+                      child: Text(
+                        choice.description,
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }).toList();
+                },
+              )
+            : SizedBox.shrink(),
       ],
     );
   }
