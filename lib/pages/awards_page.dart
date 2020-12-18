@@ -246,9 +246,6 @@ class _AwardsPageState extends State<AwardsPage> {
                 "$achievedPercentage%",
                 style: TextStyle(
                   fontSize: 12,
-                  color: achievedPercentage == 100
-                      ? Colors.green
-                      : _themeProvider.mainText,
                 ),
               ),
               Text(
@@ -509,7 +506,6 @@ class _AwardsPageState extends State<AwardsPage> {
                   color: _themeProvider.buttonText,
                 ),
                 onPressed: () async {
-
                   // Only pass awards that are being shown in the active list
                   var graphsToPass = List<dynamic>();
                   for (var awardGraph in _allAwardsGraphs) {
@@ -901,13 +897,9 @@ class _AwardsPageState extends State<AwardsPage> {
           // Populate models list
           _allAwards.add(singleAward);
         } catch (e) {
-          // TODO activate and delete print
-          print(e);
-          /*
           FirebaseCrashlytics.instance
               .log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
           FirebaseCrashlytics.instance.recordError(e, null);
-          */
         }
       }); // FINISH FOR EACH SINGLE-AWARD
     }); // FINISH FOR EACH SUBCATEGORY
