@@ -44,43 +44,35 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           : null,
       body: Padding(
         padding: const EdgeInsets.all(30),
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
-              children: <Widget>[
-                /*
-                Text(
-                  'Awards',
-                  style: TextStyle(
-                      color: const Color(0xff0f4a3c),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(
-                  height: 38,
-                ),
-                */
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: BarChart(
-                      mainBarData(),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ),
-              ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            /*
+            Text(
+              'Awards',
+              style: TextStyle(
+                  color: const Color(0xff0f4a3c),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold),
             ),
-          ),
+            const SizedBox(
+              height: 38,
+            ),
+            */
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: BarChart(
+                  mainBarData(),
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+          ],
         ),
       ),
     );
@@ -90,7 +82,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
     return AppBar(
       title: Row(
         children: [
-          Text('Awards graphs'),
+          Text('Awards graph'),
           SizedBox(width: 8),
           GestureDetector(
               onTap: () {
@@ -143,12 +135,18 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
             tooltipBgColor: Colors.blueGrey,
+            fitInsideVertically: true,
+            fitInsideHorizontally: true,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                widget.graphInfo[group.x][0].toString(),
-                TextStyle(color: Colors.yellow),
+                "${widget.graphInfo[group.x][0]}\n"
+                "Circulation ${widget.graphInfo[group.x][1]}\n"
+                "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}",
+                TextStyle(color: Colors.yellow, fontSize: 12),
               );
             }),
+        // Threshold so that the smallest bars can be selected as well
+        touchExtraThreshold: EdgeInsets.only(top: 30),
         touchCallback: (barTouchResponse) {
           setState(() {
             if (barTouchResponse.spot != null &&
@@ -167,8 +165,11 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           showTitles: false,
         ),
         leftTitles: SideTitles(
+          getTextStyles: (value) {
+            return TextStyle(color: _themeProvider.mainText, fontSize: 12);
+          },
           showTitles: true,
-          interval: 50000,
+          interval: 25000,
         ),
       ),
       borderData: FlBorderData(
