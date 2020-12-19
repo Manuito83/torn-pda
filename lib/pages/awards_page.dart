@@ -12,7 +12,7 @@ import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/models/awards/awards_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/providers/pinned_awards_provider.dart';
+import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -53,7 +53,7 @@ class _AwardsPageState extends State<AwardsPage> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
-  PinnedAwardsProvider _pinProvider;
+  AwardsProvider _pinProvider;
 
   PanelController _pc = new PanelController();
   final double _initFabHeight = 25.0;
@@ -85,7 +85,7 @@ class _AwardsPageState extends State<AwardsPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    _pinProvider = Provider.of<PinnedAwardsProvider>(context, listen: false);
+    _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
   }
@@ -295,11 +295,55 @@ class _AwardsPageState extends State<AwardsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(pinned.name),
+                    Row(
+                      children: [
+                        Text(pinned.name),
+                        SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            BotToast.showText(
+                              text: pinned.description,
+                              textStyle: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[700],
+                              duration: Duration(seconds: 6),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          },
+                          child: Icon(
+                            Icons.info_outline,
+                            size: 19,
+                          ),
+                        ),
+                      ],
+                    ),
                     GestureDetector(
                       onTap: () {
+
+                        // TODO: replace with comment when syncing with YATA
+                        String action = 'Pins are not being synchronized with YATA yet, please '
+                            'pin or unpin your awards in YATA\'s website and refresh '
+                            'this section to see the changes.';
+                        Color actionColor = Colors.grey[700];
+
+                        // TODO: add YATA post call and checks
+                        /*
                         _pinProvider.removePinned(pinned);
                         _buildAwardsWidgetList();
+                        */
+
+                        BotToast.showText(
+                          text: action,
+                          textStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: actionColor,
+                          duration: Duration(seconds: 6),
+                          contentPadding: EdgeInsets.all(10),
+                        );
                       },
                       child: Icon(
                         MdiIcons.pin,

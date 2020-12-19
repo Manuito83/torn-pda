@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
-import 'package:torn_pda/providers/pinned_awards_provider.dart';
+import 'package:torn_pda/providers/awards_provider.dart';
 
 class AwardCard extends StatefulWidget {
   AwardCard({@required this.award, @required this.pinConditionChange});
@@ -20,12 +20,12 @@ class AwardCard extends StatefulWidget {
 
 class _AwardCardState extends State<AwardCard> {
   ThemeProvider _themeProvider;
-  PinnedAwardsProvider _pinProvider;
+  AwardsProvider _pinProvider;
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _pinProvider = Provider.of<PinnedAwardsProvider>(context, listen: true);
+    _pinProvider = Provider.of<AwardsProvider>(context, listen: true);
 
     var award = widget.award;
 
@@ -81,40 +81,63 @@ class _AwardCardState extends State<AwardCard> {
             else
               SizedBox.shrink(),
             if (award.achieve < 1)
-              _pinProvider.pinnedNames.contains(award.name)
-                  ? Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            award.pinned = false;
-                          });
-                          _pinProvider.removePinned(award);
-                          widget.pinConditionChange();
-                        },
-                        child: Icon(
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: GestureDetector(
+                  onTap: () {
+                    String action = '';
+                    Color actionColor;
+
+                    // TODO: replace with comment when syncing with YATA
+                    action = 'Pins are not being synchronized with YATA yet, please '
+                        'pin or unpin your awards in YATA\'s website and refresh '
+                        'this section to see the changes.';
+                    actionColor = Colors.grey[700];
+
+                    /*
+                    // TODO: add YATA post call and checks
+                    if (_pinProvider.pinnedNames.contains(award.name)) {
+                      setState(() {
+                        award.pinned = false;
+                      });
+                      _pinProvider.removePinned(award);
+                      widget.pinConditionChange();
+                      action = 'Unpinned ${award.name}!';
+                      actionColor = Colors.red;
+                    } else {
+                      setState(() {
+                        award.pinned = true;
+                      });
+                      _pinProvider.addPinned(award);
+                      widget.pinConditionChange();
+                      action = 'Pinned ${award.name}!';
+                      actionColor = Colors.green;
+                    }
+                    */
+
+                    BotToast.showText(
+                      text: action,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: actionColor,
+                      duration: Duration(seconds: 6),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  },
+                  child: _pinProvider.pinnedNames.contains(award.name)
+                      ? Icon(
                           MdiIcons.pin,
                           color: Colors.green,
                           size: 20,
-                        ),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            award.pinned = true;
-                          });
-                          _pinProvider.addPinned(award);
-                          widget.pinConditionChange();
-                        },
-                        child: Icon(
+                        )
+                      : Icon(
                           MdiIcons.pinOutline,
                           size: 20,
                         ),
-                      ),
-                    )
+                ),
+              )
             else
               SizedBox.shrink()
           ],
