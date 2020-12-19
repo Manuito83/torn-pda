@@ -228,7 +228,7 @@ class _WebViewFullState extends State<WebViewFull> {
                                         size: 20,
                                       ),
                                       onPressed: () async {
-                                        tryGoBack();
+                                        _tryGoBack();
                                       },
                                     ),
                                   ),
@@ -527,11 +527,11 @@ class _WebViewFullState extends State<WebViewFull> {
     if (details.primaryVelocity < 0) {
       await tryGoForward();
     } else if (details.primaryVelocity > 0) {
-      await tryGoBack();
+      await _tryGoBack();
     }
   }
 
-  Future tryGoBack() async {
+  Future _tryGoBack() async {
     var canBack = await webView.canGoBack();
     if (canBack) {
       await webView.goBack();
@@ -1253,9 +1253,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // UTILS
   Future<bool> _willPopCallback() async {
-    if (widget.customCallBack != null) {
-      widget.customCallBack();
-    }
-    return true;
+    await _tryGoBack();
+    return false;
   }
 }

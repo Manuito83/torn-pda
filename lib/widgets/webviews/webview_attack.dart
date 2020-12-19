@@ -163,7 +163,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
-                _willPopCallback();
+                widget.attacksCallback(_attackedIds);
+                _chainStatusProvider.watcherAssignParent(newParent: ChainTimerParent.targets);
                 Navigator.pop(context);
               } else {
                 // But we can change and go back to previous page in certain
@@ -208,57 +209,65 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   Future _goBackOrForward(DragEndDetails details) async {
     if (details.primaryVelocity < 0) {
-      var canForward = await _webViewController.canGoForward();
-      if (canForward) {
-        await _webViewController.goForward();
-        BotToast.showText(
-          text: "Forward",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go forward!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await _tryGoForward();
     } else if (details.primaryVelocity > 0) {
-      var canBack = await _webViewController.canGoBack();
-      if (canBack) {
-        await _webViewController.goBack();
-        BotToast.showText(
-          text: "Back",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go back!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await _tryGoBack();
+    }
+  }
+
+  Future _tryGoForward() async {
+    var canForward = await _webViewController.canGoForward();
+    if (canForward) {
+      await _webViewController.goForward();
+      BotToast.showText(
+        text: "Forward",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go forward!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Future _tryGoBack() async {
+    var canBack = await _webViewController.canGoBack();
+    if (canBack) {
+      await _webViewController.goBack();
+      BotToast.showText(
+        text: "Back",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go back!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
     }
   }
 
@@ -537,9 +546,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Future<bool> _willPopCallback() async {
-    widget.attacksCallback(_attackedIds);
-    _chainStatusProvider.watcherAssignParent(newParent: ChainTimerParent.targets);
-    return true;
+    return false;
   }
 }
 
