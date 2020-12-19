@@ -2236,10 +2236,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
     } else if (message.contains('You came') ||
-        message.contains('race') ||
+        message.contains('race.') ||
+        message.contains('race and have received') ||
         message.contains('Your best lap was')) {
       insideIcon = Icon(
         MdiIcons.gauge,
+        color: Colors.red[500],
+        size: 20,
+      );
+    } else if (message.contains('Your bug report')) {
+      insideIcon = Icon(
+        MdiIcons.bug,
         color: Colors.red[500],
         size: 20,
       );
@@ -2247,6 +2254,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       insideIcon = Icon(
         MdiIcons.virusOutline,
         color: Colors.red[500],
+        size: 20,
+      );
+    } else if (message.contains('from your bazaar for')) {
+      insideIcon = Icon(
+        MdiIcons.store,
+        color: Colors.green,
         size: 20,
       );
     } else {
