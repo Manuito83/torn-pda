@@ -60,6 +60,8 @@ class SharedPreferencesModel {
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
+  final String _kMessagesShowNumber = "pda_messagesShowNumber";
+  final String _kEventsShowNumber = "pda_eventsShowNumber";
   final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
@@ -662,6 +664,16 @@ class SharedPreferencesModel {
     return prefs.setBool(_kExpandEvents, value);
   }
 
+  Future<int> getEventsShowNumber() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEventsShowNumber) ?? 25;
+  }
+
+  Future<bool> setEventsShowNumber(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kEventsShowNumber, value);
+  }
+
   Future<bool> getExpandMessages() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kExpandMessages) ?? false;
@@ -670,6 +682,16 @@ class SharedPreferencesModel {
   Future<bool> setExpandMessages(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExpandMessages, value);
+  }
+
+  Future<int> getMessagesShowNumber() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kMessagesShowNumber) ?? 25;
+  }
+
+  Future<bool> setMessagesShowNumber(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kMessagesShowNumber, value);
   }
 
   Future<bool> getExpandBasicInfo() async {

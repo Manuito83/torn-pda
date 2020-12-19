@@ -185,6 +185,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _basicInfoExpController = ExpandableController();
   var _networthExpController = ExpandableController();
 
+  int _messagesShowNumber = 25;
+  int _eventsShowNumber = 25;
+
   var _showOne = GlobalKey();
 
   @override
@@ -497,6 +500,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
               _eventsExpController.expanded = newOptions.expandEvents;
+              _messagesShowNumber = newOptions.messagesShowNumber;
+              _eventsShowNumber = newOptions.eventsShowNumber;
               _messagesExpController.expanded = newOptions.expandMessages;
               _basicInfoExpController.expanded = newOptions.expandBasicInfo;
               _networthExpController.expanded = newOptions.expandNetworth;
@@ -1962,6 +1967,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _eventsTimeline() {
+    int maxToShow = _eventsShowNumber;
+
     // Some users might an empty events map. This is why we have the events parameters as dynamic
     // in OwnProfile Model. We need to check if it contains several elements, in which case we
     // create a map in a new variable. Otherwise, we return an empty Card.
@@ -2006,10 +2013,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int loopCount = 1;
     int maxCount;
 
-    if (events.length > 20) {
-      maxCount = 20;
+    if (events.length > maxToShow) {
+      maxCount = maxToShow;
     } else {
       maxCount = events.length;
+      maxToShow = events.length;
     }
 
     for (var e in events.values) {
@@ -2088,22 +2096,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       loopCount++;
     }
 
-    if (_user.events.length > 20) {
-      timeline.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Center(
-            child: Text(
-              "(Showing last 20 events)",
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+    timeline.add(
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Center(
+          child: Text(
+            "(Showing last $maxToShow events)",
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
 
     var unreadString = '';
     if (unreadCount == 0) {
@@ -2318,7 +2324,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _messagesTimeline() {
-    const maxToShow = 20;
+    int maxToShow = _messagesShowNumber;
 
     // Some users might an empty messages map. This is why we have the events parameters as dynamic
     // in OwnProfile Model. We need to check if it contains several elements, in which case we
@@ -2377,6 +2383,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       maxCount = maxToShow;
     } else {
       maxCount = messages.length;
+      maxToShow = messages.length;
     }
 
     for (var i = 0; i < maxToShow; i++) {
@@ -2515,22 +2522,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       loopCount++;
     }
 
-    if (_user.events.length > maxToShow) {
-      timeline.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Center(
-            child: Text(
-              "(Showing last $maxToShow messages)",
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+    timeline.add(
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Center(
+          child: Text(
+            "(Showing last $maxToShow messages)",
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
 
     var unreadRecentString = '';
     if (unreadRecentCount == 0) {
@@ -4610,12 +4615,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
+    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
     var expandMessages = await SharedPreferencesModel().getExpandMessages();
+    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
     var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
     var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
     setState(() {
       _eventsExpController.expanded = expandEvents;
+      _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
+      _messagesShowNumber = messagesNumber;
       _basicInfoExpController.expanded = expandBasicInfo;
       _networthExpController.expanded = expandNetworth;
     });
