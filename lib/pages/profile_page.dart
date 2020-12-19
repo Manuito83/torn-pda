@@ -2143,7 +2143,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         color: Colors.brown[300],
         size: 20,
       );
-    } else if (message.contains('jail')) {
+    } else if (message.contains('jail') || message.contains('arrested you')) {
       insideIcon = Center(
         child: Image.asset(
           'images/icons/jail.png',
