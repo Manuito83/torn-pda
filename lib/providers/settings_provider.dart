@@ -67,6 +67,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _chatRemoveEnabled = true;
+  bool get chatRemoveEnabled => _chatRemoveEnabled;
+  set changeChatRemoveEnabled(bool value) {
+    _chatRemoveEnabled = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   void _saveSettingsSharedPrefs() {
     String browserSave;
     switch (_currentBrowser) {
@@ -80,6 +88,8 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setDefaultBrowser(browserSave);
 
     SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
+
+    SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
 
     SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
 
@@ -132,6 +142,8 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
 
     _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
+
+    _chatRemoveEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
 
     String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
     switch (restoredTimeFormat) {

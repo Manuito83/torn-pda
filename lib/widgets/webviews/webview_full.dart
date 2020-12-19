@@ -92,11 +92,14 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityIconActive = false;
   bool _cityPreferencesLoaded = false;
   var _errorCityApi = false;
-  var _cityItemsFound = List<Item>();
+  var _cityItemsFound = <Item>[];
   var _cityController = ExpandableController();
 
   var _bazaarActive = false;
   var _bazaarFillActive = false;
+
+  var _chatRemovalEnabled = false;
+  var _chatRemovalActive = false;
 
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
@@ -119,6 +122,7 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   void initState() {
     super.initState();
+    _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
@@ -391,6 +395,10 @@ class _WebViewFullState extends State<WebViewFull> {
               webView = c;
             },
             onLoadStart: (InAppWebViewController c, String url) {
+              if (_chatRemovalEnabled && _chatRemovalActive) {
+                webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+              }
+
               _currentUrl = url;
               _assessGeneral();
             },
@@ -509,15 +517,30 @@ class _WebViewFullState extends State<WebViewFull> {
           _tradesMenuIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () async {
-              _scrollX = await webView.getScrollX();
-              _scrollY = await webView.getScrollY();
-              await webView.reload();
-              _scrollAfterLoad = true;
-            },
-          ),
+          _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: GestureDetector(
+              child: Icon(Icons.refresh),
+              onTap: () async {
+                _scrollX = await webView.getScrollX();
+                _scrollY = await webView.getScrollY();
+                await webView.reload();
+                _scrollAfterLoad = true;
+
+                BotToast.showText(
+                  text: "Reloading...",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+            ),
+          )
         ],
       ),
     );
@@ -1249,6 +1272,50 @@ class _WebViewFullState extends State<WebViewFull> {
     } else {
       return SizedBox.shrink();
     }
+  }
+
+  Widget _hideChatIcon() {
+    if (!_chatRemovalActive) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(MdiIcons.chatOutline),
+          onTap: () async {
+            webView.evaluateJavascript(source: removeChatJS());
+            SharedPreferencesModel().setChatRemovalActive(true);
+            setState(() {
+              _chatRemovalActive = true;
+            });
+          },
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(
+            MdiIcons.chatRemoveOutline,
+            color: Colors.orange[500],
+          ),
+          onTap: () async {
+            webView.evaluateJavascript(source: restoreChatJS());
+            SharedPreferencesModel().setChatRemovalActive(false);
+            setState(() {
+              _chatRemovalActive = false;
+            });
+          },
+        ),
+      );
+    }
+  }
+
+  Future _loadChatPreferences() async {
+    var removalEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
+    var removalActive = await SharedPreferencesModel().getChatRemovalActive();
+    setState(() {
+      _chatRemovalEnabled = removalEnabled;
+      _chatRemovalActive = removalActive;
+    });
   }
 
   // UTILS

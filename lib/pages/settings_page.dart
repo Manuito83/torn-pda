@@ -38,6 +38,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String _openSectionValue;
   String _openBrowserValue;
   bool _loadBarBrowser;
+  bool _chatRemoveEnabled;
   String _timeFormatValue;
   String _timeZoneValue;
 
@@ -143,6 +144,26 @@ class _SettingsPageState extends State<SettingsPage> {
                                 _settingsProvider.changeLoadBarBrowser = value;
                                 setState(() {
                                   _loadBarBrowser = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("Show chat remove icon"),
+                            Switch(
+                              value: _chatRemoveEnabled,
+                              onChanged: (value) {
+                                _settingsProvider.changeChatRemoveEnabled = value;
+                                setState(() {
+                                  _chatRemoveEnabled = value;
                                 });
                               },
                               activeTrackColor: Colors.lightGreenAccent,
@@ -949,6 +970,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     setState(() {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
+      _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
     });
   }
 

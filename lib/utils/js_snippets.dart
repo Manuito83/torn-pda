@@ -269,3 +269,28 @@ String removeBazaarFillButtonsJS() {
     }
   ''';
 }
+
+String removeChatOnLoadStartJS() {
+  return '''
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = '.chat-box-wrap_20_R_ { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
+    document.getElementsByTagName('head')[0].appendChild(style);
+  ''';
+}
+
+String removeChatJS() {
+  return '''
+    var doc = document;
+    var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
+    chatBox[0].style.display = 'none';
+  ''';
+}
+
+String restoreChatJS() {
+  return '''
+    var doc = document;
+    var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
+    chatBox[0].style.display = 'block';
+  ''';
+}

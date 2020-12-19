@@ -73,6 +73,8 @@ class SharedPreferencesModel {
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
+  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
+  final String _kChatRemovalActive = "pda_chatRemovalActive";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -725,7 +727,7 @@ class SharedPreferencesModel {
     return prefs.setStringList(_kActiveCrimesList, value);
   }
 
-  /// ----------------------------  
+  /// ----------------------------
   /// Methods for loot
   /// ----------------------------
   Future<String> getLootYataCache() async {
@@ -842,6 +844,29 @@ class SharedPreferencesModel {
   Future<bool> setCityEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kCityFinderEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Chat Removal
+  /// ----------------------------
+  Future<bool> getChatRemovalEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChatRemovalEnabled) ?? true;
+  }
+
+  Future<bool> setChatRemovalEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChatRemovalEnabled, value);
+  }
+
+  Future<bool> getChatRemovalActive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChatRemovalActive) ?? false;
+  }
+
+  Future<bool> setChatRemovalActive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChatRemovalActive, value);
   }
 
 
