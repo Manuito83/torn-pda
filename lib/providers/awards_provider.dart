@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 
-class PinnedAwardsProvider extends ChangeNotifier {
+class AwardsProvider extends ChangeNotifier {
   var pinnedAwards = List<Award>();
   var pinnedNames = List<String>();
 
