@@ -60,7 +60,7 @@ class _LootPageState extends State<LootPage> {
   bool _alarmVibration;
 
   // Payload is: 400idlevel
-  var _activeNotificationsIds = List<int>();
+  var _activeNotificationsIds = <int>[];
 
   @override
   void initState() {
@@ -228,15 +228,15 @@ class _LootPageState extends State<LootPage> {
 
   Widget _returnNpcCards() {
     // Final card of every NPC
-    var npcBoxes = List<Widget>();
+    var npcBoxes = <Widget>[];
 
     // Loop every NPC
-    var npcModels = List<LootModel>();
+    var npcModels = <LootModel>[];
 
     _mainLootInfo.forEach((npcId, npcDetails) {
       // Get npcLevels in a column and format them
       int thisIndex = 1;
-      var npcLevels = List<Widget>();
+      var npcLevels = <Widget>[];
       var npcLevelsColumn = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: npcLevels,
@@ -442,7 +442,7 @@ class _LootPageState extends State<LootPage> {
       }
 
       Widget npcImage;
-      var shadow = List<BoxShadow>();
+      var shadow = <BoxShadow>[];
       if (npcDetails.levels.current >= 4) {
         shadow = [
           BoxShadow(
@@ -474,36 +474,27 @@ class _LootPageState extends State<LootPage> {
       }
 
       Widget knifeIcon;
-      knifeIcon = IconButton(
-        icon: Icon(
-          MdiIcons.knifeMilitary,
-          color: npcDetails.levels.current >= 4
-              ? Colors.red
-              : _themeProvider.mainText,
+      knifeIcon = Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: GestureDetector(
+          child: Icon(
+            MdiIcons.knifeMilitary,
+            color: npcDetails.levels.current >= 4
+                ? Colors.red
+                : _themeProvider.mainText,
+          ),
+          onTap: () {
+            _settingsProvider.useQuickBrowser
+                ? _openBrowserDialog(context,
+                    'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId')
+                : _openTornBrowser(
+                    'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
+          },
+          onLongPress: () {
+            _openTornBrowser(
+                'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
+          },
         ),
-        onPressed: () async {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => WebViewFull(
-                    customUrl:
-                        'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
-                    customTitle: npcDetails.name,
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url =
-                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
-        },
       );
 
       Color cardBorderColor() {
@@ -647,7 +638,7 @@ class _LootPageState extends State<LootPage> {
       setState(() {
         for (var npc in _mainLootInfo.values) {
           // Update main timing values comparing stored TS with current time
-          var timingsList = List<Timing>();
+          var timingsList = <Timing>[];
           npc.timings.forEach((key, value) {
             value.due = value.ts - tsNow;
             timingsList.add(Timing(
@@ -886,21 +877,21 @@ class _LootPageState extends State<LootPage> {
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      notificationId,
-      notificationTitle,
-      notificationSubtitle,
-      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-      tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
-      platformChannelSpecifics,
-      payload: notificationPayload,
-      androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime
-    );
+        notificationId,
+        notificationTitle,
+        notificationSubtitle,
+        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+        tz.TZDateTime.from(notificationTime, tz.local)
+            .subtract(Duration(seconds: _lootNotificationAhead)),
+        platformChannelSpecifics,
+        payload: notificationPayload,
+        androidAllowWhileIdle: true, // Deliver at exact time
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
 
     // DEBUG
     //print('Notification for $notificationTitle @ '
     //    '${tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead))}');
-
   }
 
   Future _retrievePendingNotifications() async {
@@ -921,7 +912,7 @@ class _LootPageState extends State<LootPage> {
 
     // Check which notifications are still in our active list but have
     // already been issued
-    var toRemove = List<int>();
+    var toRemove = <int>[];
     for (var active in _activeNotificationsIds) {
       var stillActive = false;
       for (var not in pendingNotificationRequests) {
@@ -983,5 +974,47 @@ class _LootPageState extends State<LootPage> {
 
   void _callBackFromNotificationOptions() async {
     await _loadPreferences();
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
+          ),
+        );
+      },
+    );
   }
 }

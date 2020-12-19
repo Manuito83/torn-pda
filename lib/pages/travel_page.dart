@@ -146,28 +146,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     Radius.circular(56 / 2),
                   ),
                 ),
-                onClosed: (bool flagPressed) async {
-                  if (flagPressed) {
-                    var browserType = _settingsProvider.currentBrowser;
-                    switch (browserType) {
-                      case BrowserSetting.app:
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => WebViewFull(
-                              customUrl:
-                                  'https://www.torn.com/travelagency.php',
-                              customTitle: '${_travelModel.destination}',
-                              customCallBack: _updateInformation,
-                            ),
-                          ),
-                        );
-                        break;
-                      case BrowserSetting.external:
-                        var url = 'https://www.torn.com/travelagency.php';
-                        if (await canLaunch(url)) {
-                          await launch(url, forceSafariVC: false);
-                        }
-                        break;
+                onClosed: (ReturnFlagPressed returnFlag) async {
+                  if (returnFlag.flagPressed) {
+                    if (returnFlag.shortTap) {
+                      _settingsProvider.useQuickBrowser
+                          ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+                          : _openTornBrowser('https://www.torn.com/travelagency.php');
+                    } else {
+                      _openTornBrowser('https://www.torn.com/travelagency.php');
                     }
                   }
                 },
@@ -275,27 +261,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         openBuilder: (BuildContext context, VoidCallback _) {
           return ForeignStockPage(apiKey: _myCurrentKey);
         },
-        onClosed: (bool flagPressed) async {
-          if (flagPressed) {
-            var browserType = _settingsProvider.currentBrowser;
-            switch (browserType) {
-              case BrowserSetting.app:
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => WebViewFull(
-                      customUrl: 'https://www.torn.com/travelagency.php',
-                      customTitle: '${_travelModel.destination}',
-                      customCallBack: _updateInformation,
-                    ),
-                  ),
-                );
-                break;
-              case BrowserSetting.external:
-                var url = 'https://www.torn.com/travelagency.php';
-                if (await canLaunch(url)) {
-                  await launch(url, forceSafariVC: false);
-                }
-                break;
+        onClosed: (ReturnFlagPressed returnFlag) async {
+          if (returnFlag.flagPressed) {
+            if (returnFlag.shortTap) {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+                  : _openTornBrowser('https://www.torn.com/travelagency.php');
+            } else {
+              _openTornBrowser('https://www.torn.com/travelagency.php');
             }
           }
         },
@@ -540,26 +513,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           RaisedButton(
             child: Text("Go visit!"),
+            onLongPress: () {
+              _openTornBrowser('https://www.torn.com/');
+            },
             onPressed: () async {
-              var browserType = _settingsProvider.currentBrowser;
-              switch (browserType) {
-                case BrowserSetting.app:
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => WebViewFull(
-                        customTitle: '${_travelModel.destination}',
-                        customCallBack: _updateInformation,
-                      ),
-                    ),
-                  );
-                  break;
-                case BrowserSetting.external:
-                  var url = 'https://www.torn.com/';
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
-                  }
-                  break;
-              }
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/')
+                  : _openTornBrowser('https://www.torn.com/');
             },
           ),
         ];
@@ -586,26 +546,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           RaisedButton(
             child: Icon(Icons.local_airport),
+            onLongPress: () {
+              _openTornBrowser('https://www.torn.com/');
+            },
             onPressed: () async {
-              var browserType = _settingsProvider.currentBrowser;
-              switch (browserType) {
-                case BrowserSetting.app:
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => WebViewFull(
-                        customTitle: '${_travelModel.destination}',
-                        customCallBack: _updateInformation,
-                      ),
-                    ),
-                  );
-                  break;
-                case BrowserSetting.external:
-                  var url = 'https://www.torn.com/';
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
-                  }
-                  break;
-              }
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/')
+                  : _openTornBrowser('https://www.torn.com/');
             },
           ),
         ];
@@ -660,29 +607,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               GestureDetector(
-                onLongPress: () async {
-                  var browserType = _settingsProvider.currentBrowser;
-                  switch (browserType) {
-                    case BrowserSetting.app:
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (BuildContext context) => WebViewFull(
-                            customUrl: 'https://www.torn.com',
-                            customTitle: 'Traveling',
-                          ),
-                        ),
-                      );
-                      break;
-                    case BrowserSetting.external:
-                      var url = 'https://www.torn.com';
-                      if (await canLaunch(url)) {
-                        await launch(url, forceSafariVC: false);
-                      }
-                      break;
-                  }
+                onLongPress: () {
+                  _openTornBrowser('https://www.torn.com/');
                 },
-                onTap: () =>
-                    _openBrowserDialog(context, 'https://www.torn.com'),
+                onTap: () async {
+                  _settingsProvider.useQuickBrowser
+                      ? _openBrowserDialog(context, 'https://www.torn.com/')
+                      : _openTornBrowser('https://www.torn.com/');
+                },
                 child: LinearPercentIndicator(
                   isRTL: _travelModel.destination == "Torn" ? true : false,
                   center: Text(
@@ -775,27 +707,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   RaisedButton _travelAgencyButton() {
     return RaisedButton(
       child: Text("Travel Agency"),
+      onLongPress: () {
+        _openTornBrowser('https://www.torn.com/travelagency.php');
+      },
       onPressed: () async {
-        var browserType = _settingsProvider.currentBrowser;
-        switch (browserType) {
-          case BrowserSetting.app:
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewFull(
-                  customUrl: 'https://www.torn.com/travelagency.php',
-                  customTitle: '${_travelModel.destination}',
-                  customCallBack: _updateInformation,
-                ),
-              ),
-            );
-            break;
-          case BrowserSetting.external:
-            var url = 'https://www.torn.com/travelagency.php';
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
-            }
-            break;
-        }
+        _settingsProvider.useQuickBrowser
+            ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+            : _openTornBrowser('https://www.torn.com/travelagency.php');
       },
     );
   }
@@ -1263,11 +1181,39 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
+            child: WebViewFull(
+              customUrl: initUrl,
+              dialog: true,
+              customCallBack: _updateInformation,
+            ),
           ),
         );
       },
     );
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+              customCallBack: _updateInformation,
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
   }
 }
 

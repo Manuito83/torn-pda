@@ -75,6 +75,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _useQuickBrowser = true;
+  bool get useQuickBrowser => _useQuickBrowser;
+  set changeUseQuickBrowser(bool value) {
+    _useQuickBrowser = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   void _saveSettingsSharedPrefs() {
     String browserSave;
     switch (_currentBrowser) {
@@ -90,6 +98,8 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
 
     SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
+
+    SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
 
     SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
 

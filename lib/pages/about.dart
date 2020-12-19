@@ -101,22 +101,18 @@ class _AboutPageState extends State<AboutPage> {
                       style: DefaultTextStyle.of(context).style,
                       children: <TextSpan>[
                         TextSpan(
-                            text: 'Discord channel',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () async {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (BuildContext context) =>
-                                        WebViewFull(
-                                      customTitle: 'Discord',
-                                      customUrl: 'https://discord.gg/vyP23kJ',
-                                    ),
-                                  ),
-                                );
-                              }),
+                          text: 'Discord channel',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.blue),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () async {
+                              _settingsProvider.useQuickBrowser
+                                  ? _openBrowserDialog(
+                                      context, 'https://discord.gg/vyP23kJ')
+                                  : _openTornBrowser(
+                                      'https://discord.gg/vyP23kJ');
+                            },
+                        ),
                         TextSpan(
                             text: ' and offer suggestions for new '
                                 'features or report bugs you find!'),
@@ -148,29 +144,11 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType =
-                                    _settingsProvider.currentBrowser;
-                                switch (browserType) {
-                                  case BrowserSetting.app:
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            WebViewFull(
-                                          customTitle: 'Forums',
-                                          customUrl:
-                                              'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0',
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                  case BrowserSetting.external:
-                                    var url =
-                                        'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                    break;
-                                }
+                                _settingsProvider.useQuickBrowser
+                                    ? _openBrowserDialog(context,
+                                        'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0')
+                                    : _openTornBrowser(
+                                        'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0');
                               },
                           ),
                           TextSpan(
@@ -212,29 +190,11 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType =
-                                    _settingsProvider.currentBrowser;
-                                switch (browserType) {
-                                  case BrowserSetting.app:
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            WebViewFull(
-                                          customTitle: 'Github',
-                                          customUrl:
-                                              'https://github.com/Manuito83/torn-pda',
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                  case BrowserSetting.external:
-                                    var url =
-                                        'https://github.com/Manuito83/torn-pda';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                    break;
-                                }
+                                _settingsProvider.useQuickBrowser
+                                    ? _openBrowserDialog(context,
+                                        'https://github.com/Manuito83/torn-pda')
+                                    : _openTornBrowser(
+                                        'https://github.com/Manuito83/torn-pda');
                               },
                           ),
                           TextSpan(
@@ -274,29 +234,11 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType =
-                                    _settingsProvider.currentBrowser;
-                                switch (browserType) {
-                                  case BrowserSetting.app:
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            WebViewFull(
-                                          customTitle: 'Donate to Manuito',
-                                          customUrl:
-                                              'https://www.torn.com/trade.php#step=start&userID=2225097',
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                  case BrowserSetting.external:
-                                    var url =
-                                        'https://www.torn.com/trade.php#step=start&userID=2225097';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                    break;
-                                }
+                                _settingsProvider.useQuickBrowser
+                                    ? _openBrowserDialog(context,
+                                        'https://www.torn.com/trade.php#step=start&userID=2225097')
+                                    : _openTornBrowser(
+                                        'https://www.torn.com/trade.php#step=start&userID=2225097');
                               },
                           ),
                           TextSpan(text: ' it would be certainly appreciated!'),
@@ -376,29 +318,11 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType =
-                                    _settingsProvider.currentBrowser;
-                                switch (browserType) {
-                                  case BrowserSetting.app:
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            WebViewFull(
-                                          customUrl:
-                                              'https://www.torn.com/profiles.php?XID=2225097',
-                                          customTitle: 'Manuito',
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                  case BrowserSetting.external:
-                                    var url =
-                                        'https://www.torn.com/profiles.php?XID=2225097';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                    break;
-                                }
+                                _settingsProvider.useQuickBrowser
+                                    ? _openBrowserDialog(context,
+                                        'https://www.torn.com/profiles.php?XID=2225097')
+                                    : _openTornBrowser(
+                                        'https://www.torn.com/profiles.php?XID=2225097');
                               },
                           ),
                         ],
@@ -426,29 +350,11 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType =
-                                    _settingsProvider.currentBrowser;
-                                switch (browserType) {
-                                  case BrowserSetting.app:
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            WebViewFull(
-                                          customTitle: 'Phillip_J_Fry',
-                                          customUrl:
-                                              'https://www.torn.com/profiles.php?XID=2184575',
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                  case BrowserSetting.external:
-                                    var url =
-                                        'https://www.torn.com/profiles.php?XID=2184575';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                    break;
-                                }
+                                _settingsProvider.useQuickBrowser
+                                    ? _openBrowserDialog(context,
+                                        'https://www.torn.com/profiles.php?XID=2184575')
+                                    : _openTornBrowser(
+                                        'https://www.torn.com/profiles.php?XID=2184575');
                               },
                           ),
                         ],
@@ -476,29 +382,11 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                var browserType =
-                                    _settingsProvider.currentBrowser;
-                                switch (browserType) {
-                                  case BrowserSetting.app:
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            WebViewFull(
-                                          customTitle: 'Kivou',
-                                          customUrl:
-                                              'https://www.torn.com/profiles.php?XID=2000607',
-                                        ),
-                                      ),
-                                    );
-                                    break;
-                                  case BrowserSetting.external:
-                                    var url =
-                                        'https://www.torn.com/profiles.php?XID=2000607';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                    break;
-                                }
+                                _settingsProvider.useQuickBrowser
+                                    ? _openBrowserDialog(context,
+                                        'https://www.torn.com/profiles.php?XID=2000607')
+                                    : _openTornBrowser(
+                                        'https://www.torn.com/profiles.php?XID=2000607');
                               },
                           ),
                           TextSpan(
@@ -549,5 +437,47 @@ class _AboutPageState extends State<AboutPage> {
         builder: (context) {
           return ChangeLog();
         });
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
+          ),
+        );
+      },
+    );
   }
 }

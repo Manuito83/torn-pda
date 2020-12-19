@@ -21,6 +21,13 @@ import 'dart:ui';
 
 import 'package:torn_pda/utils/api_caller.dart';
 
+class ReturnFlagPressed {
+  bool flagPressed = false;
+  bool shortTap = false;
+
+  ReturnFlagPressed({@required this.flagPressed, @required this.shortTap});
+}
+
 class ForeignStockPage extends StatefulWidget {
   final String apiKey;
 
@@ -283,7 +290,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
           // Returning 'false' to indicate we did not press a flag
-          Navigator.pop(context, false);
+          Navigator.pop(context, ReturnFlagPressed(flagPressed: false, shortTap: false));
         },
       ),
       actions: <Widget>[
@@ -780,38 +787,44 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ),
         ],
       ),
-      onTap: () {
-        // Currency configuration
-        final costCurrency = new NumberFormat("#,##0", "en_US");
-
-        var moneyOnHand = _profileMisc.moneyOnhand;
-        String moneyToBuy = '';
-        Color moneyToBuyColor = Colors.grey;
-        if (moneyOnHand >= stock.cost * _capacity) {
-          moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * _capacity)} necessary to '
-              'buy $_capacity ${stock.name}';
-          moneyToBuyColor = Colors.green;
-        } else {
-          moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost * _capacity)} '
-              'necessary to buy $_capacity ${stock.name}. Add another '
-              '\$${costCurrency.format((stock.cost * _capacity) - moneyOnHand)}';
-          moneyToBuyColor = Colors.red;
-        }
-
-        BotToast.showText(
-          text: moneyToBuy,
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: moneyToBuyColor,
-          duration: Duration(seconds: 6),
-          contentPadding: EdgeInsets.all(10),
-        );
-
-        // Return true to signal that a flag has been tapped (to open travel page)
-        Navigator.pop(context, true);
+      onLongPress: () {
+        _launchMoneyWarning(stock);
+        Navigator.pop(context, ReturnFlagPressed(flagPressed: true, shortTap: false));
       },
+      onTap: () {
+        _launchMoneyWarning(stock);
+        Navigator.pop(context, ReturnFlagPressed(flagPressed: true, shortTap: true));
+      },
+    );
+  }
+
+  void _launchMoneyWarning(ForeignStock stock) {
+    // Currency configuration
+    final costCurrency = new NumberFormat("#,##0", "en_US");
+
+    var moneyOnHand = _profileMisc.moneyOnhand;
+    String moneyToBuy = '';
+    Color moneyToBuyColor = Colors.grey;
+    if (moneyOnHand >= stock.cost * _capacity) {
+      moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * _capacity)} necessary to '
+          'buy $_capacity ${stock.name}';
+      moneyToBuyColor = Colors.green;
+    } else {
+      moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost * _capacity)} '
+          'necessary to buy $_capacity ${stock.name}. Add another '
+          '\$${costCurrency.format((stock.cost * _capacity) - moneyOnHand)}';
+      moneyToBuyColor = Colors.red;
+    }
+
+    BotToast.showText(
+      text: moneyToBuy,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: moneyToBuyColor,
+      duration: Duration(seconds: 6),
+      contentPadding: EdgeInsets.all(10),
     );
   }
 

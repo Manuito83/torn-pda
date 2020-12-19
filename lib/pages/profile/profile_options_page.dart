@@ -124,8 +124,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               child: Text(
                                 'Enable configurable shortcuts in the Profile section to '
                                 'quickly access your favourite sections in game. '
-                                'Tip: short-press shortcuts to open a small browser '
-                                'window, long-press to open a full browser with app bar',
+                                'Tip: if enabled in settings, short-press shortcuts for quick browser '
+                                'window, long-press for full browser with app bar',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
