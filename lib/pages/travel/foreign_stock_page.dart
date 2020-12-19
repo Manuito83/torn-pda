@@ -787,7 +787,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         var moneyOnHand = _profileMisc.moneyOnhand;
         String moneyToBuy = '';
         Color moneyToBuyColor = Colors.grey;
-        if (moneyOnHand > stock.cost * _capacity) {
+        if (moneyOnHand >= stock.cost * _capacity) {
           moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * _capacity)} necessary to '
               'buy $_capacity ${stock.name}';
           moneyToBuyColor = Colors.green;
