@@ -35,7 +35,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:flutter/rendering.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
@@ -187,6 +188,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   int _messagesShowNumber = 25;
   int _eventsShowNumber = 25;
+
+  var speedDialSetOpen = ValueNotifier<bool>(false);
 
   var _showOne = GlobalKey();
 
@@ -3663,6 +3666,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return SpeedDial(
       //animatedIcon: AnimatedIcons.menu_close,
       //animatedIconTheme: IconThemeData(size: 22.0),
+      openCloseDial: speedDialSetOpen,
+      onOpen: () { speedDialSetOpen.value = true; },
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
@@ -3686,11 +3691,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(context, 'https://www.torn.com/city.php')
                   : _openTornBrowser('city');
             },
             onLongPress: () {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _openTornBrowser('city');
             },
             child: Icon(
@@ -3709,12 +3720,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(
                       context, 'https://www.torn.com/trade.php')
                   : _openTornBrowser('trades');
             },
             onLongPress: () {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _openTornBrowser('trades');
             },
             child: Icon(
@@ -3733,11 +3750,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(context, 'https://www.torn.com/item.php')
                   : _openTornBrowser('items');
             },
             onLongPress: () {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _openTornBrowser('items');
             },
             child: Icon(
@@ -3756,12 +3779,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(
                       context, 'https://www.torn.com/crimes.php#/step=main')
                   : _openTornBrowser('crimes');
             },
             onLongPress: () {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _openTornBrowser('crimes');
             },
             child: Center(
@@ -3784,8 +3813,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/gym.php')
+                  ? await _openBrowserDialog(context, 'https://www.torn.com/gym.php')
                   : _openTornBrowser('gym');
 
               if (_warnAboutChains &&
@@ -3805,6 +3837,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             },
             onLongPress: () {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _openTornBrowser('gym');
 
               if (_warnAboutChains &&
@@ -3839,11 +3874,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(context, 'https://www.torn.com')
                   : _openTornBrowser('home');
             },
             onLongPress: () {
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
               _openTornBrowser('home');
             },
             child: Icon(

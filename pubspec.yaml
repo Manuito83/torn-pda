@@ -36,7 +36,6 @@ dependencies:
   expandable: ^4.1.4
   google_fonts: ^1.1.1
   timeline_tile: ^1.0.0
-  flutter_speed_dial: ^1.2.5
   animations: ^1.1.2
   bot_toast: ^3.0.5
   material_design_icons_flutter: ^4.0.5755

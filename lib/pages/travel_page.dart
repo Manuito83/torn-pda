@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -246,7 +247,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   SpeedDial buildSpeedDial() {
-    var dials = List<SpeedDialChild>();
+    var dials = <SpeedDialChild>[];
 
     var dialStocks = SpeedDialChild(
       label: 'STOCKS',
