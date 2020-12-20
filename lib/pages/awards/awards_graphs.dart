@@ -80,6 +80,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Row(
         children: [
           Text('Awards graph'),

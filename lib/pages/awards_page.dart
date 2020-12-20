@@ -512,6 +512,7 @@ class _AwardsPageState extends State<AwardsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Row(
         children: [
           Text('Awards'),
