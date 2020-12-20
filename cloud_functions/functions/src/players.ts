@@ -61,6 +61,10 @@ export const playersGroup = {
         promises.push(manageStats("racingNotification", -1));
       }
 
+      if (beforeStat.messagesNotification) {
+        promises.push(manageStats("messagesNotification", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -124,6 +128,12 @@ export const playersGroup = {
         )
       );
 
+      if (beforeStat.messagesNotification !== afterStat.messagesNotification)
+        promises.push(
+          manageStats("messagesNotification", afterStat.messagesNotification ? 1 : -1
+        )
+      );
+
       if (
         !afterStat.energyNotification &&
         !afterStat.nerveNotification &&
@@ -131,6 +141,7 @@ export const playersGroup = {
         !afterStat.hospitalNotification &&
         !afterStat.drugsNotification &&
         !afterStat.racingNotification &&
+        !afterStat.messagesNotification &&
         afterStat.alertsEnabled
       )
         promises.push(
@@ -149,7 +160,8 @@ export const playersGroup = {
          || afterStat.travelNotification
          || afterStat.hospitalNotification
          || afterStat.drugsNotification
-         || afterStat.racingNotification) 
+         || afterStat.racingNotification
+         || afterStat.messagesNotification) 
          && !afterStat.alertsEnabled
       )
         promises.push(

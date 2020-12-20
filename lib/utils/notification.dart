@@ -44,6 +44,9 @@ Future showNotificationBoth(Map payload) async {
     } else if (body.contains("Get in there")) {
       notificationIcon = "notification_racing";
       notificationColor = Colors.orange[800];
+    } else if (body.contains("Subject:") || body.contains("Subjects:")) {
+      notificationIcon = "notification_messages";
+      notificationColor = Colors.purple[700];
     }
 
     var platformChannelSpecifics = NotificationDetails(

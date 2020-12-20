@@ -2,25 +2,44 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendEnergyNotification, sendNerveNotification, 
   sendTravelNotification, sendHospitalNotification, 
-  sendDrugsNotification, sendRacingNotification } from "./notification";
+  sendDrugsNotification, sendRacingNotification, sendMessagesNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
 export const alertsGroup = {
-  runEveryMinute: functions.region('us-east4').pubsub
+  checkUsersIOS: functions.region('us-east4').pubsub
     .schedule("*/3 * * * *")
     .onRun(async () => {
       // Get the list of subscribers
-      // TODO: Research on possibility to change this to realtime database
       const response = await admin
         .firestore()
         .collection("players")
         .where("active", "==", true)
         .where("alertsEnabled", "==", true)
+        .where("platform", "==", "ios")
         .get();
-
+        
       const subscribers = response.docs.map((d) => d.data());
+      console.log("iOS check: " + subscribers.length);
       await Promise.all(subscribers.map(sendNotificationForProfile));
-    }),
+  }),
+
+  // Divide to split the work in several functions
+  checkUsersAndroid: functions.region('us-east4').pubsub
+    .schedule("*/3 * * * *")
+    .onRun(async () => {
+      // Get the list of subscribers
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("alertsEnabled", "==", true)
+        .where("platform", "==", "android")
+        .get();
+        
+      const subscribers = response.docs.map((d) => d.data());
+      console.log("Android check: " + subscribers.length);
+      await Promise.all(subscribers.map(sendNotificationForProfile));
+  }),
 };
 
 async function sendNotificationForProfile(subscriber: any): Promise<any> {
@@ -41,6 +60,8 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
         promises.push(sendDrugsNotification(userStats, subscriber));
       if (subscriber.racingNotification)
         promises.push(sendRacingNotification(userStats, subscriber));
+      if (subscriber.messagesNotification)
+        promises.push(sendMessagesNotification(userStats, subscriber));
     }
   } catch (e) {
     console.log("ERROR ALERTS");

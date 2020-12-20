@@ -158,6 +158,22 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.messagesNotification ?? false,
+                          title: Text("Messages"),
+                          subtitle: Text("Get notified when you receive new messages"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.messagesNotification = value;
+                            });
+                            firestore.subscribeToMessagesNotification(value);
+                          },
+                        ),
+                      ),
                       SizedBox(height: 40),
                     ],
                   ),

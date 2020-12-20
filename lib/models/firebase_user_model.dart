@@ -12,6 +12,7 @@ class FirebaseUserModel extends OwnProfileModel {
   bool drugsNotification = false;
   bool drugsInfluence = false;
   bool racingNotification = false;
+  bool messagesNotification = false;
   bool racingSent = false;
 
   FirebaseUserModel();
@@ -41,6 +42,7 @@ class FirebaseUserModel extends OwnProfileModel {
       "drugsNotification": drugsNotification,
       "drugsInfluence": drugsInfluence,
       "racingNotification": racingNotification,
+      "messagesNotification": messagesNotification,
       "racingSent": racingSent,
     };
   }
@@ -56,6 +58,7 @@ class FirebaseUserModel extends OwnProfileModel {
       ..drugsNotification = data["drugsNotification"] ?? false
       ..drugsInfluence = data["drugsInfluence"] ?? false
       ..racingNotification = data["racingNotification"] ?? false
+      ..messagesNotification = data["messagesNotification"] ?? false
       ..racingSent = data["racingSent"] ?? false
       ..playerId = data["playerId"]
       ..level = data["level"]
