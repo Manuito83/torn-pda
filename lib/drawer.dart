@@ -29,6 +29,7 @@ import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'main.dart';
+import 'package:flutter/services.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -432,6 +433,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                             } else {
                               _themeProvider.changeTheme = AppTheme.light;
                             }
+                            setState(() {
+                              SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+                                statusBarColor: _themeProvider.currentTheme == AppTheme.light
+                                    ? Colors.blueGrey
+                                    : Colors.grey[900],
+                              ));
+                            });
                           },
                         ),
                       ],

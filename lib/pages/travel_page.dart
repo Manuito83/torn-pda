@@ -184,6 +184,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {

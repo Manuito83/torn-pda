@@ -132,6 +132,7 @@ class _LootPageState extends State<LootPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text('Loot'),
       leading: new IconButton(
         icon: new Icon(Icons.menu),

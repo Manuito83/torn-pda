@@ -213,6 +213,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Profile options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

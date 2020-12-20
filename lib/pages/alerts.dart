@@ -174,6 +174,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text('Alerts'),
       leading: new IconButton(
         icon: new Icon(Icons.menu),

@@ -247,6 +247,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Import & Export"),
     );
   }

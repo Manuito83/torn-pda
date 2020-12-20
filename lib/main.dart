@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -115,6 +116,13 @@ class MyApp extends StatelessWidget {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     var _settingsProvider =
         Provider.of<SettingsProvider>(context, listen: true);
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.blueGrey
+          : Colors.grey[900],
+    ));
+
     return MaterialApp(
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],

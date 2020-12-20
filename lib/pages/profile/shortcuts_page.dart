@@ -385,6 +385,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Shortcuts"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

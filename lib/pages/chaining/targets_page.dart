@@ -212,6 +212,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: _appBarText,
       leading: new IconButton(
         icon: new Icon(Icons.menu),

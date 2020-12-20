@@ -162,6 +162,7 @@ class _FriendsPageState extends State<FriendsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: _appBarText,
       leading: IconButton(
         icon: Icon(Icons.menu),

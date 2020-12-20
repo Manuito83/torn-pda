@@ -339,6 +339,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       toolbarHeight: 50,
       title: Text('Settings'),
       leading: new IconButton(

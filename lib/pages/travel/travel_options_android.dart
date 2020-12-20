@@ -159,15 +159,16 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
 
   AppBar buildAppBar() {
     return AppBar(
-        title: Text("Travel options"),
-        leading: new IconButton(
-          icon: new Icon(Icons.arrow_back),
-          onPressed: () {
-            widget.callback();
-            Navigator.of(context).pop();
-          },
-        ),
-      );
+      brightness: Brightness.dark,
+      title: Text("Travel options"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          widget.callback();
+          Navigator.of(context).pop();
+        },
+      ),
+    );
   }
 
   Widget _rowsWithTypes() {
