@@ -170,6 +170,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   Future<void> _fireLaunchResumeNotifications(Map message) async {
     bool travel = false;
     bool racing = false;
+    bool messages = false;
     //bool nerve = false;
 
     if (Platform.isIOS) {
@@ -191,6 +192,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       if (message["data"]["message"].contains("Get in there")) {
         racing = true;
       }
+      if (message["data"]["message"].contains("Subject:") ||
+          message["data"]["message"].contains("Subjects:")) {
+        messages = true;
+      }
       /*
       if (message["data"]["message"].contains("Your nerve is full")) {
         nerve = true;
@@ -205,10 +210,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       var browserType = await SharedPreferencesModel().getDefaultBrowser();
       switch (browserType) {
         case 'app':
-          _openBrowserDialog(
-            context,
-            "https://www.torn.com",
-          );
+          if (_settingsProvider.useQuickBrowser) {
+            _openBrowserDialog(
+              context,
+              "https://www.torn.com",
+            );
+          } else {
+            _openTornBrowser("https://www.torn.com");
+          }
           break;
         case 'external':
           var url = 'https://www.torn.com';
@@ -226,13 +235,42 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       var browserType = await SharedPreferencesModel().getDefaultBrowser();
       switch (browserType) {
         case 'app':
-          _openBrowserDialog(
-            context,
-            "https://www.torn.com/loader.php?sid=racing",
-          );
+          if (_settingsProvider.useQuickBrowser) {
+            _openBrowserDialog(
+              context,
+              "https://www.torn.com/loader.php?sid=racing",
+            );
+          } else {
+            _openTornBrowser("https://www.torn.com/loader.php?sid=racing");
+          }
           break;
         case 'external':
           var url = 'https://www.torn.com/loader.php?sid=racing';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+
+    if (messages) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          if (_settingsProvider.useQuickBrowser) {
+            _openBrowserDialog(
+              context,
+              "https://www.torn.com/messages.php",
+            );
+          } else {
+            _openTornBrowser("https://www.torn.com/messages.php");
+          }
+          break;
+        case 'external':
+          var url = 'https://www.torn.com/messages.php';
           if (await canLaunch(url)) {
             await launch(url, forceSafariVC: false);
           }
@@ -703,6 +741,29 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _activeDrawerIndex = section;
     });
     _getPages();
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
   }
 
   Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
