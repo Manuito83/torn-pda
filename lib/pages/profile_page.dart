@@ -3668,7 +3668,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       //animatedIcon: AnimatedIcons.menu_close,
       //animatedIconTheme: IconThemeData(size: 22.0),
       openCloseDial: speedDialSetOpen,
-      onOpen: () { speedDialSetOpen.value = true; },
+      onOpen: () {
+        setState(() {
+          speedDialSetOpen.value = true;
+        });
+      },
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
@@ -3692,18 +3696,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              setState(() {
-                speedDialSetOpen.value = false;
-              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(context, 'https://www.torn.com/city.php')
                   : _openTornBrowser('city');
-            },
-            onLongPress: () {
               setState(() {
                 speedDialSetOpen.value = false;
               });
+            },
+            onLongPress: () {
               _openTornBrowser('city');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
             },
             child: Icon(
               MdiIcons.cityVariantOutline,
@@ -3721,19 +3725,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              setState(() {
-                speedDialSetOpen.value = false;
-              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(
                       context, 'https://www.torn.com/trade.php')
                   : _openTornBrowser('trades');
-            },
-            onLongPress: () {
               setState(() {
                 speedDialSetOpen.value = false;
               });
+            },
+            onLongPress: () {
               _openTornBrowser('trades');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
             },
             child: Icon(
               MdiIcons.accountSwitchOutline,
@@ -3751,18 +3755,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              setState(() {
-                speedDialSetOpen.value = false;
-              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(context, 'https://www.torn.com/item.php')
                   : _openTornBrowser('items');
-            },
-            onLongPress: () {
               setState(() {
                 speedDialSetOpen.value = false;
               });
+            },
+            onLongPress: () {
               _openTornBrowser('items');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
             },
             child: Icon(
               Icons.card_giftcard,
@@ -3780,19 +3784,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              setState(() {
-                speedDialSetOpen.value = false;
-              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(
                       context, 'https://www.torn.com/crimes.php#/step=main')
                   : _openTornBrowser('crimes');
-            },
-            onLongPress: () {
               setState(() {
                 speedDialSetOpen.value = false;
               });
+            },
+            onLongPress: () {
               _openTornBrowser('crimes');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
             },
             child: Center(
               child: Image.asset(
@@ -3814,11 +3818,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              setState(() {
-                speedDialSetOpen.value = false;
-              });
               _settingsProvider.useQuickBrowser
-                  ? await _openBrowserDialog(context, 'https://www.torn.com/gym.php')
+                  ? _openBrowserDialog(context, 'https://www.torn.com/gym.php')
                   : _openTornBrowser('gym');
 
               if (_warnAboutChains &&
@@ -3836,13 +3837,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   contentPadding: EdgeInsets.all(10),
                 );
               }
-            },
-            onLongPress: () {
               setState(() {
                 speedDialSetOpen.value = false;
               });
+            },
+            onLongPress: () {
               _openTornBrowser('gym');
-
               if (_warnAboutChains &&
                   _chainModel.chain.current > 10 &&
                   _chainModel.chain.cooldown == 0) {
@@ -3858,6 +3858,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   contentPadding: EdgeInsets.all(10),
                 );
               }
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
             },
             child: Icon(
               Icons.fitness_center,
@@ -3875,18 +3878,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              setState(() {
-                speedDialSetOpen.value = false;
-              });
               _settingsProvider.useQuickBrowser
                   ? _openBrowserDialog(context, 'https://www.torn.com')
                   : _openTornBrowser('home');
-            },
-            onLongPress: () {
               setState(() {
                 speedDialSetOpen.value = false;
               });
+            },
+            onLongPress: () {
               _openTornBrowser('home');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
             },
             child: Icon(
               Icons.home_outlined,
