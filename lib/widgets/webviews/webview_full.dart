@@ -221,7 +221,7 @@ class _WebViewFullState extends State<WebViewFull> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             SizedBox(
-                              width: 80,
+                              width: 100,
                               child: Row(
                                 children: [
                                   SizedBox(
@@ -263,10 +263,11 @@ class _WebViewFullState extends State<WebViewFull> {
                               ),
                             ),
                             SizedBox(
-                              width: 80,
+                              width: 100,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
+                                  _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
                                   IconButton(
                                     icon: Icon(Icons.refresh),
                                     onPressed: () async {
