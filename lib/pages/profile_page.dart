@@ -3709,9 +3709,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 speedDialSetOpen.value = false;
               });
             },
-            child: Icon(
-              MdiIcons.cityVariantOutline,
-              color: Colors.black,
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                MdiIcons.cityVariantOutline,
+                color: Colors.black,
+              ),
             ),
           ),
           backgroundColor: Colors.purple[500],
@@ -3739,9 +3746,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 speedDialSetOpen.value = false;
               });
             },
-            child: Icon(
-              MdiIcons.accountSwitchOutline,
-              color: Colors.black,
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                MdiIcons.accountSwitchOutline,
+                color: Colors.black,
+              ),
             ),
           ),
           backgroundColor: Colors.yellow[800],
@@ -3768,9 +3782,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 speedDialSetOpen.value = false;
               });
             },
-            child: Icon(
-              Icons.card_giftcard,
-              color: Colors.black,
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                Icons.card_giftcard,
+                color: Colors.black,
+              ),
             ),
           ),
           backgroundColor: Colors.blue[400],
@@ -3798,12 +3819,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 speedDialSetOpen.value = false;
               });
             },
-            child: Center(
-              child: Image.asset(
-                'images/icons/ic_pistol_black_48dp.png',
-                width: 25,
-                height: 25,
-                color: Colors.black,
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Center(
+                child: Image.asset(
+                  'images/icons/ic_pistol_black_48dp.png',
+                  width: 25,
+                  height: 25,
+                  color: Colors.black,
+                ),
               ),
             ),
           ),
@@ -3862,9 +3890,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 speedDialSetOpen.value = false;
               });
             },
-            child: Icon(
-              Icons.fitness_center,
-              color: Colors.black,
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                Icons.fitness_center,
+                color: Colors.black,
+              ),
             ),
           ),
           backgroundColor: Colors.green[400],
@@ -3891,9 +3926,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 speedDialSetOpen.value = false;
               });
             },
-            child: Icon(
-              Icons.home_outlined,
-              color: Colors.black,
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                Icons.home_outlined,
+                color: Colors.black,
+              ),
             ),
           ),
           backgroundColor: Colors.grey[400],
