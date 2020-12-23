@@ -425,12 +425,23 @@ class _WebViewFullState extends State<WebViewFull> {
               });
 
               // onProgressChanged gets called before onLoadStart, so it works
-              // both to add or remove widgets. It is much faster for QuickItems.
-              // TODO: refactor for the rest?
+              // both to add or remove widgets. It is much faster.
               if (_currentUrl.contains('item.php')) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessQuickItems(document);
+              }
+
+              if (_currentUrl.contains('crimes.php')) {
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _assessCrimes(document);
+              }
+
+              if (_currentUrl.contains('city.php')) {
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _assessCity(document);
               }
             },
             onLoadStart: (InAppWebViewController c, String url) {
@@ -669,19 +680,15 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  /// Note: several other modules are called in onProgressChanged, since it's
+  /// faster. The ones here probably would not benefit from it.
   Future _assessGeneral() async {
     var html = await webView.getHtml();
     var document = parse(html);
 
-    // Assign page title
-    String pageTitle = _getPageTitle(document);
     _assessBackButtonBehaviour();
     _assessTravel(document);
-    _assessCrimes(document, pageTitle);
-    // This is now being handled in onProgressChanged
-    //_assessQuickItems(document);
     _decideIfCallTrades();
-    _assessCity(document, pageTitle);
     _assessBazaar(document);
   }
 
@@ -820,20 +827,20 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CRIMES
-  Future _assessCrimes(dom.Document document, String pageTitle) async {
-    pageTitle = pageTitle.toLowerCase();
+  Future _assessCrimes(dom.Document document) async {
     if (mounted) {
-      setState(() {
-        if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
-            !pageTitle.contains('please validate') &&
-            !pageTitle.contains('error') &&
-            pageTitle.contains('crimes')) {
-          _crimesController.expanded = true;
-          _crimesActive = true;
-        } else {
+      var pageTitle = _getPageTitle(document).toLowerCase();
+      if (!pageTitle.contains('crimes')) {
+        setState(() {
           _crimesController.expanded = false;
           _crimesActive = false;
-        }
+        });
+        return;
+      }
+
+      setState(() {
+        _crimesController.expanded = true;
+        _crimesActive = true;
       });
     }
   }
@@ -1157,21 +1164,16 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CITY
-  Future _assessCity(dom.Document document, String pageTitle) async {
-    if (pageTitle != '') {
-      pageTitle = pageTitle.toLowerCase();
-    }
+  Future _assessCity(dom.Document document) async {
 
-    if (!_currentUrl.contains('https://www.torn.com/city.php') ||
-        !pageTitle.contains('city') ||
-        pageTitle.contains('please validate') ||
-        pageTitle.contains('error')) {
-      if (mounted) {
-        setState(() {
-          _cityIconActive = false;
-          _cityController.expanded = false;
-        });
-      }
+    var pageTitle = _getPageTitle(document).toLowerCase();
+    if (!pageTitle.contains('city')) {
+      setState(() {
+        _crimesController.expanded = false;
+        _crimesActive = false;
+      });
+      _cityIconActive = false;
+      _cityController.expanded = false;
       return;
     }
 
@@ -1190,12 +1192,12 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Retry several times and allow the map to load
     List<dom.Element> query;
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 40; i++) {
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
         break;
       } else {
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(milliseconds: 250));
         var updatedHtml = await webView.getHtml();
         document = parse(updatedHtml);
       }
@@ -1339,7 +1341,6 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _assessQuickItems(dom.Document document) async {
     if (mounted) {
       var pageTitle = _getPageTitle(document).toLowerCase();
-
       if (!pageTitle.contains('items')) {
         setState(() {
           _quickItemsController.expanded = false;
