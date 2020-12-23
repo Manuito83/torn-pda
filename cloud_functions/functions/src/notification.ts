@@ -273,6 +273,196 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
   return Promise.all(promises);
 }
 
+export async function sendDrugsNotification(userStats: any, subscriber: any) {
+  const cooldowns = userStats.cooldowns;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      cooldowns.drug === 0 && 
+      (subscriber.drugsInfluence === true)
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          "Drug cooldown expired",
+          "Hey junkie! Your drugs cooldown has expired, go get some more!",
+          "notification_drugs",
+          "#FF00c3"
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            drugsInfluence: false,
+          })
+      );
+    }
+
+    if (
+      cooldowns.drug > 0 &&
+      (subscriber.drugsInfluence === false)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            drugsInfluence: true,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR DRUGS");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
+export async function sendRacingNotification(userStats: any, subscriber: any) {
+  const icons = userStats.icons;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      icons.icon18 && 
+      subscriber.racingSent === false
+    ) {
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          "Race finished",
+          `Get in there ${userStats.name}!`,
+          "notification_racing",
+          "#FF9900"
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            racingSent: true,
+          })
+      );
+    }
+
+    if (
+      !icons.icon18 && 
+      (subscriber.racingSent === true)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            racingSent: false,
+          })
+      );
+    }
+
+  } catch (error) {
+    console.log("ERROR RACING");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
+export async function sendMessagesNotification(userStats: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+
+  try {
+    var changes = false;
+    var newMessages = 0;
+    var newMessagesSenders: any[] = [];
+    var newMessagesSubjects: any[] = [];
+    var knownMessages = subscriber.knownMessages || [];
+    
+    Object.keys(userStats.messages).forEach(function (key){
+      if (userStats.messages[key].seen === 0 && 
+        userStats.messages[key].read === 0 &&
+        !knownMessages.includes(key)) {
+          changes = true;
+          newMessages++;
+          knownMessages.push(key);
+          newMessagesSubjects.push(userStats.messages[key].title);
+          if (!newMessagesSenders.includes(userStats.messages[key].name)) {
+            newMessagesSenders.push(userStats.messages[key].name);
+          }
+      } 
+      else if ((userStats.messages[key].seen === 1 || 
+        userStats.messages[key].read === 1) &&
+        knownMessages.includes(key)) {
+          changes = true;
+          for( var i = 0; i < knownMessages.length; i++){ 
+            if ( knownMessages[i] === key) { 
+              knownMessages.splice(i, 1); 
+              break;
+            }
+          }
+      }
+    });
+
+    if (changes) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            knownMessages: knownMessages,
+          })
+      );
+    }
+
+    if (newMessages > 0) {
+      var notificationTitle = "";
+      var notificationSubtitle = "";
+
+      if (newMessages === 1) {
+        notificationTitle = "You have a new message from " + newMessagesSenders[0];
+        notificationSubtitle = `Subject: "${newMessagesSubjects[0]}"`;
+      }
+      else if (newMessages > 1 && newMessagesSenders.length === 1) {
+        notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders[0]}`;
+        notificationSubtitle = `Subjects: "${newMessagesSubjects.join('", "')}"`;
+      }
+      else if (newMessages > 1 && newMessagesSenders.length > 1) {
+        notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders.join(", ")}`;
+        notificationSubtitle = `Subjects: "${newMessagesSubjects.join('", "')}"`;
+      }
+
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          notificationTitle,
+          notificationSubtitle,
+          "notification_messages",
+          "#7B1FA2"
+        )
+      );
+    }
+    
+  } catch (error) {
+    console.log("ERROR MESSAGES");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
 export async function sendNotificationToUser(
   token: string,
   title: string,
@@ -287,6 +477,9 @@ export async function sendNotificationToUser(
       body: body,
       icon: icon,
       color: color,
+      sound: "default",
+      badge: "1",
+      priority: "high",
     },
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",

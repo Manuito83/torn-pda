@@ -507,7 +507,7 @@ class TargetsProvider extends ChangeNotifier {
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
       var response = await http.get(
-        'https://yata.alwaysdata.net/api/v1/targets/export/?key=$_userKey',
+        'https://yata.yt/api/v1/targets/export/?key=$_userKey',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -562,7 +562,7 @@ class TargetsProvider extends ChangeNotifier {
 
     try {
       var response = await http.post(
-        'https://yata.alwaysdata.net/api/v1/targets/import/',
+        'https://yata.yt/api/v1/targets/import/',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

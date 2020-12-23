@@ -121,6 +121,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text('${widget.target.name}'),
       leading: IconButton(
         icon: Icon(Icons.arrow_back),

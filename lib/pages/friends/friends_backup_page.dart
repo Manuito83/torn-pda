@@ -247,6 +247,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Import & Export"),
     );
   }

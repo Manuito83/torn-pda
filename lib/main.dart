@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -12,6 +13,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -25,7 +27,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:timezone/data/latest.dart' as tz;
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-final String appVersion = '1.9.3';
+final String appVersion = '1.9.7';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -100,6 +102,8 @@ Future<void> main() async {
             create: (context) => ChainStatusProvider()),
         ChangeNotifierProvider<CrimesProvider>(
             create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<QuickItemsProvider>(
+            create: (context) => QuickItemsProvider()),
         ChangeNotifierProvider<TradesProvider>(
             create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(
@@ -118,6 +122,13 @@ class MyApp extends StatelessWidget {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     var _settingsProvider =
         Provider.of<SettingsProvider>(context, listen: true);
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.blueGrey
+          : Colors.grey[900],
+    ));
+
     return MaterialApp(
       builder: BotToastInit(),
       navigatorObservers: [BotToastNavigatorObserver()],

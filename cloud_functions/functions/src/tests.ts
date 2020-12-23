@@ -8,7 +8,7 @@ export const testGroup = {
     const promises: Promise<any>[] = [];
     
     promises.push(sendTestNotification(
-        'PUT TEST TOKEN HERE', 
+        'PUT TEST TOKEN HERE', // Then call as "tests.testNotification()" in shell
         'Test', 
         'test left hospital earlier test')
     );
@@ -33,6 +33,9 @@ async function sendTestNotification(
         // There two might be overriden in Torn PDA when opened (via incoming notifications plugin)
         icon: "notification_hospital",
         color: "#FFA200",
+        sound: "default",
+        badge: "1",
+        priority: "high",
       },
       data: {
         click_action: "FLUTTER_NOTIFICATION_CLICK",

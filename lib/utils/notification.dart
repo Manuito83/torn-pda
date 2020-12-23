@@ -21,23 +21,32 @@ Future showNotificationBoth(Map payload) async {
   vibrationPattern[7] = 1000;
 
   if (Platform.isAndroid) {
-    String title = payload["notification"]["body"];
+    String body = payload["notification"]["body"];
     String notificationIcon = "notification_icon";
     Color notificationColor = Colors.grey;
-    if (title.contains("energy is full")) {
+    if (body.contains("energy is full")) {
       notificationIcon = "notification_energy";
       notificationColor = Colors.green;
-    } else if (title.contains("nerve is full")) {
+    } else if (body.contains("nerve is full")) {
       notificationIcon = "notification_nerve";
       notificationColor = Colors.red;
-    } else if (title.contains("about to land")) {
+    } else if (body.contains("about to land")) {
       notificationIcon = "notification_travel";
       notificationColor = Colors.blue;
-    } else if (title.contains("been hospitalised") ||
-        title.contains("released from hospital") ||
-        title.contains("left hospital earlier") ) {
+    } else if (body.contains("been hospitalised") ||
+        body.contains("released from hospital") ||
+        body.contains("left hospital earlier") ) {
       notificationIcon = "notification_hospital";
-      notificationColor = Colors.orange;
+      notificationColor = Colors.orange[400];
+    } else if (body.contains("drugs cooldown")) {
+      notificationIcon = "notification_drugs";
+      notificationColor = Colors.pink;
+    } else if (body.contains("Get in there")) {
+      notificationIcon = "notification_racing";
+      notificationColor = Colors.orange[800];
+    } else if (body.contains("Subject:") || body.contains("Subjects:")) {
+      notificationIcon = "notification_messages";
+      notificationColor = Colors.purple[700];
     }
 
     var platformChannelSpecifics = NotificationDetails(

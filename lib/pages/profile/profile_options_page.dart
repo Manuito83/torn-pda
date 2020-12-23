@@ -11,7 +11,9 @@ class ProfileOptionsReturn {
   bool warnAboutChainsEnabled;
   bool shortcutsEnabled;
   bool expandEvents;
+  int eventsShowNumber;
   bool expandMessages;
+  int messagesShowNumber;
   bool expandBasicInfo;
   bool expandNetworth;
 }
@@ -29,6 +31,9 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _expandMessages = false;
   bool _expandBasicInfo = false;
   bool _expandNetworth = false;
+
+  int _messagesNumber = 25;
+  int _eventsNumber = 25;
 
   Future _preferencesLoaded;
 
@@ -124,8 +129,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               child: Text(
                                 'Enable configurable shortcuts in the Profile section to '
                                 'quickly access your favourite sections in game. '
-                                'Tip: short-press shortcuts to open a small browser '
-                                'window, long-press to open a full browser with app bar',
+                                'Tip: if enabled in settings, short-press shortcuts for quick browser '
+                                'window, long-press for full browser with app bar',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
@@ -320,6 +325,23 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               ),
                             ),
                             Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Flexible(
+                                    child: Text("Events to show"),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 20),
+                                  ),
+                                  Flexible(
+                                    child: _eventsNumberDropdown(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 15),
                               child: Row(
@@ -338,6 +360,23 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     },
                                     activeTrackColor: Colors.lightGreenAccent,
                                     activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 15),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Flexible(
+                                    child: Text("Messages to show"),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 20),
+                                  ),
+                                  Flexible(
+                                    child: _messagesNumberDropdown(),
                                   ),
                                 ],
                               ),
@@ -409,6 +448,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Profile Options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
@@ -419,12 +459,198 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     );
   }
 
+  DropdownButton _eventsNumberDropdown() {
+    return DropdownButton<String>(
+      value: _eventsNumber.toString(),
+      items: [
+        DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "3",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "10",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "10",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "25",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "25",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "50",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "50",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "75",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "75",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "100",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "100",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        SharedPreferencesModel().setEventsShowNumber(int.parse(value));
+        setState(() {
+          _eventsNumber = int.parse(value);
+        });
+      },
+    );
+  }
+
+  DropdownButton _messagesNumberDropdown() {
+    return DropdownButton<String>(
+      value: _messagesNumber.toString(),
+      items: [
+        DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "3",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "10",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "10",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "25",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "25",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "50",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "50",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "75",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "75",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "100",
+          child: SizedBox(
+            width: 40,
+            child: Text(
+              "100",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        SharedPreferencesModel().setMessagesShowNumber(int.parse(value));
+        setState(() {
+          _messagesNumber = int.parse(value);
+        });
+      },
+    );
+  }
+
   Future _restorePreferences() async {
     var useNuke = await SharedPreferencesModel().getUseNukeRevive();
     var warnChains = await SharedPreferencesModel().getWarnAboutChains();
     var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
+    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
     var expandMessages = await SharedPreferencesModel().getExpandMessages();
+    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
     var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
     var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
 
@@ -433,7 +659,9 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
       _expandEvents = expandEvents;
+      _eventsNumber = eventsNumber;
       _expandMessages = expandMessages;
+      _messagesNumber = messagesNumber;
       _expandBasicInfo = expandBasicInfo;
       _expandNetworth = expandNetworth;
     });
@@ -548,7 +776,9 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
         ..shortcutsEnabled = _shortcutsEnabled
         ..expandEvents = _expandEvents
+        ..eventsShowNumber = _eventsNumber
         ..expandMessages = _expandMessages
+        ..messagesShowNumber = _messagesNumber
         ..expandBasicInfo = _expandBasicInfo
         ..expandNetworth = _expandNetworth,
     );

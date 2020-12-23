@@ -40,7 +40,8 @@ class _FriendCardState extends State<FriendCard> {
   @override
   void initState() {
     super.initState();
-    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _ticker = new Timer.periodic(
+        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
@@ -66,7 +67,8 @@ class _FriendCardState extends State<FriendCard> {
             color: Colors.red,
             icon: Icons.delete,
             onTap: () {
-              Provider.of<FriendsProvider>(context, listen: false).deleteFriend(_friend);
+              Provider.of<FriendsProvider>(context, listen: false)
+                  .deleteFriend(_friend);
               BotToast.showText(
                 text: 'Deleted ${_friend.name}!',
                 textStyle: TextStyle(
@@ -121,7 +123,8 @@ class _FriendCardState extends State<FriendCard> {
                           OpenContainer(
                             transitionDuration: Duration(milliseconds: 500),
                             transitionType: ContainerTransitionType.fadeThrough,
-                            openBuilder: (BuildContext context, VoidCallback _) {
+                            openBuilder:
+                                (BuildContext context, VoidCallback _) {
                               return FriendDetailsPage(friend: _friend);
                             },
                             closedElevation: 0,
@@ -131,7 +134,8 @@ class _FriendCardState extends State<FriendCard> {
                               ),
                             ),
                             closedColor: Colors.transparent,
-                            closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                            closedBuilder: (BuildContext context,
+                                VoidCallback openContainer) {
                               return SizedBox(
                                 height: 20,
                                 width: 20,
@@ -199,7 +203,8 @@ class _FriendCardState extends State<FriendCard> {
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
-                            color: _returnStatusColor(_friend.lastAction.status),
+                            color:
+                                _returnStatusColor(_friend.lastAction.status),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -212,7 +217,8 @@ class _FriendCardState extends State<FriendCard> {
                         Text(
                           _friend.lastAction.relative == "0 minutes ago"
                               ? 'now'
-                              : _friend.lastAction.relative.replaceAll(' ago', ''),
+                              : _friend.lastAction.relative
+                                  .replaceAll(' ago', ''),
                         ),
                       ],
                     ),
@@ -280,37 +286,23 @@ class _FriendCardState extends State<FriendCard> {
   }
 
   Widget _tradeIcon() {
-    var messageUrl = 'https://www.torn.com/trade.php#step=start&user'
+    var tradeUrl = 'https://www.torn.com/trade.php#step=start&user'
         'ID=${_friend.playerId}';
     return SizedBox(
       height: 20,
       width: 20,
-      child: IconButton(
-        padding: EdgeInsets.all(0.0),
-        iconSize: 18,
-        icon: Icon(
+      child: GestureDetector(
+        child: Icon(
           Icons.swap_horiz,
+          size: 20,
         ),
-        onPressed: () async {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => WebViewFull(
-                    customUrl: messageUrl,
-                    customTitle: 'Trade',
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url = messageUrl;
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
+        onTap: () async {
+          _settingsProvider.useQuickBrowser
+              ? _openBrowserDialog(context, tradeUrl)
+              : _openTornBrowser(tradeUrl);
+        },
+        onLongPress: () async {
+          _openTornBrowser(tradeUrl);
         },
       ),
     );
@@ -322,68 +314,41 @@ class _FriendCardState extends State<FriendCard> {
     return SizedBox(
       height: 20,
       width: 20,
-      child: IconButton(
-        padding: EdgeInsets.all(0.0),
-        iconSize: 18,
-        icon: Icon(
+      child: GestureDetector(
+        child: Icon(
           Icons.email,
+          size: 20,
         ),
-        onPressed: () async {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => WebViewFull(
-                    customUrl: messageUrl,
-                    customTitle: 'Message',
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url = messageUrl;
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
+        onTap: () async {
+          _settingsProvider.useQuickBrowser
+              ? _openBrowserDialog(context, messageUrl)
+              : _openTornBrowser(messageUrl);
+        },
+        onLongPress: () async {
+          _openTornBrowser(messageUrl);
         },
       ),
     );
   }
 
   Widget _visitProfileIcon() {
+    String profileUrl =
+        'https://www.torn.com/profiles.php?XID=${_friend.playerId}';
     return SizedBox(
       height: 20,
       width: 20,
-      child: IconButton(
-        padding: EdgeInsets.all(0.0),
-        iconSize: 18,
-        icon: Icon(
+      child: GestureDetector(
+        child: Icon(
           Icons.remove_red_eye,
+          size: 20,
         ),
-        onPressed: () async {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => WebViewFull(
-                    customUrl: 'https://www.torn.com/profiles.php?XID=${_friend.playerId}',
-                    customTitle: _friend.name,
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url = 'https://www.torn.com/profiles.php?'
-                  'XID=${_friend.playerId}';
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
+        onTap: () async {
+          _settingsProvider.useQuickBrowser
+              ? _openBrowserDialog(context, profileUrl)
+              : _openTornBrowser(profileUrl);
+        },
+        onLongPress: () async {
+          _openTornBrowser(profileUrl);
         },
       ),
     );
@@ -416,7 +381,8 @@ class _FriendCardState extends State<FriendCard> {
       }
 
       void showFactionToast() {
-        if (_friend.faction.factionId == _userProvider.myUser.faction.factionId) {
+        if (_friend.faction.factionId ==
+            _userProvider.myUser.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_friend.name} belongs to your same faction "
                 "(${_friend.faction.factionName}) as "
@@ -541,7 +507,9 @@ class _FriendCardState extends State<FriendCard> {
         width: 13,
         height: 13,
         decoration: BoxDecoration(
-            color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+            color: stateColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.black)),
       ),
     );
 
@@ -638,7 +606,6 @@ class _FriendCardState extends State<FriendCard> {
     bool updateWorked = await _friendsProvider.updateFriend(_friend);
     if (updateWorked) {
     } else {
-
       BotToast.showText(
         text: "Error updating ${_friend.name}!",
         textStyle: TextStyle(
@@ -649,7 +616,6 @@ class _FriendCardState extends State<FriendCard> {
         duration: Duration(seconds: 3),
         contentPadding: EdgeInsets.all(10),
       );
-
     }
   }
 
@@ -657,5 +623,47 @@ class _FriendCardState extends State<FriendCard> {
     setState(() {
       _returnLastUpdated();
     });
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
+          ),
+        );
+      },
+    );
   }
 }

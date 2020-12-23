@@ -71,6 +71,26 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       ],
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "Shortcut menu",
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 20),
+                        ),
+                        Flexible(
+                          flex: 2,
+                          child: _shortcutMenuDropdown(),
+                        ),
+                      ],
+                    ),
+                  ),
                   SizedBox(height: 20),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -365,6 +385,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Shortcuts"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
@@ -446,6 +467,45 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
       onChanged: (value) {
         setState(() {
           _shortcutsProvider.changeShortcutTile(value);
+        });
+      },
+    );
+  }
+
+  DropdownButton _shortcutMenuDropdown() {
+    return DropdownButton<String>(
+      value: _shortcutsProvider.shortcutMenu,
+      items: [
+        DropdownMenuItem(
+          value: "carousel",
+          child: SizedBox(
+            width: 67,
+            child: Text(
+              "Carousel",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "grid",
+          child: SizedBox(
+            width: 67,
+            child: Text(
+              "Grid",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _shortcutsProvider.changeShortcutMenu(value);
         });
       },
     );

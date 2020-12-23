@@ -9,6 +9,11 @@ class FirebaseUserModel extends OwnProfileModel {
   bool nerveNotification = false;
   bool nerveLastCheckFull = false;
   bool hospitalNotification = false;
+  bool drugsNotification = false;
+  bool drugsInfluence = false;
+  bool racingNotification = false;
+  bool messagesNotification = false;
+  bool racingSent = false;
 
   FirebaseUserModel();
 
@@ -33,7 +38,12 @@ class FirebaseUserModel extends OwnProfileModel {
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
       "nerveLastCheckFull": nerveLastCheckFull,
-      "hospitalNotification": hospitalNotification
+      "hospitalNotification": hospitalNotification,
+      "drugsNotification": drugsNotification,
+      "drugsInfluence": drugsInfluence,
+      "racingNotification": racingNotification,
+      "messagesNotification": messagesNotification,
+      "racingSent": racingSent,
     };
   }
 
@@ -45,6 +55,11 @@ class FirebaseUserModel extends OwnProfileModel {
       ..nerveNotification = data["nerveNotification"] ?? false
       ..nerveLastCheckFull = data["nerveLastCheckFull"] ?? false
       ..hospitalNotification = data["hospitalNotification"] ?? false
+      ..drugsNotification = data["drugsNotification"] ?? false
+      ..drugsInfluence = data["drugsInfluence"] ?? false
+      ..racingNotification = data["racingNotification"] ?? false
+      ..messagesNotification = data["messagesNotification"] ?? false
+      ..racingSent = data["racingSent"] ?? false
       ..playerId = data["playerId"]
       ..level = data["level"]
       ..name = data["name"]

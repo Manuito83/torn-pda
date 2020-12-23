@@ -55,34 +55,21 @@ class _AttackCardState extends State<AttackCard> {
                       SizedBox(
                         height: 20,
                         width: 20,
-                        child: IconButton(
-                          padding: EdgeInsets.all(0.0),
-                          iconSize: 20,
-                          icon: Icon(
+                        child: GestureDetector(
+                          child: Icon(
                             Icons.remove_red_eye,
+                            size: 20,
                           ),
-                          onPressed: () async {
-                            var browserType = _settingsProvider.currentBrowser;
-                            switch (browserType) {
-                              case BrowserSetting.app:
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (BuildContext context) => WebViewFull(
-                                      customUrl: 'https://www.torn.com/profiles.php?'
-                                          'XID=${_attack.targetId}',
-                                      customTitle: _attack.targetName,
-                                    ),
-                                  ),
-                                );
-                                break;
-                              case BrowserSetting.external:
-                                var url = 'https://www.torn.com/profiles.php?'
-                                    'XID=${_attack.targetId}';
-                                if (await canLaunch(url)) {
-                                  await launch(url, forceSafariVC: false);
-                                }
-                                break;
-                            }
+                          onTap: () async {
+                            _settingsProvider.useQuickBrowser
+                                ? _openBrowserDialog(context, 'https://www.torn.com/profiles.php?'
+                                'XID=${_attack.targetId}')
+                                : _openTornBrowser('https://www.torn.com/profiles.php?'
+                                'XID=${_attack.targetId}');
+                          },
+                          onLongPress: () async {
+                            _openTornBrowser('https://www.torn.com/profiles.php?'
+                                'XID=${_attack.targetId}');
                           },
                         ),
                       ),
@@ -446,5 +433,47 @@ class _AttackCardState extends State<AttackCard> {
       ),
     );
     return factionIcon;
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
+          ),
+        );
+      },
+    );
   }
 }

@@ -30,17 +30,18 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:flutter/rendering.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/profile/shortcuts_model.dart';
 
 enum ProfileNotification {
   travel,
@@ -184,6 +185,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _messagesExpController = ExpandableController();
   var _basicInfoExpController = ExpandableController();
   var _networthExpController = ExpandableController();
+
+  int _messagesShowNumber = 25;
+  int _eventsShowNumber = 25;
+
+  var speedDialSetOpen = ValueNotifier<bool>(false);
 
   var _showOne = GlobalKey();
 
@@ -441,6 +447,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text('Profile'),
       leading: new IconButton(
         icon: new Icon(Icons.menu),
@@ -497,6 +504,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
               _eventsExpController.expanded = newOptions.expandEvents;
+              _messagesShowNumber = newOptions.messagesShowNumber;
+              _eventsShowNumber = newOptions.eventsShowNumber;
               _messagesExpController.expanded = newOptions.expandMessages;
               _basicInfoExpController.expanded = newOptions.expandBasicInfo;
               _networthExpController.expanded = newOptions.expandNetworth;
@@ -532,8 +541,135 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _shortcutsCarrousel() {
+    // Returns Main individual tile
+    Widget shortcutTile(Shortcut thisShortcut) {
+      Widget tile;
+      if (_shortcuts.shortcutTile == "both") {
+        tile = Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 18,
+                child: Image.asset(
+                  thisShortcut.iconUrl,
+                  width: 16,
+                  color: _themeProvider.mainText,
+                ),
+              ),
+              SizedBox(height: 3),
+              Flexible(
+                child: Container(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: SizedBox(
+                      width: 55,
+                      child: Text(
+                        thisShortcut.nickname.toUpperCase(),
+                        style: TextStyle(fontSize: 9),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.fade,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      } else if (_shortcuts.shortcutTile == "icon") {
+        tile = SizedBox(
+          height: 18,
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Image.asset(
+              thisShortcut.iconUrl,
+              width: 16,
+            ),
+          ),
+        );
+      } else {
+        // Only text
+        tile = Padding(
+          padding: EdgeInsets.all(2),
+          child: SizedBox(
+            width: 55,
+            child: Center(
+              child: Container(
+                child: Text(
+                  thisShortcut.nickname.toUpperCase(),
+                  style: TextStyle(fontSize: 9),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.fade,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      return InkWell(
+        onLongPress: () {
+          _openTornBrowser(thisShortcut.url);
+        },
+        onTap: () {
+          _settingsProvider.useQuickBrowser
+              ? _openBrowserDialog(context, thisShortcut.url)
+              : _openTornBrowser(thisShortcut.url);
+        },
+        child: Card(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: thisShortcut.color, width: 1.5),
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          elevation: 2,
+          child: tile,
+        ),
+      );
+    }
+
+    // Main menu, returns either slidable list or wrap (grid)
+    Widget shortcutMenu() {
+      if (_shortcuts.shortcutMenu == "carousel") {
+        return ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _shortcuts.activeShortcuts.length,
+          itemBuilder: (context, index) {
+            var thisShortcut = _shortcuts.activeShortcuts[index];
+            return shortcutTile(thisShortcut);
+          },
+        );
+      } else {
+        var wrapItems = <Widget>[];
+        for (var thisShortcut in _shortcuts.activeShortcuts) {
+          double h = 60;
+          double w = 70;
+          if (_shortcuts.shortcutMenu == "grid") {
+            if (_shortcuts.shortcutTile == "icon") {
+              h = 40;
+              w = 40;
+            }
+            if (_shortcuts.shortcutTile == "text") {
+              h = 40;
+              w = 70;
+            }
+          }
+          wrapItems.add(
+            Container(height: h, width: w, child: shortcutTile(thisShortcut)),
+          );
+        }
+        return Wrap(children: wrapItems);
+      }
+    }
+
     return SizedBox(
-      height: _shortcuts.shortcutTile == 'both' ? 60 : 40,
+      // We only need a SizedBox height for the listView, the wrap will expand
+      height: _shortcuts.shortcutMenu == "grid"
+          ? null
+          : _shortcuts.shortcutTile == 'both'
+              ? 60
+              : 40,
       child: _shortcuts.activeShortcuts.length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -556,90 +692,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ],
             )
-          : ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _shortcuts.activeShortcuts.length,
-              itemBuilder: (context, index) {
-                var thisShortcut = _shortcuts.activeShortcuts[index];
-                return InkWell(
-                  onLongPress: () {
-                    _openTornBrowser(thisShortcut.url);
-                  },
-                  onTap: () {
-                    _openBrowserDialog(context, thisShortcut.url);
-                  },
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      side: BorderSide(color: thisShortcut.color, width: 1.5),
-                      borderRadius: BorderRadius.circular(4.0),
-                    ),
-                    elevation: 2,
-                    child: _shortcuts.shortcutTile == 'both'
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  height: 18,
-                                  child: Image.asset(
-                                    thisShortcut.iconUrl,
-                                    width: 16,
-                                    color: _themeProvider.mainText,
-                                  ),
-                                ),
-                                SizedBox(height: 3),
-                                Flexible(
-                                  child: Container(
-                                    child: Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 4),
-                                      child: SizedBox(
-                                        width: 55,
-                                        child: Text(
-                                          thisShortcut.nickname.toUpperCase(),
-                                          style: TextStyle(fontSize: 9),
-                                          textAlign: TextAlign.center,
-                                          overflow: TextOverflow.fade,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : _shortcuts.shortcutTile == 'icon'
-                            ? SizedBox(
-                                height: 18,
-                                child: Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Image.asset(
-                                    thisShortcut.iconUrl,
-                                    width: 16,
-                                  ),
-                                ),
-                              )
-                            : Padding(
-                                padding: EdgeInsets.all(2),
-                                child: SizedBox(
-                                  width: 55,
-                                  child: Center(
-                                    child: Container(
-                                      child: Text(
-                                        thisShortcut.nickname.toUpperCase(),
-                                        style: TextStyle(fontSize: 9),
-                                        textAlign: TextAlign.center,
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                  ),
-                );
-              },
-            ),
+          : shortcutMenu(),
     );
   }
 
@@ -670,53 +723,43 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         Widget detailsWidget;
         if (_user.status.details != '') {
           if (causingId != '') {
-            detailsWidget = RichText(
-              text: new TextSpan(
-                children: [
-                  new TextSpan(
-                    text: HtmlParser.fix(descriptionText),
-                    style: new TextStyle(color: _themeProvider.mainText),
-                  ),
-                  new TextSpan(
-                    text: ' (',
-                    style: new TextStyle(color: _themeProvider.mainText),
-                  ),
-                  new TextSpan(
-                    text: 'profile',
-                    style: new TextStyle(color: Colors.blue),
-                    recognizer: new TapGestureRecognizer()
-                      ..onTap = () async {
-                        var browserType = _settingsProvider.currentBrowser;
-                        switch (browserType) {
-                          case BrowserSetting.app:
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (BuildContext context) => WebViewFull(
-                                  customUrl:
-                                      'https://www.torn.com/profiles.php?'
-                                      'XID=$causingId',
-                                  customTitle: 'Event Profile',
-                                  customCallBack: _updateCallback,
-                                ),
-                              ),
-                            );
-                            break;
-                          case BrowserSetting.external:
-                            var url = 'https://www.torn.com/profiles.php?'
-                                'XID=$causingId';
-                            if (await canLaunch(url)) {
-                              await launch(url, forceSafariVC: false);
-                            }
-                            break;
-                        }
-                      },
-                  ),
-                  new TextSpan(
-                    text: ')',
-                    style: new TextStyle(color: _themeProvider.mainText),
-                  ),
-                ],
+            detailsWidget = GestureDetector(
+              child: RichText(
+                text: new TextSpan(
+                  children: [
+                    new TextSpan(
+                      text: HtmlParser.fix(descriptionText),
+                      style: new TextStyle(color: _themeProvider.mainText),
+                    ),
+                    new TextSpan(
+                      text: ' (',
+                      style: new TextStyle(color: _themeProvider.mainText),
+                    ),
+                    new TextSpan(
+                      text: 'profile',
+                      style: new TextStyle(color: Colors.blue),
+                    ),
+                    new TextSpan(
+                      text: ')',
+                      style: new TextStyle(color: _themeProvider.mainText),
+                    ),
+                  ],
+                ),
               ),
+              onTap: () {
+                _settingsProvider.useQuickBrowser
+                    ? _openBrowserDialog(
+                        context,
+                        'https://www.torn.com/profiles.php?'
+                        'XID=$causingId',
+                      )
+                    : _openTornBrowser('https://www.torn.com/profiles.php?'
+                        'XID=$causingId');
+              },
+              onLongPress: () {
+                _openTornBrowser('https://www.torn.com/profiles.php?'
+                    'XID=$causingId');
+              },
             );
           } else {
             detailsWidget = Text(descriptionText);
@@ -793,42 +836,50 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  LinearPercentIndicator(
-                    isRTL: _user.travel.destination == "Torn" ? true : false,
-                    center: Text(
-                      diff,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onLongPress: () => _openTornBrowser('home'),
+                    onTap: () {
+                      _settingsProvider.useQuickBrowser
+                          ? _openBrowserDialog(context, 'https://www.torn.com')
+                          : _openTornBrowser('home');
+                    },
+                    child: LinearPercentIndicator(
+                      isRTL: _user.travel.destination == "Torn" ? true : false,
+                      center: Text(
+                        diff,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    widgetIndicator: Opacity(
-                      // Make icon transparent when about to pass over text
-                      opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                              _getTravelPercentage(totalSeconds) > 0.7
-                          ? 1
-                          : 0.3,
-                      child: Padding(
-                        padding: _user.travel.destination == "Torn"
-                            ? const EdgeInsets.only(top: 6, right: 6)
-                            : const EdgeInsets.only(top: 6, left: 10),
-                        child: RotatedBox(
-                          quarterTurns:
-                              _user.travel.destination == "Torn" ? 3 : 1,
-                          child: Icon(
-                            Icons.airplanemode_active,
-                            color: Colors.blue[900],
+                      widgetIndicator: Opacity(
+                        // Make icon transparent when about to pass over text
+                        opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
+                                _getTravelPercentage(totalSeconds) > 0.7
+                            ? 1
+                            : 0.3,
+                        child: Padding(
+                          padding: _user.travel.destination == "Torn"
+                              ? const EdgeInsets.only(top: 6, right: 6)
+                              : const EdgeInsets.only(top: 6, left: 10),
+                          child: RotatedBox(
+                            quarterTurns:
+                                _user.travel.destination == "Torn" ? 3 : 1,
+                            child: Icon(
+                              Icons.airplanemode_active,
+                              color: Colors.blue[900],
+                            ),
                           ),
                         ),
                       ),
+                      animateFromLastPercent: true,
+                      animation: true,
+                      width: 180,
+                      lineHeight: 18,
+                      progressColor: Colors.blue[200],
+                      backgroundColor: Colors.grey,
+                      percent: _getTravelPercentage(totalSeconds),
                     ),
-                    animateFromLastPercent: true,
-                    animation: true,
-                    width: 180,
-                    lineHeight: 18,
-                    progressColor: Colors.blue[200],
-                    backgroundColor: Colors.grey,
-                    percent: _getTravelPercentage(totalSeconds),
                   ),
                   _notificationIcon(ProfileNotification.travel),
                 ],
@@ -980,6 +1031,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           SizedBox(width: 10),
                           GestureDetector(
                             key: _showOne,
+                            onLongPress: () {
+                              if (_warnAboutChains &&
+                                  _chainModel.chain.current > 10 &&
+                                  _chainModel.chain.cooldown == 0) {
+                                BotToast.showText(
+                                  text: 'Caution: your faction is chaining!',
+                                  align: Alignment(0, 0),
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.blue,
+                                  duration: Duration(seconds: 2),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              }
+
+                              _openTornBrowser('https://www.torn.com/gym.php');
+                            },
                             onTap: () async {
                               if (_warnAboutChains &&
                                   _chainModel.chain.current > 10 &&
@@ -997,10 +1067,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 );
                               }
 
-                              await _openBrowserDialog(
-                                context,
-                                'https://www.torn.com/gym.php',
-                              );
+                              _settingsProvider.useQuickBrowser
+                                  ? await _openBrowserDialog(
+                                      context,
+                                      'https://www.torn.com/gym.php',
+                                    )
+                                  : _openTornBrowser(
+                                      'https://www.torn.com/gym.php');
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -1062,11 +1135,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                           SizedBox(width: 10),
                           GestureDetector(
+                            onLongPress: () {
+                              _openTornBrowser(
+                                  'https://www.torn.com/crimes.php#/step=main');
+                            },
                             onTap: () async {
-                              await _openBrowserDialog(
-                                context,
-                                'https://www.torn.com/crimes.php#/step=main',
-                              );
+                              _settingsProvider.useQuickBrowser
+                                  ? await _openBrowserDialog(
+                                      context,
+                                      'https://www.torn.com/crimes.php#/step=main',
+                                    )
+                                  : _openTornBrowser(
+                                      'https://www.torn.com/crimes.php#/step=main');
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -1106,11 +1186,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       SizedBox(width: 10),
                       GestureDetector(
+                        onLongPress: () {
+                          _openTornBrowser(
+                              'https://www.torn.com/item.php#candy-items');
+                        },
                         onTap: () async {
-                          await _openBrowserDialog(
-                            context,
-                            'https://www.torn.com/item.php#candy-items',
-                          );
+                          _settingsProvider.useQuickBrowser
+                              ? await _openBrowserDialog(
+                                  context,
+                                  'https://www.torn.com/item.php#candy-items',
+                                )
+                              : _openTornBrowser(
+                                  'https://www.torn.com/item.php#candy-items');
                         },
                         child: LinearPercentIndicator(
                           width: 150,
@@ -1150,11 +1237,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                           SizedBox(width: 10),
                           GestureDetector(
+                            onLongPress: () {
+                              _openTornBrowser(
+                                  'https://www.torn.com/item.php#medical-items');
+                            },
                             onTap: () async {
-                              await _openBrowserDialog(
-                                context,
-                                'https://www.torn.com/item.php#medical-items',
-                              );
+                              _settingsProvider.useQuickBrowser
+                                  ? await _openBrowserDialog(
+                                      context,
+                                      'https://www.torn.com/item.php#medical-items',
+                                    )
+                                  : _openTornBrowser(
+                                      'https://www.torn.com/item.php#medical-items');
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -1877,6 +1971,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _eventsTimeline() {
+    int maxToShow = _eventsShowNumber;
+
     // Some users might an empty events map. This is why we have the events parameters as dynamic
     // in OwnProfile Model. We need to check if it contains several elements, in which case we
     // create a map in a new variable. Otherwise, we return an empty Card.
@@ -1915,16 +2011,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    var timeline = List<Widget>();
+    var timeline = <Widget>[];
 
     int unreadCount = 0;
     int loopCount = 1;
     int maxCount;
 
-    if (events.length > 20) {
-      maxCount = 20;
+    if (events.length > maxToShow) {
+      maxCount = maxToShow;
     } else {
       maxCount = events.length;
+      maxToShow = events.length;
     }
 
     for (var e in events.values) {
@@ -2003,22 +2100,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       loopCount++;
     }
 
-    if (_user.events.length > 20) {
-      timeline.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Center(
-            child: Text(
-              "(Showing last 20 events)",
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+    timeline.add(
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Center(
+          child: Text(
+            "(Showing last $maxToShow events)",
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
 
     var unreadString = '';
     if (unreadCount == 0) {
@@ -2046,11 +2141,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(width: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(100),
+                onLongPress: () {
+                  _openTornBrowser("https://www.torn.com/events.php#/step=all");
+                },
                 onTap: () {
-                  _openBrowserDialog(
-                    context,
-                    "https://www.torn.com/events.php#/step=all",
-                  );
+                  _settingsProvider.useQuickBrowser
+                      ? _openBrowserDialog(
+                          context, "https://www.torn.com/events.php#/step=all")
+                      : _openTornBrowser(
+                          "https://www.torn.com/events.php#/step=all");
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -2096,7 +2195,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         color: Colors.brown[300],
         size: 20,
       );
-    } else if (message.contains('jail')) {
+    } else if (message.contains('jail') || message.contains('arrested you')) {
       insideIcon = Center(
         child: Image.asset(
           'images/icons/jail.png',
@@ -2189,10 +2288,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
     } else if (message.contains('You came') ||
-        message.contains('race') ||
+        message.contains('race.') ||
+        message.contains('race and have received') ||
         message.contains('Your best lap was')) {
       insideIcon = Icon(
         MdiIcons.gauge,
+        color: Colors.red[500],
+        size: 20,
+      );
+    } else if (message.contains('Your bug report')) {
+      insideIcon = Icon(
+        MdiIcons.bug,
         color: Colors.red[500],
         size: 20,
       );
@@ -2200,6 +2306,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       insideIcon = Icon(
         MdiIcons.virusOutline,
         color: Colors.red[500],
+        size: 20,
+      );
+    } else if (message.contains('from your bazaar for')) {
+      insideIcon = Icon(
+        MdiIcons.store,
+        color: Colors.green,
         size: 20,
       );
     } else {
@@ -2216,7 +2328,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Card _messagesTimeline() {
-    const maxToShow = 20;
+    int maxToShow = _messagesShowNumber;
 
     // Some users might an empty messages map. This is why we have the events parameters as dynamic
     // in OwnProfile Model. We need to check if it contains several elements, in which case we
@@ -2256,7 +2368,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    var timeline = List<Widget>();
+    var timeline = <Widget>[];
 
     // Get total of unread messages
     int unreadTotalCount = 0;
@@ -2275,6 +2387,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       maxCount = maxToShow;
     } else {
       maxCount = messages.length;
+      maxToShow = messages.length;
     }
 
     for (var i = 0; i < maxToShow; i++) {
@@ -2351,22 +2464,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 msg.read == 0
                     ? GestureDetector(
                         child: Icon(Icons.markunread, color: Colors.green[600]),
+                        onLongPress: () {
+                          _openTornBrowser(
+                              "https://www.torn.com/messages.php#/p=read&ID="
+                              "${messages.keys.elementAt(i)}&suffix=inbox");
+                        },
                         onTap: () {
-                          _openBrowserDialog(
-                            context,
-                            "https://www.torn.com/messages.php#/p=read&ID="
-                            "${messages.keys.elementAt(i)}&suffix=inbox",
-                          );
+                          _settingsProvider.useQuickBrowser
+                              ? _openBrowserDialog(
+                                  context,
+                                  "https://www.torn.com/messages.php#/p=read&ID="
+                                  "${messages.keys.elementAt(i)}&suffix=inbox",
+                                )
+                              : _openTornBrowser(
+                                  "https://www.torn.com/messages.php#/p=read&ID="
+                                  "${messages.keys.elementAt(i)}&suffix=inbox");
                         },
                       )
                     : GestureDetector(
                         child: Icon(Icons.mark_as_unread),
+                        onLongPress: () {
+                          _openTornBrowser(
+                              "https://www.torn.com/messages.php#/p=read&ID="
+                              "${messages.keys.elementAt(i)}&suffix=inbox");
+                        },
                         onTap: () {
-                          _openBrowserDialog(
-                            context,
-                            "https://www.torn.com/messages.php#/p=read&ID="
-                            "${messages.keys.elementAt(i)}&suffix=inbox",
-                          );
+                          _settingsProvider.useQuickBrowser
+                              ? _openBrowserDialog(
+                                  context,
+                                  "https://www.torn.com/messages.php#/p=read&ID="
+                                  "${messages.keys.elementAt(i)}&suffix=inbox",
+                                )
+                              : _openTornBrowser(
+                                  "https://www.torn.com/messages.php#/p=read&ID="
+                                  "${messages.keys.elementAt(i)}&suffix=inbox");
                         },
                       ),
               ],
@@ -2395,22 +2526,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       loopCount++;
     }
 
-    if (_user.events.length > maxToShow) {
-      timeline.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Center(
-            child: Text(
-              "(Showing last $maxToShow messages)",
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+    timeline.add(
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Center(
+          child: Text(
+            "(Showing last $maxToShow messages)",
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
 
     var unreadRecentString = '';
     if (unreadRecentCount == 0) {
@@ -2452,11 +2581,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(width: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(100),
+                onLongPress: () {
+                  _openTornBrowser("https://www.torn.com/messages.php");
+                },
                 onTap: () {
-                  _openBrowserDialog(
-                    context,
-                    "https://www.torn.com/messages.php",
-                  );
+                  _settingsProvider.useQuickBrowser
+                      ? _openBrowserDialog(
+                          context,
+                          "https://www.torn.com/messages.php",
+                        )
+                      : _openTornBrowser("https://www.torn.com/messages.php");
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -2721,14 +2855,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _cashWallet(),
+              SizedBox(height: 4),
               Row(
                 children: [
                   GestureDetector(
+                    onLongPress: () {
+                      _openTornBrowser('https://www.torn.com/points.php');
+                    },
                     onTap: () async {
-                      await _openBrowserDialog(
-                        context,
-                        'https://www.torn.com/points.php',
-                      );
+                      _settingsProvider.useQuickBrowser
+                          ? await _openBrowserDialog(
+                              context,
+                              'https://www.torn.com/points.php',
+                            )
+                          : _openTornBrowser('https://www.torn.com/points.php');
                     },
                     child: Icon(
                       MdiIcons.alphaPCircleOutline,
@@ -2788,14 +2929,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
+                child: _cashWallet(),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
                 child: Row(
                   children: [
                     GestureDetector(
+                      onLongPress: () {
+                        _openTornBrowser('https://www.torn.com/points.php');
+                      },
                       onTap: () async {
-                        await _openBrowserDialog(
-                          context,
-                          'https://www.torn.com/points.php',
-                        );
+                        _settingsProvider.useQuickBrowser
+                            ? await _openBrowserDialog(
+                                context,
+                                'https://www.torn.com/points.php',
+                              )
+                            : _openTornBrowser(
+                                'https://www.torn.com/points.php');
                       },
                       child: Icon(
                         MdiIcons.alphaPCircleOutline,
@@ -2995,6 +3146,32 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _cashWallet() {
+    if (_user.networth["wallet"] != null) {
+      final moneyFormat = new NumberFormat("#,##0", "en_US");
+      return Row(children: [
+        GestureDetector(
+          onLongPress: () async {
+            _openWalletDialog(context, longPress: true);
+          },
+          onTap: () async {
+            _settingsProvider.useQuickBrowser
+                ? _openWalletDialog(context, longPress: false)
+                : _openWalletDialog(context, longPress: true);
+          },
+          child: Icon(
+            MdiIcons.cashUsdOutline,
+            color: Colors.green,
+          ),
+        ),
+        SizedBox(width: 5),
+        Text('\$${moneyFormat.format(_user.networth["wallet"])}')
+      ]);
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
   Widget _miscellaneous() {
     bool showMisc = false;
     bool addictionActive = false;
@@ -3082,8 +3259,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           InkWell(
             borderRadius: BorderRadius.circular(100),
+            onLongPress: () {
+              _openBrowserDialog(
+                  context, 'https://www.torn.com/loader.php?sid=racing');
+            },
             onTap: () {
-              _openTornBrowser("racing");
+              _settingsProvider.useQuickBrowser
+                  ? _openTornBrowser("racing")
+                  : _openBrowserDialog(
+                      context, 'https://www.torn.com/loader.php?sid=racing');
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),
@@ -3295,7 +3479,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     // List for all sources in column
-    var moneySources = List<Widget>();
+    var moneySources = <Widget>[];
 
     // Total Expanded
     moneySources.add(
@@ -3483,6 +3667,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return SpeedDial(
       //animatedIcon: AnimatedIcons.menu_close,
       //animatedIconTheme: IconThemeData(size: 22.0),
+      openCloseDial: speedDialSetOpen,
+      onOpen: () {
+        setState(() {
+          speedDialSetOpen.value = true;
+        });
+      },
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
@@ -3504,14 +3694,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
-          child: Icon(
-            MdiIcons.cityVariantOutline,
-            color: Colors.black,
+          child: GestureDetector(
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/city.php')
+                  : _openTornBrowser('city');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            onLongPress: () {
+              _openTornBrowser('city');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                MdiIcons.cityVariantOutline,
+                color: Colors.black,
+              ),
+            ),
           ),
           backgroundColor: Colors.purple[500],
-          onTap: () async {
-            _openTornBrowser('city');
-          },
           label: 'CITY',
           labelStyle: TextStyle(
             fontWeight: FontWeight.w500,
@@ -3520,14 +3730,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.purple[500],
         ),
         SpeedDialChild(
-          child: Icon(
-            MdiIcons.accountSwitchOutline,
-            color: Colors.black,
+          child: GestureDetector(
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(
+                      context, 'https://www.torn.com/trade.php')
+                  : _openTornBrowser('trades');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            onLongPress: () {
+              _openTornBrowser('trades');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                MdiIcons.accountSwitchOutline,
+                color: Colors.black,
+              ),
+            ),
           ),
           backgroundColor: Colors.yellow[800],
-          onTap: () async {
-            _openTornBrowser('trades');
-          },
           label: 'TRADES',
           labelStyle: TextStyle(
             fontWeight: FontWeight.w500,
@@ -3536,14 +3767,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.yellow[800],
         ),
         SpeedDialChild(
-          child: Icon(
-            Icons.card_giftcard,
-            color: Colors.black,
+          child: GestureDetector(
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/item.php')
+                  : _openTornBrowser('items');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            onLongPress: () {
+              _openTornBrowser('items');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                Icons.card_giftcard,
+                color: Colors.black,
+              ),
+            ),
           ),
           backgroundColor: Colors.blue[400],
-          onTap: () async {
-            _openTornBrowser('items');
-          },
           label: 'ITEMS',
           labelStyle: TextStyle(
             fontWeight: FontWeight.w500,
@@ -3552,18 +3803,39 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.blue[400],
         ),
         SpeedDialChild(
-          child: Center(
-            child: Image.asset(
-              'images/icons/ic_pistol_black_48dp.png',
-              width: 25,
-              height: 25,
-              color: Colors.black,
+          child: GestureDetector(
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(
+                      context, 'https://www.torn.com/crimes.php#/step=main')
+                  : _openTornBrowser('crimes');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            onLongPress: () {
+              _openTornBrowser('crimes');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Center(
+                child: Image.asset(
+                  'images/icons/ic_pistol_black_48dp.png',
+                  width: 25,
+                  height: 25,
+                  color: Colors.black,
+                ),
+              ),
             ),
           ),
           backgroundColor: Colors.deepOrange[400],
-          onTap: () async {
-            _openTornBrowser('crimes');
-          },
           label: 'CRIMES',
           labelStyle: TextStyle(
             fontWeight: FontWeight.w500,
@@ -3572,30 +3844,65 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.deepOrange[400],
         ),
         SpeedDialChild(
-          child: Icon(
-            Icons.fitness_center,
-            color: Colors.black,
+          child: GestureDetector(
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/gym.php')
+                  : _openTornBrowser('gym');
+
+              if (_warnAboutChains &&
+                  _chainModel.chain.current > 10 &&
+                  _chainModel.chain.cooldown == 0) {
+                BotToast.showText(
+                  text: 'Caution: your faction is chaining!',
+                  align: Alignment(0, 0),
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  duration: Duration(seconds: 2),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              }
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            onLongPress: () {
+              _openTornBrowser('gym');
+              if (_warnAboutChains &&
+                  _chainModel.chain.current > 10 &&
+                  _chainModel.chain.cooldown == 0) {
+                BotToast.showText(
+                  text: 'Caution: your faction is chaining!',
+                  align: Alignment(0, 0),
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  duration: Duration(seconds: 2),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              }
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                Icons.fitness_center,
+                color: Colors.black,
+              ),
+            ),
           ),
           backgroundColor: Colors.green[400],
-          onTap: () async {
-            if (_warnAboutChains &&
-                _chainModel.chain.current > 10 &&
-                _chainModel.chain.cooldown == 0) {
-              BotToast.showText(
-                text: 'Caution: your faction is chaining!',
-                align: Alignment(0, 0),
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.blue,
-                duration: Duration(seconds: 2),
-                contentPadding: EdgeInsets.all(10),
-              );
-            }
-
-            _openTornBrowser('gym');
-          },
           label: 'GYM',
           labelStyle: TextStyle(
             fontWeight: FontWeight.w500,
@@ -3604,14 +3911,34 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.green[400],
         ),
         SpeedDialChild(
-          child: Icon(
-            Icons.home_outlined,
-            color: Colors.black,
+          child: GestureDetector(
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com')
+                  : _openTornBrowser('home');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            onLongPress: () {
+              _openTornBrowser('home');
+              setState(() {
+                speedDialSetOpen.value = false;
+              });
+            },
+            // Needs a container and color to allow taps on the full circle, not
+            // only on the icon.
+            child: Container(
+              width: 100,
+              height: 100,
+              color: Colors.transparent,
+              child: Icon(
+                Icons.home_outlined,
+                color: Colors.black,
+              ),
+            ),
           ),
           backgroundColor: Colors.grey[400],
-          onTap: () async {
-            _openTornBrowser('home');
-          },
           label: 'HOME',
           labelStyle: TextStyle(
             fontWeight: FontWeight.w500,
@@ -3863,7 +4190,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // DEBUG
     //print('Notification $notificationTitle @ '
-    //    '${DateTime.now().add(Duration(seconds: secondsToNotification))}');
+    //    '${tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification))}');
 
     _retrievePendingNotifications();
   }
@@ -3949,8 +4276,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     bool triggered = false;
-    var updatedTypes = List<String>();
-    var updatedTimes = List<String>();
+    var updatedTypes = <String>[];
+    var updatedTimes = <String>[];
     var formatter = new DateFormat('HH:mm');
 
     for (var notification in pendingNotificationRequests) {
@@ -4375,12 +4702,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
+    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
     var expandMessages = await SharedPreferencesModel().getExpandMessages();
+    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
     var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
     var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
     setState(() {
       _eventsExpController.expanded = expandEvents;
+      _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
+      _messagesShowNumber = messagesNumber;
       _basicInfoExpController.expanded = expandBasicInfo;
       _networthExpController.expanded = expandNetworth;
     });
@@ -4553,9 +4884,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: WebViewDialog(
-              initUrl: initUrl,
-            ),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
           ),
         );
       },
@@ -4630,29 +4959,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 style: TextStyle(color: Colors.blue),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
-                                    var targetUrl =
-                                        'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0';
-                                    var browserType =
-                                        _settingsProvider.currentBrowser;
-                                    switch (browserType) {
-                                      case BrowserSetting.app:
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                WebViewFull(
-                                              customTitle: 'Forums',
-                                              customUrl: targetUrl,
-                                            ),
-                                          ),
-                                        );
-                                        break;
-                                      case BrowserSetting.external:
-                                        if (await canLaunch(targetUrl)) {
-                                          await launch(targetUrl,
-                                              forceSafariVC: false);
-                                        }
-                                        break;
-                                    }
+                                    _settingsProvider.useQuickBrowser
+                                        ? _openBrowserDialog(context,
+                                            'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0')
+                                        : _openTornBrowser(
+                                            'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0');
                                   },
                               ),
                               EasyRichTextPattern(
@@ -4660,10 +4971,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 style: TextStyle(color: Colors.blue),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
-                                    var url = 'https://discord.gg/qSHjTXx';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
+                                    _settingsProvider.useQuickBrowser
+                                        ? _openBrowserDialog(context,
+                                            'https://discord.gg/qSHjTXx')
+                                        : _openTornBrowser(
+                                            'https://discord.gg/qSHjTXx');
                                   },
                               ),
                             ],
@@ -4757,6 +5069,169 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         width: 34,
                         child: Image.asset(
                           'images/icons/nuke-revive.png',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                      padding: EdgeInsets.only(
+                        top: 45,
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                      ),
+                      margin: EdgeInsets.only(top: 15),
+                      decoration: new BoxDecoration(
+                        color: _themeProvider.background,
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10.0,
+                            offset: const Offset(0.0, 10.0),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: RaisedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/home/vault.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Personal vault"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _openTornBrowser(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _openBrowserDialog(context, url);
+                                }
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: RaisedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/faction.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Faction vault"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _openTornBrowser(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _openBrowserDialog(context, url);
+                                }
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: RaisedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/home/job.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Company vault"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    'https://www.torn.com/companies.php#/option=funds';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _openTornBrowser(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _openBrowserDialog(context, url);
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          FlatButton(
+                            child: Text("Cancel"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      )),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(
+                          MdiIcons.cashUsdOutline,
+                          color: Colors.green,
                         ),
                       ),
                     ),

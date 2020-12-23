@@ -16,6 +16,9 @@ class ShortcutsProvider extends ChangeNotifier {
   String _shortcutTile = 'both';
   String get shortcutTile => _shortcutTile;
 
+  String _shortcutMenu = 'carousel';
+  String get shortcutMenu => _shortcutMenu;
+
   OwnProfileModel _userDetails;
 
   ShortcutsProvider() {
@@ -63,6 +66,12 @@ class ShortcutsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void changeShortcutMenu(String choice) {
+    _shortcutMenu = choice;
+    SharedPreferencesModel().setShortcutMenu(choice);
+    notifyListeners();
+  }
+
   void _saveListAfterChanges() {
     var saveList = List<String>();
     for (var short in activeShortcuts) {
@@ -74,6 +83,7 @@ class ShortcutsProvider extends ChangeNotifier {
 
   Future _initializeStockShortcuts() async {
     _shortcutTile = await SharedPreferencesModel().getShortcutTile();
+    _shortcutMenu = await SharedPreferencesModel().getShortcutMenu();
     _userDetails =
         ownProfileModelFromJson(await SharedPreferencesModel().getOwnDetails());
 

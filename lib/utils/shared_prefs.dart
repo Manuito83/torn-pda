@@ -22,6 +22,7 @@ class SharedPreferencesModel {
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
+  final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
@@ -53,14 +54,18 @@ class SharedPreferencesModel {
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShortcutTile = "pda_shortcutTile";
+  final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
+  final String _kMessagesShowNumber = "pda_messagesShowNumber";
+  final String _kEventsShowNumber = "pda_eventsShowNumber";
   final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
+  final String _kQuickItemsList = "pda_quickItemsList";
   final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
@@ -75,6 +80,8 @@ class SharedPreferencesModel {
   final String _kAwardsSort = "pda_awardsSort";
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
+  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
+  final String _kChatRemovalActive = "pda_chatRemovalActive";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -142,7 +149,7 @@ class SharedPreferencesModel {
   /// ----------------------------
   Future<List<String>> getTargetsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kTargetsList) ?? List<String>();
+    return prefs.getStringList(_kTargetsList) ?? <String>[];
   }
 
   Future<bool> setTargetsList(List<String> value) async {
@@ -229,7 +236,7 @@ class SharedPreferencesModel {
   /// ----------------------------
   Future<List<String>> getFriendsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kFriendsList) ?? List<String>();
+    return prefs.getStringList(_kFriendsList) ?? <String>[];
   }
 
   Future<bool> setFriendsList(List<String> value) async {
@@ -295,6 +302,16 @@ class SharedPreferencesModel {
   Future<bool> setLoadBarBrowser(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kLoadBarBrowser, value);
+  }
+
+  Future<bool> getUseQuickBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseQuickBrowser) ?? true;
+  }
+
+  Future<bool> setUseQuickBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseQuickBrowser, value);
   }
 
   /// ----------------------------
@@ -651,6 +668,16 @@ class SharedPreferencesModel {
     return prefs.setBool(_kExpandEvents, value);
   }
 
+  Future<int> getEventsShowNumber() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kEventsShowNumber) ?? 25;
+  }
+
+  Future<bool> setEventsShowNumber(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kEventsShowNumber, value);
+  }
+
   Future<bool> getExpandMessages() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kExpandMessages) ?? false;
@@ -659,6 +686,16 @@ class SharedPreferencesModel {
   Future<bool> setExpandMessages(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExpandMessages, value);
+  }
+
+  Future<int> getMessagesShowNumber() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kMessagesShowNumber) ?? 25;
+  }
+
+  Future<bool> setMessagesShowNumber(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kMessagesShowNumber, value);
   }
 
   Future<bool> getExpandBasicInfo() async {
@@ -694,9 +731,19 @@ class SharedPreferencesModel {
     return prefs.setString(_kShortcutTile, value);
   }
 
+  Future<String> getShortcutMenu() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kShortcutMenu) ?? 'carousel';
+  }
+
+  Future<bool> setShortcutMenu(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kShortcutMenu, value);
+  }
+
   Future<List<String>> getActiveShortcutsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kActiveShortcutsList) ?? List<String>();
+    return prefs.getStringList(_kActiveShortcutsList) ?? <String>[];
   }
 
   Future<bool> setActiveShortcutsList(List<String> value) async {
@@ -709,7 +756,7 @@ class SharedPreferencesModel {
   /// ----------------------------
   Future<List<String>> getActiveCrimesList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kActiveCrimesList) ?? List<String>();
+    return prefs.getStringList(_kActiveCrimesList) ?? <String>[];
   }
 
   Future<bool> setActiveCrimesList(List<String> value) async {
@@ -717,7 +764,20 @@ class SharedPreferencesModel {
     return prefs.setStringList(_kActiveCrimesList, value);
   }
 
-  /// ----------------------------  
+  /// ----------------------------
+  /// Methods for quick items
+  /// ----------------------------
+  Future<List<String>> getQuickItemsList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kQuickItemsList) ?? <String>[];
+  }
+
+  Future<bool> setQuickItemsList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kQuickItemsList, value);
+  }
+
+  /// ----------------------------
   /// Methods for loot
   /// ----------------------------
   Future<String> getLootYataCache() async {
@@ -867,6 +927,29 @@ class SharedPreferencesModel {
   Future<bool> setHiddenAwardCategories(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kHiddenAwardCategories, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Chat Removal
+  /// ----------------------------
+  Future<bool> getChatRemovalEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChatRemovalEnabled) ?? true;
+  }
+
+  Future<bool> setChatRemovalEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChatRemovalEnabled, value);
+  }
+
+  Future<bool> getChatRemovalActive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChatRemovalActive) ?? false;
+  }
+
+  Future<bool> setChatRemovalActive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChatRemovalActive, value);
   }
 
 }

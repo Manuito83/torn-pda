@@ -81,6 +81,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Loot options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

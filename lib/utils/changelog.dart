@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 
 class ChangeLogItem {
-  String version;
+  var main = ChangeLogTitleDate();
   var features = List<String>();
+}
+
+class ChangeLogTitleDate {
+  String version = "";
+  String date = "";
 }
 
 class ChangeLog extends StatefulWidget {
@@ -12,7 +17,7 @@ class ChangeLog extends StatefulWidget {
 }
 
 class _ChangeLogState extends State<ChangeLog> {
-  var _changeLogItems = Map<String, List<String>>();
+  var _changeLogItems = Map<ChangeLogTitleDate, List<String>>();
   var _scrollController = ScrollController();
 
   @override
@@ -30,9 +35,57 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = List<ChangeLogItem>();
 
+    // VERSION 1.9.7
+    var v1_9_7 = ChangeLogItem();
+    v1_9_7.main.version = 'Torn PDA v1.9.7';
+    v1_9_7.main.date = '09 DEC 2020';
+    String feat1_9_7_1 = "Loot: fixed bug preventing notifications from working properly";
+    String feat1_9_7_2 = "Text corrections";
+    v1_9_7.features.add(feat1_9_7_1);
+    v1_9_7.features.add(feat1_9_7_2);
+
+    // VERSION 1.9.6
+    var v1_9_6 = ChangeLogItem();
+    v1_9_6.main.version = 'Torn PDA v1.9.6';
+    v1_9_6.main.date = '06 DEC 2020';
+    String feat1_9_6_1 = "Loot: added Scrooge (NPC)";
+    String feat1_9_6_2 = "Profile: added wallet money to the Basic Info card. Short/long tap to access your vaults with quick or full browser";
+    String feat1_9_6_3 = "Short or long tap the travel bar (in Profile & Travel) to launch the quick or full browser to Torn";
+    String feat1_9_6_4 = "Alerts section can now be correctly scrolled in smaller screens";
+    String feat1_9_6_5 = "Fixed other issues reported by users";
+    v1_9_6.features.add(feat1_9_6_1);
+    v1_9_6.features.add(feat1_9_6_2);
+    v1_9_6.features.add(feat1_9_6_3);
+    v1_9_6.features.add(feat1_9_6_4);
+    v1_9_6.features.add(feat1_9_6_5);
+
+    // VERSION 1.9.5
+    var v1_9_5 = ChangeLogItem();
+    v1_9_5.main.version = 'Torn PDA v1.9.5';
+    v1_9_5.main.date = '30 NOV 2020';
+    String feat1_9_5_1 = "Fixed shortcuts menu persistence after app is closed";
+    String feat1_9_5_2 = "Fixed Discord link in About section";
+    v1_9_5.features.add(feat1_9_5_1);
+    v1_9_5.features.add(feat1_9_5_2);
+
+    // VERSION 1.9.4
+    var v1_9_4 = ChangeLogItem();
+    v1_9_4.main.version = 'Torn PDA v1.9.4';
+    v1_9_4.main.date = '28 NOV 2020';
+    String feat1_9_4_1 = "Alerts: added drugs cooldown automatic alert";
+    String feat1_9_4_2 = "Alerts: added racing automatic alert";
+    String feat1_9_4_3 = "Profile: you can now choose between an horizontal slidable list or a grid view for shortcuts";
+    String feat1_9_4_4 = "Browser: added quick controls (back, forward and refresh) for the quick browser";
+    String feat1_9_4_5 = "Browser: improved speed and corrected several reported issues (i.e.: hospital timer and other sections not showing)";
+    v1_9_4.features.add(feat1_9_4_1);
+    v1_9_4.features.add(feat1_9_4_2);
+    v1_9_4.features.add(feat1_9_4_3);
+    v1_9_4.features.add(feat1_9_4_4);
+    v1_9_4.features.add(feat1_9_4_5);
+
     // VERSION 1.9.3
     var v1_9_3 = ChangeLogItem();
-    v1_9_3.version = 'Torn PDA v1.9.3';
+    v1_9_3.main.version = 'Torn PDA v1.9.3';
     String feat1_9_3_1 = "Fixed error with messages titles, preventing some users from loading the Profile section entirely";
     String feat1_9_3_2 = "Corrected emojis representation in message titles";
     v1_9_3.features.add(feat1_9_3_1);
@@ -40,7 +93,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.9.2
     var v1_9_2 = ChangeLogItem();
-    v1_9_2.version = 'Torn PDA v1.9.2';
+    v1_9_2.main.version = 'Torn PDA v1.9.2';
     String feat1_9_2_1 = "Profile: new shortcuts to your preferred game sections. Use the existing ones or configure your own. Short/long tap to open a quick or full browser";
     String feat1_9_2_2 = "Profile: added a new card for received messages";
     String feat1_9_2_3 = "Profile: added option to configure which cards are expanded or collapsed by default";
@@ -60,7 +113,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.9.1
     var v1_9_1 = ChangeLogItem();
-    v1_9_1.version = 'Torn PDA v1.9.1';
+    v1_9_1.main.version = 'Torn PDA v1.9.1';
     String feat1_9_1_1 = "Profile: added several additional quick browser triggers (tap on the happy bar, life bar or the points icon)";
     String feat1_9_1_2 = "Profile: added addiction icon and information to miscellaneous";
     String feat1_9_1_3 = "Profile: added effective battle stats calculation";
@@ -88,7 +141,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.9.0
     var v1_9_0 = ChangeLogItem();
-    v1_9_0.version = 'Torn PDA v1.9.0';
+    v1_9_0.main.version = 'Torn PDA v1.9.0';
     String feat1_9_0_1 = "Alerts: added nerve to automatic alerts";
     String feat1_9_0_2 = "Quick actions: long press app icon (supported devices) to launch Torn from home screen";
     String feat1_9_0_3 = "Profile: tapping your energy or nerve bars will open a small browser to the gym or crimes, easier than ever";
@@ -112,7 +165,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.6
     var v1_8_6 = ChangeLogItem();
-    v1_8_6.version = 'Torn PDA v1.8.6';
+    v1_8_6.main.version = 'Torn PDA v1.8.6';
     String feat1_8_6_1 = "Trading: if you are a professional trader and an user of Torn Trader, you can now activate a real time sync with your own prices, custom messages and receipt through the Trade Calculator (see options when in the Trade page in Torn to activate)";
     String feat1_8_6_2 = "Trading: a new icon will redirect you directly to your personal, faction or company vault after a trade, so that you can keep your money safe from muggers";
     String feat1_8_6_3 = "Profile: racing status added to the miscellaneous card";
@@ -124,7 +177,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.5
     var v1_8_5 = ChangeLogItem();
-    v1_8_5.version = 'Torn PDA v1.8.5';
+    v1_8_5.main.version = 'Torn PDA v1.8.5';
     String feat1_8_5_1 = "The colour of your targets' notes is now exported and imported to/from YATA (in the process, blue colour was transformed into orange for standardization)";
     String feat1_8_5_2 = "While chaining, you'll be shown your note for each target before attacking, so that you can adjust your strategy accordingly (can be disabled)";
     String feat1_8_5_3 = "You can now sort targets by note colour";
@@ -136,7 +189,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.4
     var v1_8_4 = ChangeLogItem();
-    v1_8_4.version = 'Torn PDA v1.8.4';
+    v1_8_4.main.version = 'Torn PDA v1.8.4';
     String feat1_8_4_1 = "Chaining: you can now export and import all your targets to/from YATA, including personal notes";
     String feat1_8_4_2 = "Chaining: there is a new option to wipe all your targets (use carefully)";
     String feat1_8_4_3 = "Profile: you can now schedule travel notifications directly from the profile section";
@@ -154,7 +207,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.3
     var v1_8_3 = ChangeLogItem();
-    v1_8_3.version = 'Torn PDA v1.8.3';
+    v1_8_3.main.version = 'Torn PDA v1.8.3';
     String feat1_8_3_1 = "Chaining: added a chain watcher feature that can be activated both in "
         "the targets screen and while chaining";
     String feat1_8_3_2 = "Profile: when you are in hospital, you can now send Nuclear Central "
@@ -167,7 +220,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.2
     var v1_8_2 = ChangeLogItem();
-    v1_8_2.version = 'Torn PDA v1.8.2';
+    v1_8_2.main.version = 'Torn PDA v1.8.2';
     String feat1_8_2_1 = "Chaining: targets that can't be attacked (red status or in a different country) "
         "will be skipped automatically. Maximum of 3 targets. This feature can be deactivated.";
     String feat1_8_2_2 = "Targets: added a hospital countdown and a clickable travel icon "
@@ -188,7 +241,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.1
     var v1_8_1 = ChangeLogItem();
-    v1_8_1.version = 'Torn PDA v1.8.1';
+    v1_8_1.main.version = 'Torn PDA v1.8.1';
     String feat1_8_1_1 = "Loot: increased trigger options for loot notifications";
     String feat1_8_1_2 = "Profile: corrected an issue causing delays when updating miscellaneous "
         "information";
@@ -197,7 +250,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.8.0
     var v1_8_0 = ChangeLogItem();
-    v1_8_0.version = 'Torn PDA v1.8.0';
+    v1_8_0.main.version = 'Torn PDA v1.8.0';
     String feat1_8_0_1 = "Added a city item finder when you visit the city in Torn, with a list of "
         "items found and highlights on the map";
     String feat1_8_0_2 = "Loot & Travel: you can now choose how long in advance will "
@@ -219,7 +272,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.7.1
     var v1_7_1 = ChangeLogItem();
-    v1_7_1.version = 'Torn PDA v1.7.1';
+    v1_7_1.main.version = 'Torn PDA v1.7.1';
     String feat1_7_1_1 = "Alerts section: added automatic alerts for hospital admission, "
         "revives and hospital release";
     String feat1_7_1_2 = "Profile section: added TCT clock at the top";
@@ -243,7 +296,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.7.0
     var v1_7_0 = ChangeLogItem();
-    v1_7_0.version = 'Torn PDA v1.7.0';
+    v1_7_0.main.version = 'Torn PDA v1.7.0';
     String feat1_7_0_1 = "Added Trade Calculator, with total price calculation for cash, items and "
         "shares, plus the ability to copy total figures for a quick trading. Also added trades as "
         "a quick link in the Profile section";
@@ -256,14 +309,14 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.6.2
     var v1_6_2 = ChangeLogItem();
-    v1_6_2.version = 'Torn PDA v1.6.2';
+    v1_6_2.main.version = 'Torn PDA v1.6.2';
     String feat1_6_2_1 = "Fixes error when loading API Key and the profile page for players "
         "that have deleted all their incoming events";
     v1_6_2.features.add(feat1_6_2_1);
 
     // VERSION 1.6.0
     var v1_6_0 = ChangeLogItem();
-    v1_6_0.version = 'Torn PDA v1.6.0';
+    v1_6_0.main.version = 'Torn PDA v1.6.0';
     String feat1_6_0_1 = "New NPC Loot section";
     String feat1_6_0_2 = "Added a quick crimes bar (internal app browser)";
     String feat1_6_0_3 = "Added option to fill max travel items taking into "
@@ -280,7 +333,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.5.0
     var v1_5_0 = ChangeLogItem();
-    v1_5_0.version = 'Torn PDA v1.5.0';
+    v1_5_0.main.version = 'Torn PDA v1.5.0';
     String feat1_5_0_1 = "New Alerts section with automatic notifications "
         "for travel";
     String feat1_5_0_2 = "You can now set a custom trigger for energy and "
@@ -295,7 +348,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.4.1
     var v1_4_1 = ChangeLogItem();
-    v1_4_1.version = 'Torn PDA v1.4.1';
+    v1_4_1.main.version = 'Torn PDA v1.4.1';
     String feat1_4_1_1 = "[Android] Now you can choose different notification "
         "styles (notification, alarm or timer) for each of the status bars and "
         "cooldowns available in the Profile section";
@@ -313,7 +366,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.4.0
     var v1_4_0 = ChangeLogItem();
-    v1_4_0.version = 'Torn PDA v1.4.0';
+    v1_4_0.main.version = 'Torn PDA v1.4.0';
     String feat1_4_0_1 = "New 'About' section";
     String feat1_4_0_2 = "You can now choose between 12h/24h time systems & "
         "local time (LT) or Torn City TIme (TCT) time zones";
@@ -330,7 +383,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 1.3.0
     var v1_3_0 = ChangeLogItem();
-    v1_3_0.version = 'Torn PDA v1.3.0';
+    v1_3_0.main.version = 'Torn PDA v1.3.0';
     String feat1_3_0_1 = "New Friends section, with quick access to player "
         "details and in-game actions. Personal notes and "
         "backup functionality is also included";
@@ -347,6 +400,10 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v1_9_7);
+    itemList.add(v1_9_6);
+    itemList.add(v1_9_5);
+    itemList.add(v1_9_4);
     itemList.add(v1_9_3);
     itemList.add(v1_9_2);
     itemList.add(v1_9_1);
@@ -369,7 +426,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     for (var i = 0; i < itemList.length; i++) {
       _changeLogItems.putIfAbsent(
-          itemList[i].version, () => itemList[i].features);
+          itemList[i].main, () => itemList[i].features);
     }
   }
 
@@ -454,12 +511,23 @@ class _ChangeLogState extends State<ChangeLog> {
       }
       itemList.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 15),
+          padding: const EdgeInsets.only(bottom: 0),
           child: Text(
-            entry.key,
+            entry.key.version,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+      itemList.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 15),
+          child: Text(
+            entry.key.date,
+            style: TextStyle(
+              fontSize: 11,
             ),
           ),
         ),

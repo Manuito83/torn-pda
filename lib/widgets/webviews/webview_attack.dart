@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +49,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   String _initialUrl = "";
   String _currentPageTitle = "";
 
+  var _chatRemovalEnabled = true;
+  var _chatRemovalActive = false;
+
   bool _skippingEnabled = true;
   bool _showNotes = true;
   int _attackNumber = 0;
@@ -69,6 +72,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   @override
   void initState() {
     super.initState();
+
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     // Enable hybrid composition
@@ -76,7 +80,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
     _loadPreferences();
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
+    _initialUrl =
+        'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
     _chainStatusProvider = context.read<ChainStatusProvider>();
@@ -138,6 +143,12 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                           onWebViewCreated: (WebViewController c) {
                             _webViewController = c;
                           },
+                          onPageStarted: (page) {
+                            if (_chatRemovalEnabled && _chatRemovalActive) {
+                              _webViewController.evaluateJavascript(
+                                  removeChatOnLoadStartJS());
+                            }
+                          },
                           gestureNavigationEnabled: true,
                         ),
                       ),
@@ -159,11 +170,15 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       },
       genericAppBar: AppBar(
         leading: IconButton(
-            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+            icon: _backButtonPopsContext
+                ? Icon(Icons.close)
+                : Icon(Icons.arrow_back_ios),
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
-                _willPopCallback();
+                widget.attacksCallback(_attackedIds);
+                _chainStatusProvider.watcherAssignParent(
+                    newParent: ChainTimerParent.targets);
                 Navigator.pop(context);
               } else {
                 // But we can change and go back to previous page in certain
@@ -208,80 +223,140 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   Future _goBackOrForward(DragEndDetails details) async {
     if (details.primaryVelocity < 0) {
-      var canForward = await _webViewController.canGoForward();
-      if (canForward) {
-        await _webViewController.goForward();
-        BotToast.showText(
-          text: "Forward",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go forward!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await _tryGoForward();
     } else if (details.primaryVelocity > 0) {
-      var canBack = await _webViewController.canGoBack();
-      if (canBack) {
-        await _webViewController.goBack();
-        BotToast.showText(
-          text: "Back",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go back!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await _tryGoBack();
+    }
+  }
+
+  Future _tryGoForward() async {
+    var canForward = await _webViewController.canGoForward();
+    if (canForward) {
+      await _webViewController.goForward();
+      BotToast.showText(
+        text: "Forward",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go forward!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Future _tryGoBack() async {
+    var canBack = await _webViewController.canGoBack();
+    if (canBack) {
+      await _webViewController.goBack();
+      BotToast.showText(
+        text: "Back",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go back!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
     }
   }
 
   List<Widget> _actionButtons() {
-    List<Widget> myButtons = List<Widget>();
+    List<Widget> myButtons = [];
+
+    Widget hideChatIcon = SizedBox.shrink();
+    if (!_chatRemovalActive && _chatRemovalEnabled) {
+      hideChatIcon = Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(MdiIcons.chatOutline),
+          onTap: () async {
+            _webViewController.evaluateJavascript(removeChatJS());
+            SharedPreferencesModel().setChatRemovalActive(true);
+            setState(() {
+              _chatRemovalActive = true;
+            });
+          },
+        ),
+      );
+    } else if (_chatRemovalActive && _chatRemovalEnabled) {
+      hideChatIcon = Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(
+            MdiIcons.chatRemoveOutline,
+            color: Colors.orange[500],
+          ),
+          onTap: () async {
+            _webViewController.evaluateJavascript(restoreChatJS());
+            SharedPreferencesModel().setChatRemovalActive(false);
+            setState(() {
+              _chatRemovalActive = false;
+            });
+          },
+        ),
+      );
+    }
+    myButtons.add(hideChatIcon);
 
     myButtons.add(
-      IconButton(
-        icon: Icon(MdiIcons.refresh),
-        onPressed: () async {
-          await _webViewController.reload();
-        },
+      Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(MdiIcons.refresh),
+          onTap: () async {
+            await _webViewController.reload();
+
+            BotToast.showText(
+              text: "Reloading...",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[600],
+              duration: Duration(seconds: 1),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
       ),
     );
 
     myButtons.add(
-      IconButton(
-        icon: Icon(MdiIcons.linkVariant),
-        onPressed: () {
-          _chainWidgetController.expanded
-              ? _chainWidgetController.expanded = false
-              : _chainWidgetController.expanded = true;
-        },
+      Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(MdiIcons.linkVariant),
+          onTap: () {
+            _chainWidgetController.expanded
+                ? _chainWidgetController.expanded = false
+                : _chainWidgetController.expanded = true;
+          },
+        ),
       ),
     );
 
@@ -313,13 +388,14 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 int targetsSkipped = 0;
                 var originalPosition = _attackNumber;
                 bool reachedEnd = false;
-                var skippedNames = List<String>();
+                var skippedNames = [];
 
                 // We'll skip maximum of 3 targets
                 for (var i = 0; i < 3; i++) {
                   // Get the status of our next target
                   var nextTarget = await TornApiCaller.target(
-                          _userProv.myUser.userApiKey, widget.attackIdList[_attackNumber + 1])
+                          _userProv.myUser.userApiKey,
+                          widget.attackIdList[_attackNumber + 1])
                       .getTarget;
 
                   if (nextTarget is TargetModel) {
@@ -333,10 +409,12 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     // place, we can attack him)
                     else if (nextTarget.status.color == "blue") {
                       var user = await TornApiCaller.target(
-                              _userProv.myUser.userApiKey, _userProv.myUser.playerId.toString())
+                              _userProv.myUser.userApiKey,
+                              _userProv.myUser.playerId.toString())
                           .getTarget;
                       if (user is TargetModel) {
-                        if (user.status.description != nextTarget.status.description) {
+                        if (user.status.description !=
+                            nextTarget.status.description) {
                           targetsSkipped++;
                           skippedNames.add(nextTarget.name);
                           _attackNumber++;
@@ -398,7 +476,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               }
 
               _attackNumber++;
-              await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+              await _webViewController
+                  .loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
               _attackedIds.add(widget.attackIdList[_attackNumber]);
               setState(() {
                 _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
@@ -419,17 +498,20 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Widget _medicalActionButton() {
-    return PopupMenuButton<HealingPages>(
-      icon: Icon(Icons.healing),
-      onSelected: _openHealingPage,
-      itemBuilder: (BuildContext context) {
-        return _popupChoices.map((HealingPages choice) {
-          return PopupMenuItem<HealingPages>(
-            value: choice,
-            child: Text(choice.description),
-          );
-        }).toList();
-      },
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: PopupMenuButton<HealingPages>(
+        icon: Icon(Icons.healing),
+        onSelected: _openHealingPage,
+        itemBuilder: (BuildContext context) {
+          return _popupChoices.map((HealingPages choice) {
+            return PopupMenuItem<HealingPages>(
+              value: choice,
+              child: Text(choice.description),
+            );
+          }).toList();
+        },
+      ),
     );
   }
 
@@ -527,6 +609,14 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Future _loadPreferences() async {
+    var removalEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
+    var removalActive = await SharedPreferencesModel().getChatRemovalActive();
+
+    setState(() {
+      _chatRemovalEnabled = removalEnabled;
+      _chatRemovalActive = removalActive;
+    });
+
     _skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     _showNotes = await SharedPreferencesModel().getShowTargetsNotes();
 
@@ -537,9 +627,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Future<bool> _willPopCallback() async {
-    widget.attacksCallback(_attackedIds);
-    _chainStatusProvider.watcherAssignParent(newParent: ChainTimerParent.targets);
-    return true;
+    return false;
   }
 }
 
@@ -553,7 +641,8 @@ class HealingPages {
         url = 'https://www.torn.com/item.php#medical-items';
         break;
       case "Faction":
-        url = 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+        url =
+            'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
         break;
     }
   }

@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -146,28 +147,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     Radius.circular(56 / 2),
                   ),
                 ),
-                onClosed: (bool flagPressed) async {
-                  if (flagPressed) {
-                    var browserType = _settingsProvider.currentBrowser;
-                    switch (browserType) {
-                      case BrowserSetting.app:
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => WebViewFull(
-                              customUrl:
-                                  'https://www.torn.com/travelagency.php',
-                              customTitle: '${_travelModel.destination}',
-                              customCallBack: _updateInformation,
-                            ),
-                          ),
-                        );
-                        break;
-                      case BrowserSetting.external:
-                        var url = 'https://www.torn.com/travelagency.php';
-                        if (await canLaunch(url)) {
-                          await launch(url, forceSafariVC: false);
-                        }
-                        break;
+                onClosed: (ReturnFlagPressed returnFlag) async {
+                  if (returnFlag.flagPressed) {
+                    if (returnFlag.shortTap) {
+                      _settingsProvider.useQuickBrowser
+                          ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+                          : _openTornBrowser('https://www.torn.com/travelagency.php');
+                    } else {
+                      _openTornBrowser('https://www.torn.com/travelagency.php');
                     }
                   }
                 },
@@ -197,6 +184,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
@@ -260,7 +248,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   SpeedDial buildSpeedDial() {
-    var dials = List<SpeedDialChild>();
+    var dials = <SpeedDialChild>[];
 
     var dialStocks = SpeedDialChild(
       label: 'STOCKS',
@@ -275,27 +263,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         openBuilder: (BuildContext context, VoidCallback _) {
           return ForeignStockPage(apiKey: _myCurrentKey);
         },
-        onClosed: (bool flagPressed) async {
-          if (flagPressed) {
-            var browserType = _settingsProvider.currentBrowser;
-            switch (browserType) {
-              case BrowserSetting.app:
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => WebViewFull(
-                      customUrl: 'https://www.torn.com/travelagency.php',
-                      customTitle: '${_travelModel.destination}',
-                      customCallBack: _updateInformation,
-                    ),
-                  ),
-                );
-                break;
-              case BrowserSetting.external:
-                var url = 'https://www.torn.com/travelagency.php';
-                if (await canLaunch(url)) {
-                  await launch(url, forceSafariVC: false);
-                }
-                break;
+        onClosed: (ReturnFlagPressed returnFlag) async {
+          if (returnFlag.flagPressed) {
+            if (returnFlag.shortTap) {
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+                  : _openTornBrowser('https://www.torn.com/travelagency.php');
+            } else {
+              _openTornBrowser('https://www.torn.com/travelagency.php');
             }
           }
         },
@@ -540,26 +515,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           RaisedButton(
             child: Text("Go visit!"),
+            onLongPress: () {
+              _openTornBrowser('https://www.torn.com/');
+            },
             onPressed: () async {
-              var browserType = _settingsProvider.currentBrowser;
-              switch (browserType) {
-                case BrowserSetting.app:
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => WebViewFull(
-                        customTitle: '${_travelModel.destination}',
-                        customCallBack: _updateInformation,
-                      ),
-                    ),
-                  );
-                  break;
-                case BrowserSetting.external:
-                  var url = 'https://www.torn.com/';
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
-                  }
-                  break;
-              }
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/')
+                  : _openTornBrowser('https://www.torn.com/');
             },
           ),
         ];
@@ -586,26 +548,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           RaisedButton(
             child: Icon(Icons.local_airport),
+            onLongPress: () {
+              _openTornBrowser('https://www.torn.com/');
+            },
             onPressed: () async {
-              var browserType = _settingsProvider.currentBrowser;
-              switch (browserType) {
-                case BrowserSetting.app:
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => WebViewFull(
-                        customTitle: '${_travelModel.destination}',
-                        customCallBack: _updateInformation,
-                      ),
-                    ),
-                  );
-                  break;
-                case BrowserSetting.external:
-                  var url = 'https://www.torn.com/';
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
-                  }
-                  break;
-              }
+              _settingsProvider.useQuickBrowser
+                  ? _openBrowserDialog(context, 'https://www.torn.com/')
+                  : _openTornBrowser('https://www.torn.com/');
             },
           ),
         ];
@@ -659,41 +608,52 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              LinearPercentIndicator(
-                isRTL: _travelModel.destination == "Torn" ? true : false,
-                center: Text(
-                  diff,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+              GestureDetector(
+                onLongPress: () {
+                  _openTornBrowser('https://www.torn.com/');
+                },
+                onTap: () async {
+                  _settingsProvider.useQuickBrowser
+                      ? _openBrowserDialog(context, 'https://www.torn.com/')
+                      : _openTornBrowser('https://www.torn.com/');
+                },
+                child: LinearPercentIndicator(
+                  isRTL: _travelModel.destination == "Torn" ? true : false,
+                  center: Text(
+                    diff,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                widgetIndicator: Opacity(
-                  // Make icon transparent when about to pass over text
-                  opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                          _getTravelPercentage(totalSeconds) > 0.7
-                      ? 1
-                      : 0.3,
-                  child: Padding(
-                    padding: _travelModel.destination == "Torn"
-                        ? const EdgeInsets.only(top: 6, right: 6)
-                        : const EdgeInsets.only(top: 6, left: 10),
-                    child: RotatedBox(
-                      quarterTurns: _travelModel.destination == "Torn" ? 3 : 1,
-                      child: Icon(
-                        Icons.airplanemode_active,
-                        color: Colors.blue[900],
+                  widgetIndicator: Opacity(
+                    // Make icon transparent when about to pass over text
+                    opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
+                            _getTravelPercentage(totalSeconds) > 0.7
+                        ? 1
+                        : 0.3,
+                    child: Padding(
+                      padding: _travelModel.destination == "Torn"
+                          ? const EdgeInsets.only(top: 6, right: 6)
+                          : const EdgeInsets.only(top: 6, left: 10),
+                      child: RotatedBox(
+                        quarterTurns:
+                            _travelModel.destination == "Torn" ? 3 : 1,
+                        child: Icon(
+                          Icons.airplanemode_active,
+                          color: Colors.blue[900],
+                        ),
                       ),
                     ),
                   ),
+                  animateFromLastPercent: true,
+                  animation: true,
+                  width: 200,
+                  lineHeight: 18,
+                  progressColor: Colors.blue[200],
+                  backgroundColor: Colors.grey,
+                  percent: _getTravelPercentage(totalSeconds),
                 ),
-                animateFromLastPercent: true,
-                animation: true,
-                width: 200,
-                lineHeight: 18,
-                progressColor: Colors.blue[200],
-                backgroundColor: Colors.grey,
-                percent: _getTravelPercentage(totalSeconds),
               ),
             ],
           ),
@@ -749,27 +709,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   RaisedButton _travelAgencyButton() {
     return RaisedButton(
       child: Text("Travel Agency"),
+      onLongPress: () {
+        _openTornBrowser('https://www.torn.com/travelagency.php');
+      },
       onPressed: () async {
-        var browserType = _settingsProvider.currentBrowser;
-        switch (browserType) {
-          case BrowserSetting.app:
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewFull(
-                  customUrl: 'https://www.torn.com/travelagency.php',
-                  customTitle: '${_travelModel.destination}',
-                  customCallBack: _updateInformation,
-                ),
-              ),
-            );
-            break;
-          case BrowserSetting.external:
-            var url = 'https://www.torn.com/travelagency.php';
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
-            }
-            break;
-        }
+        _settingsProvider.useQuickBrowser
+            ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+            : _openTornBrowser('https://www.torn.com/travelagency.php');
       },
     );
   }
@@ -942,7 +888,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                                       duration: Duration(seconds: 3),
                                       contentPadding: EdgeInsets.all(10),
                                     );
-
                                   }
                                 },
                               ),
@@ -1075,8 +1020,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
+
+    // DEBUG
+    //print('Notification for travel @ '
+    //    '${tz.TZDateTime.from(scheduledNotificationDateTime, tz.local)}');
 
     _retrievePendingNotifications();
     return scheduledNotificationDateTime;
@@ -1219,6 +1169,53 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   _callBackFromTravelOptions() async {
     await _restorePreferences();
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(
+              customUrl: initUrl,
+              dialog: true,
+              customCallBack: _updateInformation,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+              customCallBack: _updateInformation,
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
   }
 }
 

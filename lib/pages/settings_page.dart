@@ -38,6 +38,8 @@ class _SettingsPageState extends State<SettingsPage> {
   String _openSectionValue;
   String _openBrowserValue;
   bool _loadBarBrowser;
+  bool _chatRemoveEnabled;
+  bool _useQuickBrowser;
   String _timeFormatValue;
   String _timeZoneValue;
 
@@ -149,6 +151,60 @@ class _SettingsPageState extends State<SettingsPage> {
                               activeColor: Colors.green,
                             ),
                           ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("Show chat remove icon"),
+                            Switch(
+                              value: _chatRemoveEnabled,
+                              onChanged: (value) {
+                                _settingsProvider.changeChatRemoveEnabled = value;
+                                setState(() {
+                                  _chatRemoveEnabled = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("Use quick browser"),
+                            Switch(
+                              value: _useQuickBrowser,
+                              onChanged: (value) {
+                                _settingsProvider.changeUseQuickBrowser = value;
+                                setState(() {
+                                  _useQuickBrowser = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Note: this will allow you to open the quick browser in most '
+                              'places by using a short tap (and long tap for full browser). '
+                              'This does not apply to the chaining browser and a few other '
+                              'specific links',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       SizedBox(height: 15),
@@ -283,6 +339,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       toolbarHeight: 50,
       title: Text('Settings'),
       leading: new IconButton(
@@ -803,7 +860,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "top",
           child: SizedBox(
-            width: 50,
+            width: 58,
             child: Text(
               "Top",
               textAlign: TextAlign.right,
@@ -816,7 +873,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "bottom",
           child: SizedBox(
-            width: 50,
+            width: 58,
             child: Text(
               "Bottom",
               textAlign: TextAlign.right,
@@ -949,6 +1006,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
     setState(() {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
+      _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
+      _useQuickBrowser = _settingsProvider.useQuickBrowser;
     });
   }
 

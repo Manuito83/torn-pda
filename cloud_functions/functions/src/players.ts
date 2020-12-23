@@ -53,6 +53,18 @@ export const playersGroup = {
         promises.push(manageStats("hospitalNotification", -1));
       }
 
+      if (beforeStat.drugsNotification) {
+        promises.push(manageStats("drugsNotification", -1));
+      }
+
+      if (beforeStat.racingNotification) {
+        promises.push(manageStats("racingNotification", -1));
+      }
+
+      if (beforeStat.messagesNotification) {
+        promises.push(manageStats("messagesNotification", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -104,11 +116,32 @@ export const playersGroup = {
         )
       );
 
+      if (beforeStat.drugsNotification !== afterStat.drugsNotification)
+        promises.push(
+          manageStats("drugsNotification", afterStat.drugsNotification ? 1 : -1
+        )
+      );
+
+      if (beforeStat.racingNotification !== afterStat.racingNotification)
+        promises.push(
+          manageStats("racingNotification", afterStat.racingNotification ? 1 : -1
+        )
+      );
+
+      if (beforeStat.messagesNotification !== afterStat.messagesNotification)
+        promises.push(
+          manageStats("messagesNotification", afterStat.messagesNotification ? 1 : -1
+        )
+      );
+
       if (
         !afterStat.energyNotification &&
         !afterStat.nerveNotification &&
         !afterStat.travelNotification &&
         !afterStat.hospitalNotification &&
+        !afterStat.drugsNotification &&
+        !afterStat.racingNotification &&
+        !afterStat.messagesNotification &&
         afterStat.alertsEnabled
       )
         promises.push(
@@ -125,7 +158,10 @@ export const playersGroup = {
         (afterStat.energyNotification
          || afterStat.nerveNotification 
          || afterStat.travelNotification
-         || afterStat.hospitalNotification) 
+         || afterStat.hospitalNotification
+         || afterStat.drugsNotification
+         || afterStat.racingNotification
+         || afterStat.messagesNotification) 
          && !afterStat.alertsEnabled
       )
         promises.push(

@@ -30,6 +30,7 @@ import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'main.dart';
+import 'package:flutter/services.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -128,6 +129,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       alert: true,
       provisional: false,
     ));
+
     _messaging.configure(
       onResume: (message) {
         return _fireLaunchResumeNotifications(message);
@@ -159,24 +161,49 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   // TODO Missing bits:
+  // IMPORTANT: onResume/Launch only trigger with "FLUTTER_NOTIFICATION_CLICK"
+  // from Functions, but not directly from Firebase's Messaging console.
   //  - Join all notifications in one file
-  //  - Firebase onResume/Launch notification for energy is not configured,
-  //    so nothing happens (the APP just opens). This behaviour is different
-  //    to what happens now with standard scheduled notifications
+  //  - Firebase onResume/Launch notification for energy and other is not
+  //    configured. Give the option to choose different places? Like in nerve,
+  //    crimes vs jail. Energy: gym vs dump vs do not open.
   //  - Firebase with 'showNotification' does not have a payload in show(),
   //    so we don't do anything if triggered while app is open
 
   Future<void> _fireLaunchResumeNotifications(Map message) async {
     bool travel = false;
+    bool racing = false;
+    bool messages = false;
+    //bool nerve = false;
 
     if (Platform.isIOS) {
       if (message["message"].contains("about to land")) {
         travel = true;
       }
+      if (message["message"].contains("Get in there")) {
+        racing = true;
+      }
+      /*
+      if (message["message"].contains("Your nerve is full")) {
+        nerve = true;
+      }
+      */
     } else if (Platform.isAndroid) {
       if (message["data"]["message"].contains("about to land")) {
         travel = true;
       }
+      if (message["data"]["message"].contains("Get in there")) {
+        racing = true;
+      }
+      if (message["data"]["message"].contains("Subject:") ||
+          message["data"]["message"].contains("Subjects:")) {
+        messages = true;
+      }
+      /*
+      if (message["data"]["message"].contains("Your nerve is full")) {
+        nerve = true;
+      }
+      */
     }
 
     if (travel) {
@@ -186,13 +213,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       var browserType = await SharedPreferencesModel().getDefaultBrowser();
       switch (browserType) {
         case 'app':
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => WebViewFull(
-                customTitle: 'Travel',
-              ),
-            ),
-          );
+          if (_settingsProvider.useQuickBrowser) {
+            _openBrowserDialog(
+              context,
+              "https://www.torn.com",
+            );
+          } else {
+            _openTornBrowser("https://www.torn.com");
+          }
           break;
         case 'external':
           var url = 'https://www.torn.com';
@@ -202,6 +230,80 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           break;
       }
     }
+
+    if (racing) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          if (_settingsProvider.useQuickBrowser) {
+            _openBrowserDialog(
+              context,
+              "https://www.torn.com/loader.php?sid=racing",
+            );
+          } else {
+            _openTornBrowser("https://www.torn.com/loader.php?sid=racing");
+          }
+          break;
+        case 'external':
+          var url = 'https://www.torn.com/loader.php?sid=racing';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+
+    if (messages) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          if (_settingsProvider.useQuickBrowser) {
+            _openBrowserDialog(
+              context,
+              "https://www.torn.com/messages.php",
+            );
+          } else {
+            _openTornBrowser("https://www.torn.com/messages.php");
+          }
+          break;
+        case 'external':
+          var url = 'https://www.torn.com/messages.php';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+
+    /*
+    if (nerve) {
+      // iOS seems to open a blank WebView unless we allow some time onResume
+      await Future.delayed(Duration(milliseconds: 500));
+      // Works best if we get SharedPrefs directly instead of SettingsProvider
+      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      switch (browserType) {
+        case 'app':
+          _openBrowserDialog(
+            context,
+            "https://www.torn.com/crimes.php",
+          );
+          break;
+        case 'external':
+          var url = 'https://www.torn.com/crimes.php';
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+          break;
+      }
+    }
+    */
+
   }
 
   Future<void> _configureSelectNotificationSubject() async {
@@ -371,6 +473,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                             } else {
                               _themeProvider.changeTheme = AppTheme.light;
                             }
+                            setState(() {
+                              SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+                                statusBarColor: _themeProvider.currentTheme == AppTheme.light
+                                    ? Colors.blueGrey
+                                    : Colors.grey[900],
+                              ));
+                            });
                           },
                         ),
                       ],
@@ -648,5 +757,50 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _activeDrawerIndex = section;
     });
     _getPages();
+  }
+
+  Future _openTornBrowser(String page) async {
+    var browserType = _settingsProvider.currentBrowser;
+
+    switch (browserType) {
+      case BrowserSetting.app:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => WebViewFull(
+              customUrl: page,
+              customTitle: 'Torn',
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = page;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
+    return showDialog(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: WebViewFull(
+                customUrl: initUrl,
+                dialog: true
+            ),
+          ),
+        );
+      },
+    );
   }
 }

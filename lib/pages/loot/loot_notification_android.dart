@@ -160,6 +160,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       title: Text("Loot options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

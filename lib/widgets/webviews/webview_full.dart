@@ -18,6 +18,7 @@ import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -25,10 +26,13 @@ import 'package:torn_pda/widgets/city/city_options.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
+import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
+import 'package:torn_pda/widgets/quick_items/quick_items_options.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/widgets/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 
 class VaultsOptions {
   String description;
@@ -91,11 +95,23 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityIconActive = false;
   bool _cityPreferencesLoaded = false;
   var _errorCityApi = false;
-  var _cityItemsFound = List<Item>();
+  var _cityItemsFound = <Item>[];
   var _cityController = ExpandableController();
 
   var _bazaarActive = false;
   var _bazaarFillActive = false;
+
+  var _chatRemovalEnabled = false;
+  var _chatRemovalActive = false;
+
+  var _quickItemsActive = false;
+  var _quickItemsController = ExpandableController();
+
+  // Allow onProgressChanged to call several sections, for better responsiveness,
+  // while making sure that we don't call the API each time
+  bool _crimesTriggered = false;
+  bool _quickItemsTriggered = false;
+  bool _cityTriggered = false;
 
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
@@ -113,10 +129,12 @@ class _WebViewFullState extends State<WebViewFull> {
   double progress = 0;
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
     super.initState();
+    _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
@@ -125,6 +143,7 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   Widget build(BuildContext context) {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
       // If we are launching from a dialog, it's important not to add the show case, in
@@ -201,173 +220,323 @@ class _WebViewFullState extends State<WebViewFull> {
             left: false,
             right: false,
             bottom: true,
-            child: Column(
-              children: [
-                _settingsProvider.loadBarBrowser
-                    ? Container(
-                        height: 2,
-                        child: progress < 1.0
-                            ? LinearProgressIndicator(
-                                value: progress,
-                                backgroundColor: Colors.blueGrey[100],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.deepOrange[300]),
-                              )
-                            : Container(height: 2),
-                      )
-                    : SizedBox.shrink(),
-                // Crimes widget. NOTE: this one will open at the bottom if
-                // appBar is at the bottom, so it's duplicated below the actual
-                // webView widget
-                _settingsProvider.appBarTop
-                    ? ExpandablePanel(
-                        theme: ExpandableThemeData(
-                          hasIcon: false,
-                          tapBodyToCollapse: false,
-                          tapHeaderToExpand: false,
+            child: widget.dialog
+                ? Column(
+                    children: [
+                      Expanded(child: mainWebViewColumn()),
+                      Container(
+                        color: _themeProvider.currentTheme == AppTheme.light
+                            ? Colors.white
+                            : _themeProvider.background,
+                        height: 38,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 100,
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_back_ios_outlined,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        _tryGoBack();
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_forward_ios_outlined,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        tryGoForward();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: FlatButton(
+                                  child: Text("Close"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 100,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  _chatRemovalEnabled
+                                      ? _hideChatIcon()
+                                      : SizedBox.shrink(),
+                                  IconButton(
+                                    icon: Icon(Icons.refresh),
+                                    onPressed: () async {
+                                      _scrollX = await webView.getScrollX();
+                                      _scrollY = await webView.getScrollY();
+                                      await webView.reload();
+                                      _scrollAfterLoad = true;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        collapsed: SizedBox.shrink(),
-                        controller: _crimesController,
-                        header: SizedBox.shrink(),
-                        expanded: CrimesWidget(controller: webView),
-                      )
-                    : SizedBox.shrink(),
-                // Trades widget
-                _tradesExpandable,
-                // City widget
-                ExpandablePanel(
-                  theme: ExpandableThemeData(
-                    hasIcon: false,
-                    tapBodyToCollapse: false,
-                    tapHeaderToExpand: false,
-                  ),
-                  collapsed: SizedBox.shrink(),
-                  controller: _cityController,
-                  header: SizedBox.shrink(),
-                  expanded: CityWidget(
-                    controller: webView,
-                    cityItems: _cityItemsFound,
-                    error: _errorCityApi,
-                  ),
-                ),
-                // Actual WebView
-                Expanded(
-                  child: InAppWebView(
-                    initialUrl: _initialUrl,
-                    initialHeaders: {},
-                    initialOptions: InAppWebViewGroupOptions(
-                      crossPlatform: InAppWebViewOptions(
-                        // This is deactivated as it interferes with hospital timer,
-                        // company applications, etc.
-                        //useShouldInterceptAjaxRequest: true,
-                        debuggingEnabled: true,
-                        preferredContentMode: UserPreferredContentMode.DESKTOP,
                       ),
-                      android: AndroidInAppWebViewOptions(
-                        //builtInZoomControls: false,
-                        useHybridComposition: true,
-                        //useWideViewPort: false,
-                        //loadWithOverviewMode: true,
-                        //displayZoomControls: true,
-                      ),
-                    ),
-                    /*
-                    shouldInterceptAjaxRequest:
-                        (InAppWebViewController c, AjaxRequest x) async {
-                      // This will intercept ajax calls performed when the bazaar reached 100 items
-                      // and needs to be reloaded, so that we can remove and add again the fill buttons
-                      if (x == null) return x;
-                      if (x.data == null) return x;
-                      if (x.url == null) return x;
-
-                      if (x.data.contains("step=getList&type=All&start=") &&
-                          x.url.contains('inventory.php') &&
-                          _bazaarActive &&
-                          _bazaarFillActive) {
-                        webView.evaluateJavascript(
-                            source: removeBazaarFillButtonsJS());
-                        Future.delayed(const Duration(seconds: 2))
-                            .then((value) {
-                          webView.evaluateJavascript(
-                              source: addBazaarFillButtonsJS());
-                        });
-                      }
-                      return x;
-                    },
-                    */
-                    onProgressChanged:
-                        (InAppWebViewController c, int progress) {
-                      setState(() {
-                        this.progress = progress / 100;
-                      });
-                    },
-                    onWebViewCreated: (InAppWebViewController c) {
-                      webView = c;
-                    },
-                    onLoadStart: (InAppWebViewController c, String url) {
-                      _currentUrl = url;
-                      _assessGeneral();
-                    },
-                    onLoadStop: (InAppWebViewController c, String url) {
-                      _currentUrl = url;
-                      _assessGeneral();
-
-                      // This is used in case the user presses reload. We need to wait for the page
-                      // load to be finished in order to scroll
-                      if (_scrollAfterLoad) {
-                        webView.scrollTo(
-                            x: _scrollX, y: _scrollY, animated: false);
-                        _scrollAfterLoad = false;
-                      }
-                    },
-                    // Allows IOS to open links with target=_blank
-                    onCreateWindow:
-                        (InAppWebViewController c, CreateWindowRequest req) {
-                      webView.loadUrl(url: req.url);
-                      return;
-                    },
-                    onConsoleMessage:
-                        (InAppWebViewController c, consoleMessage) async {
-                      print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
-                      /// TRADES
-                      ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-                      ///     redirect both with console messages (all 'hash.step') for trades
-                      ///     identification, but also with _assessGeneral() so that we can remove
-                      ///     the widget when an unrelated page is visited. Console messages also
-                      ///     help with deletions updates when 'hash.step view' is shown.
-                      ///   - Android: onLoadStop works, but we still need to catch deletions,
-                      ///     so we only listen for 'hash.step view'.
-                      if (Platform.isIOS) {
-                        if (consoleMessage.message.contains('hash.step')) {
-                          _decideIfCallTrades();
-                        }
-                      } else if (Platform.isAndroid) {
-                        if (consoleMessage.message.contains('hash.step view')) {
-                          _decideIfCallTrades();
-                        }
-                      }
-                    },
-                  ),
-                ),
-                !_settingsProvider.appBarTop
-                    ? ExpandablePanel(
-                        theme: ExpandableThemeData(
-                          hasIcon: false,
-                          tapBodyToCollapse: false,
-                          tapHeaderToExpand: false,
-                        ),
-                        collapsed: SizedBox.shrink(),
-                        controller: _crimesController,
-                        header: SizedBox.shrink(),
-                        expanded: CrimesWidget(controller: webView),
-                      )
-                    : SizedBox.shrink(),
-              ],
-            ),
+                    ],
+                  )
+                : mainWebViewColumn(),
           ),
         ),
       ),
+    );
+  }
+
+  Column mainWebViewColumn() {
+    return Column(
+      children: [
+        _settingsProvider.loadBarBrowser
+            ? Container(
+                height: 2,
+                child: progress < 1.0
+                    ? LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.blueGrey[100],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.deepOrange[300]),
+                      )
+                    : Container(height: 2),
+              )
+            : SizedBox.shrink(),
+        // Crimes widget. NOTE: this one will open at the bottom if
+        // appBar is at the bottom, so it's duplicated below the actual
+        // webView widget
+        _settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _crimesController,
+                header: SizedBox.shrink(),
+                expanded: _crimesActive
+                    ? CrimesWidget(controller: webView)
+                    : SizedBox.shrink(),
+              )
+            : SizedBox.shrink(),
+        // Quick items widget. NOTE: this one will open at the bottom if
+        // appBar is at the bottom, so it's duplicated below the actual
+        // webView widget
+        _settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _quickItemsController,
+                header: SizedBox.shrink(),
+                expanded: _quickItemsActive
+                    ? QuickItemsWidget(controller: webView)
+                    : SizedBox.shrink(),
+              )
+            : SizedBox.shrink(),
+        // Trades widget
+        _tradesExpandable,
+        // City widget
+        ExpandablePanel(
+          theme: ExpandableThemeData(
+            hasIcon: false,
+            tapBodyToCollapse: false,
+            tapHeaderToExpand: false,
+          ),
+          collapsed: SizedBox.shrink(),
+          controller: _cityController,
+          header: SizedBox.shrink(),
+          expanded: _cityIconActive
+              ? CityWidget(
+                  controller: webView,
+                  cityItems: _cityItemsFound,
+                  error: _errorCityApi)
+              : SizedBox.shrink(),
+        ),
+        // Actual WebView
+        Expanded(
+          child: InAppWebView(
+            initialUrl: _initialUrl,
+            initialHeaders: {},
+            initialOptions: InAppWebViewGroupOptions(
+              crossPlatform: InAppWebViewOptions(
+                // This is deactivated as it interferes with hospital timer,
+                // company applications, etc.
+                //useShouldInterceptAjaxRequest: true,
+                debuggingEnabled: true,
+                preferredContentMode: UserPreferredContentMode.DESKTOP,
+              ),
+              android: AndroidInAppWebViewOptions(
+                //builtInZoomControls: false,
+                useHybridComposition: true,
+                //useWideViewPort: false,
+                //loadWithOverviewMode: true,
+                //displayZoomControls: true,
+              ),
+            ),
+            /*
+                  shouldInterceptAjaxRequest:
+                      (InAppWebViewController c, AjaxRequest x) async {
+                    // This will intercept ajax calls performed when the bazaar reached 100 items
+                    // and needs to be reloaded, so that we can remove and add again the fill buttons
+                    if (x == null) return x;
+                    if (x.data == null) return x;
+                    if (x.url == null) return x;
+
+                    if (x.data.contains("step=getList&type=All&start=") &&
+                        x.url.contains('inventory.php') &&
+                        _bazaarActive &&
+                        _bazaarFillActive) {
+                      webView.evaluateJavascript(
+                          source: removeBazaarFillButtonsJS());
+                      Future.delayed(const Duration(seconds: 2))
+                          .then((value) {
+                        webView.evaluateJavascript(
+                            source: addBazaarFillButtonsJS());
+                      });
+                    }
+                    return x;
+                  },
+                  */
+            onWebViewCreated: (InAppWebViewController c) {
+              webView = c;
+            },
+            onProgressChanged: (InAppWebViewController c, int progress) async {
+              setState(() {
+                this.progress = progress / 100;
+              });
+
+              // onProgressChanged gets called before onLoadStart, so it works
+              // both to add or remove widgets. It is much faster.
+              if (_currentUrl.contains('item.php')) {
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _assessQuickItems(document);
+              }
+
+              if (_currentUrl.contains('crimes.php')) {
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _assessCrimes(document);
+              }
+
+              if (_currentUrl.contains('city.php')) {
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _assessCity(document);
+              }
+            },
+            onLoadStart: (InAppWebViewController c, String url) {
+              if (_chatRemovalEnabled && _chatRemovalActive) {
+                webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+              }
+
+              _currentUrl = url;
+              _assessGeneral();
+            },
+            onLoadStop: (InAppWebViewController c, String url) {
+              _currentUrl = url;
+              _assessGeneral();
+
+              // This is used in case the user presses reload. We need to wait for the page
+              // load to be finished in order to scroll
+              if (_scrollAfterLoad) {
+                webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                _scrollAfterLoad = false;
+              }
+
+              // We reset here the triggers for the sections that are called every
+              // time onProgressChanged ticks, so that they can be called again
+              // in the future
+              _crimesTriggered = false;
+              _quickItemsTriggered = false;
+              _cityTriggered = false;
+            },
+            // Allows IOS to open links with target=_blank
+            onCreateWindow:
+                (InAppWebViewController c, CreateWindowRequest req) {
+              webView.loadUrl(url: req.url);
+              return;
+            },
+            onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+              print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+
+              /// TRADES
+              ///   - IOS: onLoadStop does not work inside of Trades, that is why we
+              ///     redirect both with console messages (all 'hash.step') for trades
+              ///     identification, but also with _assessGeneral() so that we can remove
+              ///     the widget when an unrelated page is visited. Console messages also
+              ///     help with deletions updates when 'hash.step view' is shown.
+              ///   - Android: onLoadStop works, but we still need to catch deletions,
+              ///     so we only listen for 'hash.step view'.
+              if (Platform.isIOS) {
+                if (consoleMessage.message.contains('hash.step')) {
+                  _decideIfCallTrades();
+                }
+              } else if (Platform.isAndroid) {
+                if (consoleMessage.message.contains('hash.step view')) {
+                  _decideIfCallTrades();
+                }
+              }
+            },
+          ),
+        ),
+        // Widgets that go at the bottom if we have changes appbar to bottom
+        !_settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _crimesController,
+                header: SizedBox.shrink(),
+                expanded: _crimesActive
+                    ? CrimesWidget(controller: webView)
+                    : SizedBox.shrink(),
+              )
+            : SizedBox.shrink(),
+        !_settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _quickItemsController,
+                header: SizedBox.shrink(),
+                expanded: _quickItemsActive
+                    ? QuickItemsWidget(controller: webView)
+                    : SizedBox.shrink(),
+              )
+            : SizedBox.shrink(),
+      ],
     );
   }
 
@@ -425,19 +594,36 @@ class _WebViewFullState extends State<WebViewFull> {
           _travelHomeIcon(),
           _crimesInfoIcon(),
           _crimesMenuIcon(),
+          _quickItemsInfoIcon(),
+          _quickItemsMenuIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () async {
-              _scrollX = await webView.getScrollX();
-              _scrollY = await webView.getScrollY();
-              await webView.reload();
-              _scrollAfterLoad = true;
-            },
-          ),
+          _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: GestureDetector(
+              child: Icon(Icons.refresh),
+              onTap: () async {
+                _scrollX = await webView.getScrollX();
+                _scrollY = await webView.getScrollY();
+                await webView.reload();
+                _scrollAfterLoad = true;
+
+                BotToast.showText(
+                  text: "Reloading...",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.grey[600],
+                  duration: Duration(seconds: 1),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+            ),
+          )
         ],
       ),
     );
@@ -445,71 +631,77 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _goBackOrForward(DragEndDetails details) async {
     if (details.primaryVelocity < 0) {
-      var canForward = await webView.canGoForward();
-      if (canForward) {
-        await webView.goForward();
-        BotToast.showText(
-          text: "Forward",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go forward!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await tryGoForward();
     } else if (details.primaryVelocity > 0) {
-      var canBack = await webView.canGoBack();
-      if (canBack) {
-        await webView.goBack();
-        BotToast.showText(
-          text: "Back",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        BotToast.showText(
-          text: "Can\'t go back!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.grey[600],
-          duration: Duration(seconds: 1),
-          contentPadding: EdgeInsets.all(10),
-        );
-      }
+      await _tryGoBack();
     }
   }
 
+  Future _tryGoBack() async {
+    var canBack = await webView.canGoBack();
+    if (canBack) {
+      await webView.goBack();
+      BotToast.showText(
+        text: "Back",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go back!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Future tryGoForward() async {
+    var canForward = await webView.canGoForward();
+    if (canForward) {
+      await webView.goForward();
+      BotToast.showText(
+        text: "Forward",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: "Can\'t go forward!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[600],
+        duration: Duration(seconds: 1),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
+  }
+
+  /// Note: several other modules are called in onProgressChanged, since it's
+  /// faster. The ones here probably would not benefit from it.
   Future _assessGeneral() async {
     var html = await webView.getHtml();
     var document = parse(html);
 
-    // Assign page title
-    String pageTitle = _getPageTitle(document);
     _assessBackButtonBehaviour();
     _assessTravel(document);
-    _assessCrimes(document, pageTitle);
     _decideIfCallTrades();
-    _assessCity(document, pageTitle);
     _assessBazaar(document);
   }
 
@@ -622,7 +814,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
         // Send to server
         await http.post(
-          'https://yata.alwaysdata.net/api/v1/travel/import/',
+          'https://yata.yt/api/v1/travel/import/',
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -648,20 +840,28 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CRIMES
-  Future _assessCrimes(dom.Document document, String pageTitle) async {
-    pageTitle = pageTitle.toLowerCase();
+  Future _assessCrimes(dom.Document document) async {
     if (mounted) {
-      setState(() {
-        if (_currentUrl.contains('https://www.torn.com/crimes.php') &&
-            !pageTitle.contains('please validate') &&
-            !pageTitle.contains('error') &&
-            pageTitle.contains('crimes')) {
-          _crimesController.expanded = true;
-          _crimesActive = true;
-        } else {
+      var pageTitle = _getPageTitle(document).toLowerCase();
+      if (!pageTitle.contains('crimes')) {
+        setState(() {
           _crimesController.expanded = false;
           _crimesActive = false;
-        }
+        });
+        return;
+      }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      //
+      if (_crimesTriggered) {
+        return;
+      }
+      _crimesTriggered = true;
+
+      setState(() {
+        _crimesController.expanded = true;
+        _crimesActive = true;
       });
     }
   }
@@ -711,7 +911,7 @@ class _WebViewFullState extends State<WebViewFull> {
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.fingerprint),
+              child: Icon(MdiIcons.fingerprint, color: Colors.white),
             ),
           );
         },
@@ -985,23 +1185,24 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CITY
-  Future _assessCity(dom.Document document, String pageTitle) async {
-    if (pageTitle != '') {
-      pageTitle = pageTitle.toLowerCase();
-    }
+  Future _assessCity(dom.Document document) async {
 
-    if (!_currentUrl.contains('https://www.torn.com/city.php') ||
-        !pageTitle.contains('city') ||
-        pageTitle.contains('please validate') ||
-        pageTitle.contains('error')) {
-      if (mounted) {
-        setState(() {
-          _cityIconActive = false;
-          _cityController.expanded = false;
-        });
-      }
+    var pageTitle = _getPageTitle(document).toLowerCase();
+    if (!pageTitle.contains('city')) {
+      setState(() {
+        _cityIconActive = false;
+        _cityController.expanded = false;
+      });
       return;
     }
+
+    // Stops any successive calls once we are sure that the section is the
+    // correct one. onLoadStop will reset this for the future.
+    // Otherwise we would call the API every time onProgressChanged ticks
+    if (_cityTriggered) {
+      return;
+    }
+    _cityTriggered = true;
 
     if (mounted) {
       setState(() {
@@ -1018,12 +1219,12 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Retry several times and allow the map to load
     List<dom.Element> query;
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 40; i++) {
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
         break;
       } else {
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(milliseconds: 250));
         var updatedHtml = await webView.getHtml();
         document = parse(updatedHtml);
       }
@@ -1045,7 +1246,7 @@ class _WebViewFullState extends State<WebViewFull> {
       });
     }
 
-    var mapItemsList = List<String>();
+    var mapItemsList = <String>[];
     for (var mapFind in query) {
       mapFind.attributes.forEach((key, value) {
         if (key == "src" &&
@@ -1061,7 +1262,7 @@ class _WebViewFullState extends State<WebViewFull> {
           await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
-        var itemsFound = List<Item>();
+        var itemsFound = <Item>[];
         for (var mapItem in mapItemsList) {
           Item itemMatch = tornItems[int.parse(mapItem) - 1];
           itemsFound.add(itemMatch);
@@ -1163,11 +1364,142 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  // QUICK ITEMS
+  Future _assessQuickItems(dom.Document document) async {
+    if (mounted) {
+      var pageTitle = _getPageTitle(document).toLowerCase();
+      if (!pageTitle.contains('items')) {
+        setState(() {
+          _quickItemsController.expanded = false;
+          _quickItemsActive = false;
+        });
+        return;
+      }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      // Otherwise we would call the API every time onProgressChanged ticks
+      if (_quickItemsTriggered) {
+        return;
+      }
+      _quickItemsTriggered = true;
+
+      var quickItemsProvider = context.read<QuickItemsProvider>();
+      quickItemsProvider.initLoad(apiKey: _userProvider.myUser.userApiKey);
+
+      setState(() {
+        _quickItemsController.expanded = true;
+        _quickItemsActive = true;
+      });
+    }
+  }
+
+  Widget _quickItemsInfoIcon() {
+    if (_quickItemsActive) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: IconButton(
+          icon: Icon(Icons.info_outline),
+          onPressed: () {
+            BotToast.showText(
+              text:
+                  'If you need more information about a quick item, maintain the '
+                  'quick item button pressed for a few seconds and a tooltip '
+                  'will be shown!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[700],
+              duration: Duration(seconds: 8),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _quickItemsMenuIcon() {
+    if (_quickItemsActive) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: OpenContainer(
+          transitionDuration: Duration(milliseconds: 500),
+          transitionType: ContainerTransitionType.fadeThrough,
+          openBuilder: (BuildContext context, VoidCallback _) {
+            return QuickItemsOptions();
+          },
+          closedElevation: 0,
+          closedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(56 / 2),
+            ),
+          ),
+          closedColor: Colors.transparent,
+          closedBuilder: (BuildContext context, VoidCallback openContainer) {
+            return SizedBox(
+              height: 20,
+              width: 20,
+              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
+            );
+          },
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _hideChatIcon() {
+    if (!_chatRemovalActive) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(MdiIcons.chatOutline),
+          onTap: () async {
+            webView.evaluateJavascript(source: removeChatJS());
+            SharedPreferencesModel().setChatRemovalActive(true);
+            setState(() {
+              _chatRemovalActive = true;
+            });
+          },
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.only(left: 15),
+        child: GestureDetector(
+          child: Icon(
+            MdiIcons.chatRemoveOutline,
+            color: Colors.orange[500],
+          ),
+          onTap: () async {
+            webView.evaluateJavascript(source: restoreChatJS());
+            SharedPreferencesModel().setChatRemovalActive(false);
+            setState(() {
+              _chatRemovalActive = false;
+            });
+          },
+        ),
+      );
+    }
+  }
+
+  Future _loadChatPreferences() async {
+    var removalEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
+    var removalActive = await SharedPreferencesModel().getChatRemovalActive();
+    setState(() {
+      _chatRemovalEnabled = removalEnabled;
+      _chatRemovalActive = removalActive;
+    });
+  }
+
   // UTILS
   Future<bool> _willPopCallback() async {
-    if (widget.customCallBack != null) {
-      widget.customCallBack();
-    }
-    return true;
+    await _tryGoBack();
+    return false;
   }
 }
