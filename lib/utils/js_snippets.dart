@@ -294,3 +294,74 @@ String restoreChatJS() {
     chatBox[0].style.display = 'block';
   ''';
 }
+
+String quickItemsJS({
+  @required String item,
+}) {
+  return '''
+    // Add style for result box
+    function addStyle(styleString) {
+      const style = document.createElement('style');
+      style.textContent = styleString;
+      document.head.append(style);
+    } 
+        
+    addStyle(`
+      .resultBox {
+        border: 2px dotted black;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding:5px;
+        background-color: #fff;
+      }
+    `);
+    
+    // If there any boxes remaining (from previous calls, remove them)
+    var remainingBox = document.querySelector('.resultBox');
+    if (remainingBox != null) {
+      remainingBox.remove();
+    }
+        
+    // From TornTools by Mephiles
+    function getRFC() {
+      const rfc = getCookie("rfc_v");
+      if (!rfc) {
+        const cookies = document.cookie.split("; ");
+        for (let i in cookies) {
+          let cookie = cookies[i].split("=");
+          if (cookie[0] === "rfc_v") {
+            return cookie[1];
+          }
+        }
+      }
+      return rfc;
+    }
+    
+    // From TornTools by Mephiles
+    function addRFC(url) {
+      url = url || "";
+      url += (url.split("?").length > 1 ? "&" : "?") + "rfcv=" + getRFC();
+      return url;
+    }
+    
+    var url = "https://www.torn.com/" + addRFC("item.php");
+      
+    ajaxWrapper({
+      url: url,
+      type: 'POST',
+      data: 'step=actionForm&id=${item}&action=use',
+      oncomplete: function(resp) {
+      var response = resp.responseText;
+      var topBox = document.querySelector('.content-title');
+      topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+      resultBox = document.querySelector('.resultBox');
+      resultBox.style.display = "block";
+      resultBox.innerHTML = response;
+      resultBox.querySelector(`a[data-item='${item}`).click();
+      },
+      onerror: function(e) {
+      console.error(e)
+      }
+    });
+  ''';
+}

@@ -65,6 +65,7 @@ class SharedPreferencesModel {
   final String _kExpandBasicInfo = "pda_ExpandBasicInfo";
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
+  final String _kQuickItemsList = "pda_quickItemsList";
   final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
@@ -145,7 +146,7 @@ class SharedPreferencesModel {
   /// ----------------------------
   Future<List<String>> getTargetsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kTargetsList) ?? List<String>();
+    return prefs.getStringList(_kTargetsList) ?? <String>[];
   }
 
   Future<bool> setTargetsList(List<String> value) async {
@@ -232,7 +233,7 @@ class SharedPreferencesModel {
   /// ----------------------------
   Future<List<String>> getFriendsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kFriendsList) ?? List<String>();
+    return prefs.getStringList(_kFriendsList) ?? <String>[];
   }
 
   Future<bool> setFriendsList(List<String> value) async {
@@ -739,7 +740,7 @@ class SharedPreferencesModel {
 
   Future<List<String>> getActiveShortcutsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kActiveShortcutsList) ?? List<String>();
+    return prefs.getStringList(_kActiveShortcutsList) ?? <String>[];
   }
 
   Future<bool> setActiveShortcutsList(List<String> value) async {
@@ -752,12 +753,25 @@ class SharedPreferencesModel {
   /// ----------------------------
   Future<List<String>> getActiveCrimesList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kActiveCrimesList) ?? List<String>();
+    return prefs.getStringList(_kActiveCrimesList) ?? <String>[];
   }
 
   Future<bool> setActiveCrimesList(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kActiveCrimesList, value);
+  }
+
+  /// ----------------------------
+  /// Methods for quick items
+  /// ----------------------------
+  Future<List<String>> getQuickItemsList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kQuickItemsList) ?? <String>[];
+  }
+
+  Future<bool> setQuickItemsList(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kQuickItemsList, value);
   }
 
   /// ----------------------------

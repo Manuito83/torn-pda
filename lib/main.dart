@@ -13,6 +13,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -100,6 +101,8 @@ Future<void> main() async {
             create: (context) => ChainStatusProvider()),
         ChangeNotifierProvider<CrimesProvider>(
             create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<QuickItemsProvider>(
+            create: (context) => QuickItemsProvider()),
         ChangeNotifierProvider<TradesProvider>(
             create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(
