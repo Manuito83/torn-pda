@@ -9,7 +9,7 @@ import 'package:torn_pda/utils/emoji_parser.dart';
 
 class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;
-  bool goodFetch = false;
+  bool _itemSuccess = false;
 
   var _activeQuickItemsList = <QuickItem>[];
   UnmodifiableListView<QuickItem> get activeQuickItems =>
@@ -38,20 +38,23 @@ class QuickItemsProvider extends ChangeNotifier {
 
     // If loading for the first time or if any never loaded correctly
     // for items or inventory
-    if (_firstLoad || !goodFetch) {
+    if (_firstLoad) {
       _firstLoad = false;
       _apiKey = apiKey;
-      _fullQuickItemsList = <QuickItem>[];
-      var itemsSuccess = goodFetch = await _getAllTornItems();
-      var inventorySuccess = await _updateInventoryQuantities();
-      if (itemsSuccess && inventorySuccess) {
-        goodFetch = true;
-      }
-    } else {
-      // This will only trigger with successive calls after the first
-      // fully successful load
-      goodFetch = await _updateInventoryQuantities();
+      _itemSuccess = await _getAllTornItems();
+      _updateInventoryQuantities();
     }
+    // This will only trigger with successive calls if the first
+    // load was not successful for items
+    else {
+      if (!_itemSuccess) {
+        _itemSuccess = await _getAllTornItems();
+      }
+
+    }
+
+    // We always update inventory quantities
+    _updateInventoryQuantities();
 
     notifyListeners();
   }
@@ -120,6 +123,8 @@ class QuickItemsProvider extends ChangeNotifier {
   Future _getAllTornItems() async {
     var allTornItems = await TornApiCaller.items(_apiKey).getItems;
     if (allTornItems is ItemsModel) {
+      // Clears lists in case there are successive calls from the webview
+      _fullQuickItemsList.clear();
       allTornItems.items.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type)) {
           _fullQuickItemsList.add(QuickItem()

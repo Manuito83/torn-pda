@@ -88,14 +88,30 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Text("ALL QUICK ITEMS"),
+                    child: Text("ALL AVAILABLE ITEMS"),
                   ),
                   SizedBox(height: 10),
                   _itemsProvider.fullQuickItems.isEmpty
                       ? Center(
                           child: Padding(
-                            padding: const EdgeInsets.only(top: 50),
-                            child: CircularProgressIndicator(),
+                            padding: const EdgeInsets.all(50),
+                            child: Column(
+                              children: [
+                                Text('Loading available items...'),
+                                SizedBox(height: 40),
+                                CircularProgressIndicator(),
+                                SizedBox(height: 40),
+                                Text(
+                                  'If this takes too long, there might be a connection '
+                                  'problem or Torn API might be down. Close the browser '
+                                  'completely and try again in a while!',
+                                  style: TextStyle(
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         )
                       : _allCardsList(),
@@ -330,7 +346,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                 GestureDetector(
                                   onTap: () {
                                     BotToast.showText(
-                                      text: '${item.name}\n\n${item.description}\n\n'
+                                      text:
+                                          '${item.name}\n\n${item.description}\n\n'
                                           'You have ${item.inventory} in your inventory',
                                       textStyle: TextStyle(
                                         fontSize: 14,
