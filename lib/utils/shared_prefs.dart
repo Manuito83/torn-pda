@@ -77,6 +77,9 @@ class SharedPreferencesModel {
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
+  final String _kAwardsSort = "pda_awardsSort";
+  final String _kShowAchievedAwards = "pda_showAchievedAwards";
+  final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
 
@@ -894,6 +897,39 @@ class SharedPreferencesModel {
   }
 
   /// ----------------------------
+  /// Methods for Awards
+  /// ----------------------------
+  Future<String> getAwardsSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAwardsSort) ?? '';
+  }
+
+  Future<bool> setAwardsSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAwardsSort, value);
+  }
+
+  Future<bool> getShowAchievedAwards() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowAchievedAwards) ?? true;
+  }
+
+  Future<bool> setShowAchievedAwards(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowAchievedAwards, value);
+  }
+
+  Future<List<String>> getHiddenAwardCategories() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHiddenAwardCategories) ?? List<String>();
+  }
+
+  Future<bool> setHiddenAwardCategories(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kHiddenAwardCategories, value);
+  }
+
+  /// ----------------------------
   /// Methods for Chat Removal
   /// ----------------------------
   Future<bool> getChatRemovalEnabled() async {
@@ -915,6 +951,5 @@ class SharedPreferencesModel {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kChatRemovalActive, value);
   }
-
 
 }

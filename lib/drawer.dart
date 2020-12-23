@@ -13,6 +13,7 @@ import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/loot.dart';
+import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/main.dart';
@@ -37,8 +38,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  int _settingsPosition = 6;
-  int _aboutPosition = 7;
+  int _settingsPosition = 7;
+  int _aboutPosition = 8;
   var _allowSectionsWithoutKey = [];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -49,6 +50,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Chaining",
     "Loot",
     "Friends",
+    "Awards",
     "Alerts",
     "Settings",
     "About",
@@ -596,12 +598,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return FriendsPage();
         break;
       case 5:
-        return AlertsSettings();
+        return AwardsPage();
         break;
       case 6:
-        return SettingsPage();
+        return AlertsSettings();
         break;
       case 7:
+        return SettingsPage();
+        break;
+      case 8:
         return AboutPage();
         break;
 
@@ -628,12 +633,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return Icon(Icons.people);
         break;
       case 5:
-        return Icon(Icons.notifications_active);
+        return Icon(MdiIcons.trophy);
         break;
       case 6:
-        return Icon(Icons.settings);
+        return Icon(Icons.notifications_active);
         break;
       case 7:
+        return Icon(Icons.settings);
+        break;
+      case 8:
         return Icon(Icons.info_outline);
         break;
       default:

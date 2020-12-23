@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -107,6 +108,8 @@ Future<void> main() async {
             create: (context) => TradesProvider()),
         ChangeNotifierProvider<ShortcutsProvider>(
             create: (context) => ShortcutsProvider()),
+        ChangeNotifierProvider<AwardsProvider>(
+            create: (context) => AwardsProvider()),
       ],
       child: MyApp(),
     ),
