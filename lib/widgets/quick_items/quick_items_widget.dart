@@ -100,7 +100,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           child: Text(
-            'You can configure quick crimes in the top menu',
+            'You can configure quick items in the top menu',
             style: TextStyle(
               color: Colors.orangeAccent,
               fontSize: 12,
