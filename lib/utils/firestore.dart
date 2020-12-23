@@ -83,6 +83,12 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToMessagesNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "messagesNotification": subscribe,
+    });
+  }
+
   Future<void> subscribeToHospitalNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "hospitalNotification": subscribe,
