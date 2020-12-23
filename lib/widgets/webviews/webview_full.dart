@@ -107,6 +107,12 @@ class _WebViewFullState extends State<WebViewFull> {
   var _quickItemsActive = false;
   var _quickItemsController = ExpandableController();
 
+  // Allow onProgressChanged to call several sections, for better responsiveness,
+  // while making sure that we don't call the API each time
+  bool _crimesTriggered = false;
+  bool _quickItemsTriggered = false;
+  bool _cityTriggered = false;
+
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
 
@@ -462,6 +468,13 @@ class _WebViewFullState extends State<WebViewFull> {
                 webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                 _scrollAfterLoad = false;
               }
+
+              // We reset here the triggers for the sections that are called every
+              // time onProgressChanged ticks, so that they can be called again
+              // in the future
+              _crimesTriggered = false;
+              _quickItemsTriggered = false;
+              _cityTriggered = false;
             },
             // Allows IOS to open links with target=_blank
             onCreateWindow:
@@ -838,6 +851,14 @@ class _WebViewFullState extends State<WebViewFull> {
         return;
       }
 
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      //
+      if (_crimesTriggered) {
+        return;
+      }
+      _crimesTriggered = true;
+
       setState(() {
         _crimesController.expanded = true;
         _crimesActive = true;
@@ -1169,13 +1190,19 @@ class _WebViewFullState extends State<WebViewFull> {
     var pageTitle = _getPageTitle(document).toLowerCase();
     if (!pageTitle.contains('city')) {
       setState(() {
-        _crimesController.expanded = false;
-        _crimesActive = false;
+        _cityIconActive = false;
+        _cityController.expanded = false;
       });
-      _cityIconActive = false;
-      _cityController.expanded = false;
       return;
     }
+
+    // Stops any successive calls once we are sure that the section is the
+    // correct one. onLoadStop will reset this for the future.
+    // Otherwise we would call the API every time onProgressChanged ticks
+    if (_cityTriggered) {
+      return;
+    }
+    _cityTriggered = true;
 
     if (mounted) {
       setState(() {
@@ -1348,6 +1375,14 @@ class _WebViewFullState extends State<WebViewFull> {
         });
         return;
       }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      // Otherwise we would call the API every time onProgressChanged ticks
+      if (_quickItemsTriggered) {
+        return;
+      }
+      _quickItemsTriggered = true;
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
       quickItemsProvider.initLoad(apiKey: _userProvider.myUser.userApiKey);
