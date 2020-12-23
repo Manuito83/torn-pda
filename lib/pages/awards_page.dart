@@ -38,13 +38,13 @@ class AwardsPage extends StatefulWidget {
 
 class _AwardsPageState extends State<AwardsPage> {
   // Main list with all awards
-  var _allAwards = List<Award>();
-  var _allAwardsCards = List<Widget>();
+  var _allAwards = <Award>[];
+  var _allAwardsCards = <Widget>[];
   var _allCategories = Map<String, String>();
   List<dynamic> _allAwardsGraphs;
 
   // Active categories
-  var _hiddenCategories = List<String>();
+  var _hiddenCategories = <String>[];
 
   Future _getAwardsPayload;
   bool _apiSuccess = false;
@@ -204,7 +204,7 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Widget _header() {
-    var pinnedCards = List<Widget>();
+    var pinnedCards = <Widget>[];
     for (var pinned in _pinProvider.pinnedAwards) {
       Widget commentIconRow = SizedBox.shrink();
       if (pinned.comment != null && pinned.comment.trim() != "") {
@@ -552,7 +552,7 @@ class _AwardsPageState extends State<AwardsPage> {
                 ),
                 onPressed: () async {
                   // Only pass awards that are being shown in the active list
-                  var graphsToPass = List<dynamic>();
+                  var graphsToPass = <dynamic>[];
                   for (var awardGraph in _allAwardsGraphs) {
                     for (var award in _allAwards) {
                       if (awardGraph[0] == award.name) {
@@ -621,7 +621,7 @@ class _AwardsPageState extends State<AwardsPage> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    _openBrowserDialog(context, 'https://yata.alwaysdata.net/');
+                    _openBrowserDialog(context, 'https://yata.yt');
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
@@ -685,7 +685,7 @@ class _AwardsPageState extends State<AwardsPage> {
   }
 
   Widget _categoryFilterWrap() {
-    var catChips = List<Widget>();
+    var catChips = <Widget>[];
     for (var cat in _allCategories.keys) {
       Widget catIcon = SizedBox.shrink();
       String catStats = _allCategories[cat];
@@ -1003,7 +1003,7 @@ class _AwardsPageState extends State<AwardsPage> {
     Widget header = _header();
     Widget footer = SizedBox(height: 90);
 
-    var newList = List<Widget>();
+    var newList = <Widget>[];
     newList.add(header);
 
     for (var award in _allAwards) {
