@@ -16,9 +16,9 @@ import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -1133,9 +1133,7 @@ class _AwardsPageState extends State<AwardsPage> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: WebViewDialog(
-              initUrl: initUrl,
-            ),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
           ),
         );
       },
