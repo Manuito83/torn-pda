@@ -33,7 +33,14 @@ class _ChangeLogState extends State<ChangeLog> {
   }
 
   void _createItems() {
-    var itemList = List<ChangeLogItem>();
+    var itemList = <ChangeLogItem>[];
+
+    // VERSION 2.0.0-BETA
+    var v2_0_0 = ChangeLogItem();
+    v2_0_0.main.version = 'Torn PDA v2.0.0-BETA';
+    v2_0_0.main.date = '25 DEC 2020';
+    String feat2_0_0_1 = "Please look in Discord for beta features and analysis required. Thanks for your cooperation!";
+    v2_0_0.features.add(feat2_0_0_1);
 
     // VERSION 1.9.7
     var v1_9_7 = ChangeLogItem();
