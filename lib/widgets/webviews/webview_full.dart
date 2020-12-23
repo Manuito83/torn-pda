@@ -1361,23 +1361,26 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Widget _quickItemsInfoIcon() {
     if (_quickItemsActive) {
-      return IconButton(
-        icon: Icon(Icons.info_outline),
-        onPressed: () {
-          BotToast.showText(
-            text:
-                'If you need more information about a quick item, maintain the '
-                'quick item button pressed for a few seconds and a tooltip '
-                'will be shown!',
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.grey[700],
-            duration: Duration(seconds: 8),
-            contentPadding: EdgeInsets.all(10),
-          );
-        },
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: IconButton(
+          icon: Icon(Icons.info_outline),
+          onPressed: () {
+            BotToast.showText(
+              text:
+                  'If you need more information about a quick item, maintain the '
+                  'quick item button pressed for a few seconds and a tooltip '
+                  'will be shown!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[700],
+              duration: Duration(seconds: 8),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
       );
     } else {
       return SizedBox.shrink();
@@ -1386,29 +1389,29 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Widget _quickItemsMenuIcon() {
     if (_quickItemsActive) {
-      return OpenContainer(
-        transitionDuration: Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return QuickItemsOptions();
-        },
-        closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
+      return Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: OpenContainer(
+          transitionDuration: Duration(milliseconds: 500),
+          transitionType: ContainerTransitionType.fadeThrough,
+          openBuilder: (BuildContext context, VoidCallback _) {
+            return QuickItemsOptions();
+          },
+          closedElevation: 0,
+          closedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(56 / 2),
+            ),
           ),
-        ),
-        closedColor: Colors.transparent,
-        closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 5),
-            child: SizedBox(
+          closedColor: Colors.transparent,
+          closedBuilder: (BuildContext context, VoidCallback openContainer) {
+            return SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.packageVariantClosed, color: Colors.white),
-            ),
-          );
-        },
+              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
+            );
+          },
+        ),
       );
     } else {
       return SizedBox.shrink();
