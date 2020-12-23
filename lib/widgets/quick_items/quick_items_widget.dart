@@ -17,13 +17,6 @@ class QuickItemsWidget extends StatefulWidget {
 
 class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   QuickItemsProvider _itemsProvider;
-  final _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    _scrollController.dispose();
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,8 +30,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                     AppBar().preferredSize.height)) /
             3),
         child: Scrollbar(
-          controller: _scrollController,
-          isAlwaysShown: true,
           child: SingleChildScrollView(
             child: Align(
               alignment: Alignment.center,
