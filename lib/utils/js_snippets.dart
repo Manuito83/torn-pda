@@ -308,10 +308,11 @@ String quickItemsJS({
         
     addStyle(`
       .resultBox {
-        border: 2px solid black;
+        border: 2px dotted black;
         margin-top: 20px;
         margin-bottom: 20px;
         padding:5px;
+        background-color: #fff;
       }
     `);
     

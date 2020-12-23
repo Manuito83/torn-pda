@@ -155,6 +155,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _chatRemoveEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
 
+    _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
+
     String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
     switch (restoredTimeFormat) {
       case '24':

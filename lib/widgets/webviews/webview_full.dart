@@ -26,10 +26,13 @@ import 'package:torn_pda/widgets/city/city_options.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_options.dart';
+import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
+import 'package:torn_pda/widgets/quick_items/quick_items_options.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/widgets/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 
 class VaultsOptions {
   String description;
@@ -100,6 +103,9 @@ class _WebViewFullState extends State<WebViewFull> {
 
   var _chatRemovalEnabled = false;
   var _chatRemovalActive = false;
+
+  var _quickItemsActive = false;
+  var _quickItemsController = ExpandableController();
 
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
@@ -267,7 +273,9 @@ class _WebViewFullState extends State<WebViewFull> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+                                  _chatRemovalEnabled
+                                      ? _hideChatIcon()
+                                      : SizedBox.shrink(),
                                   IconButton(
                                     icon: Icon(Icons.refresh),
                                     onPressed: () async {
@@ -321,7 +329,27 @@ class _WebViewFullState extends State<WebViewFull> {
                 collapsed: SizedBox.shrink(),
                 controller: _crimesController,
                 header: SizedBox.shrink(),
-                expanded: CrimesWidget(controller: webView),
+                expanded: _crimesActive
+                    ? CrimesWidget(controller: webView)
+                    : SizedBox.shrink(),
+              )
+            : SizedBox.shrink(),
+        // Quick items widget. NOTE: this one will open at the bottom if
+        // appBar is at the bottom, so it's duplicated below the actual
+        // webView widget
+        _settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _quickItemsController,
+                header: SizedBox.shrink(),
+                expanded: _quickItemsActive
+                    ? QuickItemsWidget(controller: webView)
+                    : SizedBox.shrink(),
               )
             : SizedBox.shrink(),
         // Trades widget
@@ -336,11 +364,12 @@ class _WebViewFullState extends State<WebViewFull> {
           collapsed: SizedBox.shrink(),
           controller: _cityController,
           header: SizedBox.shrink(),
-          expanded: CityWidget(
-            controller: webView,
-            cityItems: _cityItemsFound,
-            error: _errorCityApi,
-          ),
+          expanded: _cityIconActive
+              ? CityWidget(
+                  controller: webView,
+                  cityItems: _cityItemsFound,
+                  error: _errorCityApi)
+              : SizedBox.shrink(),
         ),
         // Actual WebView
         Expanded(
@@ -387,13 +416,22 @@ class _WebViewFullState extends State<WebViewFull> {
                     return x;
                   },
                   */
-            onProgressChanged: (InAppWebViewController c, int progress) {
+            onWebViewCreated: (InAppWebViewController c) {
+              webView = c;
+            },
+            onProgressChanged: (InAppWebViewController c, int progress) async {
               setState(() {
                 this.progress = progress / 100;
               });
-            },
-            onWebViewCreated: (InAppWebViewController c) {
-              webView = c;
+
+              // onProgressChanged gets called before onLoadStart, so it works
+              // both to add or remove widgets. It is much faster for QuickItems.
+              // TODO: refactor for the rest?
+              if (_currentUrl.contains('item.php')) {
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _assessQuickItems(document);
+              }
             },
             onLoadStart: (InAppWebViewController c, String url) {
               if (_chatRemovalEnabled && _chatRemovalActive) {
@@ -443,6 +481,7 @@ class _WebViewFullState extends State<WebViewFull> {
             },
           ),
         ),
+        // Widgets that go at the bottom if we have changes appbar to bottom
         !_settingsProvider.appBarTop
             ? ExpandablePanel(
                 theme: ExpandableThemeData(
@@ -453,7 +492,24 @@ class _WebViewFullState extends State<WebViewFull> {
                 collapsed: SizedBox.shrink(),
                 controller: _crimesController,
                 header: SizedBox.shrink(),
-                expanded: CrimesWidget(controller: webView),
+                expanded: _crimesActive
+                    ? CrimesWidget(controller: webView)
+                    : SizedBox.shrink(),
+              )
+            : SizedBox.shrink(),
+        !_settingsProvider.appBarTop
+            ? ExpandablePanel(
+                theme: ExpandableThemeData(
+                  hasIcon: false,
+                  tapBodyToCollapse: false,
+                  tapHeaderToExpand: false,
+                ),
+                collapsed: SizedBox.shrink(),
+                controller: _quickItemsController,
+                header: SizedBox.shrink(),
+                expanded: _quickItemsActive
+                    ? QuickItemsWidget(controller: webView)
+                    : SizedBox.shrink(),
               )
             : SizedBox.shrink(),
       ],
@@ -514,6 +570,8 @@ class _WebViewFullState extends State<WebViewFull> {
           _travelHomeIcon(),
           _crimesInfoIcon(),
           _crimesMenuIcon(),
+          _quickItemsInfoIcon(),
+          _quickItemsMenuIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
           _cityMenuIcon(),
@@ -620,6 +678,8 @@ class _WebViewFullState extends State<WebViewFull> {
     _assessBackButtonBehaviour();
     _assessTravel(document);
     _assessCrimes(document, pageTitle);
+    // This is now being handled in onProgressChanged
+    //_assessQuickItems(document);
     _decideIfCallTrades();
     _assessCity(document, pageTitle);
     _assessBazaar(document);
@@ -823,7 +883,7 @@ class _WebViewFullState extends State<WebViewFull> {
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.fingerprint),
+              child: Icon(MdiIcons.fingerprint, color: Colors.white),
             ),
           );
         },
@@ -1157,7 +1217,7 @@ class _WebViewFullState extends State<WebViewFull> {
       });
     }
 
-    var mapItemsList = List<String>();
+    var mapItemsList = <String>[];
     for (var mapFind in query) {
       mapFind.attributes.forEach((key, value) {
         if (key == "src" &&
@@ -1173,7 +1233,7 @@ class _WebViewFullState extends State<WebViewFull> {
           await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
-        var itemsFound = List<Item>();
+        var itemsFound = <Item>[];
         for (var mapItem in mapItemsList) {
           Item itemMatch = tornItems[int.parse(mapItem) - 1];
           itemsFound.add(itemMatch);
@@ -1269,6 +1329,85 @@ class _WebViewFullState extends State<WebViewFull> {
             color: _bazaarFillActive ? Colors.yellow[600] : Colors.white,
           ),
         ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  // QUICK ITEMS
+  Future _assessQuickItems(dom.Document document) async {
+    if (mounted) {
+      var pageTitle = _getPageTitle(document).toLowerCase();
+
+      if (!pageTitle.contains('items')) {
+        setState(() {
+          _quickItemsController.expanded = false;
+          _quickItemsActive = false;
+        });
+        return;
+      }
+
+      var quickItemsProvider = context.read<QuickItemsProvider>();
+      quickItemsProvider.initLoad(apiKey: _userProvider.myUser.userApiKey);
+
+      setState(() {
+        _quickItemsController.expanded = true;
+        _quickItemsActive = true;
+      });
+    }
+  }
+
+  Widget _quickItemsInfoIcon() {
+    if (_quickItemsActive) {
+      return IconButton(
+        icon: Icon(Icons.info_outline),
+        onPressed: () {
+          BotToast.showText(
+            text:
+                'If you need more information about a quick item, maintain the '
+                'quick item button pressed for a few seconds and a tooltip '
+                'will be shown!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: Duration(seconds: 8),
+            contentPadding: EdgeInsets.all(10),
+          );
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Widget _quickItemsMenuIcon() {
+    if (_quickItemsActive) {
+      return OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return QuickItemsOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(MdiIcons.packageVariantClosed, color: Colors.white),
+            ),
+          );
+        },
       );
     } else {
       return SizedBox.shrink();
