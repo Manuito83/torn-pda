@@ -3,8 +3,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:torn_pda/models/quick_item_model.dart';
-import 'package:torn_pda/widgets/quick_items/quick_items_options.dart';
 
 class QuickItemsWidget extends StatefulWidget {
   final InAppWebViewController controller;
@@ -19,9 +17,11 @@ class QuickItemsWidget extends StatefulWidget {
 
 class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   QuickItemsProvider _itemsProvider;
+  final _scrollController = ScrollController();
 
   @override
   void initState() {
+    _scrollController.dispose();
     super.initState();
   }
 
@@ -30,13 +30,26 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     _itemsProvider = context.watch<QuickItemsProvider>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: Align(
-        alignment: Alignment.center,
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 5,
-          runSpacing: -10,
-          children: _itemButtons(),
+      child: ConstrainedBox(
+        constraints: BoxConstraints.loose(Size.fromHeight(
+                (MediaQuery.of(context).size.height -
+                    kToolbarHeight -
+                    AppBar().preferredSize.height)) /
+            3),
+        child: Scrollbar(
+          controller: _scrollController,
+          isAlwaysShown: true,
+          child: SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.center,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 5,
+                runSpacing: -10,
+                children: _itemButtons(),
+              ),
+            ),
+          ),
         ),
       ),
     );
