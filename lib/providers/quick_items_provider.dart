@@ -31,17 +31,25 @@ class QuickItemsProvider extends ChangeNotifier {
   ];
 
   Future initLoad({@required String apiKey}) async {
+    // Restores shared preferences for active items
     if (_firstLoad) {
       _loadSaveActiveItems();
     }
 
+    // If loading for the first time or if any never loaded correctly
+    // for items or inventory
     if (_firstLoad || !goodFetch) {
       _firstLoad = false;
       _apiKey = apiKey;
       _fullQuickItemsList = <QuickItem>[];
-      goodFetch = await _getAllTornItems();
-      goodFetch = await _updateInventoryQuantities();
+      var itemsSuccess = goodFetch = await _getAllTornItems();
+      var inventorySuccess = await _updateInventoryQuantities();
+      if (itemsSuccess && inventorySuccess) {
+        goodFetch = true;
+      }
     } else {
+      // This will only trigger with successive calls after the first
+      // fully successful load
       goodFetch = await _updateInventoryQuantities();
     }
 
