@@ -119,7 +119,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             if (_landScape) {
               _landScape = false;
               SystemChrome.setPreferredOrientations(
-                  [DeviceOrientation.portraitDown]);
+                  [DeviceOrientation.portraitUp]);
             } else {
               _landScape = true;
               SystemChrome.setPreferredOrientations(
@@ -187,7 +187,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       pixelPerBar = 1;
     }
 
-    var awardBarList = List<BarChartGroupData>();
+    var awardBarList = <BarChartGroupData>[];
     for (var i = 0; i < widget.graphInfo.length; i++) {
       awardBarList.add(
         makeGroupData(
