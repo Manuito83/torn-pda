@@ -62,6 +62,10 @@ class _CrimesWidgetState extends State<CrimesWidget> {
       myList.add(
         Tooltip(
           message: '${crimesCategories[crime.nerve]}: ${crime.fullName}',
+          textStyle: TextStyle(color: Colors.white),
+          padding: EdgeInsets.all(20),
+          margin: EdgeInsets.all(20),
+          decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
             avatar: CircleAvatar(
