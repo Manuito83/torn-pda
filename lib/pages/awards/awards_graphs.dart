@@ -230,7 +230,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   }
 
   Future<bool> _willPopCallback() async {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitDown]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     Navigator.of(context).pop();
     return true;
   }

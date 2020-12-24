@@ -70,6 +70,9 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
+  // Force portrait up
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
   runApp(
     MultiProvider(
       providers: [
