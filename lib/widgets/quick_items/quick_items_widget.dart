@@ -60,6 +60,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
       myList.add(
         Tooltip(
           message: '${item.name}\n\n${item.description}',
+          textStyle: TextStyle(color: Colors.white),
           padding: EdgeInsets.all(20),
           margin: EdgeInsets.all(20),
           decoration: BoxDecoration(color: Colors.grey[700]),
