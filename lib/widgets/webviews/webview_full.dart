@@ -814,7 +814,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
         // Send to server
         await http.post(
-          'https://yata.yt/api/v1/travel/import/',
+          'https://yata.alwaysdata.net/api/v1/travel/import/',
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },

@@ -621,7 +621,7 @@ class _AwardsPageState extends State<AwardsPage> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    _openBrowserDialog(context, 'https://yata.yt');
+                    _openBrowserDialog(context, 'https://yata.alwaysdata.net');
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
