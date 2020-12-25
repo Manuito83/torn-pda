@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
@@ -112,6 +111,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _crimesTriggered = false;
   bool _quickItemsTriggered = false;
   bool _cityTriggered = false;
+  bool _tradesTriggered = false;
 
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
@@ -449,6 +449,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 var document = parse(html);
                 _assessCity(document);
               }
+
+              if (_tradesTriggered && !_currentUrl.contains("trade.php")) {
+                // Call once so that trades is deactivated
+                _decideIfCallTrades();
+              }
             },
             onLoadStart: (InAppWebViewController c, String url) {
               if (_chatRemovalEnabled && _chatRemovalActive) {
@@ -475,6 +480,7 @@ class _WebViewFullState extends State<WebViewFull> {
               _crimesTriggered = false;
               _quickItemsTriggered = false;
               _cityTriggered = false;
+              _tradesTriggered = false;
             },
             // Allows IOS to open links with target=_blank
             onCreateWindow:
@@ -486,21 +492,17 @@ class _WebViewFullState extends State<WebViewFull> {
               print("TORN PDA JS CONSOLE: " + consoleMessage.message);
 
               /// TRADES
-              ///   - IOS: onLoadStop does not work inside of Trades, that is why we
-              ///     redirect both with console messages (all 'hash.step') for trades
-              ///     identification, but also with _assessGeneral() so that we can remove
-              ///     the widget when an unrelated page is visited. Console messages also
-              ///     help with deletions updates when 'hash.step view' is shown.
-              ///   - Android: onLoadStop works, but we still need to catch deletions,
-              ///     so we only listen for 'hash.step view'.
-              if (Platform.isIOS) {
-                if (consoleMessage.message.contains('hash.step')) {
-                  _decideIfCallTrades();
-                }
-              } else if (Platform.isAndroid) {
-                if (consoleMessage.message.contains('hash.step view')) {
-                  _decideIfCallTrades();
-                }
+              /// We are calling trades from here because onLoadStop does not
+              /// work inside of Trades for iOS. Also, both in Android and iOS
+              /// we need to catch deletions that happen with a console message
+              /// of "hash.step".
+              if (consoleMessage.message.contains('hash.step') &&
+                  _currentUrl.contains('trade.php')) {
+                _currentUrl = await webView.getUrl();
+                var html = await webView.getHtml();
+                var document = parse(html);
+                _tradesTriggered = true;
+                _assessTrades(document);
               }
             },
           ),
@@ -701,7 +703,6 @@ class _WebViewFullState extends State<WebViewFull> {
 
     _assessBackButtonBehaviour();
     _assessTravel(document);
-    _decideIfCallTrades();
     _assessBazaar(document);
   }
 
@@ -922,10 +923,10 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // TRADES
-  Future _assessTrades(dom.Document document, String pageTitle) async {
+  Future _assessTrades(dom.Document document) async {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
-    pageTitle = pageTitle.toLowerCase();
+    var pageTitle = _getPageTitle(document).toLowerCase();
     var easyUrl =
         _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
@@ -1162,7 +1163,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorEnabled =
         await SharedPreferencesModel().getTradeCalculatorEnabled();
-    _decideIfCallTrades();
+    //_decideIfCallTrades();
   }
 
   // Avoid continuous calls to trades from different activators
@@ -1177,16 +1178,13 @@ class _WebViewFullState extends State<WebViewFull> {
         _currentUrl = await webView.getUrl();
         var html = await webView.getHtml();
         var document = parse(html);
-        // Assign page title
-        String pageTitle = _getPageTitle(document);
-        _assessTrades(document, pageTitle);
+        _assessTrades(document);
       }
     }
   }
 
   // CITY
   Future _assessCity(dom.Document document) async {
-
     var pageTitle = _getPageTitle(document).toLowerCase();
     if (!pageTitle.contains('city')) {
       setState(() {
@@ -1443,7 +1441,8 @@ class _WebViewFullState extends State<WebViewFull> {
             return SizedBox(
               height: 20,
               width: 20,
-              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
+              child: Image.asset('images/icons/quick_items.png',
+                  color: Colors.white),
             );
           },
         ),
