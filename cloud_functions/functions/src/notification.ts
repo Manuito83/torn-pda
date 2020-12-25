@@ -429,10 +429,12 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
     if (newMessages > 0) {
       var notificationTitle = "";
       var notificationSubtitle = "";
+      var tornMessageId = "";
 
       if (newMessages === 1) {
         notificationTitle = "You have a new message from " + newMessagesSenders[0];
         notificationSubtitle = `Subject: "${newMessagesSubjects[0]}"`;
+        tornMessageId = knownMessages[0];
       }
       else if (newMessages > 1 && newMessagesSenders.length === 1) {
         notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders[0]}`;
@@ -449,7 +451,8 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
           notificationTitle,
           notificationSubtitle,
           "notification_messages",
-          "#7B1FA2"
+          "#7B1FA2",
+          tornMessageId
         )
       );
     }
@@ -469,6 +472,7 @@ export async function sendNotificationToUser(
   body: string,
   icon: string,
   color: string,
+  tornMessageId: string = ""
 ): Promise<any> {
   
   const payload = {
@@ -483,6 +487,7 @@ export async function sendNotificationToUser(
     },
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",
+      tornMessageId: tornMessageId,
       message: body, 
     },
   };

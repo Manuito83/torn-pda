@@ -82,7 +82,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
-        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+        const ShortcutItem(
+            type: 'open_torn',
+            localizedTitle: 'Torn Home',
+            icon: "action_torn"),
       ]);
 
       quickActions.initialize((String shortcutType) async {
@@ -121,8 +124,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
-    _configureSelectNotificationSubject();
 
+    // This starts a stream that listens for tap on local notifications (i.e.:
+    // when the app is open)
+    _fireOnTapLocalNotifications();
+
+    // Configures Firebase notification behaviours
     _messaging.requestNotificationPermissions(IosNotificationSettings(
       sound: true,
       badge: true,
@@ -138,11 +145,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return _fireLaunchResumeNotifications(message);
       },
       onMessage: (message) {
+        // This will eventually fire a local notification
         return showNotification(message);
       },
     );
 
-    _tenSecTimer = new Timer.periodic(Duration(seconds: 10), (Timer t) => _refreshTctClock());
+    _tenSecTimer = new Timer.periodic(
+        Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
 
   @override
@@ -164,17 +173,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   // IMPORTANT: onResume/Launch only trigger with "FLUTTER_NOTIFICATION_CLICK"
   // from Functions, but not directly from Firebase's Messaging console.
   //  - Join all notifications in one file
-  //  - Firebase onResume/Launch notification for energy and other is not
-  //    configured. Give the option to choose different places? Like in nerve,
+  //  - Give the option to choose different places? Like in nerve,
   //    crimes vs jail. Energy: gym vs dump vs do not open.
-  //  - Firebase with 'showNotification' does not have a payload in show(),
-  //    so we don't do anything if triggered while app is open
 
   Future<void> _fireLaunchResumeNotifications(Map message) async {
+    bool launchBrowser = false;
+    var browserUrl = '';
+
     bool travel = false;
     bool racing = false;
     bool messages = false;
-    //bool nerve = false;
+    bool nerve = false;
+    bool energy = false;
 
     if (Platform.isIOS) {
       if (message["message"].contains("about to land")) {
@@ -183,11 +193,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       if (message["message"].contains("Get in there")) {
         racing = true;
       }
-      /*
+      if (message["message"].contains("Subject:") ||
+          message["message"].contains("Subjects:")) {
+        messages = true;
+      }
       if (message["message"].contains("Your nerve is full")) {
         nerve = true;
       }
-      */
+      if (message["message"].contains("Your energy is full")) {
+        energy = true;
+      }
     } else if (Platform.isAndroid) {
       if (message["data"]["message"].contains("about to land")) {
         travel = true;
@@ -199,14 +214,36 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           message["data"]["message"].contains("Subjects:")) {
         messages = true;
       }
-      /*
       if (message["data"]["message"].contains("Your nerve is full")) {
         nerve = true;
       }
-      */
+      if (message["data"]["message"].contains("Your energy is full")) {
+        energy = true;
+      }
     }
 
     if (travel) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com";
+    } else if (racing) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/loader.php?sid=racing";
+    } else if (messages) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/messages.php";
+      if (message["data"]["tornMessageId"] != "") {
+        browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
+            "${message["data"]["tornMessageId"]}&suffix=inbox";
+      }
+    } else if (nerve) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/crimes.php";
+    } else if (energy) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/gym.php";
+    }
+
+    if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
       await Future.delayed(Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
@@ -216,174 +253,65 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           if (_settingsProvider.useQuickBrowser) {
             _openBrowserDialog(
               context,
-              "https://www.torn.com",
+              browserUrl,
             );
           } else {
-            _openTornBrowser("https://www.torn.com");
+            _openTornBrowser(browserUrl);
           }
           break;
         case 'external':
-          var url = 'https://www.torn.com';
+          var url = browserUrl;
           if (await canLaunch(url)) {
             await launch(url, forceSafariVC: false);
           }
           break;
       }
     }
-
-    if (racing) {
-      // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(Duration(milliseconds: 500));
-      // Works best if we get SharedPrefs directly instead of SettingsProvider
-      var browserType = await SharedPreferencesModel().getDefaultBrowser();
-      switch (browserType) {
-        case 'app':
-          if (_settingsProvider.useQuickBrowser) {
-            _openBrowserDialog(
-              context,
-              "https://www.torn.com/loader.php?sid=racing",
-            );
-          } else {
-            _openTornBrowser("https://www.torn.com/loader.php?sid=racing");
-          }
-          break;
-        case 'external':
-          var url = 'https://www.torn.com/loader.php?sid=racing';
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
-    }
-
-    if (messages) {
-      // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(Duration(milliseconds: 500));
-      // Works best if we get SharedPrefs directly instead of SettingsProvider
-      var browserType = await SharedPreferencesModel().getDefaultBrowser();
-      switch (browserType) {
-        case 'app':
-          if (_settingsProvider.useQuickBrowser) {
-            _openBrowserDialog(
-              context,
-              "https://www.torn.com/messages.php",
-            );
-          } else {
-            _openTornBrowser("https://www.torn.com/messages.php");
-          }
-          break;
-        case 'external':
-          var url = 'https://www.torn.com/messages.php';
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
-    }
-
-    /*
-    if (nerve) {
-      // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(Duration(milliseconds: 500));
-      // Works best if we get SharedPrefs directly instead of SettingsProvider
-      var browserType = await SharedPreferencesModel().getDefaultBrowser();
-      switch (browserType) {
-        case 'app':
-          _openBrowserDialog(
-            context,
-            "https://www.torn.com/crimes.php",
-          );
-          break;
-        case 'external':
-          var url = 'https://www.torn.com/crimes.php';
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
-    }
-    */
-
   }
 
-  Future<void> _configureSelectNotificationSubject() async {
+  // Fires if notification from local_notifications package is tapped (i.e.:
+  // when the app is open)
+  Future<void> _fireOnTapLocalNotifications() async {
     selectNotificationSubject.stream.listen((String payload) async {
+      var launchBrowser = false;
+      var browserUrl = '';
+
       if (payload == 'travel') {
-        // Works best if we get SharedPrefs directly instead of SettingsProvider
-        var browserType = await SharedPreferencesModel().getDefaultBrowser();
-        switch (browserType) {
-          case 'app':
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewFull(
-                  customTitle: 'Travel',
-                ),
-              ),
-            );
-            break;
-          case 'external':
-            var url = 'https://www.torn.com';
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
-            }
-            break;
-        }
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com';
       } else if (payload.contains('energy')) {
-        var browserType = await SharedPreferencesModel().getDefaultBrowser();
-        switch (browserType) {
-          case 'app':
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewFull(
-                  customUrl: 'https://www.torn.com/gym.php',
-                  customTitle: 'Torn',
-                ),
-              ),
-            );
-            break;
-          case 'external':
-            var url = 'https://www.torn.com/gym.php';
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
-            }
-            break;
-        }
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/gym.php';
       } else if (payload.contains('nerve')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/crimes.php';
+      } else if (payload.contains('400-')) {
+        launchBrowser = true;
+        var npcId = payload.split('-')[1];
+        browserUrl =
+            'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+      } else if (payload.contains('messageId:')) {
+        launchBrowser = true;
+        var messageId = payload.split(':');
+        browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
+            "${messageId[1]}&suffix=inbox";
+      }
+
+      if (launchBrowser) {
         var browserType = await SharedPreferencesModel().getDefaultBrowser();
         switch (browserType) {
           case 'app':
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewFull(
-                  customUrl: 'https://www.torn.com/crimes.php',
-                  customTitle: 'Torn',
-                ),
-              ),
-            );
-            break;
-          case 'external':
-            var url = 'https://www.torn.com/crimes.php';
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
+            if (_settingsProvider.useQuickBrowser) {
+              _openBrowserDialog(
+                context,
+                browserUrl,
+              );
+            } else {
+              _openTornBrowser(browserUrl);
             }
             break;
-        }
-      } else if (payload.contains('400-')) {
-        var npcId = payload.split('-')[1];
-        var browserType = await SharedPreferencesModel().getDefaultBrowser();
-        switch (browserType) {
-          case 'app':
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewFull(
-                  customUrl: 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId',
-                  customTitle: 'Loot',
-                ),
-              ),
-            );
-            break;
           case 'external':
-            var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+            var url = browserUrl;
             if (await canLaunch(url)) {
               await launch(url, forceSafariVC: false);
             }
@@ -400,7 +328,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            !_changelogIsActive) {
           return Scaffold(
             body: _getPages(),
             drawer: Drawer(
@@ -460,13 +389,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     Row(
                       children: <Widget>[
                         Text(
-                          _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
+                          _themeProvider.currentTheme == AppTheme.light
+                              ? 'Light'
+                              : 'Dark',
                         ),
                         Padding(
                           padding: EdgeInsets.only(left: 10),
                         ),
                         Switch(
-                          value: _themeProvider.currentTheme == AppTheme.dark ? true : false,
+                          value: _themeProvider.currentTheme == AppTheme.dark
+                              ? true
+                              : false,
                           onChanged: (bool value) {
                             if (value) {
                               _themeProvider.changeTheme = AppTheme.dark;
@@ -474,8 +407,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                               _themeProvider.changeTheme = AppTheme.light;
                             }
                             setState(() {
-                              SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-                                statusBarColor: _themeProvider.currentTheme == AppTheme.light
+                              SystemChrome.setSystemUIOverlayStyle(
+                                  SystemUiOverlayStyle(
+                                statusBarColor: _themeProvider.currentTheme ==
+                                        AppTheme.light
                                     ? Colors.blueGrey
                                     : Colors.grey[900],
                               ));
@@ -530,13 +465,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             selectedColor: Colors.red,
             iconColor: _themeProvider.mainText,
             child: Ink(
-              color: position == _selected ? Colors.grey[300] : Colors.transparent,
+              color:
+                  position == _selected ? Colors.grey[300] : Colors.transparent,
               child: ListTile(
                 leading: _returnDrawerIcons(drawerPosition: position),
                 title: Text(
                   _drawerItemsList[position],
                   style: TextStyle(
-                    fontWeight: position == _selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: position == _selected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
                 selected: position == _selected,
@@ -564,7 +502,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 title: Text(
                   _drawerItemsList[i],
                   style: TextStyle(
-                    fontWeight: i == _selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        i == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: i == _selected,
@@ -685,7 +624,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         User mFirebaseUser = await firebaseAuth.signInAnon();
         firestore.setUID(mFirebaseUser.uid);
         await firestore.uploadUsersProfileDetail(_userProvider.myUser);
-        await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+        await firestore
+            .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
       } else {
         var uid = await firebaseAuth.getUID();
         firestore.setUID(uid);
@@ -740,7 +680,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     setState(() {
       _changelogIsActive = false;
     });
-
   }
 
   void _refreshTctClock() {
@@ -794,10 +733,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(
-                customUrl: initUrl,
-                dialog: true
-            ),
+            child: WebViewFull(customUrl: initUrl, dialog: true),
           ),
         );
       },

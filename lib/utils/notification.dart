@@ -10,6 +10,13 @@ Future showNotification(Map payload) async {
 }
 
 Future showNotificationBoth(Map payload) async {
+  var onTapPayload = '';
+
+  // If payload comes from Firebase with a torn message (mail) id
+  if (payload["data"]["tornMessageId"] != '') {
+    onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
+  }
+
   var vibrationPattern = Int64List(8);
   vibrationPattern[0] = 0;
   vibrationPattern[1] = 400;
@@ -35,7 +42,7 @@ Future showNotificationBoth(Map payload) async {
       notificationColor = Colors.blue;
     } else if (body.contains("been hospitalised") ||
         body.contains("released from hospital") ||
-        body.contains("left hospital earlier") ) {
+        body.contains("left hospital earlier")) {
       notificationIcon = "notification_hospital";
       notificationColor = Colors.orange[400];
     } else if (body.contains("drugs cooldown")) {
@@ -50,25 +57,25 @@ Future showNotificationBoth(Map payload) async {
     }
 
     var platformChannelSpecifics = NotificationDetails(
-        android: AndroidNotificationDetails(
-          "Automatic alerts",
-          "Alerts Full",
-          "Automatic alerts chosen by the user",
-          importance: Importance.max,
-          priority: Priority.high,
-          visibility: NotificationVisibility.public,
-          autoCancel: true,
-          channelShowBadge: true,
-          icon: notificationIcon,
-          color: notificationColor,
-          sound: RawResourceAndroidNotificationSound('slow_spring_board'),
-          vibrationPattern: vibrationPattern,
-          enableLights: true,
-          ledColor: const Color.fromARGB(255, 255, 0, 0),
-          ledOnMs: 1000,
-          ledOffMs: 500,
-          ticker: payload["notification"]["title"],
-        ),
+      android: AndroidNotificationDetails(
+        "Automatic alerts",
+        "Alerts Full",
+        "Automatic alerts chosen by the user",
+        importance: Importance.max,
+        priority: Priority.high,
+        visibility: NotificationVisibility.public,
+        autoCancel: true,
+        channelShowBadge: true,
+        icon: notificationIcon,
+        color: notificationColor,
+        sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+        vibrationPattern: vibrationPattern,
+        enableLights: true,
+        ledColor: const Color.fromARGB(255, 255, 0, 0),
+        ledOnMs: 1000,
+        ledOffMs: 500,
+        ticker: payload["notification"]["title"],
+      ),
       iOS: null,
     );
 
@@ -78,9 +85,8 @@ Future showNotificationBoth(Map payload) async {
       payload["notification"]["body"],
       platformChannelSpecifics,
       // Set payload to be handled by local notifications
-      //payload: '',
+      payload: onTapPayload,
     );
-
   } else if (Platform.isIOS) {
     var platformChannelSpecifics = NotificationDetails(
       android: null,
@@ -97,7 +103,7 @@ Future showNotificationBoth(Map payload) async {
         payload["aps"]["alert"]["body"],
         platformChannelSpecifics,
         // Set payload to be handled by local notifications
-        //payload: '',
+        payload: onTapPayload,
       );
     } catch (e) {
       await flutterLocalNotificationsPlugin.show(
@@ -106,12 +112,8 @@ Future showNotificationBoth(Map payload) async {
         payload["notification"]["body"],
         platformChannelSpecifics,
         // Set payload to be handled by local notifications
-        //payload: '',
+        payload: onTapPayload,
       );
     }
   }
-
 }
-
-
-
