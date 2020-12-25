@@ -960,7 +960,8 @@ class _WebViewFullState extends State<WebViewFull> {
     // We only get this once and if we are inside a trade
     // It's also in the callback from trades options
     if (!_tradesPreferencesLoaded) {
-      await _tradesPreferencesLoad();
+      _tradeCalculatorEnabled =
+          await SharedPreferencesModel().getTradeCalculatorEnabled();
       _tradesPreferencesLoaded = true;
     }
     if (!_tradeCalculatorEnabled) {
@@ -1163,7 +1164,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorEnabled =
         await SharedPreferencesModel().getTradeCalculatorEnabled();
-    //_decideIfCallTrades();
+    _decideIfCallTrades();
   }
 
   // Avoid continuous calls to trades from different activators
