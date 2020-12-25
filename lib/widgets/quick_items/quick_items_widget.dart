@@ -101,10 +101,10 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           child: Text(
-            'You can configure quick items in the top menu',
+            'Configure quick items in the menu (full browser)',
             style: TextStyle(
               color: Colors.orangeAccent,
-              fontSize: 12,
+              fontSize: 11,
             ),
           ),
         ),

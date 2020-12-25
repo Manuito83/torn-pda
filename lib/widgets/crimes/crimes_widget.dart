@@ -42,7 +42,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
   }
 
   List<Widget> _crimeButtons() {
-    var myList = List<Widget>();
+    var myList = <Widget>[];
     for (var crime in _crimesProvider.activeCrimesList) {
       String doCrime;
       if (crime.nerve <= 3) {
@@ -99,7 +99,7 @@ class _CrimesWidgetState extends State<CrimesWidget> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           child: Text(
-            'You can configure quick crimes in the top menu',
+            'Configure quick items in the menu (full browser)',
             style: TextStyle(
               color: Colors.orangeAccent,
               fontSize: 12,
