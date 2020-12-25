@@ -37,7 +37,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.0.0-BETA
     var v2_0_0 = ChangeLogItem();
-    v2_0_0.main.version = 'Torn PDA v2.0.0-BETA 2';
+    v2_0_0.main.version = 'Torn PDA v2.0.0-BETA 3';
     v2_0_0.main.date = '25 DEC 2020';
     String feat2_0_0_1 = "Please have a look in Discord for beta features and analysis required. Thanks for your cooperation!";
     v2_0_0.features.add(feat2_0_0_1);
