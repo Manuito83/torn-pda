@@ -34,45 +34,48 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return Scaffold(
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
-          : null,
-      body: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.start,
-          mainAxisSize: MainAxisSize.max,
-          children: <Widget>[
-            /*
-            Text(
-              'Awards',
-              style: TextStyle(
-                  color: const Color(0xff0f4a3c),
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(
-              height: 38,
-            ),
-            */
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: BarChart(
-                  mainBarData(),
+    return WillPopScope(
+      onWillPop: _willPopCallback,
+      child: Scaffold(
+        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+        bottomNavigationBar: !_settingsProvider.appBarTop
+            ? SizedBox(
+                height: AppBar().preferredSize.height,
+                child: buildAppBar(),
+              )
+            : null,
+        body: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.max,
+            children: <Widget>[
+              /*
+              Text(
+                'Awards',
+                style: TextStyle(
+                    color: const Color(0xff0f4a3c),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(
+                height: 38,
+              ),
+              */
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: BarChart(
+                    mainBarData(),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-          ],
+              const SizedBox(
+                height: 12,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -122,8 +125,10 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
                   [DeviceOrientation.portraitUp]);
             } else {
               _landScape = true;
-              SystemChrome.setPreferredOrientations(
-                  [DeviceOrientation.landscapeRight]);
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.landscapeRight,
+                DeviceOrientation.landscapeLeft
+              ]);
             }
           },
         )
