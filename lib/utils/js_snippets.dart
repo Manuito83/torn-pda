@@ -363,5 +363,12 @@ String quickItemsJS({
       console.error(e)
       }
     });
+    
+    // Get rid of the resultBox on close
+    document.addEventListener("click", (event) => {
+      if (event.target.classList.contains("close-act") && event.target.parentElement.parentElement.parentElement.parentElement.classList.contains("resultBox")) {
+        document.querySelector(".resultBox").style.display = "none";
+      }
+    });
   ''';
 }
