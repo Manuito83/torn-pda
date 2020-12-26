@@ -7,9 +7,13 @@ import 'package:torn_pda/widgets/crimes/crimes_options.dart';
 
 class CrimesWidget extends StatefulWidget {
   final InAppWebViewController controller;
+  final bool appBarTop;
+  final bool browserDialog;
 
   CrimesWidget({
     @required this.controller,
+    @required this.appBarTop,
+    @required this.browserDialog,
   });
 
   @override
@@ -95,11 +99,21 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     }
 
     if (myList.isEmpty) {
+      String appBarPosition = "top";
+      if (!widget.appBarTop) {
+        appBarPosition = "bottom";
+      }
+
+      String explanation = "Use the options at the $appBarPosition to configure quick crimes";
+      if (widget.browserDialog) {
+        explanation = "Open a full browser (long press) to configure your quick crimes for the first time";
+      }
+
       myList.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           child: Text(
-            'Configure quick items in the menu (full browser)',
+            explanation,
             style: TextStyle(
               color: Colors.orangeAccent,
               fontSize: 12,

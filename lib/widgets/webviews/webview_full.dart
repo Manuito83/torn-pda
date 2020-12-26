@@ -336,7 +336,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 controller: _crimesController,
                 header: SizedBox.shrink(),
                 expanded: _crimesActive
-                    ? CrimesWidget(controller: webView)
+                    ? CrimesWidget(
+                        controller: webView,
+                        appBarTop: _settingsProvider.appBarTop,
+                        browserDialog: widget.dialog,
+                      )
                     : SizedBox.shrink(),
               )
             : SizedBox.shrink(),
@@ -354,7 +358,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 controller: _quickItemsController,
                 header: SizedBox.shrink(),
                 expanded: _quickItemsActive
-                    ? QuickItemsWidget(controller: webView)
+                    ? QuickItemsWidget(
+                        controller: webView,
+                        appBarTop: _settingsProvider.appBarTop,
+                        browserDialog: widget.dialog,
+                      )
                     : SizedBox.shrink(),
               )
             : SizedBox.shrink(),
@@ -519,7 +527,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 controller: _crimesController,
                 header: SizedBox.shrink(),
                 expanded: _crimesActive
-                    ? CrimesWidget(controller: webView)
+                    ? CrimesWidget(
+                        controller: webView,
+                        appBarTop: _settingsProvider.appBarTop,
+                        browserDialog: widget.dialog,
+                      )
                     : SizedBox.shrink(),
               )
             : SizedBox.shrink(),
@@ -534,7 +546,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 controller: _quickItemsController,
                 header: SizedBox.shrink(),
                 expanded: _quickItemsActive
-                    ? QuickItemsWidget(controller: webView)
+                    ? QuickItemsWidget(
+                        controller: webView,
+                        appBarTop: _settingsProvider.appBarTop,
+                        browserDialog: widget.dialog,
+                      )
                     : SizedBox.shrink(),
               )
             : SizedBox.shrink(),

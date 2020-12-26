@@ -6,9 +6,13 @@ import 'package:torn_pda/utils/js_snippets.dart';
 
 class QuickItemsWidget extends StatefulWidget {
   final InAppWebViewController controller;
+  final bool appBarTop;
+  final bool browserDialog;
 
   QuickItemsWidget({
     @required this.controller,
+    @required this.appBarTop,
+    @required this.browserDialog,
   });
 
   @override
@@ -97,14 +101,24 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     }
 
     if (myList.isEmpty) {
+      String appBarPosition = "top";
+      if (!widget.appBarTop) {
+        appBarPosition = "bottom";
+      }
+
+      String explanation = "Use the options at the $appBarPosition to configure quick items";
+      if (widget.browserDialog) {
+        explanation = "Open a full browser (long press) to configure your quick items for the first time";
+      }
+
       myList.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           child: Text(
-            'Configure quick items in the menu (full browser)',
+            explanation,
             style: TextStyle(
               color: Colors.orangeAccent,
-              fontSize: 11,
+              fontSize: 12,
             ),
           ),
         ),
