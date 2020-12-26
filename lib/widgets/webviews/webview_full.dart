@@ -426,6 +426,10 @@ class _WebViewFullState extends State<WebViewFull> {
               webView = c;
             },
             onProgressChanged: (InAppWebViewController c, int progress) async {
+              if (_chatRemovalEnabled && _chatRemovalActive) {
+                webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+              }
+
               setState(() {
                 this.progress = progress / 100;
               });
@@ -456,10 +460,6 @@ class _WebViewFullState extends State<WebViewFull> {
               }
             },
             onLoadStart: (InAppWebViewController c, String url) {
-              if (_chatRemovalEnabled && _chatRemovalActive) {
-                webView.evaluateJavascript(source: removeChatOnLoadStartJS());
-              }
-
               _currentUrl = url;
               _assessGeneral();
             },
