@@ -32,8 +32,6 @@ class _AwardCardState extends State<AwardCard> {
     Color borderColor = Colors.transparent;
     if (award.achieve == 1) {
       borderColor = Colors.green;
-    } else if (award.achieve > 0.80 && award.achieve < 1) {
-      borderColor = Colors.blue;
     }
 
     Row titleRow = Row(
