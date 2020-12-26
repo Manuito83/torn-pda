@@ -279,10 +279,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   // KEEP THIS UNIQUE
                   bubbleShowcaseId: 'profile_showcase',
                   // WILL SHOW IF VERSION CHANGED
-                  bubbleShowcaseVersion: 2,
+                  bubbleShowcaseVersion: 3,
                   showCloseButton: false,
                   doNotReopenOnClose: true,
                   bubbleSlides: [
+                    AbsoluteBubbleSlide(
+                      positionCalculator: (size) => Position(
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                      ),
+                      child: AbsoluteBubbleSlideChild(
+                        positionCalculator: (size) => Position(
+                          top: size.height / 2,
+                          left: (size.width - 200) / 2,
+                        ),
+                        widget: SpeechBubble(
+                          width: 200,
+                          nipLocation: NipLocation.BOTTOM,
+                          nipHeight: 0,
+                          color: Colors.green[800],
+                          child: Padding(
+                            padding: EdgeInsets.all(10),
+                            child: Text(
+                              'NEW!\n\n'
+                              'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
+                              'a full browser with a LONG PRESS. You decide.\n\n'
+                              'You can deactivate this feature in the Settings section.',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                     RelativeBubbleSlide(
                       shape: Rectangle(spreadRadius: 10),
                       widgetKey: _showOne,
@@ -297,8 +327,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               padding: EdgeInsets.all(6),
                               child: Text(
                                 'Did you know?\n\n'
-                                'You can tap any of the bars to open a '
-                                'quick dialog straight to the gym, crimes or items sections!',
+                                'Tap any of the bars to launch a browser '
+                                'straight to the gym, crimes or items sections!',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
@@ -326,7 +356,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Padding(
                             padding: EdgeInsets.all(10),
                             child: Text(
-                              'Tap the points icon below to open the Points Building!',
+                              'There are other many places where you can tap to '
+                              'navigate to Torn (e.g.: the points or cash icons below)',
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
