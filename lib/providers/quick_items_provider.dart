@@ -19,6 +19,9 @@ class QuickItemsProvider extends ChangeNotifier {
   UnmodifiableListView<QuickItem> get fullQuickItems =>
       UnmodifiableListView(_fullQuickItemsList);
 
+  String _currentSearchFilter = '';
+  String get searchFilter => _currentSearchFilter;
+
   String _apiKey = "";
 
   var _quickItemTypes = [
@@ -112,6 +115,11 @@ class QuickItemsProvider extends ChangeNotifier {
     }
     _activeQuickItemsList.clear();
     _saveListAfterChanges();
+    notifyListeners();
+  }
+
+  void setFilterText(String newWordFilter) {
+    _currentSearchFilter = newWordFilter;
     notifyListeners();
   }
 

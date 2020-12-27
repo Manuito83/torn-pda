@@ -16,10 +16,19 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
   QuickItemsProvider _itemsProvider;
   ThemeProvider _themeProvider;
 
+  final _searchController = new TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _searchController.addListener(onSearchInputTextChange);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,85 +47,89 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   child: buildAppBar(),
                 )
               : null,
-          body: Container(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: SizedBox(
-                      width: 200,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text("QUICK ITEMS ACTIVE"),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(
-                              'SWIPE TO REMOVE',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(
-                              'LONG-PRESS TO SORT',
-                              style: TextStyle(fontSize: 10),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  if (_itemsProvider.activeQuickItems.length == 0)
+          body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+            child: Container(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SizedBox(height: 20),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
-                      child: Text(
-                        'No quick items active, add some below!',
-                        style: TextStyle(
-                          color: Colors.orange[800],
-                          fontStyle: FontStyle.italic,
-                          fontSize: 13,
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: SizedBox(
+                        width: 200,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text("QUICK ITEMS ACTIVE"),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                'SWIPE TO REMOVE',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                'LONG-PRESS TO SORT',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  else
-                    _activeCardsList(),
-                  SizedBox(height: 40),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Text("ALL AVAILABLE ITEMS"),
-                  ),
-                  SizedBox(height: 10),
-                  _itemsProvider.fullQuickItems.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(50),
-                            child: Column(
-                              children: [
-                                Text('Loading available items...'),
-                                SizedBox(height: 40),
-                                CircularProgressIndicator(),
-                                SizedBox(height: 40),
-                                Text(
-                                  'If this takes too long, there might be a connection '
-                                  'problem or Torn API might be down. Close the browser '
-                                  'completely and try again in a while!',
-                                  style: TextStyle(
-                                    fontStyle: FontStyle.italic,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                    ),
+                    SizedBox(height: 10),
+                    if (_itemsProvider.activeQuickItems.length == 0)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                        child: Text(
+                          'No quick items active, add some below!',
+                          style: TextStyle(
+                            color: Colors.orange[800],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 13,
                           ),
-                        )
-                      : _allCardsList(),
-                  SizedBox(height: 40),
-                ],
+                        ),
+                      )
+                    else
+                      _activeCardsList(),
+                    SizedBox(height: 40),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Text("ALL AVAILABLE ITEMS"),
+                    ),
+                    SizedBox(height: 10),
+                    _itemsProvider.fullQuickItems.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(50),
+                              child: Column(
+                                children: [
+                                  Text('Loading available items...'),
+                                  SizedBox(height: 40),
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 40),
+                                  Text(
+                                    'If this takes too long, there might be a connection '
+                                    'problem or Torn API might be down. Close the browser '
+                                    'completely and try again in a while!',
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : _allCardsList(),
+                    SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
           ),
@@ -292,118 +305,148 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
   Padding _allCardsList() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Consumer<QuickItemsProvider>(
-        builder: (context, itemsProvider, child) {
-          var allQuickItems = <Widget>[];
-          for (var item in itemsProvider.fullQuickItems) {
-            allQuickItems.add(
-              // Don't show those that are active
-              !item.active
-                  ? AnimatedOpacity(
-                      opacity: item.visible ? 1 : 0,
-                      duration: Duration(milliseconds: 300),
-                      child: Container(
-                        height: 60,
-                        child: Card(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Row(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(2),
-                                  child: Image.asset(
-                                    'images/torn_items/small/${item.number}_small.png',
-                                    width: 35,
-                                    height: 35,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Flexible(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              maxLength: 30,
+              decoration: InputDecoration(
+                isDense: true,
+                labelText: "Search",
+                counterText: "",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(6.0),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Consumer<QuickItemsProvider>(
+            builder: (context, itemsProvider, child) {
+              var allQuickItems = <Widget>[];
+              for (var item in itemsProvider.fullQuickItems) {
+                if (item.name
+                    .toLowerCase()
+                    .contains(_itemsProvider.searchFilter.toLowerCase())) {
+                  allQuickItems.add(
+                    // Don't show those that are active
+                    !item.active
+                        ? AnimatedOpacity(
+                            opacity: item.visible ? 1 : 0,
+                            duration: Duration(milliseconds: 300),
+                            child: Container(
+                              height: 60,
+                              child: Card(
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: Row(
                                     children: [
+                                      Padding(
+                                        padding: EdgeInsets.all(2),
+                                        child: Image.asset(
+                                          'images/torn_items/small/${item.number}_small.png',
+                                          width: 35,
+                                          height: 35,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
                                       Flexible(
-                                        child: Row(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Flexible(
-                                              child: Text(
-                                                item.name,
-                                                style: TextStyle(fontSize: 13),
+                                              child: Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      item.name,
+                                                      style: TextStyle(
+                                                          fontSize: 13),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
+                                            ),
+                                            Text(
+                                              "(inv: x${item.inventory})",
+                                              style: TextStyle(fontSize: 10),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      Text(
-                                        "(inv: x${item.inventory})",
-                                        style: TextStyle(fontSize: 10),
+                                      GestureDetector(
+                                        onTap: () {
+                                          BotToast.showText(
+                                            text:
+                                                '${item.name}\n\n${item.description}\n\n'
+                                                'You have ${item.inventory} in your inventory',
+                                            textStyle: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.white,
+                                            ),
+                                            contentColor: Colors.green[800],
+                                            duration: Duration(seconds: 5),
+                                            contentPadding: EdgeInsets.all(10),
+                                          );
+                                        },
+                                        child: Icon(
+                                          Icons.info_outline,
+                                          size: 19,
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: !item.visible
+                                            // Avoid double press
+                                            ? null
+                                            : () async {
+                                                // Start animation
+                                                setState(() {
+                                                  item.visible = false;
+                                                });
+
+                                                await Future.delayed(Duration(
+                                                    milliseconds: 300));
+
+                                                setState(() {
+                                                  itemsProvider
+                                                      .activateQuickItem(item);
+                                                });
+
+                                                // Reset visibility after animation
+                                                item.visible = true;
+                                              },
+                                        child: Text(
+                                          'ADD',
+                                          style: TextStyle(
+                                              color: Colors.green[500]),
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                GestureDetector(
-                                  onTap: () {
-                                    BotToast.showText(
-                                      text:
-                                          '${item.name}\n\n${item.description}\n\n'
-                                          'You have ${item.inventory} in your inventory',
-                                      textStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.green[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  },
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    size: 19,
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: !item.visible
-                                      // Avoid double press
-                                      ? null
-                                      : () async {
-                                          // Start animation
-                                          setState(() {
-                                            item.visible = false;
-                                          });
-
-                                          await Future.delayed(
-                                              Duration(milliseconds: 300));
-
-                                          setState(() {
-                                            itemsProvider
-                                                .activateQuickItem(item);
-                                          });
-
-                                          // Reset visibility after animation
-                                          item.visible = true;
-                                        },
-                                  child: Text(
-                                    'ADD',
-                                    style: TextStyle(color: Colors.green[500]),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ),
-                    )
-                  : SizedBox(),
-            );
-          }
-          return ListView(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            children: allQuickItems,
-          );
-        },
+                          )
+                        : SizedBox(),
+                  );
+                }
+              }
+              return ListView(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                children: allQuickItems,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -501,6 +544,10 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
         );
       },
     );
+  }
+
+  void onSearchInputTextChange() {
+    _itemsProvider.setFilterText(_searchController.text);
   }
 
   Future<bool> _willPopCallback() async {
