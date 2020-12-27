@@ -33,7 +33,7 @@ class QuickItemsProvider extends ChangeNotifier {
   Future initLoad({@required String apiKey}) async {
     // Restores shared preferences for active items
     if (_firstLoad) {
-      _loadSaveActiveItems();
+      await _loadSaveActiveItems();
     }
 
     // If loading for the first time or if any never loaded correctly
@@ -50,7 +50,6 @@ class QuickItemsProvider extends ChangeNotifier {
       if (!_itemSuccess) {
         _itemSuccess = await _getAllTornItems();
       }
-
     }
 
     // We always update inventory quantities
@@ -59,7 +58,7 @@ class QuickItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _loadSaveActiveItems() async {
+  Future _loadSaveActiveItems() async {
     var savedActives = await SharedPreferencesModel().getQuickItemsList();
     for (var rawItem in savedActives) {
       _activeQuickItemsList.add(quickItemFromJson(rawItem));
@@ -87,15 +86,29 @@ class QuickItemsProvider extends ChangeNotifier {
     oldItem.active = false;
     _activeQuickItemsList.remove(oldItem);
     _saveListAfterChanges();
-    notifyListeners();
 
-    _saveListAfterChanges();
+    // Look for the correct item set active false, so that it reappears in the
+    // main available items list
+    for (var stock in _fullQuickItemsList) {
+      if (stock.name == oldItem.name) {
+        stock.active = false;
+        break;
+      }
+    }
+
     notifyListeners();
   }
 
   void wipeAllQuickItems() {
-    for (var item in _activeQuickItemsList) {
-      item.active = false;
+    for (var oldItem in _activeQuickItemsList) {
+      // Look for the correct item set active false, so that it reappears in the
+      // main available items list
+      for (var stock in _fullQuickItemsList) {
+        if (stock.name == oldItem.name) {
+          stock.active = false;
+          break;
+        }
+      }
     }
     _activeQuickItemsList.clear();
     _saveListAfterChanges();
@@ -127,10 +140,24 @@ class QuickItemsProvider extends ChangeNotifier {
       _fullQuickItemsList.clear();
       allTornItems.items.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type)) {
-          _fullQuickItemsList.add(QuickItem()
-            ..name = EmojiParser.fix(itemProperties.name)
-            ..description = itemProperties.description
-            ..number = int.parse(itemNumber));
+
+          // If the item was saved as active, mark it as such so that we can
+          // filter it in our full list
+          var savedActive = false;
+          for (var saved in _activeQuickItemsList) {
+            if (saved.name == itemProperties.name) {
+              savedActive = true;
+              break;
+            }
+          }
+
+          _fullQuickItemsList.add(
+            QuickItem()
+              ..name = EmojiParser.fix(itemProperties.name)
+              ..description = itemProperties.description
+              ..number = int.parse(itemNumber)
+              ..active = savedActive,
+          );
         }
       });
       _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
