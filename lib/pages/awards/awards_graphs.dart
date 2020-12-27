@@ -6,6 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
+import 'package:intl/intl.dart';
 
 class AwardsGraphs extends StatefulWidget {
   AwardsGraphs({@required this.graphInfo});
@@ -145,12 +146,13 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             fitInsideVertically: true,
             fitInsideHorizontally: true,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final decimalFormat = new NumberFormat("#,##0", "en_US");
               var achieved = widget.graphInfo[group.x][2] == 0
                   ? "NOT ACHIEVED"
                   : "ACHIEVED";
               return BarTooltipItem(
                 "${widget.graphInfo[group.x][0]}\n"
-                "Circulation ${widget.graphInfo[group.x][1]}\n"
+                "Circulation ${decimalFormat.format(widget.graphInfo[group.x][1])}\n"
                 "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}\n\n"
                 "$achieved",
                 TextStyle(color: Colors.yellow, fontSize: 12),
