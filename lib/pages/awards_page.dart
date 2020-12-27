@@ -18,7 +18,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -621,7 +621,7 @@ class _AwardsPageState extends State<AwardsPage> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    _openBrowserDialog(context, 'https://yata.alwaysdata.net');
+                    openBrowserDialog(context, 'https://yata.alwaysdata.net');
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
@@ -1121,22 +1121,4 @@ class _AwardsPageState extends State<AwardsPage> {
     _buildAwardsWidgetList();
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
 }

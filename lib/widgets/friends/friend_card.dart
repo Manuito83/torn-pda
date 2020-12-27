@@ -16,6 +16,7 @@ import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../notes_dialog.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 class FriendCard extends StatefulWidget {
   final FriendModel friendModel;
@@ -298,7 +299,7 @@ class _FriendCardState extends State<FriendCard> {
         ),
         onTap: () async {
           _settingsProvider.useQuickBrowser
-              ? _openBrowserDialog(context, tradeUrl)
+              ? openBrowserDialog(context, tradeUrl)
               : _openTornBrowser(tradeUrl);
         },
         onLongPress: () async {
@@ -321,7 +322,7 @@ class _FriendCardState extends State<FriendCard> {
         ),
         onTap: () async {
           _settingsProvider.useQuickBrowser
-              ? _openBrowserDialog(context, messageUrl)
+              ? openBrowserDialog(context, messageUrl)
               : _openTornBrowser(messageUrl);
         },
         onLongPress: () async {
@@ -344,7 +345,7 @@ class _FriendCardState extends State<FriendCard> {
         ),
         onTap: () async {
           _settingsProvider.useQuickBrowser
-              ? _openBrowserDialog(context, profileUrl)
+              ? openBrowserDialog(context, profileUrl)
               : _openTornBrowser(profileUrl);
         },
         onLongPress: () async {
@@ -648,22 +649,4 @@ class _FriendCardState extends State<FriendCard> {
     }
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
 }

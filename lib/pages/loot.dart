@@ -24,6 +24,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 enum LootTimeType {
   dateTime,
@@ -486,7 +487,7 @@ class _LootPageState extends State<LootPage> {
           ),
           onTap: () {
             _settingsProvider.useQuickBrowser
-                ? _openBrowserDialog(context,
+                ? openBrowserDialog(context,
                     'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId')
                 : _openTornBrowser(
                     'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
@@ -1000,22 +1001,4 @@ class _LootPageState extends State<LootPage> {
     }
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
 }

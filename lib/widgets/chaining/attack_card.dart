@@ -8,10 +8,10 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
@@ -62,7 +62,7 @@ class _AttackCardState extends State<AttackCard> {
                           ),
                           onTap: () async {
                             _settingsProvider.useQuickBrowser
-                                ? _openBrowserDialog(context, 'https://www.torn.com/profiles.php?'
+                                ? openBrowserDialog(context, 'https://www.torn.com/profiles.php?'
                                 'XID=${_attack.targetId}')
                                 : _openTornBrowser('https://www.torn.com/profiles.php?'
                                 'XID=${_attack.targetId}');
@@ -314,7 +314,7 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _returnLastResults() {
-    var results = List<Widget>();
+    var results = <Widget>[];
 
     Widget firstResult = Padding(
       padding: EdgeInsets.only(left: 3, right: 8, top: 1),
@@ -458,22 +458,4 @@ class _AttackCardState extends State<AttackCard> {
     }
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
 }

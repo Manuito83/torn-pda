@@ -6,6 +6,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 import '../main.dart';
 
@@ -107,7 +108,7 @@ class _AboutPageState extends State<AboutPage> {
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
                               _settingsProvider.useQuickBrowser
-                                  ? _openBrowserDialog(
+                                  ? openBrowserDialog(
                                       context, 'https://discord.gg/vyP23kJ')
                                   : _openTornBrowser(
                                       'https://discord.gg/vyP23kJ');
@@ -145,7 +146,7 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 _settingsProvider.useQuickBrowser
-                                    ? _openBrowserDialog(context,
+                                    ? openBrowserDialog(context,
                                         'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0')
                                     : _openTornBrowser(
                                         'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0');
@@ -191,7 +192,7 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 _settingsProvider.useQuickBrowser
-                                    ? _openBrowserDialog(context,
+                                    ? openBrowserDialog(context,
                                         'https://github.com/Manuito83/torn-pda')
                                     : _openTornBrowser(
                                         'https://github.com/Manuito83/torn-pda');
@@ -235,7 +236,7 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 _settingsProvider.useQuickBrowser
-                                    ? _openBrowserDialog(context,
+                                    ? openBrowserDialog(context,
                                         'https://www.torn.com/trade.php#step=start&userID=2225097')
                                     : _openTornBrowser(
                                         'https://www.torn.com/trade.php#step=start&userID=2225097');
@@ -319,7 +320,7 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 _settingsProvider.useQuickBrowser
-                                    ? _openBrowserDialog(context,
+                                    ? openBrowserDialog(context,
                                         'https://www.torn.com/profiles.php?XID=2225097')
                                     : _openTornBrowser(
                                         'https://www.torn.com/profiles.php?XID=2225097');
@@ -351,7 +352,7 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 _settingsProvider.useQuickBrowser
-                                    ? _openBrowserDialog(context,
+                                    ? openBrowserDialog(context,
                                         'https://www.torn.com/profiles.php?XID=2184575')
                                     : _openTornBrowser(
                                         'https://www.torn.com/profiles.php?XID=2184575');
@@ -383,7 +384,7 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 _settingsProvider.useQuickBrowser
-                                    ? _openBrowserDialog(context,
+                                    ? openBrowserDialog(context,
                                         'https://www.torn.com/profiles.php?XID=2000607')
                                     : _openTornBrowser(
                                         'https://www.torn.com/profiles.php?XID=2000607');
@@ -463,22 +464,4 @@ class _AboutPageState extends State<AboutPage> {
     }
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
 }

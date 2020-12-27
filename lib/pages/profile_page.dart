@@ -42,6 +42,7 @@ import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 enum ProfileNotification {
   travel,
@@ -646,7 +647,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         },
         onTap: () {
           _settingsProvider.useQuickBrowser
-              ? _openBrowserDialog(context, thisShortcut.url)
+              ? openBrowserDialog(context, thisShortcut.url)
               : _openTornBrowser(thisShortcut.url);
         },
         child: Card(
@@ -779,7 +780,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               onTap: () {
                 _settingsProvider.useQuickBrowser
-                    ? _openBrowserDialog(
+                    ? openBrowserDialog(
                         context,
                         'https://www.torn.com/profiles.php?'
                         'XID=$causingId',
@@ -871,7 +872,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     onLongPress: () => _openTornBrowser('home'),
                     onTap: () {
                       _settingsProvider.useQuickBrowser
-                          ? _openBrowserDialog(context, 'https://www.torn.com')
+                          ? openBrowserDialog(context, 'https://www.torn.com')
                           : _openTornBrowser('home');
                     },
                     child: LinearPercentIndicator(
@@ -1099,7 +1100,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               }
 
                               _settingsProvider.useQuickBrowser
-                                  ? await _openBrowserDialog(
+                                  ? await openBrowserDialog(
                                       context,
                                       'https://www.torn.com/gym.php',
                                     )
@@ -1172,7 +1173,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             },
                             onTap: () async {
                               _settingsProvider.useQuickBrowser
-                                  ? await _openBrowserDialog(
+                                  ? await openBrowserDialog(
                                       context,
                                       'https://www.torn.com/crimes.php#/step=main',
                                     )
@@ -1223,7 +1224,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         },
                         onTap: () async {
                           _settingsProvider.useQuickBrowser
-                              ? await _openBrowserDialog(
+                              ? await openBrowserDialog(
                                   context,
                                   'https://www.torn.com/item.php#candy-items',
                                 )
@@ -1274,7 +1275,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             },
                             onTap: () async {
                               _settingsProvider.useQuickBrowser
-                                  ? await _openBrowserDialog(
+                                  ? await openBrowserDialog(
                                       context,
                                       'https://www.torn.com/item.php#medical-items',
                                     )
@@ -2177,7 +2178,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 onTap: () {
                   _settingsProvider.useQuickBrowser
-                      ? _openBrowserDialog(
+                      ? openBrowserDialog(
                           context, "https://www.torn.com/events.php#/step=all")
                       : _openTornBrowser(
                           "https://www.torn.com/events.php#/step=all");
@@ -2502,7 +2503,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         },
                         onTap: () {
                           _settingsProvider.useQuickBrowser
-                              ? _openBrowserDialog(
+                              ? openBrowserDialog(
                                   context,
                                   "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
@@ -2521,7 +2522,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         },
                         onTap: () {
                           _settingsProvider.useQuickBrowser
-                              ? _openBrowserDialog(
+                              ? openBrowserDialog(
                                   context,
                                   "https://www.torn.com/messages.php#/p=read&ID="
                                   "${messages.keys.elementAt(i)}&suffix=inbox",
@@ -2617,7 +2618,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 onTap: () {
                   _settingsProvider.useQuickBrowser
-                      ? _openBrowserDialog(
+                      ? openBrowserDialog(
                           context,
                           "https://www.torn.com/messages.php",
                         )
@@ -2896,7 +2897,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     },
                     onTap: () async {
                       _settingsProvider.useQuickBrowser
-                          ? await _openBrowserDialog(
+                          ? await openBrowserDialog(
                               context,
                               'https://www.torn.com/points.php',
                             )
@@ -2972,7 +2973,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       },
                       onTap: () async {
                         _settingsProvider.useQuickBrowser
-                            ? await _openBrowserDialog(
+                            ? await openBrowserDialog(
                                 context,
                                 'https://www.torn.com/points.php',
                               )
@@ -3291,13 +3292,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              _openBrowserDialog(
+              openBrowserDialog(
                   context, 'https://www.torn.com/loader.php?sid=racing');
             },
             onTap: () {
               _settingsProvider.useQuickBrowser
                   ? _openTornBrowser("racing")
-                  : _openBrowserDialog(
+                  : openBrowserDialog(
                       context, 'https://www.torn.com/loader.php?sid=racing');
             },
             child: Padding(
@@ -3728,7 +3729,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/city.php')
+                  ? openBrowserDialog(context, 'https://www.torn.com/city.php')
                   : _openTornBrowser('city');
               setState(() {
                 speedDialSetOpen.value = false;
@@ -3764,7 +3765,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(
+                  ? openBrowserDialog(
                       context, 'https://www.torn.com/trade.php')
                   : _openTornBrowser('trades');
               setState(() {
@@ -3801,7 +3802,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/item.php')
+                  ? openBrowserDialog(context, 'https://www.torn.com/item.php')
                   : _openTornBrowser('items');
               setState(() {
                 speedDialSetOpen.value = false;
@@ -3837,7 +3838,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(
+                  ? openBrowserDialog(
                       context, 'https://www.torn.com/crimes.php#/step=main')
                   : _openTornBrowser('crimes');
               setState(() {
@@ -3878,7 +3879,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/gym.php')
+                  ? openBrowserDialog(context, 'https://www.torn.com/gym.php')
                   : _openTornBrowser('gym');
 
               if (_warnAboutChains &&
@@ -3945,7 +3946,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com')
+                  ? openBrowserDialog(context, 'https://www.torn.com')
                   : _openTornBrowser('home');
               setState(() {
                 speedDialSetOpen.value = false;
@@ -4903,25 +4904,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _checkIfNotificationsAreCurrent();
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _openNukeReviveDialog(BuildContext _) {
     return showDialog<void>(
       context: _,
@@ -4991,7 +4973,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
                                     _settingsProvider.useQuickBrowser
-                                        ? _openBrowserDialog(context,
+                                        ? openBrowserDialog(context,
                                             'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0')
                                         : _openTornBrowser(
                                             'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0');
@@ -5003,7 +4985,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
                                     _settingsProvider.useQuickBrowser
-                                        ? _openBrowserDialog(context,
+                                        ? openBrowserDialog(context,
                                             'https://discord.gg/qSHjTXx')
                                         : _openTornBrowser(
                                             'https://discord.gg/qSHjTXx');
@@ -5175,7 +5157,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   await _openTornBrowser(url);
                                 } else {
                                   Navigator.of(context).pop();
-                                  await _openBrowserDialog(context, url);
+                                  await openBrowserDialog(context, url);
                                 }
                               },
                             ),
@@ -5204,7 +5186,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   await _openTornBrowser(url);
                                 } else {
                                   Navigator.of(context).pop();
-                                  await _openBrowserDialog(context, url);
+                                  await openBrowserDialog(context, url);
                                 }
                               },
                             ),
@@ -5233,7 +5215,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   await _openTornBrowser(url);
                                 } else {
                                   Navigator.of(context).pop();
-                                  await _openBrowserDialog(context, url);
+                                  await openBrowserDialog(context, url);
                                 }
                               },
                             ),

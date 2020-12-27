@@ -26,6 +26,7 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:animations/animations.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);
@@ -151,8 +152,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   if (returnFlag.flagPressed) {
                     if (returnFlag.shortTap) {
                       _settingsProvider.useQuickBrowser
-                          ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
-                          : _openTornBrowser('https://www.torn.com/travelagency.php');
+                          ? openBrowserDialog(
+                              context,
+                              'https://www.torn.com/travelagency.php',
+                              callBack: _updateInformation,
+                            )
+                          : _openTornBrowser(
+                              'https://www.torn.com/travelagency.php');
                     } else {
                       _openTornBrowser('https://www.torn.com/travelagency.php');
                     }
@@ -267,7 +273,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           if (returnFlag.flagPressed) {
             if (returnFlag.shortTap) {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+                  ? openBrowserDialog(
+                      context,
+                      'https://www.torn.com/travelagency.php',
+                      callBack: _updateInformation,
+                    )
                   : _openTornBrowser('https://www.torn.com/travelagency.php');
             } else {
               _openTornBrowser('https://www.torn.com/travelagency.php');
@@ -520,7 +530,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             },
             onPressed: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/')
+                  ? openBrowserDialog(
+                      context,
+                      'https://www.torn.com/',
+                      callBack: _updateInformation,
+                    )
                   : _openTornBrowser('https://www.torn.com/');
             },
           ),
@@ -553,7 +567,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             },
             onPressed: () async {
               _settingsProvider.useQuickBrowser
-                  ? _openBrowserDialog(context, 'https://www.torn.com/')
+                  ? openBrowserDialog(
+                      context,
+                      'https://www.torn.com/',
+                      callBack: _updateInformation,
+                    )
                   : _openTornBrowser('https://www.torn.com/');
             },
           ),
@@ -614,7 +632,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 },
                 onTap: () async {
                   _settingsProvider.useQuickBrowser
-                      ? _openBrowserDialog(context, 'https://www.torn.com/')
+                      ? openBrowserDialog(
+                          context,
+                          'https://www.torn.com/',
+                          callBack: _updateInformation,
+                        )
                       : _openTornBrowser('https://www.torn.com/');
                 },
                 child: LinearPercentIndicator(
@@ -714,7 +736,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       },
       onPressed: () async {
         _settingsProvider.useQuickBrowser
-            ? _openBrowserDialog(context, 'https://www.torn.com/travelagency.php')
+            ? openBrowserDialog(
+                context,
+                'https://www.torn.com/travelagency.php',
+                callBack: _updateInformation,
+              )
             : _openTornBrowser('https://www.torn.com/travelagency.php');
       },
     );
@@ -1169,29 +1195,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   _callBackFromTravelOptions() async {
     await _restorePreferences();
-  }
-
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(
-              customUrl: initUrl,
-              dialog: true,
-              customCallBack: _updateInformation,
-            ),
-          ),
-        );
-      },
-    );
   }
 
   Future _openTornBrowser(String page) async {

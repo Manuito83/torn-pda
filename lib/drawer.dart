@@ -31,6 +31,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'main.dart';
 import 'package:flutter/services.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -251,7 +252,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       switch (browserType) {
         case 'app':
           if (_settingsProvider.useQuickBrowser) {
-            _openBrowserDialog(
+            openBrowserDialog(
               context,
               browserUrl,
             );
@@ -302,7 +303,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         switch (browserType) {
           case 'app':
             if (_settingsProvider.useQuickBrowser) {
-              _openBrowserDialog(
+              openBrowserDialog(
                 context,
                 browserUrl,
               );
@@ -721,22 +722,4 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _openBrowserDialog(BuildContext _, String initUrl) {
-    return showDialog(
-      context: _,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: WebViewFull(customUrl: initUrl, dialog: true),
-          ),
-        );
-      },
-    );
-  }
 }
