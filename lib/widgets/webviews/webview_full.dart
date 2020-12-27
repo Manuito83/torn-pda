@@ -612,7 +612,6 @@ class _WebViewFullState extends State<WebViewFull> {
           _travelHomeIcon(),
           _crimesInfoIcon(),
           _crimesMenuIcon(),
-          _quickItemsInfoIcon(),
           _quickItemsMenuIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
@@ -1406,34 +1405,6 @@ class _WebViewFullState extends State<WebViewFull> {
         _quickItemsController.expanded = true;
         _quickItemsActive = true;
       });
-    }
-  }
-
-  Widget _quickItemsInfoIcon() {
-    if (_quickItemsActive) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: IconButton(
-          icon: Icon(Icons.info_outline),
-          onPressed: () {
-            BotToast.showText(
-              text:
-                  'If you need more information about a quick item, maintain the '
-                  'quick item button pressed for a few seconds and a tooltip '
-                  'will be shown!',
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.grey[700],
-              duration: Duration(seconds: 8),
-              contentPadding: EdgeInsets.all(10),
-            );
-          },
-        ),
-      );
-    } else {
-      return SizedBox.shrink();
     }
   }
 
