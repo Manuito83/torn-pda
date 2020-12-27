@@ -61,6 +61,16 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         itemColor = Colors.green[300];
       }
 
+      double fontSize = 12;
+      var itemQty = item.inventory.toString();
+      if (item.inventory > 999 && item.inventory < 100000) {
+        itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
+      } else if (item.inventory >= 100000) {
+        itemQty = "∞";
+      }
+      if (item.inventory >= 10000 && item.inventory < 100000) {
+        fontSize = 11;
+      }
       myList.add(
         Tooltip(
           message: '${item.name}\n\n${item.description}',
@@ -72,24 +82,22 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
             elevation: 3,
             avatar: CircleAvatar(
               child: Text(
-                '${item.inventory}',
+                itemQty,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: fontSize,
                   color: itemColor,
                 ),
               ),
             ),
-            label: SizedBox(
-              child: item.name.split(' ').length > 1
-                  ? _splitName(item.name)
-                  : Text(
-                      item.name,
-                      softWrap: true,
-                      overflow: TextOverflow.clip,
-                      maxLines: 2,
-                      style: TextStyle(fontSize: 11),
-                    ),
-            ),
+            label: item.name.split(' ').length > 1
+                ? _splitName(item.name)
+                : Text(
+                    item.name,
+                    softWrap: true,
+                    overflow: TextOverflow.clip,
+                    maxLines: 2,
+                    style: TextStyle(fontSize: 11),
+                  ),
             onPressed: () async {
               var js = quickItemsJS(item: item.number.toString());
               await widget.controller.evaluateJavascript(source: js);
@@ -106,9 +114,11 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         appBarPosition = "bottom";
       }
 
-      String explanation = "Use the options at the $appBarPosition to configure quick items";
+      String explanation =
+          "Use the options at the $appBarPosition to configure quick items";
       if (widget.browserDialog) {
-        explanation = "Open a full browser (long press) to configure your quick items for the first time";
+        explanation =
+            "Open a full browser (long press) to configure your quick items for the first time";
       }
 
       myList.add(
