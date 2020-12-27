@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/services.dart';
+import 'dart:math';
 
 class AwardsGraphs extends StatefulWidget {
   AwardsGraphs({@required this.graphInfo});
@@ -144,10 +145,14 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             fitInsideVertically: true,
             fitInsideHorizontally: true,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              var achieved = widget.graphInfo[group.x][2] == 0
+                  ? "NOT ACHIEVED"
+                  : "ACHIEVED";
               return BarTooltipItem(
                 "${widget.graphInfo[group.x][0]}\n"
                 "Circulation ${widget.graphInfo[group.x][1]}\n"
-                "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}",
+                "Rarity ${widget.graphInfo[group.x][4].toStringAsFixed(4)}\n\n"
+                "$achieved",
                 TextStyle(color: Colors.yellow, fontSize: 12),
               );
             }),
@@ -171,11 +176,23 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           showTitles: false,
         ),
         leftTitles: SideTitles(
+          reservedSize: 25,
+          getTitles: (value) {
+            // Antilogarithm
+            int yValue = pow(10, value).round();
+            String yString = yValue.toString();
+            if (yValue == 1) {
+              return "0";
+            } else if (yValue > 999) {
+              yString = "${(yValue / 1000).truncate().toStringAsFixed(0)}K";
+            }
+            return yString;
+          },
           getTextStyles: (value) {
             return TextStyle(color: _themeProvider.mainText, fontSize: 12);
           },
           showTitles: true,
-          interval: 25000,
+          interval: 1,
         ),
       ),
       borderData: FlBorderData(
@@ -197,7 +214,8 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       awardBarList.add(
         makeGroupData(
           x: i,
-          y: widget.graphInfo[i][1].toDouble(),
+          //y: widget.graphInfo[i][1].toDouble(),
+          y: log(widget.graphInfo[i][1]) / ln10.toDouble(),
           isTouched: i == _touchedIndex,
           barColor: widget.graphInfo[i][2] == 0 ? Colors.red : Colors.green,
           width: pixelPerBar,
@@ -220,12 +238,14 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
       x: x,
       barRods: [
         BarChartRodData(
-          y: isTouched ? y + 1 : y,
+          //y: isTouched ? y + 1 : y,
+          y: y,
           colors: isTouched ? [Colors.yellow] : [barColor],
           width: width,
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
-            y: 20,
+            //y: 20,
+            y: y,
             colors: [barBackgroundColor],
           ),
         ),
