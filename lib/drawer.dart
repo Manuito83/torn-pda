@@ -32,6 +32,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'main.dart';
 import 'package:flutter/services.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/pages/tips_page.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -55,6 +56,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Alerts",
     "Settings",
     "About",
+    "Tips"
   ];
 
   ThemeProvider _themeProvider;
@@ -549,6 +551,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       case 8:
         return AboutPage();
         break;
+      case 9:
+        return TipsPage();
+        break;
 
       default:
         return new Text("Error");
@@ -583,6 +588,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         break;
       case 8:
         return Icon(Icons.info_outline);
+        break;
+      case 9:
+        return Icon(Icons.question_answer_outlined);
         break;
       default:
         return SizedBox.shrink();
