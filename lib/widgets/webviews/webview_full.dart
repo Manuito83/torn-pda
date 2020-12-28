@@ -32,6 +32,9 @@ import 'package:torn_pda/widgets/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:dotted_border/dotted_border.dart';
 
 class VaultsOptions {
   String description;
@@ -70,6 +73,14 @@ class _WebViewFullState extends State<WebViewFull> {
   String _initialUrl = "";
   String _pageTitle = "";
   String _currentUrl = '';
+
+  final _customURLController = new TextEditingController();
+  var _customURLKey = GlobalKey<FormState>();
+
+  final _customShortcutNameController = new TextEditingController();
+  final _customShortcutURLController = new TextEditingController();
+  var _customShortcutNameKey = GlobalKey<FormState>();
+  var _customShortcutURLKey = GlobalKey<FormState>();
 
   bool _backButtonPopsContext = true;
 
@@ -130,12 +141,14 @@ class _WebViewFullState extends State<WebViewFull> {
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
+  ShortcutsProvider _shortcutsProvider;
 
   @override
   void initState() {
     super.initState();
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _initialUrl = widget.customUrl;
     _pageTitle = widget.customTitle;
   }
@@ -150,14 +163,14 @@ class _WebViewFullState extends State<WebViewFull> {
       // case this is the first time, as there is no appBar to be found and it would
       // failed to open
       child: widget.dialog
-          ? buildScaffold(context)
-          : BubbleShowcase(
+          ? BubbleShowcase(
               // KEEP THIS UNIQUE
-              bubbleShowcaseId: 'webview_full_showcase',
+              bubbleShowcaseId: 'webview_dialog_showcase',
               // WILL SHOW IF VERSION CHANGED
               bubbleShowcaseVersion: 1,
               showCloseButton: false,
               doNotReopenOnClose: true,
+              counterText: "",
               bubbleSlides: [
                 AbsoluteBubbleSlide(
                   positionCalculator: (size) => Position(
@@ -175,14 +188,53 @@ class _WebViewFullState extends State<WebViewFull> {
                       width: 200,
                       nipLocation: NipLocation.BOTTOM,
                       nipHeight: 0,
-                      color: Colors.blue,
+                      color: Colors.green[800],
                       child: Padding(
                         padding: EdgeInsets.all(10),
                         child: Text(
+                          'NEW!\n\n'
                           'Did you know?\n\n'
-                          'Long press section title to copy URL\n\n'
-                          'Swipe left/right to browse forward/back',
+                          'Long press the bottom bar of the quick browser to open a '
+                          'menu with additional options\n\n'
+                          'GIVE IT A TRY!',
                           style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              child: buildScaffold(context),
+            )
+          : BubbleShowcase(
+              // KEEP THIS UNIQUE
+              bubbleShowcaseId: 'webview_full_showcase',
+              // WILL SHOW IF VERSION CHANGED
+              bubbleShowcaseVersion: 2,
+              showCloseButton: false,
+              doNotReopenOnClose: true,
+              counterText: "",
+              bubbleSlides: [
+                RelativeBubbleSlide(
+                  shape: Rectangle(spreadRadius: 10),
+                  widgetKey: _showOne,
+                  child: RelativeBubbleSlideChild(
+                    direction: AxisDirection.down,
+                    widget: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SpeechBubble(
+                        nipLocation: NipLocation.TOP,
+                        color: Colors.green[800],
+                        child: Padding(
+                          padding: EdgeInsets.all(6),
+                          child: Text(
+                            'NEW!\n\n'
+                            'Did you know?\n\n'
+                            'Tap page title to open a menu with additional options\n\n'
+                            'Swipe page title left/right to browse forward/back\n\n'
+                            'GIVE IT A TRY!',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
@@ -221,83 +273,86 @@ class _WebViewFullState extends State<WebViewFull> {
             right: false,
             bottom: true,
             child: widget.dialog
-                ? Column(
-                    children: [
-                      Expanded(child: mainWebViewColumn()),
-                      Container(
-                        color: _themeProvider.currentTheme == AppTheme.light
-                            ? Colors.white
-                            : _themeProvider.background,
-                        height: 38,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 100,
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 40,
-                                    child: IconButton(
-                                      icon: Icon(
-                                        Icons.arrow_back_ios_outlined,
-                                        size: 20,
+                ? GestureDetector(
+                    onLongPress: () => _openCustomUrlDialog(),
+                    child: Column(
+                      children: [
+                        Expanded(child: mainWebViewColumn()),
+                        Container(
+                          color: _themeProvider.currentTheme == AppTheme.light
+                              ? Colors.white
+                              : _themeProvider.background,
+                          height: 38,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 100,
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 40,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.arrow_back_ios_outlined,
+                                          size: 20,
+                                        ),
+                                        onPressed: () async {
+                                          _tryGoBack();
+                                        },
                                       ),
-                                      onPressed: () async {
-                                        _tryGoBack();
-                                      },
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 40,
-                                    child: IconButton(
-                                      icon: Icon(
-                                        Icons.arrow_forward_ios_outlined,
-                                        size: 20,
+                                    SizedBox(
+                                      width: 40,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.arrow_forward_ios_outlined,
+                                          size: 20,
+                                        ),
+                                        onPressed: () async {
+                                          tryGoForward();
+                                        },
                                       ),
-                                      onPressed: () async {
-                                        tryGoForward();
-                                      },
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: FlatButton(
-                                  child: Text("Close"),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
+                                  ],
                                 ),
                               ),
-                            ),
-                            SizedBox(
-                              width: 100,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  _chatRemovalEnabled
-                                      ? _hideChatIcon()
-                                      : SizedBox.shrink(),
-                                  IconButton(
-                                    icon: Icon(Icons.refresh),
-                                    onPressed: () async {
-                                      _scrollX = await webView.getScrollX();
-                                      _scrollY = await webView.getScrollY();
-                                      await webView.reload();
-                                      _scrollAfterLoad = true;
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: FlatButton(
+                                    child: Text("Close"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
                                     },
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
+                              SizedBox(
+                                width: 100,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    _chatRemovalEnabled
+                                        ? _hideChatIcon()
+                                        : SizedBox.shrink(),
+                                    IconButton(
+                                      icon: Icon(Icons.refresh),
+                                      onPressed: () async {
+                                        _scrollX = await webView.getScrollX();
+                                        _scrollY = await webView.getScrollY();
+                                        await webView.reload();
+                                        _scrollAfterLoad = true;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   )
                 : mainWebViewColumn(),
           ),
@@ -467,13 +522,21 @@ class _WebViewFullState extends State<WebViewFull> {
                 _decideIfCallTrades();
               }
             },
-            onLoadStart: (InAppWebViewController c, String url) {
+            onLoadStart: (InAppWebViewController c, String url) async {
               _currentUrl = url;
-              _assessGeneral();
+
+              var html = await webView.getHtml();
+              var document = parse(html);
+              _assessGeneral(document);
             },
-            onLoadStop: (InAppWebViewController c, String url) {
+            onLoadStop: (InAppWebViewController c, String url) async {
               _currentUrl = url;
-              _assessGeneral();
+
+              var html = await webView.getHtml();
+              var document = parse(html);
+              // Force to show title
+              _getPageTitle(document, showTitle: true);
+              _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
@@ -560,9 +623,11 @@ class _WebViewFullState extends State<WebViewFull> {
 
   CustomAppBar buildCustomAppBar() {
     return CustomAppBar(
-      key: _showOne,
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
+      },
+      onTap: () {
+        _openCustomUrlDialog();
       },
       genericAppBar: AppBar(
         leading: IconButton(
@@ -589,24 +654,24 @@ class _WebViewFullState extends State<WebViewFull> {
                 _backButtonPopsContext = true;
               }
             }),
-        title: GestureDetector(
-          child: Text(_pageTitle),
-          onLongPress: () {
-            Clipboard.setData(ClipboardData(text: _currentUrl));
-            if (_currentUrl.length > 60) {
-              _currentUrl = _currentUrl.substring(0, 60) + "...";
-            }
-            BotToast.showText(
-              text: "Current URL copied to the clipboard [$_currentUrl]",
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.green,
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
-          },
+        title: DottedBorder(
+          borderType: BorderType.Rect,
+          padding: EdgeInsets.all(6),
+          dashPattern: [1, 4],
+          color: Colors.white70,
+          child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            child: Row(
+              key: _showOne,
+              children: [
+                Flexible(
+                    child: Text(
+                  _pageTitle,
+                  overflow: TextOverflow.fade,
+                )),
+              ],
+            ),
+          ),
         ),
         actions: <Widget>[
           _travelHomeIcon(),
@@ -712,10 +777,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   /// Note: several other modules are called in onProgressChanged, since it's
   /// faster. The ones here probably would not benefit from it.
-  Future _assessGeneral() async {
-    var html = await webView.getHtml();
-    var document = parse(html);
-
+  Future _assessGeneral(dom.Document document) async {
     _assessBackButtonBehaviour();
     _assessTravel(document);
     _assessBazaar(document);
@@ -742,27 +804,51 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  String _getPageTitle(dom.Document document) {
+  /// This will try first with H4 (works for most Torn sections) and revert
+  /// to the URL if it doesn't find anything
+  /// [showTitle] show ideally only be set to true in onLoadStop, or full
+  /// URLs might show up while loading the page in onProgressChange
+  Future<String> _getPageTitle(
+    dom.Document document, {
+    bool showTitle = false,
+  }) async {
+    String title = '';
     var h4 = document.querySelector(".content-title > h4");
-    String pageTitle = '';
     if (h4 != null) {
-      pageTitle = h4.innerHtml.substring(0).trim();
-      if (pageTitle.toLowerCase().contains('error') ||
-          pageTitle.toLowerCase().contains('please validate')) {
+      title = h4.innerHtml.substring(0).trim();
+    }
+
+    if (h4 == null && showTitle) {
+      title = await webView.getTitle();
+      if (title.contains(' |')) {
+        title = title.split(' |')[0];
+      }
+    }
+
+    // If title is missing, we only show the domain
+    if (title.contains('https://www.')) {
+      title = title.replaceAll('https://www.', '');
+    } else if (title.contains('https://')) {
+      title = title.replaceAll('https://', '');
+    }
+
+    if (title != null) {
+      if (title.toLowerCase().contains('error') ||
+          title.toLowerCase().contains('please validate')) {
         if (mounted) {
           setState(() {
             _pageTitle = 'Torn';
           });
         }
       } else {
-        if (mounted) {
+        if (mounted && showTitle) {
           setState(() {
-            _pageTitle = pageTitle;
+            _pageTitle = title;
           });
         }
       }
     }
-    return pageTitle;
+    return title;
   }
 
   // TRAVEL
@@ -858,7 +944,7 @@ class _WebViewFullState extends State<WebViewFull> {
   // CRIMES
   Future _assessCrimes(dom.Document document) async {
     if (mounted) {
-      var pageTitle = _getPageTitle(document).toLowerCase();
+      var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('crimes')) {
         setState(() {
           _crimesController.expanded = false;
@@ -941,7 +1027,7 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _assessTrades(dom.Document document) async {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
-    var pageTitle = _getPageTitle(document).toLowerCase();
+    var pageTitle = (await _getPageTitle(document)).toLowerCase();
     var easyUrl =
         _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
@@ -1201,7 +1287,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // CITY
   Future _assessCity(dom.Document document) async {
-    var pageTitle = _getPageTitle(document).toLowerCase();
+    var pageTitle = (await _getPageTitle(document)).toLowerCase();
     if (!pageTitle.contains('city')) {
       setState(() {
         _cityIconActive = false;
@@ -1381,7 +1467,7 @@ class _WebViewFullState extends State<WebViewFull> {
   // QUICK ITEMS
   Future _assessQuickItems(dom.Document document) async {
     if (mounted) {
-      var pageTitle = _getPageTitle(document).toLowerCase();
+      var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('items')) {
         setState(() {
           _quickItemsController.expanded = false;
@@ -1482,6 +1568,416 @@ class _WebViewFullState extends State<WebViewFull> {
       _chatRemovalEnabled = removalEnabled;
       _chatRemovalActive = removalActive;
     });
+  }
+
+  Future<void> _openCustomUrlDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "URL OPTIONS",
+                            style: TextStyle(
+                                fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Form(
+                                key: _customURLKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize
+                                      .min, // To make the card compact
+                                  children: <Widget>[
+                                    TextFormField(
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: _themeProvider.mainText,
+                                      ),
+                                      controller: _customURLController,
+                                      maxLength: 300,
+                                      maxLines: 1,
+                                      textInputAction: TextInputAction.go,
+                                      onFieldSubmitted: (value) {
+                                        onCustomURLSubmitted();
+                                      },
+                                      decoration: InputDecoration(
+                                        counterText: "",
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        labelText: 'Custom URL',
+                                      ),
+                                      validator: (value) {
+                                        if (value.replaceAll(' ', '').isEmpty) {
+                                          return "Cannot be empty!";
+                                        }
+                                        // Try to force https
+                                        if (value
+                                            .toLowerCase()
+                                            .contains('http://')) {
+                                          _customURLController.text.replaceAll(
+                                              'http://', 'https://');
+                                        }
+                                        if (!value
+                                            .toLowerCase()
+                                            .contains('https://')) {
+                                          _customURLController.text =
+                                              'https://' +
+                                                  _customURLController.text;
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.double_arrow_outlined),
+                              onPressed: () async {
+                                onCustomURLSubmitted();
+                              },
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                        RaisedButton(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            //mainAxisAlignment: MainAxisAlign,
+                            children: [
+                              Icon(Icons.paste),
+                              SizedBox(width: 5),
+                              Text('Copy current URL'),
+                            ],
+                          ),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: _currentUrl));
+                            if (_currentUrl.length > 60) {
+                              _currentUrl =
+                                  _currentUrl.substring(0, 60) + "...";
+                            }
+                            BotToast.showText(
+                              text: "Current URL copied to "
+                                  "the clipboard [$_currentUrl]",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.green,
+                              duration: Duration(seconds: 5),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                            _customURLController.text = "";
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        SizedBox(height: 10),
+                        RaisedButton(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            //mainAxisAlignment: MainAxisAlign,
+                            children: [
+                              Icon(Icons.favorite_border_outlined),
+                              SizedBox(width: 5),
+                              Text('Save shortcut'),
+                            ],
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _openCustomShortcutDialog(_pageTitle, _currentUrl);
+                            _customURLController.text = "";
+                          },
+                        ),
+                        SizedBox(height: 8),
+                        FlatButton(
+                          child: Text("Close"),
+                          onPressed: () {
+                            _customURLController.text = "";
+                            Navigator.of(context).pop();
+                          },
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 25,
+                        width: 25,
+                        child: Image.asset(
+                          "images/icons/pda_icon.png",
+                          width: 18,
+                          height: 18,
+                          color: _themeProvider.mainText,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void onCustomURLSubmitted() {
+    if (_customURLKey.currentState.validate()) {
+      webView.loadUrl(url: _customURLController.text);
+      _customURLController.text = "";
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _openCustomShortcutDialog(String title, String url) {
+    _customShortcutNameController.text = title;
+    _customShortcutURLController.text = url;
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "Add a name and URL for your custom shortcut. Note: "
+                            "ensure URL begins with 'https://'",
+                            style: TextStyle(
+                                fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Form(
+                          key: _customShortcutNameKey,
+                          child: Column(
+                            mainAxisSize:
+                                MainAxisSize.min, // To make the card compact
+                            children: <Widget>[
+                              TextFormField(
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: _themeProvider.mainText,
+                                ),
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                controller: _customShortcutNameController,
+                                maxLength: 20,
+                                maxLines: 1,
+                                decoration: InputDecoration(
+                                  counterText: "",
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Name',
+                                ),
+                                validator: (value) {
+                                  if (value.replaceAll(' ', '').isEmpty) {
+                                    return "Cannot be empty!";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Form(
+                                key: _customShortcutURLKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize
+                                      .min, // To make the card compact
+                                  children: <Widget>[
+                                    TextFormField(
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: _themeProvider.mainText,
+                                      ),
+                                      controller: _customShortcutURLController,
+                                      maxLength: 300,
+                                      maxLines: 1,
+                                      decoration: InputDecoration(
+                                        counterText: "",
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        labelText: 'URL',
+                                      ),
+                                      validator: (value) {
+                                        if (value.replaceAll(' ', '').isEmpty) {
+                                          return "Cannot be empty!";
+                                        }
+                                        if (!value
+                                            .toLowerCase()
+                                            .contains('https://')) {
+                                          if (value
+                                              .toLowerCase()
+                                              .contains('http://')) {
+                                            return "Invalid, HTTPS needed!";
+                                          }
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            FlatButton(
+                              child: Text("Add"),
+                              onPressed: () {
+                                if (!_customShortcutURLKey.currentState
+                                    .validate()) {
+                                  return;
+                                }
+                                if (!_customShortcutNameKey.currentState
+                                    .validate()) {
+                                  return;
+                                }
+
+                                var customShortcut = Shortcut()
+                                  ..name = _customShortcutNameController.text
+                                  ..nickname =
+                                      _customShortcutNameController.text
+                                  ..url = _customShortcutURLController.text
+                                  ..iconUrl = 'images/icons/pda_icon.png'
+                                  ..color = Colors.orange[500]
+                                  ..isCustom = true;
+
+                                _shortcutsProvider
+                                    .activateShortcut(customShortcut);
+                                Navigator.of(context).pop();
+                                _customShortcutNameController.text = '';
+                                _customURLController.text = '';
+                              },
+                            ),
+                            FlatButton(
+                              child: Text("Close"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                _customShortcutNameController.text = '';
+                                _customURLController.text = '';
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 25,
+                        width: 25,
+                        child: Image.asset(
+                          "images/icons/pda_icon.png",
+                          width: 18,
+                          height: 18,
+                          color: _themeProvider.mainText,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // UTILS
