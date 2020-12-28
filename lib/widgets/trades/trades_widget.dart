@@ -44,11 +44,22 @@ class _TradesWidgetState extends State<TradesWidget> {
         header: Column(
           children: <Widget>[
             if (!_tradesProv.container.ttActive)
-              Text(
-                'Trade Calculator',
-                style: TextStyle(
-                  color: Colors.orange,
-                ),
+              Column(
+                children: [
+                  Text(
+                    'Trade Calculator',
+                    style: TextStyle(
+                      color: Colors.orange,
+                    ),
+                  ),
+                  Text(
+                    '(TAP TO EXPAND)',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 8,
+                    ),
+                  ),
+                ],
               )
             else
               Row(
@@ -56,11 +67,22 @@ class _TradesWidgetState extends State<TradesWidget> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   SizedBox(width: 80),
-                  Text(
-                    'Trade Calculator',
-                    style: TextStyle(
-                      color: Colors.orange,
-                    ),
+                  Column(
+                    children: [
+                      Text(
+                        'Trade Calculator',
+                        style: TextStyle(
+                          color: Colors.orange,
+                        ),
+                      ),
+                      Text(
+                        '(TAP TO EXPAND)',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(
                     width: 90,
@@ -352,6 +374,23 @@ class _TradesWidgetState extends State<TradesWidget> {
               children: [
                 Flexible(
                   child: Text(
+                    '\$${_moneyFormat.format(total)} market',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 5),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
                     '${_tradesProv.container.ttProfit} profit',
                     textAlign: TextAlign.end,
                     style: TextStyle(
@@ -410,11 +449,11 @@ class _TradesWidgetState extends State<TradesWidget> {
   }
 
   List<Widget> sideDetailed(String side) {
-    var items = List<Widget>();
-    int sideMoney;
-    List<TradeItem> sideItems;
-    List<TradeItem> sideProperties;
-    List<TradeItem> sideShares;
+    var items = <Widget>[];
+    int sideMoney = 0;
+    var sideItems = <TradeItem>[];
+    var sideProperties = <TradeItem>[];
+    var sideShares = <TradeItem>[];
     bool noItemsFound = true;
 
     if (side == 'left') {
@@ -433,7 +472,9 @@ class _TradesWidgetState extends State<TradesWidget> {
     if (_tradesProv.container.ttActive &&
         side == 'right' &&
         (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)) {
+
       var ttItems = _tradesProv.container.ttItems;
+
       for (var ttProduct in ttItems) {
         if (ttProduct.price == null) {
           continue;
@@ -518,6 +559,10 @@ class _TradesWidgetState extends State<TradesWidget> {
           }
         }
         sideItems = List<TradeItem>.from(newSideItemList);
+
+        // If we only find TornTrader items, the standard item list will be empty
+        // and a warning will show. We need to prevent it with this setting
+        noItemsFound = false;
       }
 
       // If after comparing there are still items in sideItems, there are items not captured
