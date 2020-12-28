@@ -357,7 +357,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Padding(
                             padding: EdgeInsets.all(10),
                             child: Text(
-                              'There are other many places where you can tap to '
+                              'There are many other places where you can tap to '
                               'navigate to Torn (e.g.: the points or cash icons below)',
                               style: TextStyle(color: Colors.white),
                             ),
