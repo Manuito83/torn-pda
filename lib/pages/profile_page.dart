@@ -358,7 +358,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             padding: EdgeInsets.all(10),
                             child: Text(
                               'There are many other places where you can tap to '
-                              'navigate to Torn (e.g.: the points or cash icons below)',
+                              'navigate to Torn (e.g. the points or cash icons below)\n\n'
+                              'Don\'t forget to visit the TIPS section (see main menu) for other tips '
+                              'and tricks!',
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
@@ -3765,8 +3767,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: GestureDetector(
             onTap: () async {
               _settingsProvider.useQuickBrowser
-                  ? openBrowserDialog(
-                      context, 'https://www.torn.com/trade.php')
+                  ? openBrowserDialog(context, 'https://www.torn.com/trade.php')
                   : _openTornBrowser('trades');
               setState(() {
                 speedDialSetOpen.value = false;
