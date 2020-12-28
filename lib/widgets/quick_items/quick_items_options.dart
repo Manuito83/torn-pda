@@ -551,6 +551,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
   }
 
   Future<bool> _willPopCallback() async {
+    _searchController.text = "";
     Navigator.of(context).pop();
     return true;
   }
