@@ -317,11 +317,10 @@ String quickItemsJS({
     `);
     
     // If there any boxes remaining (from previous calls, remove them)
-    var remainingBox = document.querySelector('.resultBox');
-    if (remainingBox != null) {
-      remainingBox.remove();
+    for (let box of document.querySelectorAll('.resultBox')) {
+      box.remove();
     }
-        
+ 
     // From TornTools by Mephiles
     function getRFC() {
       const rfc = getCookie("rfc_v");
@@ -370,5 +369,21 @@ String quickItemsJS({
         document.querySelector(".resultBox").style.display = "none";
       }
     });
+    
+    // To prevent several boxes appearing if users spam click, we will 
+    // wait a few seconds and then remove all except for the very first (most 
+    // recent item)
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async function removeRemaining() {
+      await sleep(3000);
+      var remaining = document.querySelectorAll('.resultBox');
+      for (i = 1; i < remaining.length; i++) {
+        remaining[i].remove();
+      }
+    }
+    removeRemaining();
+
   ''';
 }
