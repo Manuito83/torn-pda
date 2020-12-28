@@ -499,26 +499,26 @@ class _WebViewFullState extends State<WebViewFull> {
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
-              if (_currentUrl.contains('item.php')) {
+              if (_currentUrl.contains('item.php') || _quickItemsTriggered) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessQuickItems(document);
               }
 
-              if (_currentUrl.contains('crimes.php')) {
+              if (_currentUrl.contains('crimes.php') || _crimesTriggered) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessCrimes(document);
               }
 
-              if (_currentUrl.contains('city.php')) {
+              if (_currentUrl.contains('city.php') || _cityTriggered) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessCity(document);
               }
 
-              if (_tradesTriggered && !_currentUrl.contains("trade.php")) {
-                // Call once so that trades is deactivated
+              if (!_currentUrl.contains("trade.php") && _tradesTriggered) {
+                // This is different to the others, here we call only so that trades is deactivated
                 _decideIfCallTrades();
               }
             },
@@ -552,6 +552,23 @@ class _WebViewFullState extends State<WebViewFull> {
               _quickItemsTriggered = false;
               _cityTriggered = false;
               _tradesTriggered = false;
+
+              if (_currentUrl.contains('item.php')) {
+                _quickItemsTriggered = true;
+              }
+
+              if (_currentUrl.contains('crimes.php')) {
+                _crimesTriggered = true;
+              }
+
+              if (_currentUrl.contains('city.php')) {
+                _cityTriggered = true;
+              }
+
+              if (_currentUrl.contains("trade.php")) {
+                _tradesTriggered = true;
+              }
+
             },
             // Allows IOS to open links with target=_blank
             onCreateWindow:
@@ -572,7 +589,6 @@ class _WebViewFullState extends State<WebViewFull> {
                 _currentUrl = await webView.getUrl();
                 var html = await webView.getHtml();
                 var document = parse(html);
-                _tradesTriggered = true;
                 _assessTrades(document);
               }
             },
