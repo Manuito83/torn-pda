@@ -3,7 +3,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:torn_pda/widgets/crimes/crimes_options.dart';
+import 'package:torn_pda/pages/crimes/crimes_options.dart';
 
 class CrimesWidget extends StatefulWidget {
   final InAppWebViewController controller;
