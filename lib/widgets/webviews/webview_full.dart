@@ -503,19 +503,22 @@ class _WebViewFullState extends State<WebViewFull> {
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
-              if (_currentUrl.contains('item.php') || _quickItemsTriggered) {
+              if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
+                  (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessQuickItems(document);
               }
 
-              if (_currentUrl.contains('crimes.php') || _crimesTriggered) {
+              if ((_currentUrl.contains('crimes.php') && !_crimesTriggered) ||
+                  (!_currentUrl.contains('crimes.php') && _crimesTriggered)) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessCrimes(document);
               }
 
-              if (_currentUrl.contains('city.php') || _cityTriggered) {
+              if ((_currentUrl.contains('city.php') && !_cityTriggered) ||
+                  (!_currentUrl.contains('city.php') && _cityTriggered)) {
                 var html = await webView.getHtml();
                 var document = parse(html);
                 _assessCity(document);
@@ -552,25 +555,28 @@ class _WebViewFullState extends State<WebViewFull> {
               // We reset here the triggers for the sections that are called every
               // time onProgressChanged ticks, so that they can be called again
               // in the future
-              _crimesTriggered = false;
-              _quickItemsTriggered = false;
-              _cityTriggered = false;
-              _tradesTriggered = false;
-
-              if (_currentUrl.contains('item.php')) {
-                _quickItemsTriggered = true;
+              if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
+                _crimesTriggered = false;
+                _cityTriggered = false;
+                _tradesTriggered = false;
               }
 
-              if (_currentUrl.contains('crimes.php')) {
-                _crimesTriggered = true;
+              if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
+                _quickItemsTriggered = false;
+                _cityTriggered = false;
+                _tradesTriggered = false;
               }
 
-              if (_currentUrl.contains('city.php')) {
-                _cityTriggered = true;
+              if (_currentUrl.contains('city.php') && _cityTriggered) {
+                _crimesTriggered = false;
+                _quickItemsTriggered = false;
+                _tradesTriggered = false;
               }
 
-              if (_currentUrl.contains("trade.php")) {
-                _tradesTriggered = true;
+              if (_currentUrl.contains("trade.php") && _tradesTriggered) {
+                _crimesTriggered = false;
+                _quickItemsTriggered = false;
+                _cityTriggered = false;
               }
             },
             // Allows IOS to open links with target=_blank
@@ -589,6 +595,7 @@ class _WebViewFullState extends State<WebViewFull> {
               /// of "hash.step".
               if (consoleMessage.message.contains('hash.step') &&
                   _currentUrl.contains('trade.php')) {
+                _tradesTriggered = true;
                 _currentUrl = await webView.getUrl();
                 var html = await webView.getHtml();
                 var document = parse(html);
@@ -1317,6 +1324,12 @@ class _WebViewFullState extends State<WebViewFull> {
       return;
     }
 
+    if (mounted) {
+      setState(() {
+        _cityIconActive = true;
+      });
+    }
+
     // Stops any successive calls once we are sure that the section is the
     // correct one. onLoadStop will reset this for the future.
     // Otherwise we would call the API every time onProgressChanged ticks
@@ -1324,12 +1337,6 @@ class _WebViewFullState extends State<WebViewFull> {
       return;
     }
     _cityTriggered = true;
-
-    if (mounted) {
-      setState(() {
-        _cityIconActive = true;
-      });
-    }
 
     // We only get this once and if we are inside the city
     // It's also in the callback from city options
@@ -1343,6 +1350,7 @@ class _WebViewFullState extends State<WebViewFull> {
     for (var i = 0; i < 40; i++) {
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
+        print(i);
         break;
       } else {
         await Future.delayed(const Duration(milliseconds: 250));
@@ -1366,6 +1374,8 @@ class _WebViewFullState extends State<WebViewFull> {
         _cityController.expanded = true;
       });
     }
+
+
 
     var mapItemsList = <String>[];
     for (var mapFind in query) {
