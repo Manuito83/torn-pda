@@ -35,6 +35,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _onAppExit = 'ask';
+  String get onAppExit => _onAppExit;
+  set changeOnAppExit(String choice) {
+    _onAppExit = choice;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   var _currentTimeFormat = TimeFormatSetting.h24;
   TimeFormatSetting get currentTimeFormat => _currentTimeFormat;
   set changeTimeFormat(TimeFormatSetting timeFormatSetting) {
@@ -97,6 +105,8 @@ class SettingsProvider extends ChangeNotifier {
 
     SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
 
+    SharedPreferencesModel().setOnAppExit(_onAppExit);
+
     SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
 
     SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
@@ -152,6 +162,8 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
 
     _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
+
+    _onAppExit = await SharedPreferencesModel().getOnAppExit();
 
     _chatRemoveEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
 

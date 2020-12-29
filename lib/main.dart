@@ -123,8 +123,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    var _settingsProvider =
-        Provider.of<SettingsProvider>(context, listen: true);
 
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: _themeProvider.currentTheme == AppTheme.light

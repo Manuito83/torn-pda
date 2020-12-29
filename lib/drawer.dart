@@ -33,6 +33,7 @@ import 'main.dart';
 import 'package:flutter/services.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/pages/tips_page.dart';
+import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -328,53 +329,56 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: true);
-    return FutureBuilder(
-      future: _finishedWithPreferences,
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            !_changelogIsActive) {
-          return Container(
-            color: _themeProvider.currentTheme == AppTheme.light
-                ? Colors.blueGrey
-                : Colors.grey[900],
-            child: SafeArea(
-              top: _settingsProvider.appBarTop ? false : true,
-              bottom: true,
-              child: Scaffold(
-                body: _getPages(),
-                drawer: Drawer(
-                  elevation: 2, // This avoids shadow over SafeArea
-                  child: Container(
-                    decoration: BoxDecoration(
-                        color: _themeProvider.currentTheme == AppTheme.light
-                            ? Colors.grey[100]
-                            : Colors.transparent,
-                        backgroundBlendMode: BlendMode.multiply),
-                    child: ListView(
-                      padding: EdgeInsets.zero,
-                      children: <Widget>[
-                        _getDrawerHeader(),
-                        _getDrawerItems(),
-                      ],
+    return WillPopScope(
+      onWillPop: _willPopCallback,
+      child: FutureBuilder(
+        future: _finishedWithPreferences,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done &&
+              !_changelogIsActive) {
+            return Container(
+              color: _themeProvider.currentTheme == AppTheme.light
+                  ? Colors.blueGrey
+                  : Colors.grey[900],
+              child: SafeArea(
+                top: _settingsProvider.appBarTop ? false : true,
+                bottom: true,
+                child: Scaffold(
+                  body: _getPages(),
+                  drawer: Drawer(
+                    elevation: 2, // This avoids shadow over SafeArea
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: _themeProvider.currentTheme == AppTheme.light
+                              ? Colors.grey[100]
+                              : Colors.transparent,
+                          backgroundBlendMode: BlendMode.multiply),
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: <Widget>[
+                          _getDrawerHeader(),
+                          _getDrawerItems(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          );
-        } else {
-          return Container(
-            color:Colors.black,
-            child: SafeArea(
-              top: _settingsProvider.appBarTop ? false : true,
-              bottom: true,
-              child: Center(
-                child: CircularProgressIndicator(),
+            );
+          } else {
+            return Container(
+              color:Colors.black,
+              child: SafeArea(
+                top: _settingsProvider.appBarTop ? false : true,
+                bottom: true,
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
               ),
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -745,6 +749,31 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           await launch(url, forceSafariVC: false);
         }
         break;
+    }
+  }
+
+  Future<bool> _willPopCallback() async {
+    var appExit = _settingsProvider.onAppExit;
+    if (appExit == 'exit') {
+      return true;
+    } else if (appExit == 'stay') {
+      return false;
+    } else {
+      var action;
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return OnAppExitDialog();
+        },
+      ).then((choice){
+        action = choice;
+      });
+      if (action == 'exit') {
+        await Future.delayed(Duration(milliseconds: 300));
+        return true;
+      } else {
+        return false;
+      }
     }
   }
 

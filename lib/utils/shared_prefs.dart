@@ -21,6 +21,7 @@ class SharedPreferencesModel {
   final String _kTheme = "pda_theme";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -279,6 +280,19 @@ class SharedPreferencesModel {
   Future<bool> setDefaultSection(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultSection, value);
+  }
+
+  /// ----------------------------
+  /// Methods for on app exit
+  /// ----------------------------
+  Future<String> getOnAppExit() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kOnAppExit) ?? 'ask';
+  }
+
+  Future<bool> setOnAppExit(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kOnAppExit, value);
   }
 
   /// ----------------------------
@@ -921,7 +935,7 @@ class SharedPreferencesModel {
 
   Future<List<String>> getHiddenAwardCategories() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kHiddenAwardCategories) ?? List<String>();
+    return prefs.getStringList(_kHiddenAwardCategories) ?? <String>[];
   }
 
   Future<bool> setHiddenAwardCategories(List<String> value) async {

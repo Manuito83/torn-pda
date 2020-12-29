@@ -36,6 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future _preferencesRestored;
 
   String _openSectionValue;
+  String _onAppExitValue;
   String _openBrowserValue;
   bool _loadBarBrowser;
   bool _chatRemoveEnabled;
@@ -162,7 +163,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             Switch(
                               value: _chatRemoveEnabled,
                               onChanged: (value) {
-                                _settingsProvider.changeChatRemoveEnabled = value;
+                                _settingsProvider.changeChatRemoveEnabled =
+                                    value;
                                 setState(() {
                                   _chatRemoveEnabled = value;
                                 });
@@ -197,9 +199,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Text(
                           'Note: this will allow you to open the quick browser in most '
-                              'places by using a short tap (and long tap for full browser). '
-                              'This does not apply to the chaining browser and a few other '
-                              'specific links',
+                          'places by using a short tap (and long tap for full browser). '
+                          'This does not apply to the chaining browser and a few other '
+                          'specific links',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
@@ -323,6 +325,39 @@ class _SettingsPageState extends State<SettingsPage> {
                               child: _openSectionDropdown(),
                             ),
                           ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 20, top: 10, right: 20, bottom: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "On app exit",
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(left: 20),
+                            ),
+                            Flexible(
+                              child: _appExitDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "Note: dictates how to proceed when the app detects a back button "
+                          "press or swipe that would otherwise close the app. "
+                          "If you choose 'ask', a dialog will be shown next time",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                       SizedBox(height: 50),
@@ -738,12 +773,64 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
-
       onChanged: (value) {
         // TODO: use settings provider for this?
         SharedPreferencesModel().setDefaultSection(value);
         setState(() {
           _openSectionValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _appExitDropdown() {
+    return DropdownButton<String>(
+      value: _onAppExitValue,
+      items: [
+        DropdownMenuItem(
+          value: "ask",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Ask",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "exit",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Exit",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "stay",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Stay",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        _settingsProvider.changeOnAppExit = value;
+        setState(() {
+          _onAppExitValue = value;
         });
       },
     );
@@ -990,6 +1077,21 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     await _settingsProvider.loadPreferences();
+
+    var onAppExit = _settingsProvider.onAppExit;
+    setState(() {
+      switch (onAppExit) {
+        case 'ask':
+          _onAppExitValue = 'ask';
+          break;
+        case 'exit':
+          _onAppExitValue = 'exit';
+          break;
+        case 'stay':
+          _onAppExitValue = 'stay';
+          break;
+      }
+    });
 
     var browser = _settingsProvider.currentBrowser;
     setState(() {
