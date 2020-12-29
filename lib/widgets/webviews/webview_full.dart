@@ -456,7 +456,6 @@ class _WebViewFullState extends State<WebViewFull> {
                 // company applications, etc.
                 //useShouldInterceptAjaxRequest: true,
                 debuggingEnabled: true,
-                preferredContentMode: UserPreferredContentMode.DESKTOP,
               ),
               android: AndroidInAppWebViewOptions(
                 //builtInZoomControls: false,
