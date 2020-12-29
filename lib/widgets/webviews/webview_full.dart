@@ -219,11 +219,15 @@ class _WebViewFullState extends State<WebViewFull> {
                   shape: Rectangle(spreadRadius: 10),
                   widgetKey: _showOne,
                   child: RelativeBubbleSlideChild(
-                    direction: AxisDirection.down,
+                    direction: _settingsProvider.appBarTop
+                        ? AxisDirection.down
+                        : AxisDirection.up,
                     widget: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SpeechBubble(
-                        nipLocation: NipLocation.TOP,
+                        nipLocation: _settingsProvider.appBarTop
+                            ? NipLocation.TOP
+                            : NipLocation.BOTTOM,
                         color: Colors.green[800],
                         child: Padding(
                           padding: EdgeInsets.all(6),
@@ -275,86 +279,86 @@ class _WebViewFullState extends State<WebViewFull> {
             color: Colors.grey[900],
             child: widget.dialog
                 ? Column(
-                  children: [
-                    Expanded(child: mainWebViewColumn()),
-                    Container(
-                      color: _themeProvider.currentTheme == AppTheme.light
-                          ? Colors.white
-                          : _themeProvider.background,
-                      height: 38,
-                      child: GestureDetector(
-                        onLongPress: () => _openCustomUrlDialog(),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 100,
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 40,
-                                    child: IconButton(
-                                      icon: Icon(
-                                        Icons.arrow_back_ios_outlined,
-                                        size: 20,
+                    children: [
+                      Expanded(child: mainWebViewColumn()),
+                      Container(
+                        color: _themeProvider.currentTheme == AppTheme.light
+                            ? Colors.white
+                            : _themeProvider.background,
+                        height: 38,
+                        child: GestureDetector(
+                          onLongPress: () => _openCustomUrlDialog(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 100,
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 40,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.arrow_back_ios_outlined,
+                                          size: 20,
+                                        ),
+                                        onPressed: () async {
+                                          _tryGoBack();
+                                        },
                                       ),
-                                      onPressed: () async {
-                                        _tryGoBack();
-                                      },
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 40,
-                                    child: IconButton(
-                                      icon: Icon(
-                                        Icons.arrow_forward_ios_outlined,
-                                        size: 20,
+                                    SizedBox(
+                                      width: 40,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.arrow_forward_ios_outlined,
+                                          size: 20,
+                                        ),
+                                        onPressed: () async {
+                                          tryGoForward();
+                                        },
                                       ),
-                                      onPressed: () async {
-                                        tryGoForward();
-                                      },
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 2),
-                                child: FlatButton(
-                                  child: Text("Close"),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
+                                  ],
                                 ),
                               ),
-                            ),
-                            SizedBox(
-                              width: 100,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  _chatRemovalEnabled
-                                      ? _hideChatIcon()
-                                      : SizedBox.shrink(),
-                                  IconButton(
-                                    icon: Icon(Icons.refresh),
-                                    onPressed: () async {
-                                      _scrollX = await webView.getScrollX();
-                                      _scrollY = await webView.getScrollY();
-                                      await webView.reload();
-                                      _scrollAfterLoad = true;
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: FlatButton(
+                                    child: Text("Close"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
                                     },
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ],
+                              SizedBox(
+                                width: 100,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    _chatRemovalEnabled
+                                        ? _hideChatIcon()
+                                        : SizedBox.shrink(),
+                                    IconButton(
+                                      icon: Icon(Icons.refresh),
+                                      onPressed: () async {
+                                        _scrollX = await webView.getScrollX();
+                                        _scrollY = await webView.getScrollY();
+                                        await webView.reload();
+                                        _scrollAfterLoad = true;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                )
+                    ],
+                  )
                 : mainWebViewColumn(),
           ),
         ),
@@ -569,7 +573,6 @@ class _WebViewFullState extends State<WebViewFull> {
               if (_currentUrl.contains("trade.php")) {
                 _tradesTriggered = true;
               }
-
             },
             // Allows IOS to open links with target=_blank
             onCreateWindow:
