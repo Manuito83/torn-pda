@@ -37,10 +37,36 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.0.0-BETA
     var v2_0_0 = ChangeLogItem();
-    v2_0_0.main.version = 'Torn PDA v2.0.0-BETA 4';
-    v2_0_0.main.date = '28 DEC 2020';
-    String feat2_0_0_1 = "Please have a look in Discord for beta features and analysis required. Thanks for your cooperation!";
+    v2_0_0.main.version = 'Torn PDA v2.0.0-BETA 5';
+    v2_0_0.main.date = '29 DEC 2020';
+    String feat2_0_0_1 = "YATA Awards: new section that constitutes the first official YATA mobile interface. Data comes straight from your YATA account";
+    String feat2_0_0_2 = "Quick Items: browse to the items section in Torn with the full browser and add your prefer items for a quick access later on";
+    String feat2_0_0_3 = "Alerts: added messages to automatic alerts (tap the notification to browse straight to the message). Most other notifications can now also be tapped to get access to their relevant areas";
+    String feat2_0_0_4 = "Tips: new section added to the main menu with some frequently asked questions and tips to get the maximum out or Torn PDA";
+    String feat2_0_0_5 = "Added a new button that allows to temporarily remove all chat windows from Torn";
+    String feat2_0_0_6 = "New browser features: you can now browser to any URL or add a website as a shortcut to your Profile section directly from the browser (tap the browser page title in the full browser or long press the close button in the quick browser)";
+    String feat2_0_0_7 = "Using the back button or swipe in the browser won't inadvertently close the browser any longer, but browser back if possible";
+    String feat2_0_0_8 = "Most links in Torn PDA open the quick browser with a short tap or the full browser with a long-press. Quick browser can be deactivated in Settings if desired";
+    String feat2_0_0_9 = "You can now select the number of events and messages to show in the Profile section";
+    String feat2_0_0_10 = "Added confirmation dialog to prevent exiting Torn PDA inadvertently (can be disabled)";
+    String feat2_0_0_11 = "Added Loot and Awards to the default launch section selector";
+    String feat2_0_0_12 = "Corrected travel money checks showing a warning when the exact amount was brought";
+    String feat2_0_0_13 = "Corrected appbar icons and colors";
     v2_0_0.features.add(feat2_0_0_1);
+    v2_0_0.features.add(feat2_0_0_2);
+    v2_0_0.features.add(feat2_0_0_3);
+    v2_0_0.features.add(feat2_0_0_3);
+    v2_0_0.features.add(feat2_0_0_4);
+    v2_0_0.features.add(feat2_0_0_5);
+    v2_0_0.features.add(feat2_0_0_6);
+    v2_0_0.features.add(feat2_0_0_7);
+    v2_0_0.features.add(feat2_0_0_8);
+    v2_0_0.features.add(feat2_0_0_9);
+    v2_0_0.features.add(feat2_0_0_10);
+    v2_0_0.features.add(feat2_0_0_11);
+    v2_0_0.features.add(feat2_0_0_12);
+    v2_0_0.features.add(feat2_0_0_13);
+
 
     // VERSION 1.9.7
     var v1_9_7 = ChangeLogItem();
