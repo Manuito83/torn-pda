@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,21 @@ class QuickItemsWidget extends StatefulWidget {
 
 class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   QuickItemsProvider _itemsProvider;
+
+  Timer _inventoryRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _inventoryRefreshTimer = new Timer.periodic(
+        Duration(seconds: 40), (Timer t) => _refreshInventory());
+  }
+
+  @override
+  void dispose() {
+    _inventoryRefreshTimer.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,5 +178,10 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         Text(lowerString, style: TextStyle(fontSize: 11)),
       ],
     );
+  }
+
+  _refreshInventory() {
+    _itemsProvider.updateInventoryQuantities();
+    print('tick');
   }
 }

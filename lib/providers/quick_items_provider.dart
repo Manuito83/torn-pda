@@ -45,7 +45,7 @@ class QuickItemsProvider extends ChangeNotifier {
       _firstLoad = false;
       _apiKey = apiKey;
       _itemSuccess = await _getAllTornItems();
-      _updateInventoryQuantities();
+      updateInventoryQuantities();
     }
     // This will only trigger with successive calls if the first
     // load was not successful for items
@@ -56,7 +56,7 @@ class QuickItemsProvider extends ChangeNotifier {
     }
 
     // We always update inventory quantities
-    _updateInventoryQuantities();
+    updateInventoryQuantities();
 
     notifyListeners();
   }
@@ -174,7 +174,7 @@ class QuickItemsProvider extends ChangeNotifier {
     return false;
   }
 
-  Future _updateInventoryQuantities() async {
+  Future updateInventoryQuantities() async {
     var inventoryItems = await TornApiCaller.items(_apiKey).getInventory;
     if (inventoryItems is InventoryModel) {
       for (var quickItem in _fullQuickItemsList) {
@@ -185,6 +185,7 @@ class QuickItemsProvider extends ChangeNotifier {
           }
         }
       }
+      notifyListeners();
       return true;
     }
     return false;
