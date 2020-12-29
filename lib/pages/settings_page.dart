@@ -350,7 +350,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Text(
-                          "Note: dictates how to proceed when the app detects a back button "
+                          "Note: this will only have effect in certain devices, depending on "
+                          "your configuration. Dictates how to proceed when the app detects a back button "
                           "press or swipe that would otherwise close the app. "
                           "If you choose 'ask', a dialog will be shown next time",
                           style: TextStyle(
