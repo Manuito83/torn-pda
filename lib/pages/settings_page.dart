@@ -699,6 +699,19 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Loot",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "4",
           child: SizedBox(
             width: 60,
@@ -711,7 +724,21 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "5",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Awards",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
+
       onChanged: (value) {
         // TODO: use settings provider for this?
         SharedPreferencesModel().setDefaultSection(value);
