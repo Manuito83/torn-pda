@@ -53,6 +53,7 @@ class _FlippingYataState extends State<FlippingYata>
                   child: Center(
                     child: Image.asset(
                       'images/icons/yata_logo.png',
+                      width: 80,
                     ),
                   ),
                 ),

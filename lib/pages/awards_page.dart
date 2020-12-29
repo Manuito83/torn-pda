@@ -127,7 +127,7 @@ class _AwardsPageState extends State<AwardsPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('Fetching data...'),
+                      Text('Calling YATA...'),
                       SizedBox(height: 30),
                       FlippingYata(),
                     ],
