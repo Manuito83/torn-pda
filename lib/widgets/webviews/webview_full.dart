@@ -586,7 +586,8 @@ class _WebViewFullState extends State<WebViewFull> {
               return;
             },
             onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
-              print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+              if (consoleMessage.message != "")
+                print("TORN PDA JS CONSOLE: " + consoleMessage.message);
 
               /// TRADES
               /// We are calling trades from here because onLoadStop does not
@@ -1345,20 +1346,27 @@ class _WebViewFullState extends State<WebViewFull> {
       _cityPreferencesLoaded = true;
     }
 
-    // Retry several times and allow the map to load
+    // Retry several times and allow the map to load. If the user lands in the city list, this will
+    // also trigger and the user will have 60 seconds to load the map (after that, only reloading
+    // or browsing out/in of city will force a reload)
     List<dom.Element> query;
-    for (var i = 0; i < 40; i++) {
+    for (var i = 0; i < 60; i++) {
+      if (!mounted)
+        break;
+
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
-        print(i);
+        print('City tries: $i in $i seconds (max 60 sec)');
         break;
       } else {
-        await Future.delayed(const Duration(milliseconds: 250));
+        await Future.delayed(const Duration(seconds: 1));
         var updatedHtml = await webView.getHtml();
         document = parse(updatedHtml);
       }
     }
     if (query.length == 0) {
+      // Set false so that the page can be reloaded if city widget didn't load
+      _cityTriggered = false;
       return;
     }
 
@@ -1374,8 +1382,6 @@ class _WebViewFullState extends State<WebViewFull> {
         _cityController.expanded = true;
       });
     }
-
-
 
     var mapItemsList = <String>[];
     for (var mapFind in query) {
