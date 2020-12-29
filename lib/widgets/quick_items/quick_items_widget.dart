@@ -182,6 +182,5 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
 
   _refreshInventory() {
     _itemsProvider.updateInventoryQuantities();
-    print('tick');
   }
 }
