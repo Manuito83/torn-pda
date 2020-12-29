@@ -53,6 +53,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: SafeArea(
+        top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

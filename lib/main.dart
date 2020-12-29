@@ -147,8 +147,6 @@ class MyApp extends StatelessWidget {
         color: Colors.black,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
-          right: false,
-          left: false,
           bottom: true,
           child: DrawerPage(),
         ),
