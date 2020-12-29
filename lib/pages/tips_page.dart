@@ -280,7 +280,7 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Quick return",
         expandedValue:
-            "When abroad, if using the full browser you will be able to see a house icon that "
+            "When abroad, if using the full browser, you will be able to see a house icon that "
             "will start your flight back immediately.",
       ),
     );
@@ -343,7 +343,7 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Sync with Torn Trader",
         expandedValue:
-            "If you are an user of Torn Trader, tap on the options icon while in the Trades section in game. "
+            "If you are a user of Torn Trader, tap on the options icon while in the Trades section in game. "
             "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
       ),
     );
