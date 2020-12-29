@@ -274,87 +274,87 @@ class _WebViewFullState extends State<WebViewFull> {
             // Background color for all browser widgets
             color: Colors.grey[900],
             child: widget.dialog
-                ? GestureDetector(
-                    onLongPress: () => _openCustomUrlDialog(),
-                    child: Column(
-                      children: [
-                        Expanded(child: mainWebViewColumn()),
-                        Container(
-                          color: _themeProvider.currentTheme == AppTheme.light
-                              ? Colors.white
-                              : _themeProvider.background,
-                          height: 38,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 100,
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 40,
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.arrow_back_ios_outlined,
-                                          size: 20,
-                                        ),
-                                        onPressed: () async {
-                                          _tryGoBack();
-                                        },
+                ? Column(
+                  children: [
+                    Expanded(child: mainWebViewColumn()),
+                    Container(
+                      color: _themeProvider.currentTheme == AppTheme.light
+                          ? Colors.white
+                          : _themeProvider.background,
+                      height: 38,
+                      child: GestureDetector(
+                        onLongPress: () => _openCustomUrlDialog(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 100,
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_back_ios_outlined,
+                                        size: 20,
                                       ),
-                                    ),
-                                    SizedBox(
-                                      width: 40,
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.arrow_forward_ios_outlined,
-                                          size: 20,
-                                        ),
-                                        onPressed: () async {
-                                          tryGoForward();
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: FlatButton(
-                                    child: Text("Close"),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 100,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    _chatRemovalEnabled
-                                        ? _hideChatIcon()
-                                        : SizedBox.shrink(),
-                                    IconButton(
-                                      icon: Icon(Icons.refresh),
                                       onPressed: () async {
-                                        _scrollX = await webView.getScrollX();
-                                        _scrollY = await webView.getScrollY();
-                                        await webView.reload();
-                                        _scrollAfterLoad = true;
+                                        _tryGoBack();
                                       },
                                     ),
-                                  ],
+                                  ),
+                                  SizedBox(
+                                    width: 40,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        Icons.arrow_forward_ios_outlined,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        tryGoForward();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: FlatButton(
+                                  child: Text("Close"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            SizedBox(
+                              width: 100,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  _chatRemovalEnabled
+                                      ? _hideChatIcon()
+                                      : SizedBox.shrink(),
+                                  IconButton(
+                                    icon: Icon(Icons.refresh),
+                                    onPressed: () async {
+                                      _scrollX = await webView.getScrollX();
+                                      _scrollY = await webView.getScrollY();
+                                      await webView.reload();
+                                      _scrollAfterLoad = true;
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  )
+                  ],
+                )
                 : mainWebViewColumn(),
           ),
         ),
