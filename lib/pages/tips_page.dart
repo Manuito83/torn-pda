@@ -8,6 +8,7 @@ enum TipClass {
   travel,
   profile,
   chaining,
+  trading,
 }
 
 class ExpandableTip {
@@ -35,6 +36,7 @@ class _TipsPageState extends State<TipsPage> {
   var _travelTipsList = <ExpandableTip>[];
   var _profileTipsList = <ExpandableTip>[];
   var _chainingTipsList = <ExpandableTip>[];
+  var _tradingTipsList = <ExpandableTip>[];
 
   @override
   void initState() {
@@ -44,6 +46,7 @@ class _TipsPageState extends State<TipsPage> {
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
     _chainingTipsList = buildChainingTips();
+    _tradingTipsList = buildTradingTips();
   }
 
   @override
@@ -91,6 +94,10 @@ class _TipsPageState extends State<TipsPage> {
               Text("CHAINING"),
               SizedBox(height: 10),
               tipsPanels(TipClass.chaining),
+              SizedBox(height: 25),
+              Text("TRADING"),
+              SizedBox(height: 10),
+              tipsPanels(TipClass.trading),
               SizedBox(height: 60),
             ],
           ),
@@ -132,6 +139,9 @@ class _TipsPageState extends State<TipsPage> {
         break;
       case TipClass.chaining:
         listToShow = _chainingTipsList;
+        break;
+      case TipClass.trading:
+        listToShow = _tradingTipsList;
         break;
     }
 
@@ -314,6 +324,36 @@ class _TipsPageState extends State<TipsPage> {
         expandedValue:
             "You can export and import your targets to and from YATA. Look for the 'Y' icon in the "
             "main app bar when in the Targets section.",
+      ),
+    );
+    return tips;
+  }
+
+  List<ExpandableTip> buildTradingTips() {
+    var tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "Trading calculator",
+        expandedValue:
+            "If you visit a trade in game, a Trade Calculator widget will open. Tap on "
+            "it to expand it for more details!",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Sync with Torn Trader",
+        expandedValue:
+            "If you are an user of Torn Trader, tap on the options icon while in the Trades section in game. "
+            "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Quick vault access",
+        expandedValue:
+            "While in the Trade section in game, you'll have a button for quick access to your vaults available in the main app bar.\n\n"
+            "After tapping on it you will be redirected to your choice and the full browser close icon will change from a cross to an arrow, "
+            "indicating that it will redirect you back to the trade instead of closing the browser.",
       ),
     );
     return tips;
