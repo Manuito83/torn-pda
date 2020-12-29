@@ -333,28 +333,46 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             !_changelogIsActive) {
-          return Scaffold(
-            body: _getPages(),
-            drawer: Drawer(
-              elevation: 2, // This avoids shadow over SafeArea
-              child: Container(
-                decoration: BoxDecoration(
-                    color: _themeProvider.currentTheme == AppTheme.light
-                        ? Colors.grey[100]
-                        : Colors.transparent,
-                    backgroundBlendMode: BlendMode.multiply),
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: <Widget>[
-                    _getDrawerHeader(),
-                    _getDrawerItems(),
-                  ],
+          return Container(
+            color: _themeProvider.currentTheme == AppTheme.light
+                ? Colors.blueGrey
+                : Colors.grey[900],
+            child: SafeArea(
+              top: _settingsProvider.appBarTop ? false : true,
+              bottom: true,
+              child: Scaffold(
+                body: _getPages(),
+                drawer: Drawer(
+                  elevation: 2, // This avoids shadow over SafeArea
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: _themeProvider.currentTheme == AppTheme.light
+                            ? Colors.grey[100]
+                            : Colors.transparent,
+                        backgroundBlendMode: BlendMode.multiply),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: <Widget>[
+                        _getDrawerHeader(),
+                        _getDrawerItems(),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           );
         } else {
-          return Center(child: CircularProgressIndicator());
+          return Container(
+            color:Colors.black,
+            child: SafeArea(
+              top: _settingsProvider.appBarTop ? false : true,
+              bottom: true,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
         }
       },
     );

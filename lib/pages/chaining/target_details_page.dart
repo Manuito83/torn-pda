@@ -5,6 +5,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
@@ -20,6 +21,7 @@ class TargetDetailsPage extends StatefulWidget {
 class _TargetDetailsPageState extends State<TargetDetailsPage> {
   UserDetailsProvider _userDetails;
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -30,87 +32,94 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      bottom: true,
-      child: Scaffold(
-        drawer: Drawer(),
-        appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-        bottomNavigationBar: !_settingsProvider.appBarTop
-            ? SizedBox(
-                height: AppBar().preferredSize.height,
-                child: buildAppBar(),
-              )
-            : null,
-        body: SingleChildScrollView(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${widget.target.name} [${widget.target.playerId}]',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 5),
-                        child: SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: IconButton(
-                            icon: Icon(Icons.content_copy),
-                            iconSize: 20,
-                            onPressed: () {
-                              Clipboard.setData(
-                                  ClipboardData(text: widget.target.playerId.toString()));
-                              BotToast.showText(
-                                text: "Your target's ID [${widget.target.playerId}] has been "
-                                    "copied to the clipboard!",
-                                textStyle: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.green,
-                                duration: Duration(seconds: 5),
-                                contentPadding: EdgeInsets.all(10),
-                              );
-                            },
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.blueGrey
+          : Colors.grey[900],
+      child: SafeArea(
+        top: _settingsProvider.appBarTop ? false : true,
+        bottom: true,
+        child: Scaffold(
+          drawer: Drawer(),
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: SingleChildScrollView(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${widget.target.name} [${widget.target.playerId}]',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Text('${widget.target.rank}'),
-                  SizedBox(height: 20),
-                  Text('Level: ${widget.target.level}'),
-                  Text('Gender: ${widget.target.gender}'),
-                  Text('Age: ${widget.target.age} days'),
-                  SizedBox(height: 20),
-                  _returnLife(),
-                  SizedBox(height: 5),
-                  _returnLastAction(),
-                  SizedBox(height: 5),
-                  _returnStatus(),
-                  SizedBox(height: 20),
-                  Text('Awards: ${widget.target.awards} '
-                      '(you have ${_userDetails.myUser.awards})'),
-                  SizedBox(height: 20),
-                  Text('Donator: ${widget.target.donator == 0 ? 'NO' : 'YES'}'),
-                  Text('Friends/Enemies: ${widget.target.friends}'
-                      '/${widget.target.enemies}'),
-                  SizedBox(height: 20),
-                  _returnFaction(),
-                  SizedBox(height: 20),
-                  _returnJob(),
-                  SizedBox(height: 20),
-                  _returnDiscord(),
-                  SizedBox(height: 50),
-                ],
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 5),
+                          child: SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: IconButton(
+                              icon: Icon(Icons.content_copy),
+                              iconSize: 20,
+                              onPressed: () {
+                                Clipboard.setData(
+                                    ClipboardData(text: widget.target.playerId.toString()));
+                                BotToast.showText(
+                                  text: "Your target's ID [${widget.target.playerId}] has been "
+                                      "copied to the clipboard!",
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green,
+                                  duration: Duration(seconds: 5),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text('${widget.target.rank}'),
+                    SizedBox(height: 20),
+                    Text('Level: ${widget.target.level}'),
+                    Text('Gender: ${widget.target.gender}'),
+                    Text('Age: ${widget.target.age} days'),
+                    SizedBox(height: 20),
+                    _returnLife(),
+                    SizedBox(height: 5),
+                    _returnLastAction(),
+                    SizedBox(height: 5),
+                    _returnStatus(),
+                    SizedBox(height: 20),
+                    Text('Awards: ${widget.target.awards} '
+                        '(you have ${_userDetails.myUser.awards})'),
+                    SizedBox(height: 20),
+                    Text('Donator: ${widget.target.donator == 0 ? 'NO' : 'YES'}'),
+                    Text('Friends/Enemies: ${widget.target.friends}'
+                        '/${widget.target.enemies}'),
+                    SizedBox(height: 20),
+                    _returnFaction(),
+                    SizedBox(height: 20),
+                    _returnJob(),
+                    SizedBox(height: 20),
+                    _returnDiscord(),
+                    SizedBox(height: 50),
+                  ],
+                ),
               ),
             ),
           ),
@@ -121,6 +130,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text('${widget.target.name}'),
       leading: IconButton(

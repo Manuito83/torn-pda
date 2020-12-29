@@ -481,6 +481,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text('Profile'),
       leading: new IconButton(

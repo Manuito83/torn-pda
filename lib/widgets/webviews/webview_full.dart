@@ -246,32 +246,33 @@ class _WebViewFullState extends State<WebViewFull> {
     );
   }
 
-  SafeArea buildScaffold(BuildContext context) {
-    return SafeArea(
-      bottom: true,
-      child: Scaffold(
-        appBar: widget.dialog
-            // Show appBar only if we are not showing the webView in a dialog
-            ? null
-            : _settingsProvider.appBarTop
-                ? buildCustomAppBar()
-                : null,
-        bottomNavigationBar: widget.dialog
-            // Show appBar only if we are not showing the webView in a dialog
-            ? null
-            : !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildCustomAppBar(),
-                  )
-                : null,
-        body: Container(
-          color: Colors.grey[900],
-          child: SafeArea(
-            top: false,
-            left: false,
-            right: false,
-            bottom: true,
+  Widget buildScaffold(BuildContext context) {
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.blueGrey
+          : Colors.grey[900],
+      child: SafeArea(
+        top: _settingsProvider.appBarTop ? false : true,
+        bottom: true,
+        child: Scaffold(
+          appBar: widget.dialog
+              // Show appBar only if we are not showing the webView in a dialog
+              ? null
+              : _settingsProvider.appBarTop
+                  ? buildCustomAppBar()
+                  : null,
+          bottomNavigationBar: widget.dialog
+              // Show appBar only if we are not showing the webView in a dialog
+              ? null
+              : !_settingsProvider.appBarTop
+                  ? SizedBox(
+                      height: AppBar().preferredSize.height,
+                      child: buildCustomAppBar(),
+                    )
+                  : null,
+          body: Container(
+            // Background color for all browser widgets
+            color: Colors.grey[900],
             child: widget.dialog
                 ? GestureDetector(
                     onLongPress: () => _openCustomUrlDialog(),
@@ -646,6 +647,8 @@ class _WebViewFullState extends State<WebViewFull> {
         _openCustomUrlDialog();
       },
       genericAppBar: AppBar(
+        elevation: _settingsProvider.appBarTop ? 2 : 0,
+        brightness: Brightness.dark,
         leading: IconButton(
             icon: _backButtonPopsContext
                 ? Icon(Icons.close)

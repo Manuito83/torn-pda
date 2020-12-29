@@ -1,5 +1,8 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -24,6 +27,9 @@ class _TradesOptionsState extends State<TradesOptions> {
 
   Future _preferencesLoaded;
 
+  ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
+
   @override
   void initState() {
     super.initState();
@@ -32,117 +38,139 @@ class _TradesOptionsState extends State<TradesOptions> {
 
   @override
   Widget build(BuildContext context) {
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text("Trade Calculator"),
-          leading: new IconButton(
-            icon: new Icon(Icons.arrow_back),
-            onPressed: () {
-              widget.callback();
-              Navigator.of(context).pop();
-            },
-          ),
-        ),
-        body: Builder(
-          builder: (BuildContext context) {
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: FutureBuilder(
-                future: _preferencesLoaded,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Use trade calculator"),
-                                Switch(
-                                  value: _tradeCalculatorEnabled,
-                                  onChanged: (value) {
-                                    SharedPreferencesModel().setTradeCalculatorEnabled(value);
-                                    setState(() {
-                                      _tradeCalculatorEnabled = value;
-                                      if (!value) {
-                                        _tornTraderEnabled = false;
-                                        // TODO: sharedprefs for torntrader
-                                      }
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Text(
-                              'Consider deactivating the trade calculator if it impacts '
-                              'performance or you just simply would not prefer to use it',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Row(
-                                  children: [
-                                    Image(
-                                      image: AssetImage('images/icons/torntrader_logo.png'),
-                                      width: 20,
-                                      color: ttColor,
-                                      fit: BoxFit.fill,
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : Colors.grey[900],
+        child: SafeArea(
+          top: _settingsProvider.appBarTop ? false : true,
+          bottom: true,
+          child: Scaffold(
+            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            body: Builder(
+              builder: (BuildContext context) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              SizedBox(height: 10),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Use trade calculator"),
+                                    Switch(
+                                      value: _tradeCalculatorEnabled,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel().setTradeCalculatorEnabled(value);
+                                        setState(() {
+                                          _tradeCalculatorEnabled = value;
+                                          if (!value) {
+                                            _tornTraderEnabled = false;
+                                            // TODO: sharedprefs for torntrader
+                                          }
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
                                     ),
-                                    SizedBox(width: 10),
-                                    Text("Torn Trader sync"),
                                   ],
                                 ),
-                                tornTraderSwitch(),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: Text(
-                              'If you are a professional trader and have an account with Torn '
-                              'Trader, you can activate the sync functionality here',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
                               ),
-                            ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Consider deactivating the trade calculator if it impacts '
+                                  'performance or you just simply would not prefer to use it',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 20),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Row(
+                                      children: [
+                                        Image(
+                                          image: AssetImage('images/icons/torntrader_logo.png'),
+                                          width: 20,
+                                          color: ttColor,
+                                          fit: BoxFit.fill,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Text("Torn Trader sync"),
+                                      ],
+                                    ),
+                                    tornTraderSwitch(),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'If you are a professional trader and have an account with Torn '
+                                  'Trader, you can activate the sync functionality here',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 50),
+                            ],
                           ),
-                          SizedBox(height: 50),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
-              ),
-            );
-          },
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
         ),
+      ),
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      brightness: Brightness.dark,
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      title: Text("Trade Calculator"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          widget.callback();
+          Navigator.of(context).pop();},
       ),
     );
   }

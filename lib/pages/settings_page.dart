@@ -339,6 +339,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       toolbarHeight: 50,
       title: Text('Settings'),

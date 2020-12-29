@@ -143,14 +143,7 @@ class MyApp extends StatelessWidget {
             ? Brightness.light
             : Brightness.dark,
       ),
-      home: Container(
-        color: Colors.black,
-        child: SafeArea(
-          top: _settingsProvider.appBarTop ? false : true,
-          bottom: true,
-          child: DrawerPage(),
-        ),
-      ),
+      home: DrawerPage(),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
@@ -45,6 +46,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   UserDetailsProvider _userProv;
   ChainStatusProvider _chainStatusProvider;
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   String _initialUrl = "";
   String _currentPageTitle = "";
@@ -98,64 +100,62 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   @override
   Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: SafeArea(
-        bottom: true,
-        child: Scaffold(
-          appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildCustomAppBar(),
-                )
-              : null,
-          body: Container(
-            color: Colors.grey[900],
-            child: SafeArea(
-              top: false,
-              right: false,
-              left: false,
-              bottom: true,
-              child: Builder(
-                builder: (BuildContext context) {
-                  return Column(
-                    children: [
-                      ExpandablePanel(
-                        theme: ExpandableThemeData(
-                          hasIcon: false,
-                          tapBodyToCollapse: false,
-                          tapHeaderToExpand: false,
-                        ),
-                        collapsed: SizedBox.shrink(),
-                        controller: _chainWidgetController,
-                        header: SizedBox.shrink(),
-                        expanded: ChainTimer(
-                          userKey: widget.userKey,
-                          alwaysDarkBackground: true,
-                          chainTimerParent: ChainTimerParent.webView,
-                        ),
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : Colors.grey[900],
+        child: SafeArea(
+          top: _settingsProvider.appBarTop ? false : true,
+          bottom: true,
+          child: Scaffold(
+            appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildCustomAppBar(),
+                  )
+                : null,
+            body: Builder(
+              builder: (BuildContext context) {
+                return Column(
+                  children: [
+                    ExpandablePanel(
+                      theme: ExpandableThemeData(
+                        hasIcon: false,
+                        tapBodyToCollapse: false,
+                        tapHeaderToExpand: false,
                       ),
-                      Expanded(
-                        child: WebView(
-                          initialUrl: _initialUrl,
-                          javascriptMode: JavascriptMode.unrestricted,
-                          onWebViewCreated: (WebViewController c) {
-                            _webViewController = c;
-                          },
-                          onPageStarted: (page) {
-                            if (_chatRemovalEnabled && _chatRemovalActive) {
-                              _webViewController.evaluateJavascript(
-                                  removeChatOnLoadStartJS());
-                            }
-                          },
-                          gestureNavigationEnabled: true,
-                        ),
+                      collapsed: SizedBox.shrink(),
+                      controller: _chainWidgetController,
+                      header: SizedBox.shrink(),
+                      expanded: ChainTimer(
+                        userKey: widget.userKey,
+                        alwaysDarkBackground: true,
+                        chainTimerParent: ChainTimerParent.webView,
                       ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                    Expanded(
+                      child: WebView(
+                        initialUrl: _initialUrl,
+                        javascriptMode: JavascriptMode.unrestricted,
+                        onWebViewCreated: (WebViewController c) {
+                          _webViewController = c;
+                        },
+                        onPageStarted: (page) {
+                          if (_chatRemovalEnabled && _chatRemovalActive) {
+                            _webViewController.evaluateJavascript(
+                                removeChatOnLoadStartJS());
+                          }
+                        },
+                        gestureNavigationEnabled: true,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -169,6 +169,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         await _goBackOrForward(details);
       },
       genericAppBar: AppBar(
+        brightness: Brightness.dark,
         leading: IconButton(
             icon: _backButtonPopsContext
                 ? Icon(Icons.close)

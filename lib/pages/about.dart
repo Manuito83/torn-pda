@@ -419,6 +419,7 @@ class _AboutPageState extends State<AboutPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       leading: IconButton(
         icon: Icon(Icons.dehaze),

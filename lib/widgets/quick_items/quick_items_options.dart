@@ -37,98 +37,104 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: SafeArea(
-        bottom: true,
-        child: Scaffold(
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-            child: Container(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: SizedBox(
-                        width: 200,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text("QUICK ITEMS ACTIVE"),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                'SWIPE TO REMOVE',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                'LONG-PRESS TO SORT',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    if (_itemsProvider.activeQuickItems.length == 0)
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : Colors.grey[900],
+        child: SafeArea(
+          top: _settingsProvider.appBarTop ? false : true,
+          bottom: true,
+          child: Scaffold(
+            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            body: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+              child: Container(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SizedBox(height: 20),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
-                        child: Text(
-                          'No quick items active, add some below!',
-                          style: TextStyle(
-                            color: Colors.orange[800],
-                            fontStyle: FontStyle.italic,
-                            fontSize: 13,
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: SizedBox(
+                          width: 200,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text("QUICK ITEMS ACTIVE"),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Text(
+                                  'SWIPE TO REMOVE',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Text(
+                                  'LONG-PRESS TO SORT',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      )
-                    else
-                      _activeCardsList(),
-                    SizedBox(height: 40),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Text("ALL AVAILABLE ITEMS"),
-                    ),
-                    SizedBox(height: 10),
-                    _itemsProvider.fullQuickItems.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(50),
-                              child: Column(
-                                children: [
-                                  Text('Loading available items...'),
-                                  SizedBox(height: 40),
-                                  CircularProgressIndicator(),
-                                  SizedBox(height: 40),
-                                  Text(
-                                    'If this takes too long, there might be a connection '
-                                    'problem or Torn API might be down. Close the browser '
-                                    'completely and try again in a while!',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                      ),
+                      SizedBox(height: 10),
+                      if (_itemsProvider.activeQuickItems.length == 0)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                          child: Text(
+                            'No quick items active, add some below!',
+                            style: TextStyle(
+                              color: Colors.orange[800],
+                              fontStyle: FontStyle.italic,
+                              fontSize: 13,
                             ),
-                          )
-                        : _allCardsList(),
-                    SizedBox(height: 40),
-                  ],
+                          ),
+                        )
+                      else
+                        _activeCardsList(),
+                      SizedBox(height: 40),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: Text("ALL AVAILABLE ITEMS"),
+                      ),
+                      SizedBox(height: 10),
+                      _itemsProvider.fullQuickItems.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(50),
+                                child: Column(
+                                  children: [
+                                    Text('Loading available items...'),
+                                    SizedBox(height: 40),
+                                    CircularProgressIndicator(),
+                                    SizedBox(height: 40),
+                                    Text(
+                                      'If this takes too long, there might be a connection '
+                                      'problem or Torn API might be down. Close the browser '
+                                      'completely and try again in a while!',
+                                      style: TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : _allCardsList(),
+                      SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -140,6 +146,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text("Quick items"),
       leading: new IconButton(

@@ -122,8 +122,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
-      color: Colors.black,
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.blueGrey
+          : Colors.grey[900],
       child: SafeArea(
+        top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -285,6 +288,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text("Foreign Stock"),
       leading: new IconButton(

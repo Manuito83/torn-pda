@@ -5,6 +5,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/crimes/crime_model.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 Map crimesCategories = {
   2: 'Search for cash',
@@ -36,6 +38,8 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   var _titleCrimeString = List<String>();
 
   CrimesProvider _crimesProvider;
+  ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
   Future _preferencesLoaded;
 
   @override
@@ -48,77 +52,100 @@ class _CrimesOptionsState extends State<CrimesOptions> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Quick Crimes"),
-        leading: new IconButton(
-          icon: new Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.delete_outline),
-            onPressed: () {
-              _crimesProvider.deactivateAllCrimes();
-              setState(() {
-                _titleCrimeString.clear();
-                for (var crime in _mainCrimeList) {
-                  if (crime.active) {
-                    crime.active = false;
-                  }
-                }
-              });
-              BotToast.showText(
-                text: 'All crimes deactivated!',
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.blueGrey
+          : Colors.grey[900],
+      child: SafeArea(
+        top: _settingsProvider.appBarTop ? false : true,
+        bottom: true,
+        child: Scaffold(
+          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          body: Builder(
+            builder: (BuildContext context) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: FutureBuilder(
+                  future: _preferencesLoaded,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: _titleCrimeString.length > 0
+                                  ? Text('Active crimes: '
+                                      '${_titleCrimeString.join(', ')}')
+                                  : Text('No active crimes'),
+                            ),
+                            _crimesCards(),
+                            SizedBox(height: 50),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
                 ),
-                duration: Duration(seconds: 3),
-                contentColor: Colors.grey[700],
-                contentPadding: EdgeInsets.all(10),
               );
             },
           ),
-        ],
+        ),
       ),
-      body: Builder(
-        builder: (BuildContext context) {
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-            child: FutureBuilder(
-              future: _preferencesLoaded,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: _titleCrimeString.length > 0
-                              ? Text('Active crimes: '
-                                  '${_titleCrimeString.join(', ')}')
-                              : Text('No active crimes'),
-                        ),
-                        _crimesCards(),
-                        SizedBox(height: 50),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-              },
-            ),
-          );
+    );
+  }
+
+  AppBar buildAppBar() {
+    return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
+      brightness: Brightness.dark,
+      title: Text("Quick Crimes"),
+      leading: new IconButton(
+        icon: new Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.of(context).pop();
         },
       ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.delete_outline),
+          onPressed: () {
+            _crimesProvider.deactivateAllCrimes();
+            setState(() {
+              _titleCrimeString.clear();
+              for (var crime in _mainCrimeList) {
+                if (crime.active) {
+                  crime.active = false;
+                }
+              }
+            });
+            BotToast.showText(
+              text: 'All crimes deactivated!',
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              duration: Duration(seconds: 3),
+              contentColor: Colors.grey[700],
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
+      ],
     );
   }
 

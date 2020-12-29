@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileNotificationsIOS extends StatefulWidget {
@@ -34,6 +35,7 @@ class _ProfileNotificationsIOSState
   Future _preferencesLoaded;
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -44,58 +46,65 @@ class _ProfileNotificationsIOSState
 
   @override
   Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: SafeArea(
-        bottom: true,
-        child: Scaffold(
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-            height: AppBar().preferredSize.height,
-            child: buildAppBar(),
-          )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: FutureBuilder(
-                  future: _preferencesLoaded,
-                  builder:
-                      (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return SingleChildScrollView(
-                        child: Column(
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Text(
-                                  'Here you can specify your preferred alerting '
-                                  'values for each type of event.'),
-                            ),
-                            _rowsWithTypes(),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 50,
-                                vertical: 20,
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : Colors.grey[900],
+        child: SafeArea(
+          top: _settingsProvider.appBarTop ? false : true,
+          bottom: true,
+          child: Scaffold(
+            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+                : null,
+            body: Builder(
+              builder: (BuildContext context) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder:
+                        (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text(
+                                    'Here you can specify your preferred alerting '
+                                    'values for each type of event.'),
                               ),
-                              child: Divider(),
-                            ),
-                            SizedBox(height: 50),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  },
-                ),
-              );
-            },
+                              _rowsWithTypes(),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 50,
+                                  vertical: 20,
+                                ),
+                                child: Divider(),
+                              ),
+                              SizedBox(height: 50),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -104,6 +113,7 @@ class _ProfileNotificationsIOSState
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text("Profile options"),
       leading: new IconButton(

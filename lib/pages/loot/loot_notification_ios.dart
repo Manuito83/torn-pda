@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsIOS extends StatefulWidget {
@@ -20,6 +21,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
   Future _preferencesLoaded;
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -30,49 +32,56 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
 
   @override
   Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: SafeArea(
-        bottom: true,
-        child: Scaffold(
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: FutureBuilder(
-                  future: _preferencesLoaded,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return SingleChildScrollView(
-                        child: Column(
-                          children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Text('Here you can specify your preferred notification'
-                                  ' launch time before the loot level is reached'),
-                            ),
-                            _rowsWithTypes(),
-                            SizedBox(height: 50),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  },
-                ),
-              );
-            },
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : Colors.grey[900],
+        child: SafeArea(
+          top: _settingsProvider.appBarTop ? false : true,
+          bottom: true,
+          child: Scaffold(
+            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            body: Builder(
+              builder: (BuildContext context) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text('Here you can specify your preferred notification'
+                                    ' launch time before the loot level is reached'),
+                              ),
+                              _rowsWithTypes(),
+                              SizedBox(height: 50),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -81,6 +90,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text("Loot options"),
       leading: new IconButton(

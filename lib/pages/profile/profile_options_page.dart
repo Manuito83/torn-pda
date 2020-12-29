@@ -52,395 +52,400 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
-      child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
-        bottom: true,
-        child: Scaffold(
-          appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !_settingsProvider.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Builder(
-            builder: (BuildContext context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () =>
-                    FocusScope.of(context).requestFocus(new FocusNode()),
-                child: FutureBuilder(
-                  future: _preferencesLoaded,
-                  builder:
-                      (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SizedBox(height: 15),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'SHORTCUTS',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Enable shortcuts"),
-                                  Switch(
-                                    value: _shortcutsEnabled,
-                                    onChanged: (value) {
-                                      // If user wants to disable and there are
-                                      // active shortcuts, open dialog and offer
-                                      // a second opportunity. Also might be good
-                                      // to reset the lists if there are issues.
-                                      if (!value &&
-                                          context
-                                                  .read<ShortcutsProvider>()
-                                                  .activeShortcuts
-                                                  .length >
-                                              0) {
-                                        _shortcutsDisableConfirmationDialog();
-                                      } else {
-                                        SharedPreferencesModel()
-                                            .setEnableShortcuts(value);
-                                        setState(() {
-                                          _shortcutsEnabled = value;
-                                        });
-                                      }
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : Colors.grey[900],
+        child: SafeArea(
+          top: _settingsProvider.appBarTop ? false : true,
+          bottom: true,
+          child: Scaffold(
+            appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !_settingsProvider.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            body: Builder(
+              builder: (BuildContext context) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () =>
+                      FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder:
+                        (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              SizedBox(height: 15),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'SHORTCUTS',
+                                    style: TextStyle(fontSize: 10),
                                   ),
                                 ],
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Text(
-                                'Enable configurable shortcuts in the Profile section to '
-                                'quickly access your favourite sections in game. '
-                                'Tip: if enabled in settings, short-press shortcuts for quick browser '
-                                'window, long-press for full browser with app bar',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Enable shortcuts"),
+                                    Switch(
+                                      value: _shortcutsEnabled,
+                                      onChanged: (value) {
+                                        // If user wants to disable and there are
+                                        // active shortcuts, open dialog and offer
+                                        // a second opportunity. Also might be good
+                                        // to reset the lists if there are issues.
+                                        if (!value &&
+                                            context
+                                                    .read<ShortcutsProvider>()
+                                                    .activeShortcuts
+                                                    .length >
+                                                0) {
+                                          _shortcutsDisableConfirmationDialog();
+                                        } else {
+                                          SharedPreferencesModel()
+                                              .setEnableShortcuts(value);
+                                          setState(() {
+                                            _shortcutsEnabled = value;
+                                          });
+                                        }
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 10),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text(
-                                    "Configure shortcuts",
-                                    style: TextStyle(
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Enable configurable shortcuts in the Profile section to '
+                                  'quickly access your favourite sections in game. '
+                                  'Tip: if enabled in settings, short-press shortcuts for quick browser '
+                                  'window, long-press for full browser with app bar',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text(
+                                      "Configure shortcuts",
+                                      style: TextStyle(
+                                        color: _shortcutsEnabled
+                                            ? _themeProvider.mainText
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                          Icons.keyboard_arrow_right_outlined),
                                       color: _shortcutsEnabled
                                           ? _themeProvider.mainText
                                           : Colors.grey,
+                                      onPressed: _shortcutsEnabled
+                                          ? () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (BuildContext context) =>
+                                                          ShortcutsPage(),
+                                                ),
+                                              );
+                                            }
+                                          : null,
                                     ),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                        Icons.keyboard_arrow_right_outlined),
-                                    color: _shortcutsEnabled
-                                        ? _themeProvider.mainText
-                                        : Colors.grey,
-                                    onPressed: _shortcutsEnabled
-                                        ? () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (BuildContext context) =>
-                                                        ShortcutsPage(),
-                                              ),
-                                            );
-                                          }
-                                        : null,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'CHAINING',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Warn about chains"),
-                                  Switch(
-                                    value: _warnAboutChainsEnabled,
-                                    onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setWarnAboutChains(value);
-                                      setState(() {
-                                        _warnAboutChainsEnabled = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Text(
-                                'If active, you\'ll get a message and a chain icon to the side of '
-                                'the energy bar, so that you avoid spending energy in the gym '
-                                'if you are unaware that your faction is chaining',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
+                                  ],
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'REVIVING SERVICES',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Use Nuke Reviving Services"),
-                                  Switch(
-                                    value: _nukeReviveEnabled,
-                                    onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setUseNukeRevive(value);
-                                      setState(() {
-                                        _nukeReviveEnabled = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'CHAINING',
+                                    style: TextStyle(fontSize: 10),
                                   ),
                                 ],
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Text(
-                                'If active, when you are in hospital you\'ll have the option to call '
-                                'a reviver from Central Hospital. NOTE: this is an external '
-                                'service not affiliated to Torn PDA. It\'s here so that it is '
-                                'more accessible!',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Warn about chains"),
+                                    Switch(
+                                      value: _warnAboutChainsEnabled,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setWarnAboutChains(value);
+                                        setState(() {
+                                          _warnAboutChainsEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 15),
-                            Divider(),
-                            SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'EXPANDABLE PANELS',
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Text(
-                                'Choose whether you want to automatically expand '
-                                'or collapse certain sections. You can always '
-                                'toggle manually by tapping.',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'If active, you\'ll get a message and a chain icon to the side of '
+                                  'the energy bar, so that you avoid spending energy in the gym '
+                                  'if you are unaware that your faction is chaining',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Expand events"),
-                                  Switch(
-                                    value: _expandEvents,
-                                    onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setExpandEvents(value);
-                                      setState(() {
-                                        _expandEvents = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'REVIVING SERVICES',
+                                    style: TextStyle(fontSize: 10),
                                   ),
                                 ],
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Flexible(
-                                    child: Text("Events to show"),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Use Nuke Reviving Services"),
+                                    Switch(
+                                      value: _nukeReviveEnabled,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setUseNukeRevive(value);
+                                        setState(() {
+                                          _nukeReviveEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'If active, when you are in hospital you\'ll have the option to call '
+                                  'a reviver from Central Hospital. NOTE: this is an external '
+                                  'service not affiliated to Torn PDA. It\'s here so that it is '
+                                  'more accessible!',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
                                   ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 20),
-                                  ),
-                                  Flexible(
-                                    child: _eventsNumberDropdown(),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'EXPANDABLE PANELS',
+                                    style: TextStyle(fontSize: 10),
                                   ),
                                 ],
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Expand messages"),
-                                  Switch(
-                                    value: _expandMessages,
-                                    onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setExpandMessages(value);
-                                      setState(() {
-                                        _expandMessages = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
+                              SizedBox(height: 8),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Choose whether you want to automatically expand '
+                                  'or collapse certain sections. You can always '
+                                  'toggle manually by tapping.',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Flexible(
-                                    child: Text("Messages to show"),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 20),
-                                  ),
-                                  Flexible(
-                                    child: _messagesNumberDropdown(),
-                                  ),
-                                ],
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Expand events"),
+                                    Switch(
+                                      value: _expandEvents,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setExpandEvents(value);
+                                        setState(() {
+                                          _expandEvents = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Expand basic info"),
-                                  Switch(
-                                    value: _expandBasicInfo,
-                                    onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setExpandBasicInfo(value);
-                                      setState(() {
-                                        _expandBasicInfo = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
-                                  ),
-                                ],
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Flexible(
+                                      child: Text("Events to show"),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                    ),
+                                    Flexible(
+                                      child: _eventsNumberDropdown(),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text("Expand networth"),
-                                  Switch(
-                                    value: _expandNetworth,
-                                    onChanged: (value) {
-                                      SharedPreferencesModel()
-                                          .setExpandNetworth(value);
-                                      setState(() {
-                                        _expandNetworth = value;
-                                      });
-                                    },
-                                    activeTrackColor: Colors.lightGreenAccent,
-                                    activeColor: Colors.green,
-                                  ),
-                                ],
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Expand messages"),
+                                    Switch(
+                                      value: _expandMessages,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setExpandMessages(value);
+                                        setState(() {
+                                          _expandMessages = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 50),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  },
-                ),
-              );
-            },
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Flexible(
+                                      child: Text("Messages to show"),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                    ),
+                                    Flexible(
+                                      child: _messagesNumberDropdown(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Expand basic info"),
+                                    Switch(
+                                      value: _expandBasicInfo,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setExpandBasicInfo(value);
+                                        setState(() {
+                                          _expandBasicInfo = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Expand networth"),
+                                    Switch(
+                                      value: _expandNetworth,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setExpandNetworth(value);
+                                        setState(() {
+                                          _expandNetworth = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 50),
+                            ],
+                          ),
+                        );
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -449,6 +454,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
       title: Text("Profile Options"),
       leading: new IconButton(
