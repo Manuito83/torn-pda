@@ -501,31 +501,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
-              if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
-                  (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
-                var html = await webView.getHtml();
-                var document = parse(html);
-                _assessQuickItems(document);
-              }
-
-              if ((_currentUrl.contains('crimes.php') && !_crimesTriggered) ||
-                  (!_currentUrl.contains('crimes.php') && _crimesTriggered)) {
-                var html = await webView.getHtml();
-                var document = parse(html);
-                _assessCrimes(document);
-              }
-
-              if ((_currentUrl.contains('city.php') && !_cityTriggered) ||
-                  (!_currentUrl.contains('city.php') && _cityTriggered)) {
-                var html = await webView.getHtml();
-                var document = parse(html);
-                _assessCity(document);
-              }
-
-              if (!_currentUrl.contains("trade.php") && _tradesTriggered) {
-                // This is different to the others, here we call only so that trades is deactivated
-                _decideIfCallTrades();
-              }
+              await _assessSectionsWithWidgets();
             },
             onLoadStart: (InAppWebViewController c, String url) async {
               _hideChat();
@@ -602,7 +578,8 @@ class _WebViewFullState extends State<WebViewFull> {
                 _currentUrl = await webView.getUrl();
                 var html = await webView.getHtml();
                 var document = parse(html);
-                _assessTrades(document);
+                var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                _assessTrades(document, pageTitle);
               }
             },
           ),
@@ -661,9 +638,6 @@ class _WebViewFullState extends State<WebViewFull> {
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
       },
-      onTap: () {
-        _openCustomUrlDialog();
-      },
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         brightness: Brightness.dark,
@@ -691,22 +665,27 @@ class _WebViewFullState extends State<WebViewFull> {
                 _backButtonPopsContext = true;
               }
             }),
-        title: DottedBorder(
-          borderType: BorderType.Rect,
-          padding: EdgeInsets.all(6),
-          dashPattern: [1, 4],
-          color: Colors.white70,
-          child: ClipRRect(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-            child: Row(
-              key: _showOne,
-              children: [
-                Flexible(
-                    child: Text(
-                  _pageTitle,
-                  overflow: TextOverflow.fade,
-                )),
-              ],
+        title: GestureDetector(
+          onTap: () {
+            _openCustomUrlDialog();
+          },
+          child: DottedBorder(
+            borderType: BorderType.Rect,
+            padding: EdgeInsets.all(6),
+            dashPattern: [1, 4],
+            color: Colors.white70,
+            child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              child: Row(
+                key: _showOne,
+                children: [
+                  Flexible(
+                      child: Text(
+                    _pageTitle,
+                    overflow: TextOverflow.fade,
+                  )),
+                ],
+              ),
             ),
           ),
         ),
@@ -818,6 +797,51 @@ class _WebViewFullState extends State<WebViewFull> {
     _assessBackButtonBehaviour();
     _assessTravel(document);
     _assessBazaar(document);
+  }
+
+  Future _assessSectionsWithWidgets() async {
+    bool anySectionTriggered = false;
+    bool getItems = false;
+    bool getCrimes = false;
+    bool getCity = false;
+    bool getTrades = false;
+
+    if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
+        (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
+      anySectionTriggered = true;
+      getItems = true;
+    }
+
+    if ((_currentUrl.contains('crimes.php') && !_crimesTriggered) ||
+        (!_currentUrl.contains('crimes.php') && _crimesTriggered)) {
+      anySectionTriggered = true;
+      getCrimes = true;
+    }
+
+    if ((_currentUrl.contains('city.php') && !_cityTriggered) ||
+        (!_currentUrl.contains('city.php') && _cityTriggered)) {
+      anySectionTriggered = true;
+      getCity = true;
+    }
+
+    if (!_currentUrl.contains("trade.php") && _tradesTriggered) {
+      // This is different to the others, here we call only so that trades is deactivated
+      anySectionTriggered = true;
+      getTrades = true;
+    }
+
+    if (anySectionTriggered) {
+      dom.Document doc;
+      var pageTitle = "";
+      var html = await webView.getHtml();
+      doc = parse(html);
+      pageTitle = (await _getPageTitle(doc)).toLowerCase();
+
+      if (getItems) _assessQuickItems(doc, pageTitle);
+      if (getCrimes) _assessCrimes(doc, pageTitle);
+      if (getCity) _assessCity(doc, pageTitle);
+      if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
+    }
   }
 
   void _assessBackButtonBehaviour() async {
@@ -979,9 +1003,9 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CRIMES
-  Future _assessCrimes(dom.Document document) async {
+  Future _assessCrimes(dom.Document document, String pageTitle) async {
     if (mounted) {
-      var pageTitle = (await _getPageTitle(document)).toLowerCase();
+      //var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('crimes')) {
         setState(() {
           _crimesController.expanded = false;
@@ -1061,10 +1085,10 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // TRADES
-  Future _assessTrades(dom.Document document) async {
+  Future _assessTrades(dom.Document document, String pageTitle) async {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
-    var pageTitle = (await _getPageTitle(document)).toLowerCase();
+    //var pageTitle = (await _getPageTitle(document)).toLowerCase();
     var easyUrl =
         _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
@@ -1306,25 +1330,34 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // Avoid continuous calls to trades from different activators
-  Future _decideIfCallTrades() async {
+  Future _decideIfCallTrades({dom.Document doc, String pageTitle = ""}) async {
     var now = DateTime.now();
     var diff = now.difference(_lastTradeCall);
     if (diff.inSeconds > 1 || !_lastTradeCallWasIn) {
       _lastTradeCall = now;
 
-      // Call trades
+      // Call trades. If we come from onProgressChanged we already have document
+      // and title (quicker). Otherwise, we need to get them (if we come from trade options)
       if (mounted) {
-        _currentUrl = await webView.getUrl();
-        var html = await webView.getHtml();
-        var document = parse(html);
-        _assessTrades(document);
+        print('pa');
+        if (doc != null && pageTitle.isNotEmpty) {
+          print('pi');
+          _assessTrades(doc, pageTitle);
+        } else {
+          print('po');
+          _currentUrl = await webView.getUrl();
+          var html = await webView.getHtml();
+          var d = parse(html);
+          var t = (await _getPageTitle(d)).toLowerCase();
+          _assessTrades(d, t);
+        }
       }
     }
   }
 
   // CITY
-  Future _assessCity(dom.Document document) async {
-    var pageTitle = (await _getPageTitle(document)).toLowerCase();
+  Future _assessCity(dom.Document document, String pageTitle) async {
+    //var pageTitle = (await _getPageTitle(document)).toLowerCase();
     if (!pageTitle.contains('city')) {
       setState(() {
         _cityIconActive = false;
@@ -1359,8 +1392,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // or browsing out/in of city will force a reload)
     List<dom.Element> query;
     for (var i = 0; i < 60; i++) {
-      if (!mounted)
-        break;
+      if (!mounted) break;
 
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
@@ -1510,9 +1542,9 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // QUICK ITEMS
-  Future _assessQuickItems(dom.Document document) async {
+  Future _assessQuickItems(dom.Document document, String pageTitle) async {
     if (mounted) {
-      var pageTitle = (await _getPageTitle(document)).toLowerCase();
+      //var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('items')) {
         setState(() {
           _quickItemsController.expanded = false;
