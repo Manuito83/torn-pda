@@ -493,9 +493,7 @@ class _WebViewFullState extends State<WebViewFull> {
               webView = c;
             },
             onProgressChanged: (InAppWebViewController c, int progress) async {
-              if (_chatRemovalEnabled && _chatRemovalActive) {
-                webView.evaluateJavascript(source: removeChatOnLoadStartJS());
-              }
+              _hideChat();
 
               setState(() {
                 this.progress = progress / 100;
@@ -530,6 +528,8 @@ class _WebViewFullState extends State<WebViewFull> {
               }
             },
             onLoadStart: (InAppWebViewController c, String url) async {
+              _hideChat();
+
               _currentUrl = url;
 
               var html = await webView.getHtml();
@@ -537,6 +537,8 @@ class _WebViewFullState extends State<WebViewFull> {
               _assessGeneral(document);
             },
             onLoadStop: (InAppWebViewController c, String url) async {
+              _hideChat();
+
               _currentUrl = url;
 
               var html = await webView.getHtml();
@@ -646,6 +648,12 @@ class _WebViewFullState extends State<WebViewFull> {
             : SizedBox.shrink(),
       ],
     );
+  }
+
+  void _hideChat() {
+    if (_chatRemovalEnabled && _chatRemovalActive) {
+      webView.evaluateJavascript(source: removeChatOnLoadStartJS());
+    }
   }
 
   CustomAppBar buildCustomAppBar() {
