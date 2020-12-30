@@ -44,7 +44,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_0_0_3 = "Alerts: added messages to automatic alerts (tap the notification to browse straight to the message). Most other notifications can now also be tapped to get access to their relevant areas";
     String feat2_0_0_4 = "Tips: new section added to the main menu with some frequently asked questions and tips to get the maximum out or Torn PDA";
     String feat2_0_0_5 = "Added a new button that allows to temporarily remove all chat windows from Torn";
-    String feat2_0_0_6 = "New browser features: you can now browser to any URL or add a website as a shortcut to your Profile section directly from the browser (tap the browser page title in the full browser or long press the close button in the quick browser)";
+    String feat2_0_0_6 = "New browser features: you can now browse to any URL or add a website as a shortcut to your Profile section directly from the browser (tap the browser page title in the full browser or long press the close button in the quick browser)";
     String feat2_0_0_7 = "Using the back button or swipe in the browser won't inadvertently close the browser any longer, but browser back if possible";
     String feat2_0_0_8 = "Most links in Torn PDA open the quick browser with a short tap or the full browser with a long-press. Quick browser can be deactivated in Settings if desired";
     String feat2_0_0_9 = "You can now select the number of events and messages to show in the Profile section";

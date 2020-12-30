@@ -242,7 +242,7 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "How do I browse to a custom URL?",
         expandedValue:
-            "Full browser: short tap the title bar to open a small dialog with option.\n\n"
+            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
       ),
     );
@@ -250,15 +250,15 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "How do I copy the current URL?",
         expandedValue:
-            "Full browser: short tap the title bar to open a small dialog with option.\n\n"
+            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
       ),
     );
     tips.add(
       ExpandableTip(
-        headerValue: "How do save the current URL as a shortcut?",
+        headerValue: "How do I save the current URL as a shortcut?",
         expandedValue:
-            "Full browser: short tap the title bar to open a small dialog with option.\n\n"
+            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
       ),
     );
