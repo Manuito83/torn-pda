@@ -99,14 +99,14 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     }
 
     if (myList.isEmpty) {
-      String appBarPosition = "top";
+      String appBarPosition = "above";
       if (!widget.appBarTop) {
-        appBarPosition = "bottom";
+        appBarPosition = "below";
       }
 
-      String explanation = "Use the options at the $appBarPosition to configure quick crimes";
+      String explanation = "Use the fingerprint icon $appBarPosition to configure quick crimes";
       if (widget.browserDialog) {
-        explanation = "Open a full browser (long press) to configure your quick crimes for the first time";
+        explanation = "Use the full browser (long press the crime bar) to configure your quick crimes for the first time";
       }
 
       myList.add(

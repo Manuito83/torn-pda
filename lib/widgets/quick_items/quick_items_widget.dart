@@ -125,16 +125,16 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     }
 
     if (myList.isEmpty) {
-      String appBarPosition = "top";
+      String appBarPosition = "above";
       if (!widget.appBarTop) {
-        appBarPosition = "bottom";
+        appBarPosition = "below";
       }
 
       String explanation =
-          "Use the options at the $appBarPosition to configure quick items";
+          "Use the box icon $appBarPosition to configure quick items";
       if (widget.browserDialog) {
         explanation =
-            "Open a full browser (long press) to configure your quick items for the first time";
+            "Use the full browser (long press the crime bar) to configure your quick items for the first time";
       }
 
       myList.add(
