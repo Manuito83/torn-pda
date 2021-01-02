@@ -33,9 +33,7 @@ class QuickItemsProvider extends ChangeNotifier {
     ItemType.MEDICAL,
   ];
 
-  Future initLoad({@required String apiKey}) async {
-    // If loading for the first time or if any never loaded correctly
-    // for items or inventory
+  Future loadItems({@required String apiKey}) async {
     if (_firstLoad) {
       _firstLoad = false;
       _apiKey = apiKey;
@@ -44,13 +42,16 @@ class QuickItemsProvider extends ChangeNotifier {
       updateInventoryQuantities(fullUpdate: true);
       notifyListeners();
     } else {
-      // This will only trigger with successive calls if the first
-      // load was not successful for items
-      if (!_itemSuccess) {
+      if (_itemSuccess) {
+        // Triggers every time, after the first, we land in Items
+        updateInventoryQuantities(fullUpdate: false);
+      } else {
+        // Trigger with successive calls if the first
+        // load was not successful for items
         _itemSuccess = await _getAllTornItems();
         updateInventoryQuantities(fullUpdate: true);
-        notifyListeners();
       }
+      notifyListeners();
     }
   }
 

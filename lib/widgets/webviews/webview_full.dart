@@ -1585,9 +1585,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
       var key = _userProvider.myUser.userApiKey;
-      await quickItemsProvider.initLoad(apiKey: key);
-      // Successive refreshes handled by timer in widget
-      quickItemsProvider.updateInventoryQuantities(fullUpdate: false);
+      await quickItemsProvider.loadItems(apiKey: key);
 
       setState(() {
         _quickItemsController.expanded = true;
