@@ -4,6 +4,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class QuickItemsWidget extends StatefulWidget {
   final InAppWebViewController controller;
@@ -134,18 +135,44 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           "Use the box icon $appBarPosition to configure quick items";
       if (widget.browserDialog) {
         explanation =
-            "Use the full browser (long press the Items link in the app's menu) to configure your quick items for the first time";
+            "Use the full browser to configure quick items";
       }
 
       myList.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-          child: Text(
-            explanation,
-            style: TextStyle(
-              color: Colors.orangeAccent,
-              fontSize: 12,
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                explanation,
+                style: TextStyle(
+                  color: Colors.orangeAccent,
+                  fontSize: 12,
+                ),
+              ),
+              if (widget.browserDialog)
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: GestureDetector(
+                    onTap: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return BrowserExplanationDialog();
+                        },
+                      );
+                    },
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: Colors.orangeAccent,
+                    ),
+                  ),
+                )
+              else
+                SizedBox.shrink(),
+            ],
           ),
         ),
       );
