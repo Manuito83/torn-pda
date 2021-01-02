@@ -492,6 +492,15 @@ class _WebViewFullState extends State<WebViewFull> {
             onWebViewCreated: (InAppWebViewController c) {
               webView = c;
             },
+            onLoadStart: (InAppWebViewController c, String url) async {
+              _hideChat();
+
+              _currentUrl = url;
+
+              var html = await webView.getHtml();
+              var document = parse(html);
+              _assessGeneral(document);
+            },
             onProgressChanged: (InAppWebViewController c, int progress) async {
               _hideChat();
 
@@ -501,16 +510,10 @@ class _WebViewFullState extends State<WebViewFull> {
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
-              await _assessSectionsWithWidgets();
-            },
-            onLoadStart: (InAppWebViewController c, String url) async {
-              _hideChat();
-
-              _currentUrl = url;
-
-              var html = await webView.getHtml();
-              var document = parse(html);
-              _assessGeneral(document);
+              _assessSectionsWithWidgets();
+              // We reset here the triggers for the sections that are called every
+              // time so that they can be called again
+              _resetSectionsWithWidgets();
             },
             onLoadStop: (InAppWebViewController c, String url) async {
               _currentUrl = url;
@@ -530,11 +533,6 @@ class _WebViewFullState extends State<WebViewFull> {
                 webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                 _scrollAfterLoad = false;
               }
-
-              // We reset here the triggers for the sections that are called every
-              // time onProgressChanged ticks, so that they can be called again
-              // in the future
-              _resetSectionsWithWidgets();
             },
             // Allows IOS to open links with target=_blank
             onCreateWindow:
@@ -1361,12 +1359,9 @@ class _WebViewFullState extends State<WebViewFull> {
       // Call trades. If we come from onProgressChanged we already have document
       // and title (quicker). Otherwise, we need to get them (if we come from trade options)
       if (mounted) {
-        print('pa');
         if (doc != null && pageTitle.isNotEmpty) {
-          print('pi');
           _assessTrades(doc, pageTitle);
         } else {
-          print('po');
           _currentUrl = await webView.getUrl();
           var html = await webView.getHtml();
           var d = parse(html);
@@ -1585,7 +1580,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
       var key = _userProvider.myUser.userApiKey;
-      await quickItemsProvider.loadItems(apiKey: key);
+      quickItemsProvider.loadItems(apiKey: key);
 
       setState(() {
         _quickItemsController.expanded = true;
