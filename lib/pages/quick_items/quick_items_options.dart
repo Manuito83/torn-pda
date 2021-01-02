@@ -22,6 +22,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _itemsProvider = Provider.of<QuickItemsProvider>(context, listen: false);
+    _itemsProvider.updateInventoryQuantities(fullUpdate: true);
     _searchController.addListener(onSearchInputTextChange);
   }
 
@@ -33,7 +35,6 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   @override
   Widget build(BuildContext context) {
-    _itemsProvider = Provider.of<QuickItemsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,

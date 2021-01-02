@@ -134,7 +134,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           "Use the box icon $appBarPosition to configure quick items";
       if (widget.browserDialog) {
         explanation =
-            "Use the full browser (long press the crime bar) to configure your quick items for the first time";
+            "Use the full browser (long press the Items link in the app's menu) to configure your quick items for the first time";
       }
 
       myList.add(
@@ -181,6 +181,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   }
 
   _refreshInventory() {
-    _itemsProvider.updateInventoryQuantities();
+    _itemsProvider.updateInventoryQuantities(fullUpdate: false);
   }
 }

@@ -34,31 +34,24 @@ class QuickItemsProvider extends ChangeNotifier {
   ];
 
   Future initLoad({@required String apiKey}) async {
-    // Restores shared preferences for active items
-    if (_firstLoad) {
-      await _loadSaveActiveItems();
-    }
-
     // If loading for the first time or if any never loaded correctly
     // for items or inventory
     if (_firstLoad) {
       _firstLoad = false;
       _apiKey = apiKey;
+      await _loadSaveActiveItems();
       _itemSuccess = await _getAllTornItems();
-      updateInventoryQuantities();
-    }
-    // This will only trigger with successive calls if the first
-    // load was not successful for items
-    else {
+      updateInventoryQuantities(fullUpdate: true);
+      notifyListeners();
+    } else {
+      // This will only trigger with successive calls if the first
+      // load was not successful for items
       if (!_itemSuccess) {
         _itemSuccess = await _getAllTornItems();
+        updateInventoryQuantities(fullUpdate: true);
+        notifyListeners();
       }
     }
-
-    // We always update inventory quantities
-    updateInventoryQuantities();
-
-    notifyListeners();
   }
 
   Future _loadSaveActiveItems() async {
@@ -174,17 +167,43 @@ class QuickItemsProvider extends ChangeNotifier {
     return false;
   }
 
-  Future updateInventoryQuantities() async {
+  /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
+  /// visible in the widget. Only makes sense if entering the options page
+  Future updateInventoryQuantities({bool fullUpdate = false}) async {
     var inventoryItems = await TornApiCaller.items(_apiKey).getInventory;
     if (inventoryItems is InventoryModel) {
-      for (var quickItem in _fullQuickItemsList) {
+
+      if (fullUpdate) {
+        for (var quickItem in _fullQuickItemsList) {
+          bool found = false;
+          for (var invItem in inventoryItems.inventory) {
+            if (invItem.name == quickItem.name) {
+              found = true;
+              quickItem.inventory = invItem.quantity;
+              break;
+            }
+
+          }
+          if (!found) {
+            quickItem.inventory = 0;
+          }
+        }
+      }
+
+      for (var quickItem in _activeQuickItemsList) {
+        bool found = false;
         for (var invItem in inventoryItems.inventory) {
           if (invItem.name == quickItem.name) {
+            found = true;
             quickItem.inventory = invItem.quantity;
             break;
           }
         }
+        if (!found) {
+          quickItem.inventory = 0;
+        }
       }
+
       notifyListeners();
       return true;
     }
