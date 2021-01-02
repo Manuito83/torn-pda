@@ -83,6 +83,8 @@ class SharedPreferencesModel {
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
+  final String _kHighlightChat = "pda_highlightChat";
+  final String _kHighlightColor = "pda_highlightColor";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -965,5 +967,29 @@ class SharedPreferencesModel {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kChatRemovalActive, value);
   }
+
+  /// ----------------------------
+  /// Methods for Chat Highlight
+  /// ----------------------------
+  Future<bool> getHighlightChat() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kHighlightChat) ?? true;
+  }
+
+  Future<bool> setHighlightChat(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kHighlightChat, value);
+  }
+
+  Future<int> getHighlightColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kHighlightColor) ?? 0x667ca900;
+  }
+
+  Future<bool> setHighlightColor(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kHighlightColor, value);
+  }
+
 
 }

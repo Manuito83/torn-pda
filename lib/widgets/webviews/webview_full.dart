@@ -513,9 +513,10 @@ class _WebViewFullState extends State<WebViewFull> {
               _assessGeneral(document);
             },
             onLoadStop: (InAppWebViewController c, String url) async {
-              _hideChat();
-
               _currentUrl = url;
+
+              _hideChat();
+              _highlightChat();
 
               var html = await webView.getHtml();
               var document = parse(html);
@@ -533,29 +534,7 @@ class _WebViewFullState extends State<WebViewFull> {
               // We reset here the triggers for the sections that are called every
               // time onProgressChanged ticks, so that they can be called again
               // in the future
-              if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
-                _crimesTriggered = false;
-                _cityTriggered = false;
-                _tradesTriggered = false;
-              }
-
-              if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
-                _quickItemsTriggered = false;
-                _cityTriggered = false;
-                _tradesTriggered = false;
-              }
-
-              if (_currentUrl.contains('city.php') && _cityTriggered) {
-                _crimesTriggered = false;
-                _quickItemsTriggered = false;
-                _tradesTriggered = false;
-              }
-
-              if (_currentUrl.contains("trade.php") && _tradesTriggered) {
-                _crimesTriggered = false;
-                _quickItemsTriggered = false;
-                _cityTriggered = false;
-              }
+              _resetSectionsWithWidgets();
             },
             // Allows IOS to open links with target=_blank
             onCreateWindow:
@@ -625,6 +604,24 @@ class _WebViewFullState extends State<WebViewFull> {
             : SizedBox.shrink(),
       ],
     );
+  }
+
+  void _highlightChat() {
+    if (!_currentUrl.contains('torn.com')) return;
+
+    var intColor = Color(_settingsProvider.highlightColor);
+    var background =
+        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
+    var senderColor =
+        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    String hlMap =
+        '[ { name: "${_userProvider.myUser.name}", highlight: "$background", sender: "$senderColor" } ]';
+
+    if (_settingsProvider.highlightChat) {
+      webView.evaluateJavascript(
+        source: (chatHighlightJS(highlightMap: hlMap)),
+      );
+    }
   }
 
   void _hideChat() {
@@ -841,6 +838,31 @@ class _WebViewFullState extends State<WebViewFull> {
       if (getCrimes) _assessCrimes(doc, pageTitle);
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
+    }
+  }
+
+  void _resetSectionsWithWidgets() {
+    if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
+      _crimesTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
+    } else if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
+      _quickItemsTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
+    } else if (_currentUrl.contains('city.php') && _cityTriggered) {
+      _crimesTriggered = false;
+      _quickItemsTriggered = false;
+      _tradesTriggered = false;
+    } else if (_currentUrl.contains("trade.php") && _tradesTriggered) {
+      _crimesTriggered = false;
+      _quickItemsTriggered = false;
+      _cityTriggered = false;
+    } else {
+      _crimesTriggered = false;
+      _quickItemsTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
     }
   }
 
@@ -1562,7 +1584,10 @@ class _WebViewFullState extends State<WebViewFull> {
       _quickItemsTriggered = true;
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
-      quickItemsProvider.initLoad(apiKey: _userProvider.myUser.userApiKey);
+      var key = _userProvider.myUser.userApiKey;
+      await quickItemsProvider.initLoad(apiKey: key);
+      // Successive refreshes handled by timer in widget
+      quickItemsProvider.updateInventoryQuantities(fullUpdate: false);
 
       setState(() {
         _quickItemsController.expanded = true;

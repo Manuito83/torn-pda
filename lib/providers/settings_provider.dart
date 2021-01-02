@@ -83,6 +83,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _highlightChat = true;
+  bool get highlightChat => _highlightChat;
+  set changeHighlightChat(bool value) {
+    _highlightChat = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
+  var _highlightColor = 0x66b74093;
+  int get highlightColor => _highlightColor;
+  set changeHighlightColor(int value) {
+    _highlightColor = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   var _useQuickBrowser = true;
   bool get useQuickBrowser => _useQuickBrowser;
   set changeUseQuickBrowser(bool value) {
@@ -108,6 +124,9 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setOnAppExit(_onAppExit);
 
     SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
+
+    SharedPreferencesModel().setHighlightChat(_highlightChat);
+    SharedPreferencesModel().setHighlightColor(_highlightColor);
 
     SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
 
@@ -166,6 +185,9 @@ class SettingsProvider extends ChangeNotifier {
     _onAppExit = await SharedPreferencesModel().getOnAppExit();
 
     _chatRemoveEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
+
+    _highlightChat = await SharedPreferencesModel().getHighlightChat();
+    _highlightColor = await SharedPreferencesModel().getHighlightColor();
 
     _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
 

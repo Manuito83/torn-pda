@@ -57,6 +57,7 @@ dependencies:
   cookie_jar: ^1.0.1
   fl_chart: ^0.12.1
   dotted_border: ^1.0.7
+  flutter_colorpicker: ^0.3.4
   flutter_inappwebview:
     git:
       url: https://github.com/pichillilorenzo/flutter_inappwebview.git

@@ -14,6 +14,7 @@ import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -40,6 +41,8 @@ class _SettingsPageState extends State<SettingsPage> {
   String _openBrowserValue;
   bool _loadBarBrowser;
   bool _chatRemoveEnabled;
+  bool _highlightChat;
+  Color _highlightColor = Color(0xff7ca900);
   bool _useQuickBrowser;
   String _timeFormatValue;
   String _timeZoneValue;
@@ -175,6 +178,68 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("Highlight own name in chat"),
+                            Switch(
+                              value: _highlightChat,
+                              onChanged: (value) {
+                                _settingsProvider.changeHighlightChat = value;
+                                setState(() {
+                                  _highlightChat = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_highlightChat)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                _showColorPicker(context);
+                              },
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Choose highlight color"),
+                                    Container(
+                                      width: 25,
+                                      height: 25,
+                                      color: _highlightColor,
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'The sender\'s name will appear darker '
+                                'to improve readability',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        SizedBox.shrink(),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
@@ -371,6 +436,40 @@ class _SettingsPageState extends State<SettingsPage> {
         },
       ),
     );
+  }
+
+  void _showColorPicker(BuildContext context) {
+    var pickerColor = _highlightColor;
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Pick a color!'),
+            content: SingleChildScrollView(
+              child: ColorPicker(
+                pickerColor: _highlightColor,
+                //enableAlpha: false,
+                onColorChanged: (color) {
+                  _settingsProvider.changeHighlightColor = color.value;
+                  setState(() {
+                    pickerColor = color;
+                  });
+                },
+                showLabel: true,
+                pickerAreaHeightPercent: 0.8,
+              ),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: const Text('Got it'),
+                onPressed: () {
+                  setState(() => _highlightColor = pickerColor);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
   }
 
   AppBar buildAppBar() {
@@ -1139,6 +1238,8 @@ class _SettingsPageState extends State<SettingsPage> {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
       _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
       _useQuickBrowser = _settingsProvider.useQuickBrowser;
+      _highlightChat = _settingsProvider.highlightChat;
+      _highlightColor = Color(_settingsProvider.highlightColor);
     });
   }
 
