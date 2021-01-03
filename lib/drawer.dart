@@ -76,6 +76,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   bool _changelogIsActive = false;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -344,6 +346,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 top: _settingsProvider.appBarTop ? false : true,
                 bottom: true,
                 child: Scaffold(
+                  key: _scaffoldKey,
                   body: _getPages(),
                   drawer: Drawer(
                     elevation: 2, // This avoids shadow over SafeArea
@@ -757,6 +760,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     if (appExit == 'exit') {
       return true;
     } else if (appExit == 'stay') {
+      // Open drawer instead
+      _scaffoldKey.currentState.openDrawer();
       return false;
     } else {
       var action;
@@ -772,6 +777,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         await Future.delayed(Duration(milliseconds: 300));
         return true;
       } else {
+        // Open drawer instead
+        _scaffoldKey.currentState.openDrawer();
         return false;
       }
     }
