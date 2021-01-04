@@ -120,40 +120,45 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 : null,
             body: Builder(
               builder: (BuildContext context) {
-                return Column(
-                  children: [
-                    ExpandablePanel(
-                      theme: ExpandableThemeData(
-                        hasIcon: false,
-                        tapBodyToCollapse: false,
-                        tapHeaderToExpand: false,
+                return Container(
+                  // Background color for all browser widgets
+                  color: Colors.grey[900],
+                  child: Column(
+                    children: [
+                      ExpandablePanel(
+                        theme: ExpandableThemeData(
+                          hasIcon: false,
+                          tapBodyToCollapse: false,
+                          tapHeaderToExpand: false,
+                        ),
+                        collapsed: SizedBox.shrink(),
+                        controller: _chainWidgetController,
+                        header: SizedBox.shrink(),
+                        expanded: ChainTimer(
+                          userKey: widget.userKey,
+                          alwaysDarkBackground: true,
+                          chainTimerParent: ChainTimerParent.webView,
+                        ),
                       ),
-                      collapsed: SizedBox.shrink(),
-                      controller: _chainWidgetController,
-                      header: SizedBox.shrink(),
-                      expanded: ChainTimer(
-                        userKey: widget.userKey,
-                        alwaysDarkBackground: true,
-                        chainTimerParent: ChainTimerParent.webView,
+                      Expanded(
+                        child: WebView(
+                          initialUrl: _initialUrl,
+                          javascriptMode: JavascriptMode.unrestricted,
+                          onWebViewCreated: (WebViewController c) {
+                            _webViewController = c;
+                          },
+                          onPageStarted: (page) {
+                            _hideChat();
+                          },
+                          onPageFinished: (page) {
+                            _hideChat();
+                            _highlightChat(page);
+                          },
+                          gestureNavigationEnabled: true,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: WebView(
-                        initialUrl: _initialUrl,
-                        javascriptMode: JavascriptMode.unrestricted,
-                        onWebViewCreated: (WebViewController c) {
-                          _webViewController = c;
-                        },
-                        onPageStarted: (page) {
-                          if (_chatRemovalEnabled && _chatRemovalActive) {
-                            _webViewController.evaluateJavascript(
-                                removeChatOnLoadStartJS());
-                          }
-                        },
-                        gestureNavigationEnabled: true,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
@@ -161,6 +166,30 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         ),
       ),
     );
+  }
+
+  void _highlightChat(String page) {
+    if (!page.contains('torn.com')) return;
+
+    var intColor = Color(_settingsProvider.highlightColor);
+    var background =
+        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
+    var senderColor =
+        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    String hlMap =
+        '[ { name: "${_userProv.myUser.name}", highlight: "$background", sender: "$senderColor" } ]';
+
+    if (_settingsProvider.highlightChat) {
+      _webViewController.evaluateJavascript(
+        chatHighlightJS(highlightMap: hlMap),
+      );
+    }
+  }
+
+  void _hideChat() {
+    if (_chatRemovalEnabled && _chatRemovalActive) {
+      _webViewController.evaluateJavascript(removeChatOnLoadStartJS());
+    }
   }
 
   CustomAppBar buildCustomAppBar() {
