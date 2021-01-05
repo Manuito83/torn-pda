@@ -241,7 +241,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
           ),
           SizedBox(height: 20),
           Text('If this problem reoccurs, please log out from Torn API (remove '
-              'you API Key in the Settings section and insert it again. Sorry for '
+              'you API Key in the Settings section and insert it again). Sorry for '
               'the inconvenience!'),
         ],
       ),
