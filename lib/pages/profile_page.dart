@@ -1562,11 +1562,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _customNerveMaxOverride = true;
             SharedPreferencesModel().setNervePercentageOverride(true);
             notificationSetString = 'You are already above your chosen value '
-                '(E$_customNerveTrigger), notification set for full nerve at $formattedTime';
+                '(N$_customNerveTrigger), notification set for full nerve at $formattedTime';
             alarmSetString = 'You are already above your chosen value '
-                '(E$_customNerveTrigger), alarm set for full nerve at $formattedTime';
+                '(N$_customNerveTrigger), alarm set for full nerve at $formattedTime';
             timerSetString = 'You are already above your chosen value '
-                '(E$_customNerveTrigger), timer set for full nerve at $formattedTime';
+                '(N$_customNerveTrigger), timer set for full nerve at $formattedTime';
           }
 
           notificationCancelString = 'Nerve notification cancelled!';
