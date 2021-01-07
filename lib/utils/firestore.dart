@@ -89,6 +89,28 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToEventsNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "eventsNotification": subscribe,
+    });
+  }
+
+  Future<void> addToEventsFilter(String filter) async {
+    List currentFilter = _firebaseUserModel.eventsFilter;
+    currentFilter.add(filter);
+    await _firestore.collection("players").doc(_uid).update({
+      "eventsFilter": currentFilter,
+    });
+  }
+
+  Future<void> removeFromEventsFilter(String filter) async {
+    List currentFilter = _firebaseUserModel.eventsFilter;
+    currentFilter.remove(filter);
+    await _firestore.collection("players").doc(_uid).update({
+      "eventsFilter": currentFilter,
+    });
+  }
+
   Future<void> subscribeToHospitalNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "hospitalNotification": subscribe,

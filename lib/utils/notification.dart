@@ -12,11 +12,6 @@ Future showNotification(Map payload) async {
 Future showNotificationBoth(Map payload) async {
   var onTapPayload = '';
 
-  // If payload comes from Firebase with a torn message (mail) id
-  if (payload["data"]["tornMessageId"] != '') {
-    onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
-  }
-
   var vibrationPattern = Int64List(8);
   vibrationPattern[0] = 0;
   vibrationPattern[1] = 400;
@@ -28,32 +23,46 @@ Future showNotificationBoth(Map payload) async {
   vibrationPattern[7] = 1000;
 
   if (Platform.isAndroid) {
-    String body = payload["notification"]["body"];
+    String title = payload["notification"]["title"];
     String notificationIcon = "notification_icon";
     Color notificationColor = Colors.grey;
-    if (body.contains("energy is full")) {
+
+    if (title.contains("Full Energy Bar")) {
       notificationIcon = "notification_energy";
       notificationColor = Colors.green;
-    } else if (body.contains("nerve is full")) {
+      onTapPayload += 'energy';
+    } else if (title.contains("Full Nerve Bar")) {
       notificationIcon = "notification_nerve";
       notificationColor = Colors.red;
-    } else if (body.contains("about to land")) {
+      onTapPayload += 'nerve';
+    } else if (title.contains("Approaching")) {
       notificationIcon = "notification_travel";
       notificationColor = Colors.blue;
-    } else if (body.contains("been hospitalised") ||
-        body.contains("released from hospital") ||
-        body.contains("left hospital earlier")) {
+      onTapPayload += 'travel';
+    } else if (title.contains("Hospital admission") ||
+        title.contains("Hospital time ending") ||
+        title.contains("You are out of hospital")) {
       notificationIcon = "notification_hospital";
       notificationColor = Colors.orange[400];
-    } else if (body.contains("drugs cooldown")) {
+    } else if (title.contains("Drug cooldown expired")) {
       notificationIcon = "notification_drugs";
       notificationColor = Colors.pink;
-    } else if (body.contains("Get in there")) {
+    } else if (title.contains("Race finished")) {
       notificationIcon = "notification_racing";
       notificationColor = Colors.orange[800];
-    } else if (body.contains("Subject:") || body.contains("Subjects:")) {
+      onTapPayload += 'racing';
+    } else if (title.contains("new message from") ||
+        title.contains("new messages from")) {
       notificationIcon = "notification_messages";
       notificationColor = Colors.purple[700];
+      // If payload comes from Firebase with a torn message (mail) id
+      if (payload["data"]["tornMessageId"] != '') {
+        onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
+      }
+    } else if (title.contains("new event!") || title.contains("new events!")) {
+      notificationIcon = "notification_events";
+      notificationColor = Colors.purple[700];
+      onTapPayload += 'events';
     }
 
     var platformChannelSpecifics = NotificationDetails(

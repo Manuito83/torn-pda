@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/firestore.dart';
-
+import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import '../main.dart';
 
 class AlertsSettings extends StatefulWidget {
@@ -112,7 +112,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.hospitalNotification ?? false,
+                          value:
+                              _firebaseUserModel.hospitalNotification ?? false,
                           title: Text("Hospital admission and release"),
                           subtitle: Text(
                               "If you are offline, you'll be notified if you are "
@@ -132,8 +133,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.drugsNotification ?? false,
                           title: Text("Drugs cooldown"),
-                          subtitle: Text("Get notified when your drugs cooldown "
-                              "has expired"),
+                          subtitle:
+                              Text("Get notified when your drugs cooldown "
+                                  "has expired"),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.drugsNotification = value;
@@ -149,7 +151,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.racingNotification ?? false,
                           title: Text("Racing"),
-                          subtitle: Text("Get notified when you cross the finish line"),
+                          subtitle: Text(
+                              "Get notified when you cross the finish line"),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.racingNotification = value;
@@ -163,9 +166,11 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.messagesNotification ?? false,
+                          value:
+                              _firebaseUserModel.messagesNotification ?? false,
                           title: Text("Messages"),
-                          subtitle: Text("Get notified when you receive new messages"),
+                          subtitle: Text(
+                              "Get notified when you receive new messages"),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.messagesNotification = value;
@@ -174,7 +179,52 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      SizedBox(height: 40),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.eventsNotification ?? false,
+                          title: Text("Events"),
+                          subtitle:
+                              Text("Get notified when you receive new events"),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.eventsNotification = value;
+                            });
+                            firestore.subscribeToEventsNotification(value);
+                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel?.eventsNotification)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                "Filter out events",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              IconButton(
+                                  icon:
+                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return EventsFilterDialog(
+                                          userModel: _firebaseUserModel,
+                                        );
+                                      },
+                                    );
+                                  }),
+                            ],
+                          ),
+                        )
+                      else
+                        SizedBox.shrink(),
+                      SizedBox(height: 60),
                     ],
                   ),
                 );

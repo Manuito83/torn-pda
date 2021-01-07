@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import stripHtml from "string-strip-html";
 
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
@@ -466,6 +467,157 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
   return Promise.all(promises);
 }
 
+export async function sendEventsNotification(userStats: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+
+  try {
+    var changes = false;
+    var newEvents = 0;
+    var newEventsDescriptions: any[] = [];
+    var knownEvents = subscriber.knownEvents || [];
+    
+    Object.keys(userStats.events).forEach(function (key){
+      if (userStats.events[key].seen === 0 &&
+        !knownEvents.includes(key)) {
+          changes = true;
+          newEvents++;
+          knownEvents.push(key);
+          newEventsDescriptions.push(userStats.events[key].event);
+      } 
+      else if (userStats.events[key].seen === 1 &&
+        knownEvents.includes(key)) {
+          changes = true;
+          for( var i = 0; i < knownEvents.length; i++){ 
+            if ( knownEvents[i] === key) { 
+              knownEvents.splice(i, 1); 
+              break;
+            }
+          }
+      }
+    });
+
+    if (changes) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            knownEvents: knownEvents,
+          })
+      );
+    }
+
+    // We send the notificatoin if new events are found
+    if (newEvents > 0) {
+      var notificationTitle = "";
+      var notificationSubtitle = "";
+
+      // If the user has pre-defined filters, we will remove the events
+      // matching those filters, so that the notification is not sent
+      var filters = subscriber.filteredEvents || [];
+      if (filters.length > 0) {
+        for (let i = 0; i < newEvents; i++) {
+          
+          if (newEventsDescriptions[i].includes('with the message:')) {
+            // Avoid personal messages with giveaways triggering other filter
+            continue;
+          }
+
+          if (filters.includes('crimes')) {
+            if (newEventsDescriptions[i].includes('You have been selected by') ||
+            newEventsDescriptions[i].includes('You and your team') ||
+            newEventsDescriptions[i].includes('canceled the ')) {
+              newEventsDescriptions.splice(i--, 1);
+              newEvents--;
+            }
+          }
+
+          if (filters.includes('trains')) {
+            if (newEventsDescriptions[i].includes('the director of')) {
+              newEventsDescriptions.splice(i--, 1);
+              newEvents--;
+            }
+          }
+
+          if (filters.includes('racing')) {
+            if (newEventsDescriptions[i].includes('You came') ||
+            newEventsDescriptions[i].includes('race.') ||
+            newEventsDescriptions[i].includes('Your best lap was') ||
+            newEventsDescriptions[i].includes('race and have received ')) {
+              newEventsDescriptions.splice(i--, 1);
+              newEvents--;
+            }
+          }
+
+          if (filters.includes('bazaar')) {
+            if (newEventsDescriptions[i].includes('from your bazaar for')) {
+              newEventsDescriptions.splice(i--, 1);
+              newEvents--;
+            }
+          }
+
+          if (filters.includes('attacks')) {
+            if (newEventsDescriptions[i].includes('attacked you') ||
+            newEventsDescriptions[i].includes('mugged you and stole') ||
+            newEventsDescriptions[i].includes('attacked and hospitalized')) {
+              newEventsDescriptions.splice(i--, 1);
+              newEvents--;
+            }
+          }
+
+          if (filters.includes('revives')) {
+            if (newEventsDescriptions[i].includes('revive')) {
+              newEventsDescriptions.splice(i--, 1);
+              newEvents--;
+            }
+          }
+         
+        }
+      }
+
+      // Checking again if any new events remain after filtering
+      if (newEvents > 0) {
+          if (newEvents === 1) {
+          notificationTitle = "You have a new event!";
+          notificationSubtitle = `${newEventsDescriptions[0]}`;
+        }
+        else if (newEvents > 1) {
+          notificationTitle = `You have ${newEvents} new events!`;
+          notificationSubtitle = `- ${newEventsDescriptions.join('\n- ')}`.trim();
+        }
+
+
+        // Fix notification text
+        notificationSubtitle = stripHtml(notificationSubtitle).result;
+        notificationSubtitle = notificationSubtitle.replace('View the details here!', '');
+        notificationSubtitle = notificationSubtitle.replace('Please click here to continue.', '');
+        notificationSubtitle = notificationSubtitle.replace(' [view]', '.');
+        notificationSubtitle = notificationSubtitle.replace(' [View]', '');
+        notificationSubtitle = notificationSubtitle.replace(' Please click here.', '');
+        notificationSubtitle = notificationSubtitle.replace(' Please click here to collect your funds.', '');
+
+        promises.push(
+          sendNotificationToUser(
+            subscriber.token,
+            notificationTitle,
+            notificationSubtitle,
+            "notification_events",
+            "#5B1FA2",
+          )
+        );
+      }
+    }
+    
+  } catch (error) {
+    console.log("ERROR EVENTS");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
 export async function sendNotificationToUser(
   token: string,
   title: string,
@@ -487,7 +639,11 @@ export async function sendNotificationToUser(
     },
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",
+      // Torn personal message ID
       tornMessageId: tornMessageId,
+      // This two might seem redundant, but are needed so that
+      // the information is contained in onLaundh/onResume message information
+      title: title,
       message: body, 
     },
   };

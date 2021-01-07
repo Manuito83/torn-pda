@@ -189,41 +189,40 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool travel = false;
     bool racing = false;
     bool messages = false;
+    bool events = false;
     bool nerve = false;
     bool energy = false;
 
     if (Platform.isIOS) {
-      if (message["message"].contains("about to land")) {
+      if (message["title"].contains("Approaching")) {
         travel = true;
-      }
-      if (message["message"].contains("Get in there")) {
+      } else if (message["title"].contains("Race finished")) {
         racing = true;
-      }
-      if (message["message"].contains("Subject:") ||
-          message["message"].contains("Subjects:")) {
+      } else if (message["title"].contains("new message from") ||
+          message["title"].contains("new messages from")) {
         messages = true;
-      }
-      if (message["message"].contains("Your nerve is full")) {
+      } else if (message["title"].contains("new event!") ||
+          message["title"].contains("new events!")) {
+        events = true;
+      } else if (message["title"].contains("Full Nerve Bar")) {
         nerve = true;
-      }
-      if (message["message"].contains("Your energy is full")) {
+      } else if (message["title"].contains("Full Energy Bar")) {
         energy = true;
       }
     } else if (Platform.isAndroid) {
-      if (message["data"]["message"].contains("about to land")) {
+      if (message["data"]["title"].contains("Approaching")) {
         travel = true;
-      }
-      if (message["data"]["message"].contains("Get in there")) {
+      } else if (message["data"]["title"].contains("Race finished")) {
         racing = true;
-      }
-      if (message["data"]["message"].contains("Subject:") ||
-          message["data"]["message"].contains("Subjects:")) {
+      } else if (message["data"]["title"].contains("new message from") ||
+          message["data"]["title"].contains("new messages from")) {
         messages = true;
-      }
-      if (message["data"]["message"].contains("Your nerve is full")) {
+      } else if (message["data"]["title"].contains("new event!") ||
+          message["data"]["title"].contains("new events!")) {
+        events = true;
+      } else if (message["data"]["title"].contains("Full Nerve Bar")) {
         nerve = true;
-      }
-      if (message["data"]["message"].contains("Your energy is full")) {
+      } else if (message["data"]["title"].contains("Full Energy Bar")) {
         energy = true;
       }
     }
@@ -241,6 +240,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
             "${message["data"]["tornMessageId"]}&suffix=inbox";
       }
+    } else if (events) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/events.php#/step=all";
     } else if (nerve) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
@@ -291,6 +293,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('nerve')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/crimes.php';
+      } else if (payload.contains('racing')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/loader.php?sid=racing';
       } else if (payload.contains('400-')) {
         launchBrowser = true;
         var npcId = payload.split('-')[1];
@@ -301,6 +306,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         var messageId = payload.split(':');
         browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
             "${messageId[1]}&suffix=inbox";
+      } else if (payload.contains('events')) {
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/events.php#/step=all";
       }
 
       if (launchBrowser) {
@@ -370,7 +378,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             );
           } else {
             return Container(
-              color:Colors.black,
+              color: Colors.black,
               child: SafeArea(
                 top: _settingsProvider.appBarTop ? false : true,
                 bottom: true,
@@ -770,7 +778,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         builder: (BuildContext context) {
           return OnAppExitDialog();
         },
-      ).then((choice){
+      ).then((choice) {
         action = choice;
       });
       if (action == 'exit') {
@@ -783,5 +791,4 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
     }
   }
-
 }
