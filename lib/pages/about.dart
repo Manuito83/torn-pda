@@ -107,11 +107,10 @@ class _AboutPageState extends State<AboutPage> {
                               fontWeight: FontWeight.bold, color: Colors.blue),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
-                              _settingsProvider.useQuickBrowser
-                                  ? openBrowserDialog(
-                                      context, 'https://discord.gg/vyP23kJ')
-                                  : _openTornBrowser(
-                                      'https://discord.gg/vyP23kJ');
+                              var url = 'https://discord.gg/vyP23kJ';
+                              if (await canLaunch(url)) {
+                                await launch(url, forceSafariVC: false);
+                              }
                             },
                         ),
                         TextSpan(
@@ -464,5 +463,4 @@ class _AboutPageState extends State<AboutPage> {
         break;
     }
   }
-
 }
