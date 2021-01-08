@@ -5,12 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:torn_pda/main.dart';
 
-Future showNotification(Map payload) async {
-  showNotificationBoth(payload);
+Future showNotification(Map payload, int notId) async {
+  showNotificationBoth(payload, notId);
 }
 
-Future showNotificationBoth(Map payload) async {
+Future showNotificationBoth(Map payload, int notId) async {
+
   var onTapPayload = '';
+  var channelId = '';
+  var channelName = '';
+  var channelDescription = '';
 
   var vibrationPattern = Int64List(8);
   vibrationPattern[0] = 0;
@@ -31,26 +35,44 @@ Future showNotificationBoth(Map payload) async {
       notificationIcon = "notification_energy";
       notificationColor = Colors.green;
       onTapPayload += 'energy';
+      channelId = 'Alerts energy';
+      channelName = 'Alerts energy';
+      channelDescription = 'Automatic alerts for energy';
     } else if (title.contains("Full Nerve Bar")) {
       notificationIcon = "notification_nerve";
       notificationColor = Colors.red;
       onTapPayload += 'nerve';
+      channelId = 'Alerts nerve';
+      channelName = 'Alerts nerve';
+      channelDescription = 'Automatic alerts for nerve';
     } else if (title.contains("Approaching")) {
       notificationIcon = "notification_travel";
       notificationColor = Colors.blue;
       onTapPayload += 'travel';
+      channelId = 'Alerts travel';
+      channelName = 'Alerts travel';
+      channelDescription = 'Automatic alerts for travel';
     } else if (title.contains("Hospital admission") ||
         title.contains("Hospital time ending") ||
         title.contains("You are out of hospital")) {
       notificationIcon = "notification_hospital";
       notificationColor = Colors.orange[400];
+      channelId = 'Alerts hospital';
+      channelName = 'Alerts hospital';
+      channelDescription = 'Automatic alerts for hospital';
     } else if (title.contains("Drug cooldown expired")) {
       notificationIcon = "notification_drugs";
       notificationColor = Colors.pink;
+      channelId = 'Alerts drugs';
+      channelName = 'Alerts drugs';
+      channelDescription = 'Automatic alerts for drugs';
     } else if (title.contains("Race finished")) {
       notificationIcon = "notification_racing";
       notificationColor = Colors.orange[800];
       onTapPayload += 'racing';
+      channelId = 'Alerts racing';
+      channelName = 'Alerts racing';
+      channelDescription = 'Automatic alerts for racing';
     } else if (title.contains("new message from") ||
         title.contains("new messages from")) {
       notificationIcon = "notification_messages";
@@ -59,17 +81,23 @@ Future showNotificationBoth(Map payload) async {
       if (payload["data"]["tornMessageId"] != '') {
         onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
       }
+      channelId = 'Alerts messages';
+      channelName = 'Alerts messages';
+      channelDescription = 'Automatic alerts for messages';
     } else if (title.contains("new event!") || title.contains("new events!")) {
       notificationIcon = "notification_events";
       notificationColor = Colors.purple[700];
       onTapPayload += 'events';
+      channelId = 'Alerts events';
+      channelName = 'Alerts events';
+      channelDescription = 'Automatic alerts for events';
     }
 
     var platformChannelSpecifics = NotificationDetails(
       android: AndroidNotificationDetails(
-        "Automatic alerts",
-        "Alerts Full",
-        "Automatic alerts chosen by the user",
+        channelId,
+        channelName,
+        channelDescription,
         importance: Importance.max,
         priority: Priority.high,
         visibility: NotificationVisibility.public,
@@ -88,8 +116,9 @@ Future showNotificationBoth(Map payload) async {
       iOS: null,
     );
 
+    print(notId);
     await flutterLocalNotificationsPlugin.show(
-      999,
+      notId,
       payload["notification"]["title"],
       payload["notification"]["body"],
       platformChannelSpecifics,

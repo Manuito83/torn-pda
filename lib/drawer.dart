@@ -78,6 +78,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // Allows to space alerts when app is on the foreground
+  DateTime _lastMessageReceived;
+  int concurrent = 0;
+  // Assigns different ids to alerts when the app is on the foreground
+  var notId = 900;
+
   @override
   void initState() {
     super.initState();
@@ -143,6 +149,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       provisional: false,
     ));
 
+    _lastMessageReceived = DateTime.now();
+
     _messaging.configure(
       onResume: (message) {
         return _fireLaunchResumeNotifications(message);
@@ -150,9 +158,22 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       onLaunch: (message) {
         return _fireLaunchResumeNotifications(message);
       },
-      onMessage: (message) {
+      onMessage: (message) async {
+        // Spaces out several notifications so that all of them show if
+        // the app is open (otherwise only 1 of them shows)
+        if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
+          concurrent++;
+          await Future.delayed(Duration(seconds: 8 * concurrent));
+        } else {
+          concurrent = 0;
+        }
+        _lastMessageReceived = DateTime.now();
+        // Assigns a different id two alerts that come together (otherwise one
+        // deletes the previous one)
+        notId++;
+        if (notId > 990) notId = 900;
         // This will eventually fire a local notification
-        return showNotification(message);
+        return showNotification(message, notId);
       },
     );
 
