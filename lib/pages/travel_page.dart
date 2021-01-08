@@ -1013,9 +1013,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     vibrationPattern[7] = 1000;
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Travel',
-      'Travel Full',
-      'Urgent notifications about arriving to destination',
+      'Manual travel',
+      'Manual travel',
+      'Manual notifications for travel',
       importance: Importance.max,
       priority: Priority.high,
       visibility: NotificationVisibility.public,

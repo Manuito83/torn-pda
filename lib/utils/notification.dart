@@ -116,7 +116,6 @@ Future showNotificationBoth(Map payload, int notId) async {
       iOS: null,
     );
 
-    print(notId);
     await flutterLocalNotificationsPlugin.show(
       notId,
       payload["notification"]["title"],
@@ -136,7 +135,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     // Two kind of messages might be sent by Firebase
     try {
       await flutterLocalNotificationsPlugin.show(
-        999,
+        notId,
         payload["aps"]["alert"]["title"],
         payload["aps"]["alert"]["body"],
         platformChannelSpecifics,
@@ -145,7 +144,7 @@ Future showNotificationBoth(Map payload, int notId) async {
       );
     } catch (e) {
       await flutterLocalNotificationsPlugin.show(
-        999,
+        notId,
         payload["notification"]["title"],
         payload["notification"]["body"],
         platformChannelSpecifics,

@@ -835,9 +835,9 @@ class _LootPageState extends State<LootPage> {
     String title,
     String subtitle,
   ) async {
-    String channelTitle = 'Loot';
-    String channelSubtitle = 'NPC Loot';
-    String channelDescription = 'Notifications about NPC loot';
+    String channelTitle = 'Manual loot';
+    String channelSubtitle = 'Manual loot';
+    String channelDescription = 'Manual notifications for loot';
     String notificationTitle = title;
     String notificationSubtitle = subtitle;
     int notificationId = id;

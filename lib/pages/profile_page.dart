@@ -4079,10 +4079,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         secondsToNotification =
             _travelNotificationTime.difference(DateTime.now()).inSeconds -
                 _travelNotificationAhead;
-        channelTitle = 'Travel';
-        channelSubtitle = 'Travel Full';
+        channelTitle = 'Manual travel';
+        channelSubtitle = 'Manual travel';
         channelDescription =
-            'Urgent notifications about arriving to destination';
+            'Manual notifications for travel';
         notificationTitle = _travelNotificationTitle;
         notificationSubtitle = _travelNotificationBody;
         notificationPayload += 'travel';
@@ -4093,9 +4093,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationId = 101;
         secondsToNotification =
             _energyNotificationTime.difference(DateTime.now()).inSeconds;
-        channelTitle = 'Energy';
-        channelSubtitle = 'Energy Full';
-        channelDescription = 'Urgent notifications about energy';
+        channelTitle = 'Manual energy';
+        channelSubtitle = 'Manual energy';
+        channelDescription = 'Manual notifications for energy';
         notificationTitle = 'Energy bar';
         notificationSubtitle = 'Here is your energy reminder!';
         var myTimeStamp =
@@ -4108,9 +4108,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationId = 102;
         secondsToNotification =
             _nerveNotificationTime.difference(DateTime.now()).inSeconds;
-        channelTitle = 'Nerve';
-        channelSubtitle = 'Nerve Full';
-        channelDescription = 'Urgent notifications about nerve';
+        channelTitle = 'Manual nerve';
+        channelSubtitle = 'Manual nerve';
+        channelDescription = 'Manual notifications for nerve';
         notificationTitle = 'Nerve bar';
         notificationSubtitle = 'Here is your nerve reminder!';
         var myTimeStamp =
@@ -4122,9 +4122,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.life:
         notificationId = 103;
         secondsToNotification = _user.life.fulltime;
-        channelTitle = 'Life';
-        channelSubtitle = 'Life Full';
-        channelDescription = 'Urgent notifications about life';
+        channelTitle = 'Manual life';
+        channelSubtitle = 'Manual life';
+        channelDescription = 'Manual notifications for life';
         notificationTitle = 'Life bar';
         notificationSubtitle = 'Here is your life reminder!';
         var myTimeStamp =
@@ -4135,9 +4135,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.drugs:
         notificationId = 104;
         secondsToNotification = _user.cooldowns.drug;
-        channelTitle = 'Drugs';
-        channelSubtitle = 'Drugs Expired';
-        channelDescription = 'Urgent notifications about drugs cooldown';
+        channelTitle = 'Manual drugs';
+        channelSubtitle = 'Manual drugs';
+        channelDescription = 'Manual notifications for drugs';
         notificationTitle = 'Drug Cooldown';
         notificationSubtitle = 'Here is your drugs cooldown reminder!';
         var myTimeStamp =
@@ -4148,9 +4148,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.medical:
         notificationId = 105;
         secondsToNotification = _user.cooldowns.medical;
-        channelTitle = 'Medical';
-        channelSubtitle = 'Medical Expired';
-        channelDescription = 'Urgent notifications about medical cooldown';
+        channelTitle = 'Manual medical';
+        channelSubtitle = 'Manual medical';
+        channelDescription = 'Manual notifications for medical';
         notificationTitle = 'Medical Cooldown';
         notificationSubtitle = 'Here is your medical cooldown reminder!';
         var myTimeStamp =
@@ -4161,9 +4161,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.booster:
         notificationId = 106;
         secondsToNotification = _user.cooldowns.booster;
-        channelTitle = 'Booster';
-        channelSubtitle = 'Booster Expired';
-        channelDescription = 'Urgent notifications about booster cooldown';
+        channelTitle = 'Manual booster';
+        channelSubtitle = 'Manual booster';
+        channelDescription = 'Manual notifications for booster';
         notificationTitle = 'Booster Cooldown';
         notificationSubtitle = 'Here is your booster cooldown reminder!';
         var myTimeStamp =
