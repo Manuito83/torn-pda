@@ -107,6 +107,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _removeNotificationsOnLaunch = true;
+  bool get removeNotificationsOnLaunch => _removeNotificationsOnLaunch;
+  set changeRemoveNotificationsOnLaunch(bool value) {
+    _removeNotificationsOnLaunch = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   void _saveSettingsSharedPrefs() {
     String browserSave;
     switch (_currentBrowser) {
@@ -131,6 +139,8 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
 
     SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
+
+    SharedPreferencesModel().setRemoveNotificationsOnLaunch(_removeNotificationsOnLaunch);
 
     String timeFormatSave;
     switch (_currentTimeFormat) {
@@ -190,6 +200,8 @@ class SettingsProvider extends ChangeNotifier {
     _highlightColor = await SharedPreferencesModel().getHighlightColor();
 
     _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
+
+    _removeNotificationsOnLaunch = await SharedPreferencesModel().getRemoveNotificationsOnLaunch();
 
     String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
     switch (restoredTimeFormat) {

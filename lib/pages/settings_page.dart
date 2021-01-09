@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -46,6 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _useQuickBrowser;
   String _timeFormatValue;
   String _timeZoneValue;
+  bool _removeNotificationsLaunch;
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
@@ -328,6 +330,68 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                       SizedBox(height: 15),
+                      // TODO: this is conditional now because it only affects Android.
+                      // In the future it might be needed to show always the Divider and
+                      // SizedBox and only hide the actual Android elements
+                      if (Platform.isAndroid)
+                        Column(
+                          children: [
+                            Divider(),
+                            SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'NOTIFICATIONS',
+                                  style: TextStyle(fontSize: 10),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 20, top: 0, right: 20, bottom: 0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Flexible(
+                                    child: Text(
+                                      "Remove notifications on launch",
+                                    ),
+                                  ),
+                                  Switch(
+                                    value: _removeNotificationsLaunch,
+                                    onChanged: (value) {
+                                      _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                                      setState(() {
+                                        _removeNotificationsLaunch = value;
+                                      });
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'This will remove all Torn PDA notifications from your notifications bar '
+                                'when you launch the app. Deactivate it if you would prefer to keep them '
+                                'and erase them later manually',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                          ],
+                        )
+                      else
+                        SizedBox.shrink(),
                       Divider(),
                       SizedBox(height: 5),
                       Row(
@@ -1238,6 +1302,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
       _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
       _useQuickBrowser = _settingsProvider.useQuickBrowser;
+      _removeNotificationsLaunch = _settingsProvider.removeNotificationsOnLaunch;
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
     });

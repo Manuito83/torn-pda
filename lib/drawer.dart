@@ -34,6 +34,7 @@ import 'package:flutter/services.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -83,6 +84,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   int concurrent = 0;
   // Assigns different ids to alerts when the app is on the foreground
   var notId = 900;
+
+  // Platform channel with MainActivity.java
+  static const platform = const MethodChannel('tornpda.channel');
 
   @override
   void initState() {
@@ -141,6 +145,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // when the app is open)
     _fireOnTapLocalNotifications();
 
+    // Configure all notifications channels so that Firebase alerts have already
+    // and assign channel where to land
+    configureNotificationChannels();
+
     // Configures Firebase notification behaviours
     _messaging.requestNotificationPermissions(IosNotificationSettings(
       sound: true,
@@ -190,9 +198,33 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
+      // Update Firebase active parameter
       _updateLastActiveTime();
+
+      // Get rid of notifications
+      if (Platform.isAndroid) {
+        // Gets the active (already shown) notifications
+        final List<ActiveNotification> activeNotifications =
+            await flutterLocalNotificationsPlugin
+                .resolvePlatformSpecificImplementation<
+                    AndroidFlutterLocalNotificationsPlugin>()
+                ?.getActiveNotifications();
+
+        for (var not in activeNotifications) {
+          // Platform channel to cancel direct Firebase notifications (they have an
+          // associated <TAG> that cannot be cancel with the local plugin
+          if (not.id == 0) {
+            await platform.invokeMethod('cancelNotifications');
+          }
+          // This cancels the Firebase alerts that have been triggered locally, which don't need
+          // a tag and have an id number we assigned
+          else {
+            flutterLocalNotificationsPlugin.cancel(not.id);
+          }
+        }
+      }
     }
   }
 
