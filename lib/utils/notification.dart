@@ -10,7 +10,6 @@ Future showNotification(Map payload, int notId) async {
 }
 
 Future showNotificationBoth(Map payload, int notId) async {
-
   var onTapPayload = '';
   var channelId = '';
   var channelName = '';
@@ -152,5 +151,144 @@ Future showNotificationBoth(Map payload, int notId) async {
         payload: onTapPayload,
       );
     }
+  }
+}
+
+Future configureNotificationChannels() async {
+  List<AndroidNotificationChannel> channels = [];
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts travel',
+      'Alerts travel',
+      'Automatic alerts for travel',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual travel',
+      'Manual travel',
+      'Manual notifications for travel',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts energy',
+      'Alerts energy',
+      'Automatic alerts for energy',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual energy',
+      'Manual energy',
+      'Manual notifications for energy',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts nerve',
+      'Alerts nerve',
+      'Automatic alerts for nerve',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual nerve',
+      'Manual nerve',
+      'Manual notifications for nerve',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts hospital',
+      'Alerts hospital',
+      'Automatic alerts for hospital',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts drugs',
+      'Alerts drugs',
+      'Automatic alerts for drugs',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual drugs',
+      'Manual drugs',
+      'Manual notifications for drugs',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts racing',
+      'Alerts racing',
+      'Automatic alerts for racing',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts messages',
+      'Alerts messages',
+      'Automatic alerts for messages',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts events',
+      'Alerts events',
+      'Automatic alerts for events',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual loot',
+      'Manual loot',
+      'Manual notifications for loot',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual life',
+      'Manual life',
+      'Manual notifications for life',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual medical',
+      'Manual medical',
+      'Manual notifications for medical',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual booster',
+      'Manual booster',
+      'Manual notifications for booster',
+    ),
+  );
+
+  for (var channel in channels) {
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
   }
 }
