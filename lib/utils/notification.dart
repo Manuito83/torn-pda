@@ -25,73 +25,73 @@ Future showNotificationBoth(Map payload, int notId) async {
   vibrationPattern[6] = 400;
   vibrationPattern[7] = 1000;
 
-  if (Platform.isAndroid) {
-    String title = payload["notification"]["title"];
-    String notificationIcon = "notification_icon";
-    Color notificationColor = Colors.grey;
+  String title = payload["notification"]["title"];
+  String notificationIcon = "notification_icon";
+  Color notificationColor = Colors.grey;
 
-    if (title.contains("Full Energy Bar")) {
-      notificationIcon = "notification_energy";
-      notificationColor = Colors.green;
-      onTapPayload += 'energy';
-      channelId = 'Alerts energy';
-      channelName = 'Alerts energy';
-      channelDescription = 'Automatic alerts for energy';
-    } else if (title.contains("Full Nerve Bar")) {
-      notificationIcon = "notification_nerve";
-      notificationColor = Colors.red;
-      onTapPayload += 'nerve';
-      channelId = 'Alerts nerve';
-      channelName = 'Alerts nerve';
-      channelDescription = 'Automatic alerts for nerve';
-    } else if (title.contains("Approaching")) {
-      notificationIcon = "notification_travel";
-      notificationColor = Colors.blue;
-      onTapPayload += 'travel';
-      channelId = 'Alerts travel';
-      channelName = 'Alerts travel';
-      channelDescription = 'Automatic alerts for travel';
-    } else if (title.contains("Hospital admission") ||
-        title.contains("Hospital time ending") ||
-        title.contains("You are out of hospital")) {
-      notificationIcon = "notification_hospital";
-      notificationColor = Colors.orange[400];
-      channelId = 'Alerts hospital';
-      channelName = 'Alerts hospital';
-      channelDescription = 'Automatic alerts for hospital';
-    } else if (title.contains("Drug cooldown expired")) {
-      notificationIcon = "notification_drugs";
-      notificationColor = Colors.pink;
-      channelId = 'Alerts drugs';
-      channelName = 'Alerts drugs';
-      channelDescription = 'Automatic alerts for drugs';
-    } else if (title.contains("Race finished")) {
-      notificationIcon = "notification_racing";
-      notificationColor = Colors.orange[800];
-      onTapPayload += 'racing';
-      channelId = 'Alerts racing';
-      channelName = 'Alerts racing';
-      channelDescription = 'Automatic alerts for racing';
-    } else if (title.contains("new message from") ||
-        title.contains("new messages from")) {
-      notificationIcon = "notification_messages";
-      notificationColor = Colors.purple[700];
-      // If payload comes from Firebase with a torn message (mail) id
-      if (payload["data"]["tornMessageId"] != '') {
-        onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
-      }
-      channelId = 'Alerts messages';
-      channelName = 'Alerts messages';
-      channelDescription = 'Automatic alerts for messages';
-    } else if (title.contains("new event!") || title.contains("new events!")) {
-      notificationIcon = "notification_events";
-      notificationColor = Colors.purple[700];
-      onTapPayload += 'events';
-      channelId = 'Alerts events';
-      channelName = 'Alerts events';
-      channelDescription = 'Automatic alerts for events';
+  if (title.contains("Full Energy Bar")) {
+    notificationIcon = "notification_energy";
+    notificationColor = Colors.green;
+    onTapPayload += 'energy';
+    channelId = 'Alerts energy';
+    channelName = 'Alerts energy';
+    channelDescription = 'Automatic alerts for energy';
+  } else if (title.contains("Full Nerve Bar")) {
+    notificationIcon = "notification_nerve";
+    notificationColor = Colors.red;
+    onTapPayload += 'nerve';
+    channelId = 'Alerts nerve';
+    channelName = 'Alerts nerve';
+    channelDescription = 'Automatic alerts for nerve';
+  } else if (title.contains("Approaching")) {
+    notificationIcon = "notification_travel";
+    notificationColor = Colors.blue;
+    onTapPayload += 'travel';
+    channelId = 'Alerts travel';
+    channelName = 'Alerts travel';
+    channelDescription = 'Automatic alerts for travel';
+  } else if (title.contains("Hospital admission") ||
+      title.contains("Hospital time ending") ||
+      title.contains("You are out of hospital")) {
+    notificationIcon = "notification_hospital";
+    notificationColor = Colors.orange[400];
+    channelId = 'Alerts hospital';
+    channelName = 'Alerts hospital';
+    channelDescription = 'Automatic alerts for hospital';
+  } else if (title.contains("Drug cooldown expired")) {
+    notificationIcon = "notification_drugs";
+    notificationColor = Colors.pink;
+    channelId = 'Alerts drugs';
+    channelName = 'Alerts drugs';
+    channelDescription = 'Automatic alerts for drugs';
+  } else if (title.contains("Race finished")) {
+    notificationIcon = "notification_racing";
+    notificationColor = Colors.orange[800];
+    onTapPayload += 'racing';
+    channelId = 'Alerts racing';
+    channelName = 'Alerts racing';
+    channelDescription = 'Automatic alerts for racing';
+  } else if (title.contains("new message from") ||
+      title.contains("new messages from")) {
+    notificationIcon = "notification_messages";
+    notificationColor = Colors.purple[700];
+    // If payload comes from Firebase with a torn message (mail) id
+    if (payload["data"]["tornMessageId"] != '') {
+      onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
     }
+    channelId = 'Alerts messages';
+    channelName = 'Alerts messages';
+    channelDescription = 'Automatic alerts for messages';
+  } else if (title.contains("new event!") || title.contains("new events!")) {
+    notificationIcon = "notification_events";
+    notificationColor = Colors.purple[700];
+    onTapPayload += 'events';
+    channelId = 'Alerts events';
+    channelName = 'Alerts events';
+    channelDescription = 'Automatic alerts for events';
+  }
 
+  if (Platform.isAndroid) {
     var platformChannelSpecifics = NotificationDetails(
       android: AndroidNotificationDetails(
         channelId,
@@ -135,17 +135,18 @@ Future showNotificationBoth(Map payload, int notId) async {
     try {
       await flutterLocalNotificationsPlugin.show(
         notId,
-        payload["aps"]["alert"]["title"],
-        payload["aps"]["alert"]["body"],
+        payload["notification"]["title"],
+        payload["notification"]["body"],
         platformChannelSpecifics,
         // Set payload to be handled by local notifications
         payload: onTapPayload,
       );
     } catch (e) {
+      // Probably not in use anymore as of 2021
       await flutterLocalNotificationsPlugin.show(
         notId,
-        payload["notification"]["title"],
-        payload["notification"]["body"],
+        payload["aps"]["alert"]["title"],
+        payload["aps"]["alert"]["body"],
         platformChannelSpecifics,
         // Set payload to be handled by local notifications
         payload: onTapPayload,
@@ -282,6 +283,14 @@ Future configureNotificationChannels() async {
       'Manual booster',
       'Manual booster',
       'Manual notifications for booster',
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts stale user',
+      'Alerts stale user',
+      'Automatic alerts for inactivity',
     ),
   );
 
