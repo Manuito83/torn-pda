@@ -25,70 +25,81 @@ Future showNotificationBoth(Map payload, int notId) async {
   vibrationPattern[6] = 400;
   vibrationPattern[7] = 1000;
 
-  String title = payload["notification"]["title"];
+  String channel = payload["data"]["channelId"];
   String notificationIcon = "notification_icon";
   Color notificationColor = Colors.grey;
 
-  if (title.contains("Full Energy Bar")) {
+  if (channel.contains("Alerts energy")) {
     notificationIcon = "notification_energy";
     notificationColor = Colors.green;
     onTapPayload += 'energy';
     channelId = 'Alerts energy';
     channelName = 'Alerts energy';
     channelDescription = 'Automatic alerts for energy';
-  } else if (title.contains("Full Nerve Bar")) {
+  } else if (channel.contains("Alerts nerve")) {
     notificationIcon = "notification_nerve";
     notificationColor = Colors.red;
     onTapPayload += 'nerve';
     channelId = 'Alerts nerve';
     channelName = 'Alerts nerve';
     channelDescription = 'Automatic alerts for nerve';
-  } else if (title.contains("Approaching")) {
+  } else if (channel.contains("Alerts travel")) {
     notificationIcon = "notification_travel";
     notificationColor = Colors.blue;
     onTapPayload += 'travel';
     channelId = 'Alerts travel';
     channelName = 'Alerts travel';
     channelDescription = 'Automatic alerts for travel';
-  } else if (title.contains("Hospital admission") ||
-      title.contains("Hospital time ending") ||
-      title.contains("You are out of hospital")) {
+  } else if (channel.contains("Alerts hospital")) {
     notificationIcon = "notification_hospital";
     notificationColor = Colors.orange[400];
     channelId = 'Alerts hospital';
     channelName = 'Alerts hospital';
     channelDescription = 'Automatic alerts for hospital';
-  } else if (title.contains("Drug cooldown expired")) {
+  } else if (channel.contains("Alerts drugs")) {
     notificationIcon = "notification_drugs";
     notificationColor = Colors.pink;
     channelId = 'Alerts drugs';
     channelName = 'Alerts drugs';
     channelDescription = 'Automatic alerts for drugs';
-  } else if (title.contains("Race finished")) {
+  } else if (channel.contains("Alerts racing")) {
     notificationIcon = "notification_racing";
     notificationColor = Colors.orange[800];
     onTapPayload += 'racing';
     channelId = 'Alerts racing';
     channelName = 'Alerts racing';
     channelDescription = 'Automatic alerts for racing';
-  } else if (title.contains("new message from") ||
-      title.contains("new messages from")) {
+  } else if (channel.contains("Alerts messages")) {
     notificationIcon = "notification_messages";
     notificationColor = Colors.purple[700];
     // If payload comes from Firebase with a torn message (mail) id
     if (payload["data"]["tornMessageId"] != '') {
-      onTapPayload += 'messageId:${payload["data"]["tornMessageId"]}';
+      onTapPayload += 'tornMessageId:${payload["data"]["tornMessageId"]}';
+    } else {
+      onTapPayload += 'tornMessageId:0';
     }
     channelId = 'Alerts messages';
     channelName = 'Alerts messages';
     channelDescription = 'Automatic alerts for messages';
-  } else if (title.contains("new event!") || title.contains("new events!")) {
+  } else if (channel.contains("Alerts events")) {
     notificationIcon = "notification_events";
     notificationColor = Colors.purple[700];
     onTapPayload += 'events';
     channelId = 'Alerts events';
     channelName = 'Alerts events';
     channelDescription = 'Automatic alerts for events';
+  } else if (channel.contains("Alerts trades")) {
+    notificationIcon = "notification_trades";
+    notificationColor = Colors.green[700];
+    // If payload comes from Firebase with a trade id
+    if (payload["data"]["tornTradeId"] != '') {
+      onTapPayload += 'tornTradeId:${payload["data"]["tornTradeId"]}';
+    } else {
+      onTapPayload += 'tornTradeId:0';
+    }
+    channelId = 'Alerts trades';
+    channelName = 'Alerts trades';
+    channelDescription = 'Automatic alerts for trades';
   }
 
   if (Platform.isAndroid) {
@@ -97,14 +108,15 @@ Future showNotificationBoth(Map payload, int notId) async {
         channelId,
         channelName,
         channelDescription,
+        styleInformation: BigTextStyleInformation(''),
         importance: Importance.max,
         priority: Priority.high,
         visibility: NotificationVisibility.public,
         autoCancel: true,
         channelShowBadge: true,
+        sound: RawResourceAndroidNotificationSound('slow_spring_board'),
         icon: notificationIcon,
         color: notificationColor,
-        sound: RawResourceAndroidNotificationSound('slow_spring_board'),
         vibrationPattern: vibrationPattern,
         enableLights: true,
         ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -158,11 +170,26 @@ Future showNotificationBoth(Map payload, int notId) async {
 Future configureNotificationChannels() async {
   List<AndroidNotificationChannel> channels = [];
 
+  var vibrationPattern = Int64List(8);
+  vibrationPattern[0] = 0;
+  vibrationPattern[1] = 400;
+  vibrationPattern[2] = 400;
+  vibrationPattern[3] = 600;
+  vibrationPattern[4] = 400;
+  vibrationPattern[5] = 800;
+  vibrationPattern[6] = 400;
+  vibrationPattern[7] = 1000;
+
   channels.add(
     AndroidNotificationChannel(
       'Alerts travel',
       'Alerts travel',
       'Automatic alerts for travel',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -171,6 +198,11 @@ Future configureNotificationChannels() async {
       'Manual travel',
       'Manual travel',
       'Manual notifications for travel',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -179,6 +211,11 @@ Future configureNotificationChannels() async {
       'Alerts energy',
       'Alerts energy',
       'Automatic alerts for energy',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -187,6 +224,11 @@ Future configureNotificationChannels() async {
       'Manual energy',
       'Manual energy',
       'Manual notifications for energy',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -195,6 +237,11 @@ Future configureNotificationChannels() async {
       'Alerts nerve',
       'Alerts nerve',
       'Automatic alerts for nerve',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -203,6 +250,11 @@ Future configureNotificationChannels() async {
       'Manual nerve',
       'Manual nerve',
       'Manual notifications for nerve',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -211,6 +263,11 @@ Future configureNotificationChannels() async {
       'Alerts hospital',
       'Alerts hospital',
       'Automatic alerts for hospital',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -219,6 +276,11 @@ Future configureNotificationChannels() async {
       'Alerts drugs',
       'Alerts drugs',
       'Automatic alerts for drugs',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -227,6 +289,11 @@ Future configureNotificationChannels() async {
       'Manual drugs',
       'Manual drugs',
       'Manual notifications for drugs',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -235,6 +302,11 @@ Future configureNotificationChannels() async {
       'Alerts racing',
       'Alerts racing',
       'Automatic alerts for racing',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -243,6 +315,11 @@ Future configureNotificationChannels() async {
       'Alerts messages',
       'Alerts messages',
       'Automatic alerts for messages',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -251,6 +328,24 @@ Future configureNotificationChannels() async {
       'Alerts events',
       'Alerts events',
       'Automatic alerts for events',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts trades',
+      'Alerts trades',
+      'Automatic alerts for trades',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -259,6 +354,11 @@ Future configureNotificationChannels() async {
       'Manual loot',
       'Manual loot',
       'Manual notifications for loot',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -267,6 +367,11 @@ Future configureNotificationChannels() async {
       'Manual life',
       'Manual life',
       'Manual notifications for life',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -275,6 +380,11 @@ Future configureNotificationChannels() async {
       'Manual medical',
       'Manual medical',
       'Manual notifications for medical',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -283,6 +393,11 @@ Future configureNotificationChannels() async {
       'Manual booster',
       'Manual booster',
       'Manual notifications for booster',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
@@ -291,13 +406,18 @@ Future configureNotificationChannels() async {
       'Alerts stale user',
       'Alerts stale user',
       'Automatic alerts for inactivity',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
 
   for (var channel in channels) {
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 }

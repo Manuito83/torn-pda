@@ -213,13 +213,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 ?.getActiveNotifications();
 
         for (var not in activeNotifications) {
-          // Platform channel to cancel direct Firebase notifications (they have an
-          // associated <TAG> that cannot be cancel with the local plugin
+          // Platform channel to cancel direct Firebase notifications (we can call
+          // "cancelAll()" there without affecting scheduled notifications, which is
+          // a problem with the local plugin
           if (not.id == 0) {
             await platform.invokeMethod('cancelNotifications');
           }
-          // This cancels the Firebase alerts that have been triggered locally, which don't need
-          // a tag and have an id number we assigned
+          // This cancels the Firebase alerts that have been triggered locally
           else {
             flutterLocalNotificationsPlugin.cancel(not.id);
           }
@@ -243,41 +243,33 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool racing = false;
     bool messages = false;
     bool events = false;
+    bool trades = false;
     bool nerve = false;
     bool energy = false;
 
+    var title = '';
+
     if (Platform.isIOS) {
-      if (message["title"].contains("Approaching")) {
-        travel = true;
-      } else if (message["title"].contains("Race finished")) {
-        racing = true;
-      } else if (message["title"].contains("new message from") ||
-          message["title"].contains("new messages from")) {
-        messages = true;
-      } else if (message["title"].contains("new event!") ||
-          message["title"].contains("new events!")) {
-        events = true;
-      } else if (message["title"].contains("Full Nerve Bar")) {
-        nerve = true;
-      } else if (message["title"].contains("Full Energy Bar")) {
-        energy = true;
-      }
+      title = message["title"];
     } else if (Platform.isAndroid) {
-      if (message["data"]["title"].contains("Approaching")) {
-        travel = true;
-      } else if (message["data"]["title"].contains("Race finished")) {
-        racing = true;
-      } else if (message["data"]["title"].contains("new message from") ||
-          message["data"]["title"].contains("new messages from")) {
-        messages = true;
-      } else if (message["data"]["title"].contains("new event!") ||
-          message["data"]["title"].contains("new events!")) {
-        events = true;
-      } else if (message["data"]["title"].contains("Full Nerve Bar")) {
-        nerve = true;
-      } else if (message["data"]["title"].contains("Full Energy Bar")) {
-        energy = true;
-      }
+      title = message["data"]["title"];
+    }
+
+    if (title.contains("Approaching")) {
+      travel = true;
+    } else if (title.contains("Race finished")) {
+      racing = true;
+    } else if (title.contains("new message from") ||
+        title.contains("new messages from")) {
+      messages = true;
+    } else if (title.contains("new event!") || title.contains("new events!")) {
+      events = true;
+    } else if (title.contains("New trade!")) {
+      events = true;
+    } else if (title.contains("Full Nerve Bar")) {
+      nerve = true;
+    } else if (title.contains("Full Energy Bar")) {
+      energy = true;
     }
 
     if (travel) {
@@ -296,6 +288,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (events) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/events.php#/step=all";
+    } else if (trades) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/trade.php";
+      if (message["data"]["tornTradeId"] != "") {
+        browserUrl = "https://www.torn.com/trade.php#step=view&ID="
+            "${message["data"]["tradeId"]}";
+      }
     } else if (nerve) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
@@ -354,14 +353,25 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         var npcId = payload.split('-')[1];
         browserUrl =
             'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
-      } else if (payload.contains('messageId:')) {
+      } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
         var messageId = payload.split(':');
-        browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
-            "${messageId[1]}&suffix=inbox";
+        browserUrl = "https://www.torn.com/messages.php";
+        if (messageId[1] != "0") {
+          browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
+              "${messageId[1]}&suffix=inbox";
+        }
       } else if (payload.contains('events')) {
         launchBrowser = true;
         browserUrl = "https://www.torn.com/events.php#/step=all";
+      } else if (payload.contains('tornTradeId:')) {
+        launchBrowser = true;
+        var tradeId = payload.split(':');
+        browserUrl = "https://www.torn.com/trade.php";
+        if (tradeId[1] != "0") {
+          browserUrl =
+          "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
+        }
       }
 
       if (launchBrowser) {
