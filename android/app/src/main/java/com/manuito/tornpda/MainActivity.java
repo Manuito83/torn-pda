@@ -26,10 +26,12 @@ public class MainActivity extends FlutterActivity {
         );
     }
 
-    // This cancel Firebase notifications upon request from the Flutter app, as they need a TAG, which
-    // in this case is "pdaFirebase". Id equals 0 por FCM notifications.
+    // This cancel Firebase notifications upon request from the Flutter app, as the local plugins also cancels its
+    // scheduled ones when cancelAll() is called.
+    // Note: It is also possible to use "cancel("TAG", 0)" but giving a TAG in FCM Android options overwrittes the
+    // notifications with same tag. There is an alternative which is preparing multiple tags.
     private void cancelNotifications() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel("pdaFirebase", 0);
+        notificationManager.cancelAll();
     }
 }
