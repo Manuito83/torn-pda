@@ -1100,12 +1100,27 @@ class _AwardsPageState extends State<AwardsPage> {
         sortToSave = 'rarityDesc';
         break;
       case AwardsSortType.daysAsc:
-        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
+        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        // As there are some awards with daysLeft = -99 that would go first in list
+        // (which makes no sense, as daysLeft cannot be accounted for these), we have
+        // to take them out from the beginning and add them to the end before rebuilding the list
+        var noTimeAwards = <Award>[];
+        for (var i = 0; i < _allAwards.length; i++) {
+          if (_allAwards[i].daysLeft == -99) {
+            noTimeAwards.add(_allAwards[i]);
+          } else {
+            break;
+          }
+        }
+        for (var noTime in noTimeAwards) {
+          _allAwards.remove(noTime);
+        }
+        _allAwards.addAll(noTimeAwards);
         _buildAwardsWidgetList();
         sortToSave = 'daysAsc';
         break;
       case AwardsSortType.daysDes:
-        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
         _buildAwardsWidgetList();
         sortToSave = 'daysDes';
         break;
