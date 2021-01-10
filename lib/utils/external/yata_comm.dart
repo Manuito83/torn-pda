@@ -15,6 +15,7 @@ class YataComm {
 
   static var _authUrl = Uri.parse('$_url/api/v1/auth/');
   static var _awardsUrl = Uri.parse('$_url/awards/');
+  static var _awardsTogglePinUrl = Uri.parse('$_url/awards/pin/');
 
   static CookieJar _cj = CookieJar();
   static HttpClient _client = HttpClient();
@@ -39,9 +40,37 @@ class YataComm {
       var awardsRequest = await _client.getUrl(_awardsUrl);
       awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
-      headers["referer"] = _authUrl.toString();
       var awardsResponse = await awardsRequest.close();
       var awardsJson = await awardsResponse.transform(utf8.decoder).join();
+      return json.decode(awardsJson);
+    } catch (e) {
+      return YataError();
+    }
+  }
+
+  static Future<dynamic> getPin(String apiKey, String awardId ) async {
+    Map<String, String> headers = {
+      "referer": _url,
+    };
+
+    // 2 cookies, for CSRF and SessionId
+    if (_cj.loadForRequest(_authUrl).length < 2) {
+      // No valid sessionId, calling auth!
+      await _getAuth(apiKey);
+    }
+
+    try {
+      // Modify header on the fly to account for the csrf token
+      headers["X-CSRFToken"] = _cj.loadForRequest(_authUrl)[0].value;
+
+      var awardsRequest = await _client.postUrl(_awardsTogglePinUrl);
+      awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
+      headers.forEach((key, value) => awardsRequest.headers.add(key, value));
+      var body = "{\"awardId\": \"$awardId\"}";
+      awardsRequest.write(body);
+      var awardsResponse = await awardsRequest.close();
+      var awardsJson = await awardsResponse.transform(utf8.decoder).join();
+
       return json.decode(awardsJson);
     } catch (e) {
       return YataError();

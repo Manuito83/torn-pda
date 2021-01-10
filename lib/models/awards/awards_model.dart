@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class Award {
   Award({
+    this.awardKey = "",
     this.name = "",
     this.description = "",
     this.category = '',
@@ -23,6 +24,7 @@ class Award {
     this.nextCrime,
   });
 
+  String awardKey;
   String name;
   String description;
   String category;

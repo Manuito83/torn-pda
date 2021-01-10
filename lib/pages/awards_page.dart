@@ -320,27 +320,31 @@ class _AwardsPageState extends State<AwardsPage> {
                       ],
                     ),
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        var result = await _pinProvider.removePinned(
+                          _userProvider.myUser.userApiKey,
+                          pinned,
+                        );
 
-                        // TODO: replace with comment when syncing with YATA
-                        String action = 'Pins are not being synchronized with YATA yet, please '
-                            'pin or unpin your awards in YATA\'s website and refresh '
-                            'this section to see the changes.';
-                        Color actionColor = Colors.grey[700];
-
-                        // TODO: add YATA post call and checks
-                        /*
-                        _pinProvider.removePinned(pinned);
-                        _buildAwardsWidgetList();
-                        */
+                        var resultString = "";
+                        Color resultColor = Colors.transparent;
+                        if (result) {
+                          _buildAwardsWidgetList();
+                          resultString = "Unpinned ${pinned.name}!";
+                          resultColor = Colors.green[700];
+                        } else {
+                          resultString = "Error unpinning ${pinned.name}! "
+                              "Please try again or do it directly in YATA";
+                          resultColor = Colors.red[700];
+                        }
 
                         BotToast.showText(
-                          text: action,
+                          text: resultString,
                           textStyle: TextStyle(
                             fontSize: 14,
                             color: Colors.white,
                           ),
-                          contentColor: actionColor,
+                          contentColor: resultColor,
                           duration: Duration(seconds: 6),
                           contentPadding: EdgeInsets.all(10),
                         );
@@ -896,6 +900,7 @@ class _AwardsPageState extends State<AwardsPage> {
           });
 
           var singleAward = Award(
+            awardKey: key,
             category: value["category"],
             subCategory: awardsSubcategory,
             name: value["name"],
@@ -937,7 +942,8 @@ class _AwardsPageState extends State<AwardsPage> {
 
           // Add to pinned list
           if (singleAward.pinned) {
-            _pinProvider.addPinned(singleAward);
+            _pinProvider.pinnedAwards.add(singleAward);
+            _pinProvider.pinnedNames.add(singleAward.name);
           }
 
           // Populate models list
@@ -1121,5 +1127,4 @@ class _AwardsPageState extends State<AwardsPage> {
   _onPinnedConditionChange() {
     _buildAwardsWidgetList();
   }
-
 }
