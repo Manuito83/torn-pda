@@ -61,15 +61,30 @@ class _AttackCardState extends State<AttackCard> {
                             size: 20,
                           ),
                           onTap: () async {
-                            _settingsProvider.useQuickBrowser
-                                ? openBrowserDialog(context, 'https://www.torn.com/profiles.php?'
-                                'XID=${_attack.targetId}')
-                                : _openTornBrowser('https://www.torn.com/profiles.php?'
-                                'XID=${_attack.targetId}');
+                            var url = 'https://www.torn.com/profiles.php?'
+                                'XID=${_attack.targetId}';
+                            if (_settingsProvider.currentBrowser ==
+                                BrowserSetting.external) {
+                              if (await canLaunch(url)) {
+                                await launch(url, forceSafariVC: false);
+                              }
+                            } else {
+                              _settingsProvider.useQuickBrowser
+                                  ? openBrowserDialog(context, url)
+                                  : _openTornBrowser(url);
+                            }
                           },
                           onLongPress: () async {
-                            _openTornBrowser('https://www.torn.com/profiles.php?'
-                                'XID=${_attack.targetId}');
+                            var url = 'https://www.torn.com/profiles.php?'
+                                'XID=${_attack.targetId}';
+                            if (_settingsProvider.currentBrowser ==
+                                BrowserSetting.external) {
+                              if (await canLaunch(url)) {
+                                await launch(url, forceSafariVC: false);
+                              }
+                            } else {
+                              _openTornBrowser(url);
+                            }
                           },
                         ),
                       ),
@@ -199,7 +214,8 @@ class _AttackCardState extends State<AttackCard> {
           );
           if (tryAddTarget.success) {
             BotToast.showText(
-              text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),
+              text: HtmlParser.fix(
+                  'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),
               textStyle: TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -212,7 +228,8 @@ class _AttackCardState extends State<AttackCard> {
             setState(() {});
           } else if (!tryAddTarget.success) {
             BotToast.showText(
-              text: HtmlParser.fix('Error adding ${_attack.targetId}. ${tryAddTarget.errorReason}'),
+              text: HtmlParser.fix(
+                  'Error adding ${_attack.targetId}. ${tryAddTarget.errorReason}'),
               textStyle: TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -255,7 +272,8 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   String _returnDateFormatted() {
-    var date = new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
+    var date =
+        new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
     var formatter = new DateFormat('dd MMMM HH:mm');
     return formatter.format(date);
   }
@@ -383,7 +401,8 @@ class _AttackCardState extends State<AttackCard> {
     void showFactionToast() {
       if (factionId == _userProvider.myUser.faction.factionId) {
         BotToast.showText(
-          text: HtmlParser.fix("${_attack.targetName} belongs to your same faction ($factionName)"),
+          text: HtmlParser.fix(
+              "${_attack.targetName} belongs to your same faction ($factionName)"),
           textStyle: TextStyle(
             fontSize: 14,
             color: Colors.white,
@@ -394,7 +413,8 @@ class _AttackCardState extends State<AttackCard> {
         );
       } else {
         BotToast.showText(
-          text: HtmlParser.fix("${_attack.targetName} belongs to faction $factionName"),
+          text: HtmlParser.fix(
+              "${_attack.targetName} belongs to faction $factionName"),
           textStyle: TextStyle(
             fontSize: 14,
             color: Colors.white,
@@ -457,5 +477,4 @@ class _AttackCardState extends State<AttackCard> {
         break;
     }
   }
-
 }

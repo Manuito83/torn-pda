@@ -313,10 +313,10 @@ class _TargetCardState extends State<TargetCard> {
                   break;
                 }
               }
-              List<String> attacksIds = List<String>();
-              List<String> attacksNames = List<String>();
-              List<String> attackNotes = List<String>();
-              List<String> attacksNotesColor = List<String>();
+              List<String> attacksIds = <String>[];
+              List<String> attacksNames = <String>[];
+              List<String> attackNotes = <String>[];
+              List<String> attacksNotesColor = <String>[];
               for (var tar in myTargetList) {
                 attacksIds.add(tar.playerId.toString());
                 attacksNames.add(tar.name);

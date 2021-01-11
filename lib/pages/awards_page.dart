@@ -19,6 +19,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -625,8 +627,25 @@ class _AwardsPageState extends State<AwardsPage> {
             Row(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    openBrowserDialog(context, 'https://yata.yt');
+                  onTap: () async {
+                    var url = 'https://yata.yt';
+                    if (_settingsProvider.currentBrowser ==
+                        BrowserSetting.external) {
+                      if (await canLaunch(url)) {
+                        await launch(url, forceSafariVC: false);
+                      }
+                    } else {
+                      _settingsProvider.useQuickBrowser
+                          ? openBrowserDialog(context, url)
+                          : Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (BuildContext context) => WebViewFull(
+                                  customUrl: url,
+                                  customTitle: 'Torn',
+                                ),
+                              ),
+                            );
+                    }
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),

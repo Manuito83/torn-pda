@@ -486,12 +486,18 @@ class _LootPageState extends State<LootPage> {
                 ? Colors.red
                 : _themeProvider.mainText,
           ),
-          onTap: () {
-            _settingsProvider.useQuickBrowser
-                ? openBrowserDialog(context,
-                    'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId')
-                : _openTornBrowser(
-                    'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
+          onTap: () async {
+            var url =
+                'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+            if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+            } else {
+              _settingsProvider.useQuickBrowser
+                  ? openBrowserDialog(context, url)
+                  : _openTornBrowser(url);
+            }
           },
           onLongPress: () {
             _openTornBrowser(
@@ -1001,5 +1007,4 @@ class _LootPageState extends State<LootPage> {
         break;
     }
   }
-
 }
