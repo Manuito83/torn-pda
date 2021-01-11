@@ -362,7 +362,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Switch(
                                     value: _removeNotificationsLaunch,
                                     onChanged: (value) {
-                                      _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                                      _settingsProvider
+                                              .changeRemoveNotificationsOnLaunch =
+                                          value;
                                       setState(() {
                                         _removeNotificationsLaunch = value;
                                       });
@@ -1302,7 +1304,8 @@ class _SettingsPageState extends State<SettingsPage> {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
       _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
       _useQuickBrowser = _settingsProvider.useQuickBrowser;
-      _removeNotificationsLaunch = _settingsProvider.removeNotificationsOnLaunch;
+      _removeNotificationsLaunch =
+          _settingsProvider.removeNotificationsOnLaunch;
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
     });

@@ -58,7 +58,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   // This is the model used for the cards. Simplified just with the fields
   // needed and adapted from the model that comes from YATA. It's a list of StockElement (which
   // is defined in YATA), so that it can be filtered and sorted easily
-  var _filteredStocksCards = List<ForeignStock>();
+  var _filteredStocksCards = <ForeignStock>[];
   // This is the model as it comes from YATA. There is some complexity as it consist on several
   // arrays and some details need to be filled in for the stocks as we fetch from the API
   var _stocksYataModel = ForeignStockInModel();
@@ -428,7 +428,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               });
 
               // Saving to shared preferences
-              var saveList = List<String>();
+              var saveList = <String>[];
               for (var b in _filteredFlags) {
                 b ? saveList.add('1') : saveList.add('0');
               }
@@ -483,7 +483,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               });
 
               // Saving to shared preferences
-              var saveList = List<String>();
+              var saveList = <String>[];
               for (var b in _filteredTypes) {
                 b ? saveList.add('1') : saveList.add('0');
               }
@@ -497,7 +497,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   List<Widget> _stockItems() {
-    var thisStockList = List<Widget>();
+    var thisStockList = <Widget>[];
 
     Widget lastUpdateDetails = Padding(
       padding: EdgeInsets.fromLTRB(20, 15, 20, 10),
@@ -836,7 +836,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Future<void> _fetchApiInformation() async {
     try {
       Future yataAPI() async {
-        String yataURL = 'https://yata.alwaysdata.net/api/v1/travel/export/';
+        String yataURL = 'https://yata.yt/api/v1/travel/export/';
         var responseDB = await http.get(yataURL).timeout(Duration(seconds: 10));
         if (responseDB.statusCode == 200) {
           _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
@@ -1039,7 +1039,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
     var countryMap = Map<String, CountryDetails>();
     _stocksYataModel.countries.forEach((countryKey, countryDetails) {
-      var stockList = CountryDetails()..stocks = List<ForeignStock>();
+      var stockList = CountryDetails()..stocks = <ForeignStock>[];
       stockList.update = countryDetails.update;
 
       for (var stock in countryDetails.stocks) {

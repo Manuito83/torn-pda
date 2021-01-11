@@ -672,7 +672,7 @@ class _LootPageState extends State<LootPage> {
   Future<dynamic> _fetchYataApi() async {
     try {
       // Database API
-      String url = 'https://yata.alwaysdata.net/api/v1/loot/';
+      String url = 'https://yata.yt/api/v1/loot/';
       final response = await http.get(url).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         var result = yataLootModelFromJson(response.body);
