@@ -21,6 +21,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/main.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -90,6 +91,9 @@ class _AwardsPageState extends State<AwardsPage> {
     _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
+
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'awards'});
   }
 
   @override
