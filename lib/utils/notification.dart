@@ -25,7 +25,13 @@ Future showNotificationBoth(Map payload, int notId) async {
   vibrationPattern[6] = 400;
   vibrationPattern[7] = 1000;
 
-  String channel = payload["data"]["channelId"];
+  String channel = '';
+  if (Platform.isAndroid) {
+    channel = payload["data"]["channelId"];
+  } else {
+    channel = payload["channelId"];
+  }
+
   String notificationIcon = "notification_icon";
   Color notificationColor = Colors.grey;
 
