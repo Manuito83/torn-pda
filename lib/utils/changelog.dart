@@ -36,6 +36,27 @@ class _ChangeLogState extends State<ChangeLog> {
     var itemList = <ChangeLogItem>[];
 
     // VERSION 2.0.0-BETA
+    var v2_1_0 = ChangeLogItem();
+    v2_1_0.main.version = 'Torn PDA v2.1.0';
+    v2_1_0.main.date = '14 JAN 2021';
+    String feat2_1_0_1 = "Automatic alerts: added Events (includes trading alerts as a special category), with some predefined filters";
+    String feat2_1_0_2 = "Awards: activated pins sync with YATA";
+    String feat2_1_0_3 = "Awards: fixed sorting by days left";
+    String feat2_1_0_4 = "Notifications are now automatically removed from the notification bar when the application is launched (can be deactivated)";
+    String feat2_1_0_5 = "Added notification channels (in Android's notifications settings) so that users can configure each notification (sound, alert type, etc.) individually";
+    String feat2_1_0_6 = "Corrected Discord link";
+    String feat2_1_0_7 = "Corrected issues when launching the external browser";
+    v2_1_0.features.add(feat2_1_0_1);
+    v2_1_0.features.add(feat2_1_0_2);
+    v2_1_0.features.add(feat2_1_0_3);
+    if (Platform.isAndroid) {
+      v2_1_0.features.add(feat2_1_0_4);
+      v2_1_0.features.add(feat2_1_0_5);
+    }
+    v2_1_0.features.add(feat2_1_0_6);
+    v2_1_0.features.add(feat2_1_0_7);
+
+    // VERSION 2.0.0-BETA
     var v2_0_0 = ChangeLogItem();
     v2_0_0.main.version = 'Torn PDA v2.0.0';
     v2_0_0.main.date = '06 JAN 2021';
@@ -69,7 +90,6 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_0_0.features.add(feat2_0_0_13);
     v2_0_0.features.add(feat2_0_0_14);
     v2_0_0.features.add(feat2_0_0_15);
-
 
     // VERSION 1.9.7
     var v1_9_7 = ChangeLogItem();
@@ -436,6 +456,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_1_0);
     itemList.add(v2_0_0);
     itemList.add(v1_9_7);
     itemList.add(v1_9_6);
