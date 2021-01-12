@@ -110,8 +110,8 @@ class TargetsProvider extends ChangeNotifier {
 
   void _getTargetRespect(attacksFull, TargetModel myNewTargetModel) {
     if (attacksFull is AttackFullModel) {
-      List<double> respectFromThisTarget = List<double>();
-      List<bool> userWonOrDefended = List<bool>();
+      List<double> respectFromThisTarget = <double>[];
+      List<bool> userWonOrDefended = <bool>[];
       attacksFull.attacks.forEach((key, value) {
         // We look for the our target in the the attacksFull list
         if (myNewTargetModel.playerId == value.defenderId ||
@@ -398,7 +398,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   String exportTargets() {
-    var output = List<TargetBackup>();
+    var output = <TargetBackup>[];
     for (var tar in _targets) {
       var export = TargetBackup();
       export.id = tar.playerId;
@@ -410,7 +410,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void _saveTargetsSharedPrefs() {
-    List<String> newPrefs = List<String>();
+    List<String> newPrefs = <String>[];
     for (var tar in _targets) {
       newPrefs.add(targetModelToJson(tar));
     }
@@ -507,7 +507,7 @@ class TargetsProvider extends ChangeNotifier {
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
       var response = await http.get(
-        'https://yata.alwaysdata.net/api/v1/targets/export/?key=$_userKey',
+        'https://yata.yt/api/v1/targets/export/?key=$_userKey',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -562,7 +562,7 @@ class TargetsProvider extends ChangeNotifier {
 
     try {
       var response = await http.post(
-        'https://yata.alwaysdata.net/api/v1/targets/import/',
+        'https://yata.yt/api/v1/targets/import/',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

@@ -486,12 +486,18 @@ class _LootPageState extends State<LootPage> {
                 ? Colors.red
                 : _themeProvider.mainText,
           ),
-          onTap: () {
-            _settingsProvider.useQuickBrowser
-                ? openBrowserDialog(context,
-                    'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId')
-                : _openTornBrowser(
-                    'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
+          onTap: () async {
+            var url =
+                'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+            if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+            } else {
+              _settingsProvider.useQuickBrowser
+                  ? openBrowserDialog(context, url)
+                  : _openTornBrowser(url);
+            }
           },
           onLongPress: () {
             _openTornBrowser(
@@ -672,7 +678,7 @@ class _LootPageState extends State<LootPage> {
   Future<dynamic> _fetchYataApi() async {
     try {
       // Database API
-      String url = 'https://yata.alwaysdata.net/api/v1/loot/';
+      String url = 'https://yata.yt/api/v1/loot/';
       final response = await http.get(url).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         var result = yataLootModelFromJson(response.body);
@@ -835,9 +841,9 @@ class _LootPageState extends State<LootPage> {
     String title,
     String subtitle,
   ) async {
-    String channelTitle = 'Loot';
-    String channelSubtitle = 'NPC Loot';
-    String channelDescription = 'Notifications about NPC loot';
+    String channelTitle = 'Manual loot';
+    String channelSubtitle = 'Manual loot';
+    String channelDescription = 'Manual notifications for loot';
     String notificationTitle = title;
     String notificationSubtitle = subtitle;
     int notificationId = id;
@@ -1001,5 +1007,4 @@ class _LootPageState extends State<LootPage> {
         break;
     }
   }
-
 }

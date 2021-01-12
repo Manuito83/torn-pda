@@ -34,6 +34,7 @@ import 'package:flutter/services.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -77,6 +78,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   bool _changelogIsActive = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Allows to space alerts when app is on the foreground
+  DateTime _lastMessageReceived;
+  int concurrent = 0;
+  // Assigns different ids to alerts when the app is on the foreground
+  var notId = 900;
+
+  // Platform channel with MainActivity.java
+  static const platform = const MethodChannel('tornpda.channel');
 
   @override
   void initState() {
@@ -135,6 +145,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // when the app is open)
     _fireOnTapLocalNotifications();
 
+    // Configure all notifications channels so that Firebase alerts have already
+    // and assign channel where to land
+    configureNotificationChannels();
+
     // Configures Firebase notification behaviours
     _messaging.requestNotificationPermissions(IosNotificationSettings(
       sound: true,
@@ -143,6 +157,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       provisional: false,
     ));
 
+    _lastMessageReceived = DateTime.now();
+
     _messaging.configure(
       onResume: (message) {
         return _fireLaunchResumeNotifications(message);
@@ -150,9 +166,22 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       onLaunch: (message) {
         return _fireLaunchResumeNotifications(message);
       },
-      onMessage: (message) {
+      onMessage: (message) async {
+        // Spaces out several notifications so that all of them show if
+        // the app is open (otherwise only 1 of them shows)
+        if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
+          concurrent++;
+          await Future.delayed(Duration(seconds: 8 * concurrent));
+        } else {
+          concurrent = 0;
+        }
+        _lastMessageReceived = DateTime.now();
+        // Assigns a different id two alerts that come together (otherwise one
+        // deletes the previous one)
+        notId++;
+        if (notId > 990) notId = 900;
         // This will eventually fire a local notification
-        return showNotification(message);
+        return showNotification(message, notId);
       },
     );
 
@@ -169,9 +198,33 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
+      // Update Firebase active parameter
       _updateLastActiveTime();
+
+      // Get rid of notifications
+      if (Platform.isAndroid) {
+        // Gets the active (already shown) notifications
+        final List<ActiveNotification> activeNotifications =
+            await flutterLocalNotificationsPlugin
+                .resolvePlatformSpecificImplementation<
+                    AndroidFlutterLocalNotificationsPlugin>()
+                ?.getActiveNotifications();
+
+        for (var not in activeNotifications) {
+          // Platform channel to cancel direct Firebase notifications (we can call
+          // "cancelAll()" there without affecting scheduled notifications, which is
+          // a problem with the local plugin
+          if (not.id == 0) {
+            await platform.invokeMethod('cancelNotifications');
+          }
+          // This cancels the Firebase alerts that have been triggered locally
+          else {
+            flutterLocalNotificationsPlugin.cancel(not.id);
+          }
+        }
+      }
     }
   }
 
@@ -189,43 +242,40 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool travel = false;
     bool racing = false;
     bool messages = false;
+    bool events = false;
+    bool trades = false;
     bool nerve = false;
     bool energy = false;
 
+    var title = '';
+    var messageId = '';
+    var tradeId = '';
+
     if (Platform.isIOS) {
-      if (message["message"].contains("about to land")) {
-        travel = true;
-      }
-      if (message["message"].contains("Get in there")) {
-        racing = true;
-      }
-      if (message["message"].contains("Subject:") ||
-          message["message"].contains("Subjects:")) {
-        messages = true;
-      }
-      if (message["message"].contains("Your nerve is full")) {
-        nerve = true;
-      }
-      if (message["message"].contains("Your energy is full")) {
-        energy = true;
-      }
+      title = message["title"];
+      messageId = message["tornMessageId"];
+      tradeId = message["tornTradeId"];
     } else if (Platform.isAndroid) {
-      if (message["data"]["message"].contains("about to land")) {
-        travel = true;
-      }
-      if (message["data"]["message"].contains("Get in there")) {
-        racing = true;
-      }
-      if (message["data"]["message"].contains("Subject:") ||
-          message["data"]["message"].contains("Subjects:")) {
-        messages = true;
-      }
-      if (message["data"]["message"].contains("Your nerve is full")) {
-        nerve = true;
-      }
-      if (message["data"]["message"].contains("Your energy is full")) {
-        energy = true;
-      }
+      title = message["data"]["title"];
+      messageId = message["data"]["tornMessageId"];
+      tradeId = message["data"]["tornTradeId"];
+    }
+
+    if (title.contains("Approaching")) {
+      travel = true;
+    } else if (title.contains("Race finished")) {
+      racing = true;
+    } else if (title.contains("new message from") ||
+        title.contains("new messages from")) {
+      messages = true;
+    } else if (title.contains("new event!") || title.contains("new events!")) {
+      events = true;
+    } else if (title.contains("New trade!")) {
+      trades = true;
+    } else if (title.contains("Full Nerve Bar")) {
+      nerve = true;
+    } else if (title.contains("Full Energy Bar")) {
+      energy = true;
     }
 
     if (travel) {
@@ -237,9 +287,19 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (messages) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/messages.php";
-      if (message["data"]["tornMessageId"] != "") {
+      if (messageId != "") {
         browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
-            "${message["data"]["tornMessageId"]}&suffix=inbox";
+            "$messageId&suffix=inbox";
+      }
+    } else if (events) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/events.php#/step=all";
+    } else if (trades) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/trade.php";
+      if (tradeId != "") {
+        browserUrl = "https://www.torn.com/trade.php#step=view&ID="
+            "$tradeId";
       }
     } else if (nerve) {
       launchBrowser = true;
@@ -291,16 +351,33 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('nerve')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/crimes.php';
+      } else if (payload.contains('racing')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/loader.php?sid=racing';
       } else if (payload.contains('400-')) {
         launchBrowser = true;
         var npcId = payload.split('-')[1];
         browserUrl =
             'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
-      } else if (payload.contains('messageId:')) {
+      } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
         var messageId = payload.split(':');
-        browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
-            "${messageId[1]}&suffix=inbox";
+        browserUrl = "https://www.torn.com/messages.php";
+        if (messageId[1] != "0") {
+          browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
+              "${messageId[1]}&suffix=inbox";
+        }
+      } else if (payload.contains('events')) {
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/events.php#/step=all";
+      } else if (payload.contains('tornTradeId:')) {
+        launchBrowser = true;
+        var tradeId = payload.split(':');
+        browserUrl = "https://www.torn.com/trade.php";
+        if (tradeId[1] != "0") {
+          browserUrl =
+          "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
+        }
       }
 
       if (launchBrowser) {
@@ -370,7 +447,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             );
           } else {
             return Container(
-              color:Colors.black,
+              color: Colors.black,
               child: SafeArea(
                 top: _settingsProvider.appBarTop ? false : true,
                 bottom: true,
@@ -770,7 +847,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         builder: (BuildContext context) {
           return OnAppExitDialog();
         },
-      ).then((choice){
+      ).then((choice) {
         action = choice;
       });
       if (action == 'exit') {
@@ -783,5 +860,4 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
     }
   }
-
 }

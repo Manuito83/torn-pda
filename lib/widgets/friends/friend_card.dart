@@ -298,12 +298,24 @@ class _FriendCardState extends State<FriendCard> {
           size: 20,
         ),
         onTap: () async {
-          _settingsProvider.useQuickBrowser
-              ? openBrowserDialog(context, tradeUrl)
-              : _openTornBrowser(tradeUrl);
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(tradeUrl)) {
+              await launch(tradeUrl, forceSafariVC: false);
+            }
+          } else {
+            _settingsProvider.useQuickBrowser
+                ? openBrowserDialog(context, tradeUrl)
+                : _openTornBrowser(tradeUrl);
+          }
         },
         onLongPress: () async {
-          _openTornBrowser(tradeUrl);
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(tradeUrl)) {
+              await launch(tradeUrl, forceSafariVC: false);
+            }
+          } else {
+            _openTornBrowser(tradeUrl);
+          }
         },
       ),
     );
@@ -321,12 +333,24 @@ class _FriendCardState extends State<FriendCard> {
           size: 20,
         ),
         onTap: () async {
-          _settingsProvider.useQuickBrowser
-              ? openBrowserDialog(context, messageUrl)
-              : _openTornBrowser(messageUrl);
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(messageUrl)) {
+              await launch(messageUrl, forceSafariVC: false);
+            }
+          } else {
+            _settingsProvider.useQuickBrowser
+                ? openBrowserDialog(context, messageUrl)
+                : _openTornBrowser(messageUrl);
+          }
         },
         onLongPress: () async {
-          _openTornBrowser(messageUrl);
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(messageUrl)) {
+              await launch(messageUrl, forceSafariVC: false);
+            }
+          } else {
+            _openTornBrowser(messageUrl);
+          }
         },
       ),
     );
@@ -344,12 +368,24 @@ class _FriendCardState extends State<FriendCard> {
           size: 20,
         ),
         onTap: () async {
-          _settingsProvider.useQuickBrowser
-              ? openBrowserDialog(context, profileUrl)
-              : _openTornBrowser(profileUrl);
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(profileUrl)) {
+              await launch(profileUrl, forceSafariVC: false);
+            }
+          } else {
+            _settingsProvider.useQuickBrowser
+                ? openBrowserDialog(context, profileUrl)
+                : _openTornBrowser(profileUrl);
+          }
         },
         onLongPress: () async {
-          _openTornBrowser(profileUrl);
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(profileUrl)) {
+              await launch(profileUrl, forceSafariVC: false);
+            }
+          } else {
+            _openTornBrowser(profileUrl);
+          }
         },
       ),
     );

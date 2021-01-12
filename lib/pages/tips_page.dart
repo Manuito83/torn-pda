@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/main.dart';
 
 enum TipClass {
   general,
@@ -47,6 +48,9 @@ class _TipsPageState extends State<TipsPage> {
     _profileTipsList = buildProfileSectionTips();
     _chainingTipsList = buildChainingTips();
     _tradingTipsList = buildTradingTips();
+
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'tips'});
   }
 
   @override

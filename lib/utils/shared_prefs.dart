@@ -24,6 +24,7 @@ class SharedPreferencesModel {
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
+  final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
@@ -331,7 +332,7 @@ class SharedPreferencesModel {
   }
 
   /// ----------------------------
-  /// Methods for default browser
+  /// Methods for test browser
   /// ----------------------------
   Future<bool> getTestBrowserActive() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -341,6 +342,19 @@ class SharedPreferencesModel {
   Future<bool> setTestBrowserActive(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTestBrowserActive, value);
+  }
+
+  /// ----------------------------
+  /// Methods for notifications on launch
+  /// ----------------------------
+  Future<bool> getRemoveNotificationsOnLaunch() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveNotificationsOnLaunch) ?? true;
+  }
+
+  Future<bool> setRemoveNotificationsOnLaunch(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveNotificationsOnLaunch, value);
   }
 
   /// ----------------------------

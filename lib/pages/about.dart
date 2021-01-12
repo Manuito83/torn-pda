@@ -7,7 +7,6 @@ import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-
 import '../main.dart';
 
 class AboutPage extends StatefulWidget {
@@ -107,11 +106,10 @@ class _AboutPageState extends State<AboutPage> {
                               fontWeight: FontWeight.bold, color: Colors.blue),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
-                              _settingsProvider.useQuickBrowser
-                                  ? openBrowserDialog(
-                                      context, 'https://discord.gg/vyP23kJ')
-                                  : _openTornBrowser(
-                                      'https://discord.gg/vyP23kJ');
+                              var url = 'https://discord.gg/vyP23kJ';
+                              if (await canLaunch(url)) {
+                                await launch(url, forceSafariVC: false);
+                              }
                             },
                         ),
                         TextSpan(
@@ -145,11 +143,18 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                _settingsProvider.useQuickBrowser
-                                    ? openBrowserDialog(context,
-                                        'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0')
-                                    : _openTornBrowser(
-                                        'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0');
+                                var url =
+                                    'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
+                                if (_settingsProvider.currentBrowser ==
+                                    BrowserSetting.external) {
+                                  if (await canLaunch(url)) {
+                                    await launch(url, forceSafariVC: false);
+                                  }
+                                } else {
+                                  _settingsProvider.useQuickBrowser
+                                      ? openBrowserDialog(context, url)
+                                      : _openTornBrowser(url);
+                                }
                               },
                           ),
                           TextSpan(
@@ -191,11 +196,18 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                _settingsProvider.useQuickBrowser
-                                    ? openBrowserDialog(context,
-                                        'https://github.com/Manuito83/torn-pda')
-                                    : _openTornBrowser(
-                                        'https://github.com/Manuito83/torn-pda');
+                                var url =
+                                    'https://github.com/Manuito83/torn-pda';
+                                if (_settingsProvider.currentBrowser ==
+                                    BrowserSetting.external) {
+                                  if (await canLaunch(url)) {
+                                    await launch(url, forceSafariVC: false);
+                                  }
+                                } else {
+                                  _settingsProvider.useQuickBrowser
+                                      ? openBrowserDialog(context, url)
+                                      : _openTornBrowser(url);
+                                }
                               },
                           ),
                           TextSpan(
@@ -235,11 +247,18 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                _settingsProvider.useQuickBrowser
-                                    ? openBrowserDialog(context,
-                                        'https://www.torn.com/trade.php#step=start&userID=2225097')
-                                    : _openTornBrowser(
-                                        'https://www.torn.com/trade.php#step=start&userID=2225097');
+                                var url =
+                                    'https://www.torn.com/trade.php#step=start&userID=2225097';
+                                if (_settingsProvider.currentBrowser ==
+                                    BrowserSetting.external) {
+                                  if (await canLaunch(url)) {
+                                    await launch(url, forceSafariVC: false);
+                                  }
+                                } else {
+                                  _settingsProvider.useQuickBrowser
+                                      ? openBrowserDialog(context, url)
+                                      : _openTornBrowser(url);
+                                }
                               },
                           ),
                           TextSpan(text: ' it would be certainly appreciated!'),
@@ -319,11 +338,18 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                _settingsProvider.useQuickBrowser
-                                    ? openBrowserDialog(context,
-                                        'https://www.torn.com/profiles.php?XID=2225097')
-                                    : _openTornBrowser(
-                                        'https://www.torn.com/profiles.php?XID=2225097');
+                                var url =
+                                    'https://www.torn.com/profiles.php?XID=2225097';
+                                if (_settingsProvider.currentBrowser ==
+                                    BrowserSetting.external) {
+                                  if (await canLaunch(url)) {
+                                    await launch(url, forceSafariVC: false);
+                                  }
+                                } else {
+                                  _settingsProvider.useQuickBrowser
+                                      ? openBrowserDialog(context, url)
+                                      : _openTornBrowser(url);
+                                }
                               },
                           ),
                         ],
@@ -351,11 +377,18 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                _settingsProvider.useQuickBrowser
-                                    ? openBrowserDialog(context,
-                                        'https://www.torn.com/profiles.php?XID=2184575')
-                                    : _openTornBrowser(
-                                        'https://www.torn.com/profiles.php?XID=2184575');
+                                var url =
+                                    'https://www.torn.com/profiles.php?XID=2184575';
+                                if (_settingsProvider.currentBrowser ==
+                                    BrowserSetting.external) {
+                                  if (await canLaunch(url)) {
+                                    await launch(url, forceSafariVC: false);
+                                  }
+                                } else {
+                                  _settingsProvider.useQuickBrowser
+                                      ? openBrowserDialog(context, url)
+                                      : _openTornBrowser(url);
+                                }
                               },
                           ),
                         ],
@@ -383,11 +416,18 @@ class _AboutPageState extends State<AboutPage> {
                                 color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
-                                _settingsProvider.useQuickBrowser
-                                    ? openBrowserDialog(context,
-                                        'https://www.torn.com/profiles.php?XID=2000607')
-                                    : _openTornBrowser(
-                                        'https://www.torn.com/profiles.php?XID=2000607');
+                                var url =
+                                    'https://www.torn.com/profiles.php?XID=2000607';
+                                if (_settingsProvider.currentBrowser ==
+                                    BrowserSetting.external) {
+                                  if (await canLaunch(url)) {
+                                    await launch(url, forceSafariVC: false);
+                                  }
+                                } else {
+                                  _settingsProvider.useQuickBrowser
+                                      ? openBrowserDialog(context, url)
+                                      : _openTornBrowser(url);
+                                }
                               },
                           ),
                           TextSpan(
@@ -443,26 +483,13 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Future _openTornBrowser(String page) async {
-    var browserType = _settingsProvider.currentBrowser;
-
-    switch (browserType) {
-      case BrowserSetting.app:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => WebViewFull(
-              customUrl: page,
-              customTitle: 'Torn',
-            ),
-          ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = page;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (BuildContext context) => WebViewFull(
+          customUrl: page,
+          customTitle: 'Torn',
+        ),
+      ),
+    );
   }
-
 }

@@ -150,17 +150,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 ),
                 onClosed: (ReturnFlagPressed returnFlag) async {
                   if (returnFlag.flagPressed) {
-                    if (returnFlag.shortTap) {
-                      _settingsProvider.useQuickBrowser
-                          ? openBrowserDialog(
-                              context,
-                              'https://www.torn.com/travelagency.php',
-                              callBack: _updateInformation,
-                            )
-                          : _openTornBrowser(
-                              'https://www.torn.com/travelagency.php');
+                    var url = 'https://www.torn.com/travelagency.php';
+                    if (_settingsProvider.currentBrowser ==
+                        BrowserSetting.external) {
+                      if (await canLaunch(url)) {
+                        await launch(url, forceSafariVC: false);
+                      }
                     } else {
-                      _openTornBrowser('https://www.torn.com/travelagency.php');
+                      if (returnFlag.shortTap) {
+                        _settingsProvider.useQuickBrowser
+                            ? openBrowserDialog(
+                                context,
+                                url,
+                                callBack: _updateInformation,
+                              )
+                            : _openTornBrowser(url);
+                      } else {
+                        _openTornBrowser(
+                            'https://www.torn.com/travelagency.php');
+                      }
                     }
                   }
                 },
@@ -272,16 +280,23 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         },
         onClosed: (ReturnFlagPressed returnFlag) async {
           if (returnFlag.flagPressed) {
-            if (returnFlag.shortTap) {
-              _settingsProvider.useQuickBrowser
-                  ? openBrowserDialog(
-                      context,
-                      'https://www.torn.com/travelagency.php',
-                      callBack: _updateInformation,
-                    )
-                  : _openTornBrowser('https://www.torn.com/travelagency.php');
+            var url = 'https://www.torn.com/travelagency.php';
+            if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
             } else {
-              _openTornBrowser('https://www.torn.com/travelagency.php');
+              if (returnFlag.shortTap) {
+                _settingsProvider.useQuickBrowser
+                    ? openBrowserDialog(
+                        context,
+                        url,
+                        callBack: _updateInformation,
+                      )
+                    : _openTornBrowser(url);
+              } else {
+                _openTornBrowser('https://www.torn.com/travelagency.php');
+              }
             }
           }
         },
@@ -530,13 +545,20 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               _openTornBrowser('https://www.torn.com/');
             },
             onPressed: () async {
-              _settingsProvider.useQuickBrowser
-                  ? openBrowserDialog(
-                      context,
-                      'https://www.torn.com/',
-                      callBack: _updateInformation,
-                    )
-                  : _openTornBrowser('https://www.torn.com/');
+              var url = 'https://www.torn.com/';
+              if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+                if (await canLaunch(url)) {
+                  await launch(url, forceSafariVC: false);
+                }
+              } else {
+                _settingsProvider.useQuickBrowser
+                    ? openBrowserDialog(
+                        context,
+                        url,
+                        callBack: _updateInformation,
+                      )
+                    : _openTornBrowser(url);
+              }
             },
           ),
         ];
@@ -567,13 +589,20 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               _openTornBrowser('https://www.torn.com/');
             },
             onPressed: () async {
-              _settingsProvider.useQuickBrowser
-                  ? openBrowserDialog(
-                      context,
-                      'https://www.torn.com/',
-                      callBack: _updateInformation,
-                    )
-                  : _openTornBrowser('https://www.torn.com/');
+              var url = 'https://www.torn.com/';
+              if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+                if (await canLaunch(url)) {
+                  await launch(url, forceSafariVC: false);
+                }
+              } else {
+                _settingsProvider.useQuickBrowser
+                    ? openBrowserDialog(
+                        context,
+                        url,
+                        callBack: _updateInformation,
+                      )
+                    : _openTornBrowser(url);
+              }
             },
           ),
         ];
@@ -632,13 +661,21 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   _openTornBrowser('https://www.torn.com/');
                 },
                 onTap: () async {
-                  _settingsProvider.useQuickBrowser
-                      ? openBrowserDialog(
-                          context,
-                          'https://www.torn.com/',
-                          callBack: _updateInformation,
-                        )
-                      : _openTornBrowser('https://www.torn.com/');
+                  var url = 'https://www.torn.com/';
+                  if (_settingsProvider.currentBrowser ==
+                      BrowserSetting.external) {
+                    if (await canLaunch(url)) {
+                      await launch(url, forceSafariVC: false);
+                    }
+                  } else {
+                    _settingsProvider.useQuickBrowser
+                        ? openBrowserDialog(
+                            context,
+                            url,
+                            callBack: _updateInformation,
+                          )
+                        : _openTornBrowser(url);
+                  }
                 },
                 child: LinearPercentIndicator(
                   isRTL: _travelModel.destination == "Torn" ? true : false,
@@ -736,13 +773,20 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         _openTornBrowser('https://www.torn.com/travelagency.php');
       },
       onPressed: () async {
-        _settingsProvider.useQuickBrowser
-            ? openBrowserDialog(
-                context,
-                'https://www.torn.com/travelagency.php',
-                callBack: _updateInformation,
-              )
-            : _openTornBrowser('https://www.torn.com/travelagency.php');
+        var url = 'https://www.torn.com/';
+        if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+          if (await canLaunch(url)) {
+            await launch(url, forceSafariVC: false);
+          }
+        } else {
+          _settingsProvider.useQuickBrowser
+              ? openBrowserDialog(
+                  context,
+                  url,
+                  callBack: _updateInformation,
+                )
+              : _openTornBrowser(url);
+        }
       },
     );
   }
@@ -1013,9 +1057,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     vibrationPattern[7] = 1000;
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Travel',
-      'Travel Full',
-      'Urgent notifications about arriving to destination',
+      'Manual travel',
+      'Manual travel',
+      'Manual notifications for travel',
       importance: Importance.max,
       priority: Priority.high,
       visibility: NotificationVisibility.public,

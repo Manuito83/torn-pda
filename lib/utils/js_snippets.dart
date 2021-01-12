@@ -37,6 +37,9 @@ String easyCrimesJS({
         console.error(e)
       }
     });
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -138,6 +141,8 @@ String buyMaxJS() {
     
     addFillMaxButtons();
   
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -166,6 +171,9 @@ String travelReturnHomeJS() {
     }
 
     goHome();
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -210,6 +218,9 @@ String highlightCityItemsJS() {
     }
     
     highlightItems();
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -253,6 +264,9 @@ String addBazaarFillButtonsJS() {
         });
       }
     }
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -267,6 +281,9 @@ String removeBazaarFillButtonsJS() {
         fill.remove();
       }
     }
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -276,6 +293,9 @@ String removeChatOnLoadStartJS() {
     style.type = 'text/css';
     style.innerHTML = '.chat-box-wrap_20_R_ { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
     document.getElementsByTagName('head')[0].appendChild(style);
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -284,6 +304,9 @@ String removeChatJS() {
     var doc = document;
     var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
     chatBox[0].style.display = 'none';
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -292,6 +315,9 @@ String restoreChatJS() {
     var doc = document;
     var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
     chatBox[0].style.display = 'block';
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -385,6 +411,8 @@ String quickItemsJS({@required String item}) {
     }
     removeRemaining();
 
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }
 
@@ -481,5 +509,8 @@ String chatHighlightJS({@required String highlightMap}) {
         });
       });
     } 
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }

@@ -41,10 +41,10 @@ class AwardsSort {
       case AwardsSortType.rarityDesc:
         description = 'Sort by rarity (asc)';
         break;
-      case AwardsSortType.daysAsc:
+      case AwardsSortType.daysDes:
         description = 'Sort by days left (des)';
         break;
-      case AwardsSortType.daysDes:
+      case AwardsSortType.daysAsc:
         description = 'Sort by days left (asc)';
         break;
     }

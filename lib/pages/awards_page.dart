@@ -19,6 +19,9 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/main.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -88,6 +91,9 @@ class _AwardsPageState extends State<AwardsPage> {
     _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
+
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'awards'});
   }
 
   @override
@@ -320,27 +326,31 @@ class _AwardsPageState extends State<AwardsPage> {
                       ],
                     ),
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
+                        var result = await _pinProvider.removePinned(
+                          _userProvider.myUser.userApiKey,
+                          pinned,
+                        );
 
-                        // TODO: replace with comment when syncing with YATA
-                        String action = 'Pins are not being synchronized with YATA yet, please '
-                            'pin or unpin your awards in YATA\'s website and refresh '
-                            'this section to see the changes.';
-                        Color actionColor = Colors.grey[700];
-
-                        // TODO: add YATA post call and checks
-                        /*
-                        _pinProvider.removePinned(pinned);
-                        _buildAwardsWidgetList();
-                        */
+                        var resultString = "";
+                        Color resultColor = Colors.transparent;
+                        if (result) {
+                          _buildAwardsWidgetList();
+                          resultString = "Unpinned ${pinned.name}!";
+                          resultColor = Colors.green[700];
+                        } else {
+                          resultString = "Error unpinning ${pinned.name}! "
+                              "Please try again or do it directly in YATA";
+                          resultColor = Colors.red[700];
+                        }
 
                         BotToast.showText(
-                          text: action,
+                          text: resultString,
                           textStyle: TextStyle(
                             fontSize: 14,
                             color: Colors.white,
                           ),
-                          contentColor: actionColor,
+                          contentColor: resultColor,
                           duration: Duration(seconds: 6),
                           contentPadding: EdgeInsets.all(10),
                         );
@@ -621,8 +631,25 @@ class _AwardsPageState extends State<AwardsPage> {
             Row(
               children: [
                 GestureDetector(
-                  onTap: () {
-                    openBrowserDialog(context, 'https://yata.alwaysdata.net');
+                  onTap: () async {
+                    var url = 'https://yata.yt';
+                    if (_settingsProvider.currentBrowser ==
+                        BrowserSetting.external) {
+                      if (await canLaunch(url)) {
+                        await launch(url, forceSafariVC: false);
+                      }
+                    } else {
+                      _settingsProvider.useQuickBrowser
+                          ? openBrowserDialog(context, url)
+                          : Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (BuildContext context) => WebViewFull(
+                                  customUrl: url,
+                                  customTitle: 'Torn',
+                                ),
+                              ),
+                            );
+                    }
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
@@ -896,6 +923,7 @@ class _AwardsPageState extends State<AwardsPage> {
           });
 
           var singleAward = Award(
+            awardKey: key,
             category: value["category"],
             subCategory: awardsSubcategory,
             name: value["name"],
@@ -937,7 +965,8 @@ class _AwardsPageState extends State<AwardsPage> {
 
           // Add to pinned list
           if (singleAward.pinned) {
-            _pinProvider.addPinned(singleAward);
+            _pinProvider.pinnedAwards.add(singleAward);
+            _pinProvider.pinnedNames.add(singleAward.name);
           }
 
           // Populate models list
@@ -1094,12 +1123,27 @@ class _AwardsPageState extends State<AwardsPage> {
         sortToSave = 'rarityDesc';
         break;
       case AwardsSortType.daysAsc:
-        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
+        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        // As there are some awards with daysLeft = -99 that would go first in list
+        // (which makes no sense, as daysLeft cannot be accounted for these), we have
+        // to take them out from the beginning and add them to the end before rebuilding the list
+        var noTimeAwards = <Award>[];
+        for (var i = 0; i < _allAwards.length; i++) {
+          if (_allAwards[i].daysLeft == -99) {
+            noTimeAwards.add(_allAwards[i]);
+          } else {
+            break;
+          }
+        }
+        for (var noTime in noTimeAwards) {
+          _allAwards.remove(noTime);
+        }
+        _allAwards.addAll(noTimeAwards);
         _buildAwardsWidgetList();
         sortToSave = 'daysAsc';
         break;
       case AwardsSortType.daysDes:
-        _allAwards.sort((a, b) => a.daysLeft.compareTo(b.daysLeft));
+        _allAwards.sort((a, b) => b.daysLeft.compareTo(a.daysLeft));
         _buildAwardsWidgetList();
         sortToSave = 'daysDes';
         break;
@@ -1121,5 +1165,4 @@ class _AwardsPageState extends State<AwardsPage> {
   _onPinnedConditionChange() {
     _buildAwardsWidgetList();
   }
-
 }

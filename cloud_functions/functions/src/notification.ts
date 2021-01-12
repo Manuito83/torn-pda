@@ -1,4 +1,5 @@
 import * as admin from "firebase-admin";
+import stripHtml from "string-strip-html";
 
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
@@ -15,7 +16,8 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
           "Full Energy Bar",
           "Your energy is full, go spend on something!",
           "notification_energy",
-          "#00FF00"
+          "#00FF00",
+          "Alerts energy",
         )
       );
       promises.push(
@@ -68,7 +70,8 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
           "Full Nerve Bar",
           "Your nerve is full, go crazy!",
           "notification_nerve",
-          "#FF0000"
+          "#FF0000",
+          "Alerts nerve",
         )
       );
       promises.push(
@@ -125,7 +128,8 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
           `Approaching ${travel.destination}!`,
           `You are about to land in ${travel.destination}!`,
           "notification_travel",
-          "#0000FF"
+          "#0000FF",
+          "Alerts travel",
         )
       );
       promises.push(
@@ -183,7 +187,8 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             `Hospital admission`,
             `You have been hospitalised!`,
             'notification_hospital',
-            '#FFFF00'
+            '#FFFF00',
+            "Alerts hospital",
           )
         );
       }
@@ -213,7 +218,8 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             `Hospital time ending`,
             `You are about to be released from hospital, grab your things!`,
             'notification_hospital',
-            '#FFFF00'
+            '#FFFF00',
+            "Alerts hospital",
           )
         );
       }
@@ -242,7 +248,8 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             `You are out of hospital!`,
             `You left hospital earlier than expected!`,
             'notification_hospital',
-            '#FFFF00'
+            '#FFFF00',
+            "Alerts hospital",
           )
         );
       }
@@ -288,7 +295,8 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
           "Drug cooldown expired",
           "Hey junkie! Your drugs cooldown has expired, go get some more!",
           "notification_drugs",
-          "#FF00c3"
+          "#FF00c3",
+          "Alerts drugs",
         )
       );
       promises.push(
@@ -341,7 +349,8 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
           "Race finished",
           `Get in there ${userStats.name}!`,
           "notification_racing",
-          "#FF9900"
+          "#FF9900",
+          "Alerts racing",
         )
       );
       promises.push(
@@ -383,12 +392,12 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
   const promises: Promise<any>[] = [];
 
   try {
-    var changes = false;
-    var newMessages = 0;
-    var newMessagesSenders: any[] = [];
-    var newMessagesSubjects: any[] = [];
-    var knownMessages = subscriber.knownMessages || [];
-    
+    let changes = false;
+    let newMessages = 0;
+    const newMessagesSenders: any[] = [];
+    const newMessagesSubjects: any[] = [];
+    const knownMessages = subscriber.knownMessages || [];
+
     Object.keys(userStats.messages).forEach(function (key){
       if (userStats.messages[key].seen === 0 && 
         userStats.messages[key].read === 0 &&
@@ -405,7 +414,7 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
         userStats.messages[key].read === 1) &&
         knownMessages.includes(key)) {
           changes = true;
-          for( var i = 0; i < knownMessages.length; i++){ 
+          for(let i = 0; i < knownMessages.length; i++){ 
             if ( knownMessages[i] === key) { 
               knownMessages.splice(i, 1); 
               break;
@@ -427,9 +436,9 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
     }
 
     if (newMessages > 0) {
-      var notificationTitle = "";
-      var notificationSubtitle = "";
-      var tornMessageId = "";
+      let notificationTitle = "";
+      let notificationSubtitle = "";
+      let tornMessageId = "";
 
       if (newMessages === 1) {
         notificationTitle = "You have a new message from " + newMessagesSenders[0];
@@ -452,6 +461,7 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
           notificationSubtitle,
           "notification_messages",
           "#7B1FA2",
+          "Alerts messages",
           tornMessageId
         )
       );
@@ -466,6 +476,300 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
   return Promise.all(promises);
 }
 
+export async function sendEventsNotification(userStats: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+
+  try {
+    let changes = false;
+    let newGeneralEvents = 0;
+    const newEventsDescriptions: any[] = [];
+    const knownEvents = subscriber.knownEvents || [];
+    
+    Object.keys(userStats.events).forEach(function (key){
+      if (userStats.events[key].seen === 0 &&
+        !knownEvents.includes(key)) {
+          changes = true;
+          newGeneralEvents++;
+          knownEvents.push(key);
+          newEventsDescriptions.push(userStats.events[key].event);
+      } 
+      else if (userStats.events[key].seen === 1 &&
+        knownEvents.includes(key)) {
+          changes = true;
+          for(let i = 0; i < knownEvents.length; i++){ 
+            if ( knownEvents[i] === key) { 
+              knownEvents.splice(i, 1); 
+              break;
+            }
+          }
+      }
+    });
+
+    if (changes) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            knownEvents: knownEvents,
+          })
+      );
+    }
+
+    // We will separate the trades notification from the rest of events
+    let newTradesEvents = 0;
+    const newTradesDescriptions: any[] = [];
+
+    // We send the notification if new events are found
+    if (newGeneralEvents > 0) {
+      let notificationTitle = "";
+      let notificationSubtitle = "";
+      
+      // If the user has pre-defined filters, we will remove the events
+      // matching those filters, so that the notification is not sent
+      const filters = subscriber.filteredEvents || [];
+      for (let i = 0; i < newGeneralEvents; i++) {
+
+        // Change trades notification from one list to another
+        if (newEventsDescriptions[i].includes('has initiated a trade titled') || 
+        newEventsDescriptions[i].includes('has accepted the trade') ||
+        newEventsDescriptions[i].includes('has canceled the trade') ||
+        newEventsDescriptions[i].includes('commented on your pending trade')
+        ) {
+          newTradesEvents++;
+          newTradesDescriptions.push(newEventsDescriptions[i]);
+          newEventsDescriptions.splice(i--, 1);
+          newGeneralEvents--;
+          continue;
+        }
+
+        if (filters.length > 0) { 
+
+          // Avoid personal messages with giveaways triggering other filter
+          if (newEventsDescriptions[i].includes('with the message:')) {
+            continue;
+          }
+
+          if (filters.includes('crimes')) {
+            if (newEventsDescriptions[i].includes('You have been selected by') ||
+            newEventsDescriptions[i].includes('You and your team') ||
+            newEventsDescriptions[i].includes('canceled the ')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+            }
+          }
+
+          if (filters.includes('trains')) {
+            if (newEventsDescriptions[i].includes('the director of')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+            }
+          }
+
+          if (filters.includes('racing')) {
+            if (newEventsDescriptions[i].includes('You came') ||
+            newEventsDescriptions[i].includes('race.') ||
+            newEventsDescriptions[i].includes('Your best lap was') ||
+            newEventsDescriptions[i].includes('race and have received ')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+            }
+          }
+
+          if (filters.includes('bazaar')) {
+            if (newEventsDescriptions[i].includes('from your bazaar for')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+            }
+          }
+
+          if (filters.includes('attacks')) {
+            if (newEventsDescriptions[i].includes('attacked you') ||
+            newEventsDescriptions[i].includes('mugged you and stole') ||
+            newEventsDescriptions[i].includes('attacked and hospitalized')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+            }
+          }
+
+          if (filters.includes('revives')) {
+            if (newEventsDescriptions[i].includes('revive')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+            }
+          }
+        }
+      }
+
+      // Checking again if any new events remain after filtering
+      if (newGeneralEvents > 0) {
+        if (newGeneralEvents === 1) {
+          notificationTitle = "You have a new event!";
+          notificationSubtitle = `${newEventsDescriptions[0]}`;
+        }
+        else if (newGeneralEvents > 1) {
+          notificationTitle = `You have ${newGeneralEvents} new events!`;
+          notificationSubtitle = `- ${newEventsDescriptions.join('\n- ')}`.trim();
+        }
+
+        // Fix notification text
+        notificationSubtitle = stripHtml(notificationSubtitle).result;
+        notificationSubtitle = notificationSubtitle.replace(/View the details here!/g, '');
+        notificationSubtitle = notificationSubtitle.replace(/Please click here to continue./g, '');
+        notificationSubtitle = notificationSubtitle.replace(/ \[view\]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/ \[ view \]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/ \[View\]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/ \[ View \]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/Please click here./g, '');
+        notificationSubtitle = notificationSubtitle.replace(/Please click here to collect your funds./g, '');
+
+        promises.push(
+          sendNotificationToUser(
+            subscriber.token,
+            notificationTitle,
+            notificationSubtitle,
+            "notification_events",
+            "#5B1FA2",
+            "Alerts events",
+          )
+        );   
+      }
+
+      if (newTradesEvents > 0) {
+        if (newTradesEvents === 1) {
+          notificationTitle = "Trade update!";
+          notificationSubtitle = `${newTradesDescriptions[0]}`;
+        }
+        else if (newTradesEvents > 1) {
+          notificationTitle = `${newTradesEvents} trade updates!`;
+          notificationSubtitle = `- ${newTradesDescriptions.join('\n- ')}`.trim();
+        }
+        
+        // We'll use this later in case of trade
+        const originalSubtitle = notificationSubtitle;
+        
+        let tradeId = "";
+
+        // Fix notification text
+        notificationSubtitle = stripHtml(notificationSubtitle).result;
+        notificationSubtitle = notificationSubtitle.replace(/View the details here!/g, '');
+        notificationSubtitle = notificationSubtitle.replace(/Please click here to continue./g, '');
+        notificationSubtitle = notificationSubtitle.replace(/ \[view\]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/ \[ view \]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/ \[View\]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/ \[ View \]/g, '.');
+        notificationSubtitle = notificationSubtitle.replace(/Please click here./g, '');
+
+
+        // If excactly one trade update, change title accordingly and add tradeId
+        if (newTradesEvents == 1) {
+          if (notificationSubtitle.includes("has initiated a trade titled")) {
+            notificationTitle = "New trade!";
+            const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)(?:>)`);
+            const matches = regex.exec(originalSubtitle);
+            tradeId = matches![1] ?? ''; 
+          } else if (notificationSubtitle.includes("has accepted the trade. The trade is now complete.")) {
+            notificationTitle = "Trade completed!";
+          } else if (notificationSubtitle.includes("has canceled the trade")) {
+            notificationTitle = "Trade canceled!";
+          } else if (notificationSubtitle.includes("commented on your pending trade")) {
+            notificationTitle = "Trade commented!";
+          }
+        // If more than one trade update, don't change title but add tradeIid only if new trade is detected
+        } else if (newGeneralEvents > 1) {
+          if (notificationSubtitle.includes("has initiated a trade titled")) {
+            const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)(?:>)`);
+            const matches = regex.exec(originalSubtitle);
+            tradeId = matches![1] ?? '';
+          }
+        }
+
+        promises.push(
+          sendNotificationToUser(
+            subscriber.token,
+            notificationTitle,
+            notificationSubtitle,
+            "notification_trades",
+            "#389500",
+            "Alerts trades",
+            "",
+            tradeId,
+          )
+        );  
+      }
+
+    }
+    
+  } catch (error) {
+    console.log("ERROR EVENTS");
+    console.log(subscriber.uid);
+    console.log(error);
+  }
+
+  return Promise.all(promises);
+}
+
+
+export async function sendNotificationToUser(
+  token: string,
+  title: string,
+  body: string,
+  icon: string,
+  color: string,
+  channelId: string,
+  tornMessageId: string = "",
+  tornTradeId: string = "",
+): Promise<any> {
+  
+  const payload: admin.messaging.Message = {
+    token: token,
+    notification: {
+      title: title,
+      body: body,
+    },
+    android: {
+      priority: 'high',
+      ttl: 18000000,
+      notification: {
+        channelId: channelId,
+        color: color,
+        icon: icon,
+        sound: "default",
+        clickAction: "FLUTTER_NOTIFICATION_CLICK",
+      },
+    },
+    apns: {
+      headers: {
+        "apns-priority": "10"
+      },
+      payload: {
+        aps: {
+          sound: "default",
+          badge: 1,
+        }
+      },
+    },
+    data: {
+      // This are needed so that the information is contained 
+      // in onLaundh/onResume message information
+      title: title,
+      body: body, 
+      channelId: channelId,
+      tornMessageId: tornMessageId,
+      tornTradeId: tornTradeId,
+    },
+  };
+
+  return admin.messaging().send(payload);
+  
+}
+
+
+// LEGACY FCM messaging
+// Does not incluse Android channels or tags
+// Can be removed safely
+/*
 export async function sendNotificationToUser(
   token: string,
   title: string,
@@ -484,10 +788,15 @@ export async function sendNotificationToUser(
       sound: "default",
       badge: "1",
       priority: "high",
+      id: "500"
     },
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",
+      // Torn personal message ID
       tornMessageId: tornMessageId,
+      // This two might seem redundant, but are needed so that
+      // the information is contained in onLaundh/onResume message information
+      title: title,
       message: body, 
     },
   };
@@ -499,5 +808,5 @@ export async function sendNotificationToUser(
 
   return admin.messaging()
     .sendToDevice(token, payload, options);
-  
 }
+*/
