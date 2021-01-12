@@ -521,7 +521,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     let newTradesEvents = 0;
     const newTradesDescriptions: any[] = [];
 
-    // We send the notificatoin if new events are found
+    // We send the notification if new events are found
     if (newGeneralEvents > 0) {
       let notificationTitle = "";
       let notificationSubtitle = "";
