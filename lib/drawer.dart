@@ -271,7 +271,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (title.contains("new event!") || title.contains("new events!")) {
       events = true;
     } else if (title.contains("New trade!")) {
-      events = true;
+      trades = true;
     } else if (title.contains("Full Nerve Bar")) {
       nerve = true;
     } else if (title.contains("Full Energy Bar")) {
