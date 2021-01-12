@@ -26,10 +26,16 @@ Future showNotificationBoth(Map payload, int notId) async {
   vibrationPattern[7] = 1000;
 
   String channel = '';
+  String messageId = '';
+  String tradeId = '';
   if (Platform.isAndroid) {
     channel = payload["data"]["channelId"];
+    messageId = payload["data"]["tornMessageId"];
+    tradeId = payload["data"]["tornTradeId"];
   } else {
     channel = payload["channelId"];
+    messageId = payload["tornMessageId"];
+    tradeId = payload["tornTradeId"];
   }
 
   String notificationIcon = "notification_icon";
@@ -79,8 +85,8 @@ Future showNotificationBoth(Map payload, int notId) async {
     notificationIcon = "notification_messages";
     notificationColor = Colors.purple[700];
     // If payload comes from Firebase with a torn message (mail) id
-    if (payload["data"]["tornMessageId"] != '') {
-      onTapPayload += 'tornMessageId:${payload["data"]["tornMessageId"]}';
+    if (messageId != '') {
+      onTapPayload += 'tornMessageId:$messageId}';
     } else {
       onTapPayload += 'tornMessageId:0';
     }
@@ -98,8 +104,8 @@ Future showNotificationBoth(Map payload, int notId) async {
     notificationIcon = "notification_trades";
     notificationColor = Colors.green[700];
     // If payload comes from Firebase with a trade id
-    if (payload["data"]["tornTradeId"] != '') {
-      onTapPayload += 'tornTradeId:${payload["data"]["tornTradeId"]}';
+    if (tradeId != '') {
+      onTapPayload += 'tornTradeId:$tradeId';
     } else {
       onTapPayload += 'tornTradeId:0';
     }

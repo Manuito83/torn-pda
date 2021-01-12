@@ -248,11 +248,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool energy = false;
 
     var title = '';
+    var messageId = '';
+    var tradeId = '';
 
     if (Platform.isIOS) {
       title = message["title"];
+      messageId = message["tornMessageId"];
+      tradeId = message["tornTradeId"];
     } else if (Platform.isAndroid) {
       title = message["data"]["title"];
+      messageId = message["data"]["tornMessageId"];
+      tradeId = message["data"]["tornTradeId"];
     }
 
     if (title.contains("Approaching")) {
@@ -281,9 +287,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (messages) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/messages.php";
-      if (message["data"]["tornMessageId"] != "") {
+      if (messageId != "") {
         browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
-            "${message["data"]["tornMessageId"]}&suffix=inbox";
+            "$messageId&suffix=inbox";
       }
     } else if (events) {
       launchBrowser = true;
@@ -291,9 +297,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (trades) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/trade.php";
-      if (message["data"]["tornTradeId"] != "") {
+      if (tradeId != "") {
         browserUrl = "https://www.torn.com/trade.php#step=view&ID="
-            "${message["data"]["tradeId"]}";
+            "$tradeId";
       }
     } else if (nerve) {
       launchBrowser = true;
