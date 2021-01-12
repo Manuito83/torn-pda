@@ -663,7 +663,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
 
         // If excactly one trade update, change title accordingly and add tradeId
-        if (newTradesEvents == 1) {
+        if (newTradesEvents === 1) {
           if (notificationSubtitle.includes("has initiated a trade titled")) {
             notificationTitle = "New trade!";
             const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)(?:>)`);
