@@ -532,10 +532,11 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
       for (let i = 0; i < newGeneralEvents; i++) {
 
         // Change trades notification from one list to another
-        if (newEventsDescriptions[i].includes('has initiated a trade titled') || 
-        newEventsDescriptions[i].includes('has accepted the trade') ||
-        newEventsDescriptions[i].includes('has canceled the trade') ||
-        newEventsDescriptions[i].includes('commented on your pending trade')
+        const tradeCheck = stripHtml(newEventsDescriptions[i]).result;
+        if (tradeCheck.includes('has initiated a trade titled') || 
+        tradeCheck.includes('has accepted the trade') ||
+        tradeCheck.includes('has canceled the trade') ||
+        tradeCheck.includes('commented on your pending trade')
         ) {
           newTradesEvents++;
           newTradesDescriptions.push(newEventsDescriptions[i]);
@@ -666,9 +667,6 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         if (newTradesEvents === 1) {
           if (notificationSubtitle.includes("has initiated a trade titled")) {
             notificationTitle = "New trade!";
-            const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)(?:>)`);
-            const matches = regex.exec(originalSubtitle);
-            tradeId = matches![1] ?? ''; 
           } else if (notificationSubtitle.includes("has accepted the trade. The trade is now complete.")) {
             notificationTitle = "Trade completed!";
           } else if (notificationSubtitle.includes("has canceled the trade")) {
@@ -676,13 +674,16 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           } else if (notificationSubtitle.includes("commented on your pending trade")) {
             notificationTitle = "Trade commented!";
           }
+
+          const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)`);
+          const matches = regex.exec(originalSubtitle);
+          if (matches) tradeId = matches![1] || '';
+
         // If more than one trade update, don't change title but add tradeIid only if new trade is detected
-        } else if (newGeneralEvents > 1) {
-          if (notificationSubtitle.includes("has initiated a trade titled")) {
-            const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)(?:>)`);
-            const matches = regex.exec(originalSubtitle);
-            tradeId = matches![1] ?? '';
-          }
+        } else if (newTradesEvents > 1) {
+          const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)`);
+          const matches = regex.exec(originalSubtitle);
+          if (matches) tradeId = matches![1] || '';
         }
 
         promises.push(

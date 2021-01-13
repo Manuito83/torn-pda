@@ -247,34 +247,33 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool nerve = false;
     bool energy = false;
 
-    var title = '';
+    var channel = '';
     var messageId = '';
     var tradeId = '';
 
     if (Platform.isIOS) {
-      title = message["title"];
+      channel = message["channelId"];
       messageId = message["tornMessageId"];
       tradeId = message["tornTradeId"];
     } else if (Platform.isAndroid) {
-      title = message["data"]["title"];
+      channel = message["data"]["channelId"];
       messageId = message["data"]["tornMessageId"];
       tradeId = message["data"]["tornTradeId"];
     }
 
-    if (title.contains("Approaching")) {
+    if (channel.contains("Alerts travel")) {
       travel = true;
-    } else if (title.contains("Race finished")) {
+    } else if (channel.contains("Alerts racing")) {
       racing = true;
-    } else if (title.contains("new message from") ||
-        title.contains("new messages from")) {
+    } else if (channel.contains("Alerts messages")) {
       messages = true;
-    } else if (title.contains("new event!") || title.contains("new events!")) {
+    } else if (channel.contains("Alerts events")) {
       events = true;
-    } else if (title.contains("New trade!")) {
+    } else if (channel.contains("Alerts trades")) {
       trades = true;
-    } else if (title.contains("Full Nerve Bar")) {
+    } else if (channel.contains("Alerts nerve")) {
       nerve = true;
-    } else if (title.contains("Full Energy Bar")) {
+    } else if (channel.contains("Alerts energy")) {
       energy = true;
     }
 
