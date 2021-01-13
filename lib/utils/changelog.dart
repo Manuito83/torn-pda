@@ -44,8 +44,9 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_1_0_3 = "Awards: fixed sorting by days left";
     String feat2_1_0_4 = "Notifications are now automatically removed from the notification bar when the application is launched (can be deactivated)";
     String feat2_1_0_5 = "Added notification channels (in Android's notifications settings) so that users can configure each notification (sound, alert type, etc.) individually";
-    String feat2_1_0_6 = "Corrected Discord link";
-    String feat2_1_0_7 = "Corrected issues when launching the external browser";
+    String feat2_1_0_6 = "Fixed Discord link";
+    String feat2_1_0_7 = "Fixed issues when launching the external browser";
+    String feat2_1_0_8 = "Fixed long URL copy";
     v2_1_0.features.add(feat2_1_0_1);
     v2_1_0.features.add(feat2_1_0_2);
     v2_1_0.features.add(feat2_1_0_3);
@@ -55,6 +56,7 @@ class _ChangeLogState extends State<ChangeLog> {
     }
     v2_1_0.features.add(feat2_1_0_6);
     v2_1_0.features.add(feat2_1_0_7);
+    v2_1_0.features.add(feat2_1_0_8);
 
     // VERSION 2.0.0-BETA
     var v2_0_0 = ChangeLogItem();

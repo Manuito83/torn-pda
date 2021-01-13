@@ -1785,13 +1785,18 @@ class _WebViewFullState extends State<WebViewFull> {
                           ),
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: _currentUrl));
+
+                            // Avoid copying _currentUrl directly unless we await,
+                            // otherwise we can change _currentUrl while the copy
+                            // is being performed and hang the app
+                            var copied = '';
                             if (_currentUrl.length > 60) {
-                              _currentUrl =
-                                  _currentUrl.substring(0, 60) + "...";
+                              copied = _currentUrl.substring(0, 60) + "...";
                             }
+
                             BotToast.showText(
                               text: "Current URL copied to "
-                                  "the clipboard [$_currentUrl]",
+                                  "the clipboard [$copied]",
                               textStyle: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
