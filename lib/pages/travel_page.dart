@@ -773,7 +773,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         _openTornBrowser('https://www.torn.com/travelagency.php');
       },
       onPressed: () async {
-        var url = 'https://www.torn.com/';
+        var url = 'https://www.torn.com/travelagency.php';
         if (_settingsProvider.currentBrowser == BrowserSetting.external) {
           if (await canLaunch(url)) {
             await launch(url, forceSafariVC: false);
