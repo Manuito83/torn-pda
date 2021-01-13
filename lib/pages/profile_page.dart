@@ -2209,8 +2209,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else if (message.contains('trade')) {
       insideIcon = Icon(
-        Icons.switch_camera,
-        color: Colors.purple,
+        Icons.monetization_on,
+        color: Colors.green,
         size: 20,
       );
     } else if (message.contains('has given you') ||
@@ -2248,7 +2248,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message.contains('Your bank investment has ended') ||
         message.contains('You were given \$')) {
       insideIcon = Icon(
-        Icons.monetization_on,
+        MdiIcons.cash100,
         color: Colors.green,
         size: 20,
       );
