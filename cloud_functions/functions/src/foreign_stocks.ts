@@ -28,7 +28,7 @@ export const foreignStocksGroup = {
       ).docs.map((d) => d.data());
 
       // Get the stocks
-      let json = await getStocks();
+      const json = await getStocks();
           
       for (const countryName in json.stocks) {
         const countryStocks = json.stocks[countryName].stocks;
@@ -40,7 +40,7 @@ export const foreignStocksGroup = {
           let emptyTimes: any[] = [];
           let fullTimes: any[] = [];
           // Match new and saved for several checks
-          for (let dbStock of dbStocks) {
+          for (const dbStock of dbStocks) {
             if (dbStock.codeName === codeName) {
 
               // Check if item has reached zero.
