@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
@@ -849,27 +849,14 @@ class _LootPageState extends State<LootPage> {
     int notificationId = id;
     String notificationPayload = payload;
 
-    var vibrationPattern = Int64List(8);
-    vibrationPattern[0] = 0;
-    vibrationPattern[1] = 400;
-    vibrationPattern[2] = 400;
-    vibrationPattern[3] = 600;
-    vibrationPattern[4] = 400;
-    vibrationPattern[5] = 800;
-    vibrationPattern[6] = 400;
-    vibrationPattern[7] = 1000;
-
+    var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      channelTitle,
+      "$channelTitle ${modifier.channelIdModifier}",
       channelSubtitle,
       channelDescription,
-      importance: Importance.max,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_loot',
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
-      vibrationPattern: vibrationPattern,
-      enableLights: true,
       color: Colors.grey,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
       ledOnMs: 1000,

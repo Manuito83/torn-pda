@@ -16,6 +16,7 @@ import 'package:torn_pda/utils/firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:torn_pda/utils/notification.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -47,6 +48,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _useQuickBrowser;
   String _timeFormatValue;
   String _timeZoneValue;
+  String _vibrationValue;
   bool _removeNotificationsLaunch;
 
   SettingsProvider _settingsProvider;
@@ -387,6 +389,28 @@ class _SettingsPageState extends State<SettingsPage> {
                                   fontSize: 12,
                                   fontStyle: FontStyle.italic,
                                 ),
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 20, top: 10, right: 20, bottom: 5),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Flexible(
+                                    child: Text(
+                                      "Vibration pattern",
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.only(left: 20),
+                                  ),
+                                  Flexible(
+                                    flex: 2,
+                                    child: _vibrationDropdown(),
+                                  ),
+                                ],
                               ),
                             ),
                             SizedBox(height: 5),
@@ -1134,6 +1158,62 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  DropdownButton _vibrationDropdown() {
+    return DropdownButton<String>(
+      value: _vibrationValue,
+      items: [
+        DropdownMenuItem(
+          value: "short",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Short",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "medium",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Medium",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "long",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Long",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) async {
+        await deleteNotificationChannels(mod: _vibrationValue);
+        SharedPreferencesModel().setVibrationPattern(value);
+        await configureNotificationChannels(mod: value);
+        firestore.setVibrationPattern(value);
+        setState(() {
+          _vibrationValue = value;
+        });
+      },
+    );
+  }
+
   DropdownButton _appBarPositionDropdown() {
     return DropdownButton<String>(
       value: _appBarPosition,
@@ -1202,6 +1282,8 @@ class _SettingsPageState extends State<SettingsPage> {
               forceUpdate: true);
           await firestore
               .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+
+          firestore.setVibrationPattern(_vibrationValue);
         }
       } else if (myProfile is ApiError) {
         setState(() {
@@ -1300,6 +1382,8 @@ class _SettingsPageState extends State<SettingsPage> {
       appBarPosition ? _appBarPosition = 'top' : _appBarPosition = 'bottom';
     });
 
+    var vibration = await SharedPreferencesModel().getVibrationPattern();
+
     setState(() {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
       _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
@@ -1308,6 +1392,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _settingsProvider.removeNotificationsOnLaunch;
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
+      _vibrationValue = vibration;
     });
   }
 

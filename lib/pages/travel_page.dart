@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/foundation.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
@@ -1046,27 +1046,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   Future<DateTime> _scheduleNotification() async {
     var scheduledNotificationDateTime = _travelModel.timeArrival
         .subtract(Duration(seconds: _travelNotificationAhead));
-    var vibrationPattern = Int64List(8);
-    vibrationPattern[0] = 0;
-    vibrationPattern[1] = 400;
-    vibrationPattern[2] = 400;
-    vibrationPattern[3] = 600;
-    vibrationPattern[4] = 400;
-    vibrationPattern[5] = 800;
-    vibrationPattern[6] = 400;
-    vibrationPattern[7] = 1000;
 
+    var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'Manual travel',
+      'Manual travel ${modifier.channelIdModifier}',
       'Manual travel',
       'Manual notifications for travel',
-      importance: Importance.max,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_travel',
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
-      vibrationPattern: vibrationPattern,
-      enableLights: true,
       color: Colors.blue,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
       ledOnMs: 1000,

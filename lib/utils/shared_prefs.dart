@@ -19,6 +19,7 @@ class SharedPreferencesModel {
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
+  final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kOnAppExit = "pda_onAppExit";
@@ -270,6 +271,19 @@ class SharedPreferencesModel {
   Future<bool> setAppTheme(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTheme, value);
+  }
+
+  /// ----------------------------
+  /// Methods for vibration pattern
+  /// ----------------------------
+  Future<String> getVibrationPattern() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kVibrationPattern) ?? 'medium';
+  }
+
+  Future<bool> setVibrationPattern(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kVibrationPattern, value);
   }
 
   /// ----------------------------

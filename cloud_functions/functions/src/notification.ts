@@ -18,6 +18,9 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
           "notification_energy",
           "#00FF00",
           "Alerts energy",
+          "",
+          "",
+          subscriber.vibration,
         )
       );
       promises.push(
@@ -72,6 +75,9 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
           "notification_nerve",
           "#FF0000",
           "Alerts nerve",
+          "",
+          "",
+          subscriber.vibration,
         )
       );
       promises.push(
@@ -130,6 +136,9 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
           "notification_travel",
           "#0000FF",
           "Alerts travel",
+          "",
+          "",
+          subscriber.vibration,
         )
       );
       promises.push(
@@ -189,6 +198,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
+            "",
+            "",
+            subscriber.vibration,
           )
         );
       }
@@ -220,6 +232,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
+            "",
+            "",
+            subscriber.vibration,
           )
         );
       }
@@ -250,6 +265,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
+            "",
+            "",
+            subscriber.vibration,
           )
         );
       }
@@ -297,6 +315,9 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
           "notification_drugs",
           "#FF00c3",
           "Alerts drugs",
+          "",
+          "",
+          subscriber.vibration,
         )
       );
       promises.push(
@@ -351,6 +372,9 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
           "notification_racing",
           "#FF9900",
           "Alerts racing",
+          "",
+          "",
+          subscriber.vibration,
         )
       );
       promises.push(
@@ -462,7 +486,9 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
           "notification_messages",
           "#7B1FA2",
           "Alerts messages",
-          tornMessageId
+          tornMessageId,
+          "",
+          subscriber.vibration,
         )
       );
     }
@@ -528,7 +554,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
       
       // If the user has pre-defined filters, we will remove the events
       // matching those filters, so that the notification is not sent
-      const filters = subscriber.filteredEvents || [];
+      const filters = subscriber.eventsFilter || [];
       for (let i = 0; i < newGeneralEvents; i++) {
 
         // Change trades notification from one list to another
@@ -633,6 +659,9 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             "notification_events",
             "#5B1FA2",
             "Alerts events",
+            "",
+            "",
+            subscriber.vibration,
           )
         );   
       }
@@ -650,7 +679,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         // We'll use this later in case of trade
         const originalSubtitle = notificationSubtitle;
         
-        let tradeId = "";
+        let tradeId = '';
 
         // Fix notification text
         notificationSubtitle = stripHtml(notificationSubtitle).result;
@@ -663,7 +692,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         notificationSubtitle = notificationSubtitle.replace(/Please click here./g, '');
 
 
-        // If excactly one trade update, change title accordingly and add tradeId
+        // If exactly one trade update, change title accordingly and add tradeId
         if (newTradesEvents === 1) {
           if (notificationSubtitle.includes("has initiated a trade titled")) {
             notificationTitle = "New trade!";
@@ -677,13 +706,13 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
           const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)`);
           const matches = regex.exec(originalSubtitle);
-          if (matches) tradeId = matches![1] || '';
+          if (matches !== null) tradeId = matches[1];
 
         // If more than one trade update, don't change title but add tradeIid only if new trade is detected
         } else if (newTradesEvents > 1) {
           const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)`);
           const matches = regex.exec(originalSubtitle);
-          if (matches) tradeId = matches![1] || '';
+          if (matches !== null) tradeId = matches[1];
         }
 
         promises.push(
@@ -696,6 +725,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             "Alerts trades",
             "",
             tradeId,
+            subscriber.vibration,
           )
         );  
       }
@@ -721,8 +751,15 @@ export async function sendNotificationToUser(
   channelId: string,
   tornMessageId: string = "",
   tornTradeId: string = "",
+  vibration: string,
 ): Promise<any> {
   
+  // Give a space to mach channel ids in the app
+  let vibrationPattern = vibration;
+  if (vibrationPattern !== "") {
+    vibrationPattern = ` ${vibrationPattern}`;
+  }
+
   const payload: admin.messaging.Message = {
     token: token,
     notification: {
@@ -733,7 +770,7 @@ export async function sendNotificationToUser(
       priority: 'high',
       ttl: 18000000,
       notification: {
-        channelId: channelId,
+        channelId: `${channelId}${vibrationPattern}`,
         color: color,
         icon: icon,
         sound: "default",

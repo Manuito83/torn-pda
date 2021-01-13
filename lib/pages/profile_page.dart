@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:io';
 import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -43,6 +42,7 @@ import '../main.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/utils/notification.dart';
 
 enum ProfileNotification {
   travel,
@@ -4073,27 +4073,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
     }
 
-    var vibrationPattern = Int64List(8);
-    vibrationPattern[0] = 0;
-    vibrationPattern[1] = 400;
-    vibrationPattern[2] = 400;
-    vibrationPattern[3] = 600;
-    vibrationPattern[4] = 400;
-    vibrationPattern[5] = 800;
-    vibrationPattern[6] = 400;
-    vibrationPattern[7] = 1000;
-
+    var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      channelTitle,
+      "$channelTitle ${modifier.channelIdModifier}",
       channelSubtitle,
       channelDescription,
-      importance: Importance.max,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: notificationIconAndroid,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
-      vibrationPattern: vibrationPattern,
-      enableLights: true,
       color: notificationIconColor,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
       ledOnMs: 1000,

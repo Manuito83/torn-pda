@@ -136,4 +136,10 @@ class _FirestoreHelper {
     _alreadyUploaded = false;
     await _firestore.collection("players").doc(_uid).delete();
   }
+
+  Future<void> setVibrationPattern(String pattern) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "vibration": pattern,
+    });
+  }
 }

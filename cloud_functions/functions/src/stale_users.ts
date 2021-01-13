@@ -29,7 +29,10 @@ export const staleGroup = {
             "Due to inactivity, your alerts have been turned off, please use Torn PDA again to reactivate!",
             "notification_icon",
             "#FFFFFF",
-            "Alerts stale user"
+            "Alerts stale user",
+            "",
+            "",
+            "medium",
           )
         );
         promises.push(
