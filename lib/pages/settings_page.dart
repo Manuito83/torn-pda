@@ -1206,7 +1206,7 @@ class _SettingsPageState extends State<SettingsPage> {
         await deleteNotificationChannels(mod: _vibrationValue);
         SharedPreferencesModel().setVibrationPattern(value);
         await configureNotificationChannels(mod: value);
-        firestore.setVibrationPattern(value);
+        if (Platform.isAndroid) firestore.setVibrationPattern(value);
         setState(() {
           _vibrationValue = value;
         });
@@ -1283,7 +1283,9 @@ class _SettingsPageState extends State<SettingsPage> {
           await firestore
               .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
-          firestore.setVibrationPattern(_vibrationValue);
+          if (Platform.isAndroid) {
+            firestore.setVibrationPattern(_vibrationValue);
+          }
         }
       } else if (myProfile is ApiError) {
         setState(() {

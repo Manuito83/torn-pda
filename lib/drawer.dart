@@ -147,7 +147,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     // Configure all notifications channels so that Firebase alerts have already
     // and assign channel where to land
-    configureNotificationChannels();
+    if (Platform.isAndroid) {
+      configureNotificationChannels();
+    }
 
     // Configures Firebase notification behaviours
     _messaging.requestNotificationPermissions(IosNotificationSettings(
