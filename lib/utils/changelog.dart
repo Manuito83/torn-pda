@@ -46,7 +46,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_1_0_5 = "Added notification channels (in Android's notifications settings) so that users can configure each notification (sound, alert type, etc.) individually";
     String feat2_1_0_6 = "Fixed Discord link";
     String feat2_1_0_7 = "Fixed issues when launching the external browser";
-    String feat2_1_0_8 = "Fixed long URL copy";
+    String feat2_1_0_8 = "Fixed URL copying";
     v2_1_0.features.add(feat2_1_0_1);
     v2_1_0.features.add(feat2_1_0_2);
     v2_1_0.features.add(feat2_1_0_3);
