@@ -1515,6 +1515,8 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _cityPreferencesLoad() async {
     _cityEnabled = await SharedPreferencesModel().getCityEnabled();
+    // Reset city so that it can be assessed again
+    _cityTriggered = false;
     await webView.reload();
   }
 
