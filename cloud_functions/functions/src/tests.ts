@@ -7,47 +7,75 @@ export const testGroup = {
   .onRun(async () => {
     const promises: Promise<any>[] = [];
     
-    promises.push(sendTestNotification(
-        'PUT TEST TOKEN HERE', // Then call as "tests.testNotification()" in shell
+    try {
+      
+      promises.push(sendTestNotification(
+        'd_Zx2OGPt70:APA91bHP_iNW8qgYg55RWwuqq9c9TpFuJ7h0NGfHxKmJZ0WQ515r1IcLP7HV2kZLDU10TN96eTRvBo-j6Oad8KwVIY-AYtyeLA1OatKLE2P0nkGjER6Xazf2sxbZYIvd0VxXGFMkvBiT', // Then call as "tests.testNotification()" in shell
         'Test', 
-        'test left hospital earlier test')
-    );
+        'test notification')
+      );
+      await Promise.all(promises);
     
-    await Promise.all(promises);
+    } catch (e) {
+      console.log(`ERROR TEST \n${e}`)
+    }
+
   }),
 };
 
-// ***********
-// FOR TESTING
-// ***********
+// *************************
+// FOR TESTING NOTIFICATION
+// *************************
 async function sendTestNotification(
     token: string,
     title: string,
     body: string
   ): Promise<any> {
     
-    const payload = {
-      notification: {
-        title: title,
-        body: body,
-        // There two might be overriden in Torn PDA when opened (via incoming notifications plugin)
-        icon: "notification_hospital",
-        color: "#FFA200",
-        sound: "default",
-        badge: "1",
-        priority: "high",
-      },
-      data: {
-        click_action: "FLUTTER_NOTIFICATION_CLICK",
-        message: body, 
-      },
-    };
-  
-    const options = {
+  const payload: admin.messaging.Message = {
+    token: token,
+    notification: {
+      title: title,
+      body: body,
+    },
+    android: {
       priority: 'high',
-      timeToLive: 60 * 60 * 5
-    };
-  
-    return admin.messaging()
-      .sendToDevice(token, payload, options);
-  }
+      ttl: 18000000,
+      notification: {
+        channelId: `Test Channel`,
+        //color: color,
+        //icon: icon,
+        sound: "default",
+        clickAction: "FLUTTER_NOTIFICATION_CLICK",
+      },
+    },
+    apns: {
+      headers: {
+        "apns-priority": "10"
+      },
+      payload: {
+        aps: {
+          sound: "default",
+          badge: 1,
+        }
+      },
+    },
+    data: {
+      // This are needed so that the information is contained 
+      // in onLaundh/onResume message information
+      title: title,
+      body: body, 
+      channelId: "Test Channel",
+      tornMessageId: "",
+      tornTradeId: "",
+    },
+  };
+
+  return admin
+    .messaging().send(payload)
+    .catch((error) => {
+      if (error.toString().includes("Requested entity was not found")) {
+        functions.logger.warn(`USER NOT FOUND & STALED`);
+      }
+    });
+}

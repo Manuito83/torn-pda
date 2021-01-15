@@ -71,9 +71,23 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
       await Promise.all(promises);
     }
   } catch (e) {
-    console.log("ERROR ALERTS");
-    console.log(subscriber.uid);
-    console.log(e);
+    functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
+    
+    // If users uninstall without removing API Key, this error will trigger
+    // because the token is not known. In this case, stale the user
+    if (e.toString().includes("Requested entity was not found")) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            active: false,
+          })
+      );
+      functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid}`);
+    }
+
   }
 }
 

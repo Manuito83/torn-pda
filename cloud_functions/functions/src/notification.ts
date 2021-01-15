@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import stripHtml from "string-strip-html";
+import * as functions from "firebase-functions";
 
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
@@ -50,9 +51,7 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    console.log("ERROR ENERGY");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR ENERGY \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -107,9 +106,7 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    console.log("ERROR NERVE");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR NERVE \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -153,9 +150,7 @@ export async function sendTravelNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    console.log("ERROR TRAVEL");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR TRAVEL \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -290,9 +285,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
     }
 
   } catch (error) {
-    console.log("ERROR HOSPITAL");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR HOSPITAL \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -347,9 +340,7 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    console.log("ERROR DRUGS");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR DRUGS \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -404,9 +395,7 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    console.log("ERROR RACING");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR RACING \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -494,9 +483,7 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
     }
     
   } catch (error) {
-    console.log("ERROR MESSAGES");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR MESSAGES \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -733,9 +720,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     }
     
   } catch (error) {
-    console.log("ERROR EVENTS");
-    console.log(subscriber.uid);
-    console.log(error);
+    functions.logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
