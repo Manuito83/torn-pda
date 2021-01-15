@@ -3564,48 +3564,51 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var apiChain = await TornApiCaller.chain(_userProvider.myUser.userApiKey)
         .getChainStatus;
 
-    setState(() {
-      if (apiResponse is OwnProfileModel) {
-        _apiRetries = 0;
-        _user = apiResponse;
-        _serverTime =
-            DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
-        _apiGoodData = true;
-
-        // If max values have decreased or were never initialized
-        if (_customEnergyTrigger > _user.energy.maximum ||
-            _customEnergyTrigger == 0) {
-          _customEnergyTrigger = _user.energy.maximum;
-          SharedPreferencesModel()
-              .setEnergyNotificationValue(_customEnergyTrigger);
-        }
-        if (_customNerveTrigger > _user.nerve.maximum ||
-            _customNerveTrigger == 0) {
-          _customNerveTrigger = _user.nerve.maximum;
-          SharedPreferencesModel()
-              .setNerveNotificationValue(_customNerveTrigger);
-        }
-
-        if (apiChain is ChainModel) {
-          _chainModel = apiChain;
-        } else {
-          // Default to empty chain, with all parameters at 0
-          _chainModel = ChainModel();
-          _chainModel.chain = ChainDetails();
-        }
-
-        _checkIfNotificationsAreCurrent();
-      } else {
-        if (_apiGoodData && _apiRetries < 8) {
-          _apiRetries++;
-        } else {
-          _apiGoodData = false;
-          var error = apiResponse as ApiError;
-          _apiError = error.errorReason;
+    if (mounted) {
+      setState(() {
+        if (apiResponse is OwnProfileModel) {
           _apiRetries = 0;
+          _user = apiResponse;
+          _serverTime =
+              DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
+          _apiGoodData = true;
+
+          // If max values have decreased or were never initialized
+          if (_customEnergyTrigger > _user.energy.maximum ||
+              _customEnergyTrigger == 0) {
+            _customEnergyTrigger = _user.energy.maximum;
+            SharedPreferencesModel()
+                .setEnergyNotificationValue(_customEnergyTrigger);
+          }
+          if (_customNerveTrigger > _user.nerve.maximum ||
+              _customNerveTrigger == 0) {
+            _customNerveTrigger = _user.nerve.maximum;
+            SharedPreferencesModel()
+                .setNerveNotificationValue(_customNerveTrigger);
+          }
+
+          if (apiChain is ChainModel) {
+            _chainModel = apiChain;
+          } else {
+            // Default to empty chain, with all parameters at 0
+            _chainModel = ChainModel();
+            _chainModel.chain = ChainDetails();
+          }
+
+          _checkIfNotificationsAreCurrent();
+        } else {
+          if (_apiGoodData && _apiRetries < 8) {
+            _apiRetries++;
+          } else {
+            _apiGoodData = false;
+            var error = apiResponse as ApiError;
+            _apiError = error.errorReason;
+            _apiRetries = 0;
+          }
         }
-      }
-    });
+      });
+    }
+
 
     // We get education and money (with ProfileMiscModel) separately and only once per load
     // and then on onResumed
@@ -4148,15 +4151,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
-    setState(() {
-      _travelNotificationsPending = travel;
-      _energyNotificationsPending = energy;
-      _nerveNotificationsPending = nerve;
-      _lifeNotificationsPending = life;
-      _drugsNotificationsPending = drugs;
-      _medicalNotificationsPending = medical;
-      _boosterNotificationsPending = booster;
-    });
+    if (mounted) {
+      setState(() {
+        _travelNotificationsPending = travel;
+        _energyNotificationsPending = energy;
+        _nerveNotificationsPending = nerve;
+        _lifeNotificationsPending = life;
+        _drugsNotificationsPending = drugs;
+        _medicalNotificationsPending = medical;
+        _boosterNotificationsPending = booster;
+      });
+    }
   }
 
   Future<void> _cancelNotifications(
