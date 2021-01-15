@@ -4076,7 +4076,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       "$channelTitle ${modifier.channelIdModifier}",
-      channelSubtitle,
+      "$channelSubtitle ${modifier.channelIdModifier}",
       channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,

@@ -45,9 +45,11 @@ export const alertsGroup = {
 
 async function sendNotificationForProfile(subscriber: any): Promise<any> {
   const promises: Promise<any>[] = [];
-  const userStats = await getUsersStat(subscriber.apiKey);
   
   try {
+
+    const userStats = await getUsersStat(subscriber.apiKey);
+
     if (!userStats.error) {
       if (subscriber.energyNotification)
         promises.push(sendEnergyNotification(userStats, subscriber));
@@ -65,14 +67,14 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
         promises.push(sendMessagesNotification(userStats, subscriber));
       if (subscriber.eventsNotification)
         promises.push(sendEventsNotification(userStats, subscriber));
+
+      await Promise.all(promises);
     }
   } catch (e) {
     console.log("ERROR ALERTS");
     console.log(subscriber.uid);
     console.log(e);
   }
-
-  await Promise.all(promises);
 }
 
 // Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy
