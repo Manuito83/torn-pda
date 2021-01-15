@@ -4,7 +4,7 @@ import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-
+import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import '../main.dart';
 
 class ChainingPage extends StatefulWidget {
@@ -18,8 +18,9 @@ class _ChainingPageState extends State<ChainingPage> {
   ThemeProvider _themeProvider;
 
   int _currentPage = 0;
-
   PageController _bottomNavPageController;
+
+  bool _tacEnabled = true;
 
   @override
   void initState() {
@@ -28,9 +29,8 @@ class _ChainingPageState extends State<ChainingPage> {
     _bottomNavPageController = PageController(
       initialPage: 0,
     );
-    analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': 'chaining'});
+    analytics
+        .logEvent(name: 'section_changed', parameters: {'section': 'chaining'});
   }
 
   @override
@@ -45,6 +45,9 @@ class _ChainingPageState extends State<ChainingPage> {
             userKey: _myCurrentKey,
           ),
           AttacksPage(
+            userKey: _myCurrentKey,
+          ),
+          TacPage(
             userKey: _myCurrentKey,
           ),
         ],
@@ -107,6 +110,24 @@ class _ChainingPageState extends State<ChainingPage> {
               ),
             ),
           ),
+          if (_tacEnabled)
+            Expanded(
+              child: Container(
+                color: _currentPage == 2
+                    ? _themeProvider.navSelected
+                    : Colors.transparent,
+                child: FlatButton(
+                  child: Text('TAC'),
+                  onPressed: () {
+                    setState(() {
+                      _onSelectedPage(page: 2);
+                    });
+                  },
+                ),
+              ),
+            )
+          else
+            SizedBox.shrink(),
         ],
       ),
     );
