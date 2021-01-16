@@ -63,6 +63,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts drugs")) {
     notificationIcon = "notification_drugs";
     notificationColor = Colors.pink;
+    onTapPayload += 'drugs';
     channelId = 'Alerts drugs';
     channelName = 'Alerts drugs';
     channelDescription = 'Automatic alerts for drugs';
