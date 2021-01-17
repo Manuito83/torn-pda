@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,6 +27,8 @@ class _TacCardState extends State<TacCard> {
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
+
+  bool _addButtonActive = true;
 
   final decimalFormat = new NumberFormat("#,##0", "en_US");
 
@@ -226,45 +227,64 @@ class _TacCardState extends State<TacCard> {
       return IconButton(
         padding: EdgeInsets.all(0.0),
         iconSize: 20,
-        icon: Icon(
-          Icons.add_circle_outline,
-          color: Colors.green,
-        ),
-        onPressed: () async {
-          dynamic attacksFull = await targetsProvider.getAttacksFull();
-          AddTargetResult tryAddTarget = await targetsProvider.addTarget(
-            targetId: _target.id,
-            attacksFull: attacksFull,
-          );
-          if (tryAddTarget.success) {
-            BotToast.showText(
-              text: HtmlParser.fix(
-                  'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
-                  'main targets list in Torn PDA!'),
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
+        icon: _addButtonActive
+            ? Icon(
+                Icons.add_circle_outline,
+                color: Colors.green,
+              )
+            : SizedBox(
+                height: 15,
+                width: 15,
+                child: CircularProgressIndicator(),
               ),
-              contentColor: Colors.green[700],
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
-            // Update the button
-            setState(() {});
-          } else if (!tryAddTarget.success) {
-            BotToast.showText(
-              text: HtmlParser.fix(
-                  'Error adding ${_target.id}. ${tryAddTarget.errorReason}'),
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.red[900],
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
-          }
-        },
+        onPressed: _addButtonActive
+            ? () async {
+
+                setState(() {
+                  _addButtonActive = false;
+                });
+
+                // There is no need to pass attackFull because it's very improbable
+                // that this target is in our previous attacks. Respect won't be calculated,
+                // but it will be much faster
+                AddTargetResult tryAddTarget = await targetsProvider.addTarget(
+                  targetId: _target.id,
+                  attacksFull: null,
+                );
+                if (tryAddTarget.success) {
+                  BotToast.showText(
+                    text: HtmlParser.fix(
+                        'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
+                        'main targets list in Torn PDA!'),
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[700],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                  // Update the button
+                  if (mounted) {
+                    setState(() {
+                      _addButtonActive = true;
+                    });
+                  }
+                } else if (!tryAddTarget.success) {
+                  BotToast.showText(
+                    text: HtmlParser.fix(
+                        'Error adding ${_target.id}. ${tryAddTarget.errorReason}'),
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.red[900],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                }
+              }
+            : null,
       );
     }
   }
