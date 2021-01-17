@@ -15,7 +15,6 @@ class SharedPreferencesModel {
   final String _kChainWatcherSound = "pda_chainWatcherSound";
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kYataTargetsEnabled = "pda_yataTargetsEnabled";
-  final String _kTACEnabled = "pda_tacEnabled";
   final String _kAttacksSort = "pda_attacksSort";
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
@@ -88,6 +87,11 @@ class SharedPreferencesModel {
   final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
+  // Torn Attack Central
+  // NOTE: [_kTACEnabled] adds an extra tab in Chaining
+  final String _kTACEnabled = "pda_tacEnabled";
+  final String _kTACFilters = "pda_tacFilters";
+  final String _kTACTargets = "pda_tacTargets";
 
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
@@ -222,16 +226,6 @@ class SharedPreferencesModel {
   Future<bool> setYataTargetsEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kYataTargetsEnabled, value);
-  }
-
-  Future<bool> getTACEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTACEnabled) ?? true;
-  }
-
-  Future<bool> setTACEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTACEnabled, value);
   }
 
   /// ----------------------------
@@ -1028,6 +1022,39 @@ class SharedPreferencesModel {
   Future<bool> setHighlightColor(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kHighlightColor, value);
+  }
+
+  /// -------------------
+  /// TORN ATTACK CENTRAL
+  /// -------------------
+  Future<bool> getTACEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTACEnabled) ?? true;
+  }
+
+  Future<bool> setTACEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTACEnabled, value);
+  }
+
+  Future<String> getTACFilters() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTACFilters) ?? "";
+  }
+
+  Future<bool> setTACFilters(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTACFilters, value);
+  }
+
+  Future<String> getTACTargets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTACTargets) ?? "";
+  }
+
+  Future<bool> setTACTargets(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTACTargets, value);
   }
 
 
