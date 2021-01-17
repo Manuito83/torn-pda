@@ -111,7 +111,7 @@ class _TacCardState extends State<TacCard> {
                 children: <Widget>[
                   Text(
                     _target.optimal
-                        ? 'Stats: ${decimalFormat.format(_target.estimatedStats)}'
+                        ? 'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}'
                         : 'Stats (est.): ${_target.battleStats}',
                     style: TextStyle(fontSize: 13),
                   ),
