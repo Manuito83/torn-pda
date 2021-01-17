@@ -376,6 +376,15 @@ class _TacPageState extends State<TacPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Checkbox(
+              value: _tacFilters.useOptimal,
+              onChanged: (value) {
+                setState(() {
+                  _tacFilters.useOptimal = value;
+                });
+                _saveFilters();
+              },
+            ),
             Text(
               "OPTIMAL TARGETS",
               style: TextStyle(fontSize: 12),
@@ -399,62 +408,44 @@ class _TacPageState extends State<TacPage> {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 35),
+        SizedBox(
+          width: 200,
           child: SizedBox(
-            width: 200,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  right: 145,
-                  child: Checkbox(
-                      value: _tacFilters.useOptimal,
-                      onChanged: (value) {
-                        setState(() {
-                          _tacFilters.useOptimal = value;
-                        });
-                        _saveFilters();
-                      }),
-                ),
-                SizedBox(
-                  width: 140,
-                  child: Slider(
-                    value: _tacFilters.optimalLevel.toDouble(),
-                    min: 1,
-                    max: 5,
-                    label: difficultyLabel,
-                    divisions: 4,
-                    onChanged: _tacFilters.useOptimal
-                        ? (double value) {
-                            setState(() {
-                              switch (value.round()) {
-                                case 1:
-                                  difficultyLabel = "Easy";
-                                  break;
-                                case 2:
-                                  difficultyLabel = "Easy-Moderate";
-                                  break;
-                                case 3:
-                                  difficultyLabel = "Moderate";
-                                  break;
-                                case 4:
-                                  difficultyLabel = "Moderate-Hard";
-                                  break;
-                                case 5:
-                                  difficultyLabel = "Hard";
-                                  break;
-                              }
-                              _tacFilters.optimalLevel = value.round();
-                            });
-                          }
-                        : null,
-                    onChangeEnd: (double newValue) {
-                      _saveFilters();
-                    },
-                  ),
-                ),
-              ],
+            width: 150,
+            height: 20,
+            child: Slider(
+              value: _tacFilters.optimalLevel.toDouble(),
+              min: 1,
+              max: 5,
+              label: difficultyLabel,
+              divisions: 4,
+              onChanged: _tacFilters.useOptimal
+                  ? (double value) {
+                      setState(() {
+                        switch (value.round()) {
+                          case 1:
+                            difficultyLabel = "Easy";
+                            break;
+                          case 2:
+                            difficultyLabel = "Easy-Moderate";
+                            break;
+                          case 3:
+                            difficultyLabel = "Moderate";
+                            break;
+                          case 4:
+                            difficultyLabel = "Moderate-Hard";
+                            break;
+                          case 5:
+                            difficultyLabel = "Hard";
+                            break;
+                        }
+                        _tacFilters.optimalLevel = value.round();
+                      });
+                    }
+                  : null,
+              onChangeEnd: (double newValue) {
+                _saveFilters();
+              },
             ),
           ),
         ),
