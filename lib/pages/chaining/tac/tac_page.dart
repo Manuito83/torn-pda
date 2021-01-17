@@ -635,7 +635,6 @@ class _TacPageState extends State<TacPage> {
             });
 
             if (model.targets.length > 0) {
-              _showOptimalWarning = false;
               var time = 3;
 
               var resultString = 'Retrieved ${_tacModel.targets.length} '
