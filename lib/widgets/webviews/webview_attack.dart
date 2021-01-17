@@ -28,10 +28,10 @@ class TornWebViewAttack extends StatefulWidget {
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
   TornWebViewAttack({
-    this.attackIdList = const [],
-    this.attackNameList = const [],
-    this.attackNotesList = const [],
-    this.attackNotesColorList = const [],
+    @required this.attackIdList,
+    @required this.attackNameList,
+    @required this.attackNotesList,
+    @required this.attackNotesColorList,
     this.attacksCallback,
     @required this.userKey,
   });
@@ -206,7 +206,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
-                widget.attacksCallback(_attackedIds);
+                if (widget.attacksCallback != null) {
+                  widget.attacksCallback(_attackedIds);
+                }
                 _chainStatusProvider.watcherAssignParent(
                     newParent: ChainTimerParent.targets);
                 Navigator.pop(context);
