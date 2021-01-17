@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class UserDetailsProvider extends ChangeNotifier {
   OwnProfileModel myUser;
+  OwnProfileMiscModel myUserMisc;
 
   void setUserDetails({@required OwnProfileModel userDetails}) {
     myUser = userDetails;
@@ -38,6 +40,15 @@ class UserDetailsProvider extends ChangeNotifier {
           myUser = apiVerify;
           SharedPreferencesModel().setOwnDetails(ownProfileModelToJson(myUser));
 
+          // Get misc details for other uses. No need to await. No Shared Prefs.
+          TornApiCaller.ownProfileMisc(myUser.userApiKey)
+              .getOwnProfileMisc
+              .then((value) {
+            if (value is OwnProfileMiscModel) {
+              myUserMisc = value;
+            }
+          });
+
           // We delete this deprecated ApiKey from version 1.2.0 since we won't
           // need to use it in the future again
           SharedPreferencesModel().setApiKey('');
@@ -57,8 +68,7 @@ class UserDetailsProvider extends ChangeNotifier {
   Future _tryWithDeprecatedSave() async {
     var oldKeySave = await SharedPreferencesModel().getApiKey();
     if (oldKeySave != '') {
-      var apiVerify =
-          await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
+      var apiVerify = await TornApiCaller.ownProfile(oldKeySave).getOwnProfile;
       if (apiVerify is OwnProfileModel) {
         apiVerify.userApiKey = oldKeySave;
         apiVerify.userApiKeyValid = true;
