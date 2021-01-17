@@ -15,6 +15,7 @@ class SharedPreferencesModel {
   final String _kChainWatcherSound = "pda_chainWatcherSound";
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kYataTargetsEnabled = "pda_yataTargetsEnabled";
+  final String _kTACEnabled = "pda_tacEnabled";
   final String _kAttacksSort = "pda_attacksSort";
   final String _kFriendsList = "pda_friendsList";
   final String _kFriendsSort = "pda_friendsSort";
@@ -221,6 +222,16 @@ class SharedPreferencesModel {
   Future<bool> setYataTargetsEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kYataTargetsEnabled, value);
+  }
+
+  Future<bool> getTACEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTACEnabled) ?? true;
+  }
+
+  Future<bool> setTACEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTACEnabled, value);
   }
 
   /// ----------------------------
