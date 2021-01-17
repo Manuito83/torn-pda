@@ -706,16 +706,57 @@ class _TacPageState extends State<TacPage> {
   _optimalExplanationDialog() {
     return AlertDialog(
       title: Text("Optimal targets"),
-      content: Text(
-        "The targets suggested here are based on your battle stats. This attempts to "
-        "show targets within range that should provide high respect. Please note "
-        "that these targets might be active players and some could be too hard. "
-        "We recommend bringing pepper spray and check them out ahead of chain."
+      content: EasyRichText(
+        "This feature requires premium access to TAC."
         "\n\n"
-        "This slider will adjust the difficulty of the shown targets from easy to hard. "
-        "Likewise if you are under Xanax cooldown. If you want to maximize respect-gain "
-        "with harder targets, go right.",
-        style: TextStyle(fontSize: 13),
+        "Tap here or contact Fr00t for more info",
+        defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+        patternList: [
+          EasyRichTextPattern(
+            targetString: 'here',
+            recognizer: TapGestureRecognizer()
+              ..onTap = () async {
+                Navigator.of(context).pop();
+                var url = 'https://tornattackcentral.eu/premium.php';
+                if (_settingsProvider.currentBrowser ==
+                    BrowserSetting.external) {
+                  if (await canLaunch(url)) {
+                    await launch(url, forceSafariVC: false);
+                  }
+                } else {
+                  _settingsProvider.useQuickBrowser
+                      ? openBrowserDialog(context, url)
+                      : _openTornBrowser(url);
+                }
+              },
+            style: TextStyle(
+              decoration: TextDecoration.underline,
+              color: Colors.blue,
+            ),
+          ),
+          EasyRichTextPattern(
+            targetString: 'Fr00t',
+            recognizer: TapGestureRecognizer()
+              ..onTap = () async {
+                Navigator.of(context).pop();
+                var url = 'https://www.torn.com/profiles.php?XID=2518990';
+                if (_settingsProvider.currentBrowser ==
+                    BrowserSetting.external) {
+                  if (await canLaunch(url)) {
+                    await launch(url, forceSafariVC: false);
+                  }
+                } else {
+                  _settingsProvider.useQuickBrowser
+                      ? openBrowserDialog(context, url)
+                      : _openTornBrowser(url);
+                }
+              },
+            style: TextStyle(
+              decoration: TextDecoration.underline,
+              color: Colors.blue,
+            ),
+          ),
+        ],
       ),
       actions: [
         Padding(
@@ -755,6 +796,7 @@ class _TacPageState extends State<TacPage> {
             targetString: 'website',
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
+                Navigator.of(context).pop();
                 var url = 'https://tornattackcentral.eu';
                 if (_settingsProvider.currentBrowser ==
                     BrowserSetting.external) {
@@ -774,6 +816,7 @@ class _TacPageState extends State<TacPage> {
             targetString: 'Fr00t',
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
+                Navigator.of(context).pop();
                 var url = 'https://www.torn.com/profiles.php?XID=2518990';
                 if (_settingsProvider.currentBrowser ==
                     BrowserSetting.external) {
@@ -793,6 +836,7 @@ class _TacPageState extends State<TacPage> {
             targetString: 'forum',
             recognizer: TapGestureRecognizer()
               ..onTap = () async {
+                Navigator.of(context).pop();
                 var url =
                     'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
                 if (_settingsProvider.currentBrowser ==
