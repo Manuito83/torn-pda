@@ -3370,8 +3370,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // There is no education on going... why? All done, or forgotten?
     else {
       // If the number of courses studied and available are not the same, we have forgotten
+      // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
       if (_miscModel.educationCompleted.length <
-          _tornEducationModel.education.length) {
+          _tornEducationModel.education.length - 1) {
         showMisc = true;
         educationActive = true;
         educationWidget = Row(
