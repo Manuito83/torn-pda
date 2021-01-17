@@ -12,6 +12,7 @@ import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
@@ -22,8 +23,9 @@ enum ApiType {
 
 enum ApiSelection {
   travel,
-  ownProfile,
-  ownProfileMisc,
+  ownBasic,
+  ownExtended,
+  ownMisc,
   target,
   attacks,
   attacksFull,
@@ -90,8 +92,9 @@ class TornApiCaller {
   String queryId;
 
   TornApiCaller.travel(this.apiKey);
-  TornApiCaller.ownProfile(this.apiKey);
-  TornApiCaller.ownProfileMisc(this.apiKey);
+  TornApiCaller.ownBasic(this.apiKey);
+  TornApiCaller.ownExtended(this.apiKey);
+  TornApiCaller.ownMisc(this.apiKey);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
   TornApiCaller.chain(this.apiKey);
@@ -114,27 +117,40 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getOwnProfile async {
+  Future<dynamic> get getProfileBasic async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownProfile)
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownBasic)
         .then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
-      return OwnProfileModel.fromJson(json.decode(apiResult.body));
+      return OwnProfileBasic.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
   }
 
-  Future<dynamic> get getOwnProfileMisc async {
+  Future<dynamic> get getProfileExtended async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownProfileMisc)
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended)
         .then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
-      return OwnProfileMiscModel.fromJson(json.decode(apiResult.body));
+      return OwnProfileExtended.fromJson(json.decode(apiResult.body));
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getProfileMisc async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownMisc)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      return OwnProfileMisc.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -301,11 +317,14 @@ class TornApiCaller {
       case ApiSelection.travel:
         url += '?selections=travel';
         break;
-      case ApiSelection.ownProfile:
+      case ApiSelection.ownBasic:
+        url += '?selections=profile,battlestats';
+        break;
+      case ApiSelection.ownExtended:
         url += '?selections=profile,bars,networth,cooldowns,events,travel,icons,'
             'money,education,messages';
         break;
-      case ApiSelection.ownProfileMisc:
+      case ApiSelection.ownMisc:
         url += '?selections=money,education,workstats,battlestats';
         break;
       case ApiSelection.target:

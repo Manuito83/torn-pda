@@ -7,7 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -34,7 +34,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _apiError = false;
   String _errorReason = '';
   bool _apiIsLoading = false;
-  OwnProfileModel _userProfile;
+  OwnProfileBasic _userProfile;
 
   Future _preferencesRestored;
 
@@ -1261,8 +1261,8 @@ class _SettingsPageState extends State<SettingsPage> {
   void _getApiDetails({@required bool userTriggered}) async {
     try {
       dynamic myProfile =
-          await TornApiCaller.ownProfile(_myCurrentKey).getOwnProfile;
-      if (myProfile is OwnProfileModel) {
+          await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
+      if (myProfile is OwnProfileBasic) {
         setState(() {
           _apiIsLoading = false;
           _userToLoad = true;
@@ -1317,10 +1317,10 @@ class _SettingsPageState extends State<SettingsPage> {
       });
     });
 
-    if (_userProvider.myUser.userApiKeyValid) {
+    if (_userProvider.basic.userApiKeyValid) {
       setState(() {
-        _apiKeyInputController.text = _userProvider.myUser.userApiKey;
-        _myCurrentKey = _userProvider.myUser.userApiKey;
+        _apiKeyInputController.text = _userProvider.basic.userApiKey;
+        _myCurrentKey = _userProvider.basic.userApiKey;
         _apiIsLoading = true;
       });
       _getApiDetails(userTriggered: false);

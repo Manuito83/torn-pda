@@ -97,7 +97,7 @@ class _AwardCardState extends State<AwardCard> {
                     // If the award is pinned, try to unpin
                     if (_pinProvider.pinnedNames.contains(award.name)) {
                       var result = await _pinProvider.removePinned(
-                        _userProvider.myUser.userApiKey,
+                        _userProvider.basic.userApiKey,
                         award,
                       );
 
@@ -123,7 +123,7 @@ class _AwardCardState extends State<AwardCard> {
                         resultColor = Colors.red[700];
                       } else {
                         var result = await _pinProvider.addPinned(
-                          _userProvider.myUser.userApiKey,
+                          _userProvider.basic.userApiKey,
                           award,
                         );
 

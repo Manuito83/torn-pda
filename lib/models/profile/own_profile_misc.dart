@@ -6,12 +6,12 @@ import 'dart:convert';
 
 /// This exists because if we mix some requests in Torn (e.g.: money and networth), there is
 /// some data that does not show up. So this complements.
-OwnProfileMiscModel ownProfileMiscFromJson(String str) => OwnProfileMiscModel.fromJson(json.decode(str));
+OwnProfileMisc ownProfileMiscFromJson(String str) => OwnProfileMisc.fromJson(json.decode(str));
 
-String ownProfileMiscToJson(OwnProfileMiscModel data) => json.encode(data.toJson());
+String ownProfileMiscToJson(OwnProfileMisc data) => json.encode(data.toJson());
 
-class OwnProfileMiscModel {
-  OwnProfileMiscModel({
+class OwnProfileMisc {
+  OwnProfileMisc({
     this.points,
     this.caymanBank,
     this.vaultAmount,
@@ -65,7 +65,7 @@ class OwnProfileMiscModel {
   List<String> speedInfo;
   List<String> dexterityInfo;
 
-  factory OwnProfileMiscModel.fromJson(Map<String, dynamic> json) => OwnProfileMiscModel(
+  factory OwnProfileMisc.fromJson(Map<String, dynamic> json) => OwnProfileMisc(
     points: json["points"] == null ? null : json["points"],
     caymanBank: json["cayman_bank"] == null ? null : json["cayman_bank"],
     vaultAmount: json["vault_amount"] == null ? null : json["vault_amount"],

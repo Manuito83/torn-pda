@@ -43,6 +43,7 @@ class _TacPageState extends State<TacPage> {
   bool _getButtonActive = true;
 
   var difficultyLabel = "";
+  var _incorrectPremium = false;
 
   var _statsMap = {
     0: "Under 2k",
@@ -135,7 +136,7 @@ class _TacPageState extends State<TacPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    _tacModel.incorrectPremium
+                    _incorrectPremium
                         ? Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 40),
                             child: Text(
@@ -597,7 +598,7 @@ class _TacPageState extends State<TacPage> {
 
     var url = 'https://tornattackcentral.eu/pdaintegration2.php?'
         'password=${TacConfig.password}'
-        '&userid=${_userProvider.myUser.playerId}'
+        '&userid=${_userProvider.basic.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
         '&optimal=$optimal'
         '&rank=${_tacFilters.rank}'
@@ -605,10 +606,10 @@ class _TacPageState extends State<TacPage> {
         '&minlevel=${_tacFilters.minLevel}'
         '&maxlevel=${_tacFilters.maxLevel}'
         '&maxlife=${_tacFilters.maxLife}'
-        '&strength=${_userProvider.myUserMisc.strength}'
-        '&speed=${_userProvider.myUserMisc.speed}'
-        '&dexterity=${_userProvider.myUserMisc.dexterity}'
-        '&defense=${_userProvider.myUserMisc.defense}';
+        '&strength=${_userProvider.basic.strength}'
+        '&speed=${_userProvider.basic.speed}'
+        '&dexterity=${_userProvider.basic.dexterity}'
+        '&defense=${_userProvider.basic.defense}';
 
     try {
       var response = await http.get(
@@ -637,12 +638,13 @@ class _TacPageState extends State<TacPage> {
             if (model.targets.length > 0) {
               var time = 3;
 
-              var resultString = 'Retrieved ${_tacModel.targets.length} '
+              var resultString = 'Retrieved ${model.targets.length} '
                   'targets from Torn Attack Central!';
 
               // Needs to assign the premium check, as it does not come from API
+              // We save it in the model to save in preferences
               model.incorrectPremium = false;
-              if (_tacModel.premium == 0 && _tacFilters.useOptimal) {
+              if (model.premium == 0 && _tacFilters.useOptimal) {
                 model.incorrectPremium = true;
                 resultString += '\n\nNOTE: no optimal targets retrieved '
                     'as your account is not premium!';
@@ -655,6 +657,7 @@ class _TacPageState extends State<TacPage> {
                 time: time,
               );
 
+              _incorrectPremium = model.incorrectPremium;
               _tacModel = model;
               _saveTargets();
             } else {
@@ -859,7 +862,12 @@ class _TacPageState extends State<TacPage> {
 
     var savedModel = await SharedPreferencesModel().getTACTargets();
     if (savedModel != "") {
-      _tacModel = tacModelFromJson(savedModel);
+      setState(() {
+        if (_tacModel.incorrectPremium) {
+          _incorrectPremium = true;
+        }
+        _tacModel = tacModelFromJson(savedModel);
+      });
     }
   }
 }

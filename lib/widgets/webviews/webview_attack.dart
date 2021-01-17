@@ -177,7 +177,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     var senderColor =
         'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
     String hlMap =
-        '[ { name: "${_userProv.myUser.name}", highlight: "$background", sender: "$senderColor" } ]';
+        '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       _webViewController.evaluateJavascript(
@@ -426,7 +426,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 for (var i = 0; i < 3; i++) {
                   // Get the status of our next target
                   var nextTarget = await TornApiCaller.target(
-                          _userProv.myUser.userApiKey,
+                          _userProv.basic.userApiKey,
                           widget.attackIdList[_attackNumber + 1])
                       .getTarget;
 
@@ -441,8 +441,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     // place, we can attack him)
                     else if (nextTarget.status.color == "blue") {
                       var user = await TornApiCaller.target(
-                              _userProv.myUser.userApiKey,
-                              _userProv.myUser.playerId.toString())
+                              _userProv.basic.userApiKey,
+                              _userProv.basic.playerId.toString())
                           .getTarget;
                       if (user is TargetModel) {
                         if (user.status.description !=

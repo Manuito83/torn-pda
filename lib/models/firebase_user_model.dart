@@ -1,6 +1,6 @@
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 
-class FirebaseUserModel extends OwnProfileModel {
+class FirebaseUserModel extends OwnProfileExtended {
   String token;
   String uid;
   bool travelNotification = false;
@@ -19,7 +19,7 @@ class FirebaseUserModel extends OwnProfileModel {
 
   FirebaseUserModel();
 
-  FirebaseUserModel.fromProfileModel(OwnProfileModel model) {
+  FirebaseUserModel.fromProfileModel(OwnProfileExtended model) {
     playerId = model.playerId;
     level = model.level;
     status = model.status;

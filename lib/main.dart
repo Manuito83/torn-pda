@@ -10,7 +10,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -80,26 +80,26 @@ Future<void> main() async {
         ChangeNotifierProvider<UserDetailsProvider>(
             create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
-          create: (context) => TargetsProvider(OwnProfileModel()),
+          create: (context) => TargetsProvider(OwnProfileBasic()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   TargetsProvider targetsProvider) =>
-              TargetsProvider(userProvider.myUser),
+              TargetsProvider(userProvider.basic),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
-          create: (context) => AttacksProvider(OwnProfileModel()),
+          create: (context) => AttacksProvider(OwnProfileBasic()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   AttacksProvider attacksProvider) =>
-              AttacksProvider(userProvider.myUser),
+              AttacksProvider(userProvider.basic),
         ),
         ChangeNotifierProvider<ThemeProvider>(
             create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(
             create: (context) => SettingsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
-          create: (context) => FriendsProvider(OwnProfileModel()),
+          create: (context) => FriendsProvider(OwnProfileBasic()),
           update: (BuildContext context, UserDetailsProvider userProvider,
                   FriendsProvider friendsProvider) =>
-              FriendsProvider(userProvider.myUser),
+              FriendsProvider(userProvider.basic),
         ),
         ChangeNotifierProvider<ChainStatusProvider>(
             create: (context) => ChainStatusProvider()),

@@ -328,7 +328,7 @@ class _AwardsPageState extends State<AwardsPage> {
                     GestureDetector(
                       onTap: () async {
                         var result = await _pinProvider.removePinned(
-                          _userProvider.myUser.userApiKey,
+                          _userProvider.basic.userApiKey,
                           pinned,
                         );
 
@@ -864,7 +864,7 @@ class _AwardsPageState extends State<AwardsPage> {
   Future _fetchYataAndPopulate() async {
     await _restorePrefs();
 
-    var reply = await YataComm.getAwards(_userProvider.myUser.userApiKey);
+    var reply = await YataComm.getAwards(_userProvider.basic.userApiKey);
     if (reply is YataError) {
       _errorReason = reply.reason;
     } else {

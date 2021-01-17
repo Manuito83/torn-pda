@@ -11,7 +11,7 @@ String tacModelToJson(TacInModel data) => json.encode(data.toJson());
 class TacInModel {
   TacInModel({
     // Logic
-    this.incorrectPremium, // If requested optimal and user is not premium
+    this.incorrectPremium = false, // If requested optimal and user is not premium
 
     this.premium,
     this.targets,

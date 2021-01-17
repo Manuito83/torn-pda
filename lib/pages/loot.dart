@@ -697,7 +697,7 @@ class _LootPageState extends State<LootPage> {
       for (var id in _npcIds) {
         // Get each target from our static list from Torn
         var tornTarget = await TornApiCaller.target(
-          _userProvider.myUser.userApiKey,
+          _userProvider.basic.userApiKey,
           id.toString(),
         ).getTarget;
 

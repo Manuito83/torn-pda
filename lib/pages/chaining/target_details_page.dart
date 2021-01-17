@@ -106,7 +106,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                     _returnStatus(),
                     SizedBox(height: 20),
                     Text('Awards: ${widget.target.awards} '
-                        '(you have ${_userDetails.myUser.awards})'),
+                        '(you have ${_userDetails.basic.awards})'),
                     SizedBox(height: 20),
                     Text('Donator: ${widget.target.donator == 0 ? 'NO' : 'YES'}'),
                     Text('Friends/Enemies: ${widget.target.friends}'

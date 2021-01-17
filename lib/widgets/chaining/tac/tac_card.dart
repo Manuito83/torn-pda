@@ -8,7 +8,6 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
 import 'package:torn_pda/widgets/webviews/webview_attack.dart';
@@ -27,7 +26,6 @@ class _TacCardState extends State<TacCard> {
   TacTarget _target;
   List<TacTarget> _targetsList;
 
-  ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
 
@@ -44,7 +42,6 @@ class _TacCardState extends State<TacCard> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       child: Card(
@@ -172,7 +169,7 @@ class _TacCardState extends State<TacCard> {
                     attackNotesList: attackNotes,
                     attackNotesColorList: attacksNotesColor,
                     //attacksCallback: _updateSeveralTargets,
-                    userKey: _userProvider.myUser.userApiKey,
+                    userKey: _userProvider.basic.userApiKey,
                   ),
                 ),
               );

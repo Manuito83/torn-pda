@@ -106,7 +106,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                     _returnStatus(),
                     SizedBox(height: 20),
                     Text('Awards: ${widget.friend.awards} '
-                        '(you have ${_userDetails.myUser.awards})'),
+                        '(you have ${_userDetails.basic.awards})'),
                     SizedBox(height: 20),
                     Text('Donator: ${widget.friend.donator == 0 ? 'NO' : 'YES'}'),
                     Text('Friends/Enemies: ${widget.friend.friends}'

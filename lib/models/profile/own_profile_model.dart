@@ -4,16 +4,12 @@
 
 import 'dart:convert';
 
-OwnProfileModel ownProfileModelFromJson(String str) => OwnProfileModel.fromJson(json.decode(str));
+OwnProfileExtended ownProfileExtendedFromJson(String str) => OwnProfileExtended.fromJson(json.decode(str));
 
-String ownProfileModelToJson(OwnProfileModel data) => json.encode(data.toJson());
+String ownProfileExtendedToJson(OwnProfileExtended data) => json.encode(data.toJson());
 
-class OwnProfileModel {
-  OwnProfileModel({
-    // For state management
-    this.userApiKey = '',
-    this.userApiKeyValid = false,
-
+class OwnProfileExtended {
+  OwnProfileExtended({
     this.rank,
     this.level,
     this.gender,
@@ -50,10 +46,6 @@ class OwnProfileModel {
     this.icons,
   });
 
-  // For state management
-  String userApiKey;
-  bool userApiKeyValid;
-
   String rank;
   int level;
   String gender;
@@ -89,10 +81,7 @@ class OwnProfileModel {
   Travel travel;
   TornIcons icons;
 
-  factory OwnProfileModel.fromJson(Map<String, dynamic> json) => OwnProfileModel(
-    userApiKey: json["userApiKey"] == null ? '' : json["userApiKey"],
-    userApiKeyValid: json["userApiKeyValid"] == null ? false : json["userApiKeyValid"],
-
+  factory OwnProfileExtended.fromJson(Map<String, dynamic> json) => OwnProfileExtended(
     rank: json["rank"] == null ? null : json["rank"],
     level: json["level"] == null ? null : json["level"],
     gender: json["gender"] == null ? null : json["gender"],
@@ -130,9 +119,6 @@ class OwnProfileModel {
   );
 
   Map<String, dynamic> toJson() => {
-    "userApiKey": userApiKey == null ? null : userApiKey,
-    "userApiKeyValid": userApiKeyValid == null ? null : userApiKeyValid,
-
     "rank": rank == null ? null : rank,
     "level": level == null ? null : level,
     "gender": gender == null ? null : gender,

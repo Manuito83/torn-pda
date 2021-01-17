@@ -331,7 +331,7 @@ class _TargetCardState extends State<TargetCard> {
                     attackNotesList: attackNotes,
                     attackNotesColorList: attacksNotesColor,
                     attacksCallback: _updateSeveralTargets,
-                    userKey: _userProvider.myUser.userApiKey,
+                    userKey: _userProvider.basic.userApiKey,
                   ),
                 ),
               );
@@ -371,12 +371,12 @@ class _TargetCardState extends State<TargetCard> {
     if (_target.hasFaction) {
       Color borderColor = Colors.transparent;
       Color iconColor = _themeProvider.mainText;
-      if (_target.faction.factionId == _userProvider.myUser.faction.factionId) {
+      if (_target.faction.factionId == _userProvider.basic.faction.factionId) {
         borderColor = iconColor = Colors.green[500];
       }
 
       void showFactionToast() {
-        if (_target.faction.factionId == _userProvider.myUser.faction.factionId) {
+        if (_target.faction.factionId == _userProvider.basic.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_target.name} belongs to your same faction "
                 "(${_target.faction.factionName}) as "

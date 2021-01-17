@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
 final firestore = _FirestoreHelper();
 
@@ -18,7 +18,7 @@ class _FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<void> uploadUsersProfileDetail(OwnProfileModel profile, {bool forceUpdate = false}) async {
+  Future<void> uploadUsersProfileDetail(OwnProfileBasic profile, {bool forceUpdate = false}) async {
     if (_alreadyUploaded && !forceUpdate) return;
     _alreadyUploaded = true;
     _firebaseUserModel = FirebaseUserModel();

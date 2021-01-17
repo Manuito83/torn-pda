@@ -1162,7 +1162,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   Future _restorePreferences() async {
     var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
-    _myCurrentKey = userDetails.myUser.userApiKey;
+    _myCurrentKey = userDetails.basic.userApiKey;
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }

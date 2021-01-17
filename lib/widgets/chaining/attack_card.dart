@@ -394,12 +394,12 @@ class _AttackCardState extends State<AttackCard> {
 
     Color borderColor = Colors.transparent;
     Color iconColor = _themeProvider.mainText;
-    if (factionId == _userProvider.myUser.faction.factionId) {
+    if (factionId == _userProvider.basic.faction.factionId) {
       borderColor = iconColor = Colors.green[500];
     }
 
     void showFactionToast() {
-      if (factionId == _userProvider.myUser.faction.factionId) {
+      if (factionId == _userProvider.basic.faction.factionId) {
         BotToast.showText(
           text: HtmlParser.fix(
               "${_attack.targetName} belongs to your same faction ($factionName)"),
