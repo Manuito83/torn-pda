@@ -10,19 +10,27 @@ String tacModelToJson(TacInModel data) => json.encode(data.toJson());
 
 class TacInModel {
   TacInModel({
+    // Logic
+    this.incorrectPremium, // If requested optimal and user is not premium
+
     this.premium,
     this.targets,
   });
 
+  bool incorrectPremium;
+
   int premium;
   Map<String, Target> targets;
 
+
   factory TacInModel.fromJson(Map<String, dynamic> json) => TacInModel(
+    incorrectPremium: json["incorrectPremium"] == null ? null : json["incorrectPremium"],
     premium: json["premium"] == null ? null : json["premium"],
     targets: json["targets"] == null ? null : Map.from(json["targets"]).map((k, v) => MapEntry<String, Target>(k, Target.fromJson(v))),
   );
 
   Map<String, dynamic> toJson() => {
+    "incorrectPremium": incorrectPremium == null ? null : incorrectPremium,
     "premium": premium == null ? null : premium,
     "targets": targets == null ? null : Map.from(targets).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
   };
@@ -49,6 +57,7 @@ class Target {
   String rank;
 
   factory Target.fromJson(Map<String, dynamic> json) => Target(
+    optimal: json["optimal"] == null ? null : json["optimal"],
     username: json["username"] == null ? null : json["username"],
     userlevel: json["userlevel"] == null ? null : json["userlevel"],
     estimatedstats: json["estimatedstats"] == null ? null : json["estimatedstats"],
@@ -57,6 +66,7 @@ class Target {
   );
 
   Map<String, dynamic> toJson() => {
+    "optimal": optimal == null ? null : optimal,
     "username": username == null ? null : username,
     "userlevel": userlevel == null ? null : userlevel,
     "estimatedstats": estimatedstats == null ? null : estimatedstats,

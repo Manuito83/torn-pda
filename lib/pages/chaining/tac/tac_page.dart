@@ -43,7 +43,6 @@ class _TacPageState extends State<TacPage> {
   bool _getButtonActive = true;
 
   var difficultyLabel = "";
-  bool _showOptimalWarning = false;
 
   var _statsMap = {
     0: "Under 2k",
@@ -136,7 +135,7 @@ class _TacPageState extends State<TacPage> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    _showOptimalWarning
+                    _tacModel.incorrectPremium
                         ? Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 40),
                             child: Text(
@@ -171,191 +170,176 @@ class _TacPageState extends State<TacPage> {
 
   Card _filtersCard() {
     return Card(
-                    child: ExpandablePanel(
-                      //controller: _eventsExpController,
-                      header: Padding(
-                        padding: const EdgeInsets.fromLTRB(25, 10, 25, 0),
-                        child: Row(
-                          children: [
-                            Text(
-                              'SETTINGS',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+      child: ExpandablePanel(
+        //controller: _controller,
+        header: Padding(
+          padding: const EdgeInsets.fromLTRB(25, 10, 25, 0),
+          child: Row(
+            children: [
+              Text(
+                'SETTINGS',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        collapsed: Padding(
+          padding: const EdgeInsets.fromLTRB(25, 0, 25, 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Min. level: ${_tacFilters.minLevel}',
+                      style: TextStyle(fontSize: 12)),
+                  Text('Max. level: ${_tacFilters.maxLevel}',
+                      style: TextStyle(fontSize: 12)),
+                  Text('Max. life: ${_tacFilters.maxLife}',
+                      style: TextStyle(fontSize: 12)),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('Battle stats: ${_statsMap[_tacFilters.battleStats]}',
+                      style: TextStyle(fontSize: 12)),
+                  Text('${_ranksMap[_tacFilters.rank]}',
+                      style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        expanded: Padding(
+          padding: const EdgeInsets.fromLTRB(30, 0, 5, 0),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SizedBox(child: Text('Minimum level')),
+                  Row(
+                    children: [
+                      Row(
+                        children: [
+                          Text(_tacFilters.minLevel.toString()),
+                          SizedBox(
+                            width: 175,
+                            child: Slider(
+                              value: _tacFilters.minLevel.toDouble(),
+                              min: 1,
+                              max: 100,
+                              label: _tacFilters.minLevel.toString(),
+                              divisions: 99,
+                              onChanged: (double newValue) {
+                                if (newValue <= _tacFilters.maxLevel) {
+                                  setState(() {
+                                    _tacFilters.minLevel = newValue.round();
+                                  });
+                                }
+                              },
+                              onChangeEnd: (double newValue) {
+                                _saveFilters();
+                              },
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Maximum level'),
+                  Row(
+                    children: [
+                      Text(_tacFilters.maxLevel.toString()),
+                      SizedBox(
+                        width: 175,
+                        child: Slider(
+                          value: _tacFilters.maxLevel.toDouble(),
+                          min: 1,
+                          max: 100,
+                          label: _tacFilters.maxLevel.toString(),
+                          divisions: 99,
+                          onChanged: (double newValue) {
+                            if (newValue >= _tacFilters.minLevel) {
+                              setState(() {
+                                _tacFilters.maxLevel = newValue.round();
+                              });
+                            }
+                          },
+                          onChangeEnd: (double newValue) {
+                            _saveFilters();
+                          },
                         ),
                       ),
-                      collapsed: Padding(
-                        padding: const EdgeInsets.fromLTRB(25, 0, 25, 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Min. level: ${_tacFilters.minLevel}',
-                                    style: TextStyle(fontSize: 12)),
-                                Text('Max. level: ${_tacFilters.maxLevel}',
-                                    style: TextStyle(fontSize: 12)),
-                                Text('Max. life: ${_tacFilters.maxLife}',
-                                    style: TextStyle(fontSize: 12)),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                    'Battle stats: ${_statsMap[_tacFilters.battleStats]}',
-                                    style: TextStyle(fontSize: 12)),
-                                Text('${_ranksMap[_tacFilters.rank]}',
-                                    style: TextStyle(fontSize: 12)),
-                              ],
-                            ),
-                          ],
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Maximum life'),
+                  Row(
+                    children: [
+                      Text(_tacFilters.maxLife.toString()),
+                      SizedBox(
+                        width: 175,
+                        child: Slider(
+                          value: _tacFilters.maxLife.toDouble(),
+                          min: 800,
+                          max: 9900,
+                          label: _tacFilters.maxLife.toString(),
+                          divisions: 91,
+                          onChanged: (double newValue) {
+                            setState(() {
+                              _tacFilters.maxLife = newValue.round();
+                            });
+                          },
+                          onChangeEnd: (double newValue) {
+                            _saveFilters();
+                          },
                         ),
                       ),
-                      expanded: Padding(
-                        padding: const EdgeInsets.fromLTRB(30, 0, 5, 0),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(child: Text('Minimum level')),
-                                Row(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(_tacFilters.minLevel.toString()),
-                                        SizedBox(
-                                          width: 175,
-                                          child: Slider(
-                                            value: _tacFilters.minLevel
-                                                .toDouble(),
-                                            min: 1,
-                                            max: 100,
-                                            label: _tacFilters.minLevel
-                                                .toString(),
-                                            divisions: 99,
-                                            onChanged: (double newValue) {
-                                              if (newValue <=
-                                                  _tacFilters.maxLevel) {
-                                                setState(() {
-                                                  _tacFilters.minLevel =
-                                                      newValue.round();
-                                                });
-                                              }
-                                            },
-                                            onChangeEnd: (double newValue) {
-                                              _saveFilters();
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Maximum level'),
-                                Row(
-                                  children: [
-                                    Text(_tacFilters.maxLevel.toString()),
-                                    SizedBox(
-                                      width: 175,
-                                      child: Slider(
-                                        value:
-                                            _tacFilters.maxLevel.toDouble(),
-                                        min: 1,
-                                        max: 100,
-                                        label:
-                                            _tacFilters.maxLevel.toString(),
-                                        divisions: 99,
-                                        onChanged: (double newValue) {
-                                          if (newValue >=
-                                              _tacFilters.minLevel) {
-                                            setState(() {
-                                              _tacFilters.maxLevel =
-                                                  newValue.round();
-                                            });
-                                          }
-                                        },
-                                        onChangeEnd: (double newValue) {
-                                          _saveFilters();
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Maximum life'),
-                                Row(
-                                  children: [
-                                    Text(_tacFilters.maxLife.toString()),
-                                    SizedBox(
-                                      width: 175,
-                                      child: Slider(
-                                        value: _tacFilters.maxLife.toDouble(),
-                                        min: 800,
-                                        max: 9900,
-                                        label: _tacFilters.maxLife.toString(),
-                                        divisions: 91,
-                                        onChanged: (double newValue) {
-                                          setState(() {
-                                            _tacFilters.maxLife =
-                                                newValue.round();
-                                          });
-                                        },
-                                        onChangeEnd: (double newValue) {
-                                          _saveFilters();
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Rank'),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 20),
-                                  child: _rankDropdown(),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Battle stats'),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 20),
-                                  child: _battleStatsDropdown(),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
+                    ],
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Rank'),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: _rankDropdown(),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Battle stats'),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 20),
+                    child: _battleStatsDropdown(),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _getTargetsButton() {
@@ -426,10 +410,10 @@ class _TacPageState extends State<TacPage> {
                   child: Checkbox(
                       value: _tacFilters.useOptimal,
                       onChanged: (value) {
-                        _saveFilters();
                         setState(() {
                           _tacFilters.useOptimal = value;
                         });
+                        _saveFilters();
                       }),
                 ),
                 SizedBox(
@@ -502,10 +486,10 @@ class _TacPageState extends State<TacPage> {
       value: _tacFilters.rank,
       items: dropDownList,
       onChanged: (value) {
-        _saveFilters();
         setState(() {
           _tacFilters.rank = value;
         });
+        _saveFilters();
       },
     );
   }
@@ -535,10 +519,10 @@ class _TacPageState extends State<TacPage> {
       value: _tacFilters.battleStats,
       items: dropDownList,
       onChanged: (value) {
-        _saveFilters();
         setState(() {
           _tacFilters.battleStats = value;
         });
+        _saveFilters();
       },
     );
   }
@@ -615,7 +599,7 @@ class _TacPageState extends State<TacPage> {
         'password=${TacConfig.password}'
         '&userid=${_userProvider.myUser.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
-        '&optimal=${optimal}'
+        '&optimal=$optimal'
         '&rank=${_tacFilters.rank}'
         '&bslevel=${_tacFilters.battleStats}'
         '&minlevel=${_tacFilters.minLevel}'
@@ -643,13 +627,13 @@ class _TacPageState extends State<TacPage> {
             // _optimal checkbox is ticked. In this case, we get battle stats
             // instead of estimated stats (they are two different parameters)
             bool optimalTargets = false;
-            if (_tacFilters.useOptimal && model.premium == 1)
+            if (_tacFilters.useOptimal && model.premium == 1) {
               optimalTargets = true;
+            }
             model.targets.forEach((key, value) {
               value.optimal = optimalTargets;
             });
 
-            _tacModel = model;
             if (model.targets.length > 0) {
               _showOptimalWarning = false;
               var time = 3;
@@ -657,8 +641,10 @@ class _TacPageState extends State<TacPage> {
               var resultString = 'Retrieved ${_tacModel.targets.length} '
                   'targets from Torn Attack Central!';
 
+              // Needs to assign the premium check, as it does not come from API
+              model.incorrectPremium = false;
               if (_tacModel.premium == 0 && _tacFilters.useOptimal) {
-                _showOptimalWarning = true;
+                model.incorrectPremium = true;
                 resultString += '\n\nNOTE: no optimal targets retrieved '
                     'as your account is not premium!';
                 time = 5;
@@ -669,6 +655,9 @@ class _TacPageState extends State<TacPage> {
                 Colors.green,
                 time: time,
               );
+
+              _tacModel = model;
+              _saveTargets();
             } else {
               _showSuccessToast(
                 'No targets found with the current filters!',
@@ -858,11 +847,20 @@ class _TacPageState extends State<TacPage> {
     SharedPreferencesModel().setTACFilters(tacFiltersToJson(_tacFilters));
   }
 
+  void _saveTargets() {
+    SharedPreferencesModel().setTACTargets(tacModelToJson(_tacModel));
+  }
+
   Future _restorePreferences() async {
     _tacFilters = TacFilters();
     var savedFilters = await SharedPreferencesModel().getTACFilters();
     if (savedFilters != "") {
       _tacFilters = tacFiltersFromJson(savedFilters);
+    }
+
+    var savedModel = await SharedPreferencesModel().getTACTargets();
+    if (savedModel != "") {
+      _tacModel = tacModelFromJson(savedModel);
     }
   }
 }
