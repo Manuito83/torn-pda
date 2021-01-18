@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -43,7 +43,7 @@ class FriendsProvider extends ChangeNotifier {
 
   FriendSortType _currentSort;
 
-  OwnProfileModel _userDetails;
+  OwnProfileBasic _userDetails;
   FriendsProvider(this._userDetails) {
     restorePreferences();
   }
@@ -204,7 +204,7 @@ class FriendsProvider extends ChangeNotifier {
   }
 
   String exportFriends() {
-    var output = List<FriendBackup>();
+    var output = <FriendBackup>[];
     for (var fri in _friends) {
       var export = FriendBackup();
       export.id = fri.playerId;
@@ -216,7 +216,7 @@ class FriendsProvider extends ChangeNotifier {
   }
 
   void _saveFriendsSharedPrefs() {
-    List<String> newPrefs = List<String>();
+    List<String> newPrefs = <String>[];
     for (var fri in _friends) {
       newPrefs.add(friendModelToJson(fri));
     }

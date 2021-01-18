@@ -38,8 +38,9 @@ class TargetsOptions {
 
 class TargetsPage extends StatefulWidget {
   final String userKey;
+  final Function tabCallback;
 
-  const TargetsPage({Key key, @required this.userKey}) : super(key: key);
+  const TargetsPage({Key key, @required this.userKey, @required this.tabCallback}) : super(key: key);
 
   @override
   _TargetsPageState createState() => _TargetsPageState();
@@ -608,6 +609,7 @@ class _TargetsPageState extends State<TargetsPage> {
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
+        widget.tabCallback(newOptions.tacEnabled);
         break;
       case "Backup":
         Navigator.push(

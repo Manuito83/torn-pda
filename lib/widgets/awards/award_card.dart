@@ -100,13 +100,14 @@ class _AwardCardState extends State<AwardCard> {
                           setState(() {
                             _pinActive = false;
                           });
+                        
 
-                          // If the award is pinned, try to unpin
-                          if (_pinProvider.pinnedNames.contains(award.name)) {
-                            var result = await _pinProvider.removePinned(
-                              _userProvider.myUser.userApiKey,
-                              award,
-                            );
+                    // If the award is pinned, try to unpin
+                    if (_pinProvider.pinnedNames.contains(award.name)) {
+                      var result = await _pinProvider.removePinned(
+                        _userProvider.basic.userApiKey,
+                        award,
+                      );
 
                             if (result) {
                               // Callback to rebuild widget list
@@ -127,7 +128,7 @@ class _AwardCardState extends State<AwardCard> {
                               resultColor = Colors.red[700];
                             } else {
                               var result = await _pinProvider.addPinned(
-                                _userProvider.myUser.userApiKey,
+                                _userProvider.basic.userApiKey,
                                 award,
                               );
 

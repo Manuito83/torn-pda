@@ -8,6 +8,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TargetsOptionsReturn {
   bool yataEnabled;
+  bool tacEnabled;
 }
 
 class TargetsOptionsPage extends StatefulWidget {
@@ -28,6 +29,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   // Yata import
   bool _yataTargetsEnabled = true;
+
+  // TAC
+  bool _tacEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -65,10 +69,12 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () =>
+                      FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
@@ -85,15 +91,18 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Show targets notes"),
                                     Switch(
                                       value: _showTargetsNotes,
                                       onChanged: (value) {
-                                        SharedPreferencesModel().setShowTargetsNotes(value);
+                                        SharedPreferencesModel()
+                                            .setShowTargetsNotes(value);
                                         setState(() {
                                           _showTargetsNotes = value;
                                         });
@@ -105,7 +114,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you will be shown the note you have saved for every '
                                   'target and its color as you progress with the chain',
@@ -118,15 +128,18 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                               ),
                               SizedBox(height: 15),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Skip red/blue targets"),
                                     Switch(
                                       value: _skippingEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel().setTargetSkipping(value);
+                                        SharedPreferencesModel()
+                                            .setTargetSkipping(value);
                                         setState(() {
                                           _skippingEnabled = value;
                                         });
@@ -138,7 +151,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, targets that are in hospital, jail or in another '
                                   'country will be skipped (max 3 at a time, to avoid delays)',
@@ -162,15 +176,18 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Sound alerts"),
                                     Switch(
                                       value: _soundAlertsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel().setChainWatcherSound(value);
+                                        SharedPreferencesModel()
+                                            .setChainWatcherSound(value);
                                         setState(() {
                                           _soundAlertsEnabled = value;
                                         });
@@ -182,15 +199,18 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Vibration"),
                                     Switch(
                                       value: _vibrationAlertsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel().setChainWatcherVibration(value);
+                                        SharedPreferencesModel()
+                                            .setChainWatcherVibration(value);
                                         setState(() {
                                           _vibrationAlertsEnabled = value;
                                         });
@@ -214,15 +234,18 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Show YATA icon"),
                                     Switch(
                                       value: _yataTargetsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel().setYataTargetsEnabled(value);
+                                        SharedPreferencesModel()
+                                            .setYataTargetsEnabled(value);
                                         setState(() {
                                           _yataTargetsEnabled = value;
                                         });
@@ -234,12 +257,61 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you\'ll have access to a \'Y\' icon in the top bar from '
                                   'where you can import and export to YATA. Please note that deletions '
                                   'are not propagated between YATA and Torn PDA, but notes are '
                                   'overwritten in either direction.',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Torn Attack Central',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Show TAC tab"),
+                                    Switch(
+                                      value: _tacEnabled,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setTACEnabled(value);
+                                        setState(() {
+                                          _tacEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'If enabled, you\'ll have access to TAC through a third '
+                                  'bottom tab in the Chaining section.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -285,8 +357,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     var showTargetsNotes = await SharedPreferencesModel().getShowTargetsNotes();
     var skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     var soundEnabled = await SharedPreferencesModel().getChainWatcherSound();
-    var vibrationEnabled = await SharedPreferencesModel().getChainWatcherVibration();
+    var vibrationEnabled =
+        await SharedPreferencesModel().getChainWatcherVibration();
     var yataEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
+    var tacEnabled = await SharedPreferencesModel().getTACEnabled();
 
     setState(() {
       _showTargetsNotes = showTargetsNotes;
@@ -294,6 +368,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
       _soundAlertsEnabled = soundEnabled;
       _vibrationAlertsEnabled = vibrationEnabled;
       _yataTargetsEnabled = yataEnabled;
+      _tacEnabled = tacEnabled;
     });
   }
 
@@ -301,7 +376,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     var chainStatusProvider = context.read<ChainStatusProvider>();
     chainStatusProvider.loadPreferences();
     Navigator.of(context).pop(
-      TargetsOptionsReturn()..yataEnabled = _yataTargetsEnabled,
+      TargetsOptionsReturn()
+        ..yataEnabled = _yataTargetsEnabled
+        ..tacEnabled = _tacEnabled,
     );
     return true;
   }

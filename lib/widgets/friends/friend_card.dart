@@ -413,13 +413,13 @@ class _FriendCardState extends State<FriendCard> {
     if (_friend.hasFaction) {
       Color borderColor = Colors.transparent;
       Color iconColor = _themeProvider.mainText;
-      if (_friend.faction.factionId == _userProvider.myUser.faction.factionId) {
+      if (_friend.faction.factionId == _userProvider.basic.faction.factionId) {
         borderColor = iconColor = Colors.green[500];
       }
 
       void showFactionToast() {
         if (_friend.faction.factionId ==
-            _userProvider.myUser.faction.factionId) {
+            _userProvider.basic.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_friend.name} belongs to your same faction "
                 "(${_friend.faction.factionName}) as "
@@ -496,7 +496,7 @@ class _FriendCardState extends State<FriendCard> {
       );
     }
 
-    if (_friend.job.companyId == _userProvider.myUser.job.companyId) {
+    if (_friend.job.companyId == _userProvider.basic.job.companyId) {
       Widget companyIcon = Material(
         type: MaterialType.transparency,
         child: Ink(

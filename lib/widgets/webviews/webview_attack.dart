@@ -28,10 +28,10 @@ class TornWebViewAttack extends StatefulWidget {
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
   TornWebViewAttack({
-    this.attackIdList = const [],
-    this.attackNameList = const [],
-    this.attackNotesList = const [],
-    this.attackNotesColorList = const [],
+    @required this.attackIdList,
+    @required this.attackNameList,
+    @required this.attackNotesList,
+    @required this.attackNotesColorList,
     this.attacksCallback,
     @required this.userKey,
   });
@@ -177,7 +177,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     var senderColor =
         'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
     String hlMap =
-        '[ { name: "${_userProv.myUser.name}", highlight: "$background", sender: "$senderColor" } ]';
+        '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       _webViewController.evaluateJavascript(
@@ -206,7 +206,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
-                widget.attacksCallback(_attackedIds);
+                if (widget.attacksCallback != null) {
+                  widget.attacksCallback(_attackedIds);
+                }
                 _chainStatusProvider.watcherAssignParent(
                     newParent: ChainTimerParent.targets);
                 Navigator.pop(context);
@@ -424,7 +426,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 for (var i = 0; i < 3; i++) {
                   // Get the status of our next target
                   var nextTarget = await TornApiCaller.target(
-                          _userProv.myUser.userApiKey,
+                          _userProv.basic.userApiKey,
                           widget.attackIdList[_attackNumber + 1])
                       .getTarget;
 
@@ -439,8 +441,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     // place, we can attack him)
                     else if (nextTarget.status.color == "blue") {
                       var user = await TornApiCaller.target(
-                              _userProv.myUser.userApiKey,
-                              _userProv.myUser.playerId.toString())
+                              _userProv.basic.userApiKey,
+                              _userProv.basic.playerId.toString())
                           .getTarget;
                       if (user is TargetModel) {
                         if (user.status.description !=

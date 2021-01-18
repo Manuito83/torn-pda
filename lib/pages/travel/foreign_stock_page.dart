@@ -68,7 +68,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   bool _inventoryEnabled = true;
   InventoryModel _inventory;
 
-  OwnProfileMiscModel _profileMisc;
+  OwnProfileMisc _profileMisc;
 
   int _capacity;
 
@@ -855,7 +855,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future profileMisc() async {
-        _profileMisc = await TornApiCaller.ownProfileMisc(widget.apiKey).getOwnProfileMisc;
+        _profileMisc = await TornApiCaller.ownMisc(widget.apiKey).getProfileMisc;
       }
 
       // Get all APIs at the same time

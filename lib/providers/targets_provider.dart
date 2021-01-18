@@ -8,7 +8,7 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
@@ -44,7 +44,7 @@ class TargetsProvider extends ChangeNotifier {
 
   String _userKey = '';
 
-  OwnProfileModel _userDetails;
+  OwnProfileBasic _userDetails;
   TargetsProvider(this._userDetails) {
     restorePreferences();
   }

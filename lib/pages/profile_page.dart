@@ -105,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   String _apiError = '';
   int _apiRetries = 0;
 
-  OwnProfileModel _user;
+  OwnProfileExtended _user;
 
   DateTime _serverTime;
 
@@ -173,7 +173,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _alarmVibration;
 
   bool _miscApiFetched = false;
-  OwnProfileMiscModel _miscModel;
+  OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
 
   bool _nukeReviveActive = false;
@@ -3560,14 +3560,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _fetchApi() async {
     var apiResponse =
-        await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey)
-            .getOwnProfile;
-    var apiChain = await TornApiCaller.chain(_userProvider.myUser.userApiKey)
+        await TornApiCaller.ownExtended(_userProvider.basic.userApiKey)
+            .getProfileExtended;
+    var apiChain = await TornApiCaller.chain(_userProvider.basic.userApiKey)
         .getChainStatus;
 
-    if (mounted) {
+  if (mounted) {
       setState(() {
-        if (apiResponse is OwnProfileModel) {
+        if (apiResponse is OwnProfileExtended) {
           _apiRetries = 0;
           _user = apiResponse;
           _serverTime =
@@ -3624,12 +3624,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _miscApiFetched = true;
     try {
       var miscApiResponse =
-          await TornApiCaller.ownProfileMisc(_userProvider.myUser.userApiKey)
-              .getOwnProfileMisc;
+          await TornApiCaller.ownMisc(_userProvider.basic.userApiKey)
+              .getProfileMisc;
       var educationResponse =
-          await TornApiCaller.education(_userProvider.myUser.userApiKey)
+          await TornApiCaller.education(_userProvider.basic.userApiKey)
               .getEducation;
-      if (miscApiResponse is OwnProfileMiscModel &&
+      if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
         setState(() {
           _miscModel = miscApiResponse;

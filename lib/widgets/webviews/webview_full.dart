@@ -12,7 +12,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
@@ -602,7 +601,7 @@ class _WebViewFullState extends State<WebViewFull> {
     var senderColor =
         'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
     String hlMap =
-        '[ { name: "${_userProvider.myUser.name}", highlight: "$background", sender: "$senderColor" } ]';
+        '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       webView.evaluateJavascript(
@@ -953,13 +952,8 @@ class _WebViewFullState extends State<WebViewFull> {
       try {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
-        var userProfile =
-            await TornApiCaller.ownProfile(_userProvider.myUser.userApiKey)
-                .getOwnProfile;
-        if (userProfile is OwnProfileModel) {
-          stockModel.authorName = userProfile.name;
-          stockModel.authorId = userProfile.playerId;
-        }
+        stockModel.authorName = _userProvider.basic.name;
+        stockModel.authorId = _userProvider.basic.playerId;
 
         stockModel.country = document
             .querySelector(".content-title > h4")
@@ -1224,8 +1218,8 @@ class _WebViewFullState extends State<WebViewFull> {
     // Initialize trades provider, which in turn feeds the trades widget
     var tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
-      userApiKey: _userProvider.myUser.userApiKey,
-      playerId: _userProvider.myUser.playerId,
+      userApiKey: _userProvider.basic.userApiKey,
+      playerId: _userProvider.basic.playerId,
       sellerName: sellerName,
       tradeId: tradeId,
       leftMoneyElements: leftMoneyElements,
@@ -1305,7 +1299,7 @@ class _WebViewFullState extends State<WebViewFull> {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return TradesOptions(
-            playerId: _userProvider.myUser.playerId,
+            playerId: _userProvider.basic.playerId,
             callback: _tradesPreferencesLoad,
           );
         },
@@ -1442,7 +1436,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
       dynamic apiResponse =
-          await TornApiCaller.items(_userProvider.myUser.userApiKey).getItems;
+          await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
         var itemsFound = <Item>[];
@@ -1570,7 +1564,7 @@ class _WebViewFullState extends State<WebViewFull> {
       _quickItemsTriggered = true;
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
-      var key = _userProvider.myUser.userApiKey;
+      var key = _userProvider.basic.userApiKey;
       quickItemsProvider.loadItems(apiKey: key);
 
       setState(() {

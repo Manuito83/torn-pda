@@ -28,6 +28,8 @@ class _AttackCardState extends State<AttackCard> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
 
+  bool _addButtonActive = true;
+
   @override
   Widget build(BuildContext context) {
     _attack = widget.attackModel;
@@ -202,11 +204,22 @@ class _AttackCardState extends State<AttackCard> {
       return IconButton(
         padding: EdgeInsets.all(0.0),
         iconSize: 20,
-        icon: Icon(
-          Icons.add_circle_outline,
-          color: Colors.green,
-        ),
+        icon: _addButtonActive
+            ? Icon(
+                Icons.add_circle_outline,
+                color: Colors.green,
+              )
+            : SizedBox(
+                height: 15,
+                width: 15,
+                child: CircularProgressIndicator(),
+              ),
         onPressed: () async {
+
+          setState(() {
+            _addButtonActive = false;
+          });
+
           dynamic attacksFull = await targetsProvider.getAttacksFull();
           AddTargetResult tryAddTarget = await targetsProvider.addTarget(
             targetId: _attack.targetId,
@@ -225,7 +238,11 @@ class _AttackCardState extends State<AttackCard> {
               contentPadding: EdgeInsets.all(10),
             );
             // Update the button
-            setState(() {});
+            if (mounted) {
+              setState(() {
+                _addButtonActive = true;
+              });
+            }
           } else if (!tryAddTarget.success) {
             BotToast.showText(
               text: HtmlParser.fix(
@@ -394,12 +411,12 @@ class _AttackCardState extends State<AttackCard> {
 
     Color borderColor = Colors.transparent;
     Color iconColor = _themeProvider.mainText;
-    if (factionId == _userProvider.myUser.faction.factionId) {
+    if (factionId == _userProvider.basic.faction.factionId) {
       borderColor = iconColor = Colors.green[500];
     }
 
     void showFactionToast() {
-      if (factionId == _userProvider.myUser.faction.factionId) {
+      if (factionId == _userProvider.basic.faction.factionId) {
         BotToast.showText(
           text: HtmlParser.fix(
               "${_attack.targetName} belongs to your same faction ($factionName)"),

@@ -582,7 +582,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     var drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings + About pages
     // (just don't add the other sections to the list)
-    if (!_userProvider.myUser.userApiKeyValid) {
+    if (!_userProvider.basic.userApiKeyValid) {
       for (var position in _allowSectionsWithoutKey) {
         drawerOptions.add(
           ListTileTheme(
@@ -740,7 +740,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     await _userProvider.loadPreferences();
 
-    if (!_userProvider.myUser.userApiKeyValid) {
+    if (!_userProvider.basic.userApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
@@ -753,7 +753,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       if (user == null) {
         User mFirebaseUser = await firebaseAuth.signInAnon();
         firestore.setUID(mFirebaseUser.uid);
-        await firestore.uploadUsersProfileDetail(_userProvider.myUser);
+        await firestore.uploadUsersProfileDetail(_userProvider.basic);
         await firestore
             .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
       } else {
