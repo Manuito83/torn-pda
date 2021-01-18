@@ -45,9 +45,11 @@ export const alertsGroup = {
 
 async function sendNotificationForProfile(subscriber: any): Promise<any> {
   const promises: Promise<any>[] = [];
-  const userStats = await getUsersStat(subscriber.apiKey);
   
   try {
+
+    const userStats = await getUsersStat(subscriber.apiKey);
+
     if (!userStats.error) {
       if (subscriber.energyNotification)
         promises.push(sendEnergyNotification(userStats, subscriber));
@@ -65,14 +67,28 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
         promises.push(sendMessagesNotification(userStats, subscriber));
       if (subscriber.eventsNotification)
         promises.push(sendEventsNotification(userStats, subscriber));
+
+      await Promise.all(promises);
     }
   } catch (e) {
-    console.log("ERROR ALERTS");
-    console.log(subscriber.uid);
-    console.log(e);
-  }
+    functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
+    
+    // If users uninstall without removing API Key, this error will trigger
+    // because the token is not known. In this case, stale the user
+    if (e.toString().includes("Requested entity was not found")) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            active: false,
+          })
+      );
+      functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid}`);
+    }
 
-  await Promise.all(promises);
+  }
 }
 
 // Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy

@@ -17,6 +17,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:flutter/services.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -1163,6 +1164,19 @@ class _SettingsPageState extends State<SettingsPage> {
       value: _vibrationValue,
       items: [
         DropdownMenuItem(
+          value: "no-vib",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "short",
           child: SizedBox(
             width: 80,
@@ -1203,10 +1217,11 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ],
       onChanged: (value) async {
-        await deleteNotificationChannels(mod: _vibrationValue);
+        // Deletes current channels and create new ones
+        reconfigureNotificationChannels(mod: value);
+        // Update channel preferences
+        firestore.setVibrationPattern(value);
         SharedPreferencesModel().setVibrationPattern(value);
-        await configureNotificationChannels(mod: value);
-        if (Platform.isAndroid) firestore.setVibrationPattern(value);
         setState(() {
           _vibrationValue = value;
         });

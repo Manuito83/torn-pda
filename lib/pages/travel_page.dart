@@ -1050,7 +1050,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'Manual travel ${modifier.channelIdModifier}',
-      'Manual travel',
+      'Manual travel ${modifier.channelIdModifier}',
       'Manual notifications for travel',
       priority: Priority.high,
       visibility: NotificationVisibility.public,

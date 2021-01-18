@@ -9,13 +9,11 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
+import 'package:torn_pda/widgets/awards/award_card_pin.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/models/awards/awards_sort.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
-import 'package:intl/intl.dart';
-import 'package:torn_pda/utils/html_parser.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
@@ -212,161 +210,10 @@ class _AwardsPageState extends State<AwardsPage> {
   Widget _header() {
     var pinnedCards = <Widget>[];
     for (var pinned in _pinProvider.pinnedAwards) {
-      Widget commentIconRow = SizedBox.shrink();
-      if (pinned.comment != null && pinned.comment.trim() != "") {
-        pinned.comment = HtmlParser.fix(
-            pinned.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
-        commentIconRow = Row(
-          children: [
-            SizedBox(width: 4),
-            GestureDetector(
-              onTap: () {
-                BotToast.showText(
-                  text: pinned.comment,
-                  textStyle: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.grey[700],
-                  duration: Duration(seconds: 6),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
-              child: Icon(
-                Icons.info_outline,
-                size: 19,
-              ),
-            ),
-          ],
-        );
-      }
-
-      var achievedPercentage = (pinned.achieve * 100).truncate();
-      final decimalFormat = new NumberFormat("#,##0", "en_US");
-      Widget pinDetails = Row(
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "$achievedPercentage%",
-                style: TextStyle(
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                ' - ${decimalFormat.format(pinned.current.ceil())}'
-                '/${decimalFormat.format(pinned.goal.ceil())}',
-                style: TextStyle(fontSize: 12),
-              ),
-              if (pinned.daysLeft != -99)
-                pinned.daysLeft > 0 && pinned.daysLeft < double.maxFinite
-                    ? Text(
-                        " - ${decimalFormat.format(pinned.daysLeft.round())} "
-                        "days",
-                        style: TextStyle(fontSize: 12),
-                      )
-                    : pinned.daysLeft == double.maxFinite
-                        ? Row(
-                            children: [
-                              Text(' - '),
-                              Icon(Icons.all_inclusive, size: 19),
-                            ],
-                          )
-                        : Text(
-                            " - ${(DateFormat('yyyy-MM-dd').format(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                  pinned.dateAwarded.round() * 1000),
-                            ))}",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.grey,
-                            ),
-                          )
-              else
-                SizedBox.shrink(),
-              commentIconRow,
-            ],
-          ),
-        ],
-      );
-
       pinnedCards.add(
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(pinned.name),
-                        SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () {
-                            BotToast.showText(
-                              text: pinned.description,
-                              textStyle: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white,
-                              ),
-                              contentColor: Colors.grey[700],
-                              duration: Duration(seconds: 6),
-                              contentPadding: EdgeInsets.all(10),
-                            );
-                          },
-                          child: Icon(
-                            Icons.info_outline,
-                            size: 19,
-                          ),
-                        ),
-                      ],
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        var result = await _pinProvider.removePinned(
-                          _userProvider.basic.userApiKey,
-                          pinned,
-                        );
-
-                        var resultString = "";
-                        Color resultColor = Colors.transparent;
-                        if (result) {
-                          _buildAwardsWidgetList();
-                          resultString = "Unpinned ${pinned.name}!";
-                          resultColor = Colors.green[700];
-                        } else {
-                          resultString = "Error unpinning ${pinned.name}! "
-                              "Please try again or do it directly in YATA";
-                          resultColor = Colors.red[700];
-                        }
-
-                        BotToast.showText(
-                          text: resultString,
-                          textStyle: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          contentColor: resultColor,
-                          duration: Duration(seconds: 6),
-                          contentPadding: EdgeInsets.all(10),
-                        );
-                      },
-                      child: Icon(
-                        MdiIcons.pin,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-                pinDetails,
-              ],
-            ),
-          ),
+        AwardCardPin(
+          award: pinned,
+          pinConditionChange: _onPinnedConditionChange,
         ),
       );
     }
@@ -881,6 +728,9 @@ class _AwardsPageState extends State<AwardsPage> {
 
     // Check for pinned awards
     var pinMap = awardsJson["pinnedAwards"];
+    // In case something mixed up, we'll rebuild the list later
+    _pinProvider.pinnedAwards.clear();
+    _pinProvider.pinnedNames.clear();
 
     // Populate all awards
     var awardsMap = awardsJson["awards"];

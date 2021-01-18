@@ -248,6 +248,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool trades = false;
     bool nerve = false;
     bool energy = false;
+    bool drugs = false;
 
     var channel = '';
     var messageId = '';
@@ -277,6 +278,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       nerve = true;
     } else if (channel.contains("Alerts energy")) {
       energy = true;
+    } else if (channel.contains("Alerts drugs")) {
+      drugs = true;
     }
 
     if (travel) {
@@ -308,6 +311,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (energy) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
+    } else if (drugs) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php#drugs-items";
     }
 
     if (launchBrowser) {
@@ -337,7 +343,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   // Fires if notification from local_notifications package is tapped (i.e.:
-  // when the app is open)
+  // when the app is open). Also for manual notifications when app is open.
   Future<void> _fireOnTapLocalNotifications() async {
     selectNotificationSubject.stream.listen((String payload) async {
       var launchBrowser = false;
@@ -352,6 +358,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('nerve')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/crimes.php';
+      } else if (payload.contains('drugs')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#drugs-items';
+      // Medical is only in manual notifications, payload comes from Profile
+      } else if (payload.contains('medical')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#medical-items';
+      // Booster is only in manual notifications, payload comes from Profile
+      } else if (payload.contains('booster')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#boosters-items';
+      // Medical is only in manual notifications, payload comes from Profile
       } else if (payload.contains('racing')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';

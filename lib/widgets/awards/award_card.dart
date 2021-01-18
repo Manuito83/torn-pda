@@ -24,6 +24,8 @@ class _AwardCardState extends State<AwardCard> {
   AwardsProvider _pinProvider;
   UserDetailsProvider _userProvider;
 
+  bool _pinActive = true;
+
   @override
   void initState() {
     super.initState();
@@ -90,9 +92,15 @@ class _AwardCardState extends State<AwardCard> {
               Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: GestureDetector(
-                  onTap: () async {
-                    var resultString = "";
-                    Color resultColor = Colors.transparent;
+                  onTap: _pinActive
+                      ? () async {
+                          var resultString = "";
+                          Color resultColor = Colors.transparent;
+
+                          setState(() {
+                            _pinActive = false;
+                          });
+                        
 
                     // If the award is pinned, try to unpin
                     if (_pinProvider.pinnedNames.contains(award.name)) {
@@ -101,69 +109,76 @@ class _AwardCardState extends State<AwardCard> {
                         award,
                       );
 
-                      if (result) {
-                        // Callback to rebuild widget list
-                        widget.pinConditionChange();
-                        resultString = "Unpinned ${award.name}!";
-                        resultColor = Colors.green[700];
-                        setState(() {
-                          award.pinned = false;
-                        });
-                      } else {
-                        resultString = "Error unpinning ${award.name}! "
-                            "Please try again or do it directly in YATA";
-                        resultColor = Colors.red[700];
-                      }
-                      // If the award is not pinned, pin it
-                    } else {
+                            if (result) {
+                              // Callback to rebuild widget list
+                              widget.pinConditionChange();
+                              resultString = "Unpinned ${award.name}!";
+                              resultColor = Colors.green[700];
+                            } else {
+                              resultString = "Error unpinning ${award.name}! "
+                                  "Please try again or do it directly in YATA";
+                              resultColor = Colors.red[700];
+                            }
+                            // If the award is not pinned, pin it
+                          } else {
+                            if (_pinProvider.pinnedAwards.length >= 3) {
+                              resultString =
+                                  "Could not pin ${award.name}! Only 3 "
+                                  "pinned awards are allowed!";
+                              resultColor = Colors.red[700];
+                            } else {
+                              var result = await _pinProvider.addPinned(
+                                _userProvider.basic.userApiKey,
+                                award,
+                              );
 
-                      if (_pinProvider.pinnedAwards.length >= 3) {
-                        resultString = "Could not pin ${award.name}! Only 3 "
-                            "pinned awards are allowed!";
-                        resultColor = Colors.red[700];
-                      } else {
-                        var result = await _pinProvider.addPinned(
-                          _userProvider.basic.userApiKey,
-                          award,
-                        );
+                              if (result) {
+                                resultString = "Pinned ${award.name}!";
+                                resultColor = Colors.green[700];
+                              } else {
+                                resultString = "Error pinning ${award.name}! "
+                                    "Please try again or do it directly in YATA";
+                                resultColor = Colors.red[700];
+                              }
 
-                        if (result) {
-                          resultString = "Pinned ${award.name}!";
-                          resultColor = Colors.green[700];
-                        } else {
-                          resultString = "Error pinning ${award.name}! "
-                              "Please try again or do it directly in YATA";
-                          resultColor = Colors.red[700];
+                              // Callback to rebuild widget list
+                              widget.pinConditionChange();
+                            }
+                          }
+
+                          if (mounted) {
+                            setState(() {
+                              _pinActive = true;
+                            });
+                          }
+
+                          BotToast.showText(
+                            text: resultString,
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: resultColor,
+                            duration: Duration(seconds: 6),
+                            contentPadding: EdgeInsets.all(10),
+                          );
                         }
-
-                        setState(() {
-                          award.pinned = true;
-                        });
-                        // Callback to rebuild widget list
-                        widget.pinConditionChange();
-                      }
-                    }
-
-                    BotToast.showText(
-                      text: resultString,
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: resultColor,
-                      duration: Duration(seconds: 6),
-                      contentPadding: EdgeInsets.all(10),
-                    );
-                  },
-                  child: _pinProvider.pinnedNames.contains(award.name)
-                      ? Icon(
-                          MdiIcons.pin,
-                          color: Colors.green,
-                          size: 20,
-                        )
-                      : Icon(
-                          MdiIcons.pinOutline,
-                          size: 20,
+                      : null,
+                  child: _pinActive
+                      ? _pinProvider.pinnedNames.contains(award.name)
+                          ? Icon(
+                              MdiIcons.pin,
+                              color: Colors.green,
+                              size: 20,
+                            )
+                          : Icon(
+                              MdiIcons.pinOutline,
+                              size: 20,
+                            )
+                      : SizedBox(
+                          width: 15,
+                          height: 15,
+                          child: CircularProgressIndicator(),
                         ),
                 ),
               )

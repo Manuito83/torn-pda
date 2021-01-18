@@ -1,17 +1,22 @@
 package com.manuito.tornpda;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugins.GeneratedPluginRegistrant;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
+import java.util.List;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "tornpda.channel";
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
@@ -21,6 +26,10 @@ public class MainActivity extends FlutterActivity {
             setMethodCallHandler((call, result) -> {
                 if(call.method.equals("cancelNotifications")){
                     cancelNotifications();
+                }
+
+                if(call.method.equals("deleteNotificationChannels")){
+                    deleteNotificationChannels();
                 }
             }
         );
@@ -33,5 +42,15 @@ public class MainActivity extends FlutterActivity {
     private void cancelNotifications() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancelAll();
+    }
+
+    // Deletes all notification channels
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void deleteNotificationChannels() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        List<NotificationChannel> channels = notificationManager.getNotificationChannels();
+        for (NotificationChannel channel : channels) {
+            notificationManager.deleteNotificationChannel(channel.getId());
+        }
     }
 }

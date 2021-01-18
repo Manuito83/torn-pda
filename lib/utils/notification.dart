@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:flutter/services.dart';
 
 Future showNotification(Map payload, int notId) async {
   showNotificationBoth(payload, notId);
@@ -62,6 +63,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts drugs")) {
     notificationIcon = "notification_drugs";
     notificationColor = Colors.pink;
+    onTapPayload += 'drugs';
     channelId = 'Alerts drugs';
     channelName = 'Alerts drugs';
     channelDescription = 'Automatic alerts for drugs';
@@ -110,7 +112,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     var platformChannelSpecifics = NotificationDetails(
       android: AndroidNotificationDetails(
         "$channelId ${modifier.channelIdModifier}",
-        channelName,
+        "$channelName ${modifier.channelIdModifier}",
         channelDescription,
         styleInformation: BigTextStyleInformation(''),
         priority: Priority.high,
@@ -198,8 +200,14 @@ Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) as
   vibrationPatternShort[0] = 0;
   vibrationPatternShort[1] = 400;
 
+  var vibrationPatternOff = Int64List(1);
+  vibrationPatternOff[0] = 0;
+
   var modifier = VibrationModifier();
-  if (savedPattern == "short") {
+  if (savedPattern == "no-vib") {
+    modifier.channelIdModifier = "no-vib";
+    modifier.vibrationPattern = vibrationPatternOff;
+  } else if (savedPattern == "short") {
     modifier.channelIdModifier = "short";
     modifier.vibrationPattern = vibrationPatternShort;
   } else if (savedPattern == "medium") {
@@ -221,7 +229,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts travel ${modifier.channelIdModifier}',
-      'Alerts travel',
+      'Alerts travel ${modifier.channelIdModifier}',
       'Automatic alerts for travel',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -234,7 +242,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual travel ${modifier.channelIdModifier}',
-      'Manual travel',
+      'Manual travel ${modifier.channelIdModifier}',
       'Manual notifications for travel',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -247,7 +255,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts energy ${modifier.channelIdModifier}',
-      'Alerts energy',
+      'Alerts energy ${modifier.channelIdModifier}',
       'Automatic alerts for energy',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -260,7 +268,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual energy ${modifier.channelIdModifier}',
-      'Manual energy',
+      'Manual energy ${modifier.channelIdModifier}',
       'Manual notifications for energy',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -273,7 +281,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts nerve ${modifier.channelIdModifier}',
-      'Alerts nerve',
+      'Alerts nerve ${modifier.channelIdModifier}',
       'Automatic alerts for nerve',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -286,7 +294,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual nerve ${modifier.channelIdModifier}',
-      'Manual nerve',
+      'Manual nerve ${modifier.channelIdModifier}',
       'Manual notifications for nerve',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -299,7 +307,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts hospital ${modifier.channelIdModifier}',
-      'Alerts hospital',
+      'Alerts hospital ${modifier.channelIdModifier}',
       'Automatic alerts for hospital',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -312,7 +320,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts drugs ${modifier.channelIdModifier}',
-      'Alerts drugs',
+      'Alerts drugs ${modifier.channelIdModifier}',
       'Automatic alerts for drugs',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -325,7 +333,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual drugs ${modifier.channelIdModifier}',
-      'Manual drugs',
+      'Manual drugs ${modifier.channelIdModifier}',
       'Manual notifications for drugs',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -338,7 +346,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts racing ${modifier.channelIdModifier}',
-      'Alerts racing',
+      'Alerts racing ${modifier.channelIdModifier}',
       'Automatic alerts for racing',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -351,7 +359,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts messages ${modifier.channelIdModifier}',
-      'Alerts messages',
+      'Alerts messages ${modifier.channelIdModifier}',
       'Automatic alerts for messages',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -364,7 +372,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts events ${modifier.channelIdModifier}',
-      'Alerts events',
+      'Alerts events ${modifier.channelIdModifier}',
       'Automatic alerts for events',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -377,7 +385,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts trades ${modifier.channelIdModifier}',
-      'Alerts trades',
+      'Alerts trades ${modifier.channelIdModifier}',
       'Automatic alerts for trades',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -390,7 +398,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual loot ${modifier.channelIdModifier}',
-      'Manual loot',
+      'Manual loot ${modifier.channelIdModifier}',
       'Manual notifications for loot',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -403,7 +411,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual life ${modifier.channelIdModifier}',
-      'Manual life',
+      'Manual life ${modifier.channelIdModifier}',
       'Manual notifications for life',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -416,7 +424,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual medical ${modifier.channelIdModifier}',
-      'Manual medical',
+      'Manual medical ${modifier.channelIdModifier}',
       'Manual notifications for medical',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -429,7 +437,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Manual booster ${modifier.channelIdModifier}',
-      'Manual booster',
+      'Manual booster ${modifier.channelIdModifier}',
       'Manual notifications for booster',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -442,7 +450,7 @@ Future configureNotificationChannels({String mod = ""}) async {
   channels.add(
     AndroidNotificationChannel(
       'Alerts stale user ${modifier.channelIdModifier}',
-      'Alerts stale user',
+      'Alerts stale user ${modifier.channelIdModifier}',
       'Automatic alerts for inactivity',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
@@ -460,53 +468,8 @@ Future configureNotificationChannels({String mod = ""}) async {
   }
 }
 
-Future deleteNotificationChannels({String mod = ""}) async {
-  var channels = <String>[];
-
-  var modifier = await getNotificationChannelsModifiers(mod: mod);
-
-  channels.add('Alerts travel ${modifier.channelIdModifier}');
-  channels.add('Manual travel ${modifier.channelIdModifier}');
-  channels.add('Alerts energy ${modifier.channelIdModifier}');
-  channels.add('Manual energy ${modifier.channelIdModifier}');
-  channels.add('Alerts nerve ${modifier.channelIdModifier}');
-  channels.add('Manual nerve ${modifier.channelIdModifier}');
-  channels.add('Alerts hospital ${modifier.channelIdModifier}');
-  channels.add('Alerts drugs ${modifier.channelIdModifier}');
-  channels.add('Manual drugs ${modifier.channelIdModifier}');
-  channels.add('Alerts racing ${modifier.channelIdModifier}');
-  channels.add('Alerts messages ${modifier.channelIdModifier}');
-  channels.add('Alerts events ${modifier.channelIdModifier}');
-  channels.add('Alerts trades ${modifier.channelIdModifier}');
-  channels.add('Manual loot ${modifier.channelIdModifier}');
-  channels.add('Manual life ${modifier.channelIdModifier}');
-  channels.add('Manual medical ${modifier.channelIdModifier}');
-  channels.add('Manual booster ${modifier.channelIdModifier}');
-  channels.add('Alerts stale user ${modifier.channelIdModifier}');
-
-  channels.add('Alerts travel');
-  channels.add('Manual travel');
-  channels.add('Alerts energy');
-  channels.add('Manual energy');
-  channels.add('Alerts nerve');
-  channels.add('Manual nerve');
-  channels.add('Alerts hospital');
-  channels.add('Alerts drugs');
-  channels.add('Manual drugs');
-  channels.add('Alerts racing');
-  channels.add('Alerts messages');
-  channels.add('Alerts events');
-  channels.add('Alerts trades');
-  channels.add('Manual loot');
-  channels.add('Manual life');
-  channels.add('Manual medical');
-  channels.add('Manual booster');
-  channels.add('Alerts stale user');
-
-  for (var channel in channels) {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.deleteNotificationChannel(channel);
-  }
+Future reconfigureNotificationChannels({String mod}) async {
+  const platform = const MethodChannel('tornpda.channel');
+  platform.invokeMethod('deleteNotificationChannels');
+  configureNotificationChannels(mod: mod);
 }
