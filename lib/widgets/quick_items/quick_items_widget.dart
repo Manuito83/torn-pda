@@ -4,17 +4,22 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class QuickItemsWidget extends StatefulWidget {
-  final InAppWebViewController controller;
+  final String webviewType;
+  final InAppWebViewController inAppWebViewController;
+  final WebViewController webViewController;
   final bool appBarTop;
   final bool browserDialog;
 
   QuickItemsWidget({
-    @required this.controller,
-    @required this.appBarTop,
-    @required this.browserDialog,
+    @required this.webviewType,
+    this.inAppWebViewController,
+    this.webViewController,
+    this.appBarTop,
+    this.browserDialog,
   });
 
   @override
@@ -117,7 +122,13 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                   ),
             onPressed: () async {
               var js = quickItemsJS(item: item.number.toString());
-              await widget.controller.evaluateJavascript(source: js);
+
+              if (widget.webviewType == "attacks") {
+                widget.webViewController.evaluateJavascript(js);
+              } else {
+                await widget.inAppWebViewController.evaluateJavascript(source: js);
+              }
+
               _itemsProvider.decreaseInventory(item);
             },
           ),

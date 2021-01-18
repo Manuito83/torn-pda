@@ -407,9 +407,10 @@ class _WebViewFullState extends State<WebViewFull> {
                 header: SizedBox.shrink(),
                 expanded: _quickItemsActive
                     ? QuickItemsWidget(
-                        controller: webView,
+                        inAppWebViewController: webView,
                         appBarTop: _settingsProvider.appBarTop,
                         browserDialog: widget.dialog,
+                        webviewType: 'inapp',
                       )
                     : SizedBox.shrink(),
               )
@@ -581,9 +582,10 @@ class _WebViewFullState extends State<WebViewFull> {
                 header: SizedBox.shrink(),
                 expanded: _quickItemsActive
                     ? QuickItemsWidget(
-                        controller: webView,
+                        inAppWebViewController: webView,
                         appBarTop: _settingsProvider.appBarTop,
                         browserDialog: widget.dialog,
+                        webviewType: 'inapp',
                       )
                     : SizedBox.shrink(),
               )
@@ -820,8 +822,8 @@ class _WebViewFullState extends State<WebViewFull> {
       doc = parse(html);
       pageTitle = (await _getPageTitle(doc)).toLowerCase();
 
-      if (getItems) _assessQuickItems(doc, pageTitle);
-      if (getCrimes) _assessCrimes(doc, pageTitle);
+      if (getItems) _assessQuickItems(pageTitle);
+      if (getCrimes) _assessCrimes(pageTitle);
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
     }
@@ -1006,7 +1008,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // CRIMES
-  Future _assessCrimes(dom.Document document, String pageTitle) async {
+  Future _assessCrimes(String pageTitle) async {
     if (mounted) {
       //var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('crimes')) {
@@ -1544,7 +1546,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // QUICK ITEMS
-  Future _assessQuickItems(dom.Document document, String pageTitle) async {
+  Future _assessQuickItems(String pageTitle) async {
     if (mounted) {
       //var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('items')) {

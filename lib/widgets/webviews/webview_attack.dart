@@ -16,6 +16,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
+import 'dart:async';
+import 'package:animations/animations.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 
 class TornWebViewAttack extends StatefulWidget {
   final List<String> attackIdList;
@@ -70,6 +75,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     HealingPages(description: "Personal"),
     HealingPages(description: "Faction"),
   ];
+
+  bool _quickItemsTriggered = false;
+  var _quickItemsActive = false;
+  var _quickItemsController = ExpandableController();
 
   @override
   void initState() {
@@ -140,6 +149,29 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                           chainTimerParent: ChainTimerParent.webView,
                         ),
                       ),
+                      // Quick items widget. NOTE: this one will open at the bottom if
+                      // appBar is at the bottom, so it's duplicated below the actual
+                      // webView widget
+                      _settingsProvider.appBarTop
+                          ? ExpandablePanel(
+                              theme: ExpandableThemeData(
+                                hasIcon: false,
+                                tapBodyToCollapse: false,
+                                tapHeaderToExpand: false,
+                              ),
+                              collapsed: SizedBox.shrink(),
+                              controller: _quickItemsController,
+                              header: SizedBox.shrink(),
+                              expanded: _quickItemsActive
+                                  ? QuickItemsWidget(
+                                      webViewController: _webViewController,
+                                      appBarTop: _settingsProvider.appBarTop,
+                                      browserDialog: false,
+                                      webviewType: 'attacks',
+                                    )
+                                  : SizedBox.shrink(),
+                            )
+                          : SizedBox.shrink(),
                       Expanded(
                         child: WebView(
                           initialUrl: _initialUrl,
@@ -153,10 +185,31 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                           onPageFinished: (page) {
                             _hideChat();
                             _highlightChat(page);
+                            _assessQuickItems(page);
                           },
                           gestureNavigationEnabled: true,
                         ),
                       ),
+                      !_settingsProvider.appBarTop
+                          ? ExpandablePanel(
+                              theme: ExpandableThemeData(
+                                hasIcon: false,
+                                tapBodyToCollapse: false,
+                                tapHeaderToExpand: false,
+                              ),
+                              collapsed: SizedBox.shrink(),
+                              controller: _quickItemsController,
+                              header: SizedBox.shrink(),
+                              expanded: _quickItemsActive
+                                  ? QuickItemsWidget(
+                                      webViewController: _webViewController,
+                                      appBarTop: _settingsProvider.appBarTop,
+                                      browserDialog: false,
+                                      webviewType: 'attacks',
+                                    )
+                                  : SizedBox.shrink(),
+                            )
+                          : SizedBox.shrink(),
                     ],
                   ),
                 );
@@ -319,6 +372,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   List<Widget> _actionButtons() {
     List<Widget> myButtons = [];
+
+    myButtons.add(_quickItemsMenuIcon());
 
     Widget hideChatIcon = SizedBox.shrink();
     if (!_chatRemovalActive && _chatRemovalEnabled) {
@@ -638,6 +693,75 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         ),
       ),
     );
+  }
+
+  // QUICK ITEMS
+  Future _assessQuickItems(String pageUrl) async {
+    if (mounted) {
+      //var pageTitle = (await _getPageTitle(document)).toLowerCase();
+      if (!pageUrl.contains('item.php')) {
+        setState(() {
+          _quickItemsController.expanded = false;
+          _quickItemsActive = false;
+          _quickItemsTriggered = false;
+        });
+        return;
+      }
+
+      var title = await _webViewController.getTitle();
+      if (!title.contains('Items')) {
+        return;
+      }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onPageFinished will reset this for the future.
+      // Otherwise we would call the API every time onProgressChanged ticks
+      if (_quickItemsTriggered) {
+        return;
+      }
+      _quickItemsTriggered = true;
+
+      var quickItemsProvider = context.read<QuickItemsProvider>();
+      var key = _userProv.basic.userApiKey;
+      quickItemsProvider.loadItems(apiKey: key);
+
+      setState(() {
+        _quickItemsController.expanded = true;
+        _quickItemsActive = true;
+      });
+    }
+  }
+
+  Widget _quickItemsMenuIcon() {
+    if (_quickItemsActive) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: OpenContainer(
+          transitionDuration: Duration(milliseconds: 500),
+          transitionType: ContainerTransitionType.fadeThrough,
+          openBuilder: (BuildContext context, VoidCallback _) {
+            return QuickItemsOptions();
+          },
+          closedElevation: 0,
+          closedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(56 / 2),
+            ),
+          ),
+          closedColor: Colors.transparent,
+          closedBuilder: (BuildContext context, VoidCallback openContainer) {
+            return SizedBox(
+              height: 20,
+              width: 20,
+              child: Image.asset('images/icons/quick_items.png',
+                  color: Colors.white),
+            );
+          },
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   Future _loadPreferences() async {
