@@ -587,7 +587,7 @@ class _TacPageState extends State<TacPage> {
     var optimal = 0;
     if (_tacFilters.useOptimal) optimal = 1;
 
-    var url = 'https://tornattackcentral.eu/pdaintegration2.php?'
+    var url = 'https://tornattackcentral.eu/pdaintegration.php?'
         'password=${TacConfig.password}'
         '&userid=${_userProvider.basic.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
