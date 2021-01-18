@@ -35,33 +35,40 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // VERSION 2.0.0-BETA
+    // VERSION 2.1.0
     var v2_1_0 = ChangeLogItem();
     v2_1_0.main.version = 'Torn PDA v2.1.0';
-    v2_1_0.main.date = '14 JAN 2021';
-    String feat2_1_0_1 = "Automatic alerts: added Events (includes trading alerts as a special category), with some predefined filters";
-    String feat2_1_0_2 = "Awards: activated pins sync with YATA";
-    String feat2_1_0_3 = "Awards: fixed sorting by days left";
-    String feat2_1_0_4 = "Notifications are now automatically removed from the notification bar when the application is launched (can be deactivated)";
-    String feat2_1_0_5 = "Added notification channels (in Android's notifications settings) so that users can configure each notification (sound, alert type, etc.) individually";
-    String feat2_1_0_6 = "You can now select the vibration pattern for notifications (Settings)";
-    String feat2_1_0_7 = "Fixed Discord link";
-    String feat2_1_0_8 = "Fixed issues when launching the external browser";
-    String feat2_1_0_9 = "Fixed URL copying";
+    v2_1_0.main.date = '21 JAN 2021';
+    String feat2_1_0_1 = "Added Torn Attack Central mobile interface (see Chaining section)";
+    String feat2_1_0_2 = "Automatic alerts: added Events (includes trading alerts as a special category), with some predefined filters";
+    String feat2_1_0_3 = "You can now use your shortcuts directly from the browser (tap the page title)";
+    String feat2_1_0_4 = "Added the quick items widget to the chaining browser";
+    String feat2_1_0_5 = "Awards: activated pins sync with YATA";
+    String feat2_1_0_6 = "Awards: fixed sorting by days left";
+    String feat2_1_0_7 = "Notifications are now automatically removed from the notification bar when the application is launched (can be deactivated)";
+    String feat2_1_0_8 = "Added notification channels (in Android's notifications settings) so that users can configure each notification (sound, alert type, etc.) individually";
+    String feat2_1_0_9 = "You can now select the vibration pattern for notifications (Settings)";
+    String feat2_1_0_10 = "Fixed Discord link";
+    String feat2_1_0_11 = "Fixed issues when launching the external browser";
+    String feat2_1_0_12 = "Fixed URL copying";
+    String feat2_1_0_13 = "Fixed education warning when there are no pending courses";
     v2_1_0.features.add(feat2_1_0_1);
     v2_1_0.features.add(feat2_1_0_2);
     v2_1_0.features.add(feat2_1_0_3);
-    if (Platform.isAndroid) {
-      v2_1_0.features.add(feat2_1_0_4);
-      v2_1_0.features.add(feat2_1_0_5);
-      v2_1_0.features.add(feat2_1_0_6);
-    }
+    v2_1_0.features.add(feat2_1_0_4);
+    v2_1_0.features.add(feat2_1_0_5);
     v2_1_0.features.add(feat2_1_0_6);
-    v2_1_0.features.add(feat2_1_0_7);
-    v2_1_0.features.add(feat2_1_0_8);
-    v2_1_0.features.add(feat2_1_0_9);
+    if (Platform.isAndroid) {
+      v2_1_0.features.add(feat2_1_0_7);
+      v2_1_0.features.add(feat2_1_0_8);
+      v2_1_0.features.add(feat2_1_0_9);
+    }
+    v2_1_0.features.add(feat2_1_0_10);
+    v2_1_0.features.add(feat2_1_0_11);
+    v2_1_0.features.add(feat2_1_0_12);
+    v2_1_0.features.add(feat2_1_0_13);
 
-    // VERSION 2.0.0-BETA
+    // VERSION 2.0.0
     var v2_0_0 = ChangeLogItem();
     v2_0_0.main.version = 'Torn PDA v2.0.0';
     v2_0_0.main.date = '06 JAN 2021';
