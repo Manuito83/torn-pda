@@ -783,6 +783,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Future<bool> _willPopCallback() async {
+    await _tryGoBack();
     return false;
   }
 }
