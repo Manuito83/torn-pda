@@ -1275,19 +1275,26 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _getApiDetails({@required bool userTriggered}) async {
     try {
+
+      setState(() {
+        _apiIsLoading = true;
+      });
+
       dynamic myProfile =
           await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
       if (myProfile is OwnProfileBasic) {
+
+        myProfile
+          ..userApiKey = _myCurrentKey
+          ..userApiKeyValid = true;
+        _userProvider.setUserDetails(userDetails: myProfile);
+
         setState(() {
           _apiIsLoading = false;
           _userToLoad = true;
           _apiError = false;
           _userProfile = myProfile;
         });
-        myProfile
-          ..userApiKey = _myCurrentKey
-          ..userApiKeyValid = true;
-        _userProvider.setUserDetails(userDetails: myProfile);
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
