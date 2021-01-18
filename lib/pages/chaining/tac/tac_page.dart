@@ -897,11 +897,11 @@ class _TacPageState extends State<TacPage> {
 
     var savedModel = await SharedPreferencesModel().getTACTargets();
     if (savedModel != "") {
+      _tacModel = tacModelFromJson(savedModel);
       setState(() {
         if (_tacModel.incorrectPremium) {
           _incorrectPremium = true;
         }
-        _tacModel = tacModelFromJson(savedModel);
       });
     }
   }
