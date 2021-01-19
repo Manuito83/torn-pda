@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/main.dart';
+import 'dart:io';
 
 enum TipClass {
   general,
@@ -206,6 +207,18 @@ class _TipsPageState extends State<TipsPage> {
             "NOTE: this functionality is from the OS (Android/iOS), Torn PDA will never store your Torn username or password.",
       ),
     );
+    if (Platform.isAndroid) {
+      tips.add(
+        ExpandableTip(
+          headerValue: "Android notification channels",
+          expandedValue:
+              "All apps developed for Android 7 and newer versions can optionally add separated notifications channels "
+              "so that users can customize the sound, vibration and visual alerts for each notification."
+              "\n\nTorn PDA adds three notification channels for each type of notification (this is to separate vibration in short, medium and long), "
+              "which you can customize accessing Android's Settings / All Apps / Torn PDA / Notifications.",
+        ),
+      );
+    }
     return tips;
   }
 
@@ -219,6 +232,15 @@ class _TipsPageState extends State<TipsPage> {
             "This is accomplished in the Settings section.\n\n"
             "The earlier will open your mobile phone's default browser application, but you will lose most "
             "functionalities in Torn PDA (such as quick crimes, trades calculator, city finder...)",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Chaining browser",
+        expandedValue:
+            "Please be aware that the browser used in the chaining section is focused on improving the chaining experience.\n\nIt does not "
+            "have as many features as the standard browser that you can use in other sections of the app. One exception is the "
+            "Quick Items feature, since this can be helpful while chaining.",
       ),
     );
     tips.add(
@@ -260,7 +282,7 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "How do I save the current URL as a shortcut?",
+        headerValue: "Save the current URL as a shortcut or navigate to an existing one",
         expandedValue:
             "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
@@ -317,6 +339,15 @@ class _TipsPageState extends State<TipsPage> {
             "Try tapping or long-pressing the cash and points icons!",
       ),
     );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Medic call (Nuke revive)",
+        expandedValue:
+            "When you are in hospital, you'll get the chance to call a reviver by using the icon that appears in the Profile section.\n\n"
+            "This will automatically alert all available revivers in the Central Hospital Discord channel.\n\n"
+            "Have a look at the information contained in the revive dialog and be aware that this is a paid service!",
+      ),
+    );
     return tips;
   }
 
@@ -328,6 +359,15 @@ class _TipsPageState extends State<TipsPage> {
         expandedValue:
             "You can export and import your targets to and from YATA. Look for the 'Y' icon in the "
             "main app bar when in the Targets section.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Use Torn Attack Central",
+        expandedValue:
+            "You can get suggested targets from Torn Attack Central (see their website for more information).\n\nYou can "
+            "access this feature through the third bottom tab, named 'TAC', in the Chaining section. If it's not there, please "
+            "enter the options menu in the main Targets screen to activate it.",
       ),
     );
     return tips;

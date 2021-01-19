@@ -445,6 +445,14 @@ class _AboutPageState extends State<AboutPage> {
               alignment: Alignment.bottomLeft,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+                child: Text('Thank you to our partners, who chose Torn PDA as their mobile '
+                    'interface: YATA, Torn Trader, Nuke (Central Hospital) and Torn Attack Central.'),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
                 child: Text('Some scripts, concepts and features have been '
                     'adapted from preexisting ones in tools like YATA, '
                     'Torn Tools or DocTorn.'),
