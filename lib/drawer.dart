@@ -206,7 +206,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _updateLastActiveTime();
 
       // Get rid of notifications
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
         // Gets the active (already shown) notifications
         final List<ActiveNotification> activeNotifications =
             await flutterLocalNotificationsPlugin
