@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:device_info/device_info.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -60,6 +61,8 @@ class _SettingsPageState extends State<SettingsPage> {
   var _apiKeyInputController = TextEditingController();
 
   String _appBarPosition = "top";
+
+  int _androidSdk = 0;
 
   @override
   void initState() {
@@ -397,7 +400,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               padding: const EdgeInsets.only(
                                   left: 20, top: 10, right: 20, bottom: 5),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Flexible(
                                     child: Text(
@@ -1159,7 +1163,17 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  DropdownButton _vibrationDropdown() {
+  Widget _vibrationDropdown() {
+    if (_androidSdk < 26) {
+      return Text(
+        'This functionality is only available in Android 8 (API 26 - Oreo) or higher, sorry!',
+        style: TextStyle(
+          color: Colors.red,
+          fontSize: 10,
+        ),
+      );
+    }
+
     return DropdownButton<String>(
       value: _vibrationValue,
       items: [
@@ -1275,7 +1289,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _getApiDetails({@required bool userTriggered}) async {
     try {
-
       setState(() {
         _apiIsLoading = true;
       });
@@ -1283,7 +1296,6 @@ class _SettingsPageState extends State<SettingsPage> {
       dynamic myProfile =
           await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
       if (myProfile is OwnProfileBasic) {
-
         myProfile
           ..userApiKey = _myCurrentKey
           ..userApiKeyValid = true;
@@ -1333,6 +1345,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future _restorePreferences() async {
+    if (Platform.isAndroid) {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      _androidSdk = androidInfo.version.sdkInt;
+    }
+
     await SharedPreferencesModel().getDefaultSection().then((onValue) {
       setState(() {
         _openSectionValue = onValue;

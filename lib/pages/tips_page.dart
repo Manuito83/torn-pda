@@ -212,7 +212,7 @@ class _TipsPageState extends State<TipsPage> {
         ExpandableTip(
           headerValue: "Android notification channels",
           expandedValue:
-              "All apps developed for Android 7 and newer versions can optionally add separated notifications channels "
+              "All apps developed for Android 8 (Oreo) and newer versions can optionally add separated notifications channels "
               "so that users can customize the sound, vibration and visual alerts for each notification."
               "\n\nTorn PDA adds three notification channels for each type of notification (this is to separate vibration in short, medium and long), "
               "which you can customize accessing Android's Settings / All Apps / Torn PDA / Notifications.",

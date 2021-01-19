@@ -10,13 +10,11 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import java.util.List;
-import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "tornpda.channel";
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
@@ -45,12 +43,15 @@ public class MainActivity extends FlutterActivity {
     }
 
     // Deletes all notification channels
-    @RequiresApi(api = Build.VERSION_CODES.O)
     private void deleteNotificationChannels() {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        List<NotificationChannel> channels = notificationManager.getNotificationChannels();
-        for (NotificationChannel channel : channels) {
-            notificationManager.deleteNotificationChannel(channel.getId());
+        // Oreo or above, otherwise it will fail (can't be catched in Flutter)
+        // Refer to https://developer.android.com/reference/android/os/Build.VERSION_CODES#O
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            List<NotificationChannel> channels = notificationManager.getNotificationChannels();
+            for (NotificationChannel channel : channels) {
+                notificationManager.deleteNotificationChannel(channel.getId());
+            }
         }
     }
 }
