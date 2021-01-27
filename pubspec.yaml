@@ -59,6 +59,7 @@ dependencies:
   dotted_border: ^1.0.7
   flutter_colorpicker: ^0.3.4
   device_info: ^1.0.0
+  pull_to_refresh: ^1.6.3
   flutter_inappwebview:
     git:
       url: https://github.com/pichillilorenzo/flutter_inappwebview.git

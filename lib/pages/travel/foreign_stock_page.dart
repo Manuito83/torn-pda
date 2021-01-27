@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter/cupertino.dart';
@@ -106,6 +107,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.profit),
   ];
 
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
+
+  void _onRefresh() async{
+    setState(() {
+      _apiCalled = _fetchApiInformation();
+    });
+    _refreshController.refreshCompleted();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -180,8 +190,16 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                             ),
                           ),
                         ],
-                        child: ListView(
-                          children: _stockItems(),
+                        child: SmartRefresher(
+                          enablePullDown: true,
+                          header: WaterDropMaterialHeader(
+                            backgroundColor: Theme.of(context).primaryColor,
+                          ),
+                          controller: _refreshController,
+                          onRefresh: _onRefresh,
+                          child: ListView(
+                            children: _stockItems(),
+                          ),
                         ),
                       );
                     } else {
