@@ -73,6 +73,7 @@ class ForeignStock {
   ItemType itemType;
   int value = 0;
   int profit = 0;
+  int inventoryQuantity = 0;
 
   int id;
   String name;

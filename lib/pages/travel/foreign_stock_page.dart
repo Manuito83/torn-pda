@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +18,6 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:ui';
-
 import 'package:torn_pda/utils/api_caller.dart';
 
 class ReturnFlagPressed {
@@ -67,9 +66,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   bool _inventoryEnabled = true;
   InventoryModel _inventory;
-
   OwnProfileMisc _profileMisc;
-
   int _capacity;
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
@@ -141,7 +138,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             children: <Widget>[
               FutureBuilder(
                 future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder:
+                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     if (_apiSuccess) {
                       return BubbleShowcase(
@@ -192,11 +190,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                         children: <Widget>[
                           Text(
                             'OPS!',
-                            style:
-                                TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 50, vertical: 20),
                             child: Text(
                               'There was an error getting the information, please '
                               'try again later!',
@@ -223,7 +224,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               // Sliding panel
               FutureBuilder(
                 future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder:
+                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     if (_apiSuccess) {
                       return SlidingUpPanel(
@@ -240,7 +242,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                           topRight: Radius.circular(18.0),
                         ),
                         onPanelSlide: (double pos) => setState(() {
-                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                          _fabHeight =
+                              pos * (_panelHeightOpen - _panelHeightClosed) +
+                                  _initFabHeight;
                         }),
                       );
                     } else {
@@ -255,7 +259,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               // FAB
               FutureBuilder(
                 future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder:
+                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     if (_apiSuccess) {
                       return Positioned(
@@ -295,7 +300,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
           // Returning 'false' to indicate we did not press a flag
-          Navigator.pop(context, ReturnFlagPressed(flagPressed: false, shortTap: false));
+          Navigator.pop(
+            context,
+            ReturnFlagPressed(flagPressed: false, shortTap: false),
+          );
         },
       ),
       actions: <Widget>[
@@ -352,7 +360,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                 width: 30,
                 height: 5,
                 decoration: BoxDecoration(
-                    color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
               ),
             ],
           ),
@@ -561,148 +570,23 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     thisStockList.add(typesFilterDetails);
 
     for (var stock in _filteredStocksCards) {
-      Widget stockDetails = Card(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _firstRow(stock),
-                  SizedBox(height: 10),
-                  _secondRow(stock),
-                ],
-              ),
-              _countryFlag(stock),
-            ],
-          ),
+      thisStockList.add(
+        ForeignStockCard(
+          foreignStock: stock,
+          inventoryModel: _inventory,
+          capacity: _capacity,
+          allTornItems: null,
+          inventoryEnabled: _inventoryEnabled,
+          moneyOnHand: _profileMisc.moneyOnhand,
+          flagPressedCallback: _onFlagPressed,
         ),
       );
-
-      thisStockList.add(stockDetails);
     }
 
     thisStockList.add(SizedBox(
       height: 100,
     ));
     return thisStockList;
-  }
-
-  Row _firstRow(ForeignStock stock) {
-    var invQuantity = 0;
-    if (_inventoryEnabled) {
-      for (var invItem in _inventory.inventory) {
-        if (invItem.id == stock.id) {
-          invQuantity = invItem.quantity;
-          break;
-        }
-      }
-    }
-
-    return Row(
-      children: <Widget>[
-        Image.asset('images/torn_items/small/${stock.id}_small.png'),
-        Padding(
-          padding: EdgeInsets.only(right: 10),
-        ),
-        Column(
-          children: [
-            SizedBox(
-              width: 100,
-              child: Text(stock.name),
-            ),
-            _inventoryEnabled
-                ? SizedBox(
-                    width: 100,
-                    child: Text(
-                      "(inv: x$invQuantity)",
-                      style: TextStyle(fontSize: 11),
-                    ),
-                  )
-                : SizedBox.shrink(),
-          ],
-        ),
-        Padding(
-          padding: EdgeInsets.only(right: 15),
-        ),
-        SizedBox(
-          width: 55,
-          child: Text(
-            'x${stock.quantity}',
-            style: TextStyle(
-              color: stock.quantity > 0 ? Colors.green : Colors.red,
-              fontWeight: stock.quantity > 0 ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-        _returnLastUpdated(stock.timestamp),
-      ],
-    );
-  }
-
-  Row _secondRow(ForeignStock stock) {
-    // Currency configuration
-    final costCurrency = new NumberFormat("#,##0", "en_US");
-
-    // Item cost
-    Widget costWidget;
-    costWidget = Text(
-      '\$${costCurrency.format(stock.cost)}',
-      style: TextStyle(fontWeight: FontWeight.bold),
-    );
-
-    // Profit and profit per hour
-    Widget profitWidget;
-    Widget profitPerMinuteWidget;
-    var apiModel = _allTornItems;
-    if (apiModel is ItemsModel) {
-      final profitColor = stock.value <= 0 ? Colors.red : Colors.green;
-
-      String profitFormatted = calculateProfit(stock.value.abs());
-      if (stock.value <= 0) {
-        profitFormatted = '-\$$profitFormatted';
-      } else {
-        profitFormatted = '+\$$profitFormatted';
-      }
-
-      profitWidget = Text(
-        profitFormatted,
-        style: TextStyle(color: profitColor),
-      );
-
-      // Profit per hour
-      String profitPerHourFormatted = calculateProfit((stock.profit * _capacity).abs());
-      if (stock.profit <= 0) {
-        profitPerHourFormatted = '-\$$profitPerHourFormatted';
-      } else {
-        profitPerHourFormatted = '+\$$profitPerHourFormatted';
-      }
-
-      profitPerMinuteWidget = Text(
-        '($profitPerHourFormatted/hour)',
-        style: TextStyle(color: profitColor),
-      );
-    } else if (apiModel is ApiError) {
-      // We don't necessarily need Torn API to be up
-      profitWidget = SizedBox.shrink();
-      profitPerMinuteWidget = SizedBox.shrink();
-    }
-
-    return Row(
-      children: <Widget>[
-        costWidget,
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: profitWidget,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: profitPerMinuteWidget,
-        ),
-      ],
-    );
   }
 
   String calculateProfit(int moneyInput) {
@@ -731,108 +615,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     return profitFormat;
   }
 
-  Widget _countryFlag(ForeignStock stock) {
-    String countryCode;
-    String flag;
-    switch (stock.country) {
-      case CountryName.JAPAN:
-        countryCode = 'JPN';
-        flag = 'images/flags/stock/japan.png';
-        break;
-      case CountryName.HAWAII:
-        countryCode = 'HAW';
-        flag = 'images/flags/stock/hawaii.png';
-        break;
-      case CountryName.CHINA:
-        countryCode = 'CHN';
-        flag = 'images/flags/stock/china.png';
-        break;
-      case CountryName.ARGENTINA:
-        countryCode = 'ARG';
-        flag = 'images/flags/stock/argentina.png';
-        break;
-      case CountryName.UNITED_KINGDOM:
-        countryCode = 'UK';
-        flag = 'images/flags/stock/uk.png';
-        break;
-      case CountryName.CAYMAN_ISLANDS:
-        countryCode = 'CAY';
-        flag = 'images/flags/stock/cayman.png';
-        break;
-      case CountryName.SOUTH_AFRICA:
-        countryCode = 'AFR';
-        flag = 'images/flags/stock/south-africa.png';
-        break;
-      case CountryName.SWITZERLAND:
-        countryCode = 'SWI';
-        flag = 'images/flags/stock/switzerland.png';
-        break;
-      case CountryName.MEXICO:
-        countryCode = 'MEX';
-        flag = 'images/flags/stock/mexico.png';
-        break;
-      case CountryName.UAE:
-        countryCode = 'UAE';
-        flag = 'images/flags/stock/uae.png';
-        break;
-      case CountryName.CANADA:
-        countryCode = 'CAN';
-        flag = 'images/flags/stock/canada.png';
-        break;
-    }
-
-    return GestureDetector(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(countryCode),
-          Image.asset(
-            flag,
-            width: 30,
-          ),
-        ],
-      ),
-      onLongPress: () {
-        _launchMoneyWarning(stock);
-        Navigator.pop(context, ReturnFlagPressed(flagPressed: true, shortTap: false));
-      },
-      onTap: () {
-        _launchMoneyWarning(stock);
-        Navigator.pop(context, ReturnFlagPressed(flagPressed: true, shortTap: true));
-      },
-    );
-  }
-
-  void _launchMoneyWarning(ForeignStock stock) {
-    // Currency configuration
-    final costCurrency = new NumberFormat("#,##0", "en_US");
-
-    var moneyOnHand = _profileMisc.moneyOnhand;
-    String moneyToBuy = '';
-    Color moneyToBuyColor = Colors.grey;
-    if (moneyOnHand >= stock.cost * _capacity) {
-      moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * _capacity)} necessary to '
-          'buy $_capacity ${stock.name}';
-      moneyToBuyColor = Colors.green;
-    } else {
-      moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost * _capacity)} '
-          'necessary to buy $_capacity ${stock.name}. Add another '
-          '\$${costCurrency.format((stock.cost * _capacity) - moneyOnHand)}';
-      moneyToBuyColor = Colors.red;
-    }
-
-    BotToast.showText(
-      text: moneyToBuy,
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: moneyToBuyColor,
-      duration: Duration(seconds: 6),
-      contentPadding: EdgeInsets.all(10),
-    );
-  }
-
   Future<void> _fetchApiInformation() async {
     try {
       Future yataAPI() async {
@@ -855,11 +637,17 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future profileMisc() async {
-        _profileMisc = await TornApiCaller.ownMisc(widget.apiKey).getProfileMisc;
+        _profileMisc =
+            await TornApiCaller.ownMisc(widget.apiKey).getProfileMisc;
       }
 
       // Get all APIs at the same time
-      await Future.wait<void>([yataAPI(), tornItems(), inventory(), profileMisc()]);
+      await Future.wait<void>([
+        yataAPI(),
+        tornItems(),
+        inventory(),
+        profileMisc(),
+      ]);
 
       // We need to calculate several additional values (stock value, profit, country, type and
       // timestamp) before sorting the list for the first time, as this values don't come straight
@@ -946,52 +734,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
-  Row _returnLastUpdated(int timeStamp) {
-    var inputTime = DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000);
-    var timeDifference = DateTime.now().difference(inputTime);
-    var timeString;
-    var color;
-    if (timeDifference.inMinutes < 1) {
-      timeString = 'now';
-      color = Colors.green;
-    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      timeString = '1 min';
-      color = Colors.green;
-    } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-      timeString = '${timeDifference.inMinutes} min';
-      color = Colors.green;
-    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      timeString = '1 hour';
-      color = Colors.orange;
-    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      timeString = '${timeDifference.inHours} hours';
-      color = Colors.red;
-    } else if (timeDifference.inDays == 1) {
-      timeString = '1 day';
-      color = Colors.green;
-    } else {
-      timeString = '${timeDifference.inDays} days';
-      color = Colors.green;
-    }
-
-    return Row(
-      children: <Widget>[
-        Icon(
-          Icons.access_time,
-          size: 14,
-          color: color,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            timeString,
-            style: TextStyle(color: color),
-          ),
-        ),
-      ],
-    );
-  }
-
   void _filterAndSortMainList() {
     // Edit countries string
     _countriesFilteredText = '';
@@ -999,7 +741,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     int totalCountriesShown = 0;
     for (var i = 0; i < _filteredFlags.length - 1; i++) {
       if (_filteredFlags[i]) {
-        _countriesFilteredText += firstCountry ? _countryCodes[i] : ', ${_countryCodes[i]}';
+        _countriesFilteredText +=
+            firstCountry ? _countryCodes[i] : ', ${_countryCodes[i]}';
         firstCountry = false;
         totalCountriesShown++;
       }
@@ -1140,7 +883,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     setState(() {
       switch (choice.type) {
         case StockSortType.country:
-          _filteredStocksCards.sort((a, b) => a.country.index.compareTo(b.country.index));
+          _filteredStocksCards
+              .sort((a, b) => a.country.index.compareTo(b.country.index));
           SharedPreferencesModel().setStockSort('country');
           break;
         case StockSortType.name:
@@ -1148,8 +892,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           SharedPreferencesModel().setStockSort('name');
           break;
         case StockSortType.type:
-          _filteredStocksCards
-              .sort((a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
+          _filteredStocksCards.sort(
+              (a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
           SharedPreferencesModel().setStockSort('type');
           break;
         case StockSortType.quantity:
@@ -1175,12 +919,16 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Future _restoreSharedPreferences() async {
     var flagStrings = await SharedPreferencesModel().getStockCountryFilter();
     for (var i = 0; i < flagStrings.length; i++) {
-      flagStrings[i] == '0' ? _filteredFlags[i] = false : _filteredFlags[i] = true;
+      flagStrings[i] == '0'
+          ? _filteredFlags[i] = false
+          : _filteredFlags[i] = true;
     }
 
     var typesStrings = await SharedPreferencesModel().getStockTypeFilter();
     for (var i = 0; i < typesStrings.length; i++) {
-      typesStrings[i] == '0' ? _filteredTypes[i] = false : _filteredTypes[i] = true;
+      typesStrings[i] == '0'
+          ? _filteredTypes[i] = false
+          : _filteredTypes[i] = true;
     }
 
     var sortString = await SharedPreferencesModel().getStockSort();
@@ -1203,7 +951,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _currentSort = StockSort(type: sortType);
 
     _capacity = await SharedPreferencesModel().getStockCapacity();
-    _inventoryEnabled = await SharedPreferencesModel().getShowForeignInventory();
+    _inventoryEnabled =
+        await SharedPreferencesModel().getShowForeignInventory();
   }
 
   Future<void> _showOptionsDialog() {
@@ -1254,5 +1003,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     } else {
       return '${timeDifference.inDays} days ago';
     }
+  }
+
+  void _onFlagPressed(bool flagPressed, bool shorTap) {
+    Navigator.pop(
+      context,
+      ReturnFlagPressed(flagPressed: true, shortTap: shorTap),
+    );
   }
 }
