@@ -109,13 +109,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   RefreshController _refreshController = RefreshController(initialRefresh: false);
 
-  void _onRefresh() async{
-    setState(() {
-      _apiCalled = _fetchApiInformation();
-    });
-    _refreshController.refreshCompleted();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -203,25 +196,54 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                         ),
                       );
                     } else {
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            'OPS!',
-                            style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold),
+                      var errorTiles = <Widget>[];
+                      errorTiles.add(
+                        Center(
+                          child: Column(
+                            children: [
+                              Image.asset(
+                                'images/icons/airplane.png',
+                                height: 100,
+                              ),
+                              SizedBox(height: 15),
+                              Text(
+                                'OPS!',
+                                style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 20),
+                                child: Text(
+                                  'There was an error getting the information, please '
+                                  'try again later or pull to refresh!',
+                                ),
+                              ),
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 50, vertical: 20),
-                            child: Text(
-                              'There was an error getting the information, please '
-                              'try again later!',
+                        ),
+                      );
+
+                      return SmartRefresher(
+                        enablePullDown: true,
+                        header: WaterDropMaterialHeader(
+                          backgroundColor: Theme.of(context).primaryColor,
+                        ),
+                        controller: _refreshController,
+                        onRefresh: _onRefresh,
+                        child: ListView(
+                          children: [
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height / 2,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: errorTiles,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     }
                   } else {
@@ -1028,5 +1050,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       context,
       ReturnFlagPressed(flagPressed: true, shortTap: shorTap),
     );
+  }
+
+  void _onRefresh() async {
+    await Future.delayed(Duration(milliseconds: 500));
+    await _fetchApiInformation();
+
+    setState(() {});
+    _refreshController.refreshCompleted();
+    // Initialize the controller again to avoid errors
+    _refreshController = RefreshController(initialRefresh: false);
   }
 }

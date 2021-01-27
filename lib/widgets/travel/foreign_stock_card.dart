@@ -1,3 +1,4 @@
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
@@ -33,21 +34,39 @@ class ForeignStockCard extends StatefulWidget {
 class _ForeignStockCardState extends State<ForeignStockCard> {
   @override
   Widget build(BuildContext context) {
+    return ExpandablePanel(
+      collapsed: _fullCard(expanded: true),
+      expanded: _fullCard(expanded: false),
+    );
+  }
+
+  Card _fullCard({bool expanded}) {
+
+    Widget footer = SizedBox.shrink();
+    if (expanded) {
+      Text("cuac");
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                _firstRow(widget.foreignStock),
-                SizedBox(height: 10),
-                _secondRow(widget.foreignStock),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    _firstRow(widget.foreignStock),
+                    SizedBox(height: 10),
+                    _secondRow(widget.foreignStock),
+                  ],
+                ),
+                _countryFlag(widget.foreignStock),
               ],
             ),
-            _countryFlag(widget.foreignStock),
+            footer,
           ],
         ),
       ),
