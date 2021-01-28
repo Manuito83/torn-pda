@@ -145,6 +145,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     var depletesTime = "";
     Color whenToTravelColor = _themeProvider.mainText;
 
+    bool delayDeparture = false;
+    DateTime delayedDeparture;
+
     // Calculates when to leave, taking into account:
     //  - If there are items: arrive before depletion
     //  - If there are no items: arrive when restock happens
@@ -193,14 +196,17 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     else {
       var additionalWait =
           _projectedRestockDateTime.difference(earliestArrival).inSeconds;
-      var delayedDeparture =
+
+      delayDeparture = true;
+      delayedDeparture =
           DateTime.now().add(Duration(seconds: additionalWait));
+
       whenToTravel =
           "Travel at ${DateFormat('HH:mm').format(delayedDeparture)}";
       var delayedArrival =
           delayedDeparture.add(Duration(seconds: travelSeconds));
       arrivalTime = "You will be there at "
-          "${DateFormat('hh:mm').format(delayedArrival)}";
+          "${DateFormat('HH:mm').format(delayedArrival)}";
     }
 
     return FutureBuilder(
