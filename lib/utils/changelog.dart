@@ -35,6 +35,14 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.1.1
+    // ### ADDED FOR IOS ONLY ###
+    var v2_1_1 = ChangeLogItem();
+    v2_1_1.main.version = 'Torn PDA v2.1.1';
+    v2_1_1.main.date = '30 JAN 2021';
+    String feat2_1_1_1 = "Fixed Awards not loading correctly on iOS";
+    v2_1_1.features.add(feat2_1_1_1);
+
     // VERSION 2.1.0
     var v2_1_0 = ChangeLogItem();
     v2_1_0.main.version = 'Torn PDA v2.1.0';
@@ -468,6 +476,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    if (Platform.isIOS) itemList.add(v2_1_1);
     itemList.add(v2_1_0);
     itemList.add(v2_0_0);
     itemList.add(v1_9_7);
