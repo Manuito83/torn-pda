@@ -69,6 +69,8 @@ class ForeignStock {
   // NOT INCLUDED WITH YATA IMPORT
   // Calculated, NOT exported to Shared Preferences!
   CountryName country;
+  String countryCode;
+  DateTime arrivalTime;
   int timestamp;
   ItemType itemType;
   int value = 0;

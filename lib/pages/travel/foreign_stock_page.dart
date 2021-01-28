@@ -20,6 +20,7 @@ import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:ui';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 
 class ReturnFlagPressed {
   bool flagPressed = false;
@@ -107,7 +108,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.profit),
   ];
 
-  RefreshController _refreshController = RefreshController(initialRefresh: false);
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -619,6 +621,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           inventoryEnabled: _inventoryEnabled,
           moneyOnHand: _profileMisc.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
+          key: UniqueKey(),
         ),
       );
     }
@@ -689,7 +692,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         profileMisc(),
       ]);
 
-      // We need to calculate several additional values (stock value, profit, country, type and
+      // We need to calculate several additional values (stock value, country, type and
       // timestamp) before sorting the list for the first time, as this values don't come straight
       // in every stock from the API (but can be deducted)
       var itemList = _allTornItems.items.values.toList();
@@ -701,62 +704,40 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           // Complete fields we need for value and profit
           stock.value = itemMatch.marketValue - stock.cost;
 
-          int roundTripJapan = 158 * 2;
-          int roundTripHawaii = 94 * 2;
-          int roundTripChina = 169 * 2;
-          int roundTripArgentina = 117 * 2;
-          int roundTripUK = 111 * 2;
-          int roundTripCayman = 25 * 2;
-          int roundTripSouthAfrica = 208 * 2;
-          int roundTripSwitzerland = 123 * 2;
-          int roundTripMexico = 18 * 2;
-          int roundTripUAE = 190 * 2;
-          int roundTripCanada = 29 * 2;
-
           // Assign actual profit depending on country (+ the country)
+          stock.countryCode = countryKey;
           switch (countryKey) {
             case 'jap':
-              stock.profit = (stock.value / roundTripJapan * 60).round();
               stock.country = CountryName.JAPAN;
               break;
             case 'haw':
-              stock.profit = (stock.value / roundTripHawaii * 60).round();
               stock.country = CountryName.HAWAII;
               break;
             case 'chi':
-              stock.profit = (stock.value / roundTripChina * 60).round();
               stock.country = CountryName.CHINA;
               break;
             case 'arg':
-              stock.profit = (stock.value / roundTripArgentina * 60).round();
               stock.country = CountryName.ARGENTINA;
               break;
             case 'uni':
-              stock.profit = (stock.value / roundTripUK * 60).round();
               stock.country = CountryName.UNITED_KINGDOM;
               break;
             case 'cay':
-              stock.profit = (stock.value / roundTripCayman * 60).round();
               stock.country = CountryName.CAYMAN_ISLANDS;
               break;
             case 'sou':
-              stock.profit = (stock.value / roundTripSouthAfrica * 60).round();
               stock.country = CountryName.SOUTH_AFRICA;
               break;
             case 'swi':
-              stock.profit = (stock.value / roundTripSwitzerland * 60).round();
               stock.country = CountryName.SWITZERLAND;
               break;
             case 'mex':
-              stock.profit = (stock.value / roundTripMexico * 60).round();
               stock.country = CountryName.MEXICO;
               break;
             case 'uae':
-              stock.profit = (stock.value / roundTripUAE * 60).round();
               stock.country = CountryName.UAE;
               break;
             case 'can':
-              stock.profit = (stock.value / roundTripCanada * 60).round();
               stock.country = CountryName.CANADA;
               break;
           }
@@ -764,6 +745,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           // Other fields contained in Yata and in Torn
           stock.timestamp = countryDetails.update;
           stock.itemType = itemList[stock.id - 1].type;
+          stock.arrivalTime = DateTime.now()
+              .add(Duration(minutes: TravelTimes.travelTime(stock)));
         }
       });
 
