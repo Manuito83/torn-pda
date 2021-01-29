@@ -22,6 +22,7 @@ class ForeignStockCard extends StatefulWidget {
   final int capacity;
   final int moneyOnHand;
   final Function flagPressedCallback;
+  final TravelTicket ticket;
 
   ForeignStockCard(
       {@required this.foreignStock,
@@ -31,14 +32,13 @@ class ForeignStockCard extends StatefulWidget {
       @required this.allTornItems,
       @required this.moneyOnHand,
       @required this.flagPressedCallback,
+      @required this.ticket,
       @required Key key})
       : super(key: key);
 
   @override
   _ForeignStockCardState createState() => _ForeignStockCardState();
 }
-
-
 
 class _ForeignStockCardState extends State<ForeignStockCard> {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -55,6 +55,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   var _projectedRestockDateTime = DateTime.now();
   var _depletionTrendPerSecond = 0.0;
 
+  var _invQuantity = 0;
+
   ThemeProvider _themeProvider;
 
   List<Color> gradientColors = [
@@ -65,6 +67,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   @override
   void initState() {
     super.initState();
+    _calculateDetails();
     _expandableController.addListener(() {
       if (_expandableController.expanded == true && !_footerSuccessful) {
         _footerInformationRetrieved = _getFooterInformation();
@@ -137,8 +140,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
 
     // WHEN TO TRAVEL
-    // TODO: reference global variable, not method
-    var travelSeconds = TravelTimes.travelTime(widget.foreignStock);
+    var travelSeconds = TravelTimes.travelTimeMinutesOneWay(
+          ticket: widget.ticket,
+          country: widget.foreignStock.country,
+        ) *
+        60;
 
     var whenToTravel = "";
     var arrivalTime = "";
@@ -198,8 +204,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           _projectedRestockDateTime.difference(earliestArrival).inSeconds;
 
       delayDeparture = true;
-      delayedDeparture =
-          DateTime.now().add(Duration(seconds: additionalWait));
+      delayedDeparture = DateTime.now().add(Duration(seconds: additionalWait));
 
       whenToTravel =
           "Travel at ${DateFormat('HH:mm').format(delayedDeparture)}";
@@ -317,16 +322,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Row _firstRow(ForeignStock stock) {
-    var invQuantity = 0;
-    if (widget.inventoryEnabled) {
-      for (var invItem in widget.inventoryModel.inventory) {
-        if (invItem.id == stock.id) {
-          invQuantity = invItem.quantity;
-          break;
-        }
-      }
-    }
-
     return Row(
       children: <Widget>[
         Image.asset('images/torn_items/small/${stock.id}_small.png'),
@@ -343,7 +338,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                 ? SizedBox(
                     width: 100,
                     child: Text(
-                      "(inv: x$invQuantity)",
+                      "(inv: x$_invQuantity)",
                       style: TextStyle(fontSize: 11),
                     ),
                   )
@@ -370,6 +365,16 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Row _secondRow(ForeignStock stock) {
+    // Travel time per hour, round trip
+    stock.profit = (stock.value /
+            (TravelTimes.travelTimeMinutesOneWay(
+                  ticket: widget.ticket,
+                  country: widget.foreignStock.country,
+                ) *
+                2 /
+                60))
+        .round();
+
     // Currency configuration
     final costCurrency = new NumberFormat("#,##0", "en_US");
 
@@ -385,7 +390,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     Widget profitPerMinuteWidget;
     final profitColor = stock.value <= 0 ? Colors.red : Colors.green;
 
-    String profitFormatted = calculateProfit(stock.value.abs());
+    String profitFormatted = formatProfit(stock.value.abs());
     if (stock.value <= 0) {
       profitFormatted = '-\$$profitFormatted';
     } else {
@@ -399,7 +404,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     // Profit per hour
     String profitPerHourFormatted =
-        calculateProfit((stock.profit * widget.capacity).abs());
+        formatProfit((stock.profit * widget.capacity).abs());
     if (stock.profit <= 0) {
       profitPerHourFormatted = '-\$$profitPerHourFormatted';
     } else {
@@ -426,7 +431,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  String calculateProfit(int moneyInput) {
+  String formatProfit(int moneyInput) {
     final profitCurrencyHigh = new NumberFormat("#,##0.0", "en_US");
     final costCurrencyLow = new NumberFormat("#,##0", "en_US");
     String profitFormat;
@@ -845,5 +850,14 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     return "${twoDigits(duration.inHours)}h ${twoDigitMinutes}m";
   }
 
-  
+  void _calculateDetails() {
+    if (widget.inventoryEnabled) {
+      for (var invItem in widget.inventoryModel.inventory) {
+        if (invItem.id == widget.foreignStock.id) {
+          _invQuantity = invItem.quantity;
+          break;
+        }
+      }
+    }
+  }
 }

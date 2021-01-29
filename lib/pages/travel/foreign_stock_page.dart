@@ -4,7 +4,6 @@ import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:speech_bubble/speech_bubble.dart';
@@ -70,6 +69,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   InventoryModel _inventory;
   OwnProfileMisc _profileMisc;
   int _capacity;
+  TravelTicket _ticket;
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
   final _filteredFlags = List<bool>.filled(12, true, growable: false);
@@ -621,6 +621,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           inventoryEnabled: _inventoryEnabled,
           moneyOnHand: _profileMisc.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
+          ticket: _ticket,
           key: UniqueKey(),
         ),
       );
@@ -630,32 +631,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       height: 100,
     ));
     return thisStockList;
-  }
-
-  String calculateProfit(int moneyInput) {
-    final profitCurrencyHigh = new NumberFormat("#,##0.0", "en_US");
-    final costCurrencyLow = new NumberFormat("#,##0", "en_US");
-    String profitFormat;
-
-    // Money standards to reduce string length (adding two zeros for .00)
-    final billion = 1000000000;
-    final million = 1000000;
-    final thousand = 1000;
-
-    // Profit
-    if (moneyInput < -billion || moneyInput > billion) {
-      final profitBillion = moneyInput / billion;
-      profitFormat = '${profitCurrencyHigh.format(profitBillion)}B';
-    } else if (moneyInput < -million || moneyInput > million) {
-      final profitMillion = moneyInput / million;
-      profitFormat = '${profitCurrencyHigh.format(profitMillion)}M';
-    } else if (moneyInput < -thousand || moneyInput > thousand) {
-      final profitThousand = moneyInput / thousand;
-      profitFormat = '${profitCurrencyHigh.format(profitThousand)}K';
-    } else {
-      profitFormat = '${costCurrencyLow.format(moneyInput)}';
-    }
-    return profitFormat;
   }
 
   Future<void> _fetchApiInformation() async {
@@ -745,8 +720,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           // Other fields contained in Yata and in Torn
           stock.timestamp = countryDetails.update;
           stock.itemType = itemList[stock.id - 1].type;
-          stock.arrivalTime = DateTime.now()
-              .add(Duration(minutes: TravelTimes.travelTime(stock)));
+          stock.arrivalTime = DateTime.now().add(
+            Duration(
+              minutes: TravelTimes.travelTimeMinutesOneWay(
+                country: stock.country,
+                ticket: _ticket,
+              ),
+            ),
+          );
         }
       });
 
@@ -976,6 +957,22 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _capacity = await SharedPreferencesModel().getStockCapacity();
     _inventoryEnabled =
         await SharedPreferencesModel().getShowForeignInventory();
+
+    var ticket = await SharedPreferencesModel().getTravelTicket();
+    switch (ticket) {
+      case "standard":
+        _ticket = TravelTicket.standard;
+        break;
+      case "private":
+        _ticket = TravelTicket.private;
+        break;
+      case "wlt":
+        _ticket = TravelTicket.wlt;
+        break;
+      case "business":
+        _ticket = TravelTicket.business;
+        break;
+    }
   }
 
   Future<void> _showOptionsDialog() {
@@ -992,8 +989,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           content: SingleChildScrollView(
             child: StocksOptionsDialog(
               capacity: _capacity,
-              callBack: _onCapacityChanged,
+              callBack: _onStocksOptionsChanged,
               inventoryEnabled: _inventoryEnabled,
+              ticket: _ticket,
             ),
           ),
         );
@@ -1001,10 +999,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onCapacityChanged(int newCapacity, bool inventoryEnabled) {
+  void _onStocksOptionsChanged(
+      int newCapacity, bool inventoryEnabled, TravelTicket ticket) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;
+      _ticket = ticket;
     });
   }
 

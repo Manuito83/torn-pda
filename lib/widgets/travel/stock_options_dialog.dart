@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 
 class StocksOptionsDialog extends StatefulWidget {
   final int capacity;
   final Function callBack;
   final bool inventoryEnabled;
+  final TravelTicket ticket;
 
   StocksOptionsDialog({
     @required this.capacity,
     @required this.callBack,
     @required this.inventoryEnabled,
+    @required this.ticket,
   });
 
   @override
@@ -23,12 +26,14 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
 
   int _capacity;
   bool _inventoryEnabled;
+  TravelTicket _ticket;
 
   @override
   void initState() {
     super.initState();
     _capacity = widget.capacity;
     _inventoryEnabled = widget.inventoryEnabled;
+    _ticket = widget.ticket;
   }
 
   @override
@@ -68,7 +73,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                         child: Text(
                           "Show inventory quantities",
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ),
@@ -85,54 +90,76 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Capacity: ${_capacity.round().toString()}",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 130,
+                        child: Slider(
+                          value: _capacity.toDouble(),
+                          min: 1,
+                          max: 44,
+                          label: _capacity.round().toString(),
+                          divisions: 44,
+                          onChanged: (double newCapacity) {
+                            setState(() {
+                              _capacity = newCapacity.round();
+                            });
+                            _callBackValues();
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                   Text(
-                    'If active, you\'ll be shown the quantity of each item you '
-                    'already possess in your inventory',
+                    'Affects profit per hour calculation',
                     style: TextStyle(
                       color: Colors.grey[600],
-                      fontSize: 12,
+                      fontSize: 11,
                       fontStyle: FontStyle.italic,
                     ),
                   ),
                   SizedBox(height: 10),
-                  Divider(),
-                  SizedBox(height: 10),
-                  Text(
-                    'Set your item capacity (affects profit per hour calculation)',
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
-                  SizedBox(height: 16.0),
-                  Text(
-                    "Capacity: ${_capacity.round().toString()}",
-                    style: TextStyle(
-                      fontSize: 14,
-                    ),
-                  ),
-                  Slider(
-                    value: _capacity.toDouble(),
-                    min: 1,
-                    max: 44,
-                    label: _capacity.round().toString(),
-                    divisions: 44,
-                    onChanged: (double newCapacity) {
-                      setState(() {
-                        _capacity = newCapacity.round();
-                      });
-                      _callBackValues();
-                    },
-                  ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      FlatButton(
-                        child: Text("Close"),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Ticket",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
                       ),
+                      _timeFormatDropdown(),
                     ],
+                  ),
+                  Text(
+                    'Affects all travel time based calculations',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        FlatButton(
+                          child: Text("Close"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
                   )
                 ],
               ),
@@ -163,9 +190,92 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     );
   }
 
+  DropdownButton _timeFormatDropdown() {
+    return DropdownButton<TravelTicket>(
+      value: _ticket,
+      items: [
+        DropdownMenuItem(
+          value: TravelTicket.standard,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Standard",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: TravelTicket.private,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Airstrip",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: TravelTicket.wlt,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Private",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: TravelTicket.business,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Business",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _ticket = value;
+        });
+        _callBackValues();
+      },
+    );
+  }
+
   void _callBackValues() {
-    widget.callBack(_capacity, _inventoryEnabled);
+    widget.callBack(_capacity, _inventoryEnabled, _ticket);
     SharedPreferencesModel().setStockCapacity(_capacity);
     SharedPreferencesModel().setShowForeignInventory(_inventoryEnabled);
+
+    var ticketString;
+    switch (_ticket) {
+      case TravelTicket.standard:
+        ticketString = "standard";
+        break;
+      case TravelTicket.private:
+        ticketString = "private";
+        break;
+      case TravelTicket.wlt:
+        ticketString = "wlt";
+        break;
+      case TravelTicket.business:
+        ticketString = "business";
+        break;
+    }
+    SharedPreferencesModel().setTravelTicket(ticketString);
   }
 }
