@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
 import "dart:collection";
 import 'dart:ui';
 
@@ -56,6 +57,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   var _depletionTrendPerSecond = 0.0;
 
   var _invQuantity = 0;
+
+  var _delayedDepartureTime = DateTime.now();
+  String _countryFullName = "";
+  String _codeName = "";
 
   ThemeProvider _themeProvider;
 
@@ -152,7 +157,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     Color whenToTravelColor = _themeProvider.mainText;
 
     bool delayDeparture = false;
-    DateTime delayedDeparture;
 
     // Calculates when to leave, taking into account:
     //  - If there are items: arrive before depletion
@@ -160,6 +164,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     //  - Does NOT take into account a restock that depletes quickly
     var earliestArrival = DateTime.now().add(Duration(seconds: travelSeconds));
     if (earliestArrival.isAfter(_projectedRestockDateTime)) {
+      delayDeparture = false;
+
       // Avoid dividing by 0 if we have no trend
       if (widget.foreignStock.quantity > 0 && _depletionTrendPerSecond > 0) {
         var secondsToDeplete =
@@ -200,16 +206,18 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
     // If we arrive before restock if we depart now
     else {
+      delayDeparture = true;
+
       var additionalWait =
           _projectedRestockDateTime.difference(earliestArrival).inSeconds;
 
-      delayDeparture = true;
-      delayedDeparture = DateTime.now().add(Duration(seconds: additionalWait));
+      _delayedDepartureTime =
+          DateTime.now().add(Duration(seconds: additionalWait));
 
       whenToTravel =
-          "Travel at ${DateFormat('HH:mm').format(delayedDeparture)}";
+          "Travel at ${DateFormat('HH:mm').format(_delayedDepartureTime)}";
       var delayedArrival =
-          delayedDeparture.add(Duration(seconds: travelSeconds));
+          _delayedDepartureTime.add(Duration(seconds: travelSeconds));
       arrivalTime = "You will be there at "
           "${DateFormat('HH:mm').format(delayedArrival)}";
     }
@@ -224,67 +232,71 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                 child: Column(
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (whenToTravel.isNotEmpty)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    whenToTravel,
-                                    style: TextStyle(
-                                        fontSize: 12, color: whenToTravelColor),
-                                  ),
-                                  if (depletesTime.isNotEmpty)
-                                    Text(
-                                      depletesTime,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                      ),
-                                    )
-                                  else
-                                    SizedBox.shrink(),
-                                  Text(
-                                    arrivalTime,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(height: 15),
-                                ],
-                              )
-                            else
-                              SizedBox.shrink(),
-                            Text(
-                              "Average restock time: $average",
-                              style: TextStyle(
-                                fontSize: 12,
+                        if (delayDeparture)
+                          IconButton(
+                            iconSize: 22,
+                            icon: Icon(Icons.notifications_none),
+                            onPressed: () {
+                              _showDelayedTravelDialog();
+                            },
+                          ),
+                        if (whenToTravel.isNotEmpty)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                whenToTravel,
+                                style: TextStyle(
+                                    fontSize: 12, color: whenToTravelColor),
                               ),
-                            ),
-                            if (reliability.isNotEmpty)
-                              Row(
-                                children: [
-                                  Text(
-                                    "Reliability: ",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ),
+                              if (depletesTime.isNotEmpty)
+                                Text(
+                                  depletesTime,
+                                  style: TextStyle(
+                                    fontSize: 12,
                                   ),
-                                  Text(
-                                    "$reliability",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: reliabilityColor,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              SizedBox.shrink(),
-                          ],
+                                ),
+                              Text(
+                                arrivalTime,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 15),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Average restock time: $average",
+                          style: TextStyle(
+                            fontSize: 12,
+                          ),
                         ),
+                        if (reliability.isNotEmpty)
+                          Row(
+                            children: [
+                              Text(
+                                "Reliability: ",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                "$reliability",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: reliabilityColor,
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                     SizedBox(height: 20),
@@ -463,46 +475,57 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     switch (stock.country) {
       case CountryName.JAPAN:
         countryCode = 'JPN';
+        _countryFullName = 'Japan';
         flag = 'images/flags/stock/japan.png';
         break;
       case CountryName.HAWAII:
         countryCode = 'HAW';
+        _countryFullName = 'Hawaii';
         flag = 'images/flags/stock/hawaii.png';
         break;
       case CountryName.CHINA:
         countryCode = 'CHN';
+        _countryFullName = 'China';
         flag = 'images/flags/stock/china.png';
         break;
       case CountryName.ARGENTINA:
         countryCode = 'ARG';
+        _countryFullName = 'Argentina';
         flag = 'images/flags/stock/argentina.png';
         break;
       case CountryName.UNITED_KINGDOM:
         countryCode = 'UK';
+        _countryFullName = 'the United Kingdom';
         flag = 'images/flags/stock/uk.png';
         break;
       case CountryName.CAYMAN_ISLANDS:
         countryCode = 'CAY';
+        _countryFullName = 'Cayman Islands';
         flag = 'images/flags/stock/cayman.png';
         break;
       case CountryName.SOUTH_AFRICA:
         countryCode = 'AFR';
+        _countryFullName = 'South Africa';
         flag = 'images/flags/stock/south-africa.png';
         break;
       case CountryName.SWITZERLAND:
         countryCode = 'SWI';
+        _countryFullName = 'Switzerland';
         flag = 'images/flags/stock/switzerland.png';
         break;
       case CountryName.MEXICO:
         countryCode = 'MEX';
+        _countryFullName = 'Mexico';
         flag = 'images/flags/stock/mexico.png';
         break;
       case CountryName.UAE:
         countryCode = 'UAE';
+        _countryFullName = 'the United Arab Emirates';
         flag = 'images/flags/stock/uae.png';
         break;
       case CountryName.CANADA:
         countryCode = 'CAN';
+        _countryFullName = 'Canada';
         flag = 'images/flags/stock/canada.png';
         break;
     }
@@ -612,13 +635,13 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   Future _getFooterInformation() async {
     // Build code name
-    var codeName = "${widget.foreignStock.countryCode}-"
+    _codeName = "${widget.foreignStock.countryCode}-"
         "${widget.foreignStock.name}";
 
     try {
       // Get the stock
       var firestoreData =
-          await _firestore.collection("stocks-main").doc(codeName).get();
+          await _firestore.collection("stocks-main").doc(_codeName).get();
 
       // Chart date
       var firestoreMap = firestoreData
@@ -644,8 +667,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           }
         }
         // We need a minimum number of restocks to give credibility
-        // TODO: change to 5
-        if (restock.length > 2) {
+        if (restock.length > 5) {
           _restockReliability = insideTenPercentAverage * 100 ~/ restock.length;
         } else {
           _restockReliability = 0;
@@ -759,7 +781,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         drawVerticalLine: false,
         getDrawingHorizontalLine: (value) {
           return FlLine(
-            color: const Color(0xff37434d),
+            color: _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.blueGrey
+                : const Color(0xff37434d),
             strokeWidth: 0.4,
           );
         },
@@ -805,8 +829,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           interval: interval,
           reservedSize: 10,
           margin: 12,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff67727d),
+          getTextStyles: (value) => TextStyle(
+            color: _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.blueGrey
+                : const Color(0xff67727d),
             fontSize: 10,
           ),
           getTitles: (yValue) {
@@ -859,5 +885,29 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         }
       }
     }
+  }
+
+  Future<void> _showDelayedTravelDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: DelayedTravelDialog(
+            stockName: widget.foreignStock.name,
+            boardingTime: _delayedDepartureTime,
+            country: _countryFullName,
+            stockCodeName: _codeName,
+            itemId: widget.foreignStock.id,
+            countryId: widget.foreignStock.country.index,
+          ),
+        );
+      },
+    );
   }
 }

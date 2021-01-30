@@ -1,0 +1,562 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/notification.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:torn_pda/main.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:intl/intl.dart';
+import 'dart:io';
+import 'dart:ui';
+import 'package:android_intent/android_intent.dart';
+import 'package:flutter/gestures.dart';
+
+class DelayedTravelDialog extends StatefulWidget {
+  final DateTime boardingTime;
+  final String country;
+  final String stockCodeName;
+  final String stockName;
+  final int itemId;
+  final int countryId;
+
+  DelayedTravelDialog({
+    @required this.boardingTime,
+    @required this.country,
+    @required this.stockCodeName,
+    @required this.stockName,
+    @required this.itemId,
+    @required this.countryId,
+  });
+
+  @override
+  _DelayedTravelDialogState createState() => _DelayedTravelDialogState();
+}
+
+class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
+  ThemeProvider _themeProvider;
+
+  bool _notificationActive = false;
+
+  var _delayMinutes = 0;
+
+  bool _alarmSound = true;
+  bool _alarmVibration = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _retrievePendingNotifications();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    return SingleChildScrollView(
+      child: Stack(
+        children: <Widget>[
+          SingleChildScrollView(
+            child: Container(
+              padding: EdgeInsets.only(
+                top: 45,
+                bottom: 16,
+                left: 16,
+                right: 16,
+              ),
+              margin: EdgeInsets.only(top: 30),
+              decoration: new BoxDecoration(
+                color: _themeProvider.background,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10.0,
+                    offset: const Offset(0.0, 10.0),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // To make the card compact
+                children: <Widget>[
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Departure notification",
+                            style: TextStyle(
+                              fontSize: 13,
+                            ),
+                          ),
+                          _timeDropdown(),
+                        ],
+                      ),
+                      Text(
+                        'Be aware that the restock time calculation might not be exact. You can '
+                        'add extra minutes to your notification here',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(width: 5),
+                          ActionChip(
+                            label: Icon(
+                              Icons.chat_bubble_outline,
+                              color: _notificationActive
+                                  ? Colors.green
+                                  : _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              if (_notificationActive) {
+                                _cancelNotifications();
+                                BotToast.showText(
+                                  text: 'Notification cancelled!',
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.orange[700],
+                                  duration: Duration(seconds: 5),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              } else {
+                                _scheduleNotification();
+                                Navigator.of(context).pop();
+                                BotToast.showText(
+                                  text: 'Boarding call notification set for '
+                                      '${DateFormat('HH:mm').format(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green[700],
+                                  duration: Duration(seconds: 5),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              }
+                            },
+                          ),
+                          SizedBox(width: 5),
+                          if (Platform.isAndroid)
+                            ActionChip(
+                              label: Icon(
+                                Icons.notifications_none,
+                              ),
+                              onPressed: () {
+                                _setAlarm();
+                                BotToast.showText(
+                                  text: 'Boarding call alarm set for '
+                                      '${DateFormat('HH:mm').format(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green[700],
+                                  duration: Duration(seconds: 5),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              },
+                            ),
+                          SizedBox(width: 5),
+                          if (Platform.isAndroid)
+                            ActionChip(
+                              label: Icon(
+                                Icons.timer,
+                              ),
+                              onPressed: () {
+                                _setTimer();
+                                BotToast.showText(
+                                  text: 'Boarding call timer set for '
+                                      '${DateFormat('HH:mm').format(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                  textStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: Colors.green[700],
+                                  duration: Duration(seconds: 5),
+                                  contentPadding: EdgeInsets.all(10),
+                                );
+                              },
+                            ),
+                          SizedBox(width: 5),
+                        ],
+                      ),
+                      if (Platform.isAndroid)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                "Alarm sound",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 30,
+                                child: Switch(
+                                  value: _alarmSound,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _alarmSound = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (Platform.isAndroid)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                "Alarm vibration",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 30,
+                                child: Switch(
+                                  value: _alarmVibration,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _alarmVibration = value;
+                                    });
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (Platform.isAndroid)
+                        Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                child: Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                ),
+                                onTap: () {
+
+                                  AlertDialog alert = AlertDialog(
+                                    backgroundColor: _themeProvider.background,
+                                    title: Text(
+                                      "Info",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    content: RichText(
+                                      text: TextSpan(
+                                        text:
+                                            'Note: some Android clock applications do not work well '
+                                            'with more than 1 timer or do not allow to choose '
+                                            'between sound and vibration for alarms. If you experience '
+                                            'any issue, it is recommended to install ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: _themeProvider.mainText,
+                                        ),
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: 'Google\'s Clock application',
+                                            style: TextStyle(color: Colors.blue),
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = () async {
+                                                AndroidIntent intent =
+                                                    AndroidIntent(
+                                                  action: 'action_view',
+                                                  data:
+                                                      'https://play.google.com/store'
+                                                      '/apps/details?id=com.google.android.deskclock',
+                                                );
+                                                await intent.launch();
+                                              },
+                                          ),
+                                          TextSpan(
+                                            text: '.',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: [
+                                      FlatButton(
+                                        child: Text("OK"),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return alert;
+                                    },
+                                  );
+                                },
+                              ),
+                              SizedBox(width: 10),
+                              Flexible(
+                                child: Text(
+                                  'Please read this if you having issues setting up alarms or timers',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 11,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        FlatButton(
+                          child: Text("Close"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            child: CircleAvatar(
+              radius: 26,
+              backgroundColor: _themeProvider.background,
+              child: CircleAvatar(
+                backgroundColor: _themeProvider.mainText,
+                radius: 22,
+                child: SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: Icon(
+                    Icons.settings,
+                    color: _themeProvider.background,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  DropdownButton _timeDropdown() {
+    return DropdownButton<int>(
+      value: _delayMinutes,
+      items: [
+        DropdownMenuItem(
+          value: 0,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 5,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "+5 min",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 10,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "+10 min",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 20,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "+20 min",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 30,
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "+30 min",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _delayMinutes = value;
+        });
+      },
+    );
+  }
+
+  void _scheduleNotification() async {
+    String channelTitle = 'Manual flight departure';
+    String channelSubtitle = 'Manual flight departure';
+    String channelDescription =
+        'Manual notifications for delayed flight departure';
+    String notificationTitle =
+        "You flight to ${widget.country} is ready for boarding!";
+    String notificationSubtitle =
+        "Remember to bring you ${widget.stockName} import papers!";
+    int notificationId = int.parse("211${widget.countryId}${widget.itemId}");
+
+    var modifier = await getNotificationChannelsModifiers();
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      "$channelTitle ${modifier.channelIdModifier}",
+      "$channelSubtitle ${modifier.channelIdModifier}",
+      channelDescription,
+      priority: Priority.high,
+      visibility: NotificationVisibility.public,
+      icon: 'notification_travel',
+      color: Colors.grey,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+      ledOnMs: 1000,
+      ledOffMs: 500,
+    );
+
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      sound: 'slow_spring_board.aiff',
+    );
+
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+        notificationId,
+        notificationTitle,
+        notificationSubtitle,
+        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+        tz.TZDateTime.from(widget.boardingTime, tz.local)
+            .add(Duration(minutes: _delayMinutes)),
+        platformChannelSpecifics,
+        payload: '211',
+        androidAllowWhileIdle: true, // Deliver at exact time
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime);
+  }
+
+  Future _retrievePendingNotifications() async {
+    var pendingNotificationRequests =
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+
+    for (var not in pendingNotificationRequests) {
+      var id = not.id.toString();
+      if (id == "211${widget.countryId}${widget.itemId}") {
+        setState(() {
+          _notificationActive = true;
+        });
+      }
+    }
+  }
+
+  void _cancelNotifications() async {
+    await flutterLocalNotificationsPlugin
+        .cancel(int.parse("211${widget.countryId}${widget.itemId}"));
+    setState(() {
+      _notificationActive = false;
+    });
+  }
+
+  void _setAlarm() {
+    var alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes));
+    var hour = alarmTime.hour;
+    var minute = alarmTime.minute;
+    var message = 'Flight Boarding - ${widget.stockName}';
+
+    AndroidIntent intent = AndroidIntent(
+      action: 'android.intent.action.SET_ALARM',
+      arguments: <String, dynamic>{
+        'android.intent.extra.alarm.HOUR': hour,
+        'android.intent.extra.alarm.MINUTES': minute,
+        'android.intent.extra.alarm.SKIP_UI': true,
+        //'android.intent.extra.alarm.VIBRATE': alarmVibration,
+        //'android.intent.extra.alarm.RINGTONE': thisSound,
+        'android.intent.extra.alarm.MESSAGE': message,
+      },
+    );
+    intent.launch();
+  }
+
+  void _setTimer() {
+    var totalSeconds =
+        widget.boardingTime.difference(DateTime.now()).inSeconds +
+            _delayMinutes * 60;
+    var message = 'Flight Boarding - ${widget.stockName}';
+
+    AndroidIntent intent = AndroidIntent(
+      action: 'android.intent.action.SET_TIMER',
+      arguments: <String, dynamic>{
+        'android.intent.extra.alarm.LENGTH': totalSeconds,
+        'android.intent.extra.alarm.SKIP_UI': true,
+        'android.intent.extra.alarm.MESSAGE': message,
+      },
+    );
+    intent.launch();
+  }
+}

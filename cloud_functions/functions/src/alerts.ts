@@ -22,10 +22,11 @@ export const alertsGroup = {
       const subscribers = response.docs.map((d) => d.data());
       console.log("iOS check: " + subscribers.length);
       await Promise.all(subscribers.map(sendNotificationForProfile));
+      console.log("iOS finished");
   }),
 
   // Divide to split the work in several functions
-  checkUsersAndroid: functions.region('us-east4').pubsub
+  checkUsersAndroidLow: functions.region('us-east4').pubsub
     .schedule("*/3 * * * *")
     .onRun(async () => {
       // Get the list of subscribers
@@ -35,11 +36,33 @@ export const alertsGroup = {
         .where("active", "==", true)
         .where("alertsEnabled", "==", true)
         .where("platform", "==", "android")
+        .where("level", "<", 30)
+        .get();
+      
+      const subscribers = response.docs.map((d) => d.data());
+      console.log("Android check LOW: " + subscribers.length);
+      await Promise.all(subscribers.map(sendNotificationForProfile));
+      console.log("Android LOW finished");
+  }),
+
+  // Divide to split the work in several functions
+  checkUsersAndroidHigh: functions.region('us-east4').pubsub
+    .schedule("*/3 * * * *")
+    .onRun(async () => {
+      // Get the list of subscribers
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("alertsEnabled", "==", true)
+        .where("platform", "==", "android")
+        .where("level", ">=", 30)
         .get();
         
       const subscribers = response.docs.map((d) => d.data());
-      console.log("Android check: " + subscribers.length);
+      console.log("Android check HIGH: " + subscribers.length);
       await Promise.all(subscribers.map(sendNotificationForProfile));
+      console.log("Android HIGH finished");
   }),
 };
 
@@ -72,23 +95,21 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
     }
   } catch (e) {
     functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
-    
+
     // If users uninstall without removing API Key, this error will trigger
     // because the token is not known. In this case, stale the user
     if (e.toString().includes("Requested entity was not found")) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            active: false,
-          })
-      );
+      await admin
+        .firestore()
+        .collection("players")
+        .doc(subscriber.uid)
+        .update({
+          active: false,
+        });
       functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid}`);
     }
-
   }
+
 }
 
 // Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy

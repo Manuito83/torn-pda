@@ -11,84 +11,178 @@ async function getStocks() {
 
 export const foreignStocksGroup = {
     
-  getForeignStocks: functions.region('us-east4').pubsub
-    .schedule("*/3 * * * *")
+  checkStocks: functions.region('us-east4').pubsub
+    .schedule("*/10 * * * *")
     .onRun(async () => {
     
     const promises: Promise<any>[] = [];
-    
+
     try {
       
       // Get existing stocks from Firestore
-      const dbStocks = (
+      const dbStocksMain = (
         await admin
           .firestore()
-          .collection("stocks")
+          .collection("stocks-main")
+          .get()
+      ).docs.map((d) => d.data());
+
+      const dbStocksAux = (
+        await admin
+          .firestore()
+          .collection("stocks-aux")
           .get()
       ).docs.map((d) => d.data());
 
       // Get the stocks
-      const json = await getStocks();
+      const yata = await getStocks();
           
-      for (const countryName in json.stocks) {
-        const countryStocks = json.stocks[countryName].stocks;
-        const countryTimestamp = json.stocks[countryName].update;
-        for (const item of countryStocks) {
+      let newRestocked = {};
+      let newEmptied = {};
 
-          const codeName = `${countryName}-${item.name}`;
+      // Get countries from YATA object
+      for (const countryName in yata.stocks) {
+        const yataCountry = yata.stocks[countryName].stocks;
+        const yataCountryTimestamp = yata.stocks[countryName].update;
+        
+        // For each item in each country
+        for (const yataItem of yataCountry) {
 
-          let emptyTimes: any[] = [];
-          let fullTimes: any[] = [];
-          // Match new and saved for several checks
-          for (const dbStock of dbStocks) {
+          // Common denominator (e.g.: "can-Vicondin")
+          const codeName = `${countryName}-${yataItem.name}`;
+
+          let newPeriodicMap = {};
+          let restockElapsed: any[] = [];
+          let lastEmpty = 0;
+          
+          // Main stocks colletion
+          for (const dbStock of dbStocksMain) {
+            // Find its counterpart in YATA
             if (dbStock.codeName === codeName) {
+              
+              // Retrieve the item form Firestore
+              const savedMainMap = dbStock['periodicMap'] || new Map<number, number>();
+              // Add new timestamp + quantity to the map
+              savedMainMap[yataCountryTimestamp] = yataItem.quantity;
+              // If more than 1.5 day has passed (216 iterations each 10 minutes, delete oldest)
+              if (Object.keys(savedMainMap).length > 216) {
+                // For that purpose, we create an array with keys (timestamps), sort 
+                // and delete the oldest from the "saveMainMap" object
+                const keys = [];
+                for(const key in savedMainMap){
+                  if(savedMainMap.hasOwnProperty(key)){
+                      keys.push(key);
+                  }
+                }
+                keys.sort();
+                const oldest: number = +keys.slice(0, 1);
+                delete savedMainMap[oldest];
+              }
+              // Parse map into object to upload to Firestore
+              newPeriodicMap = JSON.parse(JSON.stringify(savedMainMap));
 
-              // Check if item has reached zero.
-              if (item.quantity === 0) {
-                if (dbStock.quantity > 0) {
-                  emptyTimes = dbStock.emptyTimes || [];
-                  emptyTimes.push(countryTimestamp);
-                  if (emptyTimes.length > 5) emptyTimes.splice(0, 1);
+
+              // Save timestamp of last empty value so that elapsed times
+              // from empty to restock can be calculated later
+              // 1000 in 10 minutes to avoid falase positives (people filtering out)
+              lastEmpty = dbStock['lastEmpty'] || 0;
+              if (dbStock['quantity'] > 0 && dbStock['quantity'] < 1000 && yataItem.quantity === 0) {
+                lastEmpty = yataCountryTimestamp;
+              }
+
+              // Get the last array for restocked timestamps
+              restockElapsed = dbStock['restockElapsed'] || [];
+              // If item has been restocked
+              if (dbStock['quantity'] === 0 && yataItem.quantity > 0) {
+                // If there is also an existing lastEmpty
+                if (dbStock['lastEmpty'] !== 0) {
+                  const elapsed = yataCountryTimestamp - dbStock['lastEmpty'];
+                  restockElapsed.push(elapsed);
+                  // Allow maximum of 15 restocks
+                  if (restockElapsed.length > 15) {
+                    restockElapsed.splice(0, 1);
+                  }
                 }
               }
 
-              if (item.quantity > 0) {
-                if (dbStock.quantity === 0) {
-                  fullTimes = dbStock.emptyTimes || [];
-                  fullTimes.push(countryTimestamp);
-                  if (fullTimes.length > 5) fullTimes.splice(0, 1);
+
+              // Add values to aux documents for restocks (for automatic alerts)
+              for (const aux of dbStocksAux) {
+                if (aux["restockedMap"]) {
+                  const savedAuxRestocked = aux["restockedMap"] || new Map<string, number>();
+                  // Saved at zero but YATA reporting higher -> RESTOCKED!
+                  if (dbStock['quantity'] === 0 && yataItem.quantity > 0) {
+                    savedAuxRestocked[codeName] = yataCountryTimestamp;
+                  }
+                  newRestocked = JSON.parse(JSON.stringify(savedAuxRestocked));
+                }
+
+                if (aux["emptiedMap"]) {
+                  const savedAuxEmptied = aux["emptiedMap"] || new Map<string, number>();
+                  // Saved with items available but YATA reporting zero -> EMPTIED!
+                  // 1000 in 10 minutes to avoid falase positives (people filtering out)
+                  if (dbStock['quantity'] > 0 && dbStock['quantity'] < 1000 && yataItem.quantity === 0) {
+                    savedAuxEmptied[codeName] = yataCountryTimestamp;
+                  }
+                  newEmptied = JSON.parse(JSON.stringify(savedAuxEmptied));
                 }
               }
+
+              break;
             }
           }
 
-          // Update Firestore
+          // Update main stocks for each item
           promises.push(
             admin
               .firestore()
-              .collection("stocks")
+              .collection("stocks-main")
               .doc(codeName)
               .set({
-                id: item.id,
+                id: yataItem.id,
                 country: countryName,
-                name: item.name,
+                name: yataItem.name,
                 codeName: codeName,
-                cost: item.cost,
-                quantity: item.quantity,
-                update: countryTimestamp,
-                emptyTimes: emptyTimes,
-                fullTimes: fullTimes,
-              }, {merge: true})
+                cost: yataItem.cost,
+                quantity: yataItem.quantity,
+                update: yataCountryTimestamp,
+                periodicMap: newPeriodicMap,
+                restockElapsed: restockElapsed,
+                lastEmpty: lastEmpty,
+              }, {merge: false})
           );
         }
       }
 
+      // Update aux stocks only once (as they contain info
+      // for all items in a single map)
+      promises.push(
+        admin
+          .firestore()
+          .collection("stocks-aux")
+          .doc("restockedDoc")
+          .set({
+            restockedMap: newRestocked,
+          }, {merge: true})
+      );
+
+      promises.push(
+        admin
+          .firestore()
+          .collection("stocks-aux")
+          .doc("emptiedDoc")
+          .set({
+            emptiedMap: newEmptied,
+          }, {merge: true})
+      );
+
     } catch (e) {
-      console.log("ERROR STOCKS");
-      console.log(e);
+      functions.logger.warn(`ERROR STOCKS TREND \n${e}`);
     }
 
-    return Promise.all(promises);
+    await Promise.all(promises);
 
   }),
+
 };
+

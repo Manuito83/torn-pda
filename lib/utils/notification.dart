@@ -7,6 +7,12 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:flutter/services.dart';
 
+// IDS
+// 101 -> 106 profile cooldowns
+// 201 travel arrival
+// 211 travel departure
+// 400 loot
+
 Future showNotification(Map payload, int notId) async {
   showNotificationBoth(payload, notId);
 }
@@ -244,6 +250,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual travel ${modifier.channelIdModifier}',
       'Manual travel ${modifier.channelIdModifier}',
       'Manual notifications for travel',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual flight departure ${modifier.channelIdModifier}',
+      'Manual flight departure ${modifier.channelIdModifier}',
+      'Manual notifications for delayed flight departure',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

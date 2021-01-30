@@ -397,6 +397,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           browserUrl =
           "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
+      } else if (payload.contains('211')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/travelagency.php';
       }
 
       if (launchBrowser) {

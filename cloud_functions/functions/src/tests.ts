@@ -10,15 +10,16 @@ export const testGroup = {
     try {
       
       promises.push(sendTestNotification(
-        'd_Zx2OGPt70:APA91bHP_iNW8qgYg55RWwuqq9c9TpFuJ7h0NGfHxKmJZ0WQ515r1IcLP7HV2kZLDU10TN96eTRvBo-j6Oad8KwVIY-AYtyeLA1OatKLE2P0nkGjER6Xazf2sxbZYIvd0VxXGFMkvBiT', // Then call as "tests.testNotification()" in shell
+        '', // Then call as "tests.testNotification()" in shell
         'Test', 
         'test notification')
       );
-      await Promise.all(promises);
     
     } catch (e) {
       console.log(`ERROR TEST \n${e}`)
     }
+
+    await Promise.all(promises);
 
   }),
 };
