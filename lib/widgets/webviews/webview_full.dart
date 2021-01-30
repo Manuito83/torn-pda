@@ -283,27 +283,37 @@ class _WebViewFullState extends State<WebViewFull> {
                                 width: 100,
                                 child: Row(
                                   children: [
-                                    SizedBox(
-                                      width: 40,
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.arrow_back_ios_outlined,
-                                          size: 20,
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        customBorder: new CircleBorder(),
+                                        splashColor: Colors.blueGrey,
+                                        child: SizedBox(
+                                          width: 40,
+                                          child: Icon(
+                                            Icons.arrow_back_ios_outlined,
+                                            size: 20,
+                                          ),
                                         ),
-                                        onPressed: () async {
+                                        onTap: () async {
                                           _tryGoBack();
                                         },
                                       ),
                                     ),
-                                    SizedBox(
-                                      width: 40,
-                                      child: IconButton(
-                                        icon: Icon(
-                                          Icons.arrow_forward_ios_outlined,
-                                          size: 20,
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        customBorder: new CircleBorder(),
+                                        splashColor: Colors.blueGrey,
+                                        child: SizedBox(
+                                          width: 40,
+                                          child: Icon(
+                                            Icons.arrow_forward_ios_outlined,
+                                            size: 20,
+                                          ),
                                         ),
-                                        onPressed: () async {
-                                          tryGoForward();
+                                        onTap: () async {
+                                          _tryGoForward();
                                         },
                                       ),
                                     ),
@@ -322,21 +332,33 @@ class _WebViewFullState extends State<WebViewFull> {
                                 ),
                               ),
                               SizedBox(
-                                width: 100,
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
+                                    _travelHomeIcon(),
                                     _chatRemovalEnabled
                                         ? _hideChatIcon()
                                         : SizedBox.shrink(),
-                                    IconButton(
-                                      icon: Icon(Icons.refresh),
-                                      onPressed: () async {
-                                        _scrollX = await webView.getScrollX();
-                                        _scrollY = await webView.getScrollY();
-                                        await webView.reload();
-                                        _scrollAfterLoad = true;
-                                      },
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          customBorder: new CircleBorder(),
+                                          splashColor: Colors.blueGrey,
+                                          child: Icon(Icons.refresh),
+                                          onTap: () async {
+                                            _scrollX =
+                                                await webView.getScrollX();
+                                            _scrollY =
+                                                await webView.getScrollY();
+                                            await webView.reload();
+                                            _scrollAfterLoad = true;
+                                          },
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -686,27 +708,32 @@ class _WebViewFullState extends State<WebViewFull> {
           _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: GestureDetector(
-              child: Icon(Icons.refresh),
-              onTap: () async {
-                _scrollX = await webView.getScrollX();
-                _scrollY = await webView.getScrollY();
-                await webView.reload();
-                _scrollAfterLoad = true;
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                customBorder: new CircleBorder(),
+                splashColor: Colors.orange,
+                child: Icon(Icons.refresh),
+                onTap: () async {
+                  _scrollX = await webView.getScrollX();
+                  _scrollY = await webView.getScrollY();
+                  await webView.reload();
+                  _scrollAfterLoad = true;
 
-                BotToast.showText(
-                  text: "Reloading...",
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.grey[600],
-                  duration: Duration(seconds: 1),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              },
+                  BotToast.showText(
+                    text: "Reloading...",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.grey[600],
+                    duration: Duration(seconds: 1),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -714,7 +741,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _goBackOrForward(DragEndDetails details) async {
     if (details.primaryVelocity < 0) {
-      await tryGoForward();
+      await _tryGoForward();
     } else if (details.primaryVelocity > 0) {
       await _tryGoBack();
     }
@@ -748,7 +775,7 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  Future tryGoForward() async {
+  Future _tryGoForward() async {
     var canForward = await webView.canGoForward();
     if (canForward) {
       await webView.goForward();
@@ -996,11 +1023,18 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Widget _travelHomeIcon() {
     if (_travelActive) {
-      return IconButton(
-        icon: Icon(Icons.home),
-        onPressed: () async {
-          await webView.evaluateJavascript(source: travelReturnHomeJS());
-        },
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: new CircleBorder(),
+          splashColor: Colors.blueGrey,
+          child: Icon(
+            Icons.home,
+          ),
+          onTap: () async {
+            await webView.evaluateJavascript(source: travelReturnHomeJS());
+          },
+        ),
       );
     } else {
       return SizedBox.shrink();
