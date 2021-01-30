@@ -14,12 +14,14 @@ import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import "dart:collection";
 import 'dart:ui';
 
 class ForeignStockCard extends StatefulWidget {
   final ForeignStock foreignStock;
   final bool inventoryEnabled;
+  final bool showArrivalTime;
   final InventoryModel inventoryModel;
   final ItemsModel allTornItems;
   final int capacity;
@@ -31,6 +33,7 @@ class ForeignStockCard extends StatefulWidget {
       {@required this.foreignStock,
       @required this.inventoryEnabled,
       @required this.inventoryModel,
+      @required this.showArrivalTime,
       @required this.capacity,
       @required this.allTornItems,
       @required this.moneyOnHand,
@@ -63,6 +66,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   var _delayedDepartureTime = DateTime.now();
   String _countryFullName = "";
   String _codeName = "";
+
+  DateTime _earliestArrival = DateTime.now();
+  int _travelSeconds = 0;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -152,11 +158,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
 
     // WHEN TO TRAVEL
-    var travelSeconds = TravelTimes.travelTimeMinutesOneWay(
-          ticket: widget.ticket,
-          country: widget.foreignStock.country,
-        ) *
-        60;
 
     var whenToTravel = "";
     var arrivalTime = "";
@@ -169,8 +170,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     //  - If there are items: arrive before depletion
     //  - If there are no items: arrive when restock happens
     //  - Does NOT take into account a restock that depletes quickly
-    var earliestArrival = DateTime.now().add(Duration(seconds: travelSeconds));
-    if (earliestArrival.isAfter(_projectedRestockDateTime)) {
+
+    if (_earliestArrival.isAfter(_projectedRestockDateTime)) {
       delayDeparture = false;
 
       // Avoid dividing by 0 if we have no trend
@@ -187,8 +188,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         else {
           var depletionDateTime =
               DateTime.now().add(Duration(seconds: secondsToDeplete.round()));
-          if (earliestArrival.isAfter(depletionDateTime)) {
-            whenToTravel = "Caution, depletes at ${_timeFormatter(depletionDateTime)}";
+          if (_earliestArrival.isAfter(depletionDateTime)) {
+            whenToTravel =
+                "Caution, depletes at ${_timeFormatter(depletionDateTime)}";
             whenToTravelColor = Colors.orangeAccent;
           }
           // If we arrive before depletion
@@ -206,22 +208,21 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           whenToTravel = "Travel NOW";
         }
       }
-      arrivalTime = "You will be there at ${_timeFormatter(earliestArrival)}";
+      arrivalTime = "You will be there at ${_timeFormatter(_earliestArrival)}";
     }
     // If we arrive before restock if we depart now
     else {
       delayDeparture = true;
 
       var additionalWait =
-          _projectedRestockDateTime.difference(earliestArrival).inSeconds;
+          _projectedRestockDateTime.difference(_earliestArrival).inSeconds;
 
       _delayedDepartureTime =
           DateTime.now().add(Duration(seconds: additionalWait));
 
-      whenToTravel =
-          "Travel at ${_timeFormatter(_delayedDepartureTime)}";
+      whenToTravel = "Travel at ${_timeFormatter(_delayedDepartureTime)}";
       var delayedArrival =
-          _delayedDepartureTime.add(Duration(seconds: travelSeconds));
+          _delayedDepartureTime.add(Duration(seconds: _travelSeconds));
       arrivalTime = "You will be there at ${_timeFormatter(delayedArrival)}";
     }
 
@@ -344,20 +345,31 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           padding: EdgeInsets.only(right: 10),
         ),
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
               width: 100,
               child: Text(stock.name),
             ),
-            widget.inventoryEnabled
-                ? SizedBox(
-                    width: 100,
-                    child: Text(
-                      "(inv: x$_invQuantity)",
-                      style: TextStyle(fontSize: 11),
-                    ),
-                  )
-                : SizedBox.shrink(),
+            if (widget.inventoryEnabled)
+              SizedBox(
+                width: 100,
+                child: Text(
+                  "Inv: x$_invQuantity",
+                  style: TextStyle(fontSize: 11),
+                ),
+              ),
+            if (widget.showArrivalTime)
+              Row(
+                children: [
+                  Icon(MdiIcons.airplaneLanding, size: 12),
+                  SizedBox(width: 2),
+                  Text(
+                    "${_timeFormatter(_earliestArrival)}",
+                    style: TextStyle(fontSize: 11),
+                  ),
+                ],
+              ),
           ],
         ),
         Padding(
@@ -798,7 +810,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           showTitles: true,
           interval: _periodicMap.length > 12 ? _periodicMap.length / 12 : null,
           reservedSize: 20,
-          margin: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 45 : 30,
+          margin: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12
+              ? 45
+              : 30,
           getTextStyles: (xValue) {
             if (xValue.toInt() >= _periodicMap.length) {
               xValue = xValue - 1;
@@ -880,6 +894,13 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   void _calculateDetails() {
+    _travelSeconds = TravelTimes.travelTimeMinutesOneWay(
+          ticket: widget.ticket,
+          country: widget.foreignStock.country,
+        ) *
+        60;
+    _earliestArrival = DateTime.now().add(Duration(seconds: _travelSeconds));
+
     if (widget.inventoryEnabled) {
       for (var invItem in widget.inventoryModel.inventory) {
         if (invItem.id == widget.foreignStock.id) {

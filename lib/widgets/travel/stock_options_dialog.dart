@@ -8,12 +8,14 @@ class StocksOptionsDialog extends StatefulWidget {
   final int capacity;
   final Function callBack;
   final bool inventoryEnabled;
+  final bool showArrivalTime;
   final TravelTicket ticket;
 
   StocksOptionsDialog({
     @required this.capacity,
     @required this.callBack,
     @required this.inventoryEnabled,
+    @required this.showArrivalTime,
     @required this.ticket,
   });
 
@@ -26,6 +28,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
 
   int _capacity;
   bool _inventoryEnabled;
+  bool _showArrivalTime;
   TravelTicket _ticket;
 
   @override
@@ -33,6 +36,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     super.initState();
     _capacity = widget.capacity;
     _inventoryEnabled = widget.inventoryEnabled;
+    _showArrivalTime = widget.showArrivalTime;
     _ticket = widget.ticket;
   }
 
@@ -82,6 +86,30 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                         onChanged: (value) {
                           setState(() {
                             _inventoryEnabled = value;
+                          });
+                          _callBackValues();
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Show arrival time",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _showArrivalTime,
+                        onChanged: (value) {
+                          setState(() {
+                            _showArrivalTime = value;
                           });
                           _callBackValues();
                         },
@@ -257,9 +285,10 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   }
 
   void _callBackValues() {
-    widget.callBack(_capacity, _inventoryEnabled, _ticket);
+    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _ticket);
     SharedPreferencesModel().setStockCapacity(_capacity);
     SharedPreferencesModel().setShowForeignInventory(_inventoryEnabled);
+    SharedPreferencesModel().setShowArrivalTime(_showArrivalTime);
 
     var ticketString;
     switch (_ticket) {

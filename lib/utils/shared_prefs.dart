@@ -42,6 +42,7 @@ class SharedPreferencesModel {
   final String _kStockSort = "pda_stockSort";
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kShowForeignInventory = "pda_showForeignInventory";
+  final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kTravelTicket = "pda_travelTicket";
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
@@ -543,6 +544,16 @@ class SharedPreferencesModel {
   Future<bool> setShowForeignInventory(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowForeignInventory, value);
+  }
+
+  Future<bool> getShowArrivalTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowArrivalTime) ?? true;
+  }
+
+  Future<bool> setShowArrivalTime(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowArrivalTime, value);
   }
 
   Future<String> getTravelTicket() async {

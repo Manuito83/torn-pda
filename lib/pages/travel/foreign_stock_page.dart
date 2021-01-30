@@ -66,6 +66,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   ItemsModel _allTornItems;
 
   bool _inventoryEnabled = true;
+  bool _showArrivalTime = true;
   InventoryModel _inventory;
   OwnProfileMisc _profileMisc;
   int _capacity;
@@ -106,6 +107,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.price),
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
+    StockSort(type: StockSortType.arrivalTime),
   ];
 
   RefreshController _refreshController =
@@ -619,6 +621,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           capacity: _capacity,
           allTornItems: null,
           inventoryEnabled: _inventoryEnabled,
+          showArrivalTime: _showArrivalTime,
           moneyOnHand: _profileMisc.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
           ticket: _ticket,
@@ -916,6 +919,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           _filteredStocksCards.sort((a, b) => b.profit.compareTo(a.profit));
           SharedPreferencesModel().setStockSort('profit');
           break;
+        case StockSortType.arrivalTime:
+          _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
+          SharedPreferencesModel().setStockSort('arrivalTime');
+          break;
       }
     });
   }
@@ -951,12 +958,16 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       sortType = StockSortType.value;
     } else if (sortString == 'profit') {
       sortType = StockSortType.profit;
+    } else if (sortString == 'arrivalTime') {
+      sortType = StockSortType.arrivalTime;
     }
     _currentSort = StockSort(type: sortType);
 
     _capacity = await SharedPreferencesModel().getStockCapacity();
     _inventoryEnabled =
         await SharedPreferencesModel().getShowForeignInventory();
+    _showArrivalTime =
+        await SharedPreferencesModel().getShowArrivalTime();
 
     var ticket = await SharedPreferencesModel().getTravelTicket();
     switch (ticket) {
@@ -991,6 +1002,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               capacity: _capacity,
               callBack: _onStocksOptionsChanged,
               inventoryEnabled: _inventoryEnabled,
+              showArrivalTime: _showArrivalTime,
               ticket: _ticket,
             ),
           ),
@@ -1000,10 +1012,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   void _onStocksOptionsChanged(
-      int newCapacity, bool inventoryEnabled, TravelTicket ticket) {
+      int newCapacity, bool inventoryEnabled, bool showArrivalTime, TravelTicket ticket) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;
+      _showArrivalTime = showArrivalTime;
       _ticket = ticket;
     });
   }
