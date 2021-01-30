@@ -12,6 +12,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import "dart:collection";
 import 'dart:ui';
 
@@ -62,6 +64,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   String _countryFullName = "";
   String _codeName = "";
 
+  SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
 
   List<Color> gradientColors = [
@@ -73,6 +76,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   void initState() {
     super.initState();
     _calculateDetails();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _expandableController.addListener(() {
       if (_expandableController.expanded == true && !_footerSuccessful) {
         _footerInformationRetrieved = _getFooterInformation();
@@ -88,7 +93,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -138,6 +142,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       } else if (_restockReliability >= 33 && _restockReliability < 66) {
         reliability = "medium";
         reliabilityColor = Colors.orangeAccent;
+      } else if (_restockReliability >= 66 && _restockReliability < 80) {
+        reliability = "medium-high";
+        reliabilityColor = Colors.green;
       } else {
         reliability = "high";
         reliabilityColor = Colors.green;
@@ -181,15 +188,13 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           var depletionDateTime =
               DateTime.now().add(Duration(seconds: secondsToDeplete.round()));
           if (earliestArrival.isAfter(depletionDateTime)) {
-            whenToTravel = "Caution, depletes at "
-                "${DateFormat('HH:mm').format(depletionDateTime)}";
+            whenToTravel = "Caution, depletes at ${_timeFormatter(depletionDateTime)}";
             whenToTravelColor = Colors.orangeAccent;
           }
           // If we arrive before depletion
           else {
             whenToTravel = "Travel NOW";
-            depletesTime = "Depletes at "
-                "${DateFormat('HH:mm').format(depletionDateTime)}";
+            depletesTime = "Depletes at ${_timeFormatter(depletionDateTime)}";
           }
         }
       }
@@ -201,8 +206,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           whenToTravel = "Travel NOW";
         }
       }
-      arrivalTime = "You will be there at "
-          "${DateFormat('HH:mm').format(earliestArrival)}";
+      arrivalTime = "You will be there at ${_timeFormatter(earliestArrival)}";
     }
     // If we arrive before restock if we depart now
     else {
@@ -215,11 +219,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           DateTime.now().add(Duration(seconds: additionalWait));
 
       whenToTravel =
-          "Travel at ${DateFormat('HH:mm').format(_delayedDepartureTime)}";
+          "Travel at ${_timeFormatter(_delayedDepartureTime)}";
       var delayedArrival =
           _delayedDepartureTime.add(Duration(seconds: travelSeconds));
-      arrivalTime = "You will be there at "
-          "${DateFormat('HH:mm').format(delayedArrival)}";
+      arrivalTime = "You will be there at ${_timeFormatter(delayedArrival)}";
     }
 
     return FutureBuilder(
@@ -765,7 +768,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
                 LineTooltipItem thisItem = LineTooltipItem(
                   "${spot.y.toInt()} items"
-                  "\nat ${DateFormat('HH:mm').format(date)}",
+                  "\nat ${_timeFormatter(date)}",
                   TextStyle(
                     fontSize: 12,
                   ),
@@ -791,11 +794,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       titlesData: FlTitlesData(
         show: true,
         bottomTitles: SideTitles(
-          rotateAngle: -60,
+          rotateAngle: -70,
           showTitles: true,
           interval: _periodicMap.length > 12 ? _periodicMap.length / 12 : null,
           reservedSize: 20,
-          margin: 20,
+          margin: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 45 : 30,
           getTextStyles: (xValue) {
             if (xValue.toInt() >= _periodicMap.length) {
               xValue = xValue - 1;
@@ -821,7 +824,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             }
             var date = DateTime.fromMillisecondsSinceEpoch(
                 timestamps[xValue.toInt()] * 1000);
-            return DateFormat('HH:mm').format(date);
+            return _timeFormatter(date);
           },
         ),
         leftTitles: SideTitles(
@@ -909,5 +912,13 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         );
       },
     );
+  }
+
+  String _timeFormatter(DateTime time) {
+    return TimeFormatter(
+      inputTime: time,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).format;
   }
 }

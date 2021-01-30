@@ -6,11 +6,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:torn_pda/main.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:ui';
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/gestures.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 
 class DelayedTravelDialog extends StatefulWidget {
   final DateTime boardingTime;
@@ -35,6 +36,7 @@ class DelayedTravelDialog extends StatefulWidget {
 
 class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   ThemeProvider _themeProvider;
+  SettingsProvider _settingsProvider;
 
   bool _notificationActive = false;
 
@@ -46,12 +48,13 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   @override
   void initState() {
     super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _retrievePendingNotifications();
   }
 
   @override
   Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return SingleChildScrollView(
       child: Stack(
         children: <Widget>[
@@ -132,7 +135,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 Navigator.of(context).pop();
                                 BotToast.showText(
                                   text: 'Boarding call notification set for '
-                                      '${DateFormat('HH:mm').format(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
                                   textStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
@@ -154,7 +157,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _setAlarm();
                                 BotToast.showText(
                                   text: 'Boarding call alarm set for '
-                                      '${DateFormat('HH:mm').format(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
                                   textStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
@@ -175,7 +178,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                                 _setTimer();
                                 BotToast.showText(
                                   text: 'Boarding call timer set for '
-                                      '${DateFormat('HH:mm').format(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
+                                      '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes)))}',
                                   textStyle: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
@@ -524,6 +527,13 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   }
 
   void _setAlarm() {
+    String thisSound;
+      if (_alarmSound) {
+        thisSound = '';
+      } else {
+        thisSound = 'silent';
+      }
+
     var alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes));
     var hour = alarmTime.hour;
     var minute = alarmTime.minute;
@@ -535,8 +545,8 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
         'android.intent.extra.alarm.HOUR': hour,
         'android.intent.extra.alarm.MINUTES': minute,
         'android.intent.extra.alarm.SKIP_UI': true,
-        //'android.intent.extra.alarm.VIBRATE': alarmVibration,
-        //'android.intent.extra.alarm.RINGTONE': thisSound,
+        'android.intent.extra.alarm.VIBRATE': _alarmVibration,
+        'android.intent.extra.alarm.RINGTONE': thisSound,
         'android.intent.extra.alarm.MESSAGE': message,
       },
     );
@@ -558,5 +568,13 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       },
     );
     intent.launch();
+  }
+
+  String _timeFormatter(DateTime time) {
+    return TimeFormatter(
+      inputTime: time,
+      timeFormatSetting: _settingsProvider.currentTimeFormat,
+      timeZoneSetting: _settingsProvider.currentTimeZone,
+    ).format;
   }
 }
