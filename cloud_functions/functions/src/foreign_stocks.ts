@@ -27,18 +27,20 @@ export const foreignStocksGroup = {
           .get()
       ).docs.map((d) => d.data());
 
+      /*
       const dbStocksAux = (
         await admin
           .firestore()
           .collection("stocks-aux")
           .get()
       ).docs.map((d) => d.data());
+      */
 
       // Get the stocks
       const yata = await getStocks();
           
-      let newRestocked = {};
-      let newEmptied = {};
+      //let newRestocked = {};
+      //let newEmptied = {};
 
       // Get countries from YATA object
       for (const countryName in yata.stocks) {
@@ -105,12 +107,13 @@ export const foreignStocksGroup = {
                 }
               }
 
-
+              /*
               // Add values to aux documents for restocks (for automatic alerts)
               for (const aux of dbStocksAux) {
                 if (aux["restockedMap"]) {
                   const savedAuxRestocked = aux["restockedMap"] || new Map<string, number>();
                   // Saved at zero but YATA reporting higher -> RESTOCKED!
+                  // TODO: CHANGE === >
                   if (dbStock['quantity'] === 0 && yataItem.quantity > 0) {
                     savedAuxRestocked[codeName] = yataCountryTimestamp;
                   }
@@ -127,6 +130,7 @@ export const foreignStocksGroup = {
                   newEmptied = JSON.parse(JSON.stringify(savedAuxEmptied));
                 }
               }
+              */
 
               break;
             }
@@ -154,6 +158,7 @@ export const foreignStocksGroup = {
         }
       }
 
+      /*
       // Update aux stocks only once (as they contain info
       // for all items in a single map)
       promises.push(
@@ -175,9 +180,126 @@ export const foreignStocksGroup = {
             emptiedMap: newEmptied,
           }, {merge: true})
       );
+      */
 
     } catch (e) {
-      functions.logger.warn(`ERROR STOCKS TREND \n${e}`);
+      functions.logger.warn(`ERROR STOCKS CHECK \n${e}`);
+    }
+
+    await Promise.all(promises);
+
+  }),
+
+
+  fillRestocks: functions.region('us-east4').pubsub
+    .schedule("*/3 * * * *")
+    .onRun(async () => {
+    
+    const promises: Promise<any>[] = [];
+
+    try {
+      
+      // Get existing stocks from Realtime DB
+      const admin = require("firebase-admin");
+      const db = admin.database();
+
+      var ref = db.ref("stocks/restocks");
+
+      const savedData = {};
+      await ref.once("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+          savedData[childSnapshot.val().codeName] = childSnapshot.val();
+        });
+      });
+
+      // Get the stocks from YATA
+      const yata = await getStocks();
+
+      // Get countries from YATA object
+      for (const countryName in yata.stocks) {
+        const yataCountry = yata.stocks[countryName].stocks;
+        const yataCountryTimestamp = yata.stocks[countryName].update;
+        
+        // For each item in each country
+        for (const yataItem of yataCountry) {
+
+          
+
+          // Common denominator (e.g.: "can-Vicondin")
+          const codeName = `${countryName}-${yataItem.name}`;
+
+          let timestamp = 0;
+          // If this is known stock
+          if (`${codeName}`in savedData) {
+            // Quantity and last restock time in the database
+            const savedQty = savedData[`${codeName}`].quantity;
+            timestamp = savedData[`${codeName}`].restock;
+          
+            // We will only update the restock timestamp if we have a restock, 
+            // otherwise we leave the last known restock time
+            if (savedQty === 0 && yataItem.quantity > 0) {
+              timestamp = yataCountryTimestamp;
+            }
+          } 
+          // If the stock is not known yet, register it for the first time
+          else {
+            timestamp = yataCountryTimestamp;
+          }
+          
+          let country = "";
+          switch (countryName) {
+            case "arg":
+              country = "Argentina";
+              break;
+            case "can":
+              country = "Canada";
+              break;
+            case "cay":
+              country = "Cayman Islands";
+              break;
+            case "chi":
+              country = "China";
+              break;
+            case "haw":
+              country = "Hawaii";
+              break;
+            case "jap":
+              country = "Japan";
+              break;
+            case "mex":
+              country = "Mexico";
+              break;
+            case "sou":
+              country = "South Africa";
+              break;
+            case "swi":
+              country = "Switzerland";
+              break;
+            case "uae":
+              country = "the United Arab Emirates";
+              break;
+            case "uni":
+              country = "the United Kingdom";
+              break;
+          }
+
+          const stock: any = {
+            country: country,
+            name: yataItem.name,
+            codeName: codeName,
+            restock: timestamp,
+            quantity: yataItem.quantity,
+          }
+
+          promises.push(
+            db.ref(`stocks/restocks/${codeName}`).set(stock)
+          );
+
+        }
+      }
+
+    } catch (e) {
+      functions.logger.warn(`ERROR STOCKS FILL \n${e}`);
     }
 
     await Promise.all(promises);
