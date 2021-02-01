@@ -3,13 +3,30 @@ import * as admin from "firebase-admin";
 import { sendEnergyNotification, sendNerveNotification, 
   sendTravelNotification, sendHospitalNotification, 
   sendDrugsNotification, sendRacingNotification, 
-  sendMessagesNotification, sendEventsNotification } from "./notification";
+  sendMessagesNotification, sendEventsNotification, 
+  sendForeignRestockNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
+const runtimeOpts = {
+  timeoutSeconds: 120,
+  memory: "512MB" as "512MB",
+}
+
 export const alertsGroup = {
-  checkUsersIOS: functions.region('us-east4').pubsub
-    .schedule("*/3 * * * *")
-    .onRun(async () => {
+
+  checkAllUser: functions.region('us-east4')
+  .runWith(runtimeOpts)
+  .pubsub
+  .schedule("*/3 * * * *")
+  .onRun(async () => {
+
+    const promisesGlobal: Promise<any>[] = [];
+
+    const millisAtStart = Date.now();
+
+    async function checkIOS() {
+      const promises: Promise<any>[] = [];
+
       // Get the list of subscribers
       const response = await admin
         .firestore()
@@ -18,17 +35,24 @@ export const alertsGroup = {
         .where("alertsEnabled", "==", true)
         .where("platform", "==", "ios")
         .get();
-        
+
       const subscribers = response.docs.map((d) => d.data());
       console.log("iOS check: " + subscribers.length);
-      await Promise.all(subscribers.map(sendNotificationForProfile));
-      console.log("iOS finished");
-  }),
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], ""));
+      }
 
-  // Divide to split the work in several functions
-  checkUsersAndroidLow: functions.region('us-east4').pubsub
-    .schedule("*/3 * * * *")
-    .onRun(async () => {
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`iOS finished: ${difference} seconds`);
+        return value;
+      });
+    }
+
+    async function checkAndroidLow() {
+      const promises: Promise<any>[] = [];
+  
       // Get the list of subscribers
       const response = await admin
         .firestore()
@@ -41,14 +65,21 @@ export const alertsGroup = {
       
       const subscribers = response.docs.map((d) => d.data());
       console.log("Android check LOW: " + subscribers.length);
-      await Promise.all(subscribers.map(sendNotificationForProfile));
-      console.log("Android LOW finished");
-  }),
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], ""));
+      }
+  
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`Android LOW finished: ${difference} seconds`);
+        return value;
+      });
+    }
 
-  // Divide to split the work in several functions
-  checkUsersAndroidHigh: functions.region('us-east4').pubsub
-    .schedule("*/3 * * * *")
-    .onRun(async () => {
+    async function checkAndroidHigh() {
+      const promises: Promise<any>[] = [];
+  
       // Get the list of subscribers
       const response = await admin
         .firestore()
@@ -61,14 +92,31 @@ export const alertsGroup = {
         
       const subscribers = response.docs.map((d) => d.data());
       console.log("Android check HIGH: " + subscribers.length);
-      await Promise.all(subscribers.map(sendNotificationForProfile));
-      console.log("Android HIGH finished");
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], ""));
+      }
+  
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`Android HIGH finished: ${difference} seconds`);
+        return value;
+      });
+    }
+
+    promisesGlobal.push(checkIOS());
+    promisesGlobal.push(checkAndroidLow());
+    promisesGlobal.push(checkAndroidHigh());
+
+    await Promise.all(promisesGlobal);
+
   }),
+
 };
 
-async function sendNotificationForProfile(subscriber: any): Promise<any> {
+async function sendNotificationForProfile(subscriber: any, stocks: any): Promise<any> {
   const promises: Promise<any>[] = [];
-  
+
   try {
 
     const userStats = await getUsersStat(subscriber.apiKey);
@@ -90,6 +138,8 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
         promises.push(sendMessagesNotification(userStats, subscriber));
       if (subscriber.eventsNotification)
         promises.push(sendEventsNotification(userStats, subscriber));
+      if (subscriber.foreignRestockNotification)
+        promises.push(sendForeignRestockNotification(userStats, stocks, subscriber));
 
       await Promise.all(promises);
     }

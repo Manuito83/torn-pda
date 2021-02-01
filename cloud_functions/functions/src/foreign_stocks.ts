@@ -200,10 +200,10 @@ export const foreignStocksGroup = {
     try {
       
       // Get existing stocks from Realtime DB
-      const admin = require("firebase-admin");
-      const db = admin.database();
+      const firebaseAdmin = require("firebase-admin");
+      const db = firebaseAdmin.database();
 
-      var ref = db.ref("stocks/restocks");
+      const ref = db.ref("stocks/restocks");
 
       const savedData = {};
       await ref.once("value", function(snapshot) {

@@ -726,6 +726,33 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
+export async function sendForeignRestockNotification(userStats: any, stocks: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+
+  try {
+    /*
+    promises.push(
+      sendNotificationToUser(
+        subscriber.token,
+        notificationTitle,
+        notificationSubtitle,
+        "notification_trades",
+        "#389500",
+        "Alerts trades",
+        "",
+        tradeId,
+        subscriber.vibration,
+      )
+    );  
+    */
+    
+  } catch (error) {
+    functions.logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
+  }
+
+  return Promise.all(promises);
+}
+
 
 export async function sendNotificationToUser(
   token: string,
