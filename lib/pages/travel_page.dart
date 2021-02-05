@@ -210,6 +210,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ),
       title: Text('Travel'),
       actions: <Widget>[
+        IconButton(
+          icon: Icon(
+            Icons.refresh_outlined,
+            color: _themeProvider.buttonText,
+          ),
+          onPressed: () {
+            _updateInformation();
+            BotToast.showText(
+              text: "Refreshing",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[700],
+              duration: Duration(milliseconds: 500),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
         if (Platform.isAndroid)
           IconButton(
             icon: Icon(
