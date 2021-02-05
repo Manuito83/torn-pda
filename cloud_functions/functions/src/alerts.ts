@@ -24,6 +24,45 @@ export const alertsGroup = {
 
     const millisAtStart = Date.now();
 
+    // Get existing stocks from Realtime DB
+    const firebaseAdmin = require("firebase-admin");
+    const db = firebaseAdmin.database();
+    const ref = db.ref("stocks/restocks");
+    const foreignStocks = {};
+    await ref.once("value", function(snapshot) {
+      snapshot.forEach(function(childSnapshot) {
+        foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
+      });
+    });
+
+    /*
+    async function checkManuito() {
+      const promises: Promise<any>[] = [];
+
+      // Get the list of subscribers
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("alertsEnabled", "==", true)
+        .where("name", "==", "Manuito")
+        .get();
+
+      const subscribers = response.docs.map((d) => d.data());
+      console.log("Manuito check: " + subscribers.length);
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+      }
+
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`Manuito finished: ${difference} seconds`);
+        return value;
+      });
+    }
+    */
+    
     async function checkIOS() {
       const promises: Promise<any>[] = [];
 
@@ -39,7 +78,7 @@ export const alertsGroup = {
       const subscribers = response.docs.map((d) => d.data());
       console.log("iOS check: " + subscribers.length);
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], ""));
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
       }
 
       return Promise.all(promises).then(function(value) {
@@ -66,7 +105,7 @@ export const alertsGroup = {
       const subscribers = response.docs.map((d) => d.data());
       console.log("Android check LOW: " + subscribers.length);
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], ""));
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
       }
   
       return Promise.all(promises).then(function(value) {
@@ -93,7 +132,7 @@ export const alertsGroup = {
       const subscribers = response.docs.map((d) => d.data());
       console.log("Android check HIGH: " + subscribers.length);
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], ""));
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
       }
   
       return Promise.all(promises).then(function(value) {
@@ -103,6 +142,9 @@ export const alertsGroup = {
         return value;
       });
     }
+
+    // FOR TESTING (deactivate others)
+    // promisesGlobal.push(checkManuito());
 
     promisesGlobal.push(checkIOS());
     promisesGlobal.push(checkAndroidLow());

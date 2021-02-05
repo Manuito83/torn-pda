@@ -726,28 +726,60 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
-export async function sendForeignRestockNotification(userStats: any, stocks: any, subscriber: any) {
+export async function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
   const promises: Promise<any>[] = [];
 
   try {
-    /*
-    promises.push(
-      sendNotificationToUser(
-        subscriber.token,
-        notificationTitle,
-        notificationSubtitle,
-        "notification_trades",
-        "#389500",
-        "Alerts trades",
-        "",
-        tradeId,
-        subscriber.vibration,
-      )
-    );  
-    */
+
+    let updates = 0;
+    const stocksUpdated: any[] = [];
+
+    const userStocks = subscriber.restockActiveAlerts;
+    for (const [userCodeName, userTime] of Object.entries(userStocks)) {
+      
+      if (userCodeName in dbStocks) {
+        const dbTime = dbStocks[userCodeName].restock;
+
+        const timeDifference = <number>userTime - dbTime * 1000;
+        if (timeDifference < 0) {
+          updates++;
+          stocksUpdated.push(`${dbStocks[userCodeName].name} (${dbStocks[userCodeName].country})`)
+          userStocks[userCodeName] = dbTime * 1000;
+        }
+      } 
+    }
+
+    if (updates > 0) {
+      const notificationTitle = "Foreign items restocked!";
+      const notificationSubtitle = stocksUpdated.join(', ');
+
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            restockActiveAlerts: userStocks,
+        })
+      );
+
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          notificationTitle,
+          notificationSubtitle,
+          "notification_travel",
+          "#389500",
+          "Alerts restocks",
+          "",
+          "",
+          subscriber.vibration,
+        )
+      );  
+    }
     
   } catch (error) {
-    functions.logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
+    functions.logger.warn(`ERROR RESTOCKS \n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);
@@ -814,49 +846,3 @@ export async function sendNotificationToUser(
   return admin.messaging().send(payload);
   
 }
-
-
-// LEGACY FCM messaging
-// Does not incluse Android channels or tags
-// Can be removed safely
-/*
-export async function sendNotificationToUser(
-  token: string,
-  title: string,
-  body: string,
-  icon: string,
-  color: string,
-  tornMessageId: string = ""
-): Promise<any> {
-  
-  const payload = {
-    notification: {
-      title: title,
-      body: body,
-      icon: icon,
-      color: color,
-      sound: "default",
-      badge: "1",
-      priority: "high",
-      id: "500"
-    },
-    data: {
-      click_action: "FLUTTER_NOTIFICATION_CLICK",
-      // Torn personal message ID
-      tornMessageId: tornMessageId,
-      // This two might seem redundant, but are needed so that
-      // the information is contained in onLaundh/onResume message information
-      title: title,
-      message: body, 
-    },
-  };
-
-  const options = {
-    priority: 'high',
-    timeToLive: 60 * 60 * 5
-  };
-
-  return admin.messaging()
-    .sendToDevice(token, payload, options);
-}
-*/

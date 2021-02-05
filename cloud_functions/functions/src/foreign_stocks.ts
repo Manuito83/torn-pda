@@ -27,21 +27,9 @@ export const foreignStocksGroup = {
           .get()
       ).docs.map((d) => d.data());
 
-      /*
-      const dbStocksAux = (
-        await admin
-          .firestore()
-          .collection("stocks-aux")
-          .get()
-      ).docs.map((d) => d.data());
-      */
-
       // Get the stocks
       const yata = await getStocks();
           
-      //let newRestocked = {};
-      //let newEmptied = {};
-
       // Get countries from YATA object
       for (const countryName in yata.stocks) {
         const yataCountry = yata.stocks[countryName].stocks;
@@ -107,31 +95,6 @@ export const foreignStocksGroup = {
                 }
               }
 
-              /*
-              // Add values to aux documents for restocks (for automatic alerts)
-              for (const aux of dbStocksAux) {
-                if (aux["restockedMap"]) {
-                  const savedAuxRestocked = aux["restockedMap"] || new Map<string, number>();
-                  // Saved at zero but YATA reporting higher -> RESTOCKED!
-                  // TODO: CHANGE === >
-                  if (dbStock['quantity'] === 0 && yataItem.quantity > 0) {
-                    savedAuxRestocked[codeName] = yataCountryTimestamp;
-                  }
-                  newRestocked = JSON.parse(JSON.stringify(savedAuxRestocked));
-                }
-
-                if (aux["emptiedMap"]) {
-                  const savedAuxEmptied = aux["emptiedMap"] || new Map<string, number>();
-                  // Saved with items available but YATA reporting zero -> EMPTIED!
-                  // 1000 in 10 minutes to avoid falase positives (people filtering out)
-                  if (dbStock['quantity'] > 0 && dbStock['quantity'] < 1000 && yataItem.quantity === 0) {
-                    savedAuxEmptied[codeName] = yataCountryTimestamp;
-                  }
-                  newEmptied = JSON.parse(JSON.stringify(savedAuxEmptied));
-                }
-              }
-              */
-
               break;
             }
           }
@@ -157,30 +120,6 @@ export const foreignStocksGroup = {
           );
         }
       }
-
-      /*
-      // Update aux stocks only once (as they contain info
-      // for all items in a single map)
-      promises.push(
-        admin
-          .firestore()
-          .collection("stocks-aux")
-          .doc("restockedDoc")
-          .set({
-            restockedMap: newRestocked,
-          }, {merge: true})
-      );
-
-      promises.push(
-        admin
-          .firestore()
-          .collection("stocks-aux")
-          .doc("emptiedDoc")
-          .set({
-            emptiedMap: newEmptied,
-          }, {merge: true})
-      );
-      */
 
     } catch (e) {
       functions.logger.warn(`ERROR STOCKS CHECK \n${e}`);
@@ -222,8 +161,6 @@ export const foreignStocksGroup = {
         
         // For each item in each country
         for (const yataItem of yataCountry) {
-
-          
 
           // Common denominator (e.g.: "can-Vicondin")
           const codeName = `${countryName}-${yataItem.name}`;
@@ -276,10 +213,10 @@ export const foreignStocksGroup = {
               country = "Switzerland";
               break;
             case "uae":
-              country = "the United Arab Emirates";
+              country = "UAE";
               break;
             case "uni":
-              country = "the United Kingdom";
+              country = "UK";
               break;
           }
 
