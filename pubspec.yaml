@@ -47,7 +47,7 @@ dependencies:
   firebase_crashlytics: ^0.2.4
   easy_rich_text: ^0.5.3
   wakelock: ^0.2.1+1
-  audioplayers: ^0.17.0
+  audioplayers: 0.17.0
   vibration: ^1.7.3
   bubble_showcase: ^0.2.0+4
   speech_bubble: ^0.0.7
