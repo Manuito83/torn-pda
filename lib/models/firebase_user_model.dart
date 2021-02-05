@@ -4,6 +4,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   String token;
   String uid;
   bool travelNotification = false;
+  bool foreignRestockNotification = false;
   bool energyNotification = false;
   bool energyLastCheckFull = false;
   bool nerveNotification = false;
@@ -36,6 +37,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "token": token,
       "status": status,
       "travelNotification": travelNotification,
+      "foreignRestockNotification": foreignRestockNotification,
       "energyNotification": energyNotification,
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
@@ -54,6 +56,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   static FirebaseUserModel fromMap(Map data) {
     return FirebaseUserModel()
       ..travelNotification = data["travelNotification"] ?? false
+      ..travelNotification = data["foreignRestockNotification"] ?? false
       ..energyNotification = data["energyNotification"] ?? false
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false

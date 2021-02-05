@@ -18,6 +18,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:ui';
+import 'dart:convert';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
@@ -50,6 +51,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   Future _apiCalled;
   bool _apiSuccess;
+
+  var _activeRestocks = Map<String, dynamic>();
 
   /// MODELS
   // CAUTION: model in 'foreign_stock_in.dart' has been altered with easier names for classes
@@ -625,6 +628,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           moneyOnHand: _profileMisc.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
           ticket: _ticket,
+          activeRestocks: _activeRestocks,
           key: UniqueKey(),
         ),
       );
@@ -984,6 +988,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         _ticket = TravelTicket.business;
         break;
     }
+
+    _activeRestocks = await json.decode(await SharedPreferencesModel().getActiveRestocks());
   }
 
   Future<void> _showOptionsDialog() {

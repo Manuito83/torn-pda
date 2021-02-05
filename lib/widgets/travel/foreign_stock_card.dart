@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:torn_pda/utils/firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -15,6 +15,8 @@ import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'dart:convert';
 import "dart:collection";
 import 'dart:ui';
 
@@ -28,6 +30,7 @@ class ForeignStockCard extends StatefulWidget {
   final int moneyOnHand;
   final Function flagPressedCallback;
   final TravelTicket ticket;
+  final Map<String, dynamic> activeRestocks;
 
   ForeignStockCard(
       {@required this.foreignStock,
@@ -39,6 +42,7 @@ class ForeignStockCard extends StatefulWidget {
       @required this.moneyOnHand,
       @required this.flagPressedCallback,
       @required this.ticket,
+      @required this.activeRestocks,
       @required Key key})
       : super(key: key);
 
@@ -47,8 +51,6 @@ class ForeignStockCard extends StatefulWidget {
 }
 
 class _ForeignStockCardState extends State<ForeignStockCard> {
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   var _expandableController = ExpandableController();
 
   Future _footerInformationRetrieved;
@@ -89,6 +91,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         _footerInformationRetrieved = _getFooterInformation();
       }
     });
+
+    // Build code name
+    _codeName = "${widget.foreignStock.countryCode}-"
+        "${widget.foreignStock.name}";
   }
 
   @override
@@ -100,6 +106,15 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: widget.activeRestocks.keys.contains(_codeName)
+              ? Colors.blue
+              : Colors.transparent,
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(4.0),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ExpandablePanel(
@@ -309,6 +324,37 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                       width: 600,
                       child: LineChart(_mainChartData()),
                     ),
+                    SizedBox(height: 25),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blue,
+                        value: widget.activeRestocks.keys.contains(_codeName)
+                            ? true
+                            : false,
+                        title: Text(
+                          "Restock alert (auto)",
+                          style: TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
+                        subtitle: Text(
+                          "Get notified whenever ${widget.foreignStock.name} is restocked in $_countryFullName",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        onChanged: (ticked) async {
+                          if (ticked) {
+                            await _addToActiveRestockAlerts();
+                          } else {
+                            await _removeToActiveRestockAlerts();
+                          }
+                        },
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -335,6 +381,53 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             );
           }
         });
+  }
+
+  Future _addToActiveRestockAlerts() async {
+    var time = DateTime.now().millisecondsSinceEpoch;
+    if (!widget.activeRestocks.keys.contains(_codeName)) {
+      Map<String, dynamic> tempMap = widget.activeRestocks;
+      tempMap.addAll({_codeName: time});
+      firestore.updateActiveRestockAlerts(tempMap).then((success) async {
+        if (success) {
+          setState(() {
+            widget.activeRestocks.addAll({_codeName: time});
+          });
+          SharedPreferencesModel().setActiveRestocks(json.encode(tempMap));
+
+          var alertsEnabled =
+              await SharedPreferencesModel().getRestocksNotificationEnabled();
+          if (!alertsEnabled) {
+            BotToast.showText(
+              text: "Your restocks notifications are OFF, remember to active "
+                  "them in the Alerts section!",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[700],
+              duration: Duration(seconds: 4),
+              contentPadding: EdgeInsets.all(10),
+            );
+          }
+        }
+      });
+    }
+  }
+
+  Future _removeToActiveRestockAlerts() async {
+    if (widget.activeRestocks.keys.contains(_codeName)) {
+      Map<String, dynamic> tempMap = widget.activeRestocks;
+      tempMap.removeWhere((key, value) => key == _codeName);
+      firestore.updateActiveRestockAlerts(tempMap).then((success) {
+        if (success) {
+          setState(() {
+            widget.activeRestocks.removeWhere((key, value) => key == _codeName);
+          });
+          SharedPreferencesModel().setActiveRestocks(json.encode(tempMap));
+        }
+      });
+    }
   }
 
   Row _firstRow(ForeignStock stock) {
@@ -649,14 +742,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Future _getFooterInformation() async {
-    // Build code name
-    _codeName = "${widget.foreignStock.countryCode}-"
-        "${widget.foreignStock.name}";
-
     try {
       // Get the stock
-      var firestoreData =
-          await _firestore.collection("stocks-main").doc(_codeName).get();
+      var firestoreData = await firestore.getStockInformation(_codeName);
 
       // Chart date
       var firestoreMap = firestoreData

@@ -51,8 +51,8 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
               padding: EdgeInsets.only(
                 top: 45,
                 bottom: 16,
-                left: 16,
-                right: 16,
+                left: 25,
+                right: 25,
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
@@ -180,7 +180,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();

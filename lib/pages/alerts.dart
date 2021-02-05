@@ -64,12 +64,45 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.travelNotification ?? false,
                           title: Text("Travel"),
-                          subtitle: Text("Get notified just before you arrive"),
+                          subtitle: Text(
+                            "Get notified just before you arrive",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.travelNotification = value;
                             });
                             firestore.subscribeToTravelNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value:
+                              _firebaseUserModel.foreignRestockNotification ??
+                                  false,
+                          title: Text("Foreign stocks"),
+                          subtitle: Text(
+                            "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
+                            "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.foreignRestockNotification =
+                                  value;
+                            });
+                            firestore
+                                .subscribeToForeignRestockNotification(value);
                           },
                         ),
                       ),
@@ -80,8 +113,13 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.energyNotification ?? false,
                           title: Text("Energy full"),
-                          subtitle:
-                              Text("Get notified once you reach full energy"),
+                          subtitle: Text(
+                            "Get notified once you reach full energy",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.energyNotification = value;
@@ -97,8 +135,13 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.nerveNotification ?? false,
                           title: Text("Nerve full"),
-                          subtitle:
-                              Text("Get notified once you reach full nerve"),
+                          subtitle: Text(
+                            "Get notified once you reach full nerve",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.nerveNotification = value;
@@ -116,8 +159,13 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               _firebaseUserModel.hospitalNotification ?? false,
                           title: Text("Hospital admission and release"),
                           subtitle: Text(
-                              "If you are offline, you'll be notified if you are "
-                              "hospitalised, revived or out of hospital"),
+                            "If you are offline, you'll be notified if you are "
+                            "hospitalised, revived or out of hospital",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.hospitalNotification = value;
@@ -133,9 +181,14 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.drugsNotification ?? false,
                           title: Text("Drugs cooldown"),
-                          subtitle:
-                              Text("Get notified when your drugs cooldown "
-                                  "has expired"),
+                          subtitle: Text(
+                            "Get notified when your drugs cooldown "
+                            "has expired",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.drugsNotification = value;
@@ -152,7 +205,12 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           value: _firebaseUserModel.racingNotification ?? false,
                           title: Text("Racing"),
                           subtitle: Text(
-                              "Get notified when you cross the finish line"),
+                            "Get notified when you cross the finish line",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.racingNotification = value;
@@ -170,7 +228,12 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               _firebaseUserModel.messagesNotification ?? false,
                           title: Text("Messages"),
                           subtitle: Text(
-                              "Get notified when you receive new messages"),
+                            "Get notified when you receive new messages",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.messagesNotification = value;
@@ -186,8 +249,13 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           activeColor: Colors.blueGrey,
                           value: _firebaseUserModel.eventsNotification ?? false,
                           title: Text("Events"),
-                          subtitle:
-                              Text("Get notified when you receive new events"),
+                          subtitle: Text(
+                            "Get notified when you receive new events",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                           onChanged: (value) {
                             setState(() {
                               _firebaseUserModel?.eventsNotification = value;
@@ -202,9 +270,15 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text(
-                                "Filter out events",
-                                style: TextStyle(fontSize: 16),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Filter out events",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
                               ),
                               IconButton(
                                   icon:
@@ -221,9 +295,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                   }),
                             ],
                           ),
-                        )
-                      else
-                        SizedBox.shrink(),
+                        ),
                       SizedBox(height: 60),
                     ],
                   ),
@@ -334,7 +406,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         ),
       ),
       actions: [
-        FlatButton(
+        TextButton(
           child: Text("Close"),
           onPressed: () {
             Navigator.of(context).pop();

@@ -44,6 +44,8 @@ class SharedPreferencesModel {
   final String _kShowForeignInventory = "pda_showForeignInventory";
   final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kTravelTicket = "pda_travelTicket";
+  final String _kActiveRestocks = "pda_activeRestocks";
+  final String _kRestocksEnabled = "pda_restocksEnabled";
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
   final String _kEnergyNotificationValue = "pda_energyNotificationValue";
@@ -564,6 +566,26 @@ class SharedPreferencesModel {
   Future<bool> setTravelTicket(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTravelTicket, value);
+  }
+
+  Future<bool> getRestocksNotificationEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRestocksEnabled) ?? false;
+  }
+
+  Future<bool> setRestocksNotificationEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRestocksEnabled, value);
+  }
+
+  Future<String> getActiveRestocks() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kActiveRestocks) ?? "{}";
+  }
+
+  Future<bool> setActiveRestocks(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kActiveRestocks, value);
   }
 
   /// ----------------------------
