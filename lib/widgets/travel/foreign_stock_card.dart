@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -80,6 +81,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     const Color(0xff02d39a),
   ];
 
+  Timer _ticker;
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +95,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       }
     });
 
+    _ticker = new Timer.periodic(
+        Duration(minutes: 1), (Timer t) => _timerUpdate());
+
     // Build code name
     _codeName = "${widget.foreignStock.countryCode}-"
         "${widget.foreignStock.name}";
@@ -99,8 +105,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   @override
   void dispose() {
-    super.dispose();
+    _ticker?.cancel();
     _expandableController.dispose();
+    super.dispose();
   }
 
   @override
@@ -173,7 +180,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
 
     // WHEN TO TRAVEL
-
     var whenToTravel = "";
     var arrivalTime = "";
     var depletesTime = "";
@@ -479,7 +485,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             ),
           ),
         ),
-        _returnLastUpdated(stock.timestamp),
+        _returnLastUpdated(),
       ],
     );
   }
@@ -696,8 +702,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Row _returnLastUpdated(int timeStamp) {
-    var inputTime = DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000);
+  Row _returnLastUpdated() {
+    var inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp * 1000);
     var timeDifference = DateTime.now().difference(inputTime);
     var timeString;
     var color;
@@ -707,9 +713,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
       timeString = '1 min';
       color = Colors.green;
-    } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
+    } else if (timeDifference.inMinutes > 1 && timeDifference.inMinutes < 30) {
       timeString = '${timeDifference.inMinutes} min';
       color = Colors.green;
+    } else if (timeDifference.inMinutes >= 30 && timeDifference.inHours < 1) {
+      timeString = '${timeDifference.inMinutes} min';
+      color = Colors.orange;
     } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
       timeString = '1 hour';
       color = Colors.orange;
@@ -718,10 +727,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       color = Colors.red;
     } else if (timeDifference.inDays == 1) {
       timeString = '1 day';
-      color = Colors.green;
+      color = Colors.red;
     } else {
       timeString = '${timeDifference.inDays} days';
-      color = Colors.green;
+      color = Colors.red;
     }
     return Row(
       children: <Widget>[
@@ -1029,5 +1038,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
+  }
+
+  void _timerUpdate() {
+    setState(() {
+      _calculateDetails();
+    });
   }
 }
