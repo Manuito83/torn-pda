@@ -16,6 +16,7 @@ class TargetModel {
 
   // External, exported/imported to Shared Preferences!
   double respectGain;
+  double fairFight;
   bool userWonOrDefended;
   String personalNote;
   String personalNoteColor;
@@ -54,6 +55,7 @@ class TargetModel {
     // This first batch is here to export/import from SharedPreferences,
     // so we also have to initialize them below
     this.respectGain,
+    this.fairFight,
     this.userWonOrDefended,
     this.personalNote,
     this.personalNoteColor,
@@ -91,6 +93,7 @@ class TargetModel {
     // respectGain can't be null to allow sorting targets, so if it stays
     // at -1, it's because the target has unknown respect (new target)
     respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
+    fairFight: json["fairFight"] == null ? -1 : json["fairFight"],
     userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
     personalNote: json["personalNote"] == null ? '' : json["personalNote"],
     personalNoteColor: json["personalNoteColor"] == null ? '' : json["personalNoteColor"],
@@ -125,6 +128,7 @@ class TargetModel {
 
   Map<String, dynamic> toJson() => {
     "respectGain": respectGain,
+    "fairFight": fairFight,
     "userWonOrDefended": userWonOrDefended,
     "personalNote": personalNote,
     "personalNoteColor": personalNoteColor,

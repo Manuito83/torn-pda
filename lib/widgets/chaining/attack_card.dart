@@ -94,7 +94,7 @@ class _AttackCardState extends State<AttackCard> {
                         padding: EdgeInsets.symmetric(horizontal: 5),
                       ),
                       SizedBox(
-                        width: 100,
+                        width: 70,
                         child: Text(
                           '${_attack.targetName}',
                           overflow: TextOverflow.ellipsis,
@@ -116,14 +116,25 @@ class _AttackCardState extends State<AttackCard> {
                             ' [${_attack.targetId}]',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
                           ),
                         ),
                         _returnTargetLevel(),
-                        SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: _returnAddTargetButton(),
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: _factionIcon(),
+                            ),
+                            SizedBox(width: 5),
+                            SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: _returnAddTargetButton(),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -154,7 +165,7 @@ class _AttackCardState extends State<AttackCard> {
                       _returnLastResults(),
                     ],
                   ),
-                  _factionIcon(),
+                  _returnFairFight(),
                 ],
               ),
             ),
@@ -215,7 +226,6 @@ class _AttackCardState extends State<AttackCard> {
                 child: CircularProgressIndicator(),
               ),
         onPressed: () async {
-
           setState(() {
             _addButtonActive = false;
           });
@@ -343,6 +353,43 @@ class _AttackCardState extends State<AttackCard> {
             ),
           ),
           respectSpan,
+        ],
+      ),
+    );
+  }
+
+  Widget _returnFairFight() {
+    dynamic ff = _attack.modifiers.fairFight;
+    if (ff is String) {
+      ff = double.parse(ff);
+    }
+
+    var ffColor = Colors.red;
+    if (ff >= 2.2 && ff < 2.8) {
+      ffColor = Colors.orange;
+    } else if (ff >= 2.8) {
+      ffColor = Colors.green;
+    }
+
+    TextSpan ffSpan;
+    ffSpan = TextSpan(
+      text: ff.toString(),
+      style: TextStyle(
+        color: ffColor,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+
+    return RichText(
+      text: TextSpan(
+        children: <TextSpan>[
+          TextSpan(
+            text: 'Fair Fight: ',
+            style: TextStyle(
+              color: _themeProvider.mainText,
+            ),
+          ),
+          ffSpan,
         ],
       ),
     );
