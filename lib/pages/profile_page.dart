@@ -864,7 +864,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onLongPress: () => _launchBrowserFull('https://www.torn.com'),
+                    onLongPress: () =>
+                        _launchBrowserFull('https://www.torn.com'),
                     onTap: () {
                       _launchBrowserOption('https://www.torn.com');
                     },
@@ -1952,9 +1953,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       diff = ', in a few seconds';
     } else if (timeDifference.inMinutes >= 1 && timeDifference.inHours < 24) {
       diff = ', in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+    } else if (timeDifference.inHours >= 24 && timeDifference.inHours < 48) {
+      diff = ' in 1 day, in ${twoDigits(timeDifference.inHours)}h '
+          '${twoDigitMinutes}m';
     } else {
-      diff =
-          ' tomorrow, in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+      diff = ' in ${twoDigits(timeDifference.inDays)} days, in '
+          '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
     }
 
     /*
@@ -3565,7 +3569,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var apiChain = await TornApiCaller.chain(_userProvider.basic.userApiKey)
         .getChainStatus;
 
-  if (mounted) {
+    if (mounted) {
       setState(() {
         if (apiResponse is OwnProfileExtended) {
           _apiRetries = 0;
@@ -3609,7 +3613,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       });
     }
-
 
     // We get education and money (with ProfileMiscModel) separately and only once per load
     // and then on onResumed
@@ -3673,7 +3676,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       children: [
         SpeedDialChild(
           child: GestureDetector(
-            onTap: () async  {
+            onTap: () async {
               await _launchBrowserOption('https://www.torn.com/city.php');
               setState(() {
                 speedDialSetOpen.value = false;
@@ -3783,7 +3786,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               });
             },
             onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com/crimes.php#/step=main');
+              await _launchBrowserFull(
+                  'https://www.torn.com/crimes.php#/step=main');
               setState(() {
                 speedDialSetOpen.value = false;
               });
