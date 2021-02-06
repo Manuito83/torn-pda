@@ -767,7 +767,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
   }
 
-  void _updateLastActiveTime() {
+  void _updateLastActiveTime() async {
     // Calculate difference between last recorded use and current time
     var now = DateTime.now().millisecondsSinceEpoch;
     var dTimeStamp = now - _settingsProvider.lastAppUse;
@@ -776,8 +776,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
     // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
     if (duration.inDays > 2) {
-      firestore.uploadLastActiveTime(now);
-      _settingsProvider.updateLastUsed(now);
+      var success = await firestore.uploadLastActiveTime(now);
+      if (success) {
+        _settingsProvider.updateLastUsed(now);
+      }
     }
   }
 

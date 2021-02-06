@@ -18,7 +18,8 @@ class _FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<void> uploadUsersProfileDetail(OwnProfileBasic profile, {bool forceUpdate = false}) async {
+  Future<void> uploadUsersProfileDetail(OwnProfileBasic profile,
+      {bool forceUpdate = false}) async {
     if (_alreadyUploaded && !forceUpdate) return;
     _alreadyUploaded = true;
     _firebaseUserModel = FirebaseUserModel();
@@ -117,19 +118,23 @@ class _FirestoreHelper {
     });
   }
 
-  Future<void> uploadLastActiveTime(int timeStamp) async {
-    if (_uid == null) return;
-    await _firestore.collection("players").doc(_uid).update({
+  Future<bool> uploadLastActiveTime(int timeStamp) async {
+    if (_uid == null) return false;
+    return _firestore.collection("players").doc(_uid).update({
       "lastActive": timeStamp,
       "active": true,
+    }).then((value) {
+      return true;
+    }).catchError((error) {
+      return false;
     });
   }
 
   // Init State in alerts
   Future<FirebaseUserModel> getUserProfile() async {
     if (_firebaseUserModel != null) return _firebaseUserModel;
-    return _firebaseUserModel =
-        FirebaseUserModel.fromMap((await _firestore.collection("players").doc(_uid).get()).data());
+    return _firebaseUserModel = FirebaseUserModel.fromMap(
+        (await _firestore.collection("players").doc(_uid).get()).data());
   }
 
   Future deleteUserProfile() async {
