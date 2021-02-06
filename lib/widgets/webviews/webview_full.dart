@@ -96,7 +96,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _cityPreferencesLoaded = false;
   var _errorCityApi = false;
   var _cityItemsFound = <Item>[];
-  var _cityController = ExpandableController();
+  Widget _cityExpandable = SizedBox.shrink();
 
   var _bazaarActive = false;
   var _bazaarFillActive = false;
@@ -313,7 +313,7 @@ class _WebViewFullState extends State<WebViewFull> {
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 2),
-                                  child: FlatButton(
+                                  child: TextButton(
                                     child: Text("Close"),
                                     onPressed: () {
                                       Navigator.of(context).pop();
@@ -418,22 +418,7 @@ class _WebViewFullState extends State<WebViewFull> {
         // Trades widget
         _tradesExpandable,
         // City widget
-        ExpandablePanel(
-          theme: ExpandableThemeData(
-            hasIcon: false,
-            tapBodyToCollapse: false,
-            tapHeaderToExpand: false,
-          ),
-          collapsed: SizedBox.shrink(),
-          controller: _cityController,
-          header: SizedBox.shrink(),
-          expanded: _cityIconActive
-              ? CityWidget(
-                  controller: webView,
-                  cityItems: _cityItemsFound,
-                  error: _errorCityApi)
-              : SizedBox.shrink(),
-        ),
+        _cityExpandable,
         // Actual WebView
         Expanded(
           child: InAppWebView(
@@ -1363,7 +1348,7 @@ class _WebViewFullState extends State<WebViewFull> {
     if (!pageTitle.contains('city')) {
       setState(() {
         _cityIconActive = false;
-        _cityController.expanded = false;
+        _cityExpandable = SizedBox.shrink();
       });
       return;
     }
@@ -1418,10 +1403,9 @@ class _WebViewFullState extends State<WebViewFull> {
     if (mounted) {
       setState(() {
         if (!_cityEnabled) {
-          _cityController.expanded = false;
+          _cityExpandable = SizedBox.shrink();
           return;
         }
-        _cityController.expanded = true;
       });
     }
 
@@ -1450,6 +1434,10 @@ class _WebViewFullState extends State<WebViewFull> {
           setState(() {
             _cityItemsFound = itemsFound;
             _errorCityApi = false;
+            _cityExpandable = CityWidget(
+                controller: webView,
+                cityItems: _cityItemsFound,
+                error: _errorCityApi);
           });
         }
         webView.evaluateJavascript(source: highlightCityItemsJS());
@@ -1517,7 +1505,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Widget _bazaarFillIcon() {
     if (_bazaarActive) {
-      return FlatButton(
+      return TextButton(
         onPressed: () async {
           _bazaarFillActive
               ? await webView.evaluateJavascript(
