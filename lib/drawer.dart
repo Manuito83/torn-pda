@@ -242,6 +242,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     var browserUrl = '';
 
     bool travel = false;
+    bool hospital = false;
     bool restocks = false;
     bool racing = false;
     bool messages = false;
@@ -267,6 +268,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     if (channel.contains("Alerts travel")) {
       travel = true;
+    } else if (channel.contains("Alerts hospital")) {
+      hospital = true;
     } else if (channel.contains("Alerts restocks")) {
       restocks = true;
     } else if (channel.contains("Alerts racing")) {
@@ -286,6 +289,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
 
     if (travel) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com";
+    } else if (hospital) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com";
     } else if (restocks) {
@@ -378,7 +384,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('booster')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#boosters-items';
-      // Medical is only in manual notifications, payload comes from Profile
+      } else if (payload.contains('hospital')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com';
       } else if (payload.contains('racing')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';

@@ -8,7 +8,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:flutter/services.dart';
 
 // IDS
-// 101 -> 106 profile cooldowns
+// 101 -> 107 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
 // 400 loot
@@ -70,6 +70,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts hospital")) {
     notificationIcon = "notification_hospital";
     notificationColor = Colors.orange[400];
+    onTapPayload += 'hospital';
     channelId = 'Alerts hospital';
     channelName = 'Alerts hospital';
     channelDescription = 'Automatic alerts for hospital';
@@ -348,6 +349,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts hospital ${modifier.channelIdModifier}',
       'Alerts hospital ${modifier.channelIdModifier}',
       'Automatic alerts for hospital',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual hospital ${modifier.channelIdModifier}',
+      'Manual hospital ${modifier.channelIdModifier}',
+      'Manual notifications for hospital',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
