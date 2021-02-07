@@ -43,6 +43,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 
 enum ProfileNotification {
   travel,
@@ -2866,6 +2867,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Text('${_miscModel.points}'),
                 ],
               ),
+              SizedBox(height: 4),
+              _jobPoints(),
               SizedBox(height: 8),
               Text('Battle: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
@@ -4909,7 +4912,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Medic!"),
                               onPressed: () async {
                                 var nuke = NukeRevive(
@@ -4949,7 +4952,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 Navigator.of(context).pop();
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Cancel"),
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -5028,7 +5031,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         children: <Widget>[
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: RaisedButton(
+                            child: ElevatedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -5036,7 +5039,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'images/icons/home/vault.png',
                                     width: 15,
                                     height: 15,
-                                    color: Colors.black,
+                                    color: Colors.white70,
                                   ),
                                   SizedBox(width: 15),
                                   Text("Personal vault"),
@@ -5057,7 +5060,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: RaisedButton(
+                            child: ElevatedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -5065,7 +5068,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'images/icons/faction.png',
                                     width: 15,
                                     height: 15,
-                                    color: Colors.black,
+                                    color: Colors.white70,
                                   ),
                                   SizedBox(width: 15),
                                   Text("Faction vault"),
@@ -5086,7 +5089,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: RaisedButton(
+                            child: ElevatedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -5094,7 +5097,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'images/icons/home/job.png',
                                     width: 15,
                                     height: 15,
-                                    color: Colors.black,
+                                    color: Colors.white70,
                                   ),
                                   SizedBox(width: 15),
                                   Text("Company vault"),
@@ -5114,7 +5117,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ),
                           ),
                           SizedBox(height: 10),
-                          FlatButton(
+                          TextButton(
                             child: Text("Cancel"),
                             onPressed: () {
                               Navigator.of(context).pop();
@@ -5149,5 +5152,94 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  Widget _jobPoints() {
+    try {
+      int currentPoints = 0;
+      bool unemployed = false;
+
+      if (_user.job.companyId == 0) {
+        if (_user.job.position == "None") {
+          unemployed = true;
+        }
+
+        switch (_user.job.position.toLowerCase()) {
+          case "army":
+            currentPoints = _miscModel.jobpoints.jobs.army;
+            break;
+          case "medical":
+            currentPoints = _miscModel.jobpoints.jobs.medical;
+            break;
+          case "casino":
+            currentPoints = _miscModel.jobpoints.jobs.casino;
+            break;
+          case "education":
+            currentPoints = _miscModel.jobpoints.jobs.education;
+            break;
+          case "law":
+            currentPoints = _miscModel.jobpoints.jobs.law;
+            break;
+          case "grocer":
+            currentPoints = _miscModel.jobpoints.jobs.grocer;
+            break;
+        }
+      } else {
+        _miscModel.jobpoints.companies.forEach((type, details) {
+          if (type == _user.job.companyType.toString()) {
+            currentPoints = details.jobpoints;
+          }
+        });
+      }
+
+      String headerString = "$currentPoints job points";
+      if (unemployed) {
+        headerString = "Unemployed";
+      }
+
+      return Row(
+        children: [
+          GestureDetector(
+            onLongPress: () {
+              _launchBrowserFull('https://www.torn.com/companies.php');
+            },
+            onTap: () async {
+              _launchBrowserOption('https://www.torn.com/companies.php');
+            },
+            child: Icon(
+              Icons.work,
+              color: Colors.brown[300],
+              size: 23,
+            ),
+          ),
+          SizedBox(width: 6),
+          Text(headerString),
+          SizedBox(width: 10),
+          GestureDetector(
+            onTap: () async {
+              return showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return JobPointsDialog(
+                    currentType: _user.job.companyType,
+                    currentPoints: currentPoints,
+                    jobpoints: _miscModel.jobpoints,
+                    job: _user.job,
+                    unemployed: unemployed,
+                  );
+                },
+              );
+            },
+            child: Icon(
+              Icons.info_outline,
+              size: 20,
+            ),
+          ),
+        ],
+      );
+    } catch (e) {
+      return SizedBox.shrink();
+    }
   }
 }

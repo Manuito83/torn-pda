@@ -325,7 +325,7 @@ class TornApiCaller {
             'money,education,messages';
         break;
       case ApiSelection.ownMisc:
-        url += '?selections=money,education,workstats,battlestats';
+        url += '?selections=money,education,workstats,battlestats,jobpoints';
         break;
       case ApiSelection.target:
         url += '$prefix?selections=profile,discord';
