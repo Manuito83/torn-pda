@@ -238,7 +238,8 @@ class Faction {
     factionId: json["faction_id"] == null ? null : json["faction_id"],
     daysInFaction: json["days_in_faction"] == null ? null : json["days_in_faction"],
     factionName: json["faction_name"] == null ? null : json["faction_name"],
-    factionTag: json["faction_tag"] == null ? null : json["faction_tag"],
+    // API sometimes converts to INT if tag is numbers
+    factionTag: json["faction_tag"] == null ? null : json["faction_tag"].toString(),
   );
 
   Map<String, dynamic> toJson() => {

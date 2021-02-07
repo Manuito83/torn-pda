@@ -37,6 +37,7 @@ class OwnProfileMisc {
     this.defenseInfo,
     this.speedInfo,
     this.dexterityInfo,
+    this.jobpoints,
   });
 
   int points;
@@ -64,6 +65,7 @@ class OwnProfileMisc {
   List<String> defenseInfo;
   List<String> speedInfo;
   List<String> dexterityInfo;
+  Jobpoints jobpoints;
 
   factory OwnProfileMisc.fromJson(Map<String, dynamic> json) => OwnProfileMisc(
     points: json["points"] == null ? null : json["points"],
@@ -91,6 +93,7 @@ class OwnProfileMisc {
     defenseInfo: json["defense_info"] == null ? null : List<String>.from(json["defense_info"].map((x) => x)),
     speedInfo: json["speed_info"] == null ? null : List<String>.from(json["speed_info"].map((x) => x)),
     dexterityInfo: json["dexterity_info"] == null ? null : List<String>.from(json["dexterity_info"].map((x) => x)),
+    jobpoints: json["jobpoints"] == null ? null : Jobpoints.fromJson(json["jobpoints"]),
   );
 
   Map<String, dynamic> toJson() => {
@@ -119,6 +122,83 @@ class OwnProfileMisc {
     "defense_info": defenseInfo == null ? null : List<dynamic>.from(defenseInfo.map((x) => x)),
     "speed_info": speedInfo == null ? null : List<dynamic>.from(speedInfo.map((x) => x)),
     "dexterity_info": dexterityInfo == null ? null : List<dynamic>.from(dexterityInfo.map((x) => x)),
+    "jobpoints": jobpoints == null ? null : jobpoints.toJson(),
+  };
+}
+
+class Jobpoints {
+  Jobpoints({
+    this.jobs,
+    this.companies,
+  });
+
+  Jobs jobs;
+  Map<String, Company> companies;
+
+  factory Jobpoints.fromJson(Map<String, dynamic> json) => Jobpoints(
+    jobs: json["jobs"] == null ? null : Jobs.fromJson(json["jobs"]),
+    companies: json["companies"] == null ? null : Map.from(json["companies"]).map((k, v) => MapEntry<String, Company>(k, Company.fromJson(v))),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "jobs": jobs == null ? null : jobs.toJson(),
+    "companies": companies == null ? null : Map.from(companies).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+  };
+}
+
+class Jobs {
+  Jobs({
+    this.army,
+    this.medical,
+    this.casino,
+    this.education,
+    this.law,
+    this.grocer,
+  });
+
+  int army;
+  int medical;
+  int casino;
+  int education;
+  int law;
+  int grocer;
+
+  factory Jobs.fromJson(Map<String, dynamic> json) => Jobs(
+    army: json["army"] == null ? 0 : json["army"],
+    medical: json["medical"] == null ? 0 : json["medical"],
+    casino: json["casino"] == null ? 0 : json["casino"],
+    education: json["education"] == null ? 0 : json["education"],
+    law: json["law"] == null ? 0 : json["law"],
+    grocer: json["grocer"] == null ? 0 : json["grocer"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "army": army == null ? null : army,
+    "medical": medical == null ? null : medical,
+    "casino": casino == null ? null : casino,
+    "education": education == null ? null : education,
+    "law": law == null ? null : law,
+    "grocer": grocer == null ? null : grocer,
+  };
+}
+
+class Company {
+  Company({
+    this.name,
+    this.jobpoints,
+  });
+
+  String name;
+  int jobpoints;
+
+  factory Company.fromJson(Map<String, dynamic> json) => Company(
+    name: json["name"] == null ? null : json["name"],
+    jobpoints: json["jobpoints"] == null ? null : json["jobpoints"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "name": name == null ? null : name,
+    "jobpoints": jobpoints == null ? null : jobpoints,
   };
 }
 

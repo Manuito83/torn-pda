@@ -43,6 +43,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 
 enum ProfileNotification {
   travel,
@@ -52,6 +53,7 @@ enum ProfileNotification {
   drugs,
   medical,
   booster,
+  hospital,
 }
 
 enum NotificationType {
@@ -138,6 +140,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _drugsNotificationTime;
   DateTime _medicalNotificationTime;
   DateTime _boosterNotificationTime;
+  DateTime _hospitalNotificationTime;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -146,6 +149,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _drugsNotificationsPending = false;
   bool _medicalNotificationsPending = false;
   bool _boosterNotificationsPending = false;
+  bool _hospitalNotificationsPending = false;
 
   NotificationType _travelNotificationType;
   NotificationType _energyNotificationType;
@@ -154,6 +158,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _drugsNotificationType;
   NotificationType _medicalNotificationType;
   NotificationType _boosterNotificationType;
+  NotificationType _hospitalNotificationType;
 
   int _customEnergyTrigger;
   int _customNerveTrigger;
@@ -168,6 +173,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData _drugsNotificationIcon;
   IconData _medicalNotificationIcon;
   IconData _boosterNotificationIcon;
+  IconData _hospitalNotificationIcon;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -804,6 +810,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Flexible(
                   child: detailsWidget,
                 ),
+
               ],
             ),
           );
@@ -974,13 +981,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Column(
                 children: <Widget>[
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      SizedBox(
-                        width: 60,
-                        child: Text('Status: '),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 60,
+                            child: Text('Status: '),
+                          ),
+                          Text(_user.status.state),
+                          stateBall(),
+                        ],
                       ),
-                      Text(_user.status.state),
-                      stateBall(),
+                      if (_user.status.color == 'red')
+                        _notificationIcon(ProfileNotification.hospital)
                     ],
                   ),
                   traveling(),
@@ -1623,6 +1637,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationType = _boosterNotificationType;
         notificationIcon = _boosterNotificationIcon;
         break;
+
+      case ProfileNotification.hospital:
+        var releaseTime =
+            DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
+        secondsToGo = releaseTime.difference(DateTime.now()).inSeconds;
+        notificationsPending = _hospitalNotificationsPending;
+        _hospitalNotificationTime = releaseTime;
+        var formattedTime = TimeFormatter(
+          inputTime: _hospitalNotificationTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        notificationSetString =
+            'Hospital release notification set for $formattedTime';
+        notificationCancelString = 'Hospital release notification cancelled!';
+        alarmSetString = 'Hospital release alarm set for $formattedTime';
+        timerSetString = 'Hospital release timer set for $formattedTime';
+        notificationType = _hospitalNotificationType;
+        notificationIcon = _hospitalNotificationIcon;
+        break;
     }
 
     if (secondsToGo == 0 && !percentageError) {
@@ -1954,9 +1988,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       diff = ', in a few seconds';
     } else if (timeDifference.inMinutes >= 1 && timeDifference.inHours < 24) {
       diff = ', in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+    } else if (timeDifference.inHours >= 24 && timeDifference.inHours < 48) {
+      diff = ' in 1 day, in ${twoDigits(timeDifference.inHours)}h '
+          '${twoDigitMinutes}m';
     } else {
-      diff =
-          ' tomorrow, in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+      diff = ' in ${twoDigits(timeDifference.inDays)} days, in '
+          '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
     }
 
     /*
@@ -2864,6 +2901,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Text('${_miscModel.points}'),
                 ],
               ),
+              SizedBox(height: 4),
+              _jobPoints(),
               SizedBox(height: 8),
               Text('Battle: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
@@ -4078,6 +4117,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 _user.cooldowns.booster;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
+      case ProfileNotification.hospital:
+        notificationId = 107;
+        secondsToNotification =
+            _hospitalNotificationTime.difference(DateTime.now()).inSeconds;
+        channelTitle = 'Manual hospital';
+        channelSubtitle = 'Manual hospital';
+        channelDescription = 'Manual notifications for hospital';
+        notificationTitle = 'Hospital release';
+        notificationSubtitle = 'Here is your booster cooldown reminder!';
+        notificationPayload += 'hospital';
+        break;
     }
 
     var modifier = await getNotificationChannelsModifiers();
@@ -4131,6 +4181,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool drugs = false;
     bool medical = false;
     bool booster = false;
+    bool hospital = false;
 
     var pendingNotificationRequests =
         await flutterLocalNotificationsPlugin.pendingNotificationRequests();
@@ -4151,6 +4202,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           medical = true;
         } else if (notification.payload.contains('booster')) {
           booster = true;
+        } else if (notification.payload.contains('hospital')) {
+          hospital = true;
         }
       }
     }
@@ -4164,6 +4217,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _drugsNotificationsPending = drugs;
         _medicalNotificationsPending = medical;
         _boosterNotificationsPending = booster;
+        _hospitalNotificationsPending = hospital;
       });
     }
   }
@@ -4191,6 +4245,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.booster:
         await flutterLocalNotificationsPlugin.cancel(106);
+        break;
+      case ProfileNotification.hospital:
+        await flutterLocalNotificationsPlugin.cancel(107);
         break;
     }
 
@@ -4513,19 +4570,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else if (travelTimerAhead == '4') {
       _travelTimerAhead = 300;
     }
-
-    setState(() {
-      if (travel == '0') {
-        _travelNotificationType = NotificationType.notification;
-        _travelNotificationIcon = Icons.chat_bubble_outline;
-      } else if (travel == '1') {
-        _travelNotificationType = NotificationType.alarm;
-        _travelNotificationIcon = Icons.notifications_none;
-      } else if (travel == '2') {
-        _travelNotificationType = NotificationType.timer;
-        _travelNotificationIcon = Icons.timer;
-      }
-    });
     // TRAVEL ENDS
 
     var energy = await SharedPreferencesModel().getEnergyNotificationType();
@@ -4544,6 +4588,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var drugs = await SharedPreferencesModel().getDrugNotificationType();
     var medical = await SharedPreferencesModel().getMedicalNotificationType();
     var booster = await SharedPreferencesModel().getBoosterNotificationType();
+    var hospital = await SharedPreferencesModel().getHospitalNotificationType();
 
     _alarmSound = await SharedPreferencesModel().getProfileAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getProfileAlarmVibration();
@@ -4552,7 +4597,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
     _shortcutsEnabled = await SharedPreferencesModel().getEnableShortcuts();
 
+    var expandEvents = await SharedPreferencesModel().getExpandEvents();
+    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
+    var expandMessages = await SharedPreferencesModel().getExpandMessages();
+    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
+    var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
+    var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
+
     setState(() {
+      if (travel == '0') {
+        _travelNotificationType = NotificationType.notification;
+        _travelNotificationIcon = Icons.chat_bubble_outline;
+      } else if (travel == '1') {
+        _travelNotificationType = NotificationType.alarm;
+        _travelNotificationIcon = Icons.notifications_none;
+      } else if (travel == '2') {
+        _travelNotificationType = NotificationType.timer;
+        _travelNotificationIcon = Icons.timer;
+      }
+
       if (energy == '0') {
         _energyNotificationType = NotificationType.notification;
         _energyNotificationIcon = Icons.chat_bubble_outline;
@@ -4563,9 +4626,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _energyNotificationType = NotificationType.timer;
         _energyNotificationIcon = Icons.timer;
       }
-    });
 
-    setState(() {
       if (nerve == '0') {
         _nerveNotificationType = NotificationType.notification;
         _nerveNotificationIcon = Icons.chat_bubble_outline;
@@ -4576,9 +4637,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _nerveNotificationType = NotificationType.timer;
         _nerveNotificationIcon = Icons.timer;
       }
-    });
 
-    setState(() {
       if (life == '0') {
         _lifeNotificationType = NotificationType.notification;
         _lifeNotificationIcon = Icons.chat_bubble_outline;
@@ -4589,9 +4648,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _lifeNotificationType = NotificationType.timer;
         _lifeNotificationIcon = Icons.timer;
       }
-    });
 
-    setState(() {
       if (drugs == '0') {
         _drugsNotificationType = NotificationType.notification;
         _drugsNotificationIcon = Icons.chat_bubble_outline;
@@ -4602,9 +4659,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _drugsNotificationType = NotificationType.timer;
         _drugsNotificationIcon = Icons.timer;
       }
-    });
 
-    setState(() {
       if (medical == '0') {
         _medicalNotificationType = NotificationType.notification;
         _medicalNotificationIcon = Icons.chat_bubble_outline;
@@ -4615,9 +4670,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _medicalNotificationType = NotificationType.timer;
         _medicalNotificationIcon = Icons.timer;
       }
-    });
 
-    setState(() {
       if (booster == '0') {
         _boosterNotificationType = NotificationType.notification;
         _boosterNotificationIcon = Icons.chat_bubble_outline;
@@ -4628,15 +4681,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _boosterNotificationType = NotificationType.timer;
         _boosterNotificationIcon = Icons.timer;
       }
-    });
 
-    var expandEvents = await SharedPreferencesModel().getExpandEvents();
-    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
-    var expandMessages = await SharedPreferencesModel().getExpandMessages();
-    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
-    var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
-    var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
-    setState(() {
+      if (hospital == '0') {
+        _hospitalNotificationType = NotificationType.notification;
+        _hospitalNotificationIcon = Icons.chat_bubble_outline;
+      } else if (hospital == '1') {
+        _hospitalNotificationType = NotificationType.alarm;
+        _hospitalNotificationIcon = Icons.notifications_none;
+      } else if (hospital == '2') {
+        _hospitalNotificationType = NotificationType.timer;
+        _hospitalNotificationIcon = Icons.timer;
+      }
+
       _eventsExpController.expanded = expandEvents;
       _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
@@ -4688,6 +4744,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hour = _boosterNotificationTime.hour;
         minute = _boosterNotificationTime.minute;
         message = 'Torn PDA Booster';
+        break;
+      case ProfileNotification.hospital:
+        hour = _hospitalNotificationTime.hour;
+        minute = _hospitalNotificationTime.minute;
+        message = 'Torn PDA Hospital';
         break;
     }
 
@@ -4776,6 +4837,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         totalSeconds =
             _boosterNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Booster';
+        break;
+      case ProfileNotification.hospital:
+        totalSeconds =
+            _hospitalNotificationTime.difference(DateTime.now()).inSeconds;
+        message = 'Torn PDA Hospital';
         break;
     }
 
@@ -4907,7 +4973,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Medic!"),
                               onPressed: () async {
                                 var nuke = NukeRevive(
@@ -4947,7 +5013,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 Navigator.of(context).pop();
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Cancel"),
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -5026,7 +5092,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         children: <Widget>[
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: RaisedButton(
+                            child: ElevatedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -5034,7 +5100,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'images/icons/home/vault.png',
                                     width: 15,
                                     height: 15,
-                                    color: Colors.black,
+                                    color: Colors.white70,
                                   ),
                                   SizedBox(width: 15),
                                   Text("Personal vault"),
@@ -5055,7 +5121,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: RaisedButton(
+                            child: ElevatedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -5063,7 +5129,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'images/icons/faction.png',
                                     width: 15,
                                     height: 15,
-                                    color: Colors.black,
+                                    color: Colors.white70,
                                   ),
                                   SizedBox(width: 15),
                                   Text("Faction vault"),
@@ -5084,7 +5150,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                            child: RaisedButton(
+                            child: ElevatedButton(
                               child: Row(
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
@@ -5092,7 +5158,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     'images/icons/home/job.png',
                                     width: 15,
                                     height: 15,
-                                    color: Colors.black,
+                                    color: Colors.white70,
                                   ),
                                   SizedBox(width: 15),
                                   Text("Company vault"),
@@ -5112,7 +5178,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ),
                           ),
                           SizedBox(height: 10),
-                          FlatButton(
+                          TextButton(
                             child: Text("Cancel"),
                             onPressed: () {
                               Navigator.of(context).pop();
@@ -5147,5 +5213,94 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  Widget _jobPoints() {
+    try {
+      int currentPoints = 0;
+      bool unemployed = false;
+
+      if (_user.job.companyId == 0) {
+        if (_user.job.position == "None") {
+          unemployed = true;
+        }
+
+        switch (_user.job.position.toLowerCase()) {
+          case "army":
+            currentPoints = _miscModel.jobpoints.jobs.army;
+            break;
+          case "medical":
+            currentPoints = _miscModel.jobpoints.jobs.medical;
+            break;
+          case "casino":
+            currentPoints = _miscModel.jobpoints.jobs.casino;
+            break;
+          case "education":
+            currentPoints = _miscModel.jobpoints.jobs.education;
+            break;
+          case "law":
+            currentPoints = _miscModel.jobpoints.jobs.law;
+            break;
+          case "grocer":
+            currentPoints = _miscModel.jobpoints.jobs.grocer;
+            break;
+        }
+      } else {
+        _miscModel.jobpoints.companies.forEach((type, details) {
+          if (type == _user.job.companyType.toString()) {
+            currentPoints = details.jobpoints;
+          }
+        });
+      }
+
+      String headerString = "$currentPoints job points";
+      if (unemployed) {
+        headerString = "Unemployed";
+      }
+
+      return Row(
+        children: [
+          GestureDetector(
+            onLongPress: () {
+              _launchBrowserFull('https://www.torn.com/companies.php');
+            },
+            onTap: () async {
+              _launchBrowserOption('https://www.torn.com/companies.php');
+            },
+            child: Icon(
+              Icons.work,
+              color: Colors.brown[300],
+              size: 23,
+            ),
+          ),
+          SizedBox(width: 6),
+          Text(headerString),
+          SizedBox(width: 10),
+          GestureDetector(
+            onTap: () async {
+              return showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return JobPointsDialog(
+                    currentType: _user.job.companyType,
+                    currentPoints: currentPoints,
+                    jobpoints: _miscModel.jobpoints,
+                    job: _user.job,
+                    unemployed: unemployed,
+                  );
+                },
+              );
+            },
+            child: Icon(
+              Icons.info_outline,
+              size: 20,
+            ),
+          ),
+        ],
+      );
+    } catch (e) {
+      return SizedBox.shrink();
+    }
   }
 }

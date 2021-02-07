@@ -1,3 +1,4 @@
+import 'package:expandable/expandable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -32,37 +33,65 @@ class _CityWidgetState extends State<CityWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: ConstrainedBox(
-        constraints: BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
-                kToolbarHeight -
-                AppBar().preferredSize.height)) /
-            3),
-        child: Scrollbar(
-          controller: _scrollController,
-          isAlwaysShown: true,
+      padding: const EdgeInsets.all(10),
+      child: ExpandablePanel(
+        theme: ExpandableThemeData(
+          hasIcon: false,
+          iconColor: Colors.grey,
+          tapBodyToExpand: true,
+          tapHeaderToExpand: true,
+          tapBodyToCollapse: true,
+        ),
+        header: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Column(
+              children: [
+                Text(
+                  'City Finder',
+                  style: TextStyle(
+                    color: Colors.orange,
+                  ),
+                ),
+                Text(
+                  '(TAP TO EXPAND)',
+                  style: TextStyle(
+                    color: Colors.orange,
+                    fontSize: 8,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        collapsed: ExpandableButton(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 5),
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'City Finder',
-                      style: TextStyle(
-                        color: Colors.orange,
-                      ),
-                    ),
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: _returnItems(true),
+            ),
+          ),
+        ),
+        expanded: ConstrainedBox(
+          constraints: BoxConstraints.loose(Size.fromHeight(
+                  (MediaQuery.of(context).size.height -
+                      kToolbarHeight -
+                      AppBar().preferredSize.height)) /
+              3),
+          child: Scrollbar(
+            controller: _scrollController,
+            isAlwaysShown: true,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 0, 15),
+                  child: Column(
+                    children: _returnItems(false),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 0, 15),
-                    child: Column(
-                      children: _returnItems(),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -71,8 +100,8 @@ class _CityWidgetState extends State<CityWidget> {
     );
   }
 
-  List<Widget> _returnItems() {
-    var itemList = List<Widget>();
+  List<Widget> _returnItems(bool onlyTitle) {
+    var itemList = <Widget>[];
 
     // Empty text
     if (widget.cityItems.isEmpty) {
@@ -148,6 +177,10 @@ class _CityWidgetState extends State<CityWidget> {
           ),
         ),
       );
+    }
+
+    if (onlyTitle) {
+      return itemList;
     }
 
     // Item rows
