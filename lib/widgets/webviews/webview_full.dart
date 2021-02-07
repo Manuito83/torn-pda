@@ -532,6 +532,14 @@ class _WebViewFullState extends State<WebViewFull> {
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
                 _assessTrades(document, pageTitle);
               }
+
+              /// FORUMS URL FOR IOS (not triggered in other WebView events).
+              /// Needed for URL copy and shortcuts.
+              if (consoleMessage.message.contains('CONTENT LOADED')) {
+                await webView.getUrl().then((value) {
+                  _currentUrl = value;
+                });
+              }
             },
           ),
         ),
