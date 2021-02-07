@@ -674,9 +674,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         profileMisc(),
       ]);
 
-      // We need to calculate several additional values (stock value, country, type and
-      // timestamp) before sorting the list for the first time, as this values don't come straight
+      // We need to calculate several additional values before sorting the list
+      // for the first time, as this values don't come straight
       // in every stock from the API (but can be deducted)
+
+      // NOTE: some of this values (i.e. profit and arrival time) will later be
+      // recalculate in real time in the card widget. This first calculation is
+      // only to compare ones with the others and sort.
+
       var itemList = _allTornItems.items.values.toList();
       _stocksYataModel.countries.forEach((countryKey, countryDetails) {
         for (var stock in countryDetails.stocks) {
@@ -725,8 +730,18 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           }
 
           // Other fields contained in Yata and in Torn
+          stock.profit = (stock.value /
+              (TravelTimes.travelTimeMinutesOneWay(
+                ticket: _ticket,
+                country: stock.country,
+              ) *
+                  2 /
+                  60))
+              .round();
+
           stock.timestamp = countryDetails.update;
           stock.itemType = itemList[stock.id - 1].type;
+
           stock.arrivalTime = DateTime.now().add(
             Duration(
               minutes: TravelTimes.travelTimeMinutesOneWay(

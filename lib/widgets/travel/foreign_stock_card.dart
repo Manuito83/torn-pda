@@ -492,6 +492,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   Row _secondRow(ForeignStock stock) {
     // Travel time per hour, round trip
+
+    // We recalculate profit here so that it changes with capacity or ticket type
+    // in realtime. The profit that came from the parent was only for sorting just
+    // after retrieving data
     stock.profit = (stock.value /
             (TravelTimes.travelTimeMinutesOneWay(
                   ticket: widget.ticket,
