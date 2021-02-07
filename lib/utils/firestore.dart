@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'dart:convert';
 
 final firestore = _FirestoreHelper();
 
@@ -55,6 +57,37 @@ class _FirestoreHelper {
   Future<void> subscribeToEnergyNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "energyNotification": subscribe,
+    });
+  }
+
+  Future<void> subscribeToForeignRestockNotification(bool subscribe) async {
+    // If we had already foreign stocks chosen as alerts, we need to update them to the
+    // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
+    Map<String, dynamic> previous = await json.decode(await SharedPreferencesModel().getActiveRestocks());
+    var now = DateTime.now().millisecondsSinceEpoch;
+    previous.forEach((key, value) {
+      previous[key] = now;
+    });
+
+    _firestore.collection("players").doc(_uid).update({
+      "foreignRestockNotification": subscribe,
+      "restockActiveAlerts": previous,
+    }).then((value) {
+      SharedPreferencesModel().setRestocksNotificationEnabled(subscribe);
+    });
+  }
+
+  Future<DocumentSnapshot> getStockInformation(String codeName) async {
+    return await _firestore.collection("stocks-main").doc(codeName).get();
+  }
+
+  Future<bool> updateActiveRestockAlerts(Map restockMap) async {
+    return _firestore.collection("players").doc(_uid).update({
+      "restockActiveAlerts": restockMap,
+    }).then((value) {
+      return true;
+    }).catchError((e) {
+      return false;
     });
   }
 

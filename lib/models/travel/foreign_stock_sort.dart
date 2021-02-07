@@ -6,6 +6,7 @@ enum StockSortType {
   price,
   value,
   profit,
+  arrivalTime,
 }
 
 class StockSort {
@@ -34,6 +35,9 @@ class StockSort {
         break;
       case StockSortType.profit:
         description = 'Sort by profit';
+        break;
+      case StockSortType.arrivalTime:
+        description = 'Sort by arrival time';
         break;
     }
   }

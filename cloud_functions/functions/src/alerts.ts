@@ -3,13 +3,69 @@ import * as admin from "firebase-admin";
 import { sendEnergyNotification, sendNerveNotification, 
   sendTravelNotification, sendHospitalNotification, 
   sendDrugsNotification, sendRacingNotification, 
-  sendMessagesNotification, sendEventsNotification } from "./notification";
+  sendMessagesNotification, sendEventsNotification, 
+  sendForeignRestockNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
+const runtimeOpts = {
+  timeoutSeconds: 120,
+  memory: "512MB" as "512MB",
+}
+
 export const alertsGroup = {
-  checkUsersIOS: functions.region('us-east4').pubsub
-    .schedule("*/3 * * * *")
-    .onRun(async () => {
+
+  checkAllUser: functions.region('us-east4')
+  .runWith(runtimeOpts)
+  .pubsub
+  .schedule("*/3 * * * *")
+  .onRun(async () => {
+
+    const promisesGlobal: Promise<any>[] = [];
+
+    const millisAtStart = Date.now();
+
+    // Get existing stocks from Realtime DB
+    const firebaseAdmin = require("firebase-admin");
+    const db = firebaseAdmin.database();
+    const ref = db.ref("stocks/restocks");
+    const foreignStocks = {};
+    await ref.once("value", function(snapshot) {
+      snapshot.forEach(function(childSnapshot) {
+        foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
+      });
+    });
+
+    /*
+    async function checkManuito() {
+      const promises: Promise<any>[] = [];
+
+      // Get the list of subscribers
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("alertsEnabled", "==", true)
+        .where("name", "==", "Manuito")
+        .get();
+
+      const subscribers = response.docs.map((d) => d.data());
+      console.log("Manuito check: " + subscribers.length);
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+      }
+
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`Manuito finished: ${difference} seconds`);
+        return value;
+      });
+    }
+    */
+    
+    async function checkIOS() {
+      const promises: Promise<any>[] = [];
+
       // Get the list of subscribers
       const response = await admin
         .firestore()
@@ -18,16 +74,24 @@ export const alertsGroup = {
         .where("alertsEnabled", "==", true)
         .where("platform", "==", "ios")
         .get();
-        
+
       const subscribers = response.docs.map((d) => d.data());
       console.log("iOS check: " + subscribers.length);
-      await Promise.all(subscribers.map(sendNotificationForProfile));
-  }),
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+      }
 
-  // Divide to split the work in several functions
-  checkUsersAndroid: functions.region('us-east4').pubsub
-    .schedule("*/3 * * * *")
-    .onRun(async () => {
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`iOS finished: ${difference} seconds`);
+        return value;
+      });
+    }
+
+    async function checkAndroidLow() {
+      const promises: Promise<any>[] = [];
+  
       // Get the list of subscribers
       const response = await admin
         .firestore()
@@ -35,17 +99,66 @@ export const alertsGroup = {
         .where("active", "==", true)
         .where("alertsEnabled", "==", true)
         .where("platform", "==", "android")
+        .where("level", "<", 30)
+        .get();
+      
+      const subscribers = response.docs.map((d) => d.data());
+      console.log("Android check LOW: " + subscribers.length);
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+      }
+  
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`Android LOW finished: ${difference} seconds`);
+        return value;
+      });
+    }
+
+    async function checkAndroidHigh() {
+      const promises: Promise<any>[] = [];
+  
+      // Get the list of subscribers
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("alertsEnabled", "==", true)
+        .where("platform", "==", "android")
+        .where("level", ">=", 30)
         .get();
         
       const subscribers = response.docs.map((d) => d.data());
-      console.log("Android check: " + subscribers.length);
-      await Promise.all(subscribers.map(sendNotificationForProfile));
+      console.log("Android check HIGH: " + subscribers.length);
+      for(const key of Array.from(subscribers.keys()) ) {
+        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+      }
+  
+      return Promise.all(promises).then(function(value) {
+        const millisAfterFinish = Date.now();
+        const difference = (millisAfterFinish - millisAtStart) / 1000;
+        console.log(`Android HIGH finished: ${difference} seconds`);
+        return value;
+      });
+    }
+
+    // FOR TESTING (deactivate others)
+    // promisesGlobal.push(checkManuito());
+
+    promisesGlobal.push(checkIOS());
+    promisesGlobal.push(checkAndroidLow());
+    promisesGlobal.push(checkAndroidHigh());
+
+    await Promise.all(promisesGlobal);
+
   }),
+
 };
 
-async function sendNotificationForProfile(subscriber: any): Promise<any> {
+async function sendNotificationForProfile(subscriber: any, stocks: any): Promise<any> {
   const promises: Promise<any>[] = [];
-  
+
   try {
 
     const userStats = await getUsersStat(subscriber.apiKey);
@@ -67,28 +180,28 @@ async function sendNotificationForProfile(subscriber: any): Promise<any> {
         promises.push(sendMessagesNotification(userStats, subscriber));
       if (subscriber.eventsNotification)
         promises.push(sendEventsNotification(userStats, subscriber));
+      if (subscriber.foreignRestockNotification)
+        promises.push(sendForeignRestockNotification(userStats, stocks, subscriber));
 
       await Promise.all(promises);
     }
   } catch (e) {
     functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
-    
+
     // If users uninstall without removing API Key, this error will trigger
     // because the token is not known. In this case, stale the user
     if (e.toString().includes("Requested entity was not found")) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            active: false,
-          })
-      );
+      await admin
+        .firestore()
+        .collection("players")
+        .doc(subscriber.uid)
+        .update({
+          active: false,
+        });
       functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid}`);
     }
-
   }
+
 }
 
 // Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy

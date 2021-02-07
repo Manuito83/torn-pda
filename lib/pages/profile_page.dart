@@ -425,10 +425,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                           child: _messagesTimeline(),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                          child: _playerStats(),
-                        ),
+                        if (_miscApiFetched)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                            child: _playerStats(),
+                          ),
                         _miscellaneous(),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
@@ -3660,7 +3661,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _getMiscInformation() async {
-    _miscApiFetched = true;
     try {
       var miscApiResponse =
           await TornApiCaller.ownMisc(_userProvider.basic.userApiKey)
@@ -3668,10 +3668,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       var educationResponse =
           await TornApiCaller.education(_userProvider.basic.userApiKey)
               .getEducation;
+
       if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
         setState(() {
           _miscModel = miscApiResponse;
+          _miscApiFetched = true;
           _tornEducationModel = educationResponse;
         });
       }
@@ -4266,13 +4268,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var formatter = new DateFormat('HH:mm');
 
     for (var notification in pendingNotificationRequests) {
-      // Don't take into account other kind of notifications,
-      // as they don't have the same payload with timestamp
-      if (notification.id == 999 ||
-          notification.payload.substring(0, 3).contains('400')) {
+      // Don't take into account notifications that don't split this way
+      // Using this instead of try/catch
+      var splitPayload = notification.payload.split('-');
+      if (splitPayload.length < 2) {
         continue;
       }
-      var splitPayload = notification.payload.split('-');
       var oldTimeStamp = int.parse(splitPayload[1]);
 
       // ENERGY

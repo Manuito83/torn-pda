@@ -210,6 +210,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ),
       title: Text('Travel'),
       actions: <Widget>[
+        IconButton(
+          icon: Icon(
+            Icons.refresh_outlined,
+            color: _themeProvider.buttonText,
+          ),
+          onPressed: () {
+            _updateInformation();
+            BotToast.showText(
+              text: "Refreshing",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[700],
+              duration: Duration(milliseconds: 500),
+              contentPadding: EdgeInsets.all(10),
+            );
+          },
+        ),
         if (Platform.isAndroid)
           IconButton(
             icon: Icon(
@@ -539,7 +558,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               ),
             ),
           ),
-          RaisedButton(
+          ElevatedButton(
             child: Text("Go visit!"),
             onLongPress: () {
               _openTornBrowser('https://www.torn.com/');
@@ -583,7 +602,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               ),
             ),
           ),
-          RaisedButton(
+          ElevatedButton(
             child: Icon(Icons.local_airport),
             onLongPress: () {
               _openTornBrowser('https://www.torn.com/');
@@ -766,8 +785,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
   }
 
-  RaisedButton _travelAgencyButton() {
-    return RaisedButton(
+  ElevatedButton _travelAgencyButton() {
+    return ElevatedButton(
       child: Text("Travel Agency"),
       onLongPress: () {
         _openTornBrowser('https://www.torn.com/travelagency.php');
@@ -927,7 +946,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
-                              FlatButton(
+                              ElevatedButton(
                                 child: Text("Change"),
                                 onPressed: () async {
                                   if (_notificationFormKey.currentState
@@ -962,7 +981,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                                   }
                                 },
                               ),
-                              FlatButton(
+                              ElevatedButton(
                                 child: Text("Cancel"),
                                 onPressed: () {
                                   Navigator.of(context).pop();

@@ -50,6 +50,7 @@ class _LootPageState extends State<LootPage> {
 
   bool _firstLoad = true;
   int _tornTicks = 0;
+  int _yataRetryTicks = 0;
   Timer _tickerUpdateTimes;
 
   LootTimeType _lootTimeType;
@@ -621,17 +622,38 @@ class _LootPageState extends State<LootPage> {
     // If it's not the first execution, fetch only when needed
     else {
       // We update YATA whenever there is a new update
-      if (_yataLootInfo.nextUpdate < tsNow) {
-        var yataFetch = await _fetchYataApi();
-        if (yataFetch is YataLootModel) {
-          _yataLootInfo = yataFetch;
-          SharedPreferencesModel()
-              .setLootYataCache(yataLootModelToJson(yataFetch));
-        } else {
-          _apiSuccess = false;
-          return;
+      if (_apiSuccess) {
+        if (_yataLootInfo.nextUpdate < tsNow) {
+          var yataFetch = await _fetchYataApi();
+          if (yataFetch is YataLootModel) {
+            _yataLootInfo = yataFetch;
+            SharedPreferencesModel()
+                .setLootYataCache(yataLootModelToJson(yataFetch));
+          } else {
+            _apiSuccess = false;
+            return;
+          }
         }
+      } else {
+        // If this is not the first load but it has failed, be will only call
+        // YATA again every 20 seconds to avoid overloading.
+        if (_yataRetryTicks > 20) {
+          _yataRetryTicks = 0;
+          var yataFetch = await _fetchYataApi();
+          if (yataFetch is YataLootModel) {
+            _yataLootInfo = yataFetch;
+            SharedPreferencesModel()
+                .setLootYataCache(yataLootModelToJson(yataFetch));
+            var fillWithTornSuccess = await _fetchTornApi(tsNow);
+            if (fillWithTornSuccess) {
+              _apiSuccess = true;
+            }
+          }
+        }
+        _yataRetryTicks++;
       }
+
+      if (!_apiSuccess) return;
 
       // We update Torn every 30 seconds, in case there are some changes
       _tornTicks++;

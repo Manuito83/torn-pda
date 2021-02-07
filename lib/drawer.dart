@@ -242,6 +242,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     var browserUrl = '';
 
     bool travel = false;
+    bool restocks = false;
     bool racing = false;
     bool messages = false;
     bool events = false;
@@ -266,6 +267,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     if (channel.contains("Alerts travel")) {
       travel = true;
+    } else if (channel.contains("Alerts restocks")) {
+      restocks = true;
     } else if (channel.contains("Alerts racing")) {
       racing = true;
     } else if (channel.contains("Alerts messages")) {
@@ -285,6 +288,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     if (travel) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com";
+    } else if (restocks) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/travelagency.php";
     } else if (racing) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/loader.php?sid=racing";
@@ -352,6 +358,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       if (payload == 'travel') {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com';
+      } else if (payload == 'restocks') {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/travelagency.php';
       } else if (payload.contains('energy')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/gym.php';
@@ -397,6 +406,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           browserUrl =
           "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
+      } else if (payload.contains('211')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/travelagency.php';
       }
 
       if (launchBrowser) {
