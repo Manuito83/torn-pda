@@ -53,6 +53,7 @@ class SharedPreferencesModel {
   final String _kDrugNotificationType = "pda_drugNotificationType";
   final String _kMedicalNotificationType = "pda_medicalNotificationType";
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
+  final String _kHospitalNotificationType = "pda_hospitalNotificationType";
   final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
   final String _kProfileAlarmSound = "pda_profileAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -655,6 +656,16 @@ class SharedPreferencesModel {
   Future<bool> setBoosterNotificationType(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kBoosterNotificationType, value);
+  }
+
+  Future<String> getHospitalNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kHospitalNotificationType) ?? '0';
+  }
+
+  Future<bool> setHospitalNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kHospitalNotificationType, value);
   }
 
   Future<bool> getProfileAlarmVibration() async {
