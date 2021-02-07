@@ -95,8 +95,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       }
     });
 
-    _ticker = new Timer.periodic(
-        Duration(minutes: 1), (Timer t) => _timerUpdate());
+    _ticker =
+        new Timer.periodic(Duration(minutes: 1), (Timer t) => _timerUpdate());
 
     // Build code name
     _codeName = "${widget.foreignStock.countryCode}-"
@@ -707,7 +707,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Row _returnLastUpdated() {
-    var inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp * 1000);
+    var inputTime = DateTime.fromMillisecondsSinceEpoch(
+        widget.foreignStock.timestamp * 1000);
     var timeDifference = DateTime.now().difference(inputTime);
     var timeString;
     var color;

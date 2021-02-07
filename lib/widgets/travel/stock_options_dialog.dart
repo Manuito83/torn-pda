@@ -168,7 +168,8 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                     ],
                   ),
                   Text(
-                    'Affects all travel time based calculations',
+                    'Affects all travel time-based calculations. Does not affect '
+                    'profit calculation.',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 11,
