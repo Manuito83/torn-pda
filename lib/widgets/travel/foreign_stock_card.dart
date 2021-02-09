@@ -652,7 +652,15 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         GestureDetector(
-          child: Text(countryCode),
+          child: Column(
+            children: [
+              Text(countryCode),
+              Image.asset(
+                flag,
+                width: 30,
+              ),
+            ],
+          ),
           onLongPress: () {
             _launchMoneyWarning(stock);
             widget.flagPressedCallback(true, false);
@@ -661,10 +669,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             _launchMoneyWarning(stock);
             widget.flagPressedCallback(true, true);
           },
-        ),
-        Image.asset(
-          flag,
-          width: 30,
         ),
         Padding(
           padding: const EdgeInsets.only(top: 10),
@@ -684,12 +688,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     if (moneyOnHand >= stock.cost * widget.capacity) {
       moneyToBuy =
           'You HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
-          'buy $widget.capacity ${stock.name}';
+          'buy ${widget.capacity} ${stock.name}';
       moneyToBuyColor = Colors.green;
     } else {
       moneyToBuy =
           'You DO NOT HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} '
-          'necessary to buy $widget.capacity ${stock.name}. Add another '
+          'necessary to buy ${widget.capacity} ${stock.name}. Add another '
           '\$${costCurrency.format((stock.cost * widget.capacity) - moneyOnHand)}';
       moneyToBuyColor = Colors.red;
     }
