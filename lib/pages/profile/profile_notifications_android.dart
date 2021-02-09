@@ -3,9 +3,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'dart:io';
+import 'package:torn_pda/pages/travel/travel_options_android.dart';
 
 class ProfileNotificationsAndroid extends StatefulWidget {
   final Function callback;
@@ -19,10 +22,12 @@ class ProfileNotificationsAndroid extends StatefulWidget {
   });
 
   @override
-  _ProfileNotificationsAndroidState createState() => _ProfileNotificationsAndroidState();
+  _ProfileNotificationsAndroidState createState() =>
+      _ProfileNotificationsAndroidState();
 }
 
-class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid> {
+class _ProfileNotificationsAndroidState
+    extends State<ProfileNotificationsAndroid> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
@@ -38,6 +43,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   String _drugDropDownValue;
   String _medicalDropDownValue;
   String _boosterDropDownValue;
+  String _hospitalDropDownValue;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -78,17 +84,20 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () =>
+                      FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text('Here you can specify your preferred alerting '
+                                child: Text(
+                                    'Here you can specify your preferred alerting '
                                     'method for each type of event.'),
                               ),
                               _rowsWithTypes(),
@@ -103,7 +112,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                                 padding: const EdgeInsets.all(20),
                                 child: RichText(
                                   text: TextSpan(
-                                    text: 'Note: some Android clock applications do not work well '
+                                    text:
+                                        'Note: some Android clock applications do not work well '
                                         'with more than 1 timer or do not allow to choose '
                                         'between sound and vibration for alarms. If you experience '
                                         'any issue, it is recommended to install ',
@@ -114,9 +124,11 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                                         style: TextStyle(color: Colors.blue),
                                         recognizer: TapGestureRecognizer()
                                           ..onTap = () async {
-                                            AndroidIntent intent = AndroidIntent(
+                                            AndroidIntent intent =
+                                                AndroidIntent(
                                               action: 'action_view',
-                                              data: 'https://play.google.com/store'
+                                              data:
+                                                  'https://play.google.com/store'
                                                   '/apps/details?id=com.google.android.deskclock',
                                             );
                                             await intent.launch();
@@ -130,9 +142,11 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Alarm sound"),
                                     Switch(
@@ -141,7 +155,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                                         setState(() {
                                           _alarmSound = value;
                                         });
-                                        SharedPreferencesModel().setProfileAlarmSound(value);
+                                        SharedPreferencesModel()
+                                            .setManualAlarmSound(value);
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
                                       activeColor: Colors.green,
@@ -152,7 +167,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                               Row(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 15),
                                     child: Text(
                                       'Not applicable to travel',
                                       style: TextStyle(
@@ -166,9 +182,11 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                               ),
                               SizedBox(height: 10),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Alarm vibration"),
                                     Switch(
@@ -177,7 +195,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                                         setState(() {
                                           _alarmVibration = value;
                                         });
-                                        SharedPreferencesModel().setProfileAlarmVibration(value);
+                                        SharedPreferencesModel()
+                                            .setManualAlarmVibration(value);
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
                                       activeColor: Colors.green,
@@ -188,7 +207,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                               Row(
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 15),
                                     child: Text(
                                       'Not applicable to travel',
                                       style: TextStyle(
@@ -236,7 +256,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   }
 
   Widget _rowsWithTypes() {
-    var types = List<Widget>();
+    var types = <Widget>[];
     String typeString;
     ProfileNotification profileType;
     ProfileNotification.values.forEach((element) {
@@ -269,6 +289,10 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
           typeString = 'Booster';
           profileType = ProfileNotification.booster;
           break;
+        case ProfileNotification.hospital:
+          typeString = 'Hospital';
+          profileType = ProfileNotification.hospital;
+          break;
       }
 
       types.add(
@@ -295,15 +319,35 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         types.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Text(
-              'Please note that the main configuration for travel notifications (such us the '
-              'notification title, alarm sound or the alerting time before arrival) is '
-              'taken from what you have selected in the Travel section',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Travel notification options"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    if (Platform.isAndroid) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return TravelOptionsAndroid();
+                          },
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return TravelOptionsIOS();
+                          },
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
           ),
         );
@@ -335,7 +379,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel().setEnergyNotificationValue(finalValue.floor());
+                        SharedPreferencesModel()
+                            .setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -370,7 +415,8 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel().setNerveNotificationValue(finalValue.floor());
+                        SharedPreferencesModel()
+                            .setNerveNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -410,6 +456,9 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         break;
       case ProfileNotification.booster:
         value = _boosterDropDownValue;
+        break;
+      case ProfileNotification.hospital:
+        value = _hospitalDropDownValue;
         break;
     }
 
@@ -500,6 +549,12 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
               _boosterDropDownValue = value;
             });
             break;
+          case ProfileNotification.hospital:
+            SharedPreferencesModel().setHospitalNotificationType(value);
+            setState(() {
+              _hospitalDropDownValue = value;
+            });
+            break;
         }
       },
     );
@@ -509,14 +564,16 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     var travelType = await SharedPreferencesModel().getTravelNotificationType();
 
     var energyType = await SharedPreferencesModel().getEnergyNotificationType();
-    var energyTrigger = await SharedPreferencesModel().getEnergyNotificationValue();
+    var energyTrigger =
+        await SharedPreferencesModel().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
       energyTrigger = widget.energyMax;
     }
 
     var nerveType = await SharedPreferencesModel().getNerveNotificationType();
-    var nerveTrigger = await SharedPreferencesModel().getNerveNotificationValue();
+    var nerveTrigger =
+        await SharedPreferencesModel().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
       nerveTrigger = widget.nerveMax;
@@ -524,11 +581,16 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
 
     var lifeType = await SharedPreferencesModel().getLifeNotificationType();
     var drugsType = await SharedPreferencesModel().getDrugNotificationType();
-    var medicalType = await SharedPreferencesModel().getMedicalNotificationType();
-    var boosterType = await SharedPreferencesModel().getBoosterNotificationType();
+    var medicalType =
+        await SharedPreferencesModel().getMedicalNotificationType();
+    var hospitalType =
+        await SharedPreferencesModel().getHospitalNotificationType();
+    var boosterType =
+        await SharedPreferencesModel().getBoosterNotificationType();
 
-    var alarmSound = await SharedPreferencesModel().getProfileAlarmSound();
-    var alarmVibration = await SharedPreferencesModel().getProfileAlarmVibration();
+    var alarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    var alarmVibration =
+        await SharedPreferencesModel().getManualAlarmVibration();
 
     setState(() {
       _travelDropDownValue = travelType;
@@ -544,6 +606,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
       _lifeDropDownValue = lifeType;
       _drugDropDownValue = drugsType;
       _medicalDropDownValue = medicalType;
+      _hospitalDropDownValue = hospitalType;
       _boosterDropDownValue = boosterType;
       _alarmSound = alarmSound;
       _alarmVibration = alarmVibration;

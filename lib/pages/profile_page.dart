@@ -50,10 +50,10 @@ enum ProfileNotification {
   energy,
   nerve,
   life,
+  hospital,
   drugs,
   medical,
   booster,
-  hospital,
 }
 
 enum NotificationType {
@@ -125,22 +125,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   ScrollController scrollController;
   bool dialVisible = true;
 
-  bool _travelAlarmSound = false;
-  bool _travelAlarmVibration = true;
   int _travelNotificationAhead;
   int _travelAlarmAhead;
   int _travelTimerAhead;
   String _travelNotificationTitle;
   String _travelNotificationBody;
 
-  DateTime _travelNotificationTime;
+  DateTime _travelArrivalTime;
   DateTime _energyNotificationTime;
   DateTime _nerveNotificationTime;
   DateTime _lifeNotificationTime;
   DateTime _drugsNotificationTime;
   DateTime _medicalNotificationTime;
   DateTime _boosterNotificationTime;
-  DateTime _hospitalNotificationTime;
+  DateTime _hospitalReleaseTime;
+
+  int _hospitalNotificationAhead = 30;
+  int _hospitalTimerAhead = 30;
+  int _hospitalAlarmAhead = 30;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -810,7 +812,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Flexible(
                   child: detailsWidget,
                 ),
-
               ],
             ),
           );
@@ -1405,33 +1406,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        var timeArrival = new DateTime.fromMillisecondsSinceEpoch(
+        _travelArrivalTime = new DateTime.fromMillisecondsSinceEpoch(
             _user.travel.timestamp * 1000);
-        var timeDifference = timeArrival.difference(DateTime.now());
+        var timeDifference = _travelArrivalTime.difference(DateTime.now());
         secondsToGo = timeDifference.inSeconds;
         notificationsPending = _travelNotificationsPending;
-        _travelNotificationTime =
-            DateTime.now().add(Duration(seconds: secondsToGo));
 
+        var notificationTime = _travelArrivalTime
+            .add(Duration(seconds: -_travelNotificationAhead));
         var formattedTimeNotification = TimeFormatter(
-          inputTime: _travelNotificationTime,
+          inputTime: notificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
+
         var alarmTime =
-            _travelNotificationTime.add(Duration(minutes: -_travelAlarmAhead));
+            _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
         var formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
+
         var timerTime =
-            _travelNotificationTime.add(Duration(seconds: -_travelTimerAhead));
+            _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
         var formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
+
         notificationSetString =
             'Travel notification set for $formattedTimeNotification';
         notificationCancelString = 'Travel notification cancelled!';
@@ -1639,21 +1643,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
 
       case ProfileNotification.hospital:
-        var releaseTime =
+        _hospitalReleaseTime =
             DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
-        secondsToGo = releaseTime.difference(DateTime.now()).inSeconds;
+        secondsToGo = _hospitalReleaseTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _hospitalNotificationsPending;
-        _hospitalNotificationTime = releaseTime;
+
+        var notificationTime = _hospitalReleaseTime
+            .add(Duration(seconds: -_hospitalNotificationAhead));
         var formattedTime = TimeFormatter(
-          inputTime: _hospitalNotificationTime,
+          inputTime: notificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
+
+        var alarmTime = _hospitalReleaseTime
+            .add(Duration(seconds: -_hospitalNotificationAhead));
+        var formattedTimeAlarm = TimeFormatter(
+          inputTime: alarmTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+
+        var timerTime = _hospitalReleaseTime
+            .add(Duration(seconds: -_hospitalNotificationAhead));
+        var formattedTimeTimer = TimeFormatter(
+          inputTime: timerTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+
         notificationSetString =
             'Hospital release notification set for $formattedTime';
         notificationCancelString = 'Hospital release notification cancelled!';
-        alarmSetString = 'Hospital release alarm set for $formattedTime';
-        timerSetString = 'Hospital release timer set for $formattedTime';
+        alarmSetString = 'Hospital release alarm set for $formattedTimeAlarm';
+        timerSetString = 'Hospital release timer set for $formattedTimeTimer';
         notificationType = _hospitalNotificationType;
         notificationIcon = _hospitalNotificationIcon;
         break;
@@ -4024,7 +4047,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.travel:
         notificationId = 201;
         secondsToNotification =
-            _travelNotificationTime.difference(DateTime.now()).inSeconds -
+            _travelArrivalTime.difference(DateTime.now()).inSeconds -
                 _travelNotificationAhead;
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
@@ -4120,12 +4143,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.hospital:
         notificationId = 107;
         secondsToNotification =
-            _hospitalNotificationTime.difference(DateTime.now()).inSeconds;
+            _hospitalReleaseTime.difference(DateTime.now()).inSeconds -
+                _hospitalNotificationAhead;
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
         notificationTitle = 'Hospital release';
-        notificationSubtitle = 'Here is your booster cooldown reminder!';
+        notificationSubtitle = 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
         break;
     }
@@ -4157,7 +4181,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       notificationId,
       notificationTitle,
       notificationSubtitle,
-      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 10)), // DEBUG
       tz.TZDateTime.now(tz.local).add(Duration(seconds: secondsToNotification)),
       platformChannelSpecifics,
       payload: notificationPayload,
@@ -4525,9 +4549,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await SharedPreferencesModel().getTravelNotificationTitle();
     _travelNotificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
-    _travelAlarmSound = await SharedPreferencesModel().getTravelAlarmSound();
-    _travelAlarmVibration =
-        await SharedPreferencesModel().getTravelAlarmVibration();
     var travelNotificationAhead =
         await SharedPreferencesModel().getTravelNotificationAhead();
     var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
@@ -4590,8 +4611,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var booster = await SharedPreferencesModel().getBoosterNotificationType();
     var hospital = await SharedPreferencesModel().getHospitalNotificationType();
 
-    _alarmSound = await SharedPreferencesModel().getProfileAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getProfileAlarmVibration();
+    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
 
     _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
     _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
@@ -4710,7 +4731,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     switch (profileNotification) {
       case ProfileNotification.travel:
         var alarmTime =
-            _travelNotificationTime.add(Duration(minutes: -_travelAlarmAhead));
+            _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Travel';
@@ -4746,8 +4767,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message = 'Torn PDA Booster';
         break;
       case ProfileNotification.hospital:
-        hour = _hospitalNotificationTime.hour;
-        minute = _hospitalNotificationTime.minute;
+        var alarmTime =
+          _hospitalReleaseTime.add(Duration(seconds: -_hospitalAlarmAhead));
+        hour = alarmTime.hour;
+        minute = alarmTime.minute;
         message = 'Torn PDA Hospital';
         break;
     }
@@ -4755,7 +4778,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Travel sound and vibration is configured from the travel section
     String thisSound;
     if (profileNotification == ProfileNotification.travel) {
-      if (_travelAlarmSound) {
+      if (_alarmSound) {
         thisSound = '';
       } else {
         thisSound = 'silent';
@@ -4770,7 +4793,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     bool alarmVibration;
     if (profileNotification == ProfileNotification.travel) {
-      if (_travelAlarmVibration) {
+      if (_alarmVibration) {
         alarmVibration = true;
       } else {
         alarmVibration = false;
@@ -4803,9 +4826,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        totalSeconds =
-            _travelNotificationTime.difference(DateTime.now()).inSeconds -
-                _travelTimerAhead;
+        totalSeconds = _travelArrivalTime.difference(DateTime.now()).inSeconds -
+            _travelTimerAhead;
         message = 'Torn PDA Travel';
         break;
       case ProfileNotification.energy:
@@ -4840,7 +4862,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.hospital:
         totalSeconds =
-            _hospitalNotificationTime.difference(DateTime.now()).inSeconds;
+            _hospitalReleaseTime.difference(DateTime.now()).inSeconds -
+                _hospitalTimerAhead;
         message = 'Torn PDA Hospital';
         break;
     }

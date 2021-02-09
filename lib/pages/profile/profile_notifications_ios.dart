@@ -127,7 +127,7 @@ class _ProfileNotificationsIOSState
   }
 
   Widget _rowsWithTypes() {
-    var types = List<Widget>();
+    var types = <Widget>[];
     ProfileNotification.values.forEach((element) {
       if (element == ProfileNotification.energy) {
         types.add(
