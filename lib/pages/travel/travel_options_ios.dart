@@ -8,7 +8,7 @@ class TravelOptionsIOS extends StatefulWidget {
   final Function callback;
 
   TravelOptionsIOS({
-    @required this.callback,
+    this.callback,
   });
 
   @override
@@ -46,25 +46,28 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
                 : null,
             body: Builder(
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () =>
+                      FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text('Here you can specify your preferred notification '
+                                child: Text(
+                                    'Here you can specify your preferred notification '
                                     'launch time before arrival'),
                               ),
                               _rowsWithTypes(),
@@ -96,7 +99,9 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          widget.callback();
+          if (widget.callback != null) {
+            widget.callback();
+          }
           Navigator.of(context).pop();
         },
       ),
@@ -207,7 +212,8 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
   }
 
   Future _restorePreferences() async {
-    var travelNotificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
+    var travelNotificationAhead =
+        await SharedPreferencesModel().getTravelNotificationAhead();
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;

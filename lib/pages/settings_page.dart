@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:android_intent/android_intent.dart';
 import 'package:device_info/device_info.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
@@ -51,6 +53,8 @@ class _SettingsPageState extends State<SettingsPage> {
   String _timeFormatValue;
   String _timeZoneValue;
   String _vibrationValue;
+  bool _manualAlarmSound;
+  bool _manualAlarmVibration;
   bool _removeNotificationsLaunch;
 
   SettingsProvider _settingsProvider;
@@ -405,7 +409,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 children: <Widget>[
                                   Flexible(
                                     child: Text(
-                                      "Vibration pattern",
+                                      "Alerts vibration",
                                     ),
                                   ),
                                   Padding(
@@ -418,7 +422,106 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ],
                               ),
                             ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                'This vibration applies to the automatic alerts only, with the '
+                                'app in use or in the background',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
                             SizedBox(height: 5),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Manual alarm sound"),
+                                  Switch(
+                                    value: _manualAlarmSound,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _manualAlarmSound = value;
+                                      });
+                                      SharedPreferencesModel()
+                                          .setManualAlarmSound(value);
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text("Manual alarm vibration"),
+                                  Switch(
+                                    value: _manualAlarmVibration,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _manualAlarmVibration = value;
+                                      });
+                                      SharedPreferencesModel()
+                                          .setManualAlarmVibration(value);
+                                    },
+                                    activeTrackColor: Colors.lightGreenAccent,
+                                    activeColor: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: RichText(
+                                text: TextSpan(
+                                  text:
+                                      'Applies to manually activated alarms in all sections '
+                                      '(Travel, Loot, Profile, etc.). '
+                                      'Some Android clock applications do not work well '
+                                      'with more than 1 timer or do not allow to choose '
+                                      'between sound and vibration for alarms. If you experience '
+                                      'any issue, it is recommended to install ',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  children: <TextSpan>[
+                                    TextSpan(
+                                      text: 'Google\'s Clock application',
+                                      style: TextStyle(color: Colors.blue),
+                                      recognizer: TapGestureRecognizer()
+                                        ..onTap = () async {
+                                          AndroidIntent intent = AndroidIntent(
+                                            action: 'action_view',
+                                            data:
+                                                'https://play.google.com/store'
+                                                '/apps/details?id=com.google.android.deskclock',
+                                          );
+                                          await intent.launch();
+                                        },
+                                    ),
+                                    TextSpan(
+                                      text: '.',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 15),
                           ],
                         )
                       else
@@ -555,7 +658,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: const Text('Got it'),
                 onPressed: () {
                   setState(() => _highlightColor = pickerColor);
@@ -652,7 +755,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              RaisedButton(
+                              ElevatedButton(
                                 child: Text("Reload"),
                                 onPressed: () {
                                   FocusScope.of(context)
@@ -666,7 +769,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               Padding(
                                 padding: EdgeInsetsDirectional.only(start: 10),
                               ),
-                              RaisedButton(
+                              ElevatedButton(
                                 child: Text("Remove"),
                                 onPressed: () async {
                                   FocusScope.of(context)
@@ -752,7 +855,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              RaisedButton(
+                              ElevatedButton(
                                 child: Text("Load"),
                                 onPressed: () {
                                   FocusScope.of(context)
@@ -1424,7 +1527,10 @@ class _SettingsPageState extends State<SettingsPage> {
       appBarPosition ? _appBarPosition = 'top' : _appBarPosition = 'bottom';
     });
 
-    var vibration = await SharedPreferencesModel().getVibrationPattern();
+    var alertsVibration = await SharedPreferencesModel().getVibrationPattern();
+    var manualAlarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    var manualAlarmVibration =
+        await SharedPreferencesModel().getManualAlarmVibration();
 
     setState(() {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
@@ -1434,7 +1540,9 @@ class _SettingsPageState extends State<SettingsPage> {
           _settingsProvider.removeNotificationsOnLaunch;
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
-      _vibrationValue = vibration;
+      _vibrationValue = alertsVibration;
+      _manualAlarmSound = manualAlarmSound;
+      _manualAlarmVibration = manualAlarmVibration;
     });
   }
 

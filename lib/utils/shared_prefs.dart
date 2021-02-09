@@ -35,8 +35,6 @@ class SharedPreferencesModel {
   final String _kTravelNotificationAhead = "pda_travelNotificationAhead";
   final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
-  final String _kTravelAlarmSound = "pda_travelAlarmSound";
-  final String _kTravelAlarmVibration = "pda_travelAlarmVibration";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
@@ -58,8 +56,8 @@ class SharedPreferencesModel {
   final String _kMedicalNotificationType = "pda_medicalNotificationType";
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kHospitalNotificationType = "pda_hospitalNotificationType";
-  final String _kProfileAlarmVibration = "pda_profileAlarmVibration";
-  final String _kProfileAlarmSound = "pda_profileAlarmSound";
+  final String _kManualAlarmVibration = "pda_manualAlarmVibration";
+  final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kShortcutMenu = "pda_shortcutMenu";
@@ -80,8 +78,6 @@ class SharedPreferencesModel {
   final String _kLootNotificationAhead = "pda_lootNotificationAhead";
   final String _kLootAlarmAhead = "pda_lootAlarmAhead";
   final String _kLootTimerAhead = "pda_lootTimerAhead";
-  final String _kLootAlarmVibration = "pda_lootAlarmVibration";
-  final String _kLootAlarmSound = "pda_lootAlarmSound";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
@@ -474,26 +470,6 @@ class SharedPreferencesModel {
     return prefs.setString(_kTravelTimerAhead, value);
   }
 
-  Future<bool> getTravelAlarmSound() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelAlarmSound) ?? true;
-  }
-
-  Future<bool> setTravelAlarmSound(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelAlarmSound, value);
-  }
-
-  Future<bool> getTravelAlarmVibration() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelAlarmVibration) ?? true;
-  }
-
-  Future<bool> setTravelAlarmVibration(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelAlarmVibration, value);
-  }
-
   /// ----------------------------
   /// Methods for foreign stocks
   /// ----------------------------
@@ -712,24 +688,24 @@ class SharedPreferencesModel {
     return prefs.setString(_kHospitalNotificationType, value);
   }
 
-  Future<bool> getProfileAlarmVibration() async {
+  Future<bool> getManualAlarmVibration() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kProfileAlarmVibration) ?? true;
+    return prefs.getBool(_kManualAlarmVibration) ?? true;
   }
 
-  Future<bool> setProfileAlarmVibration(bool value) async {
+  Future<bool> setManualAlarmVibration(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kProfileAlarmVibration, value);
+    return prefs.setBool(_kManualAlarmVibration, value);
   }
 
-  Future<bool> getProfileAlarmSound() async {
+  Future<bool> getManualAlarmSound() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kProfileAlarmSound) ?? true;
+    return prefs.getBool(_kManualAlarmSound) ?? true;
   }
 
-  Future<bool> setProfileAlarmSound(bool value) async {
+  Future<bool> setManualAlarmSound(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kProfileAlarmSound, value);
+    return prefs.setBool(_kManualAlarmSound, value);
   }
 
   Future<bool> getEnableShortcuts() async {
@@ -942,26 +918,6 @@ class SharedPreferencesModel {
   Future<bool> setLootTimerAhead(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kLootTimerAhead, value);
-  }
-
-  Future<bool> getLootAlarmVibration() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kLootAlarmVibration) ?? true;
-  }
-
-  Future<bool> setLootAlarmVibration(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kLootAlarmVibration, value);
-  }
-
-  Future<bool> getLootAlarmSound() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kLootAlarmSound) ?? true;
-  }
-
-  Future<bool> setLootAlarmSound(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kLootAlarmSound, value);
   }
 
   /// ----------------------------

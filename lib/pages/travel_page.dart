@@ -1189,8 +1189,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         await SharedPreferencesModel().getTravelNotificationTitle();
     _notificationBody =
         await SharedPreferencesModel().getTravelNotificationBody();
-    _alarmSound = await SharedPreferencesModel().getTravelAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
+    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
 
     // Ahead timers
     var notificationAhead =

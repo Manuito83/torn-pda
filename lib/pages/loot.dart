@@ -809,8 +809,8 @@ class _LootPageState extends State<LootPage> {
         await SharedPreferencesModel().getLootNotificationAhead();
     var alarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
     var timerAhead = await SharedPreferencesModel().getLootTimerAhead();
-    _alarmSound = await SharedPreferencesModel().getLootAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
+    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
     setState(() {
       if (notification == '0') {
         _lootNotificationType = NotificationType.notification;

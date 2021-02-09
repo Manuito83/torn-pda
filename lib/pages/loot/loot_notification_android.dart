@@ -1,5 +1,3 @@
-import 'package:android_intent/android_intent.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -22,9 +20,6 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   String _lootNotificationAheadDropDownValue;
   String _lootAlarmAheadDropDownValue;
   String _lootTimerAheadDropDownValue;
-
-  bool _alarmSound;
-  bool _alarmVibration;
 
   Future _preferencesLoaded;
 
@@ -76,77 +71,6 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
                                     'method and launch time before the loot level is reached'),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 20),
-                              Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: 'Note: some Android clock applications do not work well '
-                                        'with more than 1 timer or do not allow to choose '
-                                        'between sound and vibration for alarms. If you experience '
-                                        'any issue, it is recommended to install ',
-                                    style: DefaultTextStyle.of(context).style,
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                        text: 'Google\'s Clock application',
-                                        style: TextStyle(color: Colors.blue),
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () async {
-                                            AndroidIntent intent = AndroidIntent(
-                                              action: 'action_view',
-                                              data: 'https://play.google.com/store'
-                                                  '/apps/details?id=com.google.android.deskclock',
-                                            );
-                                            await intent.launch();
-                                          },
-                                      ),
-                                      TextSpan(
-                                        text: '.',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Alarm sound"),
-                                    Switch(
-                                      value: _alarmSound,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _alarmSound = value;
-                                        });
-                                        SharedPreferencesModel().setLootAlarmSound(value);
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Alarm vibration"),
-                                    Switch(
-                                      value: _alarmVibration,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _alarmVibration = value;
-                                        });
-                                        SharedPreferencesModel().setLootAlarmVibration(value);
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
                               SizedBox(height: 50),
                             ],
                           ),
@@ -543,16 +467,12 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     var lootNotificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
     var lootAlarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
     var lootTimerAhead = await SharedPreferencesModel().getLootTimerAhead();
-    var alarmSound = await SharedPreferencesModel().getLootAlarmSound();
-    var alarmVibration = await SharedPreferencesModel().getLootAlarmVibration();
 
     setState(() {
       _lootTypeDropDownValue = lootType;
       _lootNotificationAheadDropDownValue = lootNotificationAhead;
       _lootAlarmAheadDropDownValue = lootAlarmAhead;
       _lootTimerAheadDropDownValue = lootTimerAhead;
-      _alarmSound = alarmSound;
-      _alarmVibration = alarmVibration;
     });
   }
 

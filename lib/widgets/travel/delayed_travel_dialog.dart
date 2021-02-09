@@ -11,6 +11,7 @@ import 'dart:ui';
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 
 class DelayedTravelDialog extends StatefulWidget {
@@ -50,6 +51,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    _restorePreferences();
     _retrievePendingNotifications();
   }
 
@@ -192,147 +194,6 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                           SizedBox(width: 5),
                         ],
                       ),
-                      if (Platform.isAndroid)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                "Alarm sound",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                ),
-                              ),
-                              SizedBox(
-                                height: 30,
-                                child: Switch(
-                                  value: _alarmSound,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _alarmSound = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (Platform.isAndroid)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                "Alarm vibration",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                ),
-                              ),
-                              SizedBox(
-                                height: 30,
-                                child: Switch(
-                                  value: _alarmVibration,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _alarmVibration = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (Platform.isAndroid)
-                        Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Row(
-                            children: [
-                              GestureDetector(
-                                child: Icon(
-                                  Icons.info_outline,
-                                  size: 18,
-                                ),
-                                onTap: () {
-
-                                  AlertDialog alert = AlertDialog(
-                                    backgroundColor: _themeProvider.background,
-                                    title: Text(
-                                      "Info",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    content: RichText(
-                                      text: TextSpan(
-                                        text:
-                                            'Note: some Android clock applications do not work well '
-                                            'with more than 1 timer or do not allow to choose '
-                                            'between sound and vibration for alarms. If you experience '
-                                            'any issue, it is recommended to install ',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: _themeProvider.mainText,
-                                        ),
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'Google\'s Clock application',
-                                            style: TextStyle(color: Colors.blue),
-                                            recognizer: TapGestureRecognizer()
-                                              ..onTap = () async {
-                                                AndroidIntent intent =
-                                                    AndroidIntent(
-                                                  action: 'action_view',
-                                                  data:
-                                                      'https://play.google.com/store'
-                                                      '/apps/details?id=com.google.android.deskclock',
-                                                );
-                                                await intent.launch();
-                                              },
-                                          ),
-                                          TextSpan(
-                                            text: '.',
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    actions: [
-                                      FlatButton(
-                                        child: Text("OK"),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return alert;
-                                    },
-                                  );
-                                },
-                              ),
-                              SizedBox(width: 10),
-                              Flexible(
-                                child: Text(
-                                  'Please read this if you having issues setting up alarms or timers',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 11,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                     ],
                   ),
                   Padding(
@@ -340,7 +201,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: Text("Close"),
                           onPressed: () {
                             Navigator.of(context).pop();
@@ -528,11 +389,11 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
 
   void _setAlarm() {
     String thisSound;
-      if (_alarmSound) {
-        thisSound = '';
-      } else {
-        thisSound = 'silent';
-      }
+    if (_alarmSound) {
+      thisSound = '';
+    } else {
+      thisSound = 'silent';
+    }
 
     var alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes));
     var hour = alarmTime.hour;
@@ -576,5 +437,10 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
+  }
+
+  void _restorePreferences() async {
+    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
   }
 }

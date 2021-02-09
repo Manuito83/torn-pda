@@ -1,5 +1,3 @@
-import 'package:android_intent/android_intent.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -10,7 +8,7 @@ class TravelOptionsAndroid extends StatefulWidget {
   final Function callback;
 
   TravelOptionsAndroid({
-    @required this.callback,
+    this.callback,
   });
 
   @override
@@ -21,9 +19,6 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   String _travelNotificationAheadDropDownValue;
   String _travelAlarmAheadDropDownValue;
   String _travelTimerAheadDropDownValue;
-
-  bool _alarmSound;
-  bool _alarmVibration;
 
   Future _preferencesLoaded;
 
@@ -75,77 +70,6 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
                                     'method and launch time before arrival'),
                               ),
                               _rowsWithTypes(),
-                              SizedBox(height: 20),
-                              Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: 'Note: some Android clock applications do not work well '
-                                        'with more than 1 timer or do not allow to choose '
-                                        'between sound and vibration for alarms. If you experience '
-                                        'any issue, it is recommended to install ',
-                                    style: DefaultTextStyle.of(context).style,
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                        text: 'Google\'s Clock application',
-                                        style: TextStyle(color: Colors.blue),
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () async {
-                                            AndroidIntent intent = AndroidIntent(
-                                              action: 'action_view',
-                                              data: 'https://play.google.com/store'
-                                                  '/apps/details?id=com.google.android.deskclock',
-                                            );
-                                            await intent.launch();
-                                          },
-                                      ),
-                                      TextSpan(
-                                        text: '.',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Alarm sound"),
-                                    Switch(
-                                      value: _alarmSound,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _alarmSound = value;
-                                        });
-                                        SharedPreferencesModel().setTravelAlarmSound(value);
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Alarm vibration"),
-                                    Switch(
-                                      value: _alarmVibration,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _alarmVibration = value;
-                                        });
-                                        SharedPreferencesModel().setTravelAlarmVibration(value);
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
                               SizedBox(height: 50),
                             ],
                           ),
@@ -174,7 +98,9 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
-          widget.callback();
+          if (widget.callback != null) {
+            widget.callback();
+          }
           Navigator.of(context).pop();
         },
       ),
@@ -493,15 +419,11 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
     var travelNotificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
     var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
     var travelTimerAhead = await SharedPreferencesModel().getTravelTimerAhead();
-    var alarmSound = await SharedPreferencesModel().getTravelAlarmSound();
-    var alarmVibration = await SharedPreferencesModel().getTravelAlarmVibration();
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;
       _travelAlarmAheadDropDownValue = travelAlarmAhead;
       _travelTimerAheadDropDownValue = travelTimerAhead;
-      _alarmSound = alarmSound;
-      _alarmVibration = alarmVibration;
     });
   }
 
