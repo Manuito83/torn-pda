@@ -60,6 +60,7 @@ class CountryDetails {
 
 class ForeignStock {
   ForeignStock({
+    this.countryFullName,
     this.id,
     this.name,
     this.quantity,
@@ -70,6 +71,7 @@ class ForeignStock {
   // Calculated, NOT exported to Shared Preferences!
   CountryName country;
   String countryCode;
+  String countryFullName;
   DateTime arrivalTime;
   int timestamp;
   ItemType itemType;
@@ -109,4 +111,5 @@ enum CountryName {
   SWITZERLAND,
   UAE,
   UNITED_KINGDOM,
+  TORN,
 }

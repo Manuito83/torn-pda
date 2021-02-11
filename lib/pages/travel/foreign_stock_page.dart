@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,7 +9,6 @@ import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/inventory_model.dart';
-import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -71,7 +71,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   bool _inventoryEnabled = true;
   bool _showArrivalTime = true;
   InventoryModel _inventory;
-  OwnProfileMisc _profileMisc;
+  TravelModel _travelModel;
   int _capacity;
   TravelTicket _ticket;
 
@@ -622,13 +622,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           foreignStock: stock,
           inventoryModel: _inventory,
           capacity: _capacity,
-          allTornItems: null,
           inventoryEnabled: _inventoryEnabled,
           showArrivalTime: _showArrivalTime,
-          moneyOnHand: _profileMisc.moneyOnhand,
+          moneyOnHand: _travelModel.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
           ticket: _ticket,
           activeRestocks: _activeRestocks,
+          travellingTimeStamp: _travelModel.timeStamp,
+          travellingCountry: _returnCountryName(_travelModel.destination),
+          travellingCountryFullName: _travelModel.destination,
           key: UniqueKey(),
         ),
       );
@@ -662,8 +664,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future profileMisc() async {
-        _profileMisc =
-            await TornApiCaller.ownMisc(widget.apiKey).getProfileMisc;
+        _travelModel =
+            await TornApiCaller.travel(widget.apiKey).getTravel;
       }
 
       // Get all APIs at the same time
@@ -696,47 +698,58 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           switch (countryKey) {
             case 'jap':
               stock.country = CountryName.JAPAN;
+              stock.countryFullName = "Japan";
               break;
             case 'haw':
               stock.country = CountryName.HAWAII;
+              stock.countryFullName = "Hawaii";
               break;
             case 'chi':
               stock.country = CountryName.CHINA;
+              stock.countryFullName = "China";
               break;
             case 'arg':
               stock.country = CountryName.ARGENTINA;
+              stock.countryFullName = "Argentina";
               break;
             case 'uni':
               stock.country = CountryName.UNITED_KINGDOM;
+              stock.countryFullName = "UK";
               break;
             case 'cay':
               stock.country = CountryName.CAYMAN_ISLANDS;
+              stock.countryFullName = "Cayman Islands";
               break;
             case 'sou':
               stock.country = CountryName.SOUTH_AFRICA;
+              stock.countryFullName = "South Africa";
               break;
             case 'swi':
               stock.country = CountryName.SWITZERLAND;
+              stock.countryFullName = "Switzerland";
               break;
             case 'mex':
               stock.country = CountryName.MEXICO;
+              stock.countryFullName = "Mexico";
               break;
             case 'uae':
               stock.country = CountryName.UAE;
+              stock.countryFullName = "UAE";
               break;
             case 'can':
               stock.country = CountryName.CANADA;
+              stock.countryFullName = "Canada";
               break;
           }
 
           // Other fields contained in Yata and in Torn
           stock.profit = (stock.value /
-              (TravelTimes.travelTimeMinutesOneWay(
-                ticket: _ticket,
-                country: stock.country,
-              ) *
-                  2 /
-                  60))
+                  (TravelTimes.travelTimeMinutesOneWay(
+                        ticket: _ticket,
+                        country: stock.country,
+                      ) *
+                      2 /
+                      60))
               .round();
 
           stock.timestamp = countryDetails.update;
@@ -868,6 +881,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               stockList.stocks.add(stock);
             }
             break;
+          case CountryName.TORN:
+            break;
         }
       }
 
@@ -939,7 +954,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           SharedPreferencesModel().setStockSort('profit');
           break;
         case StockSortType.arrivalTime:
-          _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
+          _filteredStocksCards
+              .sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
           SharedPreferencesModel().setStockSort('arrivalTime');
           break;
       }
@@ -985,8 +1001,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _capacity = await SharedPreferencesModel().getStockCapacity();
     _inventoryEnabled =
         await SharedPreferencesModel().getShowForeignInventory();
-    _showArrivalTime =
-        await SharedPreferencesModel().getShowArrivalTime();
+    _showArrivalTime = await SharedPreferencesModel().getShowArrivalTime();
 
     var ticket = await SharedPreferencesModel().getTravelTicket();
     switch (ticket) {
@@ -1004,7 +1019,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         break;
     }
 
-    _activeRestocks = await json.decode(await SharedPreferencesModel().getActiveRestocks());
+    _activeRestocks =
+        await json.decode(await SharedPreferencesModel().getActiveRestocks());
   }
 
   Future<void> _showOptionsDialog() {
@@ -1032,8 +1048,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onStocksOptionsChanged(
-      int newCapacity, bool inventoryEnabled, bool showArrivalTime, TravelTicket ticket) {
+  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled,
+      bool showArrivalTime, TravelTicket ticket) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;
@@ -1077,5 +1093,46 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _refreshController.refreshCompleted();
     // Initialize the controller again to avoid errors
     _refreshController = RefreshController(initialRefresh: false);
+  }
+
+  CountryName _returnCountryName(String country) {
+    switch (country) {
+      case "Argentina":
+        return CountryName.ARGENTINA;
+        break;
+      case "Canada":
+        return CountryName.CANADA;
+        break;
+      case "Cayman Islands":
+        return CountryName.CAYMAN_ISLANDS;
+        break;
+      case "China":
+        return CountryName.CHINA;
+        break;
+      case "Hawaii":
+        return CountryName.HAWAII;
+        break;
+      case "Japan":
+        return CountryName.JAPAN;
+        break;
+      case "Mexico":
+        return CountryName.MEXICO;
+        break;
+      case "South Africa":
+        return CountryName.SOUTH_AFRICA;
+        break;
+      case "Switzerland":
+        return CountryName.SWITZERLAND;
+        break;
+      case "UAE":
+        return CountryName.UAE;
+        break;
+      case "United Kingdom":
+        return CountryName.UNITED_KINGDOM;
+        break;
+      default:
+        return CountryName.TORN;
+        break;
+    }
   }
 }

@@ -1,18 +1,20 @@
 class TravelModel {
-  bool travelling;
+  bool abroad;
   String destination;
   int timeLeft;
   int timeStamp;
   DateTime timeArrival;
   int departed;
+  int moneyOnhand;
 
   TravelModel({
-    this.travelling = false,
+    this.abroad = false,
     this.destination,
     this.timeLeft,
     this.timeStamp,
     this.timeArrival,
     this.departed,
+    this.moneyOnhand,
   }) {
     if (timeArrival == null) {
       this.timeArrival = DateTime.now();
@@ -24,6 +26,7 @@ class TravelModel {
     var timeLeft = json['travel']['time_left'];
     var timestamp = json['travel']['timestamp'];
     var departed = json['travel']['departed'];
+    var moneyOnHand = json["money_onhand"];
 
     bool active = false;
     if (destination != 'Torn' || timeLeft > 0) {
@@ -34,12 +37,13 @@ class TravelModel {
         new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
 
     return TravelModel(
-      travelling: active,
+      abroad: active,
       destination: destination,
       timeLeft: timeLeft,
       timeStamp: timestamp,
       timeArrival: timeArrival,
       departed: departed,
+      moneyOnhand: moneyOnHand,
     );
   }
 }

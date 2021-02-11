@@ -5,7 +5,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
-import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/utils/firestore.dart';
 import 'package:provider/provider.dart';
@@ -26,12 +25,15 @@ class ForeignStockCard extends StatefulWidget {
   final bool inventoryEnabled;
   final bool showArrivalTime;
   final InventoryModel inventoryModel;
-  final ItemsModel allTornItems;
   final int capacity;
   final int moneyOnHand;
   final Function flagPressedCallback;
   final TravelTicket ticket;
   final Map<String, dynamic> activeRestocks;
+
+  final int travellingTimeStamp;
+  final CountryName travellingCountry;
+  final String travellingCountryFullName;
 
   ForeignStockCard(
       {@required this.foreignStock,
@@ -39,11 +41,13 @@ class ForeignStockCard extends StatefulWidget {
       @required this.inventoryModel,
       @required this.showArrivalTime,
       @required this.capacity,
-      @required this.allTornItems,
       @required this.moneyOnHand,
       @required this.flagPressedCallback,
       @required this.ticket,
       @required this.activeRestocks,
+      @required this.travellingTimeStamp,
+      @required this.travellingCountry,
+      @required this.travellingCountryFullName,
       @required Key key})
       : super(key: key);
 
@@ -67,11 +71,16 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   var _invQuantity = 0;
 
   var _delayedDepartureTime = DateTime.now();
-  String _countryFullName = "";
   String _codeName = "";
 
   DateTime _earliestArrival = DateTime.now();
   int _travelSeconds = 0;
+
+  // Used for mid-trip calculations
+  bool _flyingToThisCountry = false;
+  bool _flyingElsewhere = false;
+  bool _landedInWidgetCountry = false;
+  String _tripExplanatory = "";
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -86,8 +95,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   @override
   void initState() {
     super.initState();
-    _calculateDetails();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _calculateDetails();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _expandableController.addListener(() {
       if (_expandableController.expanded == true && !_footerSuccessful) {
@@ -192,7 +201,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     //  - If there are no items: arrive when restock happens
     //  - Does NOT take into account a restock that depletes quickly
 
-    if (_earliestArrival.isAfter(_projectedRestockDateTime)) {
+    if (_earliestArrival.isAfter(_projectedRestockDateTime) ||
+        widget.foreignStock.quantity > 0) {
+      // Checks > 0 in case restock has happened already
+
       delayDeparture = false;
 
       // Avoid dividing by 0 if we have no trend
@@ -256,18 +268,44 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (delayDeparture)
-                          IconButton(
-                            iconSize: 22,
-                            icon: Icon(Icons.notifications_none),
-                            onPressed: () {
-                              _showDelayedTravelDialog();
-                            },
+                    if (_flyingElsewhere || _flyingToThisCountry)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  _tripExplanatory,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        if (whenToTravel.isNotEmpty)
+                          if (depletesTime.isNotEmpty) SizedBox(height: 10),
+                          Text(
+                            depletesTime,
+                            style: TextStyle(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (delayDeparture)
+                            IconButton(
+                              iconSize: 22,
+                              icon: Icon(Icons.notifications_none),
+                              onPressed: () {
+                                _showDelayedTravelDialog();
+                              },
+                            ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -292,8 +330,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                             ],
                           ),
-                      ],
-                    ),
+                        ],
+                      ),
                     SizedBox(height: 15),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +384,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                           ),
                         ),
                         subtitle: Text(
-                          "Get notified whenever ${widget.foreignStock.name} is restocked in $_countryFullName",
+                          "Get notified whenever ${widget.foreignStock.name} is restocked in"
+                          "${widget.foreignStock.countryFullName}",
                           style: TextStyle(
                             fontSize: 11,
                             fontStyle: FontStyle.italic,
@@ -458,17 +497,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                   style: TextStyle(fontSize: 11),
                 ),
               ),
-            if (widget.showArrivalTime)
-              Row(
-                children: [
-                  Icon(MdiIcons.airplaneLanding, size: 12),
-                  SizedBox(width: 2),
-                  Text(
-                    "${_timeFormatter(_earliestArrival)}",
-                    style: TextStyle(fontSize: 11),
-                  ),
-                ],
-              ),
+            if (widget.showArrivalTime) _arrivalTime(),
           ],
         ),
         Padding(
@@ -593,58 +622,49 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     switch (stock.country) {
       case CountryName.JAPAN:
         countryCode = 'JPN';
-        _countryFullName = 'Japan';
         flag = 'images/flags/stock/japan.png';
         break;
       case CountryName.HAWAII:
         countryCode = 'HAW';
-        _countryFullName = 'Hawaii';
         flag = 'images/flags/stock/hawaii.png';
         break;
       case CountryName.CHINA:
         countryCode = 'CHN';
-        _countryFullName = 'China';
         flag = 'images/flags/stock/china.png';
         break;
       case CountryName.ARGENTINA:
         countryCode = 'ARG';
-        _countryFullName = 'Argentina';
         flag = 'images/flags/stock/argentina.png';
         break;
       case CountryName.UNITED_KINGDOM:
         countryCode = 'UK';
-        _countryFullName = 'the United Kingdom';
         flag = 'images/flags/stock/uk.png';
         break;
       case CountryName.CAYMAN_ISLANDS:
         countryCode = 'CAY';
-        _countryFullName = 'Cayman Islands';
         flag = 'images/flags/stock/cayman.png';
         break;
       case CountryName.SOUTH_AFRICA:
         countryCode = 'AFR';
-        _countryFullName = 'South Africa';
         flag = 'images/flags/stock/south-africa.png';
         break;
       case CountryName.SWITZERLAND:
         countryCode = 'SWI';
-        _countryFullName = 'Switzerland';
         flag = 'images/flags/stock/switzerland.png';
         break;
       case CountryName.MEXICO:
         countryCode = 'MEX';
-        _countryFullName = 'Mexico';
         flag = 'images/flags/stock/mexico.png';
         break;
       case CountryName.UAE:
         countryCode = 'UAE';
-        _countryFullName = 'the United Arab Emirates';
         flag = 'images/flags/stock/uae.png';
         break;
       case CountryName.CANADA:
         countryCode = 'CAN';
-        _countryFullName = 'Canada';
         flag = 'images/flags/stock/canada.png';
+        break;
+      case CountryName.TORN:
         break;
     }
 
@@ -999,14 +1019,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     return "${twoDigits(duration.inHours)}h ${twoDigitMinutes}m";
   }
 
-  void _calculateDetails() {
-    _travelSeconds = TravelTimes.travelTimeMinutesOneWay(
-          ticket: widget.ticket,
-          country: widget.foreignStock.country,
-        ) *
-        60;
-    _earliestArrival = DateTime.now().add(Duration(seconds: _travelSeconds));
-
+  _calculateDetails() {
+    // INVENTORY
     if (widget.inventoryEnabled) {
       for (var invItem in widget.inventoryModel.inventory) {
         if (invItem.id == widget.foreignStock.id) {
@@ -1014,6 +1028,106 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           break;
         }
       }
+    }
+
+    // ARRIVAL TIMES
+    _flyingToThisCountry = false;
+    _flyingElsewhere = false;
+    _tripExplanatory = "";
+
+    var now = DateTime.now();
+    var travelTs =
+        DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp * 1000);
+
+    // If we are travelling or stopped in another country abroad
+    if (travelTs.isAfter(now) || widget.travellingCountry != CountryName.TORN) {
+      // If we are in flight to Torn
+      if (widget.travellingCountry == CountryName.TORN) {
+        _flyingElsewhere = true;
+        var timeToTorn = travelTs.difference(now).inSeconds;
+        if (timeToTorn < 0) {
+          timeToTorn = 0;
+          // We are in Torn (after updating without refresh this might happen)
+          _flyingElsewhere = false;
+        }
+        var timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
+                ticket: widget.ticket, country: widget.foreignStock.country) *
+            60;
+        var totalNeeded = timeToWidgetCountry + timeToTorn;
+        _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
+
+        _tripExplanatory = "You are flying back to Torn\n\n"
+            "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time to "
+            "${widget.foreignStock.countryFullName} after you land";
+      }
+      // If this stock is in the country we are flying to, just look at time remaining
+      else if (widget.travellingCountry == widget.foreignStock.country) {
+        _flyingToThisCountry = true;
+        var timeToWidgetCountry = travelTs.difference(now).inSeconds;
+        if (timeToWidgetCountry < 0) {
+          _landedInWidgetCountry = true;
+          timeToWidgetCountry = 0;
+        }
+        _earliestArrival = travelTs;
+
+        // If we want to come back (we only show this in the footer)
+        var timeToTornAndBack = TravelTimes.travelTimeMinutesOneWay(
+                ticket: widget.ticket, country: widget.foreignStock.country) *
+            60 *
+            2;
+        var totalNeeded = timeToTornAndBack + timeToWidgetCountry;
+        var earliestArrivalToSame =
+            DateTime.now().add(Duration(seconds: totalNeeded));
+
+        if (timeToWidgetCountry == 0) {
+          _tripExplanatory =
+          "You are visiting ${widget.travellingCountryFullName}\n\n"
+              "If you like it here and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
+              "is your earliest possible return time if you leave now";
+        } else {
+          _tripExplanatory =
+          "You are flying to ${widget.travellingCountryFullName}\n\n"
+              "If you like it there and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
+              "is your earliest possible return time if you leave quickly";
+        }
+      }
+      // If we are flying to a different country, account for the whole trip and
+      // return flight from the first country
+      else if (widget.travellingCountry != widget.foreignStock.country) {
+        _flyingElsewhere = true;
+        var timeToFirstCountryFromTorn = travelTs.difference(now).inSeconds;
+        if (timeToFirstCountryFromTorn < 0) {
+          timeToFirstCountryFromTorn = 0;
+        }
+        var timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
+                ticket: widget.ticket, country: widget.travellingCountry) *
+            60;
+        var timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
+                ticket: widget.ticket, country: widget.foreignStock.country) *
+            60;
+        var totalNeeded =
+            timeToFirstCountryFromTorn + timeBackToTorn + timeToWidgetCountry;
+        _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
+
+        if (timeToFirstCountryFromTorn == 0) {
+          _tripExplanatory =
+              "You are visiting ${widget.travellingCountryFullName}\n\n"
+              "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time "
+              "to ${widget.foreignStock.countryFullName} after you make your way back to Torn.";
+        } else {
+          _tripExplanatory =
+              "You are flying to ${widget.travellingCountryFullName}.\n\n"
+              "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time to ${widget.foreignStock.countryFullName} "
+              "after you make your way back to Torn.";
+        }
+      }
+    } else {
+      _travelSeconds = TravelTimes.travelTimeMinutesOneWay(
+            ticket: widget.ticket,
+            country: widget.foreignStock.country,
+          ) *
+          60;
+      _earliestArrival = DateTime.now().add(Duration(seconds: _travelSeconds));
     }
   }
 
@@ -1031,7 +1145,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           content: DelayedTravelDialog(
             stockName: widget.foreignStock.name,
             boardingTime: _delayedDepartureTime,
-            country: _countryFullName,
+            country: widget.foreignStock.countryFullName,
             stockCodeName: _codeName,
             itemId: widget.foreignStock.id,
             countryId: widget.foreignStock.country.index,
@@ -1053,5 +1167,70 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     setState(() {
       _calculateDetails();
     });
+  }
+
+  Widget _arrivalTime() {
+    return Row(
+      children: [
+        Icon(MdiIcons.airplaneLanding, size: 12),
+        SizedBox(width: 2),
+        if (_flyingToThisCountry)
+          if (_landedInWidgetCountry)
+            Text(
+              "LANDED",
+              style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.green,
+                  fontStyle: FontStyle.italic),
+            )
+          else
+            Text(
+              "${_timeFormatter(_earliestArrival)}",
+              style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.green,
+                  fontStyle: FontStyle.italic),
+            )
+        else if (_flyingElsewhere)
+          Row(
+            children: [
+              Text(
+                "${_timeFormatter(_earliestArrival)}",
+                style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.orange[700],
+                    fontStyle: FontStyle.italic),
+              ),
+              SizedBox(width: 3),
+              GestureDetector(
+                child: Icon(
+                  Icons.info_outline,
+                  size: 13,
+                  color: Colors.orange[700],
+                ),
+                onTap: () {
+                  BotToast.showText(
+                    text: _tripExplanatory,
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.grey[700],
+                    duration: Duration(seconds: 6),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+              ),
+            ],
+          )
+        else
+          Text(
+            "${_timeFormatter(_earliestArrival)}",
+            style: TextStyle(
+              fontSize: 11,
+            ),
+          )
+      ],
+    );
   }
 }

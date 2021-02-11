@@ -315,7 +315,7 @@ class TornApiCaller {
 
     switch (apiSelection) {
       case ApiSelection.travel:
-        url += '?selections=travel';
+        url += '?selections=money,travel';
         break;
       case ApiSelection.ownBasic:
         url += '?selections=profile,battlestats';

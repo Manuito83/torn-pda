@@ -126,14 +126,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         ),
       ),
       floatingActionButtonAnimator: FabOverrideAnimation(),
-      floatingActionButtonLocation: _travelModel.travelling
+      floatingActionButtonLocation: _travelModel.abroad
           ? FloatingActionButtonLocation.endFloat
           : FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FutureBuilder(
         future: _finishedLoadingPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (_travelModel.travelling) {
+            if (_travelModel.abroad) {
               return buildSpeedDial();
             } else {
               return OpenContainer(
@@ -454,7 +454,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     // We always add stocks
     dials.add(dialStocks);
 
-    if (_travelModel.travelling && _travelModel.timeLeft > 120) {
+    if (_travelModel.abroad && _travelModel.timeLeft > 120) {
       if (_notificationsPending) {
         dials.add(dialNotificationCancel);
       } else {
@@ -539,7 +539,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       ];
     }
     // API was correct: are we travelling or not?
-    if (_travelModel.travelling) {
+    if (_travelModel.abroad) {
       // If we have reached another country
       if (_travelModel.destination != 'Torn' && _travelModel.timeLeft < 15) {
         return <Widget>[
