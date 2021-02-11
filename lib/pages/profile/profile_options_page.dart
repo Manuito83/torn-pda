@@ -10,6 +10,7 @@ class ProfileOptionsReturn {
   bool nukeReviveEnabled;
   bool warnAboutChainsEnabled;
   bool shortcutsEnabled;
+  bool dedicatedTravelSection;
   bool expandEvents;
   int eventsShowNumber;
   bool expandMessages;
@@ -27,6 +28,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _nukeReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
   bool _shortcutsEnabled = true;
+  bool _dedicatedTravelSection = true;
   bool _expandEvents = false;
   bool _expandMessages = false;
   bool _expandBasicInfo = false;
@@ -75,8 +77,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                       FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder:
-                        (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
@@ -236,6 +238,56 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
+                                    'TRAVEL',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Dedicated Travel card"),
+                                    Switch(
+                                      value: _dedicatedTravelSection,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setDedicatedTravelSection(value);
+                                        setState(() {
+                                          _dedicatedTravelSection = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'If active, you\'ll get an extra card for travel information, '
+                                  'access to foreign stocks and notifications (reduced version of the '
+                                  'Travel section). If inactive, you\'ll still have basic travel information '
+                                  'in the Status card',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
                                     'REVIVING SERVICES',
                                     style: TextStyle(fontSize: 10),
                                   ),
@@ -298,7 +350,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Text(
                                   'Choose whether you want to automatically expand '
                                   'or collapse certain sections. You can always '
-                                  'toggle manually by tapping.',
+                                  'toggle manually by tapping',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -330,9 +382,11 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Flexible(
                                       child: Text("Events to show"),
@@ -370,9 +424,11 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Flexible(
                                       child: Text("Messages to show"),
@@ -654,6 +710,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var useNuke = await SharedPreferencesModel().getUseNukeRevive();
     var warnChains = await SharedPreferencesModel().getWarnAboutChains();
     var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
+    var dedTravel = await SharedPreferencesModel().getDedicatedTravelSection();
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
     var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
     var expandMessages = await SharedPreferencesModel().getExpandMessages();
@@ -665,6 +722,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _nukeReviveEnabled = useNuke;
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
+      _dedicatedTravelSection = dedTravel;
       _expandEvents = expandEvents;
       _eventsNumber = eventsNumber;
       _expandMessages = expandMessages;
@@ -725,7 +783,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Disable!"),
                               onPressed: () {
                                 context
@@ -739,7 +797,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 Navigator.of(context).pop();
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -782,6 +840,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..nukeReviveEnabled = _nukeReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
         ..shortcutsEnabled = _shortcutsEnabled
+        ..dedicatedTravelSection = _dedicatedTravelSection
         ..expandEvents = _expandEvents
         ..eventsShowNumber = _eventsNumber
         ..expandMessages = _expandMessages

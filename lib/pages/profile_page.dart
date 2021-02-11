@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:android_intent/android_intent.dart';
+import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -21,6 +22,7 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
+import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -187,6 +189,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _nukeReviveActive = false;
   bool _warnAboutChains = false;
   bool _shortcutsEnabled = false;
+  bool _dedicatedTravelSection = false;
 
   ChainModel _chainModel;
 
@@ -411,6 +414,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
                           child: _playerStatus(),
                         ),
+                        if (_dedicatedTravelSection)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                            child: _travelCard(),
+                          ),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                           child: _basicBars(),
@@ -547,6 +555,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _nukeReviveActive = newOptions.nukeReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
+              _dedicatedTravelSection = newOptions.dedicatedTravelSection;
               _eventsExpController.expanded = newOptions.expandEvents;
               _messagesShowNumber = newOptions.messagesShowNumber;
               _eventsShowNumber = newOptions.eventsShowNumber;
@@ -844,98 +853,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    Widget traveling() {
-      if (_user.status.state == 'Traveling') {
-        var startTime = _user.travel.departed;
-        var endTime = _user.travel.timestamp;
-        var totalSeconds = endTime - startTime;
-
-        var dateTimeArrival =
-            DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
-        var timeDifference = dateTimeArrival.difference(DateTime.now());
-        String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes =
-            twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff =
-            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
-
-        var formattedTime = TimeFormatter(
-          inputTime: dateTimeArrival,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
-
-        return Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onLongPress: () =>
-                        _launchBrowserFull('https://www.torn.com'),
-                    onTap: () {
-                      _launchBrowserOption('https://www.torn.com');
-                    },
-                    child: LinearPercentIndicator(
-                      isRTL: _user.travel.destination == "Torn" ? true : false,
-                      center: Text(
-                        diff,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      widgetIndicator: Opacity(
-                        // Make icon transparent when about to pass over text
-                        opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                                _getTravelPercentage(totalSeconds) > 0.7
-                            ? 1
-                            : 0.3,
-                        child: Padding(
-                          padding: _user.travel.destination == "Torn"
-                              ? const EdgeInsets.only(top: 6, right: 6)
-                              : const EdgeInsets.only(top: 6, left: 10),
-                          child: RotatedBox(
-                            quarterTurns:
-                                _user.travel.destination == "Torn" ? 3 : 1,
-                            child: Icon(
-                              Icons.airplanemode_active,
-                              color: Colors.blue[900],
-                            ),
-                          ),
-                        ),
-                      ),
-                      animateFromLastPercent: true,
-                      animation: true,
-                      width: 180,
-                      lineHeight: 18,
-                      progressColor: Colors.blue[200],
-                      backgroundColor: Colors.grey,
-                      percent: _getTravelPercentage(totalSeconds),
-                    ),
-                  ),
-                  _notificationIcon(ProfileNotification.travel),
-                ],
-              ),
-              SizedBox(height: 10),
-              Row(
-                children: <Widget>[
-                  Flexible(
-                    child: Text(
-                        'Arriving in ${_user.travel.destination} at $formattedTime'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      } else {
-        return SizedBox.shrink();
-      }
-    }
-
     Widget nukeRevive() {
       if (_user.status.state == 'Hospital' && _nukeReviveActive) {
         return Padding(
@@ -998,7 +915,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         _notificationIcon(ProfileNotification.hospital)
                     ],
                   ),
-                  traveling(),
+                  if (!_dedicatedTravelSection) _travelWidget(),
                   descriptionWidget(),
                   nukeRevive(),
                 ],
@@ -1020,6 +937,384 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else {
       return percentage;
     }
+  }
+
+  Widget _travelWidget() {
+    if (_user.status.state == 'Traveling') {
+      var startTime = _user.travel.departed;
+      var endTime = _user.travel.timestamp;
+      var totalSeconds = endTime - startTime;
+
+      var dateTimeArrival =
+          DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
+      var timeDifference = dateTimeArrival.difference(DateTime.now());
+      String twoDigits(int n) => n.toString().padLeft(2, "0");
+      String twoDigitMinutes =
+          twoDigits(timeDifference.inMinutes.remainder(60));
+      String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+
+      var formattedTime = TimeFormatter(
+        inputTime: dateTimeArrival,
+        timeFormatSetting: _settingsProvider.currentTimeFormat,
+        timeZoneSetting: _settingsProvider.currentTimeZone,
+      ).format;
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onLongPress: () => _launchBrowserFull('https://www.torn.com'),
+                  onTap: () {
+                    _launchBrowserOption('https://www.torn.com');
+                  },
+                  child: LinearPercentIndicator(
+                    isRTL: _user.travel.destination == "Torn" ? true : false,
+                    center: Text(
+                      diff,
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    widgetIndicator: Opacity(
+                      // Make icon transparent when about to pass over text
+                      opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
+                              _getTravelPercentage(totalSeconds) > 0.7
+                          ? 1
+                          : 0.3,
+                      child: Padding(
+                        padding: _user.travel.destination == "Torn"
+                            ? const EdgeInsets.only(top: 6, right: 6)
+                            : const EdgeInsets.only(top: 6, left: 10),
+                        child: RotatedBox(
+                          quarterTurns:
+                              _user.travel.destination == "Torn" ? 3 : 1,
+                          child: Icon(
+                            Icons.airplanemode_active,
+                            color: Colors.blue[900],
+                          ),
+                        ),
+                      ),
+                    ),
+                    animateFromLastPercent: true,
+                    animation: true,
+                    width: 180,
+                    lineHeight: 18,
+                    progressColor: Colors.blue[200],
+                    backgroundColor: Colors.grey,
+                    percent: _getTravelPercentage(totalSeconds),
+                  ),
+                ),
+                if (!_dedicatedTravelSection)
+                  _notificationIcon(ProfileNotification.travel),
+              ],
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: <Widget>[
+                Flexible(
+                  child: Text(
+                      'Arriving in ${_user.travel.destination} at $formattedTime'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Card _travelCard() {
+    Widget foreignStocksButton = OpenContainer(
+      transitionDuration: Duration(seconds: 1),
+      transitionType: ContainerTransitionType.fadeThrough,
+      openBuilder: (BuildContext context, VoidCallback _) {
+        return ForeignStockPage(apiKey: _userProvider.basic.userApiKey);
+      },
+      closedElevation: 3,
+      closedShape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(56 / 2),
+        ),
+      ),
+      onClosed: (ReturnFlagPressed returnFlag) async {
+        if (returnFlag.flagPressed) {
+          var url = 'https://www.torn.com/travelagency.php';
+          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+            if (await canLaunch(url)) {
+              await launch(url, forceSafariVC: false);
+            }
+          } else {
+            if (returnFlag.shortTap) {
+              _settingsProvider.useQuickBrowser
+                  ? await openBrowserDialog(
+                      context,
+                      url,
+                      callBack: null,
+                    )
+                  : await _launchBrowserOption(url);
+              _updateCallback();
+            } else {
+              _launchBrowserFull('https://www.torn.com/travelagency.php');
+            }
+          }
+        }
+      },
+      closedColor: Colors.orange,
+      closedBuilder: (BuildContext context, VoidCallback openContainer) {
+        return SizedBox(
+          height: 30,
+          width: 30,
+          child: Center(
+            child: Image.asset(
+              'images/icons/box.png',
+              width: 16,
+            ),
+          ),
+        );
+      },
+    );
+
+    Widget header;
+    if (_user.status.state == "Traveling") {
+      // TODO: TIME REMAINING TO VISIT
+      header = _travelWidget();
+    } else if (_user.status.state == "Abroad") {
+      header = Row(
+        children: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              elevation: 2,
+              primary: _themeProvider.currentTheme == AppTheme.dark
+                  ? _themeProvider.background
+                  : Colors.white,
+              side: BorderSide(
+                width: 2.0,
+                color: Colors.blueGrey,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  _flagImage(),
+                  SizedBox(width: 6),
+                  Column(
+                    children: [
+                      Text(
+                        "VISIT",
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: _themeProvider.mainText,
+                        ),
+                      ),
+                      Text(
+                        _user.travel.destination.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 8,
+                          color: _themeProvider.mainText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            onLongPress: () {
+              _launchBrowserFull('https://www.torn.com');
+            },
+            onPressed: () async {
+              var url = 'https://www.torn.com';
+              _launchBrowserOption(url);
+            },
+          ),
+          SizedBox(width: 20),
+          foreignStocksButton,
+        ],
+      );
+    } else {
+      header = Row(
+        children: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              elevation: 2,
+              primary: _themeProvider.currentTheme == AppTheme.dark
+                  ? _themeProvider.background
+                  : Colors.white,
+              side: BorderSide(
+                width: 2.0,
+                color: Colors.blueGrey,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  MdiIcons.airport,
+                  size: 22,
+                  color: _themeProvider.mainText,
+                ),
+                SizedBox(width: 6),
+                Column(
+                  children: [
+                    Text(
+                      "TRAVEL",
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: _themeProvider.mainText,
+                      ),
+                    ),
+                    Text(
+                      "AGENCY",
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: _themeProvider.mainText,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            onLongPress: () {
+              _launchBrowserFull('https://www.torn.com/travelagency.php');
+            },
+            onPressed: () async {
+              var url = 'https://www.torn.com/travelagency.php';
+              _launchBrowserOption(url);
+            },
+          ),
+          SizedBox(width: 20),
+          foreignStocksButton,
+        ],
+      );
+    }
+
+    Widget alertsButton;
+    if (Platform.isAndroid) {
+      alertsButton = Row(
+        children: [
+          RawMaterialButton(
+            onPressed: () {},
+            elevation: 2.0,
+            constraints: BoxConstraints.expand(width: 30, height: 30),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            child: _notificationIcon(
+              ProfileNotification.travel,
+              size: 18,
+            ),
+            padding: EdgeInsets.all(5.0),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: _travelNotificationsPending
+                    ? Colors.green
+                    : Colors.blueGrey,
+                width: 2,
+                style: BorderStyle.solid,
+              ),
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+          SizedBox(width: 10),
+          RawMaterialButton(
+            onPressed: () {},
+            elevation: 2.0,
+            constraints: BoxConstraints.expand(width: 30, height: 30),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            child: _notificationIcon(
+              ProfileNotification.travel,
+              size: 18,
+              forcedTravelIcon: NotificationType.alarm,
+            ),
+            padding: EdgeInsets.all(5.0),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: Colors.blueGrey,
+                width: 2,
+                style: BorderStyle.solid,
+              ),
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+          SizedBox(width: 10),
+          RawMaterialButton(
+            onPressed: () {},
+            elevation: 2.0,
+            constraints: BoxConstraints.expand(width: 30, height: 30),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            child: _notificationIcon(
+              ProfileNotification.travel,
+              size: 18,
+              forcedTravelIcon: NotificationType.timer,
+            ),
+            padding: EdgeInsets.all(5.0),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: Colors.blueGrey,
+                width: 2,
+                style: BorderStyle.solid,
+              ),
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+        ],
+      );
+    } else if (Platform.isIOS) {
+      alertsButton = RawMaterialButton(
+        onPressed: () {},
+        elevation: 2.0,
+        constraints: BoxConstraints.expand(width: 30, height: 30),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        fillColor: _themeProvider.navSelected,
+        child: _notificationIcon(
+          ProfileNotification.travel,
+          size: 18,
+        ),
+        padding: EdgeInsets.all(5.0),
+        shape: CircleBorder(),
+      );
+    }
+
+    Widget buttonsRow;
+    if (_user.status.state == "Traveling") {
+      buttonsRow = Row(
+        children: [
+          foreignStocksButton,
+          SizedBox(width: 20),
+          alertsButton,
+        ],
+      );
+    } else {
+      buttonsRow = SizedBox.shrink();
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Text(
+                'TRAVEL',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            header,
+            SizedBox(height: 15),
+            buttonsRow,
+          ],
+        ),
+      ),
+    );
   }
 
   Card _basicBars() {
@@ -1393,7 +1688,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Widget _notificationIcon(ProfileNotification profileNotification) {
+  Widget _notificationIcon(
+    ProfileNotification profileNotification, {
+    double size = 22,
+    NotificationType forcedTravelIcon,
+  }) {
     int secondsToGo = 0;
     bool percentageError = false;
     bool notificationsPending;
@@ -1441,8 +1740,25 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationCancelString = 'Travel notification cancelled!';
         alarmSetString = 'Travel alarm set for $formattedTimeAlarm';
         timerSetString = 'Travel timer set for $formattedTimeTimer';
-        notificationType = _travelNotificationType;
-        notificationIcon = _travelNotificationIcon;
+
+        if (forcedTravelIcon == null) {
+          notificationType = _travelNotificationType;
+          notificationIcon = _travelNotificationIcon;
+        } else {
+          notificationType = forcedTravelIcon;
+          switch (forcedTravelIcon) {
+            case NotificationType.notification:
+              notificationIcon = Icons.chat_bubble_outline;
+              break;
+            case NotificationType.alarm:
+              notificationIcon = Icons.notifications_none;
+              break;
+            case NotificationType.timer:
+              notificationIcon = Icons.timer;
+              break;
+          }
+        }
+
         break;
 
       case ProfileNotification.energy:
@@ -1701,7 +2017,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         splashColor: Colors.transparent,
         child: Icon(
           notificationIcon,
-          size: 22,
+          size: size,
           color: thisColor,
         ),
         onTap: () {
@@ -2098,6 +2414,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       String message = HtmlParser.fix(e.event);
+      message = EmojiParser.fix(message);
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll('Please click here to continue.', '');
       message = message.replaceAll(' [view]', '.');
@@ -3986,8 +4303,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } else {
       _settingsProvider.useQuickBrowser
-          ? openBrowserDialog(context, url)
-          : _launchBrowserFull(url);
+          ? await openBrowserDialog(context, url)
+          : await _launchBrowserFull(url);
+      _updateCallback();
     }
   }
 
@@ -3997,15 +4315,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await launch(page, forceSafariVC: false);
       }
     } else {
-      Navigator.of(context).push(
+      await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (BuildContext context) => WebViewFull(
             customUrl: page,
             customTitle: 'Torn',
-            customCallBack: _updateCallback,
+            customCallBack: null,
           ),
         ),
       );
+      _updateCallback();
     }
   }
 
@@ -4019,7 +4338,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Even if this implies colling the app twice, it enhances player
     // experience as the bars are updated quickly after a change
     // In turn, we only call the API every 30 seconds with the timer
-    await Future.delayed(Duration(seconds: 10));
+    await Future.delayed(Duration(seconds: 5));
     if (mounted) {
       _fetchApi();
     }
@@ -4617,6 +4936,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
     _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
     _shortcutsEnabled = await SharedPreferencesModel().getEnableShortcuts();
+    _dedicatedTravelSection =
+        await SharedPreferencesModel().getDedicatedTravelSection();
 
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
     var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
@@ -4768,7 +5089,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.hospital:
         var alarmTime =
-          _hospitalReleaseTime.add(Duration(seconds: -_hospitalAlarmAhead));
+            _hospitalReleaseTime.add(Duration(seconds: -_hospitalAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Hospital';
@@ -5325,5 +5646,55 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } catch (e) {
       return SizedBox.shrink();
     }
+  }
+
+  Widget _flagImage() {
+    String flagFile;
+    switch (_user.travel.destination) {
+      case "Torn":
+        flagFile = 'images/flags/travel/torn.png';
+        break;
+      case "Argentina":
+        flagFile = 'images/flags/stock/argentina.png';
+        break;
+      case "Canada":
+        flagFile = 'images/flags/stock/canada.png';
+        break;
+      case "Cayman Islands":
+        flagFile = 'images/flags/stock/cayman.png';
+        break;
+      case "China":
+        flagFile = 'images/flags/stock/china.png';
+        break;
+      case "Hawaii":
+        flagFile = 'images/flags/stock/hawaii.png';
+        break;
+      case "Japan":
+        flagFile = 'images/flags/stock/japan.png';
+        break;
+      case "Mexico":
+        flagFile = 'images/flags/stock/mexico.png';
+        break;
+      case "South Africa":
+        flagFile = 'images/flags/stock/south-africa.png';
+        break;
+      case "Switzerland":
+        flagFile = 'images/flags/stock/switzerland.png';
+        break;
+      case "UAE":
+        flagFile = 'images/flags/stock/uae.png';
+        break;
+      case "United Kingdom":
+        flagFile = 'images/flags/stock/uk.png';
+        break;
+      default:
+        return SizedBox.shrink();
+    }
+
+    return Image(
+      image: AssetImage(flagFile),
+      height: 30,
+      width: 50,
+    );
   }
 }

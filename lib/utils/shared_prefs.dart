@@ -59,6 +59,7 @@ class SharedPreferencesModel {
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
+  final String _kDedicatedTravelSection = "pda_dedicatedTravelSection";
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
@@ -716,6 +717,16 @@ class SharedPreferencesModel {
   Future<bool> setEnableShortcuts(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kEnableShortcuts, value);
+  }
+
+  Future<bool> getDedicatedTravelSection() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDedicatedTravelSection) ?? true;
+  }
+
+  Future<bool> setDedicatedTravelSection(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDedicatedTravelSection, value);
   }
 
   Future<bool> getUseNukeRevive() async {

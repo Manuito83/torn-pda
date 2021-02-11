@@ -45,9 +45,6 @@ class _ProfileNotificationsAndroidState
   String _boosterDropDownValue;
   String _hospitalDropDownValue;
 
-  bool _alarmSound;
-  bool _alarmVibration;
-
   Future _preferencesLoaded;
 
   SettingsProvider _settingsProvider;
@@ -101,125 +98,6 @@ class _ProfileNotificationsAndroidState
                                     'method for each type of event.'),
                               ),
                               _rowsWithTypes(),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 50,
-                                  vertical: 20,
-                                ),
-                                child: Divider(),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: RichText(
-                                  text: TextSpan(
-                                    text:
-                                        'Note: some Android clock applications do not work well '
-                                        'with more than 1 timer or do not allow to choose '
-                                        'between sound and vibration for alarms. If you experience '
-                                        'any issue, it is recommended to install ',
-                                    style: DefaultTextStyle.of(context).style,
-                                    children: <TextSpan>[
-                                      TextSpan(
-                                        text: 'Google\'s Clock application',
-                                        style: TextStyle(color: Colors.blue),
-                                        recognizer: TapGestureRecognizer()
-                                          ..onTap = () async {
-                                            AndroidIntent intent =
-                                                AndroidIntent(
-                                              action: 'action_view',
-                                              data:
-                                                  'https://play.google.com/store'
-                                                  '/apps/details?id=com.google.android.deskclock',
-                                            );
-                                            await intent.launch();
-                                          },
-                                      ),
-                                      TextSpan(
-                                        text: '.',
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Alarm sound"),
-                                    Switch(
-                                      value: _alarmSound,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _alarmSound = value;
-                                        });
-                                        SharedPreferencesModel()
-                                            .setManualAlarmSound(value);
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 15),
-                                    child: Text(
-                                      'Not applicable to travel',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 10),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Alarm vibration"),
-                                    Switch(
-                                      value: _alarmVibration,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _alarmVibration = value;
-                                        });
-                                        SharedPreferencesModel()
-                                            .setManualAlarmVibration(value);
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 15),
-                                    child: Text(
-                                      'Not applicable to travel',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
                               SizedBox(height: 50),
                             ],
                           ),
@@ -319,10 +197,24 @@ class _ProfileNotificationsAndroidState
         types.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Text(
+              'This option does not apply if you are using the dedicated card for Travel in the '
+              'Profile section (in that case you\'ll have direct access to all types of notification methods)',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        );
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Travel notification options"),
+                Text("Travel notification timings"),
                 IconButton(
                   icon: Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
@@ -588,10 +480,6 @@ class _ProfileNotificationsAndroidState
     var boosterType =
         await SharedPreferencesModel().getBoosterNotificationType();
 
-    var alarmSound = await SharedPreferencesModel().getManualAlarmSound();
-    var alarmVibration =
-        await SharedPreferencesModel().getManualAlarmVibration();
-
     setState(() {
       _travelDropDownValue = travelType;
 
@@ -608,8 +496,6 @@ class _ProfileNotificationsAndroidState
       _medicalDropDownValue = medicalType;
       _hospitalDropDownValue = hospitalType;
       _boosterDropDownValue = boosterType;
-      _alarmSound = alarmSound;
-      _alarmVibration = alarmVibration;
     });
   }
 

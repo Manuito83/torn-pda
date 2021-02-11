@@ -159,15 +159,17 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     } else {
                       if (returnFlag.shortTap) {
                         _settingsProvider.useQuickBrowser
-                            ? openBrowserDialog(
+                            ? await openBrowserDialog(
                                 context,
                                 url,
-                                callBack: _updateInformation,
+                                callBack: null,
                               )
-                            : _openTornBrowser(url);
+                            : await _openTornBrowser(url);
+                        _updateInformation();
                       } else {
-                        _openTornBrowser(
+                        await _openTornBrowser(
                             'https://www.torn.com/travelagency.php');
+                        _updateInformation();
                       }
                     }
                   }
@@ -307,14 +309,16 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             } else {
               if (returnFlag.shortTap) {
                 _settingsProvider.useQuickBrowser
-                    ? openBrowserDialog(
+                    ? await openBrowserDialog(
                         context,
                         url,
-                        callBack: _updateInformation,
+                        callBack: null,
                       )
-                    : _openTornBrowser(url);
+                    : await _openTornBrowser(url);
+                _updateInformation();
               } else {
-                _openTornBrowser('https://www.torn.com/travelagency.php');
+                await _openTornBrowser('https://www.torn.com/travelagency.php');
+                _updateInformation();
               }
             }
           }
@@ -560,8 +564,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           ElevatedButton(
             child: Text("Go visit!"),
-            onLongPress: () {
-              _openTornBrowser('https://www.torn.com/');
+            onLongPress: () async {
+              await _openTornBrowser('https://www.torn.com/');
+              _updateInformation();
             },
             onPressed: () async {
               var url = 'https://www.torn.com/';
@@ -571,12 +576,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 }
               } else {
                 _settingsProvider.useQuickBrowser
-                    ? openBrowserDialog(
+                    ? await openBrowserDialog(
                         context,
                         url,
-                        callBack: _updateInformation,
+                        callBack: null,
                       )
-                    : _openTornBrowser(url);
+                    : await _openTornBrowser(url);
+                _updateInformation();
               }
             },
           ),
@@ -604,8 +610,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ),
           ElevatedButton(
             child: Icon(Icons.local_airport),
-            onLongPress: () {
-              _openTornBrowser('https://www.torn.com/');
+            onLongPress: () async {
+              await _openTornBrowser('https://www.torn.com/');
+              _updateInformation();
             },
             onPressed: () async {
               var url = 'https://www.torn.com/';
@@ -615,12 +622,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 }
               } else {
                 _settingsProvider.useQuickBrowser
-                    ? openBrowserDialog(
+                    ? await openBrowserDialog(
                         context,
                         url,
-                        callBack: _updateInformation,
+                        callBack: null,
                       )
-                    : _openTornBrowser(url);
+                    : await _openTornBrowser(url);
+                _updateInformation();
               }
             },
           ),
@@ -676,8 +684,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               GestureDetector(
-                onLongPress: () {
-                  _openTornBrowser('https://www.torn.com/');
+                onLongPress: () async {
+                  await _openTornBrowser('https://www.torn.com/');
+                  _updateInformation();
                 },
                 onTap: () async {
                   var url = 'https://www.torn.com/';
@@ -688,12 +697,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                     }
                   } else {
                     _settingsProvider.useQuickBrowser
-                        ? openBrowserDialog(
+                        ? await openBrowserDialog(
                             context,
                             url,
-                            callBack: _updateInformation,
+                            callBack: null,
                           )
-                        : _openTornBrowser(url);
+                        : await _openTornBrowser(url);
+                    _updateInformation();
                   }
                 },
                 child: LinearPercentIndicator(
@@ -788,8 +798,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   ElevatedButton _travelAgencyButton() {
     return ElevatedButton(
       child: Text("Travel Agency"),
-      onLongPress: () {
-        _openTornBrowser('https://www.torn.com/travelagency.php');
+      onLongPress: () async {
+        await _openTornBrowser('https://www.torn.com/travelagency.php');
+        _updateInformation();
       },
       onPressed: () async {
         var url = 'https://www.torn.com/travelagency.php';
@@ -799,12 +810,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           }
         } else {
           _settingsProvider.useQuickBrowser
-              ? openBrowserDialog(
+              ? await openBrowserDialog(
                   context,
                   url,
-                  callBack: _updateInformation,
+                  callBack: null,
                 )
-              : _openTornBrowser(url);
+              : await _openTornBrowser(url);
+          _updateInformation();
         }
       },
     );
@@ -1254,12 +1266,12 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     switch (browserType) {
       case BrowserSetting.app:
-        Navigator.of(context).push(
+        await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (BuildContext context) => WebViewFull(
               customUrl: page,
               customTitle: 'Torn',
-              customCallBack: _updateInformation,
+              customCallBack: null,
             ),
           ),
         );
