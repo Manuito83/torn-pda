@@ -285,13 +285,16 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                             ],
                           ),
-                          if (depletesTime.isNotEmpty) SizedBox(height: 10),
-                          Text(
-                            depletesTime,
-                            style: TextStyle(
-                              fontSize: 12,
+                          if (depletesTime.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Text(
+                                depletesTime,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
-                          ),
                         ],
                       )
                     else
@@ -1081,12 +1084,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
         if (timeToWidgetCountry == 0) {
           _tripExplanatory =
-          "You are visiting ${widget.travellingCountryFullName}\n\n"
+              "You are visiting ${widget.travellingCountryFullName}\n\n"
               "If you like it here and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave now";
         } else {
           _tripExplanatory =
-          "You are flying to ${widget.travellingCountryFullName}\n\n"
+              "You are flying to ${widget.travellingCountryFullName}\n\n"
               "If you like it there and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave quickly";
         }
