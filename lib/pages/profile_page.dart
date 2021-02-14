@@ -115,6 +115,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Timer _oneSecTimer;
   DateTime _currentTctTime = DateTime.now().toUtc();
+  double alertBorderWidth = 1;
 
   Timer _tickerCallApi;
 
@@ -1083,7 +1084,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     Widget header;
     if (_user.status.state == "Traveling") {
-      // TODO: TIME REMAINING TO VISIT
       header = _travelWidget();
     } else if (_user.status.state == "Abroad") {
       header = Row(
@@ -1100,7 +1100,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
                   _flagImage(),
@@ -1281,13 +1281,75 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     Widget buttonsRow;
     if (_user.status.state == "Traveling") {
-      buttonsRow = Row(
-        children: [
-          foreignStocksButton,
-          SizedBox(width: 20),
-          alertsButton,
-        ],
-      );
+      if (_user.travel.timeLeft > 180) {
+        buttonsRow = Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: Row(
+            children: [
+              foreignStocksButton,
+              SizedBox(width: 20),
+              alertsButton,
+            ],
+          ),
+        );
+      } else {
+        buttonsRow = Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: Row(
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 2,
+                  primary: _themeProvider.currentTheme == AppTheme.dark
+                      ? _themeProvider.background
+                      : Colors.white,
+                  side: BorderSide(
+                    width: alertBorderWidth,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.flight_land,
+                      size: 22,
+                      color: _themeProvider.mainText,
+                    ),
+                    SizedBox(width: 6),
+                    Column(
+                      children: [
+                        Text(
+                          "APPROACHING",
+                          style: TextStyle(
+                            fontSize: 8,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                        Text(
+                          _user.travel.destination.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 8,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                onLongPress: () {
+                  _launchBrowserFull('https://www.torn.com');
+                },
+                onPressed: () async {
+                  var url = 'https://www.torn.com';
+                  _launchBrowserOption(url);
+                },
+              ),
+              SizedBox(width: 20),
+              foreignStocksButton,
+            ],
+          ),
+        );
+      }
     } else {
       buttonsRow = SizedBox.shrink();
     }
@@ -1309,7 +1371,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
             ),
             header,
-            SizedBox(height: 15),
             buttonsRow,
           ],
         ),
@@ -5203,6 +5264,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   void _refreshTctClock() {
     setState(() {
       _currentTctTime = DateTime.now().toUtc();
+
+      // Add border style alert when approaching a country
+      if (_dedicatedTravelSection && _user.travel.timeLeft < 180) {
+        alertBorderWidth == 1 ? alertBorderWidth = 2 :  alertBorderWidth = 1;
+      }
     });
   }
 
@@ -5694,7 +5760,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return Image(
       image: AssetImage(flagFile),
       height: 30,
-      width: 50,
+      width: 40,
     );
   }
 }
