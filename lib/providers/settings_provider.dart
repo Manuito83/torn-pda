@@ -35,6 +35,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _disableTravelSection = false;
+  bool get disableTravelSection => _disableTravelSection;
+  set changeDisableTravelSection(bool disable) {
+    _disableTravelSection = disable;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   var _onAppExit = 'ask';
   String get onAppExit => _onAppExit;
   set changeOnAppExit(String choice) {
@@ -129,6 +137,8 @@ class SettingsProvider extends ChangeNotifier {
 
     SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
 
+    SharedPreferencesModel().setDisableTravelSection(_disableTravelSection);
+
     SharedPreferencesModel().setOnAppExit(_onAppExit);
 
     SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
@@ -187,6 +197,8 @@ class SettingsProvider extends ChangeNotifier {
         _currentBrowser = BrowserSetting.external;
         break;
     }
+
+    _disableTravelSection = await SharedPreferencesModel().getDisableTravelSection();
 
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
 

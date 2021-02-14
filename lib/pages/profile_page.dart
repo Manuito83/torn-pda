@@ -96,8 +96,12 @@ extension ProfileNotificationExtension on ProfileNotification {
 
 class ProfilePage extends StatefulWidget {
   final Function callBackSection;
+  final Function disableTravelSection;
 
-  ProfilePage({@required this.callBackSection});
+  ProfilePage({
+    @required this.callBackSection,
+    @required this.disableTravelSection,
+  });
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -190,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _nukeReviveActive = false;
   bool _warnAboutChains = false;
   bool _shortcutsEnabled = false;
-  bool _dedicatedTravelSection = false;
+  bool _dedicatedTravelCard = false;
 
   ChainModel _chainModel;
 
@@ -415,7 +419,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
                           child: _playerStatus(),
                         ),
-                        if (_dedicatedTravelSection)
+                        if (_dedicatedTravelCard)
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
                             child: _travelCard(),
@@ -552,11 +556,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               context,
               MaterialPageRoute(builder: (context) => ProfileOptionsPage()),
             );
+            widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
               _nukeReviveActive = newOptions.nukeReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
-              _dedicatedTravelSection = newOptions.dedicatedTravelSection;
+              _dedicatedTravelCard = newOptions.dedicatedTravelCard;
               _eventsExpController.expanded = newOptions.expandEvents;
               _messagesShowNumber = newOptions.messagesShowNumber;
               _eventsShowNumber = newOptions.eventsShowNumber;
@@ -916,7 +921,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         _notificationIcon(ProfileNotification.hospital)
                     ],
                   ),
-                  if (!_dedicatedTravelSection) _travelWidget(),
+                  if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
                   nukeRevive(),
                 ],
@@ -1010,7 +1015,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     percent: _getTravelPercentage(totalSeconds),
                   ),
                 ),
-                if (!_dedicatedTravelSection)
+                if (!_dedicatedTravelCard)
                   _notificationIcon(ProfileNotification.travel),
               ],
             ),
@@ -4997,8 +5002,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
     _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
     _shortcutsEnabled = await SharedPreferencesModel().getEnableShortcuts();
-    _dedicatedTravelSection =
-        await SharedPreferencesModel().getDedicatedTravelSection();
+    _dedicatedTravelCard =
+        await SharedPreferencesModel().getDedicatedTravelCard();
 
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
     var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
@@ -5264,11 +5269,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   void _refreshTctClock() {
     setState(() {
       _currentTctTime = DateTime.now().toUtc();
-
       // Add border style alert when approaching a country
-      if (_dedicatedTravelSection && _user.travel.timeLeft < 180) {
-        alertBorderWidth == 1 ? alertBorderWidth = 2 :  alertBorderWidth = 1;
-      }
+      alertBorderWidth == 1 ? alertBorderWidth = 2 : alertBorderWidth = 1;
     });
   }
 

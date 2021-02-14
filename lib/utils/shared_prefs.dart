@@ -59,7 +59,8 @@ class SharedPreferencesModel {
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
-  final String _kDedicatedTravelSection = "pda_dedicatedTravelSection";
+  final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
+  final String _kDisableTravelSection = "pda_disableTravelSection";
   final String _kShortcutTile = "pda_shortcutTile";
   final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
@@ -719,14 +720,24 @@ class SharedPreferencesModel {
     return prefs.setBool(_kEnableShortcuts, value);
   }
 
-  Future<bool> getDedicatedTravelSection() async {
+  Future<bool> getDedicatedTravelCard() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDedicatedTravelSection) ?? true;
+    return prefs.getBool(_kDedicatedTravelCard) ?? true;
   }
 
-  Future<bool> setDedicatedTravelSection(bool value) async {
+  Future<bool> setDedicatedTravelCard(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDedicatedTravelSection, value);
+    return prefs.setBool(_kDedicatedTravelCard, value);
+  }
+
+  Future<bool> getDisableTravelSection() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDisableTravelSection) ?? true;
+  }
+
+  Future<bool> setDisableTravelSection(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDisableTravelSection, value);
   }
 
   Future<bool> getUseNukeRevive() async {

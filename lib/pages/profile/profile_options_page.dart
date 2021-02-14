@@ -10,7 +10,8 @@ class ProfileOptionsReturn {
   bool nukeReviveEnabled;
   bool warnAboutChainsEnabled;
   bool shortcutsEnabled;
-  bool dedicatedTravelSection;
+  bool dedicatedTravelCard;
+  bool disableTravelSection;
   bool expandEvents;
   int eventsShowNumber;
   bool expandMessages;
@@ -28,7 +29,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _nukeReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
   bool _shortcutsEnabled = true;
-  bool _dedicatedTravelSection = true;
+  bool _dedicatedTravelCard = true;
+  bool _disableTravelSection = false;
   bool _expandEvents = false;
   bool _expandMessages = false;
   bool _expandBasicInfo = false;
@@ -252,13 +254,20 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   children: <Widget>[
                                     Text("Dedicated Travel card"),
                                     Switch(
-                                      value: _dedicatedTravelSection,
+                                      value: _dedicatedTravelCard,
                                       onChanged: (value) {
                                         SharedPreferencesModel()
-                                            .setDedicatedTravelSection(value);
+                                            .setDedicatedTravelCard(value);
                                         setState(() {
-                                          _dedicatedTravelSection = value;
+                                          _dedicatedTravelCard = value;
                                         });
+
+                                        if (!value) {
+                                          _disableTravelSection = false;
+                                          SharedPreferencesModel()
+                                              .setDisableTravelSection(value);
+                                        }
+
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
                                       activeColor: Colors.green,
@@ -281,6 +290,49 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                               ),
+                              if (_dedicatedTravelCard)
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          15, 5, 15, 0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Text("Disable Travel Section"),
+                                          Switch(
+                                            value: _disableTravelSection,
+                                            onChanged: (value) {
+                                              SharedPreferencesModel()
+                                                  .setDisableTravelSection(
+                                                      value);
+                                              setState(() {
+                                                _disableTravelSection = value;
+                                              });
+                                            },
+                                            activeTrackColor:
+                                                Colors.lightGreenAccent,
+                                            activeColor: Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15),
+                                      child: Text(
+                                        'If using the dedicated travel card, you can optionally disable the app\'s '
+                                        'Travel section entirely, as the same information is shown in both',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               SizedBox(height: 15),
                               Divider(),
                               SizedBox(height: 5),
@@ -710,7 +762,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var useNuke = await SharedPreferencesModel().getUseNukeRevive();
     var warnChains = await SharedPreferencesModel().getWarnAboutChains();
     var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
-    var dedTravel = await SharedPreferencesModel().getDedicatedTravelSection();
+    var dedTravel = await SharedPreferencesModel().getDedicatedTravelCard();
+    var disableTravel = await SharedPreferencesModel().getDisableTravelSection();
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
     var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
     var expandMessages = await SharedPreferencesModel().getExpandMessages();
@@ -722,7 +775,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _nukeReviveEnabled = useNuke;
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
-      _dedicatedTravelSection = dedTravel;
+      _dedicatedTravelCard = dedTravel;
+      _disableTravelSection = disableTravel;
       _expandEvents = expandEvents;
       _eventsNumber = eventsNumber;
       _expandMessages = expandMessages;
@@ -840,7 +894,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..nukeReviveEnabled = _nukeReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
         ..shortcutsEnabled = _shortcutsEnabled
-        ..dedicatedTravelSection = _dedicatedTravelSection
+        ..dedicatedTravelCard = _dedicatedTravelCard
+        ..disableTravelSection = _disableTravelSection
         ..expandEvents = _expandEvents
         ..eventsShowNumber = _eventsNumber
         ..expandMessages = _expandMessages

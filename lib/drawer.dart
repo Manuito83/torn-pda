@@ -631,6 +631,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       // Otherwise, if the key is valid, we loop all the sections
       for (var i = 0; i < _drawerItemsList.length; i++) {
+        if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
+          continue;
+        }
+
         // Adding divider just before SETTINGS
         if (i == _settingsPosition) {
           drawerOptions.add(Divider());
@@ -666,6 +670,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       case 0:
         return ProfilePage(
           callBackSection: _callSectionFromOutside,
+          disableTravelSection: _onChangeDisableTravelSection,
         );
         break;
       case 1:
@@ -900,5 +905,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return false;
       }
     }
+  }
+
+  _onChangeDisableTravelSection(bool disable) {
+    setState(() {
+      _settingsProvider.changeDisableTravelSection = disable;
+    });
   }
 }
