@@ -158,8 +158,9 @@ class _TacCardState extends State<TacCard> {
               for (var tar in myTargetList) {
                 attacksIds.add(tar.id.toString());
                 attacksNames.add(tar.username);
-                // We don't use notes for TAC
-                attackNotes.add("");
+                _target.optimal
+                    ? attackNotes.add('Stats (est.): ${decimalFormat.format(_target.estimatedStats)}')
+                    : attackNotes.add('Stats (est.): ${_target.battleStats}');
                 attacksNotesColor.add("");
               }
               Navigator.of(context).push(
