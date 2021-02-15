@@ -22,6 +22,7 @@ import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -1391,6 +1392,16 @@ class _SettingsPageState extends State<SettingsPage> {
         setState(() {
           _vibrationValue = value;
         });
+
+        if (await Vibration.hasVibrator()) {
+          if (value == 'short') {
+            Vibration.vibrate(pattern: [0, 400]);
+          } else if (value == 'medium') {
+            Vibration.vibrate(pattern: [0, 400, 400, 400, 400]);
+          } else if (value == 'long') {
+            Vibration.vibrate(pattern: [0, 400, 400, 600, 400, 800, 400, 1000]);
+          }
+        }
       },
     );
   }
