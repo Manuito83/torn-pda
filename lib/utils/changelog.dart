@@ -35,6 +35,54 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.2.0
+    var v2_2_0 = ChangeLogItem();
+    v2_2_0.main.version = 'Torn PDA v2.2.0';
+    v2_2_0.main.date = '25 JAN 2021';
+    String feat2_2_0_1 = "Travel: added foreign stock graphs with last 36 hours data";
+    String feat2_2_0_2 = "Travel: added restock and depletion times calculation, with flight departure times suggestions and manually activated notifications";
+    String feat2_2_0_3 = "Travel: added automatic alerts for items restock (Alerts section)";
+    String feat2_2_0_4 = "Travel: you can now specify your travel ticket type, which will affect departure and arrival times as well as profit calculation";
+    String feat2_2_0_5 = "Travel: arrival times are now shown in the main stock card";
+    String feat2_2_0_6 = "Travel: items can now be sorted by arrival time";
+    String feat2_2_0_7 = "Travel: the foreign stock page can now be refreshed by pulling. Also added a button in the app bar to manually refresh the API while in the Travel section";
+    String feat2_2_0_8 = "Profile: added Organized Crimes in Misc and Travel cards (note: you need Api Access permission from your faction)";
+    String feat2_2_0_9 = "Profile: you can now manually sort the cards shown in the Profile section";
+    String feat2_2_0_10 = "Profile: you can now optionally activate a minimalistic travel card which shows the same information the Travel section offers (and disable the latter entirely if you wish)";
+    String feat2_2_0_11 = "Profile: added job points to the basic information card";
+    String feat2_2_0_12 = "Chaining: added fair fight to recent attacks cards";
+    String feat2_2_0_13 = "Chaining: added fair fight and respect calculation from TAC (realtime based on current chain hit number)";
+    String feat2_2_0_14 = "Chaining: added notes for TAC targets";
+    String feat2_2_0_15 = "City Finder now collapses (less intrusive)";
+    String feat2_2_0_16 = "Added option to clear the browser's cache (Settings)";
+    String feat2_2_0_17 = "Sound and vibration options for manually activated alarms have been moved to Settings and now apply equally to all alarms";
+    String feat2_2_0_18 = "Fixed forums URL copying";
+    String feat2_2_0_19 = "Fixed cooldowns time string";
+    String feat2_2_0_20 = "Fixed targets wipe functionality";
+    String feat2_2_0_21 = "Fixed other several minor bugs";
+    v2_2_0.features.add(feat2_2_0_1);
+    v2_2_0.features.add(feat2_2_0_2);
+    v2_2_0.features.add(feat2_2_0_3);
+    v2_2_0.features.add(feat2_2_0_4);
+    v2_2_0.features.add(feat2_2_0_5);
+    v2_2_0.features.add(feat2_2_0_6);
+    v2_2_0.features.add(feat2_2_0_7);
+    v2_2_0.features.add(feat2_2_0_8);
+    v2_2_0.features.add(feat2_2_0_9);
+    v2_2_0.features.add(feat2_2_0_10);
+    v2_2_0.features.add(feat2_2_0_11);
+    v2_2_0.features.add(feat2_2_0_12);
+    v2_2_0.features.add(feat2_2_0_13);
+    v2_2_0.features.add(feat2_2_0_14);
+    v2_2_0.features.add(feat2_2_0_15);
+    v2_2_0.features.add(feat2_2_0_16);
+    if (Platform.isAndroid) v2_2_0.features.add(feat2_2_0_17);
+    if (Platform.isIOS) v2_2_0.features.add(feat2_2_0_18);
+    v2_2_0.features.add(feat2_2_0_18);
+    v2_2_0.features.add(feat2_2_0_19);
+    v2_2_0.features.add(feat2_2_0_20);
+    v2_2_0.features.add(feat2_2_0_21);
+
     // VERSION 2.1.1
     // ### ADDED FOR IOS ONLY ###
     var v2_1_1 = ChangeLogItem();
@@ -476,6 +524,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_2_0);
     if (Platform.isIOS) itemList.add(v2_1_1);
     itemList.add(v2_1_0);
     itemList.add(v2_0_0);
@@ -543,7 +592,7 @@ class _ChangeLogState extends State<ChangeLog> {
               ),
               Padding(
                 padding: EdgeInsets.all(5),
-                child: RaisedButton(
+                child: ElevatedButton(
                   child: Text(
                     'Great!',
                     style: TextStyle(
