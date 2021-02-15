@@ -17,6 +17,8 @@ class TacTarget {
     this.username = "",
     this.id = "",
     this.optimal = false,
+    this.fairfight = 0,
+    this.respect = 0,
   });
 
   bool optimal;
@@ -26,6 +28,8 @@ class TacTarget {
   int estimatedStats;
   String battleStats;
   String rank;
+  double fairfight;
+  double respect;
 
   factory TacTarget.fromJson(Map<String, dynamic> json) => TacTarget(
     battleStats: json["battleStats"] == null ? null : json["battleStats"],
@@ -35,6 +39,8 @@ class TacTarget {
     username: json["username"] == null ? null : json["username"],
     id: json["id"] == null ? null : json["id"],
     optimal: json["optimal"] == null ? null : json["optimal"],
+    fairfight: json["fairfight"] == null ? null : json["fairfight"].toDouble(),
+    respect: json["respect"] == null ? null : json["respect"].toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -45,5 +51,7 @@ class TacTarget {
     "username": username == null ? null : username,
     "id": id == null ? null : id,
     "optimal": optimal == null ? null : optimal,
+    "fairfight": fairfight == null ? null : fairfight,
+    "respect": respect == null ? null : respect,
   };
 }

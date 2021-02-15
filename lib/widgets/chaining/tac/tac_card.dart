@@ -109,13 +109,31 @@ class _TacCardState extends State<TacCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  Text(
-                    _target.optimal
-                        ? 'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}'
-                        : 'Stats (est.): ${_target.battleStats}',
-                    style: TextStyle(fontSize: 13),
+                  Flexible(
+                    child: Text(
+                      _target.optimal
+                          ? 'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}'
+                          : 'Stats (est.): ${_target.battleStats}',
+                      style: TextStyle(fontSize: 12),
+                    ),
                   ),
-                  Text('${_target.rank}', style: TextStyle(fontSize: 13)),
+                  Flexible(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: Text(
+                        '${_target.rank}',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Text('FF: ${_target.fairfight ?? 'unk'}',
+                          style: TextStyle(fontSize: 12)),
+                      Text(' / R: ${_target.respect ?? 'unk'}',
+                          style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -159,7 +177,8 @@ class _TacCardState extends State<TacCard> {
                 attacksIds.add(tar.id.toString());
                 attacksNames.add(tar.username);
                 _target.optimal
-                    ? attackNotes.add('Stats (est.): ${decimalFormat.format(_target.estimatedStats)}')
+                    ? attackNotes.add(
+                        'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}')
                     : attackNotes.add('Stats (est.): ${_target.battleStats}');
                 attacksNotesColor.add("");
               }
@@ -240,7 +259,6 @@ class _TacCardState extends State<TacCard> {
               ),
         onPressed: _addButtonActive
             ? () async {
-
                 setState(() {
                   _addButtonActive = false;
                 });

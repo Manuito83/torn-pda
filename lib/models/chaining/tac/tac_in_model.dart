@@ -46,6 +46,8 @@ class Target {
     this.estimatedstats,
     this.battlestats,
     this.rank,
+    this.fairfight,
+    this.respect,
   });
 
   bool optimal;
@@ -55,6 +57,8 @@ class Target {
   int estimatedstats;
   String battlestats;
   String rank;
+  double fairfight;
+  double respect;
 
   factory Target.fromJson(Map<String, dynamic> json) => Target(
     optimal: json["optimal"] == null ? null : json["optimal"],
@@ -63,6 +67,8 @@ class Target {
     estimatedstats: json["estimatedstats"] == null ? null : json["estimatedstats"],
     battlestats: json["battlestats"] == null ? null : json["battlestats"],
     rank: json["rank"] == null ? null : json["rank"],
+    fairfight: json["fairfight"] == null ? null : json["fairfight"].toDouble(),
+    respect: json["respect"] == null ? null : json["respect"].toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -72,5 +78,7 @@ class Target {
     "estimatedstats": estimatedstats == null ? null : estimatedstats,
     "battlestats": battlestats == null ? null : battlestats,
     "rank": rank == null ? null : rank,
+    "fairfight": fairfight == null ? null : fairfight,
+    "respect": respect == null ? null : respect,
   };
 }

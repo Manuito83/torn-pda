@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:http/http.dart' as http;
@@ -346,7 +348,7 @@ class _TacPageState extends State<TacPage> {
   Widget _getTargetsButton() {
     return Column(
       children: [
-        RaisedButton(
+        ElevatedButton(
           child: Text('Get targets'),
           onPressed: _getButtonActive
               ? () {
@@ -560,7 +562,9 @@ class _TacPageState extends State<TacPage> {
           ..rank = value.rank
           ..battleStats = value.battlestats
           ..estimatedStats = value.estimatedstats
-          ..userLevel = value.userlevel;
+          ..userLevel = value.userlevel
+          ..fairfight = value.fairfight
+          ..respect = value.respect;
 
         targetsList.add(thisTacModel);
       });
@@ -580,6 +584,13 @@ class _TacPageState extends State<TacPage> {
   }
 
   Future _fetchTac() async {
+    int currentChainHit = 0;
+    var chainResponse =
+        await TornApiCaller.chain(widget.userKey).getChainStatus;
+    if (chainResponse is ChainModel) {
+      currentChainHit = chainResponse.chain.current;
+    }
+
     setState(() {
       _apiCall = true;
     });
@@ -600,7 +611,8 @@ class _TacPageState extends State<TacPage> {
         '&strength=${_userProvider.basic.strength}'
         '&speed=${_userProvider.basic.speed}'
         '&dexterity=${_userProvider.basic.dexterity}'
-        '&defense=${_userProvider.basic.defense}';
+        '&defense=${_userProvider.basic.defense}'
+        '&chainnumber=$currentChainHit';
 
     try {
       var response = await http.get(
@@ -761,7 +773,7 @@ class _TacPageState extends State<TacPage> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: FlatButton(
+          child: TextButton(
             child: Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
@@ -858,7 +870,7 @@ class _TacPageState extends State<TacPage> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: FlatButton(
+          child: TextButton(
             child: Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');
