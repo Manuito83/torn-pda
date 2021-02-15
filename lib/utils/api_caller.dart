@@ -7,6 +7,7 @@ import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
+import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -34,6 +35,7 @@ enum ApiSelection {
   items,
   inventory,
   education,
+  factionCrimes,
   friends,
 }
 
@@ -102,6 +104,7 @@ class TornApiCaller {
   TornApiCaller.items(this.apiKey);
   TornApiCaller.inventory(this.apiKey);
   TornApiCaller.education(this.apiKey);
+  TornApiCaller.factionCrimes(this.apiKey);
   TornApiCaller.friends(this.apiKey, this.queryId);
 
   Future<dynamic> get getTravel async {
@@ -280,6 +283,23 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getFactionCrimes async {
+    dynamic apiResult;
+    await _apiCall(ApiType.faction, apiSelection: ApiSelection.factionCrimes)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return FactionCrimesModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> get getFriends async {
     dynamic apiResult;
     await _apiCall(ApiType.user,
@@ -350,6 +370,9 @@ class TornApiCaller {
         break;
       case ApiSelection.education:
         url += '?selections=education';
+        break;
+      case ApiSelection.factionCrimes:
+        url += '?selections=crimes';
         break;
       case ApiSelection.friends:
         url += '$prefix?selections=profile,discord';

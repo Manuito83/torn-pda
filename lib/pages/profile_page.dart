@@ -46,6 +46,7 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
+import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 
 enum ProfileNotification {
   travel,
@@ -190,6 +191,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _miscApiFetched = false;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
+
+  String _factionCrimeName = "";
+  DateTime _factionCrimeTimestamp;
+  int _factionParticipantsNotReady = 0;
+  bool _factionCrimeReady = false;
+  String _factionCrimeTimeString = "";
 
   bool _nukeReviveActive = false;
   bool _warnAboutChains = false;
@@ -1122,57 +1129,75 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       );
     } else {
-      header = Row(
+      header = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              elevation: 2,
-              primary: _themeProvider.currentTheme == AppTheme.dark
-                  ? _themeProvider.background
-                  : Colors.white,
-              side: BorderSide(
-                width: 2.0,
-                color: Colors.blueGrey,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  MdiIcons.airport,
-                  size: 22,
-                  color: _themeProvider.mainText,
+          Row(
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 2,
+                  primary: _themeProvider.currentTheme == AppTheme.dark
+                      ? _themeProvider.background
+                      : Colors.white,
+                  side: BorderSide(
+                    width: 2.0,
+                    color: Colors.blueGrey,
+                  ),
                 ),
-                SizedBox(width: 6),
-                Column(
+                child: Row(
                   children: [
-                    Text(
-                      "TRAVEL",
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: _themeProvider.mainText,
-                      ),
+                    Icon(
+                      MdiIcons.airport,
+                      size: 22,
+                      color: _themeProvider.mainText,
                     ),
-                    Text(
-                      "AGENCY",
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: _themeProvider.mainText,
-                      ),
+                    SizedBox(width: 6),
+                    Column(
+                      children: [
+                        Text(
+                          "TRAVEL",
+                          style: TextStyle(
+                            fontSize: 8,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                        Text(
+                          "AGENCY",
+                          style: TextStyle(
+                            fontSize: 8,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            onLongPress: () {
-              _launchBrowserFull('https://www.torn.com/travelagency.php');
-            },
-            onPressed: () async {
-              var url = 'https://www.torn.com/travelagency.php';
-              _launchBrowserOption(url);
-            },
+                onLongPress: () {
+                  _launchBrowserFull('https://www.torn.com/travelagency.php');
+                },
+                onPressed: () async {
+                  var url = 'https://www.torn.com/travelagency.php';
+                  _launchBrowserOption(url);
+                },
+              ),
+              SizedBox(width: 20),
+              foreignStocksButton,
+            ],
           ),
-          SizedBox(width: 20),
-          foreignStocksButton,
+          if (_factionCrimeName.isNotEmpty &&
+              _factionCrimeTimestamp.difference(DateTime.now()).inHours <
+                  10)
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(
+                "OC $_factionCrimeTimeString",
+                style: TextStyle(
+                  color: Colors.orange[700],
+                  fontSize: 12,
+                ),
+              ),
+            ),
         ],
       );
     }
@@ -2324,7 +2349,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
-    String diff = _cooldownTimeFormatted(timeEnd);
+    String diff = _timeFormatted(timeEnd);
     return Flexible(
         child: Padding(
       padding: const EdgeInsets.only(right: 5),
@@ -2339,7 +2364,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
-    String diff = _cooldownTimeFormatted(timeEnd);
+    String diff = _timeFormatted(timeEnd);
     return Flexible(
         child: Padding(
       padding: const EdgeInsets.only(right: 5),
@@ -2354,7 +2379,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
     ).format;
-    String diff = _cooldownTimeFormatted(timeEnd);
+    String diff = _timeFormatted(timeEnd);
     return Flexible(
         child: Padding(
       padding: const EdgeInsets.only(right: 5),
@@ -2362,7 +2387,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     ));
   }
 
-  String _cooldownTimeFormatted(DateTime timeEnd) {
+  String _timeFormatted(DateTime timeEnd) {
     var timeDifference = timeEnd.difference(_serverTime);
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
@@ -3677,6 +3702,62 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
+    // FACTION CRIMES
+    var factionCrimesActive = false;
+    Widget factionCrimes = SizedBox.shrink();
+    if (_factionCrimeName.isNotEmpty) {
+      factionCrimesActive = true;
+      _factionCrimeReady = false;
+      _factionCrimeTimeString = "";
+      if (_factionCrimeTimestamp.isAfter(DateTime.now())) {
+        _factionCrimeTimeString =
+            "will be ready${_timeFormatted(_factionCrimeTimestamp)}";
+      } else {
+        _factionCrimeReady = true;
+        if (_factionParticipantsNotReady == 0) {
+          _factionCrimeTimeString = "and all participants are ready!";
+        } else {
+          _factionCrimeTimeString =
+              "is ready, but $_factionParticipantsNotReady participants are not!";
+        }
+      }
+
+      factionCrimes = Row(
+        children: [
+          Icon(MdiIcons.fingerprint),
+          SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              "$_factionCrimeName $_factionCrimeTimeString",
+              style: TextStyle(
+                color: _factionCrimeReady
+                    ? _factionParticipantsNotReady == 0
+                        ? Colors.green
+                        : Colors.orange[700]
+                    : _themeProvider.mainText,
+              ),
+            ),
+          ),
+          if (_factionCrimeReady)
+            InkWell(
+              borderRadius: BorderRadius.circular(100),
+              onLongPress: () {
+                _launchBrowserFull(
+                    "https://www.torn.com/factions.php?step=your#/tab=crimes");
+              },
+              onTap: () {
+                _launchBrowserOption(
+                    'https://www.torn.com/factions.php?step=your#/tab=crimes');
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Icon(MdiIcons.openInApp, size: 18),
+              ),
+            ),
+        ],
+      );
+    }
+
     // BANK
     Widget bankWidget = SizedBox.shrink();
     if (_miscModel.cityBank.timeLeft > 0) {
@@ -3845,13 +3926,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   padding: const EdgeInsets.only(left: 8),
                   child: racingWidget,
                 ),
-                if ((addictionActive || racingActive) && bankActive)
+                if ((addictionActive || racingActive) && factionCrimesActive)
+                  SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: factionCrimes,
+                ),
+                if ((addictionActive || racingActive || factionCrimesActive) &&
+                    bankActive)
                   SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: bankWidget,
                 ),
-                if ((addictionActive || racingActive || bankActive) &&
+                if ((addictionActive ||
+                        racingActive ||
+                        factionCrimesActive ||
+                        bankActive) &&
                     educationActive)
                   SizedBox(height: 10),
                 Padding(
@@ -4055,6 +4146,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
+        // Get this async
+        _getFactionCrimes();
+
         setState(() {
           _miscModel = miscApiResponse;
           _miscApiFetched = true;
@@ -4063,6 +4157,39 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // If something fails, we simple don't show the MISC section
+    }
+  }
+
+  Future<void> _getFactionCrimes() async {
+    var factionCrimes =
+        await TornApiCaller.factionCrimes(_userProvider.basic.userApiKey)
+            .getFactionCrimes;
+
+    var found = false;
+    if (factionCrimes is FactionCrimesModel) {
+      factionCrimes.crimes.forEach((key, details) {
+        if (details.initiated == 0 && !found) {
+          var participantsNotReady = 0;
+          for (var part in details.participants) {
+            var partDetails = Participant.fromJson(part);
+            if (partDetails.description != "Okay") {
+              participantsNotReady++;
+            }
+            if (part.containsKey(_userProvider.basic.playerId.toString())) {
+              _factionCrimeName = details.crimeName;
+              _factionCrimeTimestamp =
+                  DateTime.fromMillisecondsSinceEpoch(details.timeReady * 1000);
+
+              _factionParticipantsNotReady = participantsNotReady;
+              found = true;
+            }
+          }
+        }
+      });
+    }
+
+    if (factionCrimes is ApiError || !found) {
+      _factionCrimeName = "";
     }
   }
 
@@ -4909,7 +5036,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //SharedPreferencesModel().setProfileSectionOrder([]);
 
     // SECTION ORDER
-    var savedUserOrder = await SharedPreferencesModel().getProfileSectionOrder();
+    var savedUserOrder =
+        await SharedPreferencesModel().getProfileSectionOrder();
     // Ensures that new sections are added as high as possible
     bool sectionsModified = false;
     for (var i = 0; i < _originalSectionOrder.length; i++) {
@@ -5768,10 +5896,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     for (var section in _userSectionOrder) {
       if (section == "Shortcuts" && _shortcutsEnabled) {
         sectionSort.add(
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-              child: _shortcutsCarrousel(),
-            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _shortcutsCarrousel(),
+          ),
         );
       } else if (section == "Status") {
         sectionSort.add(
@@ -5837,5 +5965,4 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
     return sectionSort;
   }
-
 }
