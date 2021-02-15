@@ -8,6 +8,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -285,6 +286,54 @@ class _SettingsPageState extends State<SettingsPage> {
                             fontStyle: FontStyle.italic,
                           ),
                         ),
+                      ),
+                      SizedBox(height: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text("Browser cache"),
+                                ElevatedButton(
+                                  child: Text("Clear"),
+                                  onPressed: () async {
+                                    var headlessWebView =
+                                        new HeadlessInAppWebView(
+                                      initialUrl: "https://flutter.dev/",
+                                      initialOptions: InAppWebViewGroupOptions(
+                                        crossPlatform: InAppWebViewOptions(
+                                          debuggingEnabled: true,
+                                        ),
+                                      ),
+                                      onWebViewCreated: (controller) async {
+                                        await controller.clearCache();
+                                      },
+                                    );
+                                    await headlessWebView.run();
+                                    await headlessWebView.dispose();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20),
+                            child: Text(
+                              'Note: this will clear your browser\'s cache. It can be '
+                              'useful in case of errors (sections not loading correctly, etc.). '
+                              'You\'ll be logged-out from Torn and all other sites',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 15),
                       Divider(),
