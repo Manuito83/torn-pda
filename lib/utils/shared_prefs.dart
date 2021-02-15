@@ -746,7 +746,7 @@ class SharedPreferencesModel {
 
   Future<bool> getDisableTravelSection() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDisableTravelSection) ?? true;
+    return prefs.getBool(_kDisableTravelSection) ?? false;
   }
 
   Future<bool> setDisableTravelSection(bool value) async {
