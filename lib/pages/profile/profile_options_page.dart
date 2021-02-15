@@ -18,6 +18,7 @@ class ProfileOptionsReturn {
   int messagesShowNumber;
   bool expandBasicInfo;
   bool expandNetworth;
+  List<String> sectionSort;
 }
 
 class ProfileOptionsPage extends StatefulWidget {
@@ -35,6 +36,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _expandMessages = false;
   bool _expandBasicInfo = false;
   bool _expandNetworth = false;
+
+  List<String> _sectionList;
 
   int _messagesNumber = 25;
   int _eventsNumber = 25;
@@ -267,7 +270,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           SharedPreferencesModel()
                                               .setDisableTravelSection(value);
                                         }
-
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
                                       activeColor: Colors.green,
@@ -540,6 +542,52 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ],
                                 ),
                               ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'CARDS ORDER',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Container(
+                                height: _sectionList.length * 40.0 + 40,
+                                child: ReorderableListView(
+                                  onReorder: (int oldIndex, int newIndex) {
+                                    if (oldIndex < newIndex) {
+                                      // removing the item at oldIndex will shorten the list by 1
+                                      newIndex -= 1;
+                                    }
+                                    var oldItem = _sectionList[oldIndex];
+                                    setState(() {
+                                      _sectionList.removeAt(oldIndex);
+                                      _sectionList.insert(newIndex, oldItem);
+                                    });
+                                    SharedPreferencesModel()
+                                        .setProfileSectionOrder(_sectionList);
+                                  },
+                                  children: _currentSectionSort(),
+                                ),
+                              ),
+                              SizedBox(height: 5),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Drag card names to sort them accordingly in the '
+                                  'Profile section',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
                               SizedBox(height: 50),
                             ],
                           ),
@@ -763,13 +811,15 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var warnChains = await SharedPreferencesModel().getWarnAboutChains();
     var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
     var dedTravel = await SharedPreferencesModel().getDedicatedTravelCard();
-    var disableTravel = await SharedPreferencesModel().getDisableTravelSection();
+    var disableTravel =
+        await SharedPreferencesModel().getDisableTravelSection();
     var expandEvents = await SharedPreferencesModel().getExpandEvents();
     var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
     var expandMessages = await SharedPreferencesModel().getExpandMessages();
     var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
     var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
     var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
+    var sectionList = await SharedPreferencesModel().getProfileSectionOrder();
 
     setState(() {
       _nukeReviveEnabled = useNuke;
@@ -783,6 +833,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _messagesNumber = messagesNumber;
       _expandBasicInfo = expandBasicInfo;
       _expandNetworth = expandNetworth;
+      _sectionList = sectionList;
     });
   }
 
@@ -901,8 +952,43 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..expandMessages = _expandMessages
         ..messagesShowNumber = _messagesNumber
         ..expandBasicInfo = _expandBasicInfo
-        ..expandNetworth = _expandNetworth,
+        ..expandNetworth = _expandNetworth
+        ..sectionSort = _sectionList,
     );
     return true;
+  }
+
+  List<Widget> _currentSectionSort() {
+    var myList = <Widget>[];
+    for (var section in _sectionList) {
+      myList.add(
+        SizedBox(
+          height: 40,
+          key: UniqueKey(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Card(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      section,
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+                    Icon(Icons.menu, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    return myList;
   }
 }

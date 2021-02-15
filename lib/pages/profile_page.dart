@@ -206,9 +206,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _messagesShowNumber = 25;
   int _eventsShowNumber = 25;
 
-  var speedDialSetOpen = ValueNotifier<bool>(false);
+  var _speedDialSetOpen = ValueNotifier<bool>(false);
 
   var _showOne = GlobalKey();
+
+  var _originalSectionOrder = [
+    "Shortcuts",
+    "Status",
+    "Travel",
+    "Bars",
+    "Cooldowns",
+    "Events",
+    "Messages",
+    "Basic Info",
+    "Misc",
+    "Networth",
+  ];
+  var _userSectionOrder = <String>[];
 
   @override
   void initState() {
@@ -410,47 +424,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ],
                           ),
                         ),
-                        if (_shortcutsEnabled)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                            child: _shortcutsCarrousel(),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                          child: _playerStatus(),
+                        Column(
+                          children: _returnSections(),
                         ),
-                        if (_dedicatedTravelCard)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                            child: _travelCard(),
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                          child: _basicBars(),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                          child: _coolDowns(),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                          child: _eventsTimeline(),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                          child: _messagesTimeline(),
-                        ),
-                        if (_miscApiFetched)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                            child: _playerStats(),
-                          ),
-                        _miscellaneous(),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 5, 20, 30),
-                          child: _netWorth(),
-                        ),
-                        SizedBox(height: 50),
+                        SizedBox(height: 70),
                       ],
                     ),
                   ),
@@ -568,6 +545,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _messagesExpController.expanded = newOptions.expandMessages;
               _basicInfoExpController.expanded = newOptions.expandBasicInfo;
               _networthExpController.expanded = newOptions.expandNetworth;
+              _userSectionOrder = newOptions.sectionSort;
             });
           },
         )
@@ -4092,10 +4070,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return SpeedDial(
       //animatedIcon: AnimatedIcons.menu_close,
       //animatedIconTheme: IconThemeData(size: 22.0),
-      openCloseDial: speedDialSetOpen,
+      openCloseDial: _speedDialSetOpen,
       onOpen: () {
         setState(() {
-          speedDialSetOpen.value = true;
+          _speedDialSetOpen.value = true;
         });
       },
       backgroundColor: Colors.transparent,
@@ -4123,13 +4101,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onTap: () async {
               await _launchBrowserOption('https://www.torn.com/city.php');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
               await _launchBrowserFull('https://www.torn.com/city.php');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             // Needs a container and color to allow taps on the full circle, not
@@ -4157,13 +4135,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onTap: () async {
               await _launchBrowserOption('https://www.torn.com/trade.php');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
               await _launchBrowserFull('https://www.torn.com/trade.php');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             // Needs a container and color to allow taps on the full circle, not
@@ -4191,13 +4169,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onTap: () async {
               await _launchBrowserOption('https://www.torn.com/item.php');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
               await _launchBrowserFull('https://www.torn.com/item.php');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             // Needs a container and color to allow taps on the full circle, not
@@ -4226,14 +4204,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               await _launchBrowserOption(
                   'https://www.torn.com/crimes.php#/step=main');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
               await _launchBrowserFull(
                   'https://www.torn.com/crimes.php#/step=main');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             // Needs a container and color to allow taps on the full circle, not
@@ -4280,7 +4258,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 );
               }
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
@@ -4301,7 +4279,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 );
               }
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             // Needs a container and color to allow taps on the full circle, not
@@ -4329,13 +4307,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onTap: () async {
               await _launchBrowserOption('https://www.torn.com');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
               await _launchBrowserFull('https://www.torn.com');
               setState(() {
-                speedDialSetOpen.value = false;
+                _speedDialSetOpen.value = false;
               });
             },
             // Needs a container and color to allow taps on the full circle, not
@@ -4928,6 +4906,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _loadPreferences() async {
+    //SharedPreferencesModel().setProfileSectionOrder([]);
+
+    // SECTION ORDER
+    var savedUserOrder = await SharedPreferencesModel().getProfileSectionOrder();
+    // Ensures that new sections are added as high as possible
+    bool sectionsModified = false;
+    for (var i = 0; i < _originalSectionOrder.length; i++) {
+      if (!savedUserOrder.contains(_originalSectionOrder[i])) {
+        savedUserOrder.insert(i, _originalSectionOrder[i]);
+        sectionsModified = true;
+      }
+    }
+    if (sectionsModified) {
+      SharedPreferencesModel().setProfileSectionOrder(savedUserOrder);
+    }
+
     // TRAVEL
     var travel = await SharedPreferencesModel().getTravelNotificationType();
     _travelNotificationTitle =
@@ -5013,6 +5007,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
 
     setState(() {
+      _userSectionOrder = savedUserOrder;
+
       if (travel == '0') {
         _travelNotificationType = NotificationType.notification;
         _travelNotificationIcon = Icons.chat_bubble_outline;
@@ -5765,4 +5761,81 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       width: 40,
     );
   }
+
+  List<Widget> _returnSections() {
+    var sectionSort = <Widget>[];
+
+    for (var section in _userSectionOrder) {
+      if (section == "Shortcuts" && _shortcutsEnabled) {
+        sectionSort.add(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+              child: _shortcutsCarrousel(),
+            ),
+        );
+      } else if (section == "Status") {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _playerStatus(),
+          ),
+        );
+      } else if (section == "Travel" && _dedicatedTravelCard) {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _travelCard(),
+          ),
+        );
+      } else if (section == "Bars") {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _basicBars(),
+          ),
+        );
+      } else if (section == "Cooldowns") {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _coolDowns(),
+          ),
+        );
+      } else if (section == "Events") {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _eventsTimeline(),
+          ),
+        );
+      } else if (section == "Messages") {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _messagesTimeline(),
+          ),
+        );
+      } else if (section == "Basic Info" && _miscApiFetched) {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+            child: _playerStats(),
+          ),
+        );
+      } else if (section == "Misc") {
+        sectionSort.add(
+          _miscellaneous(),
+        );
+      } else if (section == "Networth") {
+        sectionSort.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+            child: _netWorth(),
+          ),
+        );
+      }
+    }
+    return sectionSort;
+  }
+
 }

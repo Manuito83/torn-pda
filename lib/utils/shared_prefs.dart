@@ -30,6 +30,7 @@ class SharedPreferencesModel {
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kAppBarPosition = "pda_AppBarPosition";
+  final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
   final String _kTravelNotificationAhead = "pda_travelNotificationAhead";
@@ -155,6 +156,19 @@ class SharedPreferencesModel {
   Future<bool> setApiKey(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kApiKey, value);
+  }
+
+  /// ----------------------------
+  /// Methods for profile section order
+  /// ----------------------------
+  Future<List<String>> getProfileSectionOrder() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kProfileSectionOrder) ?? <String>[];
+  }
+
+  Future<bool> setProfileSectionOrder(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kProfileSectionOrder, value);
   }
 
   /// ----------------------------
