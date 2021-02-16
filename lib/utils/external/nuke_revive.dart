@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/main.dart';
-import 'package:torn_pda/models/profile/nuke_revive/nuke_revive_model.dart';
+import 'package:torn_pda/models/profile/revive_services/nuke_revive_model.dart';
 
 class NukeRevive {
   String playerId;

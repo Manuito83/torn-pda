@@ -27,6 +27,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/external/nuke_revive.dart';
+import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -199,6 +200,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   String _factionCrimeTimeString = "";
 
   bool _nukeReviveActive = false;
+  bool _uhcReviveActive = false;
   bool _warnAboutChains = false;
   bool _shortcutsEnabled = false;
   bool _dedicatedTravelCard = false;
@@ -543,6 +545,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {
               _nukeReviveActive = newOptions.nukeReviveEnabled;
+              _uhcReviveActive = newOptions.uhcReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
               _dedicatedTravelCard = newOptions.dedicatedTravelCard;
@@ -860,7 +863,32 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ),
               SizedBox(width: 10),
-              Flexible(child: Text("Request a revive")),
+              Flexible(child: Text("Request a revive (Nuke)")),
+            ],
+          ),
+        );
+      } else {
+        return SizedBox.shrink();
+      }
+    }
+
+    Widget uhcRevive() {
+      if (_user.status.state == 'Hospital' && _uhcReviveActive) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 13),
+                child: GestureDetector(
+                  child: Image.asset('images/icons/uhc_revive.png', width: 24),
+                  onTap: () {
+                    _openUhcReviveDialog(context);
+                  },
+                ),
+              ),
+              SizedBox(width: 10),
+              Flexible(child: Text("Request a revive (UHC)")),
             ],
           ),
         );
@@ -909,6 +937,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
                   nukeRevive(),
+                  uhcRevive(),
                 ],
               ),
             ),
@@ -1186,8 +1215,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ],
           ),
           if (_factionCrimeName.isNotEmpty &&
-              _factionCrimeTimestamp.difference(DateTime.now()).inHours <
-                  10)
+              _factionCrimeTimestamp.difference(DateTime.now()).inHours < 10)
             Padding(
               padding: const EdgeInsets.only(top: 5),
               child: Text(
@@ -5127,6 +5155,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
 
     _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
+    _uhcReviveActive = await SharedPreferencesModel().getUseUhcRevive();
     _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
     _shortcutsEnabled = await SharedPreferencesModel().getEnableShortcuts();
     _dedicatedTravelCard =
@@ -5485,8 +5514,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 style: TextStyle(color: Colors.blue),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () async {
-                                    _launchBrowserOption(
-                                        'https://discord.gg/qSHjTXx');
+                                    var url = 'https://discord.gg/qSHjTXx';
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
                                   },
                               ),
                             ],
@@ -5580,6 +5611,200 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         width: 34,
                         child: Image.asset(
                           'images/icons/nuke-revive.png',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openUhcReviveDialog(BuildContext _) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize:
+                          MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  "REQUEST A REVIVE FROM UHC",
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color: _themeProvider.mainText),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: EasyRichText(
+                            "Universal Health Care (UHC for short) is a revive alliance consisting "
+                            "of factions. You can find more information in the forums or "
+                            "in the UHC Discord server.",
+                            defaultStyle: TextStyle(
+                                fontSize: 13, color: _themeProvider.mainText),
+                            patternList: [
+                              EasyRichTextPattern(
+                                targetString: 'forums',
+                                style: TextStyle(color: Colors.blue),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () async {
+                                    _launchBrowserOption(
+                                        'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0');
+                                  },
+                              ),
+                              EasyRichTextPattern(
+                                targetString: 'UHC Discord',
+                                style: TextStyle(color: Colors.blue),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () async {
+                                    var url = 'https://discord.gg/JJprTpb';
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                  },
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "Each revive must be paid directly to the reviver and costs "
+                            "\$1 million or 1 Xanax. There are special prices for faction contracts "
+                            "(more information in the forums).",
+                            style: TextStyle(
+                                fontSize: 13, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Flexible(
+                          child: Text(
+                            "Please keep in mind if you don't pay for the requested revive, "
+                            "you risk getting blocked from UHC!",
+                            style: TextStyle(
+                                fontSize: 13, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: Text("Medic!"),
+                              onPressed: () async {
+                                var uhc = UhcRevive(
+                                  playerId: _user.playerId,
+                                  playerName: _user.name,
+                                  playerFaction: _user.faction.factionName,
+                                  playerFactionId: _user.faction.factionId,
+                                );
+
+                                uhc.callMedic().then((value) {
+                                  var resultString = "";
+                                  var resultColor = Colors.transparent;
+
+                                  if (value == "200") {
+                                    resultString =
+                                        "Request received by UHC!\n\n"
+                                        "Please pay your reviver "
+                                        "1 Xanax or \$1M";
+                                    resultColor = Colors.green[800];
+                                  } else if (value == "error") {
+                                    resultString =
+                                        "There was an error contacting UHC, try again later"
+                                        "or contact them through UHC\'s Discord"
+                                        "server!";
+                                    resultColor = Colors.red[800];
+                                  } else {
+                                    resultString = value;
+                                    resultColor = Colors.red[800];
+                                  }
+
+                                  BotToast.showText(
+                                    text: resultString,
+                                    textStyle: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: resultColor,
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                });
+
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: Text("Cancel"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Image.asset(
+                          'images/icons/uhc_revive.png',
                         ),
                       ),
                     ),

@@ -8,6 +8,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
   bool nukeReviveEnabled;
+  bool uhcReviveEnabled;
   bool warnAboutChainsEnabled;
   bool shortcutsEnabled;
   bool dedicatedTravelCard;
@@ -28,6 +29,7 @@ class ProfileOptionsPage extends StatefulWidget {
 
 class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _nukeReviveEnabled = true;
+  bool _uhcReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
   bool _shortcutsEnabled = true;
   bool _dedicatedTravelCard = true;
@@ -376,8 +378,44 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Text(
                                   'If active, when you are in hospital you\'ll have the option to call '
                                   'a reviver from Central Hospital. NOTE: this is an external '
-                                  'service not affiliated to Torn PDA. It\'s here so that it is '
-                                  'more accessible!',
+                                  'service not affiliated to Torn PDA.',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Use UHC Reviving Services"),
+                                    Switch(
+                                      value: _uhcReviveEnabled,
+                                      onChanged: (value) {
+                                        SharedPreferencesModel()
+                                            .setUseUhcRevive(value);
+                                        setState(() {
+                                          _uhcReviveEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'If active, when you are in hospital you\'ll have the option to call '
+                                  'a reviver from Universal Health Care. NOTE: this is an external '
+                                  'service not affiliated to Torn PDA.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -808,6 +846,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
   Future _restorePreferences() async {
     var useNuke = await SharedPreferencesModel().getUseNukeRevive();
+    var useUhc = await SharedPreferencesModel().getUseUhcRevive();
     var warnChains = await SharedPreferencesModel().getWarnAboutChains();
     var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
     var dedTravel = await SharedPreferencesModel().getDedicatedTravelCard();
@@ -823,6 +862,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     setState(() {
       _nukeReviveEnabled = useNuke;
+      _uhcReviveEnabled = useUhc;
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
       _dedicatedTravelCard = dedTravel;
@@ -943,6 +983,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     Navigator.of(context).pop(
       ProfileOptionsReturn()
         ..nukeReviveEnabled = _nukeReviveEnabled
+        ..uhcReviveEnabled = _uhcReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
         ..shortcutsEnabled = _shortcutsEnabled
         ..dedicatedTravelCard = _dedicatedTravelCard

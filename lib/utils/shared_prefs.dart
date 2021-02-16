@@ -66,6 +66,7 @@ class SharedPreferencesModel {
   final String _kShortcutMenu = "pda_shortcutMenu";
   final String _kActiveShortcutsList = "pda_activeShortcutsList";
   final String _kUseNukeRevive = "pda_useNukeRevive";
+  final String _kUseUhcRevive = "pda_useUhcRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
@@ -762,6 +763,16 @@ class SharedPreferencesModel {
   Future<bool> setUseNukeRevive(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseNukeRevive, value);
+  }
+
+  Future<bool> getUseUhcRevive() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseUhcRevive) ?? false;
+  }
+
+  Future<bool> setUseUhcRevive(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseUhcRevive, value);
   }
 
   Future<bool> getWarnAboutChains() async {
