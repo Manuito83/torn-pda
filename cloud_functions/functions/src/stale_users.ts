@@ -26,7 +26,7 @@ export const staleGroup = {
           sendNotificationToUser(
             user.token,
             "Automatic alerts have been deactivated!",
-            "Due to inactivity, your alerts have been turned off, please use Torn PDA again to reactivate!",
+            "Your alerts have been turned off due to inactivity, please use Torn PDA again to reactivate! If you think this is an error, contact us!",
             "notification_icon",
             "#FFFFFF",
             "Alerts stale user",
