@@ -2424,30 +2424,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       diff = ', in a few seconds';
     } else if (timeDifference.inMinutes >= 1 && timeDifference.inHours < 24) {
       diff = ', in ${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
-    } else if (timeDifference.inHours >= 24 && timeDifference.inHours < 48) {
-      diff = ' in 1 day, in ${twoDigits(timeDifference.inHours)}h '
-          '${twoDigitMinutes}m';
     } else {
-      diff = ' in ${twoDigits(timeDifference.inDays)} days, in '
+      var dayWeek = TimeFormatter(
+        inputTime: timeEnd,
+        timeFormatSetting: _settingsProvider.currentTimeFormat,
+        timeZoneSetting: _settingsProvider.currentTimeZone,
+      ).dayWeek;
+      diff = ' $dayWeek, in '
           '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
     }
-
-    /*
-    if (timeDifference.inMinutes < 1) {
-      diff = ', seconds away';
-    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      diff = ', in 1 minute';
-    } else if (timeDifference.inMinutes > 1 && timeDifference.inHours < 1) {
-      diff = ', in ${timeDifference.inMinutes} minutes';
-    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      diff = ', in 1 hour';
-    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      diff = ', in ${timeDifference.inHours} hours';
-    } else {
-      diff = ' tomorrow, in ${timeDifference.inHours} hours';
-    }
-    */
-
     return diff;
   }
 
@@ -3743,8 +3728,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _factionCrimeReady = false;
       _factionCrimeTimeString = "";
       if (_factionCrimeTimestamp.isAfter(DateTime.now())) {
+        var formattedTime = TimeFormatter(
+          inputTime: _factionCrimeTimestamp,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
         _factionCrimeTimeString =
-            "will be ready${_timeFormatted(_factionCrimeTimestamp)}";
+            "will be ready @ $formattedTime${_timeFormatted(_factionCrimeTimestamp)}";
       } else {
         _factionCrimeReady = true;
         if (_factionParticipantsNotReady == 0) {

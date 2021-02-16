@@ -7,7 +7,6 @@ class TimeFormatter {
   final TimeFormatSetting timeFormatSetting;
   final TimeZoneSetting timeZoneSetting;
 
-
   TimeFormatter(
       {@required this.inputTime,
         @required this.timeFormatSetting,
@@ -40,6 +39,24 @@ class TimeFormatter {
     }
 
     return _timeFormatted;
+  }
+
+  String _dayWeek;
+  String get dayWeek {
+    DateTime timeZonedTime;
+    switch (timeZoneSetting) {
+      case TimeZoneSetting.localTime:
+        timeZonedTime = inputTime.toLocal();
+        break;
+      case TimeZoneSetting.tornTime:
+        timeZonedTime = inputTime.toUtc();
+        break;
+    }
+
+    var formatter = DateFormat('EEEE');
+    _dayWeek = 'on ${formatter.format(timeZonedTime)}';
+
+    return _dayWeek;
   }
 
 }
