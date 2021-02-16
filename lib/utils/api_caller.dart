@@ -378,7 +378,7 @@ class TornApiCaller {
         url += '$prefix?selections=profile,discord';
         break;
     }
-    url += '&key=$apiKey';
+    url += '&key=$apiKey&comment=TornPDA';
 
     //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
     //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2
