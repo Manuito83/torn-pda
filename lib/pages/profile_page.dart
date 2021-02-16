@@ -3384,6 +3384,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
+              SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: _jobPoints(),
+              ),
               SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
