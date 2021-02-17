@@ -551,10 +551,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     // Item cost
     Widget costWidget;
     String moneyToBuy = '';
+    String moneyToBuyExtra = '';
     Color moneyToBuyColor = Colors.grey;
     if (widget.moneyOnHand >= stock.cost * widget.capacity) {
       moneyToBuy =
-          'You HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
+          'You have the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
           'buy ${widget.capacity} ${stock.name}';
       moneyToBuyColor = Colors.green[800];
       costWidget = Row(
@@ -588,8 +589,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       );
     } else {
       moneyToBuy =
-          'You DO NOT HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} '
-          'necessary to buy ${widget.capacity} ${stock.name}.\n\nAdd another '
+          'You do not have the \$${costCurrency.format(stock.cost * widget.capacity)} '
+          'necessary to buy ${widget.capacity} ${stock.name}.';
+      moneyToBuyExtra = 'Add another '
           '\$${costCurrency.format((stock.cost * widget.capacity) - widget.moneyOnHand)}';
       moneyToBuyColor = Colors.orange[800];
       costWidget = Row(
@@ -620,6 +622,15 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                           Flexible(
                             child: Text(
                               moneyToBuy,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Flexible(
+                            child: Text(
+                              moneyToBuyExtra,
                               style: TextStyle(
                                 color: Colors.white,
                               ),
@@ -1531,14 +1542,14 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
     // Second try
     await Future.delayed(Duration(seconds: 10));
-      if (mounted) {
-        widget.requestMoneyRefresh();
-      }
+    if (mounted) {
+      widget.requestMoneyRefresh();
+    }
     // Third try
     await Future.delayed(Duration(seconds: 20));
-      if (mounted) {
-        widget.requestMoneyRefresh();
-      }
+    if (mounted) {
+      widget.requestMoneyRefresh();
+    }
   }
 
   Future _launchBrowserOption(String url) async {
