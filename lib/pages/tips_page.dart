@@ -282,7 +282,8 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "Save the current URL as a shortcut or navigate to an existing one",
+        headerValue:
+            "Save the current URL as a shortcut or navigate to an existing one",
         expandedValue:
             "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
@@ -341,11 +342,20 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "Medic call (Nuke revive)",
+        headerValue: "Medic call",
         expandedValue:
-            "When you are in hospital, you'll get the chance to call a reviver by using the icon that appears in the Profile section.\n\n"
-            "This will automatically alert all available revivers in the Central Hospital Discord channel.\n\n"
+            "When you are in hospital, you'll get the chance to call a reviver by using the icon that appears in the Profile section (status card).\n\n"
+            "You can use one of two partners: Central Hospital or Universal Health Care (activate or deactivate them in options in the Profile section).\n\n"
+            "Your call will automatically alert all available revivers in the selected partner's Discord channel.\n\n"
             "Have a look at the information contained in the revive dialog and be aware that this is a paid service!",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Why can't I see organized crimes in the Profile Section?",
+        expandedValue:
+            "In order to see organized crimes predictions, you need to have AA (API Access) permission from your faction leaders.\n\n"
+            "This is a Torn restriction built to ensure that faction leaders can control the access their members have to certain information through the API.",
       ),
     );
     return tips;
