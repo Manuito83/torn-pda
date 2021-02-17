@@ -1214,7 +1214,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               foreignStocksButton,
             ],
           ),
-          if (_factionCrimeName.isNotEmpty &&
+          if (_factionCrimeName.isNotEmpty && _factionCrimeTimeString.isNotEmpty &&
               _factionCrimeTimestamp.difference(DateTime.now()).inHours < 10)
             Padding(
               padding: const EdgeInsets.only(top: 5),
