@@ -22,7 +22,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _firestoreProfileReceived = firestore.getUserProfile();
+    _firestoreProfileReceived = firestore.getUserProfile(force: false);
     analytics
         .logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
   }

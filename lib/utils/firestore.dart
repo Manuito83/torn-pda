@@ -20,9 +20,12 @@ class _FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<void> uploadUsersProfileDetail(OwnProfileBasic profile,
-      {bool forceUpdate = false}) async {
-    if (_alreadyUploaded && !forceUpdate) return;
+  Future<void> uploadUsersProfileDetail(
+    OwnProfileBasic profile, {
+    bool userTriggered = false,
+  }) async {
+
+    if (_alreadyUploaded && !userTriggered) return;
     _alreadyUploaded = true;
     _firebaseUserModel = FirebaseUserModel();
     var platform = Platform.isAndroid ? "android" : "ios";
@@ -46,6 +49,10 @@ class _FirestoreHelper {
       },
       SetOptions(merge: true),
     );
+
+    // Gets current alerts in case this user was already existing (after uninstall/reinstall
+    // with saved settings for Android)
+    await getUserProfile(force: true);
   }
 
   Future<void> subscribeToTravelNotification(bool subscribe) async {
@@ -63,7 +70,8 @@ class _FirestoreHelper {
   Future<void> subscribeToForeignRestockNotification(bool subscribe) async {
     // If we had already foreign stocks chosen as alerts, we need to update them to the
     // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
-    Map<String, dynamic> previous = await json.decode(await SharedPreferencesModel().getActiveRestocks());
+    Map<String, dynamic> previous =
+        await json.decode(await SharedPreferencesModel().getActiveRestocks());
     var now = DateTime.now().millisecondsSinceEpoch;
     previous.forEach((key, value) {
       previous[key] = now;
@@ -164,10 +172,10 @@ class _FirestoreHelper {
   }
 
   // Init State in alerts
-  Future<FirebaseUserModel> getUserProfile() async {
-    if (_firebaseUserModel != null) return _firebaseUserModel;
-    return _firebaseUserModel = FirebaseUserModel.fromMap(
-        (await _firestore.collection("players").doc(_uid).get()).data());
+  Future<FirebaseUserModel> getUserProfile({bool force = false}) async {
+    if (_firebaseUserModel != null && !force) return _firebaseUserModel;
+    var firestoreUser = await _firestore.collection("players").doc(_uid).get();
+    return _firebaseUserModel = FirebaseUserModel.fromMap(firestoreUser.data());
   }
 
   Future deleteUserProfile() async {

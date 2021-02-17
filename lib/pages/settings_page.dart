@@ -1476,7 +1476,7 @@ class _SettingsPageState extends State<SettingsPage> {
           User mFirebaseUser = await firebaseAuth.signInAnon();
           firestore.setUID(mFirebaseUser.uid);
           await firestore.uploadUsersProfileDetail(myProfile,
-              forceUpdate: true);
+              userTriggered: true);
           await firestore
               .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
