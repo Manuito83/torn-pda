@@ -16,9 +16,13 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'dart:convert';
 import "dart:collection";
 import 'dart:ui';
+
+import 'package:url_launcher/url_launcher.dart';
 
 class ForeignStockCard extends StatefulWidget {
   final ForeignStock foreignStock;
@@ -28,6 +32,7 @@ class ForeignStockCard extends StatefulWidget {
   final int capacity;
   final int moneyOnHand;
   final Function flagPressedCallback;
+  final Function requestMoneyRefresh;
   final TravelTicket ticket;
   final Map<String, dynamic> activeRestocks;
 
@@ -43,6 +48,7 @@ class ForeignStockCard extends StatefulWidget {
       @required this.capacity,
       @required this.moneyOnHand,
       @required this.flagPressedCallback,
+      @required this.requestMoneyRefresh,
       @required this.ticket,
       @required this.activeRestocks,
       @required this.travellingTimeStamp,
@@ -151,13 +157,15 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                _firstRow(widget.foreignStock),
-                SizedBox(height: 10),
-                _secondRow(widget.foreignStock),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _firstRow(widget.foreignStock),
+                  SizedBox(height: 10),
+                  _secondRow(widget.foreignStock),
+                ],
+              ),
             ),
             _countryFlagAndArrow(widget.foreignStock),
           ],
@@ -387,7 +395,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                           ),
                         ),
                         subtitle: Text(
-                          "Get notified whenever ${widget.foreignStock.name} is restocked in"
+                          "Get notified whenever ${widget.foreignStock.name} is restocked in "
                           "${widget.foreignStock.countryFullName}",
                           style: TextStyle(
                             fontSize: 11,
@@ -522,7 +530,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Row _secondRow(ForeignStock stock) {
+  Widget _secondRow(ForeignStock stock) {
     // Travel time per hour, round trip
 
     // We recalculate profit here so that it changes with capacity or ticket type
@@ -542,10 +550,116 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     // Item cost
     Widget costWidget;
-    costWidget = Text(
-      '\$${costCurrency.format(stock.cost)}',
-      style: TextStyle(fontWeight: FontWeight.bold),
-    );
+    String moneyToBuy = '';
+    Color moneyToBuyColor = Colors.grey;
+    if (widget.moneyOnHand >= stock.cost * widget.capacity) {
+      moneyToBuy =
+          'You HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
+          'buy ${widget.capacity} ${stock.name}';
+      moneyToBuyColor = Colors.green[800];
+      costWidget = Row(
+        children: [
+          GestureDetector(
+            child: Icon(
+              MdiIcons.cash,
+              color: moneyToBuyColor,
+            ),
+            onTap: () {
+              BotToast.showText(
+                text: moneyToBuy,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: moneyToBuyColor,
+                duration: Duration(seconds: 6),
+                contentPadding: EdgeInsets.all(10),
+              );
+            },
+          ),
+          SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              '\$${costCurrency.format(stock.cost)}',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      );
+    } else {
+      moneyToBuy =
+          'You DO NOT HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} '
+          'necessary to buy ${widget.capacity} ${stock.name}.\n\nAdd another '
+          '\$${costCurrency.format((stock.cost * widget.capacity) - widget.moneyOnHand)}';
+      moneyToBuyColor = Colors.orange[800];
+      costWidget = Row(
+        children: [
+          GestureDetector(
+            child: Icon(
+              MdiIcons.cash,
+              color: moneyToBuyColor,
+            ),
+            onTap: () {
+              BotToast.showCustomText(
+                duration: Duration(seconds: 6),
+                onlyOne: true,
+                clickClose: true,
+                crossPage: false,
+                animationDuration: Duration(milliseconds: 200),
+                animationReverseDuration: Duration(milliseconds: 200),
+                toastBuilder: (_) => Padding(
+                  padding: const EdgeInsets.all(30),
+                  child: Card(
+                    color: moneyToBuyColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              moneyToBuy,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          GestureDetector(
+                            child: Image.asset(
+                              'images/icons/home/vault.png',
+                              width: 40,
+                              height: 40,
+                              color: Colors.white,
+                            ),
+                            onLongPress: () async {
+                              _openWalletDialog(context, longPress: true);
+                            },
+                            onTap: () async {
+                              _settingsProvider.useQuickBrowser
+                                  ? _openWalletDialog(context, longPress: false)
+                                  : _openWalletDialog(context, longPress: true);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              '\$${costCurrency.format(stock.cost)}',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      );
+    }
 
     // Profit and profit per hour
     Widget profitWidget;
@@ -580,15 +694,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     return Row(
       children: <Widget>[
-        costWidget,
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: profitWidget,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 8.0),
-          child: profitPerMinuteWidget,
-        ),
+        Flexible(child: costWidget),
+        SizedBox(width: 8),
+        profitWidget,
+        SizedBox(width: 8),
+        profitPerMinuteWidget,
       ],
     );
   }
@@ -1235,5 +1345,229 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           )
       ],
     );
+  }
+
+  Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                      padding: EdgeInsets.only(
+                        top: 45,
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                      ),
+                      margin: EdgeInsets.only(top: 15),
+                      decoration: new BoxDecoration(
+                        color: _themeProvider.background,
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10.0,
+                            offset: const Offset(0.0, 10.0),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: ElevatedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/home/vault.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.white70,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Personal vault"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _launchBrowserFull(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await _launchBrowserOption(url);
+                                }
+                                _refreshMoney();
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: ElevatedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/faction.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.white70,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Faction vault"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _launchBrowserFull(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await openBrowserDialog(context, url);
+                                }
+                                _refreshMoney();
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: ElevatedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/home/job.png',
+                                    width: 15,
+                                    height: 15,
+                                    color: Colors.white70,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Company vault"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    'https://www.torn.com/companies.php#/option=funds';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _launchBrowserFull(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await openBrowserDialog(context, url);
+                                }
+                                _refreshMoney();
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextButton(
+                            child: Text("Cancel"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      )),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(
+                          MdiIcons.cashUsdOutline,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _refreshMoney() async {
+    BotToast.showText(
+      text: "Refreshing money in a few seconds",
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[700],
+      duration: Duration(seconds: 4),
+      contentPadding: EdgeInsets.all(15),
+    );
+    // First try
+    await Future.delayed(Duration(seconds: 5));
+    if (mounted) {
+      widget.requestMoneyRefresh();
+    }
+    // Second try
+    await Future.delayed(Duration(seconds: 10));
+      if (mounted) {
+        widget.requestMoneyRefresh();
+      }
+    // Third try
+    await Future.delayed(Duration(seconds: 20));
+      if (mounted) {
+        widget.requestMoneyRefresh();
+      }
+  }
+
+  Future _launchBrowserOption(String url) async {
+    if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+      if (await canLaunch(url)) {
+        await launch(url, forceSafariVC: false);
+      }
+    } else {
+      _settingsProvider.useQuickBrowser
+          ? await openBrowserDialog(context, url)
+          : await _launchBrowserFull(url);
+    }
+  }
+
+  Future _launchBrowserFull(String page) async {
+    if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+      if (await canLaunch(page)) {
+        await launch(page, forceSafariVC: false);
+      }
+    } else {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => WebViewFull(
+            customUrl: page,
+            customTitle: 'Torn',
+            customCallBack: null,
+          ),
+        ),
+      );
+    }
   }
 }

@@ -626,6 +626,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           showArrivalTime: _showArrivalTime,
           moneyOnHand: _travelModel.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
+          requestMoneyRefresh: _refreshMoney,
           ticket: _ticket,
           activeRestocks: _activeRestocks,
           travellingTimeStamp: _travelModel.timeStamp,
@@ -1133,6 +1134,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       default:
         return CountryName.TORN;
         break;
+    }
+  }
+
+  _refreshMoney() async {
+    var travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
+    if (travelModel is TravelModel && mounted) {
+      setState(() {
+        _travelModel = travelModel;
+      });
     }
   }
 }
