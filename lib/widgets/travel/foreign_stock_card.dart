@@ -1526,7 +1526,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   Future<void> _refreshMoney() async {
     BotToast.showText(
-      text: "Refreshing money in a few seconds",
+      text: "Refreshing cash on hand, might take a few seconds...",
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,
