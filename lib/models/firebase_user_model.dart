@@ -56,7 +56,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   static FirebaseUserModel fromMap(Map data) {
     return FirebaseUserModel()
       ..travelNotification = data["travelNotification"] ?? false
-      ..travelNotification = data["foreignRestockNotification"] ?? false
+      ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
       ..energyNotification = data["energyNotification"] ?? false
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false
