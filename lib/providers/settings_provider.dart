@@ -107,6 +107,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _removeAirplane = false;
+  bool get removeAirplane => _removeAirplane;
+  set changeRemoveAirplane(bool value) {
+    _removeAirplane = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   var _useQuickBrowser = true;
   bool get useQuickBrowser => _useQuickBrowser;
   set changeUseQuickBrowser(bool value) {
@@ -145,6 +153,8 @@ class SettingsProvider extends ChangeNotifier {
 
     SharedPreferencesModel().setHighlightChat(_highlightChat);
     SharedPreferencesModel().setHighlightColor(_highlightColor);
+
+    SharedPreferencesModel().setRemoveAirplane(_removeAirplane);
 
     SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
 

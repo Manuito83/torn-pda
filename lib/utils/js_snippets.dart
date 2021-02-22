@@ -146,6 +146,18 @@ String buyMaxJS() {
   ''';
 }
 
+String travelRemovePlaneJS() {
+  return '''
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = '.travel-agency-travelling .stage, .travel-agency-travelling .popup-info { display: none !important; }';
+    document.getElementsByTagName('head')[0].appendChild(style);
+        
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}
+
 String travelReturnHomeJS() {
   return '''
     function goHome() {

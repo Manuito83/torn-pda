@@ -51,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _chatRemoveEnabled;
   bool _highlightChat;
   Color _highlightColor = Color(0xff7ca900);
+  bool _removeAirplane;
   bool _useQuickBrowser;
   String _timeFormatValue;
   String _timeZoneValue;
@@ -286,6 +287,41 @@ class _SettingsPageState extends State<SettingsPage> {
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
                           ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text("Remove airplane"),
+                            Switch(
+                              value: _removeAirplane,
+                              onChanged: (value) {
+                                _settingsProvider.changeRemoveAirplane = value;
+                                setState(() {
+                                  _removeAirplane = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Removes airplane and cloud animation when travelling',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       SizedBox(height: 10),
@@ -1600,6 +1636,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _settingsProvider.removeNotificationsOnLaunch;
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
+      _removeAirplane = _settingsProvider.removeAirplane;
       _vibrationValue = alertsVibration;
       _manualAlarmSound = manualAlarmSound;
       _manualAlarmVibration = manualAlarmVibration;

@@ -74,7 +74,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   bool _backButtonPopsContext = true;
 
-  var _travelActive = false;
+  var _travelAbroad = false;
 
   var _crimesActive = false;
   var _crimesController = ExpandableController();
@@ -498,6 +498,10 @@ class _WebViewFullState extends State<WebViewFull> {
               _assessGeneral(document);
             },
             onProgressChanged: (InAppWebViewController c, int progress) async {
+              if (_settingsProvider.removeAirplane) {
+                webView.evaluateJavascript(source: travelRemovePlaneJS());
+              }
+
               _hideChat();
 
               setState(() {
@@ -944,20 +948,24 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // TRAVEL
   Future _assessTravel(dom.Document document) async {
-    var query = document.querySelectorAll(".travel-home");
+/*    var traveling = document.querySelector(".travel-agency-travelling .stage");
+    if (traveling != null) {
+      await webView.evaluateJavascript(source: travelRemovePlaneJS());
+    }*/
 
-    if (query.length > 0) {
+    var abroad = document.querySelectorAll(".travel-home");
+    if (abroad.length > 0) {
       _insertTravelFillMaxButtons();
       _sendStockInformation(document);
       if (mounted) {
         setState(() {
-          _travelActive = true;
+          _travelAbroad = true;
         });
       }
     } else {
       if (mounted) {
         setState(() {
-          _travelActive = false;
+          _travelAbroad = false;
         });
       }
     }
@@ -1015,7 +1023,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Widget _travelHomeIcon() {
-    if (_travelActive) {
+    if (_travelAbroad) {
       return Material(
         color: Colors.transparent,
         child: InkWell(
