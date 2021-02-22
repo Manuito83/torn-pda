@@ -1242,6 +1242,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: _notificationIcon(
               ProfileNotification.travel,
               size: 18,
+              forcedTravelIcon: NotificationType.notification,
             ),
             padding: EdgeInsets.all(5.0),
             shape: RoundedRectangleBorder(
