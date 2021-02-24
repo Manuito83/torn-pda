@@ -221,6 +221,8 @@ class SettingsProvider extends ChangeNotifier {
     _highlightChat = await SharedPreferencesModel().getHighlightChat();
     _highlightColor = await SharedPreferencesModel().getHighlightColor();
 
+    _removeAirplane = await SharedPreferencesModel().getRemoveAirplane();
+
     _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
 
     _removeNotificationsOnLaunch = await SharedPreferencesModel().getRemoveNotificationsOnLaunch();
