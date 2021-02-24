@@ -47,21 +47,22 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_2_0_6 = "Travel: items can now be sorted by arrival time";
     String feat2_2_0_7 = "Travel: added calculation of money to carry and direct access to vaults";
     String feat2_2_0_8 = "Travel: the foreign stock page can now be refreshed by pulling. Also added a button in the app bar to manually refresh the API while in the Travel section";
-    String feat2_2_0_9 = "Profile: added Universal Health Care reviving services call when in hospital (activate in profile options)";
-    String feat2_2_0_10 = "Profile: added Organized Crimes in Misc and Travel cards (note: you need Api Access permission from your faction)";
-    String feat2_2_0_11 = "Profile: you can now manually sort the cards shown in the Profile section";
-    String feat2_2_0_12 = "Profile: you can now optionally activate a minimalistic travel card which shows the same information the Travel section offers (and disable the latter entirely if you wish)";
-    String feat2_2_0_13 = "Profile: added job points to the basic information card";
-    String feat2_2_0_14 = "Chaining: added fair fight to recent attacks cards";
-    String feat2_2_0_15 = "Chaining: added fair fight and respect calculation from TAC (realtime based on current chain hit number)";
-    String feat2_2_0_16 = "Chaining: added notes for TAC targets";
-    String feat2_2_0_17 = "City Finder now collapses (less intrusive)";
-    String feat2_2_0_18 = "Added option to clear the browser's cache (Settings)";
-    String feat2_2_0_19 = "Sound and vibration options for manually activated alarms have been moved to Settings and now apply equally to all alarms";
-    String feat2_2_0_20 = "Fixed forums URL copying";
-    String feat2_2_0_21 = "Fixed cooldowns time string";
-    String feat2_2_0_22 = "Fixed targets wipe functionality";
-    String feat2_2_0_23 = "Fixed other several minor bugs";
+    String feat2_2_0_9 = "Travel: you can now optionally hide the airplane while flying (Settings)";
+    String feat2_2_0_10 = "Profile: added Universal Health Care reviving services call when in hospital (activate in profile options)";
+    String feat2_2_0_11 = "Profile: added Organized Crimes in Misc and Travel cards (note: you need Api Access permission from your faction)";
+    String feat2_2_0_12 = "Profile: you can now manually sort the cards shown in the Profile section";
+    String feat2_2_0_13 = "Profile: you can now optionally activate a minimalistic travel card which shows the same information the Travel section offers (and disable the latter entirely if you wish)";
+    String feat2_2_0_14 = "Profile: added job points to the basic information card";
+    String feat2_2_0_15 = "Chaining: added fair fight to recent attacks cards";
+    String feat2_2_0_16 = "Chaining: added fair fight and respect calculation from TAC (realtime based on current chain hit number)";
+    String feat2_2_0_17 = "Chaining: added notes for TAC targets";
+    String feat2_2_0_18 = "City Finder now collapses (less intrusive)";
+    String feat2_2_0_19 = "Added option to clear the browser's cache (Settings)";
+    String feat2_2_0_20 = "Sound and vibration options for manually activated alarms have been moved to Settings and now apply equally to all alarms";
+    String feat2_2_0_21 = "Fixed forums URL copying";
+    String feat2_2_0_22 = "Fixed cooldowns time string";
+    String feat2_2_0_23 = "Fixed targets wipe functionality";
+    String feat2_2_0_24 = "Fixed other several minor bugs";
     v2_2_0.features.add(feat2_2_0_1);
     v2_2_0.features.add(feat2_2_0_2);
     v2_2_0.features.add(feat2_2_0_3);
@@ -80,11 +81,12 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_2_0.features.add(feat2_2_0_16);
     v2_2_0.features.add(feat2_2_0_17);
     v2_2_0.features.add(feat2_2_0_18);
-    if (Platform.isAndroid) v2_2_0.features.add(feat2_2_0_19);
-    if (Platform.isIOS) v2_2_0.features.add(feat2_2_0_20);
-    v2_2_0.features.add(feat2_2_0_21);
+    v2_2_0.features.add(feat2_2_0_19);
+    if (Platform.isAndroid) v2_2_0.features.add(feat2_2_0_20);
+    if (Platform.isIOS) v2_2_0.features.add(feat2_2_0_21);
     v2_2_0.features.add(feat2_2_0_22);
     v2_2_0.features.add(feat2_2_0_23);
+    v2_2_0.features.add(feat2_2_0_24);
 
     // VERSION 2.1.1
     // ### ADDED FOR IOS ONLY ###
