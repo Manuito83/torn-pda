@@ -190,6 +190,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _alarmVibration;
 
   bool _miscApiFetched = false;
+  var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
 
@@ -255,7 +256,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     _tickerCallApi =
-        new Timer.periodic(Duration(seconds: 20), (Timer t) => _fetchApi());
+        new Timer.periodic(Duration(seconds: 20), (Timer t) {
+          _fetchApi();
+
+          // Fetch misc every minute
+          if (_miscTick < 2) {
+            _miscTick ++;
+          } else {
+            _getMiscInformation();
+            _miscTick = 0;
+          }
+
+        });
 
     _oneSecTimer = new Timer.periodic(
         Duration(seconds: 1), (Timer t) => _refreshTctClock());
@@ -290,7 +302,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_apiGoodData) {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
-        await _getMiscInformation();
+        _getMiscInformation();
       }
     }
   }
@@ -1214,7 +1226,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               foreignStocksButton,
             ],
           ),
-          if (_factionCrimeName.isNotEmpty && _factionCrimeTimeString.isNotEmpty &&
+          if (_factionCrimeName.isNotEmpty &&
+              _factionCrimeTimeString.isNotEmpty &&
               _factionCrimeTimestamp.difference(DateTime.now()).inHours < 10)
             Padding(
               padding: const EdgeInsets.only(top: 5),
@@ -3740,6 +3753,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _factionCrimeReady = true;
         if (_factionParticipantsNotReady == 0) {
           _factionCrimeTimeString = "and all participants are ready!";
+        } else if (_factionParticipantsNotReady == 1) {
+          _factionCrimeTimeString = "is ready, but 1 participant is not!";
         } else {
           _factionCrimeTimeString =
               "is ready, but $_factionParticipantsNotReady participants are not!";
