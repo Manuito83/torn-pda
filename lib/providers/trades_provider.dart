@@ -26,8 +26,8 @@ class TradesContainer {
   String ttUrl = "";
   bool ttServerError = false;
   bool ttAuthError = false;
-  var ttItems = List<ttInItem>();
-  var ttMessages = List<TradeMessage>();
+  var ttItems = <ttInItem>[];
+  var ttMessages = <TradeMessage>[];
 }
 
 class TradesProvider extends ChangeNotifier {

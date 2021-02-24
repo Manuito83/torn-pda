@@ -237,6 +237,9 @@ class _TradesWidgetState extends State<TradesWidget> {
       for (var item in _tradesProv.container.leftItems) {
         total += item.totalPrice;
       }
+      for (var share in _tradesProv.container.leftShares) {
+        total += share.totalPrice;
+      }
       for (var property in _tradesProv.container.leftProperties) {
         if (property.name != 'No properties in trade') {
           hasProperty = true;
@@ -247,6 +250,9 @@ class _TradesWidgetState extends State<TradesWidget> {
       total += _tradesProv.container.rightMoney;
       for (var item in _tradesProv.container.rightItems) {
         total += item.totalPrice;
+      }
+      for (var share in _tradesProv.container.rightShares) {
+        total += share.totalPrice;
       }
       for (var property in _tradesProv.container.rightProperties) {
         if (property.name != 'No properties in trade') {
@@ -603,6 +609,9 @@ class _TradesWidgetState extends State<TradesWidget> {
         for (var rem in sideItems) {
           remainingTotal += rem.totalPrice;
         }
+        for (var sha in sideShares) {
+          remainingTotal += sha.totalPrice;
+        }
         items.add(
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -808,7 +817,7 @@ class _TradesWidgetState extends State<TradesWidget> {
       String thisMessage = _tradesProv.container.ttMessages[0].message;
       _copyToClipboard(thisMessage, 'Message "$thisMessage"');
     } else {
-      var options = List<Widget>();
+      var options = <Widget>[];
       for (var msg in _tradesProv.container.ttMessages) {
         options.add(
           SimpleDialogOption(
@@ -831,7 +840,7 @@ class _TradesWidgetState extends State<TradesWidget> {
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: RaisedButton(
+              child: ElevatedButton(
                 child: Text(
                   'Cancel',
                   style: TextStyle(
