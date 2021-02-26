@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -73,6 +74,8 @@ Future<void> main() async {
   // Force portrait up
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
+  HttpOverrides.global = new MyHttpOverrides();
+
   runApp(
     MultiProvider(
       providers: [
@@ -143,5 +146,14 @@ class MyApp extends StatelessWidget {
       ),
       home: DrawerPage(),
     );
+  }
+}
+
+// Avoid HTTP Handshake errors
+class MyHttpOverrides extends HttpOverrides{
+  @override
+  HttpClient createHttpClient(SecurityContext context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
   }
 }
