@@ -38,7 +38,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.2.0
     var v2_2_0 = ChangeLogItem();
     v2_2_0.main.version = 'Torn PDA v2.2.0';
-    v2_2_0.main.date = '25 JAN 2021';
+    v2_2_0.main.date = '25 FEB 2021';
     String feat2_2_0_1 = "Travel: added foreign stock graphs with last 36 hours data";
     String feat2_2_0_2 = "Travel: added restock and depletion times calculation, with flight departure times suggestions and manually activated notifications";
     String feat2_2_0_3 = "Travel: added automatic alerts for items restock (Alerts section)";
