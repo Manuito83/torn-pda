@@ -178,8 +178,8 @@ class _TacCardState extends State<TacCard> {
                 attacksNames.add(tar.username);
                 _target.optimal
                     ? attackNotes.add(
-                        'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}')
-                    : attackNotes.add('Stats (est.): ${_target.battleStats}');
+                        'Stats (est.): ${decimalFormat.format(tar.estimatedStats)}')
+                    : attackNotes.add('Stats (est.): ${tar.battleStats}');
                 attacksNotesColor.add("");
               }
               Navigator.of(context).push(
