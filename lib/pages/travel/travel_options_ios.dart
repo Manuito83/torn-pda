@@ -68,7 +68,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
                                 padding: const EdgeInsets.all(20.0),
                                 child: Text(
                                     'Here you can specify your preferred notification '
-                                    'launch time before arrival'),
+                                    'trigger time before arrival'),
                               ),
                               _rowsWithTypes(),
                               SizedBox(height: 50),
@@ -95,7 +95,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
-      title: Text("Travel options"),
+      title: Text("Travel notification"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {

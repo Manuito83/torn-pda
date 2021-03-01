@@ -58,6 +58,9 @@ class SharedPreferencesModel {
   final String _kMedicalNotificationType = "pda_medicalNotificationType";
   final String _kBoosterNotificationType = "pda_boosterNotificationType";
   final String _kHospitalNotificationType = "pda_hospitalNotificationType";
+  final String _kHospitalNotificationAhead = "pda_hospitalNotificationAhead";
+  final String _kHospitalAlarmAhead = "pda_hospitalAlarmAhead";
+  final String _kHospitalTimerAhead = "pda_hospitalTimesAhead";
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -714,6 +717,36 @@ class SharedPreferencesModel {
   Future<bool> setHospitalNotificationType(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kHospitalNotificationType, value);
+  }
+
+  Future<int> getHospitalNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kHospitalNotificationAhead) ?? 40;
+  }
+
+  Future<bool> setHospitalNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kHospitalNotificationAhead, value);
+  }
+
+  Future<int> getHospitalAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kHospitalAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setHospitalAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kHospitalAlarmAhead, value);
+  }
+
+  Future<int> getHospitalTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kHospitalTimerAhead) ?? 40;
+  }
+
+  Future<bool> setHospitalTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kHospitalTimerAhead, value);
   }
 
   Future<bool> getManualAlarmVibration() async {

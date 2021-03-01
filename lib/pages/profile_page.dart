@@ -149,9 +149,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _boosterNotificationTime;
   DateTime _hospitalReleaseTime;
 
-  int _hospitalNotificationAhead = 30;
-  int _hospitalTimerAhead = 30;
-  int _hospitalAlarmAhead = 30;
+  int _hospitalNotificationAhead;
+  int _hospitalTimerAhead;
+  int _hospitalAlarmAhead;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -5155,7 +5155,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var drugs = await SharedPreferencesModel().getDrugNotificationType();
     var medical = await SharedPreferencesModel().getMedicalNotificationType();
     var booster = await SharedPreferencesModel().getBoosterNotificationType();
+
     var hospital = await SharedPreferencesModel().getHospitalNotificationType();
+    _hospitalNotificationAhead = await SharedPreferencesModel().getHospitalNotificationAhead();
+    _hospitalAlarmAhead = await SharedPreferencesModel().getHospitalAlarmAhead();
+    _hospitalTimerAhead = await SharedPreferencesModel().getHospitalTimerAhead();
 
     _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
@@ -5319,7 +5323,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.hospital:
         var alarmTime =
-            _hospitalReleaseTime.add(Duration(seconds: -_hospitalAlarmAhead));
+            _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Hospital';

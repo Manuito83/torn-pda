@@ -1,24 +1,26 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class TravelOptionsAndroid extends StatefulWidget {
+class HospitalAheadOptions extends StatefulWidget {
   final Function callback;
 
-  TravelOptionsAndroid({
+  HospitalAheadOptions({
     this.callback,
   });
 
   @override
-  _TravelOptionsAndroidState createState() => _TravelOptionsAndroidState();
+  _HospitalAheadOptionsState createState() => _HospitalAheadOptionsState();
 }
 
-class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
-  String _travelNotificationAheadDropDownValue;
-  String _travelAlarmAheadDropDownValue;
-  String _travelTimerAheadDropDownValue;
+class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
+  int _hospitalNotificationAheadValue;
+  int _hospitalAlarmAheadDropDownValue;
+  int _hospitalTimerAheadDropDownValue;
 
   Future _preferencesLoaded;
 
@@ -48,26 +50,29 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
                 : null,
             body: Builder(
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () =>
+                      FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text('Here you can specify your preferred notification '
-                                    'trigger time before arrival'),
+                                child: Text(
+                                    'Here you can specify your preferred notification '
+                                    'trigger time before hospital release'),
                               ),
                               _rowsWithTypes(),
                               SizedBox(height: 50),
@@ -94,7 +99,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       brightness: Brightness.dark,
-      title: Text("Travel notification"),
+      title: Text("Hospital notification"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
@@ -122,81 +127,83 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
-                child: _travelNotificationAheadDropDown(),
+                child: _hospitalNotificationAheadDropDown(),
               ),
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text('Alarm'),
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
-              Flexible(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Flexible(
-                          child: _travelAlarmAheadDropDown(),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            "(alarms are set on the minute)",
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
-                              fontSize: 12,
+        if (Platform.isAndroid)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text('Alarm'),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: _travelAlarmAheadDropDown(),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              "(alarms are set on the minute)",
+                              style: TextStyle(
+                                fontStyle: FontStyle.italic,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Text('Timer'),
-              ),
-              Padding(
-                padding: EdgeInsets.only(left: 20),
-              ),
-              Flexible(
-                child: _travelTimerAheadDropDown(),
-              ),
-            ],
+        if (Platform.isAndroid)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Flexible(
+                  child: Text('Timer'),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Flexible(
+                  child: _travelTimerAheadDropDown(),
+                ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
 
-  DropdownButton _travelNotificationAheadDropDown() {
-    return DropdownButton<String>(
-      value: _travelNotificationAheadDropDownValue,
+  DropdownButton _hospitalNotificationAheadDropDown() {
+    return DropdownButton<int>(
+      value: _hospitalNotificationAheadValue,
       items: [
         DropdownMenuItem(
-          value: "0",
+          value: 20,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -209,7 +216,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "1",
+          value: 40,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -222,7 +229,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "2",
+          value: 60,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -235,7 +242,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "3",
+          value: 120,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -248,7 +255,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "4",
+          value: 300,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -262,20 +269,20 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelNotificationAhead(value);
+        SharedPreferencesModel().setHospitalNotificationAhead(value);
         setState(() {
-          _travelNotificationAheadDropDownValue = value;
+          _hospitalNotificationAheadValue = value;
         });
       },
     );
   }
 
   DropdownButton _travelAlarmAheadDropDown() {
-    return DropdownButton<String>(
-      value: _travelAlarmAheadDropDownValue,
+    return DropdownButton<int>(
+      value: _hospitalAlarmAheadDropDownValue,
       items: [
         DropdownMenuItem(
-          value: "0",
+          value: 0,
           child: SizedBox(
             width: 120,
             child: Text(
@@ -288,7 +295,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "1",
+          value: 1,
           child: SizedBox(
             width: 120,
             child: Text(
@@ -301,7 +308,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "2",
+          value: 2,
           child: SizedBox(
             width: 120,
             child: Text(
@@ -314,7 +321,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "3",
+          value: 5,
           child: SizedBox(
             width: 120,
             child: Text(
@@ -328,20 +335,20 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelAlarmAhead(value);
+        SharedPreferencesModel().setHospitalAlarmAhead(value);
         setState(() {
-          _travelAlarmAheadDropDownValue = value;
+          _hospitalAlarmAheadDropDownValue = value;
         });
       },
     );
   }
 
   DropdownButton _travelTimerAheadDropDown() {
-    return DropdownButton<String>(
-      value: _travelTimerAheadDropDownValue,
+    return DropdownButton<int>(
+      value: _hospitalTimerAheadDropDownValue,
       items: [
         DropdownMenuItem(
-          value: "0",
+          value: 20,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -354,7 +361,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "1",
+          value: 40,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -367,7 +374,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "2",
+          value: 60,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -380,7 +387,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "3",
+          value: 120,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -393,7 +400,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
           ),
         ),
         DropdownMenuItem(
-          value: "4",
+          value: 300,
           child: SizedBox(
             width: 80,
             child: Text(
@@ -407,23 +414,26 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelTimerAhead(value);
+        SharedPreferencesModel().setHospitalTimerAhead(value);
         setState(() {
-          _travelTimerAheadDropDownValue = value;
+          _hospitalTimerAheadDropDownValue = value;
         });
       },
     );
   }
 
   Future _restorePreferences() async {
-    var travelNotificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
-    var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
-    var travelTimerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+    var travelNotificationAhead =
+        await SharedPreferencesModel().getHospitalNotificationAhead();
+    var travelAlarmAhead =
+        await SharedPreferencesModel().getHospitalAlarmAhead();
+    var travelTimerAhead =
+        await SharedPreferencesModel().getHospitalTimerAhead();
 
     setState(() {
-      _travelNotificationAheadDropDownValue = travelNotificationAhead;
-      _travelAlarmAheadDropDownValue = travelAlarmAhead;
-      _travelTimerAheadDropDownValue = travelTimerAhead;
+      _hospitalNotificationAheadValue = travelNotificationAhead;
+      _hospitalAlarmAheadDropDownValue = travelAlarmAhead;
+      _hospitalTimerAheadDropDownValue = travelTimerAhead;
     });
   }
 

@@ -7,6 +7,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'dart:io';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
+import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
 
 class ProfileNotificationsAndroid extends StatefulWidget {
   final Function callback;
@@ -315,6 +316,34 @@ class _ProfileNotificationsAndroidState
             ),
           ),
         );
+      }
+
+      if (element == ProfileNotification.hospital) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Hospital notification timings"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return HospitalAheadOptions();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
       }
     });
 
