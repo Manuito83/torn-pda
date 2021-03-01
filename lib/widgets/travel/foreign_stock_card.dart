@@ -705,11 +705,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     return Row(
       children: <Widget>[
-        Flexible(child: costWidget),
+        Flexible(flex: 2, child: costWidget),
         SizedBox(width: 8),
-        profitWidget,
+        Flexible(child: profitWidget),
         SizedBox(width: 8),
-        profitPerMinuteWidget,
+        Flexible(flex: 2, child: profitPerMinuteWidget),
       ],
     );
   }
