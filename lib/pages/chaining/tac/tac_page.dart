@@ -787,85 +787,87 @@ class _TacPageState extends State<TacPage> {
   _tacExplanationDialog() {
     return AlertDialog(
       title: Text("Torn Attack Central"),
-      content: EasyRichText(
-        "Torn Attack Central (TAC) is a service provided by Fr00t. This is its Torn PDA interface."
-        "\n\n"
-        "TAC will help you find targets depending on several factors. There is also a Premium package and "
-        "other features you can benefit from. Make sure to visit their website and forum if you wish to learn more."
-        "\n\n"
-        "IMPORTANT: Torn PDA does not benefit from TAC and does not share any information with it."
-        "\n\n"
-        "If you prefer not to use TAC, please go to Options in your main target's screen (Chaining section) "
-        "and deactivate it.",
-        defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-        patternList: [
-          EasyRichTextPattern(
-            targetString: 'IMPORTANT',
-            //matchOption: 'all'
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          EasyRichTextPattern(
-            targetString: 'website',
-            recognizer: TapGestureRecognizer()
-              ..onTap = () async {
-                Navigator.of(context).pop();
-                var url = 'https://tornattackcentral.eu';
-                if (_settingsProvider.currentBrowser ==
-                    BrowserSetting.external) {
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
+      content: SingleChildScrollView(
+        child: EasyRichText(
+          "Torn Attack Central (TAC) is a service provided by Fr00t. This is its Torn PDA interface."
+          "\n\n"
+          "TAC will help you find targets depending on several factors. There is also a Premium package and "
+          "other features you can benefit from. Make sure to visit their website and forum if you wish to learn more."
+          "\n\n"
+          "To configure notes behaviour when chaining or if would like to deactivate TAC, please tab the settings icon "
+          "in the main target's screen (Chaining section)."
+          "\n\n"
+          "IMPORTANT: Torn PDA does not benefit from TAC and does not share any information (e.g. API key) with it.",
+          defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+          patternList: [
+            EasyRichTextPattern(
+              targetString: 'IMPORTANT',
+              //matchOption: 'all'
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            EasyRichTextPattern(
+              targetString: 'website',
+              recognizer: TapGestureRecognizer()
+                ..onTap = () async {
+                  Navigator.of(context).pop();
+                  var url = 'https://tornattackcentral.eu';
+                  if (_settingsProvider.currentBrowser ==
+                      BrowserSetting.external) {
+                    if (await canLaunch(url)) {
+                      await launch(url, forceSafariVC: false);
+                    }
+                  } else {
+                    _settingsProvider.useQuickBrowser
+                        ? openBrowserDialog(context, url)
+                        : _openTornBrowser(url);
                   }
-                } else {
-                  _settingsProvider.useQuickBrowser
-                      ? openBrowserDialog(context, url)
-                      : _openTornBrowser(url);
-                }
-              },
-            style: TextStyle(
-                decoration: TextDecoration.underline, color: Colors.blue),
-          ),
-          EasyRichTextPattern(
-            targetString: 'Fr00t',
-            recognizer: TapGestureRecognizer()
-              ..onTap = () async {
-                Navigator.of(context).pop();
-                var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                if (_settingsProvider.currentBrowser ==
-                    BrowserSetting.external) {
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
+                },
+              style: TextStyle(
+                  decoration: TextDecoration.underline, color: Colors.blue),
+            ),
+            EasyRichTextPattern(
+              targetString: 'Fr00t',
+              recognizer: TapGestureRecognizer()
+                ..onTap = () async {
+                  Navigator.of(context).pop();
+                  var url = 'https://www.torn.com/profiles.php?XID=2518990';
+                  if (_settingsProvider.currentBrowser ==
+                      BrowserSetting.external) {
+                    if (await canLaunch(url)) {
+                      await launch(url, forceSafariVC: false);
+                    }
+                  } else {
+                    _settingsProvider.useQuickBrowser
+                        ? openBrowserDialog(context, url)
+                        : _openTornBrowser(url);
                   }
-                } else {
-                  _settingsProvider.useQuickBrowser
-                      ? openBrowserDialog(context, url)
-                      : _openTornBrowser(url);
-                }
-              },
-            style: TextStyle(
-                decoration: TextDecoration.underline, color: Colors.blue),
-          ),
-          EasyRichTextPattern(
-            targetString: 'forum',
-            recognizer: TapGestureRecognizer()
-              ..onTap = () async {
-                Navigator.of(context).pop();
-                var url =
-                    'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
-                if (_settingsProvider.currentBrowser ==
-                    BrowserSetting.external) {
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
+                },
+              style: TextStyle(
+                  decoration: TextDecoration.underline, color: Colors.blue),
+            ),
+            EasyRichTextPattern(
+              targetString: 'forum',
+              recognizer: TapGestureRecognizer()
+                ..onTap = () async {
+                  Navigator.of(context).pop();
+                  var url =
+                      'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
+                  if (_settingsProvider.currentBrowser ==
+                      BrowserSetting.external) {
+                    if (await canLaunch(url)) {
+                      await launch(url, forceSafariVC: false);
+                    }
+                  } else {
+                    _settingsProvider.useQuickBrowser
+                        ? openBrowserDialog(context, url)
+                        : _openTornBrowser(url);
                   }
-                } else {
-                  _settingsProvider.useQuickBrowser
-                      ? openBrowserDialog(context, url)
-                      : _openTornBrowser(url);
-                }
-              },
-            style: TextStyle(
-                decoration: TextDecoration.underline, color: Colors.blue),
-          ),
-        ],
+                },
+              style: TextStyle(
+                  decoration: TextDecoration.underline, color: Colors.blue),
+            ),
+          ],
+        ),
       ),
       actions: [
         Padding(

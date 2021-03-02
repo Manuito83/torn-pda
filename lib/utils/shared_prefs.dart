@@ -12,6 +12,7 @@ class SharedPreferencesModel {
   final String _kTargetsSort = "pda_targetsSort";
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
+  final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
   final String _kChainWatcherSound = "pda_chainWatcherSound";
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kYataTargetsEnabled = "pda_yataTargetsEnabled";
@@ -218,6 +219,16 @@ class SharedPreferencesModel {
   Future<bool> setShowTargetsNotes(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowTargetsNotes, value);
+  }
+
+  Future<bool> getShowOnlineFactionWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowOnlineFactionWarning) ?? true;
+  }
+
+  Future<bool> setShowOnlineFactionWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowOnlineFactionWarning, value);
   }
 
   Future<bool> getChainWatcherSound() async {

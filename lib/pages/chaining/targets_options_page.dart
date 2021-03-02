@@ -22,6 +22,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   // Targets notes while chaining
   bool _showTargetsNotes = true;
+  bool _showOnlineFactionWarning = true;
 
   // Chain watcher
   bool _soundAlertsEnabled = true;
@@ -118,7 +119,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you will be shown the note you have saved for every '
-                                  'target and its color as you progress with the chain',
+                                  'target and its color as you progress with the chain. For TAC targets this '
+                                  'will show the estimated stats.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -127,6 +129,52 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               SizedBox(height: 15),
+                              if (_showTargetsNotes)
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Text("Last online & faction warning"),
+                                          Switch(
+                                            value: _showOnlineFactionWarning,
+                                            onChanged: (value) {
+                                              SharedPreferencesModel()
+                                                  .setShowOnlineFactionWarning(
+                                                      value);
+                                              setState(() {
+                                                _showOnlineFactionWarning =
+                                                    value;
+                                              });
+                                            },
+                                            activeTrackColor:
+                                                Colors.lightGreenAccent,
+                                            activeColor: Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 15),
+                                      child: Text(
+                                        'If enabled, in addition to the target\'s note (if any) you\'ll be shown if the '
+                                        'target has been online in the last 7 days. If so, a faction check will also be performed. '
+                                        'This is to avoid attacking active targets, if desired. Applies to standard targets and TAC.',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 15),
+                                  ],
+                                ),
                               Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 15),
@@ -355,6 +403,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   Future _restorePreferences() async {
     var showTargetsNotes = await SharedPreferencesModel().getShowTargetsNotes();
+    var showOnlineFactionWarning =
+        await SharedPreferencesModel().getShowOnlineFactionWarning();
     var skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     var soundEnabled = await SharedPreferencesModel().getChainWatcherSound();
     var vibrationEnabled =
@@ -364,6 +414,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
     setState(() {
       _showTargetsNotes = showTargetsNotes;
+      _showOnlineFactionWarning = showOnlineFactionWarning;
       _skippingEnabled = skippingEnabled;
       _soundAlertsEnabled = soundEnabled;
       _vibrationAlertsEnabled = vibrationEnabled;

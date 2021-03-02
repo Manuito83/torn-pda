@@ -61,8 +61,12 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   bool _skippingEnabled = true;
   bool _showNotes = true;
+  bool _showOnlineFactionWarning = true;
   int _attackNumber = 0;
   List<String> _attackedIds = [];
+
+  String _factionName = "";
+  int _lastOnline = 0;
 
   bool _backButtonPopsContext = true;
   String _goBackTitle = '';
@@ -508,8 +512,13 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                         }
                       }
                     }
-                    // If we found a good target, we break here
+                    // If we found a good target, we break here. But before, we gather
+                    // some more details if option is enabled
                     else {
+                      if (_showOnlineFactionWarning) {
+                        _factionName = nextTarget.faction.factionName;
+                        _lastOnline = nextTarget.lastAction.timestamp;
+                      }
                       break;
                     }
                     // If after looping we are over the target limit, it means we have reached the end
@@ -559,6 +568,21 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     _nextButtonPressed = false;
                   });
                   return;
+                }
+              }
+              // If skipping is disabled but notes are not, we still get information
+              // from the API
+              else {
+                if (_showOnlineFactionWarning) {
+                  var nextTarget = await TornApiCaller.target(
+                          _userProv.basic.userApiKey,
+                          widget.attackIdList[_attackNumber + 1])
+                      .getTarget;
+
+                  if (nextTarget is TargetModel) {
+                    _factionName = nextTarget.faction.factionName;
+                    _lastOnline = nextTarget.lastAction.timestamp;
+                  }
                 }
               }
 
@@ -620,11 +644,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   void _showNoteToast() {
-    // Do nothing if note is empty
-    if (widget.attackNotesList[_attackNumber].isEmpty) {
-      return;
-    }
-
     Color cardColor;
     switch (widget.attackNotesColorList[_attackNumber]) {
       case '':
@@ -641,6 +660,35 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         break;
     }
 
+    String extraInfo = "";
+    var now = DateTime.now();
+    var lastOnlineDiff =
+        now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
+    if (lastOnlineDiff.inDays < 7) {
+      if (widget.attackNotesList[_attackNumber].isNotEmpty) {
+        extraInfo += "\n\n";
+      }
+      if (lastOnlineDiff.inHours < 1) {
+        extraInfo += "Online less than an hour ago!";
+      } else  if (lastOnlineDiff.inHours == 1) {
+        extraInfo += "Online 1 hour ago!";
+      } else  if (lastOnlineDiff.inHours > 1 && lastOnlineDiff.inHours < 24) {
+        extraInfo += "Online ${lastOnlineDiff.inHours} hours ago!";
+      } else  if (lastOnlineDiff.inDays == 1) {
+        extraInfo += "Online yesterday!";
+      } else  if (lastOnlineDiff.inDays > 1) {
+        extraInfo += "Online ${lastOnlineDiff.inDays} days ago!";
+      }
+      if (_factionName != "None") {
+        extraInfo += "\nBelongs to faction $_factionName";
+      }
+    }
+
+    // Do nothing if note is empty
+    if (widget.attackNotesList[_attackNumber].isEmpty && extraInfo.isEmpty) {
+      return;
+    }
+
     BotToast.showCustomText(
       clickClose: true,
       ignoreContentClick: true,
@@ -655,33 +703,35 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               padding: const EdgeInsets.all(15),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        MdiIcons.notebookOutline,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      SizedBox(width: 5),
-                      Text(
-                        'Note for ${widget.attackNameList[_attackNumber]}',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 2),
-                  SizedBox(height: 10),
+                  if (widget.attackNotesList[_attackNumber].isNotEmpty)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          MdiIcons.notebookOutline,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Note for ${widget.attackNameList[_attackNumber]}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  if (widget.attackNotesList[_attackNumber].isNotEmpty)
+                    SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Flexible(
                         child: Text(
-                          '${widget.attackNotesList[_attackNumber]}',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
+                          '${widget.attackNotesList[_attackNumber]}$extraInfo',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
@@ -775,9 +825,22 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
     _skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     _showNotes = await SharedPreferencesModel().getShowTargetsNotes();
+    _showOnlineFactionWarning = await SharedPreferencesModel().getShowOnlineFactionWarning();
 
     // This will show the note of the first target, if applicable
     if (_showNotes) {
+      if (_showOnlineFactionWarning) {
+        var nextTarget = await TornApiCaller.target(
+            _userProv.basic.userApiKey,
+            widget.attackIdList[0])
+            .getTarget;
+
+        if (nextTarget is TargetModel) {
+          _factionName = nextTarget.faction.factionName;
+          _lastOnline = nextTarget.lastAction.timestamp;
+        }
+      }
+
       _showNoteToast();
     }
   }
