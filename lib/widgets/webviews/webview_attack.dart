@@ -531,6 +531,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                   }
                   // If there is an error getting a target, don't skip
                   else {
+                    _factionName = "";
+                    _lastOnline = 0;
                     break;
                   }
                 }
@@ -582,6 +584,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                   if (nextTarget is TargetModel) {
                     _factionName = nextTarget.faction.factionName;
                     _lastOnline = nextTarget.lastAction.timestamp;
+                  } else {
+                    _factionName = "";
+                    _lastOnline = 0;
                   }
                 }
               }
@@ -661,26 +666,28 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
 
     String extraInfo = "";
-    var now = DateTime.now();
-    var lastOnlineDiff =
-        now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
-    if (lastOnlineDiff.inDays < 7) {
-      if (widget.attackNotesList[_attackNumber].isNotEmpty) {
-        extraInfo += "\n\n";
-      }
-      if (lastOnlineDiff.inHours < 1) {
-        extraInfo += "Online less than an hour ago!";
-      } else  if (lastOnlineDiff.inHours == 1) {
-        extraInfo += "Online 1 hour ago!";
-      } else  if (lastOnlineDiff.inHours > 1 && lastOnlineDiff.inHours < 24) {
-        extraInfo += "Online ${lastOnlineDiff.inHours} hours ago!";
-      } else  if (lastOnlineDiff.inDays == 1) {
-        extraInfo += "Online yesterday!";
-      } else  if (lastOnlineDiff.inDays > 1) {
-        extraInfo += "Online ${lastOnlineDiff.inDays} days ago!";
-      }
-      if (_factionName != "None") {
-        extraInfo += "\nBelongs to faction $_factionName";
+    if (_lastOnline > 0) {
+      var now = DateTime.now();
+      var lastOnlineDiff = now
+          .difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
+      if (lastOnlineDiff.inDays < 7) {
+        if (widget.attackNotesList[_attackNumber].isNotEmpty) {
+          extraInfo += "\n\n";
+        }
+        if (lastOnlineDiff.inHours < 1) {
+          extraInfo += "Online less than an hour ago!";
+        } else if (lastOnlineDiff.inHours == 1) {
+          extraInfo += "Online 1 hour ago!";
+        } else if (lastOnlineDiff.inHours > 1 && lastOnlineDiff.inHours < 24) {
+          extraInfo += "Online ${lastOnlineDiff.inHours} hours ago!";
+        } else if (lastOnlineDiff.inDays == 1) {
+          extraInfo += "Online yesterday!";
+        } else if (lastOnlineDiff.inDays > 1) {
+          extraInfo += "Online ${lastOnlineDiff.inDays} days ago!";
+        }
+        if (_factionName != "None" && _factionName != "") {
+          extraInfo += "\nBelongs to faction $_factionName";
+        }
       }
     }
 
@@ -825,14 +832,14 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
     _skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
     _showNotes = await SharedPreferencesModel().getShowTargetsNotes();
-    _showOnlineFactionWarning = await SharedPreferencesModel().getShowOnlineFactionWarning();
+    _showOnlineFactionWarning =
+        await SharedPreferencesModel().getShowOnlineFactionWarning();
 
     // This will show the note of the first target, if applicable
     if (_showNotes) {
       if (_showOnlineFactionWarning) {
         var nextTarget = await TornApiCaller.target(
-            _userProv.basic.userApiKey,
-            widget.attackIdList[0])
+                _userProv.basic.userApiKey, widget.attackIdList[0])
             .getTarget;
 
         if (nextTarget is TargetModel) {
