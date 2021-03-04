@@ -255,19 +255,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
-    _tickerCallApi =
-        new Timer.periodic(Duration(seconds: 20), (Timer t) {
-          _fetchApi();
+    _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
+      _fetchApi();
 
-          // Fetch misc every minute
-          if (_miscTick < 2) {
-            _miscTick ++;
-          } else {
-            _getMiscInformation();
-            _miscTick = 0;
-          }
-
-        });
+      // Fetch misc every minute
+      if (_miscTick < 2) {
+        _miscTick++;
+      } else {
+        _getMiscInformation();
+        _miscTick = 0;
+      }
+    });
 
     _oneSecTimer = new Timer.periodic(
         Duration(seconds: 1), (Timer t) => _refreshTctClock());
@@ -2668,7 +2666,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         color: Colors.green,
         size: 20,
       );
-    } else if (message.contains('the director of')) {
+    } else if (message.contains('the director of') ||
+        message.contains('You have been fired from')) {
       insideIcon = Icon(
         Icons.work,
         color: Colors.brown[300],
@@ -2755,13 +2754,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else if (message.contains('You left your faction') ||
         message.contains('Your application to') ||
-        message.contains('canceled the')) {
+        message.contains('has applied to join your faction')) {
       insideIcon = Container(
         child: Center(
           child: Image.asset(
             'images/icons/faction.png',
-            width: 20,
-            height: 20,
+            width: 15,
+            height: 15,
             color: Colors.black,
           ),
         ),
@@ -5157,9 +5156,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var booster = await SharedPreferencesModel().getBoosterNotificationType();
 
     var hospital = await SharedPreferencesModel().getHospitalNotificationType();
-    _hospitalNotificationAhead = await SharedPreferencesModel().getHospitalNotificationAhead();
-    _hospitalAlarmAhead = await SharedPreferencesModel().getHospitalAlarmAhead();
-    _hospitalTimerAhead = await SharedPreferencesModel().getHospitalTimerAhead();
+    _hospitalNotificationAhead =
+        await SharedPreferencesModel().getHospitalNotificationAhead();
+    _hospitalAlarmAhead =
+        await SharedPreferencesModel().getHospitalAlarmAhead();
+    _hospitalTimerAhead =
+        await SharedPreferencesModel().getHospitalTimerAhead();
 
     _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
