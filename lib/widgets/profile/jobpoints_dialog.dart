@@ -140,7 +140,9 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
         Column(
           children: [
             Text(
-              '${widget.job.companyName}',
+              widget.job.companyName == 'None'
+                  ? widget.job.position
+                  : widget.job.companyName,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
