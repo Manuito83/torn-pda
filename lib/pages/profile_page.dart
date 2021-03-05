@@ -4208,12 +4208,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       factionCrimes.crimes.forEach((key, details) {
         if (details.initiated == 0 && !found) {
           var participantsNotReady = 0;
-          for (var part in details.participants) {
-            var partDetails = Participant.fromJson(part);
-            if (partDetails.description != "Okay") {
-              participantsNotReady++;
-            }
-            if (part.containsKey(_userProvider.basic.playerId.toString())) {
+          details.participants.forEach((participant) {
+            // There is only one participant, but in another map
+            participant.forEach((key, values) {
+              if (values.description != "Okay") {
+                participantsNotReady++;
+              }
+            });
+
+            if (participant.containsKey(_userProvider.basic.playerId.toString())) {
               _factionCrimeName = details.crimeName;
               _factionCrimeTimestamp =
                   DateTime.fromMillisecondsSinceEpoch(details.timeReady * 1000);
@@ -4221,7 +4224,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _factionParticipantsNotReady = participantsNotReady;
               found = true;
             }
-          }
+          });
         }
       });
     }
