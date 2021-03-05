@@ -34,7 +34,6 @@ dependencies:
   html: ^0.14.0+4
   sliding_up_panel: ^1.0.2
   expandable: ^4.1.4
-  google_fonts: ^1.1.2
   timeline_tile: ^1.0.0
   animations: ^1.1.2
   bot_toast: ^3.0.5
@@ -60,10 +59,7 @@ dependencies:
   flutter_colorpicker: ^0.3.5
   device_info: ^1.0.0
   pull_to_refresh: ^1.6.3
-  flutter_inappwebview:
-    git:
-      url: https://github.com/pichillilorenzo/flutter_inappwebview.git
-      ref: master
+  flutter_inappwebview: ^5.0.5+3
 
 dev_dependencies:
   flutter_test:
