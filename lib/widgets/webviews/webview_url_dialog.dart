@@ -272,7 +272,11 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
-      widget.webview.loadUrl(url: _customURLController.text);
+      widget.webview.loadUrl(
+        urlRequest: URLRequest(
+          url: Uri.parse(_customURLController.text),
+        ),
+      );
       _customURLController.text = "";
       Navigator.of(context).pop();
     }

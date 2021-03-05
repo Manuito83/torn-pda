@@ -30,6 +30,7 @@ import 'package:http/http.dart' as http;
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -68,7 +69,7 @@ class WebViewFull extends StatefulWidget {
 
 class _WebViewFullState extends State<WebViewFull> {
   InAppWebViewController webView;
-  String _initialUrl = "";
+  URLRequest _initialUrl;
   String _pageTitle = "";
   String _currentUrl = '';
 
@@ -114,6 +115,11 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
 
+  Widget _profileAttackExpandable = SizedBox.shrink();
+  var _profileAttackController = ExpandableController();
+  var _profileTriggered = false;
+  var _attackTriggered = false;
+
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
 
@@ -137,7 +143,7 @@ class _WebViewFullState extends State<WebViewFull> {
     super.initState();
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _initialUrl = widget.customUrl;
+    _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
     _pageTitle = widget.customTitle;
   }
 
@@ -395,6 +401,7 @@ class _WebViewFullState extends State<WebViewFull> {
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
+        _profileAttackExpandable,
         _settingsProvider.appBarTop
             ? ExpandablePanel(
                 theme: ExpandableThemeData(
@@ -444,15 +451,13 @@ class _WebViewFullState extends State<WebViewFull> {
         // Actual WebView
         Expanded(
           child: InAppWebView(
-            initialUrl: _initialUrl,
-            initialHeaders: {},
+            initialUrlRequest: _initialUrl,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
-                // This is deactivated as it interferes with hospital timer,
-                // company applications, etc.
-                //useShouldInterceptAjaxRequest: true,
-                debuggingEnabled: true,
-              ),
+                  // This is deactivated as it interferes with hospital timer,
+                  // company applications, etc.
+                  //useShouldInterceptAjaxRequest: true,
+                  ),
               android: AndroidInAppWebViewOptions(
                 //builtInZoomControls: false,
                 useHybridComposition: true,
@@ -488,10 +493,10 @@ class _WebViewFullState extends State<WebViewFull> {
             onWebViewCreated: (InAppWebViewController c) {
               webView = c;
             },
-            onLoadStart: (InAppWebViewController c, String url) async {
+            onLoadStart: (InAppWebViewController c, Uri url) async {
               _hideChat();
 
-              _currentUrl = url;
+              _currentUrl = url.path;
 
               var html = await webView.getHtml();
               var document = parse(html);
@@ -515,8 +520,8 @@ class _WebViewFullState extends State<WebViewFull> {
               // time so that they can be called again
               _resetSectionsWithWidgets();
             },
-            onLoadStop: (InAppWebViewController c, String url) async {
-              _currentUrl = url;
+            onLoadStop: (InAppWebViewController c, Uri url) async {
+              _currentUrl = url.path;
 
               _hideChat();
               _highlightChat();
@@ -535,9 +540,8 @@ class _WebViewFullState extends State<WebViewFull> {
               }
             },
             // Allows IOS to open links with target=_blank
-            onCreateWindow:
-                (InAppWebViewController c, CreateWindowRequest req) {
-              webView.loadUrl(url: req.url);
+            onCreateWindow: (InAppWebViewController c, CreateWindowAction r) {
+              webView.loadUrl(urlRequest: r.request);
               return;
             },
             onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
@@ -552,7 +556,7 @@ class _WebViewFullState extends State<WebViewFull> {
               if (consoleMessage.message.contains('hash.step') &&
                   _currentUrl.contains('trade.php')) {
                 _tradesTriggered = true;
-                _currentUrl = await webView.getUrl();
+                _currentUrl = (await webView.getUrl()).path;
                 var html = await webView.getHtml();
                 var document = parse(html);
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
@@ -563,7 +567,7 @@ class _WebViewFullState extends State<WebViewFull> {
               /// Needed for URL copy and shortcuts.
               if (consoleMessage.message.contains('CONTENT LOADED')) {
                 await webView.getUrl().then((value) {
-                  _currentUrl = value;
+                  _currentUrl = value.path;
                 });
               }
             },
@@ -814,6 +818,8 @@ class _WebViewFullState extends State<WebViewFull> {
     bool getCrimes = false;
     bool getCity = false;
     bool getTrades = false;
+    bool getProfile = false;
+    bool getAttack = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
         (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
@@ -839,6 +845,22 @@ class _WebViewFullState extends State<WebViewFull> {
       getTrades = true;
     }
 
+    if ((!_currentUrl.contains('torn.com/profiles.php?XID=') &&
+            _profileTriggered) ||
+        (_currentUrl.contains('torn.com/profiles.php?XID=') &&
+            !_profileTriggered)) {
+      anySectionTriggered = true;
+      getProfile = true;
+    }
+
+    if ((!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
+            _attackTriggered) ||
+        (_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
+            !_attackTriggered)) {
+      anySectionTriggered = true;
+      getAttack = true;
+    }
+
     if (anySectionTriggered) {
       dom.Document doc;
       var pageTitle = "";
@@ -850,6 +872,8 @@ class _WebViewFullState extends State<WebViewFull> {
       if (getCrimes) _assessCrimes(pageTitle);
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
+      if (getProfile) _assessProfileAttack();
+      if (getAttack) _assessProfileAttack();
     }
   }
 
@@ -858,23 +882,47 @@ class _WebViewFullState extends State<WebViewFull> {
       _crimesTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
     } else if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
     } else if (_currentUrl.contains('city.php') && _cityTriggered) {
       _crimesTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
     } else if (_currentUrl.contains("trade.php") && _tradesTriggered) {
       _crimesTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
+    } else if (_currentUrl.contains("torn.com/profiles.php?XID=") &&
+        _profileTriggered) {
+      _crimesTriggered = false;
+      _quickItemsTriggered = false;
+      _tradesTriggered = false;
+      _cityTriggered = false;
+      _attackTriggered = false;
+    } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") &&
+        _attackTriggered) {
+      _crimesTriggered = false;
+      _quickItemsTriggered = false;
+      _tradesTriggered = false;
+      _cityTriggered = false;
+      _profileTriggered = false;
     } else {
       _crimesTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
     }
   }
 
@@ -892,7 +940,8 @@ class _WebViewFullState extends State<WebViewFull> {
       var history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
       if (history.currentIndex > 0) {
-        if (history.list[history.currentIndex - 1].url.contains('trade.php')) {
+        if (history.list[history.currentIndex - 1].url.path
+            .contains('trade.php')) {
           _backButtonPopsContext = false;
         }
       }
@@ -1315,16 +1364,26 @@ class _WebViewFullState extends State<WebViewFull> {
     switch (choice.description) {
       case "Personal vault":
         webView.loadUrl(
-            url: "https://www.torn.com/properties.php#/p=options&tab=vault");
+          urlRequest: URLRequest(
+            url: Uri.parse(
+                "https://www.torn.com/properties.php#/p=options&tab=vault"),
+          ),
+        );
         break;
       case "Faction vault":
         webView.loadUrl(
-            url:
-                "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
+          urlRequest: URLRequest(
+            url: Uri.parse(
+                "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate"),
+          ),
+        );
         break;
       case "Company vault":
         webView.loadUrl(
-            url: "https://www.torn.com/companies.php#/option=funds");
+          urlRequest: URLRequest(
+            url: Uri.parse("https://www.torn.com/companies.php#/option=funds"),
+          ),
+        );
         break;
     }
   }
@@ -1382,7 +1441,7 @@ class _WebViewFullState extends State<WebViewFull> {
         if (doc != null && pageTitle.isNotEmpty) {
           _assessTrades(doc, pageTitle);
         } else {
-          _currentUrl = await webView.getUrl();
+          _currentUrl = (await webView.getUrl()).path;
           var html = await webView.getHtml();
           var d = parse(html);
           var t = (await _getPageTitle(d)).toLowerCase();
@@ -1485,9 +1544,10 @@ class _WebViewFullState extends State<WebViewFull> {
             _cityItemsFound = itemsFound;
             _errorCityApi = false;
             _cityExpandable = CityWidget(
-                controller: webView,
-                cityItems: _cityItemsFound,
-                error: _errorCityApi);
+              controller: webView,
+              cityItems: _cityItemsFound,
+              error: _errorCityApi,
+            );
           });
         }
         webView.evaluateJavascript(source: highlightCityItemsJS());
@@ -1646,6 +1706,62 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  // ASSESS PROFILES
+  Future _assessProfileAttack() async {
+    if (mounted) {
+      if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
+          !_currentUrl.contains('torn.com/profiles.php?XID=')) {
+        _profileTriggered = false;
+        _profileAttackExpandable = SizedBox.shrink();
+        _profileAttackController.expanded = false;
+        return;
+      }
+
+      int userId = 0;
+
+      if (_currentUrl.contains('torn.com/profiles.php?XID=')) {
+        if (_profileTriggered) {
+          return;
+        }
+        _profileTriggered = true;
+
+        try {
+          RegExp regId = new RegExp(r"(?:php\?XID=)([0-9]+)");
+          var matches = regId.allMatches(_currentUrl);
+          userId = int.parse(matches.elementAt(0).group(1));
+          setState(() {
+            _profileAttackExpandable = ProfileAttackCheckWidget(
+              profileId: userId,
+            );
+            _profileAttackController.expanded = true;
+          });
+        } catch (e) {
+          userId = 0;
+        }
+      } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=')) {
+        if (_attackTriggered) {
+          return;
+        }
+        _attackTriggered = true;
+
+        try {
+          RegExp regId = new RegExp(r"(?:&user2ID=)([0-9]+)");
+          var matches = regId.allMatches(_currentUrl);
+          userId = int.parse(matches.elementAt(0).group(1));
+          setState(() {
+            _profileAttackExpandable = ProfileAttackCheckWidget(
+              profileId: userId,
+            );
+            _profileAttackController.expanded = true;
+          });
+        } catch (e) {
+          userId = 0;
+        }
+      }
+    }
+  }
+
+  // HIDE CHAT
   Widget _hideChatIcon() {
     if (!_chatRemovalActive) {
       return Padding(

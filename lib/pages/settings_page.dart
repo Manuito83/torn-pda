@@ -339,11 +339,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                   onPressed: () async {
                                     var headlessWebView =
                                         new HeadlessInAppWebView(
-                                      initialUrl: "https://flutter.dev/",
-                                      initialOptions: InAppWebViewGroupOptions(
-                                        crossPlatform: InAppWebViewOptions(
-                                          debuggingEnabled: true,
-                                        ),
+                                      initialUrlRequest: URLRequest(
+                                        url: Uri.parse("https://flutter.dev/"),
                                       ),
                                       onWebViewCreated: (controller) async {
                                         await controller.clearCache();
@@ -357,8 +354,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Text(
                               'Note: this will clear your browser\'s cache. It can be '
                               'useful in case of errors (sections not loading correctly, etc.). '

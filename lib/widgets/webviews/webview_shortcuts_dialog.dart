@@ -110,7 +110,11 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
     return InkWell(
       onTap: () async {
-        widget.webview.loadUrl(url: thisShortcut.url);
+        widget.webview.loadUrl(
+          urlRequest: URLRequest(
+            url: Uri.parse(thisShortcut.url),
+          ),
+        );
         Navigator.of(context).pop();
       },
       child: Card(
