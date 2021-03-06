@@ -454,49 +454,45 @@ class _WebViewFullState extends State<WebViewFull> {
             initialUrlRequest: _initialUrl,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
-                  // This is deactivated as it interferes with hospital timer,
-                  // company applications, etc.
-                  //useShouldInterceptAjaxRequest: true,
-                  ),
+                // This is deactivated as it interferes with hospital timer,
+                // company applications, etc.
+                //useShouldInterceptAjaxRequest: true,
+              ),
               android: AndroidInAppWebViewOptions(
-                //builtInZoomControls: false,
                 useHybridComposition: true,
-                //useWideViewPort: false,
-                //loadWithOverviewMode: true,
-                //displayZoomControls: true,
               ),
             ),
             /*
-                  shouldInterceptAjaxRequest:
-                      (InAppWebViewController c, AjaxRequest x) async {
-                    // This will intercept ajax calls performed when the bazaar reached 100 items
-                    // and needs to be reloaded, so that we can remove and add again the fill buttons
-                    if (x == null) return x;
-                    if (x.data == null) return x;
-                    if (x.url == null) return x;
+            shouldInterceptAjaxRequest:
+                (InAppWebViewController c, AjaxRequest x) async {
+              // This will intercept ajax calls performed when the bazaar reached 100 items
+              // and needs to be reloaded, so that we can remove and add again the fill buttons
+              if (x == null) return x;
+              if (x.data == null) return x;
+              if (x.url == null) return x;
 
-                    if (x.data.contains("step=getList&type=All&start=") &&
-                        x.url.contains('inventory.php') &&
-                        _bazaarActive &&
-                        _bazaarFillActive) {
-                      webView.evaluateJavascript(
-                          source: removeBazaarFillButtonsJS());
-                      Future.delayed(const Duration(seconds: 2))
-                          .then((value) {
-                        webView.evaluateJavascript(
-                            source: addBazaarFillButtonsJS());
-                      });
-                    }
-                    return x;
-                  },
-                  */
+              if (x.data.contains("step=getList&type=All&start=") &&
+                  x.url.contains('inventory.php') &&
+                  _bazaarActive &&
+                  _bazaarFillActive) {
+                webView.evaluateJavascript(
+                    source: removeBazaarFillButtonsJS());
+                Future.delayed(const Duration(seconds: 2))
+                    .then((value) {
+                  webView.evaluateJavascript(
+                      source: addBazaarFillButtonsJS());
+                });
+              }
+              return x;
+            },
+            */
             onWebViewCreated: (InAppWebViewController c) {
               webView = c;
             },
-            onLoadStart: (InAppWebViewController c, Uri url) async {
+            onLoadStart: (InAppWebViewController c, Uri uri) async {
               _hideChat();
 
-              _currentUrl = url.path;
+              _currentUrl = uri.toString();
 
               var html = await webView.getHtml();
               var document = parse(html);
@@ -521,7 +517,7 @@ class _WebViewFullState extends State<WebViewFull> {
               _resetSectionsWithWidgets();
             },
             onLoadStop: (InAppWebViewController c, Uri url) async {
-              _currentUrl = url.path;
+              _currentUrl = url.toString();
 
               _hideChat();
               _highlightChat();
@@ -556,7 +552,7 @@ class _WebViewFullState extends State<WebViewFull> {
               if (consoleMessage.message.contains('hash.step') &&
                   _currentUrl.contains('trade.php')) {
                 _tradesTriggered = true;
-                _currentUrl = (await webView.getUrl()).path;
+                _currentUrl = (await webView.getUrl()).toString();
                 var html = await webView.getHtml();
                 var document = parse(html);
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
@@ -567,7 +563,7 @@ class _WebViewFullState extends State<WebViewFull> {
               /// Needed for URL copy and shortcuts.
               if (consoleMessage.message.contains('CONTENT LOADED')) {
                 await webView.getUrl().then((value) {
-                  _currentUrl = value.path;
+                  _currentUrl = value.toString();
                 });
               }
             },
@@ -940,7 +936,7 @@ class _WebViewFullState extends State<WebViewFull> {
       var history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
       if (history.currentIndex > 0) {
-        if (history.list[history.currentIndex - 1].url.path
+        if (history.list[history.currentIndex - 1].url.toString()
             .contains('trade.php')) {
           _backButtonPopsContext = false;
         }
@@ -1441,7 +1437,7 @@ class _WebViewFullState extends State<WebViewFull> {
         if (doc != null && pageTitle.isNotEmpty) {
           _assessTrades(doc, pageTitle);
         } else {
-          _currentUrl = (await webView.getUrl()).path;
+          _currentUrl = (await webView.getUrl()).toString();
           var html = await webView.getHtml();
           var d = parse(html);
           var t = (await _getPageTitle(d)).toLowerCase();
