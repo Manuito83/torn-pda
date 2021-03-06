@@ -993,11 +993,6 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // TRAVEL
   Future _assessTravel(dom.Document document) async {
-/*    var traveling = document.querySelector(".travel-agency-travelling .stage");
-    if (traveling != null) {
-      await webView.evaluateJavascript(source: travelRemovePlaneJS());
-    }*/
-
     var abroad = document.querySelectorAll(".travel-home");
     if (abroad.length > 0) {
       _insertTravelFillMaxButtons();
