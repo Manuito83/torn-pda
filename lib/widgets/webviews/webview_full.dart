@@ -145,6 +145,13 @@ class _WebViewFullState extends State<WebViewFull> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
     _pageTitle = widget.customTitle;
+    //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+  }
+
+  @override
+  void dispose() {
+    webView = null;
+    super.dispose();
   }
 
   @override
@@ -454,10 +461,10 @@ class _WebViewFullState extends State<WebViewFull> {
             initialUrlRequest: _initialUrl,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
-                // This is deactivated as it interferes with hospital timer,
-                // company applications, etc.
-                //useShouldInterceptAjaxRequest: true,
-              ),
+                  // This is deactivated as it interferes with hospital timer,
+                  // company applications, etc.
+                  //useShouldInterceptAjaxRequest: true,
+                  ),
               android: AndroidInAppWebViewOptions(
                 useHybridComposition: true,
               ),
@@ -936,7 +943,8 @@ class _WebViewFullState extends State<WebViewFull> {
       var history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
       if (history.currentIndex > 0) {
-        if (history.list[history.currentIndex - 1].url.toString()
+        if (history.list[history.currentIndex - 1].url
+            .toString()
             .contains('trade.php')) {
           _backButtonPopsContext = false;
         }
