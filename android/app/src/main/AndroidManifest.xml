@@ -17,7 +17,8 @@
         android:label="Torn PDA"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"
-        android:fullBackupOnly="false">
+        android:fullBackupOnly="false"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
