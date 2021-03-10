@@ -49,5 +49,21 @@
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	<!-- Allow cleartext for Torn -->
+	<key>NSAppTransportSecurity</key>
+    <dict>
+      <key>NSExceptionDomains</key>
+      <dict>
+        <key>torn.com</key>
+        <dict>
+          <key>NSIncludesSubdomains</key>
+          <true/>
+          <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+          <true/>
+          <key>NSTemporaryExceptionMinimumTLSVersion</key>
+          <string>TLSv1.1</string>
+        </dict>
+      </dict>
+    </dict>
 </dict>
 </plist>
