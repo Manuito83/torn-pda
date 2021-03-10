@@ -140,6 +140,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
         brightness: _themeProvider.currentTheme == AppTheme.light
             ? Brightness.light
             : Brightness.dark,
