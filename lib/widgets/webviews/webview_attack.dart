@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -80,9 +81,13 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     HealingPages(description: "Faction"),
   ];
 
-  bool _quickItemsTriggered = false;
+  // NOT APPLICABLE UNLESS USING ON PROGRESS
+  // bool _quickItemsTriggered = false;
   var _quickItemsActive = false;
   var _quickItemsController = ExpandableController();
+
+  Widget _profileAttackWidget = SizedBox.shrink();
+  var _lastProfileVisited = "";
 
   @override
   void initState() {
@@ -176,6 +181,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                                   : SizedBox.shrink(),
                             )
                           : SizedBox.shrink(),
+                      _profileAttackWidget,
                       Expanded(
                         child: WebView(
                           initialUrl: _initialUrl,
@@ -185,6 +191,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                           },
                           onPageStarted: (page) {
                             _hideChat();
+                            _assessProfileAttack(page);
                           },
                           onPageFinished: (page) {
                             _hideChat();
@@ -760,7 +767,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         setState(() {
           _quickItemsController.expanded = false;
           _quickItemsActive = false;
-          _quickItemsTriggered = false;
+          // NOT APPLICABLE UNLESS USING ON PROGRESS
+          // _quickItemsTriggered = false;
         });
         return;
       }
@@ -770,6 +778,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         return;
       }
 
+      /* NOT APPLICABLE UNLESS USING ON PROGRESS
       // Stops any successive calls once we are sure that the section is the
       // correct one. onPageFinished will reset this for the future.
       // Otherwise we would call the API every time onProgressChanged ticks
@@ -777,6 +786,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         return;
       }
       _quickItemsTriggered = true;
+      */
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
       var key = _userProv.basic.userApiKey;
@@ -818,6 +828,64 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       );
     } else {
       return SizedBox.shrink();
+    }
+  }
+
+  // ASSESS PROFILES
+  Future _assessProfileAttack(String page) async {
+    if (mounted) {
+      if (!page.contains('loader.php?sid=attack&user2ID=') &&
+          !page.contains('torn.com/profiles.php?XID=')) {
+        _profileAttackWidget = SizedBox.shrink();
+        _lastProfileVisited = "";
+        return;
+      }
+
+      int userId = 0;
+
+      if (page.contains('torn.com/profiles.php?XID=')) {
+        if (page == _lastProfileVisited) {
+          return;
+        }
+        _lastProfileVisited = page;
+
+        try {
+          RegExp regId = new RegExp(r"(?:php\?XID=)([0-9]+)");
+          var matches = regId.allMatches(page);
+          userId = int.parse(matches.elementAt(0).group(1));
+          setState(() {
+            _profileAttackWidget = ProfileAttackCheckWidget(
+              key: UniqueKey(),
+              profileId: userId,
+              apiKey: _userProv.basic.userApiKey,
+              profileCheckType: ProfileCheckType.profile,
+            );
+          });
+        } catch (e) {
+          userId = 0;
+        }
+      } else if (page.contains('loader.php?sid=attack&user2ID=')) {
+        if (page == _lastProfileVisited) {
+          return;
+        }
+        _lastProfileVisited = page;
+
+        try {
+          RegExp regId = new RegExp(r"(?:&user2ID=)([0-9]+)");
+          var matches = regId.allMatches(page);
+          userId = int.parse(matches.elementAt(0).group(1));
+          setState(() {
+            _profileAttackWidget = ProfileAttackCheckWidget(
+              key: UniqueKey(),
+              profileId: userId,
+              apiKey: _userProv.basic.userApiKey,
+              profileCheckType: ProfileCheckType.attack,
+            );
+          });
+        } catch (e) {
+          userId = 0;
+        }
+      }
     }
   }
 

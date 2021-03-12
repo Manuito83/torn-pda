@@ -115,8 +115,8 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
 
-  Widget _profileAttackExpandable = SizedBox.shrink();
-  var _profileAttackController = ExpandableController();
+  Widget _profileAttackWidget = SizedBox.shrink();
+  var _lastProfileVisited = "";
   var _profileTriggered = false;
   var _attackTriggered = false;
 
@@ -408,7 +408,7 @@ class _WebViewFullState extends State<WebViewFull> {
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
-        _profileAttackExpandable,
+        _profileAttackWidget,
         _settingsProvider.appBarTop
             ? ExpandablePanel(
                 theme: ExpandableThemeData(
@@ -848,18 +848,18 @@ class _WebViewFullState extends State<WebViewFull> {
       getTrades = true;
     }
 
-    if ((!_currentUrl.contains('torn.com/profiles.php?XID=') &&
-            _profileTriggered) ||
-        (_currentUrl.contains('torn.com/profiles.php?XID=') &&
-            !_profileTriggered)) {
+    var profileUrl = 'torn.com/profiles.php?XID=';
+    if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
+        (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
+        (_currentUrl.contains(profileUrl) && _currentUrl != _lastProfileVisited)) {
       anySectionTriggered = true;
       getProfile = true;
     }
 
-    if ((!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
-            _attackTriggered) ||
-        (_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
-            !_attackTriggered)) {
+    var attackUrl = 'loader.php?sid=attack&user2ID=';
+    if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
+        (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
+        (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
       anySectionTriggered = true;
       getAttack = true;
     }
@@ -1711,47 +1711,52 @@ class _WebViewFullState extends State<WebViewFull> {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
           !_currentUrl.contains('torn.com/profiles.php?XID=')) {
         _profileTriggered = false;
-        _profileAttackExpandable = SizedBox.shrink();
-        _profileAttackController.expanded = false;
+        _profileAttackWidget = SizedBox.shrink();
         return;
       }
 
       int userId = 0;
 
       if (_currentUrl.contains('torn.com/profiles.php?XID=')) {
-        if (_profileTriggered) {
+        if (_profileTriggered && _currentUrl == _lastProfileVisited) {
           return;
         }
         _profileTriggered = true;
+        _lastProfileVisited = _currentUrl;
 
         try {
           RegExp regId = new RegExp(r"(?:php\?XID=)([0-9]+)");
           var matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
-            _profileAttackExpandable = ProfileAttackCheckWidget(
+            _profileAttackWidget = ProfileAttackCheckWidget(
+              key: UniqueKey(),
               profileId: userId,
+              apiKey: _userProvider.basic.userApiKey,
+              profileCheckType: ProfileCheckType.profile,
             );
-            _profileAttackController.expanded = true;
           });
         } catch (e) {
           userId = 0;
         }
       } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=')) {
-        if (_attackTriggered) {
+        if (_attackTriggered && _currentUrl == _lastProfileVisited) {
           return;
         }
         _attackTriggered = true;
+        _lastProfileVisited = _currentUrl;
 
         try {
           RegExp regId = new RegExp(r"(?:&user2ID=)([0-9]+)");
           var matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
-            _profileAttackExpandable = ProfileAttackCheckWidget(
+            _profileAttackWidget = ProfileAttackCheckWidget(
+              key: UniqueKey(),
               profileId: userId,
+              apiKey: _userProvider.basic.userApiKey,
+              profileCheckType: ProfileCheckType.attack,
             );
-            _profileAttackController.expanded = true;
           });
         } catch (e) {
           userId = 0;
