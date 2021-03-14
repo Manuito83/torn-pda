@@ -2,6 +2,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +57,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               controller: _expandableController,
               expanded: _mainDetailsWidget,
             );
-          } else if (_errorToShow){
+          } else if (_errorToShow) {
             return ExpandablePanel(
               controller: _expandableController,
               expanded: _mainDetailsWidget,
@@ -75,6 +76,16 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       widget.apiKey,
       widget.profileId.toString(),
     ).getTarget;
+
+    // FRIEND CHECK
+    var isFriend = false;
+    var friendsProv = context.read<FriendsProvider>();
+    if (!friendsProv.initialized) {
+      await friendsProv.initFriends();
+    }
+    for (var friend in friendsProv.allFriends) {
+      if (friend.playerId == widget.profileId) isFriend = true;
+    }
 
     var tornPda = false;
     var ownProfile = false;
@@ -102,8 +113,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         standard = true;
       }
 
-      if ((tornPda || standard) && mounted) {
+      if ((tornPda || isFriend || standard) && mounted) {
         Widget tornPdaDetails = SizedBox.shrink();
+        Widget friendsDetails = SizedBox.shrink();
         Widget widgetDetails = SizedBox.shrink();
         Color backgroundColor = Colors.transparent;
 
@@ -118,11 +130,46 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 //color: Colors.brown[400],
               ),
               SizedBox(width: 10),
-              Text(
-                "Hi! Thank you for using Torn PDA!",
-                style: TextStyle(
-                  color: Colors.pink,
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  "Hi! Thank you for using Torn PDA!",
+                  style: TextStyle(
+                    color: Colors.pink,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        if (isFriend) {
+          Color friendTextColor = Colors.green;
+          String friendText = "This is a friend of yours!";
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            friendTextColor = Colors.black;
+            friendText = "CAUTION: this is a friend of yours!";
+            backgroundColor = Colors.red;
+          }
+          friendsDetails = Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.people,
+                color: friendTextColor,
+                size: 15,
+              ),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  friendText,
+                  style: TextStyle(
+                    color: friendTextColor,
+                    fontSize: 12,
+                    fontWeight: friendText.contains("CAUTION")
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
                 ),
               ),
             ],
@@ -138,97 +185,83 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 size: 16,
               ),
               SizedBox(width: 10),
-              Text(
-                "This is you, you're beautiful!",
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  "This is you, you're beautiful!",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
           );
         } else if (ownFaction) {
-          if (widget.profileCheckType == ProfileCheckType.profile) {
-            widgetDetails = Row(
-              children: [
-                Image.asset(
-                  'images/icons/faction.png',
-                  width: 15,
-                  height: 16,
-                  color: Colors.green,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "This is a fellow faction member (${target.faction.position})!",
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            );
-          } else if (widget.profileCheckType == ProfileCheckType.attack) {
+          String factionText = "This is a fellow faction member "
+              "(${target.faction.position.toLowerCase()})!";
+          Color factionColor = Colors.green;
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            factionColor = Colors.black;
+            factionText = "CAUTION: this is a fellow faction member!";
             backgroundColor = Colors.red;
-            widgetDetails = Row(
-              children: [
-                Image.asset(
-                  'images/icons/faction.png',
-                  width: 15,
-                  height: 16,
-                  color: Colors.black,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "CAUTION: this is a fellow faction member!",
+          }
+          widgetDetails = Row(
+            children: [
+              Image.asset(
+                'images/icons/faction.png',
+                width: 15,
+                height: 12,
+                color: factionColor,
+              ),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  factionText,
                   style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+                    color: factionColor,
+                    fontWeight: factionText.contains("CAUTION")
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     fontSize: 12,
                   ),
                 ),
-              ],
-            );
-          }
+              ),
+            ],
+          );
         } else if (partner) {
-          if (widget.profileCheckType == ProfileCheckType.profile) {
-            widgetDetails = Row(
-              children: [
-                Icon(
-                  MdiIcons.heart,
-                  color: Colors.red,
-                  size: 16,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "This is your lovely ${target.gender == "Male" ? "husband" : "wife"}!",
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            );
-          } else if (widget.profileCheckType == ProfileCheckType.attack) {
+          String partnerText = "This is your lovely "
+              "${target.gender == "Male" ? "husband" : "wife"}!";
+          Color partnerColor = Colors.green;
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            partnerColor = Colors.black;
+            partnerText = "CAUTION: this is your "
+                "${target.gender == "Male" ? "husband" : "wife"}! "
+                "Are you really that mad at "
+                "${target.gender == "Male" ? "him" : "her"}?";
             backgroundColor = Colors.red;
-            widgetDetails = Row(
-              children: [
-                Icon(
-                  MdiIcons.heart,
-                  color: Colors.black,
-                  size: 16,
-                ),
-                SizedBox(width: 10),
-                Text(
-                  "CAUTION: this is your ${target.gender == "Male" ? "husband" : "wife"}!",
+          }
+          widgetDetails = Row(
+            children: [
+              Icon(
+                MdiIcons.heart,
+                color: partnerColor,
+                size: 16,
+              ),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  partnerText,
                   style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
+                    color: partnerColor,
+                    fontWeight: partnerText.contains("CAUTION")
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     fontSize: 12,
                   ),
                 ),
-              ],
-            );
-          }
+              ),
+            ],
+          );
         }
 
         Widget mainWidgetBox = Container(
@@ -236,15 +269,19 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           child: Row(
             mainAxisSize: MainAxisSize.max,
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    tornPdaDetails,
-                    if (tornPda && standard) SizedBox(height: 8),
-                    widgetDetails,
-                  ],
+              Flexible(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(15, 10, 15, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      tornPdaDetails,
+                      if (tornPda && isFriend) SizedBox(height: 8),
+                      friendsDetails,
+                      if ((tornPda || isFriend) && standard) SizedBox(height: 8),
+                      widgetDetails,
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -277,7 +314,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _expandableController.expanded = true;
         _mainDetailsWidget = errorDetails;
       });
-
     }
   }
 }
