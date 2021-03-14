@@ -44,6 +44,7 @@ class _FriendsPageState extends State<FriendsPage> {
   @override
   void initState() {
     super.initState();
+    _restoreFriends();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _searchController.addListener(onSearchInputTextChange);
     // Reset the filter so that we get all the targets
@@ -57,7 +58,6 @@ class _FriendsPageState extends State<FriendsPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     return Scaffold(
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -478,4 +478,12 @@ class _FriendsPageState extends State<FriendsPage> {
         break;
     }
   }
+
+  Future _restoreFriends () async {
+    var friendsProv = context.read<FriendsProvider>();
+    if (!friendsProv.initialized) {
+      friendsProv.initFriends();
+    }
+  }
+
 }
