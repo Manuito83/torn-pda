@@ -32,6 +32,9 @@ class UpdateFriendResult {
 }
 
 class FriendsProvider extends ChangeNotifier {
+  bool _initialized = false;
+  bool get initialized => _initialized;
+
   List<FriendModel> _friends = [];
   UnmodifiableListView<FriendModel> get allFriends =>
       UnmodifiableListView(_friends);
@@ -44,9 +47,7 @@ class FriendsProvider extends ChangeNotifier {
   FriendSortType _currentSort;
 
   OwnProfileBasic _userDetails;
-  FriendsProvider(this._userDetails) {
-    restorePreferences();
-  }
+  FriendsProvider(this._userDetails);
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
@@ -305,7 +306,7 @@ class FriendsProvider extends ChangeNotifier {
     SharedPreferencesModel().setFriendsSort(sortToSave);
   }
 
-  Future<void> restorePreferences() async {
+  Future<void> initFriends() async {
     // Friends list
     bool needToSave = false;
     List<String> jsonFriends = await SharedPreferencesModel().getFriendsList();
@@ -351,6 +352,8 @@ class FriendsProvider extends ChangeNotifier {
         _currentSort = FriendSortType.nameAsc;
         break;
     }
+
+    _initialized = true;
 
     // Notification
     notifyListeners();
