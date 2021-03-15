@@ -115,6 +115,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _extraPlayerInformation = false;
+  bool get extraPlayerInformation => _extraPlayerInformation;
+  set changeExtraPlayerInformation(bool value) {
+    _extraPlayerInformation = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   var _useQuickBrowser = true;
   bool get useQuickBrowser => _useQuickBrowser;
   set changeUseQuickBrowser(bool value) {
@@ -155,6 +163,8 @@ class SettingsProvider extends ChangeNotifier {
     SharedPreferencesModel().setHighlightColor(_highlightColor);
 
     SharedPreferencesModel().setRemoveAirplane(_removeAirplane);
+
+    SharedPreferencesModel().setExtraPlayerInformation(_extraPlayerInformation);
 
     SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
 
@@ -222,6 +232,8 @@ class SettingsProvider extends ChangeNotifier {
     _highlightColor = await SharedPreferencesModel().getHighlightColor();
 
     _removeAirplane = await SharedPreferencesModel().getRemoveAirplane();
+
+    _extraPlayerInformation = await SharedPreferencesModel().getExtraPlayerInformation();
 
     _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
 

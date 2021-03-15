@@ -38,6 +38,7 @@ class SharedPreferencesModel {
   final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
+  final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
@@ -510,6 +511,20 @@ class SharedPreferencesModel {
   Future<bool> setRemoveAirplane(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRemoveAirplane, value);
+  }
+
+  /// ----------------------------
+  /// Methods for extra player information
+  /// ----------------------------
+
+  Future<bool> getExtraPlayerInformation() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExtraPlayerInformation) ?? true;
+  }
+
+  Future<bool> setExtraPlayerInformation(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExtraPlayerInformation, value);
   }
 
   /// ----------------------------

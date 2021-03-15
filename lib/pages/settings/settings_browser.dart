@@ -6,6 +6,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter/services.dart';
+import 'package:torn_pda/pages/settings/friendly_factions.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);
@@ -25,6 +26,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Color _highlightColor = Color(0xff7ca900);
   bool _removeAirplane;
   bool _useQuickBrowser;
+  bool _extraPlayerInformation;
 
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
@@ -81,6 +83,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
+                          _profile(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
                           _maintenance(),
                           SizedBox(height: 40),
                         ],
@@ -95,6 +101,96 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Column _profile() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'PLAYER PROFILES',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Extra player information"),
+                  Switch(
+                    value: _extraPlayerInformation,
+                    onChanged: (value) {
+                      _settingsProvider.changeExtraPlayerInformation = value;
+                      setState(() {
+                        _extraPlayerInformation = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Add additional player information when visiting a profile or attacking '
+                'someone (e.g. same faction, friendly faction, friends) and estimated stats',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            if (_extraPlayerInformation)
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          "Friendly factions",
+                        ),
+                        IconButton(
+                            icon: Icon(Icons.keyboard_arrow_right_outlined),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      FriendlyFactionsPage(),
+                                ),
+                              );
+                            }),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'You will see a note if you are visiting the profile of a '
+                      'friendly faction\'s player, or a warning if you are about to attack, ',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -437,6 +533,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
       _removeAirplane = _settingsProvider.removeAirplane;
+      _extraPlayerInformation = _settingsProvider.extraPlayerInformation;
     });
   }
 
