@@ -8,6 +8,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
+import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -35,6 +36,7 @@ enum ApiSelection {
   items,
   inventory,
   education,
+  faction,
   factionCrimes,
   friends,
 }
@@ -104,6 +106,7 @@ class TornApiCaller {
   TornApiCaller.items(this.apiKey);
   TornApiCaller.inventory(this.apiKey);
   TornApiCaller.education(this.apiKey);
+  TornApiCaller.faction(this.apiKey, this.queryId);
   TornApiCaller.factionCrimes(this.apiKey);
   TornApiCaller.friends(this.apiKey, this.queryId);
 
@@ -283,6 +286,26 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getFaction async {
+    dynamic apiResult;
+    await _apiCall(
+      ApiType.faction,
+      prefix: queryId,
+      apiSelection: ApiSelection.faction,
+    ).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return FactionModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> get getFactionCrimes async {
     dynamic apiResult;
     await _apiCall(ApiType.faction, apiSelection: ApiSelection.factionCrimes)
@@ -341,7 +364,8 @@ class TornApiCaller {
         url += '?selections=profile,battlestats';
         break;
       case ApiSelection.ownExtended:
-        url += '?selections=profile,bars,networth,cooldowns,events,travel,icons,'
+        url += '?selections=profile,bars,networth,'
+            'cooldowns,events,travel,icons,'
             'money,education,messages';
         break;
       case ApiSelection.ownMisc:
@@ -370,6 +394,9 @@ class TornApiCaller {
         break;
       case ApiSelection.education:
         url += '?selections=education';
+        break;
+      case ApiSelection.faction:
+        url += '$prefix?selections=';
         break;
       case ApiSelection.factionCrimes:
         url += '?selections=crimes';

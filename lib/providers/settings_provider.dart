@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/pages/settings/friendly_factions.dart';
 
 enum BrowserSetting {
   app,
@@ -119,6 +120,14 @@ class SettingsProvider extends ChangeNotifier {
   bool get extraPlayerInformation => _extraPlayerInformation;
   set changeExtraPlayerInformation(bool value) {
     _extraPlayerInformation = value;
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
+  var _friendlyFactions = <FriendlyFaction>[];
+  List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
+  set setFriendlyFactions(List<FriendlyFaction> faction) {
+    _friendlyFactions = faction;
     _saveSettingsSharedPrefs();
     notifyListeners();
   }

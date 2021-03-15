@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +44,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   void initState() {
     super.initState();
     _userDetails = context.read<UserDetailsProvider>();
+
     _checkedPerson = _fetchAndAssess();
   }
 
@@ -87,39 +89,53 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       if (friend.playerId == widget.profileId) isFriend = true;
     }
 
-    var tornPda = false;
-    var ownProfile = false;
-    var partner = false;
-    var ownFaction = false;
+    var isTornPda = false;
+    var isPartner = false;
 
-    bool standard = false;
+    var isOwnPlayer = false;
+    var isOwnFaction = false;
+    var isFriendlyFaction = false;
+    // This one will take own player, own faction or friendly faction (so that
+    // we don't show them separately, but by importance (first one self, then
+    // own faction and lastly friendly faction)
+    var playerOrFaction = false;
+
     if (target is TargetModel) {
       if (target.playerId == 2225097) {
-        tornPda = true;
-      }
-
-      if (target.playerId == _userDetails.basic.playerId) {
-        ownProfile = true;
-        standard = true;
+        isTornPda = true;
       }
 
       if (target.married.spouseId == _userDetails.basic.playerId) {
-        partner = true;
-        standard = true;
+        isPartner = true;
+      }
+
+      if (target.playerId == _userDetails.basic.playerId) {
+        isOwnPlayer = true;
+        playerOrFaction = true;
       }
 
       if (target.faction.factionId == _userDetails.basic.faction.factionId) {
-        ownFaction = true;
-        standard = true;
+        isOwnFaction = true;
+        playerOrFaction = true;
       }
 
-      if ((tornPda || isFriend || standard) && mounted) {
+      var settingsProvider = context.read<SettingsProvider>();
+      for (var fact in settingsProvider.friendlyFactions) {
+        if (target.faction.factionId == fact.id) {
+          isFriendlyFaction = true;
+          break;
+        }
+      }
+
+      if ((isTornPda || isPartner || isFriend || isFriendlyFaction || playerOrFaction) && mounted) {
         Widget tornPdaDetails = SizedBox.shrink();
+        Widget partnerDetails = SizedBox.shrink();
         Widget friendsDetails = SizedBox.shrink();
-        Widget widgetDetails = SizedBox.shrink();
+        Widget friendlyFactionDetails = SizedBox.shrink();
+        Widget playerOrFactionDetails = SizedBox.shrink();
         Color backgroundColor = Colors.transparent;
 
-        if (tornPda) {
+        if (isTornPda) {
           tornPdaDetails = Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -176,8 +192,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         }
 
-        if (ownProfile) {
-          widgetDetails = Row(
+        if (isOwnPlayer) {
+          playerOrFactionDetails = Row(
             children: [
               Icon(
                 MdiIcons.heart,
@@ -196,7 +212,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               ),
             ],
           );
-        } else if (ownFaction) {
+        } else if (isOwnFaction) {
           String factionText = "This is a fellow faction member "
               "(${target.faction.position.toLowerCase()})!";
           Color factionColor = Colors.green;
@@ -205,7 +221,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             factionText = "CAUTION: this is a fellow faction member!";
             backgroundColor = Colors.red;
           }
-          widgetDetails = Row(
+          playerOrFactionDetails = Row(
             children: [
               Image.asset(
                 'images/icons/faction.png',
@@ -228,7 +244,42 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               ),
             ],
           );
-        } else if (partner) {
+        } else if (isFriendlyFaction) {
+          String factionText = "This is an allied faction member "
+              "(${target.faction.factionName})!";
+          Color factionColor = Colors.green;
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            factionColor = Colors.black;
+            factionText = "CAUTION: this is an allied faction member!";
+            backgroundColor = Colors.red;
+          }
+
+          friendlyFactionDetails = Row(
+            children: [
+              Image.asset(
+                'images/icons/faction.png',
+                width: 15,
+                height: 12,
+                color: factionColor,
+              ),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  factionText,
+                  style: TextStyle(
+                    color: factionColor,
+                    fontWeight: factionText.contains("CAUTION")
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        if (isPartner) {
           String partnerText = "This is your lovely "
               "${target.gender == "Male" ? "husband" : "wife"}!";
           Color partnerColor = Colors.green;
@@ -240,7 +291,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 "${target.gender == "Male" ? "him" : "her"}?";
             backgroundColor = Colors.red;
           }
-          widgetDetails = Row(
+
+          partnerDetails = Row(
             children: [
               Icon(
                 MdiIcons.heart,
@@ -276,10 +328,17 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       tornPdaDetails,
-                      if (tornPda && isFriend) SizedBox(height: 8),
+                      if (isTornPda && isPartner) SizedBox(height: 8),
+                      partnerDetails,
+                      if ((isTornPda || isPartner) && isFriend) SizedBox(height: 8),
                       friendsDetails,
-                      if ((tornPda || isFriend) && standard) SizedBox(height: 8),
-                      widgetDetails,
+                      if ((isTornPda || isPartner || isFriend) && playerOrFaction)
+                        SizedBox(height: 8),
+                      playerOrFactionDetails,
+                      if ((isTornPda || isPartner || isFriend || playerOrFaction) &&
+                          isFriendlyFaction)
+                        SizedBox(height: 8),
+                      friendlyFactionDetails,
                     ],
                   ),
                 ),
