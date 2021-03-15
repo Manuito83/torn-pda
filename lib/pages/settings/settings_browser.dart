@@ -524,8 +524,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Future _restorePreferences() async {
-    await _settingsProvider.loadPreferences();
-
     setState(() {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
       _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;

@@ -85,8 +85,6 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   }
 
   Future _restorePreferences() async {
-    await _settingsProvider.loadPreferences();
-
     setState(() {
 
     });
