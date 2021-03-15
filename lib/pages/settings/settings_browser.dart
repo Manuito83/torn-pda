@@ -69,274 +69,19 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       child: Column(
                         children: <Widget>[
                           SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'GENERAL',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Show load bar"),
-                                Switch(
-                                  value: _loadBarBrowser,
-                                  onChanged: (value) {
-                                    _settingsProvider.changeLoadBarBrowser =
-                                        value;
-                                    setState(() {
-                                      _loadBarBrowser = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Use quick browser"),
-                                Switch(
-                                  value: _useQuickBrowser,
-                                  onChanged: (value) {
-                                    _settingsProvider.changeUseQuickBrowser =
-                                        value;
-                                    setState(() {
-                                      _useQuickBrowser = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              'Note: this will allow you to open the quick browser in most '
-                                  'places by using a short tap (and long tap for full browser). '
-                                  'This does not apply to the chaining browser and a few other '
-                                  'specific links',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
+                          _general(),
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'CHAT',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Show chat remove icon"),
-                                Switch(
-                                  value: _chatRemoveEnabled,
-                                  onChanged: (value) {
-                                    _settingsProvider.changeChatRemoveEnabled =
-                                        value;
-                                    setState(() {
-                                      _chatRemoveEnabled = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Highlight own name in chat"),
-                                Switch(
-                                  value: _highlightChat,
-                                  onChanged: (value) {
-                                    _settingsProvider.changeHighlightChat =
-                                        value;
-                                    setState(() {
-                                      _highlightChat = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_highlightChat)
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    _showColorPicker(context);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        20, 0, 35, 10),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Text("Choose highlight color"),
-                                        Container(
-                                          width: 25,
-                                          height: 25,
-                                          color: _highlightColor,
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Text(
-                                    'The sender\'s name will appear darker '
-                                    'to improve readability',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            SizedBox.shrink(),
+                          _chat(context),
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'TRAVEL',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ],
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text("Remove airplane"),
-                                Switch(
-                                  value: _removeAirplane,
-                                  onChanged: (value) {
-                                    _settingsProvider.changeRemoveAirplane =
-                                        value;
-                                    setState(() {
-                                      _removeAirplane = value;
-                                    });
-                                  },
-                                  activeTrackColor: Colors.lightGreenAccent,
-                                  activeColor: Colors.green,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Removes airplane and cloud animation when travelling',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          _travel(),
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'MAINTENANCE',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ],
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Browser cache"),
-                                    ElevatedButton(
-                                      child: Text("Clear"),
-                                      onPressed: () async {
-                                        var headlessWebView =
-                                            new HeadlessInAppWebView(
-                                          initialUrlRequest: URLRequest(
-                                            url: Uri.parse(
-                                                "https://flutter.dev/"),
-                                          ),
-                                          onWebViewCreated: (controller) async {
-                                            await controller.clearCache();
-                                          },
-                                        );
-                                        await headlessWebView.run();
-                                        await headlessWebView.dispose();
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: Text(
-                                  'Note: this will clear your browser\'s cache. It can be '
-                                  'useful in case of errors (sections not loading correctly, etc.). '
-                                  'You\'ll be logged-out from Torn and all other sites',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          _maintenance(),
                           SizedBox(height: 40),
                         ],
                       ),
@@ -350,6 +95,280 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Column _maintenance() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'MAINTENANCE',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Browser cache"),
+                  ElevatedButton(
+                    child: Text("Clear"),
+                    onPressed: () async {
+                      var headlessWebView = new HeadlessInAppWebView(
+                        initialUrlRequest: URLRequest(
+                          url: Uri.parse("https://flutter.dev/"),
+                        ),
+                        onWebViewCreated: (controller) async {
+                          await controller.clearCache();
+                        },
+                      );
+                      await headlessWebView.run();
+                      await headlessWebView.dispose();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Note: this will clear your browser\'s cache. It can be '
+                'useful in case of errors (sections not loading correctly, etc.). '
+                'You\'ll be logged-out from Torn and all other sites',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column _travel() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'TRAVEL',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Remove airplane"),
+              Switch(
+                value: _removeAirplane,
+                onChanged: (value) {
+                  _settingsProvider.changeRemoveAirplane = value;
+                  setState(() {
+                    _removeAirplane = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Text(
+                'Removes airplane and cloud animation when travelling',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _chat(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'CHAT',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Show chat remove icon"),
+              Switch(
+                value: _chatRemoveEnabled,
+                onChanged: (value) {
+                  _settingsProvider.changeChatRemoveEnabled = value;
+                  setState(() {
+                    _chatRemoveEnabled = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Highlight own name in chat"),
+              Switch(
+                value: _highlightChat,
+                onChanged: (value) {
+                  _settingsProvider.changeHighlightChat = value;
+                  setState(() {
+                    _highlightChat = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        if (_highlightChat)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _showColorPicker(context);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text("Choose highlight color"),
+                      Container(
+                        width: 25,
+                        height: 25,
+                        color: _highlightColor,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'The sender\'s name will appear darker '
+                  'to improve readability',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          SizedBox.shrink(),
+      ],
+    );
+  }
+
+  Column _general() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'GENERAL',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Show load bar"),
+              Switch(
+                value: _loadBarBrowser,
+                onChanged: (value) {
+                  _settingsProvider.changeLoadBarBrowser = value;
+                  setState(() {
+                    _loadBarBrowser = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Use quick browser"),
+              Switch(
+                value: _useQuickBrowser,
+                onChanged: (value) {
+                  _settingsProvider.changeUseQuickBrowser = value;
+                  setState(() {
+                    _useQuickBrowser = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Note: this will allow you to open the quick browser in most '
+            'places by using a short tap (and long tap for full browser). '
+            'This does not apply to the chaining browser and a few other '
+            'specific links',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
