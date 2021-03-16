@@ -34,10 +34,10 @@ class TargetSort {
         description = 'Sort by name (asc)';
         break;
       case TargetSortType.colorDes:
-        description = 'Sort by color (R-Y-G-B)';
+        description = 'Sort by color (#-R-Y-G)';
         break;
       case TargetSortType.colorAsc:
-        description = 'Sort by color (B-G-Y-R)';
+        description = 'Sort by color (G-Y-R-#)';
         break;
     }
   }

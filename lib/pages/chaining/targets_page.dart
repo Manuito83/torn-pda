@@ -703,7 +703,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   int _yataColorCode(String colorString) {
     switch (colorString) {
-      case "":
+      case "z":
         return 0;
         break;
       case "green":

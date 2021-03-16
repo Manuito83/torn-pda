@@ -468,6 +468,13 @@ class TargetsProvider extends ChangeNotifier {
         needToSave = true;
       }
 
+      // In v2.3.0 we adapt colors to be as per YATA, with black/white sorting at the end.
+      // This can be later removed safely at some point.
+      if (thisTarget.personalNoteColor == "") {
+        thisTarget.personalNoteColor = "z";
+        needToSave = true;
+      }
+
       _targets.add(thisTarget);
     }
 

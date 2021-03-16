@@ -103,7 +103,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                               if (isSelected) {
                                 _myTempChosenColor = 'red';
                               } else {
-                                _myTempChosenColor = '';
+                                _myTempChosenColor = 'z';
                               }
                             });
                           },
@@ -128,7 +128,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                               if (isSelected) {
                                 _myTempChosenColor = 'orange';
                               } else {
-                                _myTempChosenColor = '';
+                                _myTempChosenColor = 'z';
                               }
                             });
                           },
@@ -154,7 +154,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                               if (isSelected) {
                                 _myTempChosenColor = 'green';
                               } else {
-                                _myTempChosenColor = '';
+                                _myTempChosenColor = 'z';
                               }
                             });
                           },
