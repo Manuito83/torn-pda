@@ -37,8 +37,11 @@ class TargetsProvider extends ChangeNotifier {
 
   List<TargetModel> _oldTargetsList = [];
 
-  String _currentFilter = '';
-  String get currentFilter => _currentFilter;
+  String _currentWordFilter = '';
+  String get currentWordFilter => _currentWordFilter;
+
+  List<String> _currentColorFilterOut = [];
+  List<String> get currentColorFilterOut => _currentColorFilterOut;
 
   TargetSortType _currentSort;
 
@@ -357,7 +360,13 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void setFilterText(String newFilter) {
-    _currentFilter = newFilter;
+    _currentWordFilter = newFilter;
+    notifyListeners();
+  }
+
+  void setFilterColorsOut(List<String> newFilter) {
+    _currentColorFilterOut = newFilter;
+    SharedPreferencesModel().setTargetsColorFilter(_currentColorFilterOut);
     notifyListeners();
   }
 
@@ -507,6 +516,10 @@ class TargetsProvider extends ChangeNotifier {
         _currentSort = TargetSortType.nameAsc;
         break;
     }
+
+    // Targets color filter
+    _currentColorFilterOut = await SharedPreferencesModel().getTargetsColorFilter();
+
     // Notification
     notifyListeners();
   }

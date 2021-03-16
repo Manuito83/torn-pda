@@ -18,11 +18,13 @@ class TargetsList extends StatelessWidget {
 
   List<Widget> getChildrenTargets(BuildContext _) {
     var targetsProvider = Provider.of<TargetsProvider>(_, listen: false);
-    String filter = targetsProvider.currentFilter;
-    List<Widget> filteredCards = List<Widget>();
+    String filter = targetsProvider.currentWordFilter;
+    List<Widget> filteredCards = <Widget>[];
     for (var thisTarget in targets) {
       if (thisTarget.name.toUpperCase().contains(filter.toUpperCase())) {
-        filteredCards.add(TargetCard(key: UniqueKey(), targetModel: thisTarget));
+        if (!targetsProvider.currentColorFilterOut.contains(thisTarget.personalNoteColor)) {
+          filteredCards.add(TargetCard(key: UniqueKey(), targetModel: thisTarget));
+        }
       }
     }
     // Avoid collisions with SnackBar

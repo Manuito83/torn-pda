@@ -89,7 +89,7 @@ class _TargetCardState extends State<TargetCard> {
         ),
       ],
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         child: Card(
           shape: RoundedRectangleBorder(
               side: BorderSide(color: _borderColor(), width: 1.5),

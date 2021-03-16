@@ -10,6 +10,7 @@ class SharedPreferencesModel {
   final String _kLastAppUse = "pda_lastAppUse";
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
+  final String _kTargetsColorFilter = "pda_targetsColorFilter";
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
@@ -202,6 +203,18 @@ class SharedPreferencesModel {
     return prefs.setString(_kTargetsSort, value);
   }
 
+  //**************
+  Future<List<String>> getTargetsColorFilter() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kTargetsColorFilter) ?? [];
+  }
+
+  Future<bool> setTargetsColorFilter(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kTargetsColorFilter, value);
+  }
+
+  //**************
   Future<bool> getTargetSkipping() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkipping) ?? true;

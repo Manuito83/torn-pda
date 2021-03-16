@@ -13,6 +13,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
@@ -25,6 +26,9 @@ class TargetsOptions {
     switch (description) {
       case "Options":
         iconData = Icons.settings;
+        break;
+      case "Filter":
+        iconData = Icons.filter_list;
         break;
       case "Backup":
         iconData = Icons.save;
@@ -40,7 +44,9 @@ class TargetsPage extends StatefulWidget {
   final String userKey;
   final Function tabCallback;
 
-  const TargetsPage({Key key, @required this.userKey, @required this.tabCallback}) : super(key: key);
+  const TargetsPage(
+      {Key key, @required this.userKey, @required this.tabCallback})
+      : super(key: key);
 
   @override
   _TargetsPageState createState() => _TargetsPageState();
@@ -83,6 +89,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   final _popupOptionsChoices = <TargetsOptions>[
     TargetsOptions(description: "Options"),
+    TargetsOptions(description: "Filter"),
     TargetsOptions(description: "Backup"),
     TargetsOptions(description: "Wipe"),
   ];
@@ -101,7 +108,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
       drawer: Drawer(),
@@ -117,7 +124,7 @@ class _TargetsPageState extends State<TargetsPage> {
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
         child: Column(
           children: <Widget>[
-            SizedBox(height: 15),
+            SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -192,12 +199,19 @@ class _TargetsPageState extends State<TargetsPage> {
                 ),
               ],
             ),
-            SizedBox(height: 5),
             ChainTimer(
               userKey: widget.userKey,
               alwaysDarkBackground: false,
               chainTimerParent: ChainTimerParent.targets,
             ),
+            if (_targetsProvider.currentColorFilterOut.length > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  "NOTE: there is an active color filter!",
+                  style: TextStyle(color: Colors.orange[800], fontSize: 12),
+                ),
+              ),
             Flexible(
               child: Consumer<TargetsProvider>(
                 builder: (context, targetsModel, child) => TargetsList(
@@ -610,6 +624,14 @@ class _TargetsPageState extends State<TargetsPage> {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
         widget.tabCallback(newOptions.tacEnabled);
+        break;
+      case "Filter":
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return ColorFilterDialog();
+          },
+        );
         break;
       case "Backup":
         Navigator.push(
