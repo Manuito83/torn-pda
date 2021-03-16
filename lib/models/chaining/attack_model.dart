@@ -40,7 +40,7 @@ class Attack {
   int targetLevel;
   bool attackWon;
   bool attackInitiated;
-  var attackSeriesGreen = List<bool>();
+  var attackSeriesGreen = <bool>[];
 
   // From Torn API
   String code;
@@ -163,11 +163,11 @@ class Modifiers {
 
   factory Modifiers.fromJson(Map<String, dynamic> json) => Modifiers(
         // Make sure everything is a double
-        fairFight: json["fairFight"] is String
-            ? double.parse(json["fairFight"])
-            : json["fairFight"] is int
-                ? json["fairFight"].toDouble()
-                : json["fairFight"],
+        fairFight: json["fair_fight"] is String
+            ? double.parse(json["fair_fight"])
+            : json["fair_fight"] is int
+                ? json["fair_fight"].toDouble()
+                : json["fair_fight"],
         war: json["war"] is String
             ? double.parse(json["war"])
             : json["war"] is int ? json["war"].toDouble() : json["war"],
@@ -176,30 +176,30 @@ class Modifiers {
             : json["retaliation"] is int
                 ? json["retaliation"].toDouble()
                 : json["retaliation"],
-        groupAttack: json["groupAttack"] is String
-            ? double.parse(json["groupAttack"])
-            : json["groupAttack"] is int
-                ? json["groupAttack"].toDouble()
-                : json["groupAttack"],
+        groupAttack: json["group_attack"] is String
+            ? double.parse(json["group_attack"])
+            : json["group_attack"] is int
+                ? json["group_attack"].toDouble()
+                : json["group_attack"],
         overseas: json["overseas"] is String
             ? double.parse(json["overseas"])
             : json["overseas"] is int
                 ? json["overseas"].toDouble()
                 : json["overseas"],
-        chainBonus: json["chainBonus"] is String
-            ? double.parse(json["chainBonus"])
-            : json["chainBonus"] is int
-                ? json["chainBonus"].toDouble()
-                : json["chainBonus"],
+        chainBonus: json["chain_bonus"] is String
+            ? double.parse(json["chain_bonus"])
+            : json["chain_bonus"] is int
+                ? json["chain_bonus"].toDouble()
+                : json["chain_bonus"],
       );
 
   Map<String, dynamic> toJson() => {
-        "fairFight": fairFight,
+        "fair_fight": fairFight,
         "war": war,
         "retaliation": retaliation,
-        "groupAttack": groupAttack,
+        "group_attack": groupAttack,
         "overseas": overseas,
-        "chainBonus": chainBonus,
+        "chain_bonus": chainBonus,
       };
 }
 
