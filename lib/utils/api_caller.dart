@@ -89,6 +89,9 @@ class ApiError {
       case 12:
         errorReason = 'key read error: Error reading key from Database';
         break;
+      case 13:
+        errorReason = 'key is temporary disabled due to owner inactivity';
+        break;
     }
   }
 }
