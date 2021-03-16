@@ -251,7 +251,10 @@ class _FriendCardState extends State<FriendCard> {
                       child: IconButton(
                         padding: EdgeInsets.all(0),
                         iconSize: 20,
-                        icon: Icon(MdiIcons.notebookEditOutline),
+                        icon: Icon(
+                          MdiIcons.notebookEditOutline,
+                          color: _returnFriendNoteColor(),
+                        ),
                         onPressed: () {
                           _showNotesDialog();
                         },
