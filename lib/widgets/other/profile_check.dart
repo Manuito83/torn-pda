@@ -1,7 +1,7 @@
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -31,6 +31,55 @@ class ProfileAttackCheckWidget extends StatefulWidget {
 }
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
+  final _levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
+  final _crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
+  final _networthTriggers = [
+    5000000,
+    50000000,
+    500000000,
+    5000000000,
+    50000000000
+  ];
+
+  final _ranksTriggers = {
+    "Absolute beginner": 1,
+    "Beginner": 2,
+    "Inexperienced": 3,
+    "Rookie": 4,
+    "Novice": 5,
+    "Below average": 6,
+    "Average": 7,
+    "Reasonable": 8,
+    "Above average": 9,
+    "Competent": 10,
+    "Highly competent": 11,
+    "Veteran": 12,
+    "Distinguished": 13,
+    "Highly distinguished": 14,
+    "Professional": 15,
+    "Star": 16,
+    "Master": 17,
+    "Outstanding": 18,
+    "Celebrity": 19,
+    "Supreme": 20,
+    "Idolized": 21,
+    "Champion": 22,
+    "Heroic": 23,
+    "Legendary": 24,
+    "Elite": 25,
+    "Invincible": 26,
+  };
+
+  final _statsResults = [
+    "< 2k",
+    "2k - 25k",
+    "20k - 250k",
+    "200k - 2.5M",
+    "2M - 25M",
+    "20M - 250M",
+    "> 200M",
+  ];
+
   Future _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
@@ -74,10 +123,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    var target = await TornApiCaller.target(
+    var otherProfile = await TornApiCaller.target(
       widget.apiKey,
       widget.profileId.toString(),
-    ).getTarget;
+    ).getOtherProfile;
 
     // FRIEND CHECK
     var isFriend = false;
@@ -100,43 +149,83 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // own faction and lastly friendly faction)
     var playerOrFaction = false;
 
-    if (target is TargetModel) {
-      if (target.playerId == 2225097) {
+    var hasEstimatedStats = false;
+
+    if (otherProfile is OtherProfileModel) {
+      String estimatedStats = _calculateStats(otherProfile);
+      if (estimatedStats.isNotEmpty) hasEstimatedStats = true;
+
+      if (otherProfile.playerId == 2225097) {
         isTornPda = true;
       }
 
-      if (target.married.spouseId == _userDetails.basic.playerId) {
+      if (otherProfile.married.spouseId == _userDetails.basic.playerId) {
         isPartner = true;
       }
 
-      if (target.playerId == _userDetails.basic.playerId) {
+      if (otherProfile.playerId == _userDetails.basic.playerId) {
         isOwnPlayer = true;
         playerOrFaction = true;
       }
 
-      if (target.faction.factionId == _userDetails.basic.faction.factionId) {
+      if (otherProfile.faction.factionId ==
+          _userDetails.basic.faction.factionId) {
         isOwnFaction = true;
         playerOrFaction = true;
       }
 
       var settingsProvider = context.read<SettingsProvider>();
       for (var fact in settingsProvider.friendlyFactions) {
-        if (target.faction.factionId == fact.id) {
+        if (otherProfile.faction.factionId == fact.id) {
           isFriendlyFaction = true;
           break;
         }
       }
 
-      if ((isTornPda || isPartner || isFriend || isFriendlyFaction || playerOrFaction) && mounted) {
-        Widget tornPdaDetails = SizedBox.shrink();
-        Widget partnerDetails = SizedBox.shrink();
-        Widget friendsDetails = SizedBox.shrink();
-        Widget friendlyFactionDetails = SizedBox.shrink();
-        Widget playerOrFactionDetails = SizedBox.shrink();
+      if ((hasEstimatedStats ||
+              isTornPda ||
+              isPartner ||
+              isFriend ||
+              isFriendlyFaction ||
+              playerOrFaction) &&
+          mounted) {
+        Widget estimatedStatsWidget = SizedBox.shrink();
+        Widget tornPdaWidget = SizedBox.shrink();
+        Widget partnerWidget = SizedBox.shrink();
+        Widget friendsWidget = SizedBox.shrink();
+        Widget friendlyFactionWidget = SizedBox.shrink();
+        Widget playerOrFactionWidget = SizedBox.shrink();
         Color backgroundColor = Colors.transparent;
 
+        if (hasEstimatedStats) {
+          estimatedStatsWidget = Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Text(
+                  "STATS:",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  estimatedStats,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
         if (isTornPda) {
-          tornPdaDetails = Row(
+          tornPdaWidget = Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Image.asset(
@@ -167,7 +256,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             friendText = "CAUTION: this is a friend of yours!";
             backgroundColor = Colors.red;
           }
-          friendsDetails = Row(
+          friendsWidget = Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Icon(
@@ -193,7 +282,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
 
         if (isOwnPlayer) {
-          playerOrFactionDetails = Row(
+          playerOrFactionWidget = Row(
             children: [
               Icon(
                 MdiIcons.heart,
@@ -214,14 +303,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         } else if (isOwnFaction) {
           String factionText = "This is a fellow faction member "
-              "(${target.faction.position.toLowerCase()})!";
+              "(${otherProfile.faction.position.toLowerCase()})!";
           Color factionColor = Colors.green;
           if (widget.profileCheckType == ProfileCheckType.attack) {
             factionColor = Colors.black;
             factionText = "CAUTION: this is a fellow faction member!";
             backgroundColor = Colors.red;
           }
-          playerOrFactionDetails = Row(
+          playerOrFactionWidget = Row(
             children: [
               Image.asset(
                 'images/icons/faction.png',
@@ -246,7 +335,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         } else if (isFriendlyFaction) {
           String factionText = "This is an allied faction member "
-              "(${target.faction.factionName})!";
+              "(${otherProfile.faction.factionName})!";
           Color factionColor = Colors.green;
           if (widget.profileCheckType == ProfileCheckType.attack) {
             factionColor = Colors.black;
@@ -254,7 +343,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             backgroundColor = Colors.red;
           }
 
-          friendlyFactionDetails = Row(
+          friendlyFactionWidget = Row(
             children: [
               Image.asset(
                 'images/icons/faction.png',
@@ -281,18 +370,18 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
         if (isPartner) {
           String partnerText = "This is your lovely "
-              "${target.gender == "Male" ? "husband" : "wife"}!";
+              "${otherProfile.gender == "Male" ? "husband" : "wife"}!";
           Color partnerColor = Colors.green;
           if (widget.profileCheckType == ProfileCheckType.attack) {
             partnerColor = Colors.black;
             partnerText = "CAUTION: this is your "
-                "${target.gender == "Male" ? "husband" : "wife"}! "
+                "${otherProfile.gender == "Male" ? "husband" : "wife"}! "
                 "Are you really that mad at "
-                "${target.gender == "Male" ? "him" : "her"}?";
+                "${otherProfile.gender == "Male" ? "him" : "her"}?";
             backgroundColor = Colors.red;
           }
 
-          partnerDetails = Row(
+          partnerWidget = Row(
             children: [
               Icon(
                 MdiIcons.heart,
@@ -327,18 +416,31 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      tornPdaDetails,
-                      if (isTornPda && isPartner) SizedBox(height: 8),
-                      partnerDetails,
-                      if ((isTornPda || isPartner) && isFriend) SizedBox(height: 8),
-                      friendsDetails,
-                      if ((isTornPda || isPartner || isFriend) && playerOrFaction)
+                      estimatedStatsWidget,
+                      if (hasEstimatedStats && isTornPda) SizedBox(height: 8),
+                      tornPdaWidget,
+                      if ((hasEstimatedStats || isTornPda) && isPartner)
                         SizedBox(height: 8),
-                      playerOrFactionDetails,
-                      if ((isTornPda || isPartner || isFriend || playerOrFaction) &&
+                      partnerWidget,
+                      if ((hasEstimatedStats || isTornPda || isPartner) &&
+                          isFriend)
+                        SizedBox(height: 8),
+                      friendsWidget,
+                      if ((hasEstimatedStats ||
+                              isTornPda ||
+                              isPartner ||
+                              isFriend) &&
+                          playerOrFaction)
+                        SizedBox(height: 8),
+                      playerOrFactionWidget,
+                      if ((hasEstimatedStats ||
+                              isTornPda ||
+                              isPartner ||
+                              isFriend ||
+                              playerOrFaction) &&
                           isFriendlyFaction)
                         SizedBox(height: 8),
-                      friendlyFactionDetails,
+                      friendlyFactionWidget,
                     ],
                   ),
                 ),
@@ -374,5 +476,28 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _mainDetailsWidget = errorDetails;
       });
     }
+  }
+
+  String _calculateStats(OtherProfileModel otherProfile) {
+    var levelIndex =
+        _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
+    var crimeIndex = _crimesTriggers
+            .lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) +
+        1;
+    var networthIndex = _networthTriggers
+            .lastIndexWhere((x) => x <= otherProfile.personalstats.networth) +
+        1;
+    var rankIndex = 0;
+    _ranksTriggers.forEach((tornRank, index) {
+      if (otherProfile.rank.contains(tornRank)) {
+        rankIndex = index;
+      }
+    });
+
+    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
+    if (finalIndex >= 0 && finalIndex <= 6) {
+      return _statsResults[finalIndex];
+    }
+    return "";
   }
 }
