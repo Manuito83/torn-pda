@@ -38,6 +38,7 @@ class OwnProfileMisc {
     this.speedInfo,
     this.dexterityInfo,
     this.jobpoints,
+    this.properties,
   });
 
   int points;
@@ -66,6 +67,7 @@ class OwnProfileMisc {
   List<String> speedInfo;
   List<String> dexterityInfo;
   Jobpoints jobpoints;
+  Map<String, Property> properties;
 
   factory OwnProfileMisc.fromJson(Map<String, dynamic> json) => OwnProfileMisc(
     points: json["points"] == null ? null : json["points"],
@@ -94,6 +96,7 @@ class OwnProfileMisc {
     speedInfo: json["speed_info"] == null ? null : List<String>.from(json["speed_info"].map((x) => x)),
     dexterityInfo: json["dexterity_info"] == null ? null : List<String>.from(json["dexterity_info"].map((x) => x)),
     jobpoints: json["jobpoints"] == null ? null : Jobpoints.fromJson(json["jobpoints"]),
+    properties: json["properties"] == null ? null : Map.from(json["properties"]).map((k, v) => MapEntry<String, Property>(k, Property.fromJson(v))),
   );
 
   Map<String, dynamic> toJson() => {
@@ -123,6 +126,7 @@ class OwnProfileMisc {
     "speed_info": speedInfo == null ? null : List<dynamic>.from(speedInfo.map((x) => x)),
     "dexterity_info": dexterityInfo == null ? null : List<dynamic>.from(dexterityInfo.map((x) => x)),
     "jobpoints": jobpoints == null ? null : jobpoints.toJson(),
+    "properties": properties == null ? null : Map.from(properties).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
   };
 }
 
@@ -221,3 +225,144 @@ class CityBank {
     "time_left": timeLeft == null ? null : timeLeft,
   };
 }
+
+class Property {
+  Property({
+    this.ownerId,
+    this.propertyType,
+    this.property,
+    this.status,
+    this.happy,
+    this.upkeep,
+    this.staffCost,
+    this.cost,
+    this.marketprice,
+    this.modifications,
+    this.staff,
+  });
+
+  int ownerId;
+  int propertyType;
+  String property;
+  String status;
+  int happy;
+  int upkeep;
+  int staffCost;
+  int cost;
+  int marketprice;
+  Modifications modifications;
+  Staff staff;
+
+  factory Property.fromJson(Map<String, dynamic> json) => Property(
+    ownerId: json["owner_id"] == null ? null : json["owner_id"],
+    propertyType: json["property_type"] == null ? null : json["property_type"],
+    property: json["property"] == null ? null : json["property"],
+    status: json["status"] == null ? null : json["status"],
+    happy: json["happy"] == null ? null : json["happy"],
+    upkeep: json["upkeep"] == null ? null : json["upkeep"],
+    staffCost: json["staff_cost"] == null ? null : json["staff_cost"],
+    cost: json["cost"] == null ? null : json["cost"],
+    marketprice: json["marketprice"] == null ? null : json["marketprice"],
+    modifications: json["modifications"] == null ? null : Modifications.fromJson(json["modifications"]),
+    staff: json["staff"] == null ? null : Staff.fromJson(json["staff"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "owner_id": ownerId == null ? null : ownerId,
+    "property_type": propertyType == null ? null : propertyType,
+    "property": property == null ? null : property,
+    "status": status == null ? null : status,
+    "happy": happy == null ? null : happy,
+    "upkeep": upkeep == null ? null : upkeep,
+    "staff_cost": staffCost == null ? null : staffCost,
+    "cost": cost == null ? null : cost,
+    "marketprice": marketprice == null ? null : marketprice,
+    "modifications": modifications == null ? null : modifications.toJson(),
+    "staff": staff == null ? null : staff.toJson(),
+  };
+}
+
+class Modifications {
+  Modifications({
+    this.interior,
+    this.hotTub,
+    this.sauna,
+    this.pool,
+    this.openBar,
+    this.shootingRange,
+    this.vault,
+    this.medicalFacility,
+    this.airstrip,
+    this.yacht,
+  });
+
+  int interior;
+  int hotTub;
+  int sauna;
+  int pool;
+  int openBar;
+  int shootingRange;
+  int vault;
+  int medicalFacility;
+  int airstrip;
+  int yacht;
+
+  factory Modifications.fromJson(Map<String, dynamic> json) => Modifications(
+    interior: json["interior"] == null ? null : json["interior"],
+    hotTub: json["hot_tub"] == null ? null : json["hot_tub"],
+    sauna: json["sauna"] == null ? null : json["sauna"],
+    pool: json["pool"] == null ? null : json["pool"],
+    openBar: json["open_bar"] == null ? null : json["open_bar"],
+    shootingRange: json["shooting_range"] == null ? null : json["shooting_range"],
+    vault: json["vault"] == null ? null : json["vault"],
+    medicalFacility: json["medical_facility"] == null ? null : json["medical_facility"],
+    airstrip: json["airstrip"] == null ? null : json["airstrip"],
+    yacht: json["yacht"] == null ? null : json["yacht"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "interior": interior == null ? null : interior,
+    "hot_tub": hotTub == null ? null : hotTub,
+    "sauna": sauna == null ? null : sauna,
+    "pool": pool == null ? null : pool,
+    "open_bar": openBar == null ? null : openBar,
+    "shooting_range": shootingRange == null ? null : shootingRange,
+    "vault": vault == null ? null : vault,
+    "medical_facility": medicalFacility == null ? null : medicalFacility,
+    "airstrip": airstrip == null ? null : airstrip,
+    "yacht": yacht == null ? null : yacht,
+  };
+}
+
+class Staff {
+  Staff({
+    this.maid,
+    this.guard,
+    this.pilot,
+    this.butler,
+    this.doctor,
+  });
+
+  int maid;
+  int guard;
+  int pilot;
+  int butler;
+  int doctor;
+
+  factory Staff.fromJson(Map<String, dynamic> json) => Staff(
+    maid: json["maid"] == null ? null : json["maid"],
+    guard: json["guard"] == null ? null : json["guard"],
+    pilot: json["pilot"] == null ? null : json["pilot"],
+    butler: json["butler"] == null ? null : json["butler"],
+    doctor: json["doctor"] == null ? null : json["doctor"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "maid": maid == null ? null : maid,
+    "guard": guard == null ? null : guard,
+    "pilot": pilot == null ? null : pilot,
+    "butler": butler == null ? null : butler,
+    "doctor": doctor == null ? null : doctor,
+  };
+}
+

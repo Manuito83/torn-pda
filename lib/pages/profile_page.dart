@@ -48,6 +48,7 @@ import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
+import 'package:torn_pda/models/property_model.dart';
 
 enum ProfileNotification {
   travel,
@@ -193,6 +194,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
+
+  var _rentedPropertiesTick = 0;
+  var _rentedProperties = 0;
+  Widget _rentedPropertiesWidget = SizedBox.shrink();
 
   String _factionCrimeName = "";
   DateTime _factionCrimeTimestamp;
@@ -3635,6 +3640,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool racingActive = false;
     bool bankActive = false;
     bool educationActive = false;
+    bool propertyActive = false;
 
     // DEBUG ******************************
     //_user.icons.icon57 = "Test addiction -" + " long string " * 6;
@@ -3934,6 +3940,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    // PROPERTIES
+    if (_rentedProperties > 0) {
+      showMisc = true;
+      propertyActive = true;
+    }
+
     if (!showMisc) {
       return SizedBox.shrink();
     } else {
@@ -3986,6 +3998,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: educationWidget,
+                ),
+                if ((addictionActive ||
+                        racingActive ||
+                        factionCrimesActive ||
+                        bankActive ||
+                        educationActive) &&
+                    propertyActive)
+                  SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: _rentedPropertiesWidget,
                 ),
               ],
             ),
@@ -4187,6 +4210,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         // Get this async
         _getFactionCrimes();
 
+        // Assess properties async, but wait some more time
+        if (_rentedPropertiesTick == 0) {
+          _checkProperties(miscApiResponse);
+        } else if (_rentedPropertiesTick > 30) {
+          _checkProperties(miscApiResponse);
+          _rentedPropertiesTick = 0;
+        }
+        _rentedPropertiesTick++;
+
         setState(() {
           _miscModel = miscApiResponse;
           _miscApiFetched = true;
@@ -4216,7 +4248,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             });
 
-            if (participant.containsKey(_userProvider.basic.playerId.toString())) {
+            if (participant
+                .containsKey(_userProvider.basic.playerId.toString())) {
               _factionCrimeName = details.crimeName;
               _factionCrimeTimestamp =
                   DateTime.fromMillisecondsSinceEpoch(details.timeReady * 1000);
@@ -6209,5 +6242,103 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
     return sectionSort;
+  }
+
+  void _checkProperties(OwnProfileMisc miscApiResponse) async {
+    // Get the properties we are renting into a map
+    var thisRented = Map<String, Map<String, String>>();
+    var propertyModel = miscApiResponse.properties;
+
+    var keys = [];
+    var details = [];
+    propertyModel.forEach((key, value) {
+      if (value.status == "Currently being rented") {
+        keys.add(key);
+        details.add(value);
+      }
+    });
+
+    int number = 0;
+    await Future.forEach(keys, (element) async {
+      var rentDetails =
+          await TornApiCaller.property(_userProvider.basic.userApiKey, element)
+              .getProperty;
+
+      if (rentDetails is PropertyModel) {
+        var timeLeft = rentDetails.property.rented.daysLeft;
+        var daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
+        if (timeLeft <= 7) {
+          thisRented.addAll({
+            element: {
+              "time": timeLeft.toString(),
+              "text": "Your ${details[number].property.toLowerCase()}'s "
+                  "rent will end in $daysString!",
+            }
+          });
+        }
+      }
+      number++;
+    });
+
+    // Convert to a widget
+    var propertyLines = <Widget>[];
+    var currentItem = 0;
+    thisRented.forEach((key, value) {
+      int numberDays = int.parse(value["time"]);
+      Widget prop = Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.house_outlined),
+                SizedBox(width: 10),
+                Flexible(
+                    child: Text(
+                  value["text"],
+                  style: TextStyle(
+                    color: numberDays <= 5
+                        ? numberDays <= 2
+                            ? Colors.red[500]
+                            : Colors.orange[800]
+                        : _themeProvider.mainText,
+                  ),
+                )),
+              ],
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onLongPress: () {
+              openBrowserDialog(context,
+                  'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize');
+            },
+            onTap: () {
+              _launchBrowserOption(
+                  'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize');
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 5),
+              child: Icon(MdiIcons.openInApp, size: 18),
+            ),
+          ),
+        ],
+      );
+
+      // Add the property
+      propertyLines.add(prop);
+
+      // Add some space if we have more properties
+      if (currentItem + 1 < thisRented.length) {
+        propertyLines.add(SizedBox(height: 10));
+      }
+      currentItem++;
+    });
+
+    // Pass to global widget
+    setState(() {
+      _rentedProperties = currentItem;
+      _rentedPropertiesWidget = Column(children: propertyLines);
+    });
   }
 }

@@ -17,11 +17,13 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/property_model.dart';
 
 enum ApiType {
   user,
   faction,
   torn,
+  property,
 }
 
 enum ApiSelection {
@@ -41,6 +43,7 @@ enum ApiSelection {
   faction,
   factionCrimes,
   friends,
+  property,
 }
 
 class ApiError {
@@ -115,6 +118,7 @@ class TornApiCaller {
   TornApiCaller.faction(this.apiKey, this.queryId);
   TornApiCaller.factionCrimes(this.apiKey);
   TornApiCaller.friends(this.apiKey, this.queryId);
+  TornApiCaller.property(this.apiKey, this.queryId);
 
   Future<dynamic> get getTravel async {
     dynamic apiResult;
@@ -361,6 +365,24 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getProperty async {
+    dynamic apiResult;
+    await _apiCall(ApiType.property,
+        prefix: this.queryId, apiSelection: ApiSelection.property)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return PropertyModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _apiCall(ApiType apiType,
       {String prefix, ApiSelection apiSelection}) async {
     String url = 'https://api.torn.com/';
@@ -373,6 +395,9 @@ class TornApiCaller {
         break;
       case ApiType.torn:
         url += 'torn/';
+        break;
+      case ApiType.property:
+        url += 'property/';
         break;
     }
 
@@ -389,7 +414,7 @@ class TornApiCaller {
             'money,education,messages';
         break;
       case ApiSelection.ownMisc:
-        url += '?selections=money,education,workstats,battlestats,jobpoints';
+        url += '?selections=money,education,workstats,battlestats,jobpoints,properties';
         break;
       case ApiSelection.otherProfile:
         url += '$prefix?selections=profile,crimes,personalstats';
@@ -426,6 +451,9 @@ class TornApiCaller {
         break;
       case ApiSelection.friends:
         url += '$prefix?selections=profile,discord';
+        break;
+      case ApiSelection.property:
+        url += '$prefix?selections=property';
         break;
     }
     url += '&key=$apiKey&comment=TornPDA';
