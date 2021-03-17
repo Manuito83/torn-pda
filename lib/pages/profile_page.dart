@@ -2797,6 +2797,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         color: Colors.green,
         size: 20,
       );
+    } else if (message.contains('Your period of renting the') ||
+        message.contains('has sent an offer for you to rent') ||
+        message.contains('Your rental agreement with')) {
+      insideIcon = Icon(
+        Icons.house_outlined,
+        color: Colors.orange[900],
+        size: 20,
+      );
     } else {
       insideIcon = Container(
         child: Center(
