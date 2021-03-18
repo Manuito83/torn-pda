@@ -152,8 +152,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     var hasEstimatedStats = false;
 
     if (otherProfile is OtherProfileModel) {
-      String estimatedStats = _calculateStats(otherProfile);
-      if (estimatedStats.isNotEmpty) hasEstimatedStats = true;
+
+      String estimatedStats = "";
+      try {
+        estimatedStats = _calculateStats(otherProfile);
+        hasEstimatedStats = true;
+      } catch (e) {
+        // Will be empty
+      }
 
       if (otherProfile.playerId == 2225097) {
         isTornPda = true;
@@ -217,6 +223,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 11,
+                    fontStyle: estimatedStats == "unk"
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                   ),
                 ),
               ),
@@ -498,6 +507,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     if (finalIndex >= 0 && finalIndex <= 6) {
       return _statsResults[finalIndex];
     }
-    return "";
+    return "unk";
   }
 }
