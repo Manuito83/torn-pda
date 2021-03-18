@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter/services.dart';
 import 'package:torn_pda/pages/settings/friendly_factions.dart';
+import 'package:torn_pda/pages/settings/userscripts_page.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);
@@ -27,14 +29,18 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   bool _removeAirplane;
   bool _useQuickBrowser;
   bool _extraPlayerInformation;
+  bool _userScriptsEnabled;
 
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  UserScriptsProvider _userScriptsProvider;
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userScriptsProvider =
+        Provider.of<UserScriptsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
   }
 
@@ -72,6 +78,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         children: <Widget>[
                           SizedBox(height: 15),
                           _general(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
+                          _userScripts(),
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
@@ -184,6 +194,85 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column _userScripts() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'USER SCRIPTS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Enable custom user scripts"),
+                  Switch(
+                    value: _userScriptsEnabled,
+                    onChanged: (value) {
+                      _userScriptsProvider.setUserScriptsEnabled = value;
+                      setState(() {
+                        _userScriptsEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'You can load custom user scripts in the browser (this feature does not currently '
+                'work when using the browser for chaining)',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+            if (_userScriptsEnabled)
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          "Manage scripts",
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.keyboard_arrow_right_outlined),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    UserScriptsPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -532,6 +621,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       _highlightColor = Color(_settingsProvider.highlightColor);
       _removeAirplane = _settingsProvider.removeAirplane;
       _extraPlayerInformation = _settingsProvider.extraPlayerInformation;
+      _userScriptsEnabled = _userScriptsProvider.userScriptsEnabled;
     });
   }
 

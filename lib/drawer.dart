@@ -21,6 +21,7 @@ import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firestore.dart';
@@ -64,6 +65,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
+  UserScriptsProvider _userScriptsProvider;
   final FirebaseMessaging _messaging = FirebaseMessaging();
   final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -759,6 +761,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Set up SettingsProvider so that user preferences are applied
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
+
+    // Set up UserScriptsProvider so that user preferences are applied
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    await _userScriptsProvider.loadPreferences();
 
     // Set up UserProvider. If key is empty, redirect to the Settings page.
     // Else, open the default

@@ -99,6 +99,8 @@ class SharedPreferencesModel {
   final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
+  final String _kUserScriptsList = "pda_userScriptsList";
+
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
   final String _kTACEnabled = "pda_tacEnabled";
@@ -1196,6 +1198,19 @@ class SharedPreferencesModel {
   Future<bool> setTACTargets(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTACTargets, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR LISTS IN SETTINGS
+  /// -----------------------------
+  Future<String> getUserScriptsList() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kUserScriptsList) ?? [];
+  }
+
+  Future<bool> setUserScriptsList(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kUserScriptsList, value);
   }
 
 

@@ -15,6 +15,7 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
@@ -136,6 +137,7 @@ class _WebViewFullState extends State<WebViewFull> {
   double progress = 0;
 
   SettingsProvider _settingsProvider;
+  UserScriptsProvider _userScriptsProvider;
   ThemeProvider _themeProvider;
 
   @override
@@ -143,6 +145,7 @@ class _WebViewFullState extends State<WebViewFull> {
     super.initState();
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
     _pageTitle = widget.customTitle;
     //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
@@ -459,6 +462,7 @@ class _WebViewFullState extends State<WebViewFull> {
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
+            initialUserScripts: _userScriptsProvider.getSources(),
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                   // This is deactivated as it interferes with hospital timer,

@@ -24,6 +24,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -104,18 +105,27 @@ Future<void> main() async {
                   FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.basic),
         ),
+        ChangeNotifierProvider<UserScriptsProvider>(
+          create: (context) => UserScriptsProvider(),
+        ),
         ChangeNotifierProvider<ChainStatusProvider>(
-            create: (context) => ChainStatusProvider()),
+          create: (context) => ChainStatusProvider(),
+        ),
         ChangeNotifierProvider<CrimesProvider>(
-            create: (context) => CrimesProvider()),
+          create: (context) => CrimesProvider(),
+        ),
         ChangeNotifierProvider<QuickItemsProvider>(
-            create: (context) => QuickItemsProvider()),
+          create: (context) => QuickItemsProvider(),
+        ),
         ChangeNotifierProvider<TradesProvider>(
-            create: (context) => TradesProvider()),
+          create: (context) => TradesProvider(),
+        ),
         ChangeNotifierProvider<ShortcutsProvider>(
-            create: (context) => ShortcutsProvider()),
+          create: (context) => ShortcutsProvider(),
+        ),
         ChangeNotifierProvider<AwardsProvider>(
-            create: (context) => AwardsProvider()),
+          create: (context) => AwardsProvider(),
+        ),
       ],
       child: MyApp(),
     ),
@@ -151,10 +161,11 @@ class MyApp extends StatelessWidget {
 }
 
 // Avoid HTTP Handshake errors
-class MyHttpOverrides extends HttpOverrides{
+class MyHttpOverrides extends HttpOverrides {
   @override
-  HttpClient createHttpClient(SecurityContext context){
+  HttpClient createHttpClient(SecurityContext context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
