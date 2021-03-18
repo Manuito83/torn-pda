@@ -1206,7 +1206,7 @@ class SharedPreferencesModel {
   /// -----------------------------
   Future<String> getUserScriptsList() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kUserScriptsList) ?? [];
+    return prefs.getString(_kUserScriptsList) ?? "";
   }
 
   Future<bool> setUserScriptsList(String value) async {
@@ -1217,7 +1217,7 @@ class SharedPreferencesModel {
   // *************
   Future<String> getFriendlyFactions() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kFriendlyFactions) ?? [];
+    return prefs.getString(_kFriendlyFactions) ?? "";
   }
 
   Future<bool> setFriendlyFactions(String value) async {

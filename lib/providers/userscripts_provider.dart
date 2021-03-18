@@ -83,11 +83,12 @@ class UserScriptsProvider extends ChangeNotifier {
 
   Future<void> loadPreferences() async {
     var savedScripts = await SharedPreferencesModel().getUserScriptsList();
-    var decoded = json.decode(savedScripts);
-    for (var dec in decoded) {
-      _userScriptList.add(UserScriptModel.fromJson(dec));
+    if (savedScripts.isNotEmpty) {
+      var decoded = json.decode(savedScripts);
+      for (var dec in decoded) {
+        _userScriptList.add(UserScriptModel.fromJson(dec));
+      }
     }
     notifyListeners();
-
   }
 }

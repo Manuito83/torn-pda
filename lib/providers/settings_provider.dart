@@ -226,9 +226,11 @@ class SettingsProvider extends ChangeNotifier {
     _extraPlayerInformation = await SharedPreferencesModel().getExtraPlayerInformation();
 
     var savedFriendlyFactions = await SharedPreferencesModel().getFriendlyFactions();
-    var decoded = json.decode(savedFriendlyFactions);
-    for (var dec in decoded) {
-      _friendlyFactions.add(FriendlyFaction.fromJson(dec));
+    if (savedFriendlyFactions.isNotEmpty) {
+      var decoded = json.decode(savedFriendlyFactions);
+      for (var dec in decoded) {
+        _friendlyFactions.add(FriendlyFaction.fromJson(dec));
+      }
     }
 
     _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
