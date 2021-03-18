@@ -26,8 +26,6 @@ class _UserScriptsDialogState extends State<UserScriptsDialog> {
 
   UserScriptsProvider _userScriptsProvider;
 
-  var _sourceScrollController = ScrollController();
-
   @override
   void initState() {
     super.initState();
@@ -122,7 +120,6 @@ class _UserScriptsDialogState extends State<UserScriptsDialog> {
                 child: Form(
                   key: _sourceFormKey,
                   child: TextFormField(
-                    scrollController: _sourceScrollController,
                     minLines: null,
                     maxLines: null,
                     expands: true,
