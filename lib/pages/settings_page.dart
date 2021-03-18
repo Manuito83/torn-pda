@@ -1327,8 +1327,6 @@ class _SettingsPageState extends State<SettingsPage> {
       _getApiDetails(userTriggered: false);
     }
 
-    await _settingsProvider.loadPreferences();
-
     var onAppExit = _settingsProvider.onAppExit;
     setState(() {
       switch (onAppExit) {

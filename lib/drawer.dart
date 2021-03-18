@@ -235,7 +235,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   // TODO Missing bits:
   // IMPORTANT: onResume/Launch only trigger with "FLUTTER_NOTIFICATION_CLICK"
   // from Functions, but not directly from Firebase's Messaging console.
-  //  - Join all notifications in one file
   //  - Give the option to choose different places? Like in nerve,
   //    crimes vs jail. Energy: gym vs dump vs do not open.
 

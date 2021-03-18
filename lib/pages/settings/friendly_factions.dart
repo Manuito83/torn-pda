@@ -7,11 +7,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
-
-class FriendlyFaction {
-  String name = "";
-  int id = 0;
-}
+import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
@@ -126,9 +122,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                     child: Text(
                       'Use the \'+\' button to add new friendly factions to the list. '
                       'Players in said factions will be flagged as allied when you visit their '
-                      'profiles or try to attack them. '
-                      'You can find the faction ID in the browser address bar when visiting '
-                      'another faction.',
+                      'profiles or try to attack them.',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -264,56 +258,70 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                           ),
                         ],
                       ),
-                      child: Form(
-                        key: _addFormKey,
-                        child: Column(
-                          mainAxisSize:
-                              MainAxisSize.min, // To make the card compact
-                          children: <Widget>[
-                            TextFormField(
-                              style: TextStyle(fontSize: 14),
-                              controller: _addIdController,
-                              maxLength: 8,
-                              minLines: 1,
-                              maxLines: 1,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly
-                              ],
-                              decoration: InputDecoration(
-                                counterText: "",
-                                border: OutlineInputBorder(),
-                                labelText: 'Insert faction ID',
-                              ),
-                              validator: (value) {
-                                if (value.isEmpty || value == "0") {
-                                  return "Enter a valid ID!";
-                                }
-                                _addIdController.text = value.trim();
-                                return null;
-                              },
+                      child: Column(
+                        children: [
+                          Text(
+                            'You can find the faction ID in the browser address bar when visiting '
+                            'another faction',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
                             ),
-                            SizedBox(height: 16.0),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
+                          ),
+                          SizedBox(height: 10),
+                          Form(
+                            key: _addFormKey,
+                            child: Column(
+                              mainAxisSize:
+                                  MainAxisSize.min, // To make the card compact
                               children: <Widget>[
-                                TextButton(
-                                  child: Text("Add"),
-                                  onPressed: () async {
-                                    await _addPressed(context);
+                                TextFormField(
+                                  style: TextStyle(fontSize: 14),
+                                  controller: _addIdController,
+                                  maxLength: 8,
+                                  minLines: 1,
+                                  maxLines: 1,
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: <TextInputFormatter>[
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Insert faction ID',
+                                  ),
+                                  validator: (value) {
+                                    if (value.isEmpty || value == "0") {
+                                      return "Enter a valid ID!";
+                                    }
+                                    _addIdController.text = value.trim();
+                                    return null;
                                   },
                                 ),
-                                TextButton(
-                                  child: Text("Cancel"),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    _addIdController.text = '';
-                                  },
-                                ),
+                                SizedBox(height: 16.0),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: <Widget>[
+                                    TextButton(
+                                      child: Text("Add"),
+                                      onPressed: () async {
+                                        await _addPressed(context);
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text("Cancel"),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                        _addIdController.text = '';
+                                      },
+                                    ),
+                                  ],
+                                )
                               ],
-                            )
-                          ],
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -369,8 +377,23 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
           duration: Duration(seconds: 4),
           contentPadding: EdgeInsets.all(10),
         );
-
         return;
+      }
+
+      for (var faction in _settingsProvider.friendlyFactions) {
+        if (faction.id.toString() == inputId) {
+          BotToast.showText(
+            text: 'This faction is already in the list!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.orange[700],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+          return;
+        }
       }
 
       var retrievedFaction = await TornApiCaller.faction(

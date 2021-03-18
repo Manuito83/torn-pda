@@ -85,7 +85,6 @@ class _TradesOptionsState extends State<TradesOptions> {
                                           _tradeCalculatorEnabled = value;
                                           if (!value) {
                                             _tornTraderEnabled = false;
-                                            // TODO: sharedprefs for torntrader
                                           }
                                         });
                                       },

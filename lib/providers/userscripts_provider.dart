@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/models/settings/userscript_model.dart';
+import 'package:torn_pda/models/userscript_model.dart';
 
 class UserScriptsProvider extends ChangeNotifier {
   List<UserScriptModel> _userScriptList = <UserScriptModel>[];

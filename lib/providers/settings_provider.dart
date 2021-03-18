@@ -1,6 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/pages/settings/friendly_factions.dart';
+import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 
 enum BrowserSetting {
   app,
@@ -24,131 +25,8 @@ class SettingsProvider extends ChangeNotifier {
   BrowserSetting get currentBrowser => _currentBrowser;
   set changeBrowser(BrowserSetting browserType) {
     _currentBrowser = browserType;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
 
-  var _testBrowserActive = false;
-  bool get testBrowserActive => _testBrowserActive;
-  set changeTestBrowserActive(bool active) {
-    _testBrowserActive = active;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _disableTravelSection = false;
-  bool get disableTravelSection => _disableTravelSection;
-  set changeDisableTravelSection(bool disable) {
-    _disableTravelSection = disable;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _onAppExit = 'ask';
-  String get onAppExit => _onAppExit;
-  set changeOnAppExit(String choice) {
-    _onAppExit = choice;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _currentTimeFormat = TimeFormatSetting.h24;
-  TimeFormatSetting get currentTimeFormat => _currentTimeFormat;
-  set changeTimeFormat(TimeFormatSetting timeFormatSetting) {
-    _currentTimeFormat = timeFormatSetting;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _currentTimeZone = TimeZoneSetting.localTime;
-  TimeZoneSetting get currentTimeZone => _currentTimeZone;
-  set changeTimeZone(TimeZoneSetting timeZoneSetting) {
-    _currentTimeZone = timeZoneSetting;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _appBarTop = true;
-  bool get appBarTop => _appBarTop;
-  set changeAppBarTop(bool value) {
-    _appBarTop = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _loadBarBrowser = true;
-  bool get loadBarBrowser => _loadBarBrowser;
-  set changeLoadBarBrowser(bool value) {
-    _loadBarBrowser = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _chatRemoveEnabled = true;
-  bool get chatRemoveEnabled => _chatRemoveEnabled;
-  set changeChatRemoveEnabled(bool value) {
-    _chatRemoveEnabled = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _highlightChat = true;
-  bool get highlightChat => _highlightChat;
-  set changeHighlightChat(bool value) {
-    _highlightChat = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _highlightColor = 0x66b74093;
-  int get highlightColor => _highlightColor;
-  set changeHighlightColor(int value) {
-    _highlightColor = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _removeAirplane = false;
-  bool get removeAirplane => _removeAirplane;
-  set changeRemoveAirplane(bool value) {
-    _removeAirplane = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _extraPlayerInformation = false;
-  bool get extraPlayerInformation => _extraPlayerInformation;
-  set changeExtraPlayerInformation(bool value) {
-    _extraPlayerInformation = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _friendlyFactions = <FriendlyFaction>[];
-  List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
-  set setFriendlyFactions(List<FriendlyFaction> faction) {
-    _friendlyFactions = faction;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _useQuickBrowser = true;
-  bool get useQuickBrowser => _useQuickBrowser;
-  set changeUseQuickBrowser(bool value) {
-    _useQuickBrowser = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  var _removeNotificationsOnLaunch = true;
-  bool get removeNotificationsOnLaunch => _removeNotificationsOnLaunch;
-  set changeRemoveNotificationsOnLaunch(bool value) {
-    _removeNotificationsOnLaunch = value;
-    _saveSettingsSharedPrefs();
-    notifyListeners();
-  }
-
-  void _saveSettingsSharedPrefs() {
+    // SHARED PREFS
     String browserSave;
     switch (_currentBrowser) {
       case BrowserSetting.app:
@@ -160,27 +38,39 @@ class SettingsProvider extends ChangeNotifier {
     }
     SharedPreferencesModel().setDefaultBrowser(browserSave);
 
-    SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
+    notifyListeners();
+  }
 
-    SharedPreferencesModel().setDisableTravelSection(_disableTravelSection);
-
-    SharedPreferencesModel().setOnAppExit(_onAppExit);
-
-    SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
-
-    SharedPreferencesModel().setHighlightChat(_highlightChat);
-    SharedPreferencesModel().setHighlightColor(_highlightColor);
-
-    SharedPreferencesModel().setRemoveAirplane(_removeAirplane);
-
-    SharedPreferencesModel().setExtraPlayerInformation(_extraPlayerInformation);
-
-    SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
-
+  var _testBrowserActive = false;
+  bool get testBrowserActive => _testBrowserActive;
+  set changeTestBrowserActive(bool active) {
+    _testBrowserActive = active;
     SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
+    notifyListeners();
+  }
 
-    SharedPreferencesModel().setRemoveNotificationsOnLaunch(_removeNotificationsOnLaunch);
+  var _disableTravelSection = false;
+  bool get disableTravelSection => _disableTravelSection;
+  set changeDisableTravelSection(bool disable) {
+    _disableTravelSection = disable;
+    SharedPreferencesModel().setDisableTravelSection(_disableTravelSection);
+    notifyListeners();
+  }
 
+  var _onAppExit = 'ask';
+  String get onAppExit => _onAppExit;
+  set changeOnAppExit(String choice) {
+    _onAppExit = choice;
+    SharedPreferencesModel().setOnAppExit(_onAppExit);
+    notifyListeners();
+  }
+
+  var _currentTimeFormat = TimeFormatSetting.h24;
+  TimeFormatSetting get currentTimeFormat => _currentTimeFormat;
+  set changeTimeFormat(TimeFormatSetting timeFormatSetting) {
+    _currentTimeFormat = timeFormatSetting;
+
+    // SHARED PREFS
     String timeFormatSave;
     switch (_currentTimeFormat) {
       case TimeFormatSetting.h24:
@@ -192,6 +82,15 @@ class SettingsProvider extends ChangeNotifier {
     }
     SharedPreferencesModel().setDefaultTimeFormat(timeFormatSave);
 
+    notifyListeners();
+  }
+
+  var _currentTimeZone = TimeZoneSetting.localTime;
+  TimeZoneSetting get currentTimeZone => _currentTimeZone;
+  set changeTimeZone(TimeZoneSetting timeZoneSetting) {
+    _currentTimeZone = timeZoneSetting;
+
+    // SHARED PREFS
     String timeZoneSave;
     switch (_currentTimeZone) {
       case TimeZoneSetting.localTime:
@@ -203,9 +102,91 @@ class SettingsProvider extends ChangeNotifier {
     }
     SharedPreferencesModel().setDefaultTimeZone(timeZoneSave);
 
+    notifyListeners();
+  }
+
+  var _appBarTop = true;
+  bool get appBarTop => _appBarTop;
+  set changeAppBarTop(bool value) {
+    _appBarTop = value;
+
     _appBarTop
         ? SharedPreferencesModel().setAppBarPosition('top')
         : SharedPreferencesModel().setAppBarPosition('bottom');
+
+    notifyListeners();
+  }
+
+  var _loadBarBrowser = true;
+  bool get loadBarBrowser => _loadBarBrowser;
+  set changeLoadBarBrowser(bool value) {
+    _loadBarBrowser = value;
+    SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
+    notifyListeners();
+  }
+
+  var _chatRemoveEnabled = true;
+  bool get chatRemoveEnabled => _chatRemoveEnabled;
+  set changeChatRemoveEnabled(bool value) {
+    _chatRemoveEnabled = value;
+    SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
+    notifyListeners();
+  }
+
+  var _highlightChat = true;
+  bool get highlightChat => _highlightChat;
+  set changeHighlightChat(bool value) {
+    _highlightChat = value;
+    SharedPreferencesModel().setHighlightChat(_highlightChat);
+    notifyListeners();
+  }
+
+  var _highlightColor = 0x66b74093;
+  int get highlightColor => _highlightColor;
+  set changeHighlightColor(int value) {
+    _highlightColor = value;
+    SharedPreferencesModel().setHighlightColor(_highlightColor);
+    notifyListeners();
+  }
+
+  var _removeAirplane = false;
+  bool get removeAirplane => _removeAirplane;
+  set changeRemoveAirplane(bool value) {
+    _removeAirplane = value;
+    SharedPreferencesModel().setRemoveAirplane(_removeAirplane);
+    notifyListeners();
+  }
+
+  var _extraPlayerInformation = false;
+  bool get extraPlayerInformation => _extraPlayerInformation;
+  set changeExtraPlayerInformation(bool value) {
+    _extraPlayerInformation = value;
+    SharedPreferencesModel().setExtraPlayerInformation(_extraPlayerInformation);
+    notifyListeners();
+  }
+
+  var _friendlyFactions = <FriendlyFaction>[];
+  List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
+  set setFriendlyFactions(List<FriendlyFaction> faction) {
+    _friendlyFactions = faction;
+    SharedPreferencesModel().setFriendlyFactions(json.encode(_friendlyFactions));
+    notifyListeners();
+  }
+
+  var _useQuickBrowser = true;
+  bool get useQuickBrowser => _useQuickBrowser;
+  set changeUseQuickBrowser(bool value) {
+    _useQuickBrowser = value;
+    SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
+    notifyListeners();
+  }
+
+  var _removeNotificationsOnLaunch = true;
+  bool get removeNotificationsOnLaunch => _removeNotificationsOnLaunch;
+  set changeRemoveNotificationsOnLaunch(bool value) {
+    _removeNotificationsOnLaunch = value;
+    SharedPreferencesModel().setRemoveNotificationsOnLaunch(_removeNotificationsOnLaunch);
+    notifyListeners();
   }
 
   void updateLastUsed(int timeStamp) {
@@ -243,6 +224,12 @@ class SettingsProvider extends ChangeNotifier {
     _removeAirplane = await SharedPreferencesModel().getRemoveAirplane();
 
     _extraPlayerInformation = await SharedPreferencesModel().getExtraPlayerInformation();
+
+    var savedFriendlyFactions = await SharedPreferencesModel().getFriendlyFactions();
+    var decoded = json.decode(savedFriendlyFactions);
+    for (var dec in decoded) {
+      _friendlyFactions.add(FriendlyFaction.fromJson(dec));
+    }
 
     _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
 

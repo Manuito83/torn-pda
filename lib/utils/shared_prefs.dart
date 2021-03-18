@@ -100,6 +100,7 @@ class SharedPreferencesModel {
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
+  final String _kFriendlyFactions = "pda_kFriendlyFactions";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1213,5 +1214,15 @@ class SharedPreferencesModel {
     return prefs.setString(_kUserScriptsList, value);
   }
 
+  // *************
+  Future<String> getFriendlyFactions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFriendlyFactions) ?? [];
+  }
+
+  Future<bool> setFriendlyFactions(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFriendlyFactions, value);
+  }
 
 }
