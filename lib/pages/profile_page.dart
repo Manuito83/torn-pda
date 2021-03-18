@@ -2672,7 +2672,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         size: 20,
       );
     } else if (message.contains('the director of') ||
-        message.contains('You have been fired from')) {
+        message.contains('You have been fired from') ||
+        message.contains('You application to join the company')) {
       insideIcon = Icon(
         Icons.work,
         color: Colors.brown[300],
@@ -2758,7 +2759,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
     } else if (message.contains('You left your faction') ||
-        message.contains('Your application to') ||
+        message.contains('Your application to join the faction') ||
         message.contains('has applied to join your faction')) {
       insideIcon = Container(
         child: Center(
