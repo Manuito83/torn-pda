@@ -36,6 +36,48 @@ class _ChangeLogState extends State<ChangeLog> {
     var itemList = <ChangeLogItem>[];
 
     // VERSION 2.2.0
+    var v2_3_0 = ChangeLogItem();
+    v2_3_0.main.version = 'Torn PDA v2.3.0 BETA';
+    v2_3_0.main.date = 'XX APR 2021';
+    String feat2_3_0_1 = "Loot: added Fernando (NPC).";
+    String feat2_3_0_2 = "Browser: added custom user scripts support (add your own in Settings / Browser Options). Preexisting scripts might require code changes to work in Torn PDA.";
+    String feat2_3_0_3 = "Browser: added estimated stats to players' profiles.";
+    String feat2_3_0_4 = "Browser: added extra information when attacking or visiting other players' profiles. You will be warned if they belong to your same faction or a friendly faction, if they are on your friends' list, etc. You can configure friendly factions in the advanced browser settings inside of the Settings section.";
+    String feat2_3_0_5 = "Chaining: added extra information to targets' notes when chaining, showing if the target has been online recently and if it belongs to a faction. Applies to standard targets and TAC.";
+    String feat2_3_0_6 = "Chaining: changed sorting by note color to match YATA's (G-Y-R-OFF or OFF-R-Y-G).";
+    String feat2_3_0_7 = "Chaining: you can now filter targets by note color.";
+    String feat2_3_0_8 = "Chaining: fixed TAC stats notes not showing correctly.";
+    String feat2_3_0_9 = "Chaining: notes color now sync with YATA even if the note is empty. The notebook icon is now also colored accordingly";
+    String feat2_3_0_10 = "Friends: the notebook icon is now colored according to the note's color, even if empty.";
+    String feat2_3_0_11 = "Profile: added a check for property rental expiry (< 7 days) in the miscellaneous card";
+    String feat2_3_0_12 = "Profile: the manual hospital release notification can now be configured to trigger several minutes in advance (similar to travel notifications).";
+    String feat2_3_0_13 = "Profile: fixed company name when working for a public company.";
+    String feat2_3_0_14 = "Profile: fixed participants readiness check for OCs.";
+    String feat2_3_0_15 = "Travel: Improved foreign items layout for narrow screens.";
+    String feat2_3_0_16 = "Settings: moved browser options to a dedicated section to reduce complexity.";
+    String feat2_3_0_17 = "Corrected pixel density for certain devices.";
+    String feat2_3_0_18 = "Corrected Torn links not working when the website returns an unsecure (http) url.";
+    v2_3_0.features.add(feat2_3_0_1);
+    v2_3_0.features.add(feat2_3_0_2);
+    v2_3_0.features.add(feat2_3_0_3);
+    v2_3_0.features.add(feat2_3_0_4);
+    v2_3_0.features.add(feat2_3_0_5);
+    v2_3_0.features.add(feat2_3_0_6);
+    v2_3_0.features.add(feat2_3_0_7);
+    v2_3_0.features.add(feat2_3_0_8);
+    v2_3_0.features.add(feat2_3_0_9);
+    v2_3_0.features.add(feat2_3_0_10);
+    v2_3_0.features.add(feat2_3_0_11);
+    v2_3_0.features.add(feat2_3_0_12);
+    v2_3_0.features.add(feat2_3_0_13);
+    v2_3_0.features.add(feat2_3_0_14);
+    v2_3_0.features.add(feat2_3_0_15);
+    v2_3_0.features.add(feat2_3_0_16);
+    v2_3_0.features.add(feat2_3_0_17);
+    v2_3_0.features.add(feat2_3_0_18);
+
+
+    // VERSION 2.2.0
     var v2_2_0 = ChangeLogItem();
     v2_2_0.main.version = 'Torn PDA v2.2.0';
     v2_2_0.main.date = '25 FEB 2021';
@@ -533,6 +575,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_3_0);
     itemList.add(v2_2_0);
     if (Platform.isIOS) itemList.add(v2_1_1);
     itemList.add(v2_1_0);
