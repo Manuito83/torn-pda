@@ -113,35 +113,17 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                              child: Icon(
-                                MdiIcons.alertDecagramOutline,
-                                color: Colors.orange[900],
-                              ),
-                              onTap: () async {
-                                await showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return _explanationDialog();
-                                  },
-                                );
-                              }),
-                          SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                              'Preexisting scripts might require modifications to work with Torn PDA. '
-                              'Please ensure that you use scripts responsibly and '
-                              'understand the hazards. Tap the exclamation mark for more information.',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
+                      child: Flexible(
+                        child: Text(
+                          'Preexisting scripts might require modifications to work with Torn PDA. '
+                          'Please ensure that you use scripts responsibly and '
+                          'understand the hazards. Tap the exclamation mark for more information.',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -247,6 +229,22 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           _willPopCallback();
         },
       ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            MdiIcons.alertDecagramOutline,
+            color: Colors.orange[300],
+          ),
+          onPressed: () async {
+            await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return _explanationDialog();
+              },
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -372,17 +370,45 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   _explanationDialog() {
     return AlertDialog(
       title: Text("DISCLAIMER"),
-      content: Text(
-        "User scripts are small programs written in JavaScript that enhance the browser's "
-        "functionalities. Be careful when using them and ensure that you understand the code "
-        "and what the script accomplishes; otherwise, ensure they come from a reliable "
-        "source and have been checked by someone you trust.\n\n"
-        "As in any other browser, user scripts might be used maliciously to get information "
-        "from your Torn account or other websites you visit.\n\n"
-        "NOTE: preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
-        "code changes to work with Torn PDA if external libraries were used.",
-        style: TextStyle(
-          fontSize: 13,
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "User scripts are small programs written in JavaScript that enhance the browser's "
+              "functionalities. Be careful when using them and ensure that you understand the code "
+              "and what the script accomplishes; otherwise, ensure they come from a reliable "
+              "source and have been checked by someone you trust.\n\n"
+              "As in any other browser, user scripts might be used maliciously to get information "
+              "from your Torn account or other websites you visit.\n\n"
+              "NOTE: preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
+              "code changes to work with Torn PDA if external libraries were used.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+            SizedBox(height: 25),
+            Text(
+              "TIPS",
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "Activation URLs, starting with '@match' in some user scripts headers, cannot contain wildcards like "
+              "'*'. Instead, full URLs or part of them (e.g. 'profile.php') are accepted.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
+              "Torn PDA will replace it with your API key in runtime.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
