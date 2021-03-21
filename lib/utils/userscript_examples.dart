@@ -16,10 +16,9 @@ class ScriptsExamples {
     if (matches.length > 0) {
       for (Match match in matches) {
         try {
-          print(match.group(2));
           urls.add(match.group(2));
         } catch (e) {
-          print(e);
+          //
         }
       }
     }

@@ -107,7 +107,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       ]);
 
       quickActions.initialize((String shortcutType) async {
-        print(shortcutType);
 
         if (shortcutType == 'open_torn') {
           var browserType = _settingsProvider.currentBrowser;

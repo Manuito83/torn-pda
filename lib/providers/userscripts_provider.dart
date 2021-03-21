@@ -166,6 +166,7 @@ class UserScriptsProvider extends ChangeNotifier {
     if (savedScripts == null) {
       _userScriptList =
           List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+      _saveSettingsSharedPrefs();
     } else {
       if (savedScripts.isNotEmpty) {
         var decoded = json.decode(savedScripts);

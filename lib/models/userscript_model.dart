@@ -3,7 +3,6 @@
 //     final userScriptModel = userScriptModelFromJson(jsonString);
 
 import 'dart:convert';
-import 'package:flutter/material.dart';
 
 UserScriptModel userScriptModelFromJson(String str) => UserScriptModel.fromJson(json.decode(str));
 
@@ -11,14 +10,14 @@ String userScriptModelToJson(UserScriptModel data) => json.encode(data.toJson())
 
 class UserScriptModel {
   UserScriptModel({
-    @required this.enabled,
-    @required this.urls,
-    @required this.name,
-    @required this.source,
+    this.enabled,
+    this.urls,
+    this.name,
+    this.source,
   });
 
   bool enabled;
-  List<String> urls;
+  List<dynamic> urls;
   String name;
   String source;
 
