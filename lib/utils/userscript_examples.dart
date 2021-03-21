@@ -305,7 +305,7 @@ class ScriptsExamples {
             if(data == null) {
                 // Default settings
                 data = {
-                    apiKey : apiKey,
+                    apiKey : apikey,
                     apiQueryDelay : 250,
                     hideFactionDescription: false,
                     queries: 0,
