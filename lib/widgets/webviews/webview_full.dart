@@ -501,14 +501,15 @@ class _WebViewFullState extends State<WebViewFull> {
               webView = c;
             },
             onLoadStart: (InAppWebViewController c, Uri uri) async {
+              // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
                 apiKey: _userProvider.basic.userApiKey,
               );
               for (var group in changes.scriptsToRemove) {
-                await c.removeUserScriptsByGroupName(groupName: group);
+                c.removeUserScriptsByGroupName(groupName: group);
               }
-              await c.addUserScripts(userScripts: changes.scriptsToAdd);
+              c.addUserScripts(userScripts: changes.scriptsToAdd);
 
               _hideChat();
 

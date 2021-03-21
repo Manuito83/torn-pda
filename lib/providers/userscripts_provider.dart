@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -33,7 +34,9 @@ class UserScriptsProvider extends ChangeNotifier {
           scriptList.add(
             UserScript(
               groupName: script.name,
-              injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+              injectionTime: Platform.isAndroid
+                  ? UserScriptInjectionTime.AT_DOCUMENT_START
+                  : UserScriptInjectionTime.AT_DOCUMENT_END,
               source: script.source.replaceAll("###PDA-APIKEY###", apiKey),
             ),
           );
@@ -60,7 +63,9 @@ class UserScriptsProvider extends ChangeNotifier {
                 scriptListToAdd.add(
                   UserScript(
                     groupName: script.name,
-                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                    injectionTime: Platform.isAndroid
+                        ? UserScriptInjectionTime.AT_DOCUMENT_START
+                        : UserScriptInjectionTime.AT_DOCUMENT_END,
                     source:
                         script.source.replaceAll("###PDA-APIKEY###", apiKey),
                   ),

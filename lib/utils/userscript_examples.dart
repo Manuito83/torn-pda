@@ -38,8 +38,6 @@ class ScriptsExamples {
         // @connect      api.torn.com
         // ==/UserScript==
         
-        console.log("Hello");
-        
         let apikey = '###PDA-APIKEY###';
         
         let torn_api = async (args) => {
