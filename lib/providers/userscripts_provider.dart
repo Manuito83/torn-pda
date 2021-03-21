@@ -4,6 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/utils/userscript_examples.dart';
+
+class UserScriptChanges {
+  UnmodifiableListView<UserScript> scriptsToAdd;
+  List<String> scriptsToRemove;
+}
 
 class UserScriptsProvider extends ChangeNotifier {
   List<UserScriptModel> _userScriptList = <UserScriptModel>[];
@@ -17,34 +23,85 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  UnmodifiableListView<UserScript> getSources() {
+  UnmodifiableListView<UserScript> getContinuousSources({
+    @required String apiKey,
+  }) {
     var scriptList = <UserScript>[];
-    for (var script in _userScriptList) {
-      scriptList.add(
-        UserScript(
-          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-          source: script.source,
-        ),
-      );
+    if (_userScriptsEnabled) {
+      for (var script in _userScriptList) {
+        if (script.enabled && script.urls.isEmpty) {
+          scriptList.add(
+            UserScript(
+              groupName: script.name,
+              injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+              source: script.source.replaceAll("###PDA-APIKEY###", apiKey),
+            ),
+          );
+        }
+      }
     }
     return UnmodifiableListView<UserScript>(scriptList);
   }
 
+  UserScriptChanges getCondSources({
+    @required String url,
+    @required String apiKey,
+  }) {
+    var scriptListToAdd = <UserScript>[];
+    var scriptListToRemove = <String>[];
+    if (_userScriptsEnabled) {
+      for (var script in _userScriptList) {
+        if (script.enabled) {
+          if (script.urls.isNotEmpty) {
+            var found = false;
+            for (var u in script.urls) {
+              if (url.contains(u)) {
+                found = true;
+                scriptListToAdd.add(
+                  UserScript(
+                    groupName: script.name,
+                    injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                    source:
+                        script.source.replaceAll("###PDA-APIKEY###", apiKey),
+                  ),
+                );
+                break;
+              }
+            }
+            if (!found) {
+              scriptListToRemove.add(script.name);
+            }
+          }
+        }
+      }
+    }
+    var changes = UserScriptChanges()
+      ..scriptsToAdd = UnmodifiableListView(scriptListToAdd)
+      ..scriptsToRemove = scriptListToRemove;
+    return changes;
+  }
+
   void addUserScript(String name, String source) {
-    var newScript = UserScriptModel()
-      ..enabled = true
-      ..name = name
-      ..source = source;
+    var newScript = UserScriptModel(
+      enabled: true,
+      urls: getUrls(source),
+      name: name,
+      source: source,
+    );
     userScriptList.add(newScript);
     notifyListeners();
     _saveSettingsSharedPrefs();
   }
 
   void updateUserScript(
-      UserScriptModel editedModel, String name, String source) {
+    UserScriptModel editedModel,
+    String name,
+    String source,
+  ) {
     for (var script in userScriptList) {
       if (script == editedModel) {
         script.name = name;
+        script.urls = getUrls(source);
         script.source = source;
         break;
       }
@@ -81,12 +138,36 @@ class UserScriptsProvider extends ChangeNotifier {
     SharedPreferencesModel().setUserScriptsList(saveString);
   }
 
+  List<String> getUrls(String source) {
+    var urls = <String>[];
+    final regex = RegExp(r'(@match+\s+)(.*)');
+    var matches = regex.allMatches(source);
+    if (matches.length > 0) {
+      for (Match match in matches) {
+        try {
+          print(match.group(2));
+          urls.add(match.group(2));
+        } catch (e) {
+          print(e);
+        }
+      }
+    }
+    return urls;
+  }
+
   Future<void> loadPreferences() async {
     var savedScripts = await SharedPreferencesModel().getUserScriptsList();
-    if (savedScripts.isNotEmpty) {
-      var decoded = json.decode(savedScripts);
-      for (var dec in decoded) {
-        _userScriptList.add(UserScriptModel.fromJson(dec));
+
+    // NULL returned if we installed the app, so we add example scripts
+    if (savedScripts == null) {
+      _userScriptList =
+          List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+    } else {
+      if (savedScripts.isNotEmpty) {
+        var decoded = json.decode(savedScripts);
+        for (var dec in decoded) {
+          _userScriptList.add(UserScriptModel.fromJson(dec));
+        }
       }
     }
     notifyListeners();

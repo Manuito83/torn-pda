@@ -145,7 +145,8 @@ class _WebViewFullState extends State<WebViewFull> {
     super.initState();
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider =
+        Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
     _pageTitle = widget.customTitle;
     //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
@@ -462,7 +463,6 @@ class _WebViewFullState extends State<WebViewFull> {
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
-            initialUserScripts: _userScriptsProvider.getSources(),
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                   // This is deactivated as it interferes with hospital timer,
@@ -501,6 +501,15 @@ class _WebViewFullState extends State<WebViewFull> {
               webView = c;
             },
             onLoadStart: (InAppWebViewController c, Uri uri) async {
+              UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                url: uri.toString(),
+                apiKey: _userProvider.basic.userApiKey,
+              );
+              for (var group in changes.scriptsToRemove) {
+                await c.removeUserScriptsByGroupName(groupName: group);
+              }
+              await c.addUserScripts(userScripts: changes.scriptsToAdd);
+
               _hideChat();
 
               _currentUrl = uri.toString();
@@ -855,7 +864,8 @@ class _WebViewFullState extends State<WebViewFull> {
     var profileUrl = 'torn.com/profiles.php?XID=';
     if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
         (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
-        (_currentUrl.contains(profileUrl) && _currentUrl != _lastProfileVisited)) {
+        (_currentUrl.contains(profileUrl) &&
+            _currentUrl != _lastProfileVisited)) {
       anySectionTriggered = true;
       getProfile = true;
     }
@@ -863,7 +873,8 @@ class _WebViewFullState extends State<WebViewFull> {
     var attackUrl = 'loader.php?sid=attack&user2ID=';
     if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
         (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
-        (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
+        (_currentUrl.contains(attackUrl) &&
+            _currentUrl != _lastProfileVisited)) {
       anySectionTriggered = true;
       getAttack = true;
     }
