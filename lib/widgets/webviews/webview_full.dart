@@ -463,6 +463,9 @@ class _WebViewFullState extends State<WebViewFull> {
         Expanded(
           child: InAppWebView(
             initialUrlRequest: _initialUrl,
+            initialUserScripts: _userScriptsProvider.getContinuousSources(
+              apiKey: _userProvider.basic.userApiKey,
+            ),
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                   // This is deactivated as it interferes with hospital timer,

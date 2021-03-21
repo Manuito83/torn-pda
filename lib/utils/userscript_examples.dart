@@ -173,6 +173,8 @@ class ScriptsExamples {
         
         'use strict';
         
+        let apikey = '###PDA-APIKEY###';
+        
         let GM_addStyle = function(s)
         {
             let style = document.createElement("style");
@@ -200,10 +202,12 @@ class ScriptsExamples {
                 let users = $('.user.name');
                 let players = users.toArray();
                 let playerIDs = [];
+        
                 players.forEach(function(el){
                     let regex = /(XID=)(\d*)/;
                     let found = el.href.match(regex);
                     let playerID = Number(found[0].slice(4));
+        
                     // Push to new array if not already present.
                     if (playerIDs.indexOf(playerID) == -1){
                         playerIDs.push(playerID);
@@ -230,31 +234,42 @@ class ScriptsExamples {
                 this.playerIDs = [];
             }
         }
+        
         // Global script variables:
         /************************************** */
+        
         // Development flag.
         let develCheck = false;
         let localStorageLocation = 'torncat.factionFilters';
+        
         // Local cache for api data.
         let apiDataCache = {};
         var data = data || {};
+        
         // Player queue
         let queue = new PlayerIDQueue();
+        
         // Torn API query limit, to prevent flood protection rejections.
         let apiQueryLimit = 60;
+        
         // Calculated values of checkboxes;
         var reviveCheck = false;
         var attackCheck = false;
         var offlineCheck = false;
+        
+        
         // Main script.
         /************************************** */
         (function() {
             'use strict';
+        
             console.log('Faction Player Filters (FPF) started');
             // Load localStorage;
             loadData();
             // Save data back to localStorage;
             save();
+        
+        
             // Automatically display widget for pages that load user lists via AJAX.
             $( document ).ajaxComplete(function( event, xhr, settings ) {
                 if (hideAjaxUrl(settings.url) == false) {
@@ -262,6 +277,7 @@ class ScriptsExamples {
                     reapplyFilters();
                 }
             });
+        
             // Manually display the filter widget if current url matches an item in the manualList array.
             // Following pages don't load the user list via AJAX.
             let manualList = [
@@ -269,37 +285,43 @@ class ScriptsExamples {
                 'step=profile',
                 'blacklist.php',
                 'friendlist.php'
+        
             ];
+        
             manualList.forEach(el =>{
                 if (window.location.href.match(el)){
                     renderFilterBar();
                 }
             });
+        
         })();
+        
+        
         /**
          * Load localStorage data.
          */
         function loadData(){
             data = localStorage.getItem(localStorageLocation);
-            console.log(localStorageLocation);
+        
             if(data == null) {
-                console.log("LOADED!");
                 // Default settings
                 data = {
-                    apiKey : '',
+                    apiKey : apiKey,
                     apiQueryDelay : 250,
                     hideFactionDescription: false,
                     queries: 0,
                     start: '0'
                 };
             } else {
-                console.log("NOT LOADED!");
                 data = JSON.parse(data);
                 if (data.apiQueryDelay == undefined){
                     data.apiQueryDelay = 250;
                 }
             }
+        
+        
             // Calculate values of checkboxes.
+        
             // eslint-disable-next-line no-undef
             reviveCheck = $('#tc-filter-revive').prop('checked');
             // eslint-disable-next-line no-undef
@@ -307,21 +329,17 @@ class ScriptsExamples {
             // eslint-disable-next-line no-undef
             offlineCheck = $('#tc-filter-offline').prop('checked');
             develCheck = $('#tc-devmode').prop('checked');
+        
         }
+        
         /**
          * Save localStorage data.
          */
         function save(){
             console.log('FPF local data saved');
-            try {
-              localStorage.setItem('torncat.factionFilters', JSON.stringify(data));
-              console.log(JSON.stringify(data));
-            } catch (e) {
-              console.log("ERRORRRRR");
-              console.log(e);
-            }
-            
+            localStorage.setItem('torncat.factionFilters', JSON.stringify(data));
         }
+        
         /**
          * Renders HTML filter elements above the user list.
          */
@@ -332,6 +350,7 @@ class ScriptsExamples {
             let offlineCheck = '#tc-filter-offline';
             let refreshCheck = '#tc-refresh';
             let widgetLocationsSelector = '';
+        
             let widgetHTML = `
                 <div class="torncat-player-filter-bar">
                     <div class="info-msg-cont border-round m-top10">
@@ -363,15 +382,20 @@ class ScriptsExamples {
                 </div>
             `;
             let filterBar = $('.torncat-player-filter-bar');
+        
             // Only insert if there isn't already a filter bar on the page.
+        
             if ($(filterBar).length != 1){
+        
                 if (window.location.href.match('factions.php')){
                     widgetLocationsSelector = '#faction-info-members';
                 } else {
                     widgetLocationsSelector = '.users-list-title';
                 }
+        
                 var widgetLocationsLength = $(widgetLocationsSelector).length;
                 $(widgetHTML).insertBefore($(widgetLocationsSelector)[widgetLocationsLength - 1]);
+        
                 // Scroll mobile view.
                 if ($(window).width() < 1000 && data.hideFactionDescription ) {
                     setTimeout(() => {
@@ -380,10 +404,12 @@ class ScriptsExamples {
                         });
                     },2000);
                 }
+        
                 /* Add event listeners. */
                 $('.torncat-player-filter-bar a.torncat-icon').click(function () {
                     $('.api-key-prompt').toggle();
                 });
+        
                 // Disable filters on Hospital/ Jail pages.
                 if (
                     window.location.href.startsWith('https://www.torn.com/hospital') ||
@@ -393,6 +419,7 @@ class ScriptsExamples {
                     $('#tc-filter-revive').parent().hide();
                     $('#tc-filter-attack').parent().hide();
                 }
+        
                 // Watch for event changes on the revive mode checkbox.
                 $(reviveCheck).change(() => {
                     toggleUserRow('revive');
@@ -401,6 +428,7 @@ class ScriptsExamples {
                         toggleUserRow('attack');
                     }
                 });
+        
                 // Watch for event changes on the attack mode checkbox.
                 $(attackCheck).change(() =>  {
                     loadData();
@@ -410,11 +438,13 @@ class ScriptsExamples {
                         toggleUserRow('revive');
                     }
                 });
+        
                 // Watch for event changes on the Hide Offline mode checkbox.
                 $(offlineCheck).change(() => {
                     loadData();
                     toggleUserRow('offline');
                 });
+        
                 // Watch for event changes on the Auto-refresh checkbox.
                 $('#tc-refresh').change(() => {
                     if ($(refreshCheck).prop('checked')) {
@@ -427,12 +457,17 @@ class ScriptsExamples {
                         if(develCheck) console.debug(data);
                         queue.clear();
                     }
+        
+        
                 });
             }
+        
             if ($('.api-key-prompt').length != 1){
                 renderSettings();
             }
+        
         }
+        
         /**
          * Renders API key and other filter settings.
          */
@@ -448,9 +483,11 @@ class ScriptsExamples {
             input += 'padding: 5px;';
             input += 'font-size: 16px;height: 20px';
             input += '" placeholder="  API Key"></input><br/><br/>';
+        
             let delayOption = '<label for="tc-delay">Delay time between API calls (ms):</label>';
             delayOption += '<select name="tc-delay" id="tc-delay">';
             switch (data.apiQueryDelay){
+        
             case '100':
                 delayOption += '  <option value="100" selected="selected">Short (100)</option>';
                 delayOption += '  <option value="250">Medium (250)</option>';
@@ -475,6 +512,7 @@ class ScriptsExamples {
                 delayOption += '  <option value="500" selected="selected">Long (500)</option>';
             }
             delayOption += '</select><br/>';
+        
             let block = '<div class="api-key-prompt profile-wrapper medals-wrapper m-top10">';
             block += '<div class="menu-header">TornCAT - Player Filters</div>';
             block += '<div class="profile-container"><div class="profile-container-description" style="padding: 10px">';
@@ -490,25 +528,32 @@ class ScriptsExamples {
             setTimeout(()=>{
                 if ($('.api-key-prompt').length != 1){
                     $(block).insertAfter('.torncat-player-filter-bar');
+        
                     // Re-enter saved data.
                     if (data.apiKey != ''){
                         $('#JApiKeyInput').val(data.apiKey);
                     }
+        
                     if (data.hideFactionDescription) {
                         $('#tc-hideFactionDescription').prop('checked', true);
                         $('.faction-description').hide();
                     }
+        
                     // Add event listeners.
+        
                     $('#JApiKeyBtn').click(function(){
                         data.apiKey = $('#JApiKeyInput').val();
                         save();
                         $('.api-key-prompt').toggle();
                     });
+        
                     $('#tc-delay').change(()=>{
                         data.apiQueryDelay = $('#tc-delay').val();
                         save();
                         if (develCheck) console.debug('Changed apiQueryDelay to ' + data.apiQueryDelay + 'ms');
                     });
+        
+        
                     $('#tc-devmode').change(() => {
                         loadData();
                         console.debug('FPF Devel mode set to ' + develCheck);
@@ -516,6 +561,7 @@ class ScriptsExamples {
                         console.debug('apiDataCache', apiDataCache);
                         console.debug('queue', queue);
                     });
+        
                     $('#tc-hideFactionDescription').change(()=>{
                         data.hideFactionDescription = $('#tc-hideFactionDescription').attr('checked') ? true : false;
                         save();
@@ -529,13 +575,16 @@ class ScriptsExamples {
                         });
                     });
                 }
+        
                 if (forceCheck == true){
                     $('.api-key-prompt').show();
                 } else {
                     $('.api-key-prompt').hide();
                 }
             }, 500);
+        
         }
+        
         /**
          * Re-applies the selected filters if the page data is reloaded via AJAX.
          */
@@ -560,6 +609,8 @@ class ScriptsExamples {
                 processRefreshQueue(queue);
             }
         }
+        
+        
         /**
          * Async loop for processing next item in player queue.
          *
@@ -574,6 +625,7 @@ class ScriptsExamples {
                 let playerID = queue.peek();
                 // Call cache, if API queries threshold not hit.
                 let now = new Date();
+        
                 if  ( now.getMinutes() != data.start ){
                     console.log('FPF: Reset API call limit.  Highwater mark: ' + data.queries + ' API calls.');
                     data.queries = 0;
@@ -581,6 +633,7 @@ class ScriptsExamples {
                     queue.start = now;
                     save();
                 }
+        
                 if (data.queries > apiQueryLimit && limited == false){
                     let delay = (60 - now.getSeconds());
                     console.log('Hit local API query limit of (' + apiQueryLimit + '). Waiting ' + delay + 's');
@@ -598,6 +651,7 @@ class ScriptsExamples {
                         $('#tc-refresh').prop('checked', true);
                         processRefreshQueue(queue);
                     }, delay * 1000);
+        
                     continue;
                 } else if (!limited){
                     limited = false;
@@ -605,6 +659,7 @@ class ScriptsExamples {
                         let playerData = await callCache(playerID);
                         // Find player row in userlist.
                         let selector = $('a.user.name[href$="' + playerID + '"]').parent().closest('li');
+        
                         updatePlayerContent(selector, playerData);
                         // Update player row data.
                         if(!queue.isEmpty() && ($('#tc-refresh').prop('checked') == true)) {
@@ -622,6 +677,7 @@ class ScriptsExamples {
                 }
             }
         }
+        
         /**
          * Returns cached player data, calling Torn API if cache hit is missed.
          *
@@ -631,6 +687,7 @@ class ScriptsExamples {
             let factionData = {};
             let playerData = {};
             let faction_id = 0;
+        
             if (!(playerID in apiDataCache) || recurse == true){
                 if (develCheck) console.debug('Missed cache for ' + playerID);
                 // Call faction API endpoint async, if applicable.
@@ -642,12 +699,14 @@ class ScriptsExamples {
                     factionData = await callTornAPI('faction', faction_id, 'basic,timestamp');
                     saveCacheData(factionData);
                 }
+        
                 // Call user API endpoint async
                 playerData = await callTornAPI('user', playerID, 'basic,profile,timestamp');
             } else {
                 if (develCheck) console.debug('Cache hit for ' + apiDataCache[playerID].name + ' (' + playerID + ')');
                 let now = new Date();
                 playerData = apiDataCache[playerID];
+        
                 // Check timestamp for old data.
                 let delta = (Math.round(now / 1000) - playerData.timestamp);
                 if (delta > 30){
@@ -655,13 +714,16 @@ class ScriptsExamples {
                     playerData = await callCache(playerID, true);
                 }
             }
+        
             saveCacheData(playerData);
+        
             return new Promise((resolve) => {
                 setTimeout(()=>{
                     resolve(playerData);
                 }, data.apiQueryDelay);
             });
         }
+        
         /**
          * Calls Torn API Endpoints.
          *
@@ -676,6 +738,7 @@ class ScriptsExamples {
                     let baseURL = 'https://api.torn.com/';
                     let streamURL = baseURL + type + '/' + id + '?selections=' + selections + '&key=' + data.apiKey;
                     if (develCheck) console.debug('Making an API call to ' + streamURL);
+        
                     // Reject if key isn't set.
                     if (data.apiKey == undefined || data.apiKey == '') {
                         let error = {
@@ -684,6 +747,7 @@ class ScriptsExamples {
                         };
                         reject(error);
                     }
+        
                     $.getJSON(streamURL)
                         .done((result) => {
                             if (result.error != undefined){
@@ -698,9 +762,11 @@ class ScriptsExamples {
                             var err = textStatus + ', ' + error;
                             reject(err);
                         });
+        
                 }, data.apiQueryDelay);
             });
         }
+        
         /**
          * Saves Torn API data to local cache.
          *
@@ -721,6 +787,7 @@ class ScriptsExamples {
                 apiDataCache[response.player_id] = response;
             }
         }
+        
         /**
          * Only returns if the AJAX URL is on the known list.
          * @param {string} url
@@ -739,12 +806,14 @@ class ScriptsExamples {
                 'torn-proxy.com',
                 'websocket.php'
             ];
+        
             // Known valid AJAX URl's, saved here for my own notes.
             // eslint-disable-next-line no-unused-vars
             let validURLList = [
                 'userlist.php',
                 'factions.php'
             ];
+        
             for (let el of hideURLList) {
                 if (url.match(el)) {
                     return true;
@@ -752,6 +821,7 @@ class ScriptsExamples {
             }
             return false;
         }
+        
         /**
          * Toggles classes on user rows based on toggleType.
          * @param {string} toggleType
@@ -760,31 +830,38 @@ class ScriptsExamples {
             var greenStatusList = $('.status .t-green').toArray();
             var redStatusList = $('.status .t-red').toArray();
             var blueStatusList = $('.status .t-blue').toArray();
+        
             if (toggleType == 'offline') {
                 var idleList = $('li [id^=icon62_').toArray();
                 var offlineList = $('li [id^=icon2_]').toArray();
+        
                 var awayList = idleList.concat(offlineList);
                 awayList.forEach(el =>{
                     $(el).parent().closest('li').toggleClass('torncat-hide-' + toggleType);
                 });
                 return;
             }
+        
             blueStatusList.forEach(el => {
                 var line = $(el).parent().closest('li');
                 $(line).toggleClass('torncat-hide-' + toggleType);
             });
+        
+        
             greenStatusList.forEach(el => {
                 var line = $(el).parent().closest('li');
                 if(toggleType == 'revive'){
                     $(line).toggleClass('torncat-hide-' + toggleType);
                 }
             });
+        
             redStatusList.forEach(el => {
                 var matches = [
                     'Traveling',
                     'Fallen',
                     'Federal'
                 ];
+        
                 if (toggleType == 'attack') {
                     var line = $(el).parent().closest('li');
                     $(line).toggleClass('torncat-hide-' + toggleType);
@@ -797,7 +874,9 @@ class ScriptsExamples {
                     });
                 }
             });
+        
         }
+        
         /**
          * Updates a player's row content with API data.
          */
@@ -806,14 +885,17 @@ class ScriptsExamples {
             let offlineCheck = $('#tc-filter-offline').prop('checked');
             // Apply highlight.
             $(selector).toggleClass('torncat-update');
+        
             // Remove highlight after a delay.
             setTimeout(()=>{
                 $(selector).toggleClass('torncat-update');
             }, data.apiQueryDelay * 2);
+        
             // Update row HTML.
             let newHtml = '<span class="d-hide bold">Status:</span><span class="t-' + statusColor + '">' + playerData.status.state + '</span>';
             $(selector).find('div.status').html(newHtml);
             $(selector).find('div.status').css('color', statusColor);
+        
             // Update status icon.
             switch (playerData.last_action.status) {
             case 'Offline':
@@ -838,6 +920,7 @@ class ScriptsExamples {
                 }
                 break;
             }
+        
             // Update HTML classes to show/ hide row.
             if ($('#tc-filter-revive').prop('checked')) {
                 // Hide traveling
@@ -856,6 +939,7 @@ class ScriptsExamples {
                 }
                 return;
             }
+        
             if ($('#tc-filter-attack').prop('checked')) {
                 // Hide traveling
                 if (playerData.status.color == 'blue') {
@@ -873,19 +957,23 @@ class ScriptsExamples {
                 }
             }
         }
+        
         var styles= `
         .torncat-filters div.msg {
             display: flex;
             justify-content: center;
         }
+        
         .torncat-filters {
             width: 100%
         }
+        
         .torncat-filter {
             display: inline-block;
             margin: 0 10px 0 10px;
             text-align: center;
         }
+        
         .torncat-update {
             background: rgba(76, 200, 76, 0.2) !important;
         }
@@ -898,6 +986,7 @@ class ScriptsExamples {
         .torncat-hide-offline {
             display:none !important
         }
+        
         .torncat-icon {
             background-image: url("data:image/svg+xml,%3Csvg data-v-fde0c5aa='' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' class='icon'%3E%3C!----%3E%3Cdefs data-v-fde0c5aa=''%3E%3C!----%3E%3C/defs%3E%3C!----%3E%3C!----%3E%3Cdefs data-v-fde0c5aa=''%3E%3C!----%3E%3C/defs%3E%3Cg data-v-fde0c5aa='' id='761e8856-1551-45a8-83d8-eb3e49301c32' fill='black' stroke='none' transform='matrix(2.200000047683716,0,0,2.200000047683716,39.999999999999986,39.99999999999999)'%3E%3Cpath d='M93.844 43.76L52.389 70.388V85.92L100 55.314zM0 55.314L47.611 85.92V70.384L6.174 43.718zM50 14.08L9.724 39.972 50 65.887l40.318-25.888L50 14.08zm0 15.954L29.95 42.929l-5.027-3.228L50 23.576l25.077 16.125-5.026 3.228L50 30.034z'%3E%3C/path%3E%3C/g%3E%3C!----%3E%3C/svg%3E");
             background-position: center center;
@@ -907,6 +996,7 @@ class ScriptsExamples {
             display: inline-block;
             width: 32px;
         }
+        
         `;
         // eslint-disable-next-line no-undef
         GM_addStyle(styles);
