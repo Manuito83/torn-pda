@@ -109,20 +109,17 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                   SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                  Flexible(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Flexible(
-                        child: Text(
-                          'Preexisting scripts might require modifications to work with Torn PDA. '
-                          'Please ensure that you use scripts responsibly and '
-                          'understand the hazards. Tap the exclamation mark for more information.',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Preexisting scripts might require modifications to work with Torn PDA. '
+                        'Please ensure that you use scripts responsibly and '
+                        'understand the hazards. Tap the exclamation mark for more information.',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
                     ),
