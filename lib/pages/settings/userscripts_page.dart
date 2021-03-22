@@ -377,9 +377,22 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
               "and what the script accomplishes; otherwise, ensure they come from a reliable "
               "source and have been checked by someone you trust.\n\n"
               "As in any other browser, user scripts might be used maliciously to get information "
-              "from your Torn account or other websites you visit.\n\n"
-              "NOTE: preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
-              "code changes to work with Torn PDA if external libraries were used.",
+              "from your Torn account or other websites you visit.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+            ),
+            SizedBox(height: 25),
+            Text(
+              "TROBLESHOOTING",
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "Preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
+              "code changes to work with Torn PDA if external libraries were used.\n\n"
+              "If a script does not work as intended after changing its code in Torn PDA, please "
+              "try resetting your browser cache in the advanced browser settings section.",
               style: TextStyle(
                 fontSize: 13,
               ),
