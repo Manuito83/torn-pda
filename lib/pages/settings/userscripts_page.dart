@@ -228,7 +228,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       actions: [
         IconButton(
           icon: Icon(
-            MdiIcons.restore,
+            MdiIcons.backupRestore,
           ),
           onPressed: () async {
             _openRestoreDialog();

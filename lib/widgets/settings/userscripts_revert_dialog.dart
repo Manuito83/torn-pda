@@ -156,7 +156,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                   child: SizedBox(
                     height: 34,
                     width: 34,
-                    child: Icon(MdiIcons.restore),
+                    child: Icon(MdiIcons.backupRestore),
                   ),
                 ),
               ),
