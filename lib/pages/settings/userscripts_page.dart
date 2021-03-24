@@ -5,7 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/widgets/settings/userscripts_dialog.dart';
+import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
+import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
 
 class UserScriptsPage extends StatefulWidget {
   @override
@@ -109,18 +110,16 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                   SizedBox(height: 10),
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'Preexisting scripts might require modifications to work with Torn PDA. '
-                        'Please ensure that you use scripts responsibly and '
-                        'understand the hazards. Tap the exclamation mark for more information.',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Preexisting scripts might require modifications to work with Torn PDA. '
+                      'Please ensure that you use scripts responsibly and '
+                      'understand the hazards. Tap the exclamation mark for more information.',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ),
@@ -182,7 +181,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           context: context,
                           barrierDismissible: false, // user must tap button!
                           builder: (BuildContext context) {
-                            return UserScriptsDialog(
+                            return UserScriptsAddDialog(
                               editExisting: true,
                               editScript: script,
                             );
@@ -229,6 +228,14 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       actions: [
         IconButton(
           icon: Icon(
+            MdiIcons.restore,
+          ),
+          onPressed: () async {
+            _openRestoreDialog();
+          },
+        ),
+        IconButton(
+          icon: Icon(
             MdiIcons.alertDecagramOutline,
             color: Colors.orange[300],
           ),
@@ -236,7 +243,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
             await showDialog(
               context: context,
               builder: (BuildContext context) {
-                return _explanationDialog();
+                return _disclaimerDialog();
               },
             );
           },
@@ -250,7 +257,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       context: _,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return UserScriptsDialog(editExisting: false);
+        return UserScriptsAddDialog(editExisting: false);
       },
     );
   }
@@ -364,7 +371,17 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  _explanationDialog() {
+  Future<void> _openRestoreDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return UserScriptsRevertDialog();
+      },
+    );
+  }
+
+  _disclaimerDialog() {
     return AlertDialog(
       title: Text("DISCLAIMER"),
       content: SingleChildScrollView(
@@ -384,7 +401,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
             ),
             SizedBox(height: 25),
             Text(
-              "TROBLESHOOTING",
+              "TROUBLESHOOTING",
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
