@@ -4,17 +4,17 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 
-class UserScriptsDialog extends StatefulWidget {
+class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;
   final UserScriptModel editScript;
 
-  UserScriptsDialog({@required this.editExisting, this.editScript});
+  UserScriptsAddDialog({@required this.editExisting, this.editScript});
 
   @override
-  _UserScriptsDialogState createState() => _UserScriptsDialogState();
+  _UserScriptsAddDialogState createState() => _UserScriptsAddDialogState();
 }
 
-class _UserScriptsDialogState extends State<UserScriptsDialog> {
+class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   double hPad = 15;
   double vPad = 20;
   double frame = 10;
@@ -150,7 +150,7 @@ class _UserScriptsDialogState extends State<UserScriptsDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    child: Text(widget.editExisting ? "Edit" : "Add"),
+                    child: Text(widget.editExisting ? "Save" : "Add"),
                     onPressed: () async {
                       await _addPressed(context);
                     },

@@ -94,6 +94,8 @@ class UserScriptsProvider extends ChangeNotifier {
       source: source,
     );
     userScriptList.add(newScript);
+
+    _sort();
     notifyListeners();
     _saveSettingsSharedPrefs();
   }
@@ -132,6 +134,46 @@ class UserScriptsProvider extends ChangeNotifier {
     _saveSettingsSharedPrefs();
   }
 
+  Future restoreExamples(bool onlyRestoreNew) async {
+    var newList = <UserScriptModel>[];
+
+    // Add the ones that are not examples
+    for (var existing in _userScriptList) {
+      if (existing.exampleCode == 0) {
+        newList.add(existing);
+      }
+    }
+
+    // Then add the examples ones
+    var exampleScripts =
+        List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+    if (onlyRestoreNew) {
+      for (var i = 0; i < exampleScripts.length; i++) {
+        var newExample = true;
+        for (var j = 0; j < _userScriptList.length; j++) {
+          if (exampleScripts[i].exampleCode == _userScriptList[j].exampleCode) {
+            newExample = false;
+            break;
+          }
+        }
+        if (newExample) {
+          newList.add(exampleScripts[i]);
+        } else {
+          newList.add(_userScriptList
+              .singleWhere((element) => element.exampleCode == i + 1));
+        }
+      }
+    } else {
+      newList.addAll(exampleScripts);
+    }
+
+    _userScriptList = List<UserScriptModel>.from(newList);
+
+    _sort();
+    _saveSettingsSharedPrefs();
+    notifyListeners();
+  }
+
   void wipe() {
     _userScriptList.clear();
     notifyListeners();
@@ -157,6 +199,10 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
     return urls;
+  }
+
+  _sort() {
+    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   Future<void> loadPreferences() async {

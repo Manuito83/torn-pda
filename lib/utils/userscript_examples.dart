@@ -149,6 +149,7 @@ try {
       enabled: true,
       urls: getUrls(source),
       name: "Bazaar Auto Price",
+      exampleCode: 1,
       source: source,
     );
   }
@@ -264,6 +265,14 @@ var offlineCheck = false;
   loadData();
   // Save data back to localStorage;
   save();
+
+  // Automatically display widget for pages that load user lists via AJAX.
+  $( document ).ajaxComplete(function( event, xhr, settings ) {
+      if (hideAjaxUrl(settings.url) == false) {
+          renderFilterBar();
+          reapplyFilters();
+      }
+  });
 
   // Manually display the filter widget if current url matches an item in the manualList array.
   // Following pages don't load the user list via AJAX.
@@ -994,6 +1003,7 @@ GM_addStyle(styles);""";
       enabled: true,
       urls: getUrls(source),
       name: "TornCAT Faction Player Filters",
+      exampleCode: 2,
       source: source,
     );
   }
@@ -1109,6 +1119,7 @@ function drawPresetBar() {
       enabled: true,
       urls: getUrls(source),
       name: "Custom Race Presets",
+      exampleCode: 3,
       source: source,
     );
 

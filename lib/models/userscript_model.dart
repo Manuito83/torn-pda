@@ -13,18 +13,21 @@ class UserScriptModel {
     this.enabled,
     this.urls,
     this.name,
+    this.exampleCode = 0,
     this.source,
   });
 
   bool enabled;
   List<dynamic> urls;
   String name;
+  int exampleCode;
   String source;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) => UserScriptModel(
     enabled: json["enabled"] == null ? null : json["enabled"],
     urls: json["urls"] == null ? null : json["urls"],
     name: json["name"] == null ? null : json["name"],
+    exampleCode: json["exampleCode"] == null ? null : json["exampleCode"],
     source: json["source"] == null ? null : json["source"],
   );
 
@@ -32,6 +35,7 @@ class UserScriptModel {
     "enabled": enabled == null ? null : enabled,
     "urls": urls == null ? null : urls,
     "name": name == null ? null : name,
+    "exampleCode": exampleCode == null ? null : exampleCode,
     "source": source == null ? null : source,
   };
 }
