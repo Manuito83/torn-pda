@@ -37,7 +37,7 @@ class AttackFull {
   int defenderFaction;
   Result result;
   int stealthed;
-  dynamic respectGain;
+  dynamic respect;
 
   AttackFull({
     this.code,
@@ -49,7 +49,7 @@ class AttackFull {
     this.defenderFaction,
     this.result,
     this.stealthed,
-    this.respectGain,
+    this.respect,
   });
 
   factory AttackFull.fromJson(Map<String, dynamic> json) => AttackFull(
@@ -62,7 +62,7 @@ class AttackFull {
     defenderFaction: json["defender_faction"] == null ? null : json["defender_faction"],
     result: json["result"] == null ? null : resultValues.map[json["result"]],
     stealthed: json["stealthed"] == null ? null : json["stealthed"],
-    respectGain: json["respect_gain"],
+    respect: json["respect"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -75,7 +75,7 @@ class AttackFull {
     "defender_faction": defenderFaction == null ? null : defenderFaction,
     "result": result == null ? null : resultValues.reverse[result],
     "stealthed": stealthed == null ? null : stealthed,
-    "respect_gain": respectGain,
+    "respect": respect,
   };
 }
 
