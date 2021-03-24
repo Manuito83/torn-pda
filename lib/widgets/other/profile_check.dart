@@ -144,6 +144,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     var isOwnPlayer = false;
     var isOwnFaction = false;
     var isFriendlyFaction = false;
+    var isWorkColleague = false;
     // This one will take own player, own faction or friendly faction (so that
     // we don't show them separately, but by importance (first one self, then
     // own faction and lastly friendly faction)
@@ -152,7 +153,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     var hasEstimatedStats = false;
 
     if (otherProfile is OtherProfileModel) {
-
       String estimatedStats = "";
       try {
         estimatedStats = _calculateStats(otherProfile);
@@ -188,6 +188,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
       }
 
+      if (otherProfile.job.companyId != 0 &&
+          otherProfile.job.companyId == _userDetails.basic.job.companyId) {
+        isWorkColleague = true;
+      }
+
       if ((hasEstimatedStats ||
               isTornPda ||
               isPartner ||
@@ -200,6 +205,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Widget partnerWidget = SizedBox.shrink();
         Widget friendsWidget = SizedBox.shrink();
         Widget friendlyFactionWidget = SizedBox.shrink();
+        Widget workColleagueWidget = SizedBox.shrink();
         Widget playerOrFactionWidget = SizedBox.shrink();
         Color backgroundColor = Colors.transparent;
 
@@ -414,6 +420,39 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         }
 
+        if (isWorkColleague) {
+          Color colleagueTextColor = Colors.brown[300];
+          String colleagueText = "This is a work colleague!";
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            colleagueTextColor = Colors.black;
+            colleagueText = "CAUTION: this is a work colleague!";
+            backgroundColor = Colors.red;
+          }
+          workColleagueWidget = Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.work,
+                color: colleagueTextColor,
+                size: 15,
+              ),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  colleagueText,
+                  style: TextStyle(
+                    color: colleagueTextColor,
+                    fontSize: 12,
+                    fontWeight: colleagueText.contains("CAUTION")
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
         Widget mainWidgetBox = Container(
           color: backgroundColor,
           child: Row(
@@ -450,6 +489,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           isFriendlyFaction)
                         SizedBox(height: 8),
                       friendlyFactionWidget,
+                      if ((hasEstimatedStats ||
+                              isTornPda ||
+                              isPartner ||
+                              isFriend ||
+                              playerOrFaction ||
+                              isFriendlyFaction) &&
+                          isWorkColleague)
+                        SizedBox(height: 8),
+                      workColleagueWidget,
                     ],
                   ),
                 ),
