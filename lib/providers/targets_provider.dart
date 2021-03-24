@@ -119,11 +119,11 @@ class TargetsProvider extends ChangeNotifier {
         // We look for the our target in the the attacksFull list
         if (myNewTargetModel.playerId == value.defenderId ||
             myNewTargetModel.playerId == value.attackerId) {
-          if (value.respectGain is String) {
-            respectFromThisTarget.add(double.parse(value.respectGain));
+          if (value.respect is String) {
+            respectFromThisTarget.add(double.parse(value.respect));
           } else {
             // This is either int or double, so we convert just in case
-            respectFromThisTarget.add(value.respectGain.toDouble());
+            respectFromThisTarget.add(value.respect.toDouble());
           }
 
           // Find out if this was won or successfully defended by the user
