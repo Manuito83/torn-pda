@@ -103,13 +103,14 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: _onlyRestoreNew
-                                      ? Colors.green[800]
-                                      : Colors.red[800],
+                                      ? Colors.green[600]
+                                      : Colors.orange[600],
                                 ),
                               ),
                             ),
                             Switch(
                               value: _onlyRestoreNew,
+                              inactiveThumbColor: Colors.orange[300],
                               onChanged: (value) {
                                 setState(() {
                                   _onlyRestoreNew = value;
