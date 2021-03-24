@@ -78,15 +78,22 @@ class _FriendsPageState extends State<FriendsPage> {
               children: <Widget>[
                 ButtonTheme(
                   minWidth: 1.0,
-                  child: RaisedButton(
-                    color: _themeProvider.background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          _themeProvider.background),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          side: BorderSide(
+                              width: 2, color: Colors.blueGrey),
+                        ),
+                      ),
                     ),
                     child: Icon(
                       Icons.add,
                       size: 20,
+                      color: _themeProvider.mainText,
                     ),
                     onPressed: () {
                       _showAddDialog(context);
@@ -96,15 +103,22 @@ class _FriendsPageState extends State<FriendsPage> {
                 SizedBox(width: 15),
                 ButtonTheme(
                   minWidth: 1.0,
-                  child: RaisedButton(
-                    color: _themeProvider.background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                          _themeProvider.background),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          side: BorderSide(
+                              width: 2, color: Colors.blueGrey),
+                        ),
+                      ),
                     ),
                     child: Icon(
                       Icons.refresh,
                       size: 20,
+                      color: _themeProvider.mainText,
                     ),
                     onPressed: () async {
                       var updateResult =
@@ -340,7 +354,7 @@ class _FriendsPageState extends State<FriendsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: <Widget>[
-                              FlatButton(
+                              TextButton(
                                 child: Text("Add"),
                                 onPressed: () async {
                                   if (_addFormKey.currentState.validate()) {
@@ -384,7 +398,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                   }
                                 },
                               ),
-                              FlatButton(
+                              TextButton(
                                 child: Text("Cancel"),
                                 onPressed: () {
                                   Navigator.of(context).pop();
@@ -480,9 +494,9 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future _restoreFriends () async {
-    var friendsProv = context.read<FriendsProvider>();
-    if (!friendsProv.initialized) {
-      friendsProv.initFriends();
+    _friendsProvider = context.read<FriendsProvider>();
+    if (!_friendsProvider.initialized) {
+      _friendsProvider.initFriends();
     }
   }
 
