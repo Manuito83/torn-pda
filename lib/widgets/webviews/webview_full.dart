@@ -512,7 +512,7 @@ class _WebViewFullState extends State<WebViewFull> {
               for (var group in changes.scriptsToRemove) {
                 c.removeUserScriptsByGroupName(groupName: group);
               }
-              c.addUserScripts(userScripts: changes.scriptsToAdd);
+              await c.addUserScripts(userScripts: changes.scriptsToAdd);
 
               _hideChat();
 

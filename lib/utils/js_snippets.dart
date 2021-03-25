@@ -243,13 +243,13 @@ String addBazaarFillButtonsJS() {
     var bazaar = doc.querySelectorAll(".clearfix.no-mods");
     
     var needToAdd = true;
-    for(let item of bazaar){
+    for(let item of bazaar) {
       let fill = item.querySelector(".torn-btn");
       
       // Are the buttons already active?
       if (fill != null) {
-          needToAdd = false;
-        }	
+        needToAdd = false;
+      }	
     } 
     
     if (needToAdd) {
@@ -301,10 +301,14 @@ String removeBazaarFillButtonsJS() {
 
 String removeChatOnLoadStartJS() {
   return '''
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    style.innerHTML = '.chat-box-wrap_20_R_ { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
-    document.getElementsByTagName('head')[0].appendChild(style);
+    try {
+      var style = document.createElement('style');
+      style.type = 'text/css';
+      style.innerHTML = '.chat-box-wrap_20_R_ { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
+      document.getElementsByTagName('head')[0].appendChild(style);
+    } catch (e) {
+      // Sometimes firing too early and generating error in other scripts
+    }
     
     // Return to avoid iOS WKErrorDomain
     123;
@@ -313,9 +317,13 @@ String removeChatOnLoadStartJS() {
 
 String removeChatJS() {
   return '''
-    var doc = document;
-    var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
-    chatBox[0].style.display = 'none';
+    try {
+      var doc = document;
+      var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
+      chatBox[0].style.display = 'none';
+    } catch (e) {
+      // Sometimes firing too early and generating error in other scripts
+    }
     
     // Return to avoid iOS WKErrorDomain
     123;
@@ -494,16 +502,16 @@ String chatHighlightJS({@required String highlightMap}) {
     
       new MutationObserver((mutationsList) => {
         for (let mutation of mutationsList) {
-        for (let addedNode of mutation.addedNodes) {
-          
-          if (addedNode.classList && addedNode.classList.contains("chat-box-content_2C5UJ")) {
-          manipulateChat();
+          for (let addedNode of mutation.addedNodes) {
+            
+            if (addedNode.classList && addedNode.classList.contains("chat-box-content_2C5UJ")) {
+              manipulateChat();
+            }
+      
+            if (addedNode.classList && addedNode.classList.contains("message_oP8oM")) {
+              applyChatHighlights(addedNode);
+            }
           }
-    
-          if (addedNode.classList && addedNode.classList.contains("message_oP8oM")) {
-          applyChatHighlights(addedNode);
-          }
-        }
         }
       }).observe(document.querySelector("#chatRoot"), { childList: true, subtree: true });  
     
