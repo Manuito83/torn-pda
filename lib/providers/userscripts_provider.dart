@@ -16,11 +16,14 @@ class UserScriptsProvider extends ChangeNotifier {
   List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
 
+  bool _scriptsFirstTime = true;
+  bool get scriptsFirstTime => _scriptsFirstTime;
+
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
   set setUserScriptsEnabled(bool value) {
     _userScriptsEnabled = value;
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
     notifyListeners();
   }
 
@@ -97,7 +100,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
     _sort();
     notifyListeners();
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
   }
 
   void updateUserScript(
@@ -114,13 +117,13 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
   }
 
   void removeUserScript(UserScriptModel removedModel) {
     _userScriptList.remove(removedModel);
     notifyListeners();
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
   }
 
   void changeUserScriptEnabled(UserScriptModel changedModel, bool enabled) {
@@ -131,7 +134,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
   }
 
   Future restoreExamples(bool onlyRestoreNew) async {
@@ -170,17 +173,17 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptList = List<UserScriptModel>.from(newList);
 
     _sort();
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
     notifyListeners();
   }
 
   void wipe() {
     _userScriptList.clear();
     notifyListeners();
-    _saveSettingsSharedPrefs();
+    _saveUserScriptsSharedPrefs();
   }
 
-  void _saveSettingsSharedPrefs() {
+  void _saveUserScriptsSharedPrefs() {
     var saveString = json.encode(_userScriptList);
     SharedPreferencesModel().setUserScriptsList(saveString);
   }
@@ -205,14 +208,21 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
+  void changeScriptsFirstTime (bool value) {
+    _scriptsFirstTime = value;
+    SharedPreferencesModel().setUserScriptsFirstTime(value);
+  }
+
   Future<void> loadPreferences() async {
+    _scriptsFirstTime = await SharedPreferencesModel().getUserScriptsFirstTime();
+
     var savedScripts = await SharedPreferencesModel().getUserScriptsList();
 
     // NULL returned if we installed the app, so we add example scripts
     if (savedScripts == null) {
       _userScriptList =
           List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
-      _saveSettingsSharedPrefs();
+      _saveUserScriptsSharedPrefs();
     } else {
       if (savedScripts.isNotEmpty) {
         var decoded = json.decode(savedScripts);

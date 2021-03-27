@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -18,12 +19,29 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
 
+  bool _firstTimeNotAccepted = false;
+
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userScriptsProvider =
         Provider.of<UserScriptsProvider>(context, listen: false);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_userScriptsProvider.scriptsFirstTime) {
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return _firstTimeDialog();
+          },
+        );
+        if (_firstTimeNotAccepted) {
+          _willPopCallback();
+        }
+      }
+    });
   }
 
   @override
@@ -449,6 +467,79 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  _firstTimeDialog() {
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: AlertDialog(
+        title: Text("CAUTION"),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Be careful when using user scripts and ensure that you understand the code "
+                "and what it accomplishes; otherwise, ensure they come from a reliable "
+                "source and have been checked by someone you trust.\n\n"
+                "As in any other browser, user scripts might be used maliciously to get information "
+                "from your Torn account or other websites you visit.",
+                style: TextStyle(
+                  fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Please, read the disclaimer by pressing the warning icon in the app bar for "
+                "more information.",
+                style: TextStyle(
+                  fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Do you understand the risk?",
+                style: TextStyle(
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              child: Text("Yes, I promise!"),
+              onPressed: () {
+                _userScriptsProvider.changeScriptsFirstTime(false);
+                Navigator.of(context).pop('exit');
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: TextButton(
+              child: Text("What?!"),
+              onPressed: () {
+                _firstTimeNotAccepted = true;
+                BotToast.showText(
+                  text: 'Returning...!',
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.orange[800],
+                  duration: Duration(seconds: 2),
+                  contentPadding: EdgeInsets.all(10),
+                );
+                Navigator.of(context).pop('exit');
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 

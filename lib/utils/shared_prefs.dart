@@ -100,6 +100,7 @@ class SharedPreferencesModel {
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
+  final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
 
   // Torn Attack Central
@@ -1212,6 +1213,16 @@ class SharedPreferencesModel {
   Future<bool> setUserScriptsList(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kUserScriptsList, value);
+  }
+
+  Future<bool> getUserScriptsFirstTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUserScriptsFirstTime) ?? true;
+  }
+
+  Future<bool> setUserScriptsFirstTime(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUserScriptsFirstTime, value);
   }
 
   // *************
