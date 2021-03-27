@@ -1585,15 +1585,23 @@ class _WebViewFullState extends State<WebViewFull> {
           itemsFound.add(itemMatch);
         }
         if (mounted) {
-          setState(() {
-            _cityItemsFound = itemsFound;
-            _errorCityApi = false;
-            _cityExpandable = CityWidget(
-              controller: webView,
-              cityItems: _cityItemsFound,
-              error: _errorCityApi,
-            );
-          });
+          // This last check prevents city widget from loading if we are leaving the city
+          // before it had time to load (which could collude with other widgets)
+          if (!_cityTriggered) {
+            setState(() {
+              _cityExpandable = SizedBox.shrink();
+            });
+          } else {
+            setState(() {
+              _cityItemsFound = itemsFound;
+              _errorCityApi = false;
+              _cityExpandable = CityWidget(
+                controller: webView,
+                cityItems: _cityItemsFound,
+                error: _errorCityApi,
+              );
+            });
+          }
         }
         webView.evaluateJavascript(source: highlightCityItemsJS());
       } else {
