@@ -43,7 +43,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_0_2 = "Browser: added custom user scripts support (add your own in Settings / Browser Options). Preexisting scripts might require code changes to work in Torn PDA.";
     String feat2_3_0_3 = "Browser: added estimated stats to players' profiles.";
     String feat2_3_0_4 = "Browser: added extra information when attacking or visiting other players' profiles. You will be warned if they belong to your same faction or a friendly faction, if they are on your friends' list, etc. You can configure friendly factions in the advanced browser settings inside of the Settings section.";
-    String feat2_3_0_5 = "Browser: added estimated stats to players' profiles.";
+    String feat2_3_0_5 = "Browser: added pull to refresh and optionally hide refresh icon (does not work in the chaining browser).";
     String feat2_3_0_6 = "Chaining: added extra information to targets' notes when chaining, showing if the target has been online recently and if it belongs to a faction. Applies to standard targets and TAC.";
     String feat2_3_0_7 = "Chaining: changed sorting by note color to match YATA's (G-Y-R-OFF or OFF-R-Y-G).";
     String feat2_3_0_8 = "Chaining: you can now filter targets by note color.";
