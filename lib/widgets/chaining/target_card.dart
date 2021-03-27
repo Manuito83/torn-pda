@@ -794,9 +794,7 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateSeveralTargets(List<String> attackedIds) async {
-    if (mounted) {
-      await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
-    }
+    await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
   }
 
   void _timerUpdateInformation() {

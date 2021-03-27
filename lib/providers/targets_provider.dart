@@ -99,7 +99,7 @@ class TargetsProvider extends ChangeNotifier {
 
   /// The result of this needs to be passed to several functions, so that we don't need
   /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
-  /// the attackFull variable we provide is the same and we only requested it once.
+  /// the attack variable we provide is the same and we only requested it once.
   dynamic getAttacks() async {
     return await TornApiCaller.attacks(_userKey).getAttacks;
   }
@@ -266,7 +266,7 @@ class TargetsProvider extends ChangeNotifier {
 
   Future<void> updateTargetsAfterAttacks({@required List<String> targetsIds}) async {
     // Get attacks full to use later
-    dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
+    dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
     void updatePass(bool showUpdateAnimation) async {
@@ -281,7 +281,7 @@ class TargetsProvider extends ChangeNotifier {
               dynamic myUpdatedTargetModel =
                   await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
               if (myUpdatedTargetModel is TargetModel) {
-                _getRespectFF(attacksFull, myUpdatedTargetModel);
+                _getRespectFF(attacks, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
                 _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
                 var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
