@@ -188,7 +188,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
       }
 
-      if (otherProfile.job.companyId != 0 &&
+      if (!isOwnPlayer && otherProfile.job.companyId != 0 &&
           otherProfile.job.companyId == _userDetails.basic.job.companyId) {
         isWorkColleague = true;
       }
