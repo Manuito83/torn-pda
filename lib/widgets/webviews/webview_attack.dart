@@ -658,7 +658,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   void _showNoteToast() {
     Color cardColor;
     switch (widget.attackNotesColorList[_attackNumber]) {
-      case '':
+      case 'z':
         cardColor = Colors.grey[700];
         break;
       case 'green':
@@ -670,6 +670,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       case 'red':
         cardColor = Colors.red[900];
         break;
+      default:
+        cardColor = Colors.grey[700];
     }
 
     String extraInfo = "";
