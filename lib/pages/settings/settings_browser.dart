@@ -542,6 +542,19 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'The browser has pull to refresh functionality (not applicable to the chaining browser). '
+            'However, you can get an extra refresh icon if it\'s useful for certain situations (e.g. '
+            'jail or hospital refresh)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
