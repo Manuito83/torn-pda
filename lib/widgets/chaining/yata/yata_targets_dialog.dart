@@ -299,12 +299,11 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
 
   void _startImport() async {
     // We add all targets coming from YATA
-    dynamic attacksFull = await _targetsProvider.getAttacksFull();
     for (var i = 0; i <= widget.onlyYata.length - 1; i++) {
       if (mounted) {
         var importResult = await _targetsProvider.addTarget(
           targetId: widget.onlyYata[i].id,
-          attacksFull: attacksFull,
+          attacks: await _targetsProvider.getAttacks(),
           notes: widget.onlyYata[i].noteYata,
           notesColor: _localColorCode(widget.onlyYata[i].colorYata),
         );

@@ -1,7 +1,8 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:torn_pda/models/chaining/attack_full_model.dart';
+import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
@@ -56,7 +57,7 @@ class TargetsProvider extends ChangeNotifier {
   /// chars and of an acceptable color (green, blue, red).
   Future<AddTargetResult> addTarget({
     @required String targetId,
-    @required dynamic attacksFull,
+    @required dynamic attacks,
     String notes = '',
     String notesColor = '',
   }) async {
@@ -72,7 +73,7 @@ class TargetsProvider extends ChangeNotifier {
     dynamic myNewTargetModel = await TornApiCaller.target(_userKey, targetId).getTarget;
 
     if (myNewTargetModel is TargetModel) {
-      _getTargetRespect(attacksFull, myNewTargetModel);
+      _getRespectFF(attacks, myNewTargetModel);
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
       myNewTargetModel.personalNoteColor = notesColor;
@@ -99,8 +100,8 @@ class TargetsProvider extends ChangeNotifier {
   /// The result of this needs to be passed to several functions, so that we don't need
   /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
   /// the attackFull variable we provide is the same and we only requested it once.
-  dynamic getAttacksFull() async {
-    return await TornApiCaller.attacks(_userKey).getAttacksFull;
+  dynamic getAttacks() async {
+    return await TornApiCaller.attacks(_userKey).getAttacks;
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
@@ -111,22 +112,27 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void _getTargetRespect(attacksFull, TargetModel myNewTargetModel) {
-    if (attacksFull is AttackFullModel) {
-      List<double> respectFromThisTarget = <double>[];
-      List<bool> userWonOrDefended = <bool>[];
-      attacksFull.attacks.forEach((key, value) {
-        // We look for the our target in the the attacksFull list
+  void _getRespectFF(AttackModel attackModel, TargetModel myNewTargetModel) {
+    double respect = -1;
+    double fairFight = -1; // Unknown
+    List<bool> userWonOrDefended = <bool>[];
+    if (attackModel is AttackModel) {
+
+      attackModel.attacks.forEach((key, value) {
+        // We look for the our target in the the attacks list
         if (myNewTargetModel.playerId == value.defenderId ||
             myNewTargetModel.playerId == value.attackerId) {
-          if (value.respect is String) {
-            respectFromThisTarget.add(double.parse(value.respect));
-          } else {
-            // This is either int or double, so we convert just in case
-            respectFromThisTarget.add(value.respect.toDouble());
+
+          // Only update if we have still not found a positive value (because
+          // we lost or we have no records)
+          if (value.respectGain > 0) {
+            fairFight = value.modifiers.fairFight;
+            respect = fairFight * 0.25 * (log(myNewTargetModel.level) + 1);
+          } else if (respect == -1 ){
+            respect = 0;
+            fairFight = 1.00;
           }
 
-          // Find out if this was won or successfully defended by the user
           if (myNewTargetModel.playerId == value.defenderId) {
             if (value.result == Result.LOST || value.result == Result.STALEMATE) {
               // If we attacked and lost
@@ -145,10 +151,14 @@ class TargetsProvider extends ChangeNotifier {
         }
       });
 
-      if (respectFromThisTarget.isNotEmpty) {
-        myNewTargetModel.respectGain = respectFromThisTarget.first;
+      myNewTargetModel.respectGain = respect;
+      myNewTargetModel.fairFight = fairFight;
+      if (userWonOrDefended.isNotEmpty) {
         myNewTargetModel.userWonOrDefended = userWonOrDefended.first;
+      } else {
+        myNewTargetModel.userWonOrDefended = true; // Placeholder
       }
+
     }
   }
 
@@ -170,7 +180,7 @@ class TargetsProvider extends ChangeNotifier {
 
   Future<bool> updateTarget({
     @required TargetModel targetToUpdate,
-    @required dynamic attacksFull,
+    @required dynamic attacks,
   }) async {
     targetToUpdate.isUpdating = true;
     notifyListeners();
@@ -179,7 +189,7 @@ class TargetsProvider extends ChangeNotifier {
       dynamic myUpdatedTargetModel =
           await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
-        _getTargetRespect(attacksFull, myUpdatedTargetModel);
+        _getRespectFF(attacks, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(targetToUpdate)] = myUpdatedTargetModel;
         var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
@@ -212,13 +222,13 @@ class TargetsProvider extends ChangeNotifier {
     }
     notifyListeners();
     // Then start the real update
-    dynamic attacksFull = await TornApiCaller.attacks(_userKey).getAttacksFull;
+    dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
         dynamic myUpdatedTargetModel =
             await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
         if (myUpdatedTargetModel is TargetModel) {
-          _getTargetRespect(attacksFull, myUpdatedTargetModel);
+          _getRespectFF(attacks, myUpdatedTargetModel);
           _getTargetFaction(myUpdatedTargetModel);
           var notes = _targets[i].personalNote;
           var notesColor = _targets[i].personalNoteColor;
@@ -271,7 +281,7 @@ class TargetsProvider extends ChangeNotifier {
               dynamic myUpdatedTargetModel =
                   await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
               if (myUpdatedTargetModel is TargetModel) {
-                _getTargetRespect(attacksFull, myUpdatedTargetModel);
+                _getRespectFF(attacksFull, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
                 _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
                 var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];

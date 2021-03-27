@@ -54,7 +54,7 @@ class Attack {
   String defenderName;
   int defenderFaction;
   String defenderFactionname;
-  String result;
+  Result result;
   int stealthed;
   dynamic respectGain;
   int chain;
@@ -101,7 +101,8 @@ class Attack {
         defenderFactionname: json["defender_factionname"] == null
             ? null
             : json["defender_factionname"],
-        result: json["result"] == null ? null : json["result"],
+        result:
+            json["result"] == null ? null : resultValues.map[json["result"]],
         stealthed: json["stealthed"] == null ? null : json["stealthed"],
         respectGain: json["respect_gain"],
         chain: json["chain"] == null ? null : json["chain"],
@@ -124,7 +125,7 @@ class Attack {
         "defender_faction": defenderFaction == null ? null : defenderFaction,
         "defender_factionname":
             defenderFactionname == null ? null : defenderFactionname,
-        "result": result == null ? null : result,
+        "result": result == null ? null : resultValues.reverse[result],
         "stealthed": stealthed == null ? null : stealthed,
         "respect_gain": respectGain,
         "chain": chain == null ? null : chain,
@@ -170,7 +171,9 @@ class Modifiers {
                 : json["fair_fight"],
         war: json["war"] is String
             ? double.parse(json["war"])
-            : json["war"] is int ? json["war"].toDouble() : json["war"],
+            : json["war"] is int
+                ? json["war"].toDouble()
+                : json["war"],
         retaliation: json["retaliation"] is String
             ? double.parse(json["retaliation"])
             : json["retaliation"] is int
@@ -202,6 +205,30 @@ class Modifiers {
         "chain_bonus": chainBonus,
       };
 }
+
+enum Result {
+  ATTACKED,
+  HOSPITALIZED,
+  LOST,
+  MUGGED,
+  SPECIAL,
+  STALEMATE,
+  ARRESTED,
+  ESCAPE,
+  ASSIST
+}
+
+final resultValues = EnumValues({
+  "Arrested": Result.ARRESTED,
+  "Assist": Result.ASSIST,
+  "Attacked": Result.ATTACKED,
+  "Escape": Result.ESCAPE,
+  "Hospitalized": Result.HOSPITALIZED,
+  "Lost": Result.LOST,
+  "Mugged": Result.MUGGED,
+  "Special": Result.SPECIAL,
+  "Stalemate": Result.STALEMATE
+});
 
 class EnumValues<T> {
   Map<String, T> map;

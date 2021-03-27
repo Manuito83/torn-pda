@@ -37,7 +37,7 @@ class _AttackCardState extends State<AttackCard> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4.0),
@@ -230,10 +230,9 @@ class _AttackCardState extends State<AttackCard> {
             _addButtonActive = false;
           });
 
-          dynamic attacksFull = await targetsProvider.getAttacksFull();
           AddTargetResult tryAddTarget = await targetsProvider.addTarget(
             targetId: _attack.targetId,
-            attacksFull: attacksFull,
+            attacks: await targetsProvider.getAttacks(),
           );
           if (tryAddTarget.success) {
             BotToast.showText(

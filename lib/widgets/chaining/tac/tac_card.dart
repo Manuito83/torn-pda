@@ -44,7 +44,7 @@ class _TacCardState extends State<TacCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4.0),
@@ -268,7 +268,7 @@ class _TacCardState extends State<TacCard> {
                 // but it will be much faster
                 AddTargetResult tryAddTarget = await targetsProvider.addTarget(
                   targetId: _target.id,
-                  attacksFull: null,
+                  attacks: await targetsProvider.getAttacks(),
                 );
                 if (tryAddTarget.success) {
                   BotToast.showText(

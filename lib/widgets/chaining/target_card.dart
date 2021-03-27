@@ -89,7 +89,7 @@ class _TargetCardState extends State<TargetCard> {
         ),
       ],
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
         child: Card(
           shape: RoundedRectangleBorder(
               side: BorderSide(color: _borderColor(), width: 1.5),
@@ -184,7 +184,7 @@ class _TargetCardState extends State<TargetCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   mainAxisSize: MainAxisSize.max,
                   children: <Widget>[
-                    _returnRespect(_target.respectGain),
+                    _returnRespectFF(_target.respectGain, _target.fairFight),
                     _returnHealth(_target),
                   ],
                 ),
@@ -459,12 +459,13 @@ class _TargetCardState extends State<TargetCard> {
     }
   }
 
-  Widget _returnRespect(double respect) {
+  Widget _returnRespectFF(double respect, double fairFight) {
     TextSpan respectResult;
+    TextSpan fairFightResult;
 
     if (respect == -1) {
       respectResult = TextSpan(
-        text: 'unknown',
+        text: 'unk',
         style: TextStyle(
           color: _themeProvider.mainText,
         ),
@@ -472,7 +473,7 @@ class _TargetCardState extends State<TargetCard> {
     } else if (respect == 0) {
       if (_target.userWonOrDefended) {
         respectResult = TextSpan(
-          text: '0 (defended)',
+          text: '0 (def)',
           style: TextStyle(
             color: _themeProvider.mainText,
           ),
@@ -496,16 +497,68 @@ class _TargetCardState extends State<TargetCard> {
       );
     }
 
-    return RichText(
-      text: TextSpan(
-        children: <TextSpan>[
-          TextSpan(
-            text: 'Respect: ',
-            style: TextStyle(
-              color: _themeProvider.mainText,
+
+
+    if (fairFight == -1) {
+      fairFightResult = TextSpan(
+        text: 'unk',
+        style: TextStyle(
+          color: _themeProvider.mainText,
+        ),
+      );
+    } else {
+
+      var ffColor = Colors.red;
+      if (fairFight >= 2.2 && fairFight < 2.8) {
+        ffColor = Colors.orange;
+      } else if (fairFight >= 2.8) {
+        ffColor = Colors.green;
+      }
+
+      fairFightResult = TextSpan(
+        text: fairFight.toStringAsFixed(2),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: ffColor,
+        ),
+      );
+    }
+
+    return Flexible(
+      child: Row(
+        children: [
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                children: <TextSpan>[
+                  TextSpan(
+                    text: 'R: ',
+                    style: TextStyle(
+                      color: _themeProvider.mainText,
+                    ),
+                  ),
+                  respectResult,
+                ],
+              ),
             ),
           ),
-          respectResult,
+          respect == 0
+              ? SizedBox.shrink()
+              : Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: ' / FF: ',
+                          style: TextStyle(
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                        fairFightResult,
+                      ],
+                    ),
+                  ),
+                ),
         ],
       ),
     );
@@ -721,10 +774,9 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateThisTarget() async {
-    dynamic attacksFull = await _targetsProvider.getAttacksFull();
     bool updateWorked = await _targetsProvider.updateTarget(
       targetToUpdate: _target,
-      attacksFull: attacksFull,
+      attacks: await _targetsProvider.getAttacks(),
     );
     if (updateWorked) {
     } else {

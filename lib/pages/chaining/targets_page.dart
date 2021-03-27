@@ -478,13 +478,11 @@ class _TargetsPageState extends State<TargetsPage> {
                                       // does not appear again in case of failure
                                       var inputId = _addIdController.text;
                                       _addIdController.text = '';
-                                      dynamic attacksFull =
-                                          await _targetsProvider
-                                              .getAttacksFull();
                                       AddTargetResult tryAddTarget =
                                           await targetsProvider.addTarget(
                                         targetId: inputId,
-                                        attacksFull: attacksFull,
+                                        attacks:
+                                            await _targetsProvider.getAttacks(),
                                       );
                                       if (tryAddTarget.success) {
                                         BotToast.showText(

@@ -98,7 +98,7 @@ class AttacksProvider extends ChangeNotifier {
   }
 
   void _determineAttackWonLost(Attack thisAttack) {
-    if (thisAttack.result == 'Lost' || thisAttack.result == 'Stalemate') {
+    if (thisAttack.result == Result.LOST || thisAttack.result == Result.STALEMATE) {
       thisAttack.attackWon = false;
     } else {
       thisAttack.attackWon = true;
@@ -119,7 +119,7 @@ class AttacksProvider extends ChangeNotifier {
         thisAttack.respectGain = respectGain;
       }
       double modifiers = thisAttack.modifiers.getTotalModifier;
-      if (thisAttack.result == 'Mugged') {
+      if (thisAttack.result == Result.MUGGED) {
         modifiers *= 0.75;
       }
       double baseRespect = respectGain / modifiers;
