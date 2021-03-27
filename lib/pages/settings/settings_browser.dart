@@ -23,6 +23,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Future _preferencesRestored;
 
   bool _loadBarBrowser;
+  bool _refreshIconBrowser;
   bool _chatRemoveEnabled;
   bool _highlightChat;
   Color _highlightColor = Color(0xff7ca900);
@@ -524,6 +525,26 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
+              Text("Show refresh icon"),
+              Switch(
+                value: _refreshIconBrowser,
+                onChanged: (value) {
+                  _settingsProvider.changeRefreshIconBrowser = value;
+                  setState(() {
+                    _refreshIconBrowser = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
               Text("Use quick browser"),
               Switch(
                 value: _useQuickBrowser,
@@ -615,6 +636,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   Future _restorePreferences() async {
     setState(() {
       _loadBarBrowser = _settingsProvider.loadBarBrowser;
+      _refreshIconBrowser = _settingsProvider.refreshIconBrowser;
       _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
       _useQuickBrowser = _settingsProvider.useQuickBrowser;
       _highlightChat = _settingsProvider.highlightChat;

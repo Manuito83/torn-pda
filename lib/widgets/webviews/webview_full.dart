@@ -140,6 +140,8 @@ class _WebViewFullState extends State<WebViewFull> {
   UserScriptsProvider _userScriptsProvider;
   ThemeProvider _themeProvider;
 
+  PullToRefreshController _pullToRefreshController;
+
   @override
   void initState() {
     super.initState();
@@ -149,6 +151,23 @@ class _WebViewFullState extends State<WebViewFull> {
         Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
     _pageTitle = widget.customTitle;
+
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    _pullToRefreshController = PullToRefreshController(
+      options: PullToRefreshOptions(
+        color: Colors.orange[800],
+        size: AndroidPullToRefreshSize.DEFAULT,
+        backgroundColor: _themeProvider.background,
+        enabled: true,
+        slingshotDistance: 150,
+        distanceToTriggerSync: 150,
+      ),
+      onRefresh: () async {
+        await webView.reload();
+      },
+    );
+
     //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
 
@@ -161,7 +180,6 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   Widget build(BuildContext context) {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
       // If we are launching from a dialog, it's important not to add the show case, in
@@ -360,22 +378,26 @@ class _WebViewFullState extends State<WebViewFull> {
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
                                       ),
-                                      child: Material(
-                                        color: Colors.transparent,
-                                        child: InkWell(
-                                          customBorder: new CircleBorder(),
-                                          splashColor: Colors.blueGrey,
-                                          child: Icon(Icons.refresh),
-                                          onTap: () async {
-                                            _scrollX =
-                                                await webView.getScrollX();
-                                            _scrollY =
-                                                await webView.getScrollY();
-                                            await webView.reload();
-                                            _scrollAfterLoad = true;
-                                          },
-                                        ),
-                                      ),
+                                      child: _settingsProvider
+                                              .refreshIconBrowser
+                                          ? Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                customBorder:
+                                                    new CircleBorder(),
+                                                splashColor: Colors.blueGrey,
+                                                child: Icon(Icons.refresh),
+                                                onTap: () async {
+                                                  _scrollX = await webView
+                                                      .getScrollX();
+                                                  _scrollY = await webView
+                                                      .getScrollY();
+                                                  await webView.reload();
+                                                  _scrollAfterLoad = true;
+                                                },
+                                              ),
+                                            )
+                                          : SizedBox.shrink(),
                                     ),
                                   ],
                                 ),
@@ -466,6 +488,7 @@ class _WebViewFullState extends State<WebViewFull> {
             initialUserScripts: _userScriptsProvider.getContinuousSources(
               apiKey: _userProvider.basic.userApiKey,
             ),
+            pullToRefreshController: _pullToRefreshController,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                   // This is deactivated as it interferes with hospital timer,
@@ -532,6 +555,8 @@ class _WebViewFullState extends State<WebViewFull> {
               setState(() {
                 this.progress = progress / 100;
               });
+
+              if (progress > 75) _pullToRefreshController.endRefreshing();
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
@@ -728,33 +753,35 @@ class _WebViewFullState extends State<WebViewFull> {
           _bazaarFillIcon(),
           _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                customBorder: new CircleBorder(),
-                splashColor: Colors.orange,
-                child: Icon(Icons.refresh),
-                onTap: () async {
-                  _scrollX = await webView.getScrollX();
-                  _scrollY = await webView.getScrollY();
-                  await webView.reload();
-                  _scrollAfterLoad = true;
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _settingsProvider.refreshIconBrowser
+                ? Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: new CircleBorder(),
+                      splashColor: Colors.orange,
+                      child: Icon(Icons.refresh),
+                      onTap: () async {
+                        _scrollX = await webView.getScrollX();
+                        _scrollY = await webView.getScrollY();
+                        await webView.reload();
+                        _scrollAfterLoad = true;
 
-                  BotToast.showText(
-                    text: "Reloading...",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
+                        BotToast.showText(
+                          text: "Reloading...",
+                          textStyle: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.grey[600],
+                          duration: Duration(seconds: 1),
+                          contentPadding: EdgeInsets.all(10),
+                        );
+                      },
                     ),
-                    contentColor: Colors.grey[600],
-                    duration: Duration(seconds: 1),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-              ),
-            ),
-          ),
+                  )
+                : SizedBox.shrink(),
+          )
         ],
       ),
     );

@@ -125,6 +125,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _refreshIconBrowser = true;
+  bool get refreshIconBrowser => _refreshIconBrowser;
+  set changeRefreshIconBrowser(bool value) {
+    _refreshIconBrowser = value;
+    SharedPreferencesModel().setRefreshIconBrowser(_refreshIconBrowser);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -213,6 +221,8 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
 
     _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
+
+    _refreshIconBrowser = await SharedPreferencesModel().getRefreshIconBrowser();
 
     _onAppExit = await SharedPreferencesModel().getOnAppExit();
 
