@@ -37,26 +37,29 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.2.0
     var v2_3_0 = ChangeLogItem();
-    v2_3_0.main.version = 'Torn PDA v2.3.0 BETA';
-    v2_3_0.main.date = 'XX APR 2021';
+    v2_3_0.main.version = 'Torn PDA v2.3.0';
+    v2_3_0.main.date = '01 APR 2021';
     String feat2_3_0_1 = "Loot: added Fernando (NPC).";
     String feat2_3_0_2 = "Browser: added custom user scripts support (add your own in Settings / Browser Options). Preexisting scripts might require code changes to work in Torn PDA.";
     String feat2_3_0_3 = "Browser: added estimated stats to players' profiles.";
     String feat2_3_0_4 = "Browser: added extra information when attacking or visiting other players' profiles. You will be warned if they belong to your same faction or a friendly faction, if they are on your friends' list, etc. You can configure friendly factions in the advanced browser settings inside of the Settings section.";
-    String feat2_3_0_5 = "Chaining: added extra information to targets' notes when chaining, showing if the target has been online recently and if it belongs to a faction. Applies to standard targets and TAC.";
-    String feat2_3_0_6 = "Chaining: changed sorting by note color to match YATA's (G-Y-R-OFF or OFF-R-Y-G).";
-    String feat2_3_0_7 = "Chaining: you can now filter targets by note color.";
-    String feat2_3_0_8 = "Chaining: fixed TAC stats notes not showing correctly.";
-    String feat2_3_0_9 = "Chaining: notes color now sync with YATA even if the note is empty. The notebook icon is now also colored accordingly";
-    String feat2_3_0_10 = "Friends: the notebook icon is now colored according to the note's color, even if empty.";
-    String feat2_3_0_11 = "Profile: added a check for property rental expiry (< 7 days) in the miscellaneous card";
-    String feat2_3_0_12 = "Profile: the manual hospital release notification can now be configured to trigger several minutes in advance (similar to travel notifications).";
-    String feat2_3_0_13 = "Profile: fixed company name when working for a public company.";
-    String feat2_3_0_14 = "Profile: fixed participants readiness check for OCs.";
-    String feat2_3_0_15 = "Travel: Improved foreign items layout for narrow screens.";
-    String feat2_3_0_16 = "Settings: moved browser options to a dedicated section to reduce complexity.";
-    String feat2_3_0_17 = "Corrected pixel density for certain devices.";
-    String feat2_3_0_18 = "Corrected Torn links not working when the website returns an unsecure (http) url.";
+    String feat2_3_0_5 = "Browser: added estimated stats to players' profiles.";
+    String feat2_3_0_6 = "Chaining: added extra information to targets' notes when chaining, showing if the target has been online recently and if it belongs to a faction. Applies to standard targets and TAC.";
+    String feat2_3_0_7 = "Chaining: changed sorting by note color to match YATA's (G-Y-R-OFF or OFF-R-Y-G).";
+    String feat2_3_0_8 = "Chaining: you can now filter targets by note color.";
+    String feat2_3_0_9 = "Chaining: fixed TAC stats notes not showing correctly.";
+    String feat2_3_0_10 = "Chaining: notes color now sync with YATA even if the note is empty. The notebook icon is now also colored accordingly";
+    String feat2_3_0_11 = "Chaining: target cards now show flat respect. Added fair fight.";
+    String feat2_3_0_12 = "Friends: the notebook icon is now colored according to the note's color, even if empty.";
+    String feat2_3_0_13 = "Profile: added a check for property rental expiry (< 7 days) in the miscellaneous card";
+    String feat2_3_0_14 = "Profile: the manual hospital release notification can now be configured to trigger several minutes in advance (similar to travel notifications).";
+    String feat2_3_0_15 = "Profile: fixed company name when working for a public company.";
+    String feat2_3_0_16 = "Profile: fixed participants readiness check for OCs.";
+    String feat2_3_0_17 = "Travel: Improved foreign items layout for narrow screens.";
+    String feat2_3_0_18 = "Settings: moved browser options to a dedicated section to reduce complexity.";
+    String feat2_3_0_19 = "Corrected pixel density for certain devices.";
+    String feat2_3_0_20 = "Corrected Torn links not working when the website returns an unsecure (http) url.";
+    String feat2_3_0_21 = "Corrected targets sync issues caused by API changes.";
     v2_3_0.features.add(feat2_3_0_1);
     v2_3_0.features.add(feat2_3_0_2);
     v2_3_0.features.add(feat2_3_0_3);
@@ -75,6 +78,9 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_0.features.add(feat2_3_0_16);
     v2_3_0.features.add(feat2_3_0_17);
     v2_3_0.features.add(feat2_3_0_18);
+    v2_3_0.features.add(feat2_3_0_19);
+    v2_3_0.features.add(feat2_3_0_20);
+    v2_3_0.features.add(feat2_3_0_21);
 
 
     // VERSION 2.2.0
