@@ -154,11 +154,17 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
     if (otherProfile is OtherProfileModel) {
       String estimatedStats = "";
-      try {
-        estimatedStats = _calculateStats(otherProfile);
+      var npcs = [4, 10, 15, 19, 20];
+      if (npcs.contains(otherProfile.playerId)) {
+        estimatedStats = "NPC!";
         hasEstimatedStats = true;
-      } catch (e) {
-        // Will be empty
+      } else {
+        try {
+          estimatedStats = _calculateStats(otherProfile);
+          hasEstimatedStats = true;
+        } catch (e) {
+          // Will be empty
+        }
       }
 
       if (otherProfile.playerId == 2225097) {
