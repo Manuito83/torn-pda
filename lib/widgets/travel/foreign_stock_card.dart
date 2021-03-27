@@ -588,11 +588,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         ],
       );
     } else {
-      moneyToBuy =
-          'You do not have the \$${costCurrency.format(stock.cost * widget.capacity)} '
-          'necessary to buy ${widget.capacity} ${stock.name}.';
-      moneyToBuyExtra = 'Add another '
-          '\$${costCurrency.format((stock.cost * widget.capacity) - widget.moneyOnHand)}';
+      var howMany = (widget.moneyOnHand / stock.cost).floor();
+      String howManyString = howMany == 0 ? "cannot buy a single" : "can only buy $howMany";
+      moneyToBuy = 'You $howManyString ${stock.name} with the money you have.';
+      moneyToBuyExtra = 'You need '
+          '\$${costCurrency.format((stock.cost * widget.capacity) - widget.moneyOnHand)} more '
+          '(a total of \$${costCurrency.format(stock.cost * widget.capacity)}) to buy ${widget.capacity}.';
       moneyToBuyColor = Colors.orange[800];
       costWidget = Row(
         children: [
