@@ -128,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
-  UserDetailsProvider _userProvider;
+  UserDetailsProvider _userProv;
   ShortcutsProvider _shortcuts;
 
   // For dial FAB
@@ -253,7 +253,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ScrollDirection.forward);
       });
 
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _shortcuts = context.read<ShortcutsProvider>();
 
     _loadPreferences().whenComplete(() {
@@ -1070,7 +1070,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       transitionDuration: Duration(seconds: 1),
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
-        return ForeignStockPage(apiKey: _userProvider.basic.userApiKey);
+        return ForeignStockPage(apiKey: _userProv.basic.userApiKey);
       },
       closedElevation: 3,
       closedShape: const RoundedRectangleBorder(
@@ -4146,10 +4146,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _fetchApi() async {
     var apiResponse =
-        await TornApiCaller.ownExtended(_userProvider.basic.userApiKey)
+        await TornApiCaller.ownExtended(_userProv.basic.userApiKey)
             .getProfileExtended;
-    var apiChain = await TornApiCaller.chain(_userProvider.basic.userApiKey)
-        .getChainStatus;
+    var apiChain =
+        await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
 
     if (mounted) {
       setState(() {
@@ -4208,10 +4208,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _getMiscInformation() async {
     try {
       var miscApiResponse =
-          await TornApiCaller.ownMisc(_userProvider.basic.userApiKey)
+          await TornApiCaller.ownMisc(_userProv.basic.userApiKey)
               .getProfileMisc;
       var educationResponse =
-          await TornApiCaller.education(_userProvider.basic.userApiKey)
+          await TornApiCaller.education(_userProv.basic.userApiKey)
               .getEducation;
 
       if (miscApiResponse is OwnProfileMisc &&
@@ -4241,15 +4241,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _getFactionCrimes() async {
     var factionCrimes =
-        await TornApiCaller.factionCrimes(_userProvider.basic.userApiKey)
+        await TornApiCaller.factionCrimes(_userProv.basic.userApiKey)
             .getFactionCrimes;
 
     var found = false;
     if (factionCrimes is FactionCrimesModel) {
-      factionCrimes.crimes.forEach((key, details) {
-        if (details.initiated == 0 && !found) {
+      factionCrimes.crimes.forEach((key, crime) {
+        if (crime.initiated == 0 && !found) {
           var participantsNotReady = 0;
-          details.participants.forEach((participant) {
+          crime.participants.forEach((participant) {
             // There is only one participant, but in another map
             participant.forEach((key, values) {
               if (values.description != "Okay") {
@@ -4257,16 +4257,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               }
             });
 
-            if (participant
-                .containsKey(_userProvider.basic.playerId.toString())) {
-              _factionCrimeName = details.crimeName;
+            if (participant.containsKey(_userProv.basic.playerId.toString())) {
+              _factionCrimeName = crime.crimeName;
               _factionCrimeTimestamp =
-                  DateTime.fromMillisecondsSinceEpoch(details.timeReady * 1000);
+                  DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
 
-              _factionParticipantsNotReady = participantsNotReady;
+              // Breaks loop
               found = true;
             }
           });
+
+          // If found our crime, assign final number of participants not ready
+          if (found) _factionParticipantsNotReady = participantsNotReady;
         }
       });
     }
@@ -6270,7 +6272,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int number = 0;
     await Future.forEach(keys, (element) async {
       var rentDetails =
-          await TornApiCaller.property(_userProvider.basic.userApiKey, element)
+          await TornApiCaller.property(_userProv.basic.userApiKey, element)
               .getProperty;
 
       if (rentDetails is PropertyModel) {
