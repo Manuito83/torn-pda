@@ -4084,6 +4084,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         source = 'Auction House';
       } else if (v.key == 'unpaidfees') {
         source = 'Unpaid Fees';
+      } else if (v.key == 'itemmarket') {
+        source = 'Items Market';
+      } else if (v.key == 'enlistedcars') {
+        source = 'Enlisted Cars';
       } else {
         source = "${v.key[0].toUpperCase()}${v.key.substring(1)}";
       }
@@ -4092,7 +4096,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         Row(
           children: <Widget>[
             SizedBox(
-              height: 20,
               width: 110,
               child: Text('$source: '),
             ),
