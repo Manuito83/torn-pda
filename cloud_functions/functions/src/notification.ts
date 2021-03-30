@@ -571,6 +571,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             newEventsDescriptions[i].includes('canceled the ')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
+              continue;
             }
           }
 
@@ -578,6 +579,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             if (newEventsDescriptions[i].includes('the director of')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
+              continue;
             }
           }
 
@@ -588,6 +590,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             newEventsDescriptions[i].includes('race and have received ')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
+              continue;
             }
           }
 
@@ -595,6 +598,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             if (newEventsDescriptions[i].includes('from your bazaar for')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
+              continue;
             }
           }
 
@@ -604,6 +608,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             newEventsDescriptions[i].includes('attacked and hospitalized')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
+              continue;
             }
           }
 
@@ -611,6 +616,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             if (newEventsDescriptions[i].includes('revive')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
+              continue;
             }
           }
         }
