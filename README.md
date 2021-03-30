@@ -15,6 +15,8 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Have a look at foreign stocks directly in the Travel section. Filter and sort items at your convenience, including profit based on item capacity. Also, by using the in-app browser, you are contributing by sending stock data automatically to the shared database!
 
+* User scripts support.
+
 * YATA mobile interface: new sections (e.g. Awards) that constitute the first official YATA mobile interface. Data comes straight from your YATA account.
 
 * Ability to fill max items on arrival to destination, based on current capacity and money available. Then, use the quick home return button in the top bar to make your stay quicker and safer.
