@@ -18,6 +18,12 @@ enum TimeZoneSetting {
   tornTime,
 }
 
+enum BrowserRefreshSetting {
+  icon,
+  pull,
+  both,
+}
+
 class SettingsProvider extends ChangeNotifier {
   int lastAppUse;
 
@@ -125,11 +131,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _refreshIconBrowser = true;
-  bool get refreshIconBrowser => _refreshIconBrowser;
-  set changeRefreshIconBrowser(bool value) {
-    _refreshIconBrowser = value;
-    SharedPreferencesModel().setRefreshIconBrowser(_refreshIconBrowser);
+  var _browserRefreshMethod = BrowserRefreshSetting.both;
+  BrowserRefreshSetting get browserRefreshMethod => _browserRefreshMethod;
+  set changeBrowserRefreshMethod(BrowserRefreshSetting value) {
+    _browserRefreshMethod = value;
+    switch (value) {
+      case BrowserRefreshSetting.icon:
+        SharedPreferencesModel().setBrowserRefreshMethod("icon");
+        break;
+      case BrowserRefreshSetting.pull:
+        SharedPreferencesModel().setBrowserRefreshMethod("pull");
+        break;
+      case BrowserRefreshSetting.both:
+        SharedPreferencesModel().setBrowserRefreshMethod("both");
+        break;
+    }
     notifyListeners();
   }
 
@@ -222,7 +238,18 @@ class SettingsProvider extends ChangeNotifier {
 
     _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
 
-    _refreshIconBrowser = await SharedPreferencesModel().getRefreshIconBrowser();
+    var refresh = await SharedPreferencesModel().getBrowserRefreshMethod();
+    switch (refresh) {
+      case "icon":
+        _browserRefreshMethod = BrowserRefreshSetting.icon;
+        break;
+      case "pull":
+        _browserRefreshMethod = BrowserRefreshSetting.pull;
+        break;
+      case "both":
+        _browserRefreshMethod = BrowserRefreshSetting.both;
+        break;
+    }
 
     _onAppExit = await SharedPreferencesModel().getOnAppExit();
 

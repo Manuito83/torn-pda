@@ -22,15 +22,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Future _preferencesRestored;
 
-  bool _loadBarBrowser;
-  bool _refreshIconBrowser;
-  bool _chatRemoveEnabled;
   bool _highlightChat;
   Color _highlightColor = Color(0xff7ca900);
-  bool _removeAirplane;
-  bool _useQuickBrowser;
-  bool _extraPlayerInformation;
-  bool _userScriptsEnabled;
 
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
@@ -58,7 +51,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
-            drawer: new Drawer(),
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -136,11 +128,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 children: <Widget>[
                   Text("Extra player information"),
                   Switch(
-                    value: _extraPlayerInformation,
+                    value: _settingsProvider.extraPlayerInformation,
                     onChanged: (value) {
-                      _settingsProvider.changeExtraPlayerInformation = value;
                       setState(() {
-                        _extraPlayerInformation = value;
+                        _settingsProvider.changeExtraPlayerInformation = value;
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -161,7 +152,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
-            if (_extraPlayerInformation)
+            if (_settingsProvider.extraPlayerInformation)
               Column(
                 children: [
                   Padding(
@@ -226,11 +217,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 children: <Widget>[
                   Text("Enable custom user scripts"),
                   Switch(
-                    value: _userScriptsEnabled,
+                    value: _userScriptsProvider.userScriptsEnabled,
                     onChanged: (value) {
-                      _userScriptsProvider.setUserScriptsEnabled = value;
                       setState(() {
-                        _userScriptsEnabled = value;
+                        _userScriptsProvider.setUserScriptsEnabled = value;
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -251,7 +241,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ),
-            if (_userScriptsEnabled)
+            if (_userScriptsProvider.userScriptsEnabled)
               Column(
                 children: [
                   Padding(
@@ -361,11 +351,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: <Widget>[
               Text("Remove airplane"),
               Switch(
-                value: _removeAirplane,
+                value: _settingsProvider.removeAirplane,
                 onChanged: (value) {
-                  _settingsProvider.changeRemoveAirplane = value;
                   setState(() {
-                    _removeAirplane = value;
+                    _settingsProvider.changeRemoveAirplane = value;
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -412,11 +401,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: <Widget>[
               Text("Show chat remove icon"),
               Switch(
-                value: _chatRemoveEnabled,
+                value: _settingsProvider.chatRemoveEnabled,
                 onChanged: (value) {
-                  _settingsProvider.changeChatRemoveEnabled = value;
                   setState(() {
-                    _chatRemoveEnabled = value;
+                    _settingsProvider.changeChatRemoveEnabled = value;
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -432,11 +420,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: <Widget>[
               Text("Highlight own name in chat"),
               Switch(
-                value: _highlightChat,
+                value: _settingsProvider.highlightChat,
                 onChanged: (value) {
-                  _settingsProvider.changeHighlightChat = value;
                   setState(() {
-                    _highlightChat = value;
+                    _settingsProvider.changeHighlightChat = value;
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -507,11 +494,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: <Widget>[
               Text("Show load bar"),
               Switch(
-                value: _loadBarBrowser,
+                value: _settingsProvider.loadBarBrowser,
                 onChanged: (value) {
-                  _settingsProvider.changeLoadBarBrowser = value;
                   setState(() {
-                    _loadBarBrowser = value;
+                    _settingsProvider.changeLoadBarBrowser = value;
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -525,18 +511,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Show refresh icon"),
-              Switch(
-                value: _refreshIconBrowser,
-                onChanged: (value) {
-                  _settingsProvider.changeRefreshIconBrowser = value;
-                  setState(() {
-                    _refreshIconBrowser = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
+              Text("Refresh method"),
+              _refreshMethodDropdown(),
             ],
           ),
         ),
@@ -560,11 +536,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: <Widget>[
               Text("Use quick browser"),
               Switch(
-                value: _useQuickBrowser,
+                value: _settingsProvider.useQuickBrowser,
                 onChanged: (value) {
-                  _settingsProvider.changeUseQuickBrowser = value;
                   setState(() {
-                    _useQuickBrowser = value;
+                    _settingsProvider.changeUseQuickBrowser = value;
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -646,17 +621,62 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
     super.dispose();
   }
 
+  Widget _refreshMethodDropdown() {
+    return DropdownButton<BrowserRefreshSetting>(
+      value: _settingsProvider.browserRefreshMethod,
+      items: [
+        DropdownMenuItem(
+          value: BrowserRefreshSetting.icon,
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Icon",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: BrowserRefreshSetting.pull,
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Pull to refresh",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: BrowserRefreshSetting.both,
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Both",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.changeBrowserRefreshMethod = value;
+        });
+      },
+    );
+  }
+
   Future _restorePreferences() async {
     setState(() {
-      _loadBarBrowser = _settingsProvider.loadBarBrowser;
-      _refreshIconBrowser = _settingsProvider.refreshIconBrowser;
-      _chatRemoveEnabled = _settingsProvider.chatRemoveEnabled;
-      _useQuickBrowser = _settingsProvider.useQuickBrowser;
       _highlightChat = _settingsProvider.highlightChat;
       _highlightColor = Color(_settingsProvider.highlightColor);
-      _removeAirplane = _settingsProvider.removeAirplane;
-      _extraPlayerInformation = _settingsProvider.extraPlayerInformation;
-      _userScriptsEnabled = _userScriptsProvider.userScriptsEnabled;
     });
   }
 

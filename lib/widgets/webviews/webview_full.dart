@@ -159,7 +159,10 @@ class _WebViewFullState extends State<WebViewFull> {
         color: Colors.orange[800],
         size: AndroidPullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.background,
-        enabled: true,
+        enabled:
+            _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon
+                ? true
+                : false,
         slingshotDistance: 150,
         distanceToTriggerSync: 150,
       ),
@@ -379,7 +382,8 @@ class _WebViewFullState extends State<WebViewFull> {
                                         horizontal: 12,
                                       ),
                                       child: _settingsProvider
-                                              .refreshIconBrowser
+                                                  .browserRefreshMethod !=
+                                              BrowserRefreshSetting.pull
                                           ? Material(
                                               color: Colors.transparent,
                                               child: InkWell(
@@ -754,7 +758,8 @@ class _WebViewFullState extends State<WebViewFull> {
           _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _settingsProvider.refreshIconBrowser
+            child: _settingsProvider.browserRefreshMethod !=
+                    BrowserRefreshSetting.pull
                 ? Material(
                     color: Colors.transparent,
                     child: InkWell(

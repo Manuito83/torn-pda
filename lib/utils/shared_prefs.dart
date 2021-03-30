@@ -26,7 +26,7 @@ class SharedPreferencesModel {
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
-  final String _kRefreshIconBrowser = "pda_refreshIconBrowser";
+  final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -392,14 +392,14 @@ class SharedPreferencesModel {
     return prefs.setBool(_kLoadBarBrowser, value);
   }
 
-  Future<bool> getRefreshIconBrowser() async {
+  Future<String> getBrowserRefreshMethod() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRefreshIconBrowser) ?? true;
+    return prefs.getString(_kBrowserRefreshMethod) ?? "both";
   }
 
-  Future<bool> setRefreshIconBrowser(bool value) async {
+  Future<bool> setBrowserRefreshMethod(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRefreshIconBrowser, value);
+    return prefs.setString(_kBrowserRefreshMethod, value);
   }
 
   Future<bool> getUseQuickBrowser() async {
