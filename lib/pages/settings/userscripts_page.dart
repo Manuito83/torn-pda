@@ -58,7 +58,6 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
-            drawer: new Drawer(),
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
