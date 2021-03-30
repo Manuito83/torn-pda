@@ -37,7 +37,7 @@ class LootPage extends StatefulWidget {
 }
 
 class _LootPageState extends State<LootPage> {
-  final _npcIds = [4, 10, 15, 19, 20];
+  final _npcIds = [4, 10, 15, 17, 19, 20];
 
   Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
   YataLootModel _yataLootInfo;
@@ -458,24 +458,23 @@ class _LootPageState extends State<LootPage> {
       } else {
         shadow = null;
       }
-      if (npcId == '4' || npcId == '10' || npcId == '15' || npcId == '19' || npcId == '20') {
-        npcImage = Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.grey[900], width: 2),
-            boxShadow: shadow,
+
+      npcImage = Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.grey[900], width: 2),
+          boxShadow: shadow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image(
+            image: _npcIds.contains(int.parse(npcId))
+                ? AssetImage('images/npcs/npc_$npcId.png')
+                : AssetImage('images/npcs/npc_0.png'),
+            height: 60,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image(
-              image: AssetImage('images/npcs/npc_$npcId.png'),
-              height: 60,
-            ),
-          ),
-        );
-      } else {
-        npcImage = Icon(Icons.person);
-      }
+        ),
+      );
 
       Widget knifeIcon;
       knifeIcon = Padding(
