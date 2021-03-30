@@ -492,7 +492,8 @@ class _WebViewFullState extends State<WebViewFull> {
             initialUserScripts: _userScriptsProvider.getContinuousSources(
               apiKey: _userProvider.basic.userApiKey,
             ),
-            pullToRefreshController: _pullToRefreshController,
+            // Temporarily deactivated as it is affecting chats
+            //pullToRefreshController: _pullToRefreshController,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                   // This is deactivated as it interferes with hospital timer,
