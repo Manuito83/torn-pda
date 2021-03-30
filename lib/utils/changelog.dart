@@ -35,6 +35,19 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.3.1
+    var v2_3_1 = ChangeLogItem();
+    v2_3_1.main.version = 'Torn PDA v2.3.1';
+    v2_3_1.main.date = '02 APR 2021';
+    String feat2_3_1_1 = "Browser: the pull to refresh feature has been temporarily deactivated due to unexpected behaviours.";
+    String feat2_3_1_2 = "Events alerts reliability has been improved.";
+    String feat2_3_1_3 = "Fixed user scripts page opening a blank menu.";
+    String feat2_3_1_4 = "Fixed reported typos in the Profile section.";
+    v2_3_1.features.add(feat2_3_1_1);
+    v2_3_1.features.add(feat2_3_1_2);
+    v2_3_1.features.add(feat2_3_1_3);
+    v2_3_1.features.add(feat2_3_1_4);
+
     // VERSION 2.2.0
     var v2_3_0 = ChangeLogItem();
     v2_3_0.main.version = 'Torn PDA v2.3.0';
@@ -581,6 +594,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_3_1);
     itemList.add(v2_3_0);
     itemList.add(v2_2_0);
     if (Platform.isIOS) itemList.add(v2_1_1);
