@@ -27,13 +27,13 @@ Future showNotificationBoth(Map payload, int notId) async {
   String messageId = '';
   String tradeId = '';
   if (Platform.isAndroid) {
-    channel = payload["data"]["channelId"];
-    messageId = payload["data"]["tornMessageId"];
-    tradeId = payload["data"]["tornTradeId"];
+    channel = payload["data"]["channelId"] ?? '';
+    messageId = payload["data"]["tornMessageId"] ?? '';
+    tradeId = payload["data"]["tornTradeId"] ?? '';
   } else {
-    channel = payload["channelId"];
-    messageId = payload["tornMessageId"];
-    tradeId = payload["tornTradeId"];
+    channel = payload["channelId"] ?? '';
+    messageId = payload["tornMessageId"] ?? '';
+    tradeId = payload["tornTradeId"] ?? '';
   }
 
   String notificationIcon = "notification_icon";
