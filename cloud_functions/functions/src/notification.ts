@@ -112,45 +112,35 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
-export async function sendTravelNotification(userStats: any, subscriber: any) {
+// This will log the travel at first opportunity (in case the API cannot be contacted later)
+// when it detects we have a new timestamp and are on the air. Then, the TravelGroup function
+// will sort users and send relevant notifications
+export async function logTravelArrival(userStats: any, subscriber: any) {
   const travel = userStats.travel;
   const promises: Promise<any>[] = [];
-  const lastTravelNotificationSent = subscriber.lastTravelNotified || 0;
-
-  const currentDateInMillis = Date.now();
+  
+  const travelTimeArrival = subscriber.travelTimeArrival || 0;
 
   try {
-    if (
-      travel.time_left > 0 &&
-      travel.time_left <= 240 &&
-      currentDateInMillis - lastTravelNotificationSent > 300 * 1000
-    ) {
-      promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          `Approaching ${travel.destination}!`,
-          `You are about to land in ${travel.destination}!`,
-          "notification_travel",
-          "#0000FF",
-          "Alerts travel",
-          "",
-          "",
-          subscriber.vibration,
-        )
-      );
+
+    // We are flying register planned landing time ASAP
+    // unless the current arrival was already in the DB
+    if (travel.time_left > 0 && travel.timestamp != travelTimeArrival) {
       promises.push(
         admin
           .firestore()
           .collection("players")
           .doc(subscriber.uid)
           .update({
-            lastTravelNotified: currentDateInMillis,
+            travelTimeArrival: travel.timestamp,
+            travelTimeNotification: travel.timestamp,
+            travelDestination: travel.destination,
           })
       );
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR TRAVEL \n${subscriber.uid} \n${error}`);
+    functions.logger.warn(`ERROR TRAVEL LOG\n${subscriber.uid} \n${error}`);
   }
 
   return Promise.all(promises);

@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { sendEnergyNotification, sendNerveNotification, 
-  sendTravelNotification, sendHospitalNotification, 
+  logTravelArrival, sendHospitalNotification, 
   sendDrugsNotification, sendRacingNotification, 
   sendMessagesNotification, sendEventsNotification, 
   sendForeignRestockNotification } from "./notification";
@@ -20,6 +20,11 @@ export const alertsGroup = {
   .schedule("*/3 * * * *")
   .onRun(async () => {
 
+    /////////////////////////////////
+    // CHANGE TO FALSE BEFORE DEPLOY!
+    const debugManuito = false;
+    /////////////////////////////////
+
     const promisesGlobal: Promise<any>[] = [];
 
     const millisAtStart = Date.now();
@@ -27,15 +32,14 @@ export const alertsGroup = {
     // Get existing stocks from Realtime DB
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
-    const ref = db.ref("stocks/restocks");
+    const stocksDB = db.ref("stocks/restocks");
     const foreignStocks = {};
-    await ref.once("value", function(snapshot) {
+    await stocksDB.once("value", function(snapshot) {
       snapshot.forEach(function(childSnapshot) {
         foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
       });
     });
 
-    /*
     async function checkManuito() {
       const promises: Promise<any>[] = [];
 
@@ -61,7 +65,6 @@ export const alertsGroup = {
         return value;
       });
     }
-    */
     
     async function checkIOS() {
       const promises: Promise<any>[] = [];
@@ -143,12 +146,14 @@ export const alertsGroup = {
       });
     }
 
-    // FOR TESTING (deactivate others)
-    // promisesGlobal.push(checkManuito());
-
-    promisesGlobal.push(checkIOS());
-    promisesGlobal.push(checkAndroidLow());
-    promisesGlobal.push(checkAndroidHigh());
+    // FOR TESTING
+    if (debugManuito) {
+      promisesGlobal.push(checkManuito());
+    } else {
+      promisesGlobal.push(checkIOS());
+      promisesGlobal.push(checkAndroidLow());
+      promisesGlobal.push(checkAndroidHigh());
+    }
 
     await Promise.all(promisesGlobal);
 
@@ -169,7 +174,7 @@ async function sendNotificationForProfile(subscriber: any, stocks: any): Promise
       if (subscriber.nerveNotification)
         promises.push(sendNerveNotification(userStats, subscriber));
       if (subscriber.travelNotification)
-        promises.push(sendTravelNotification(userStats, subscriber));
+        promises.push(logTravelArrival(userStats, subscriber));
       if (subscriber.hospitalNotification)
         promises.push(sendHospitalNotification(userStats, subscriber));
       if (subscriber.drugsNotification)
