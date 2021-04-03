@@ -612,14 +612,6 @@ class _WebViewFullState extends State<WebViewFull> {
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
                 _assessTrades(document, pageTitle);
               }
-
-              /// FORUMS URL FOR IOS (not triggered in other WebView events).
-              /// Needed for URL copy and shortcuts.
-              if (consoleMessage.message.contains('CONTENT LOADED')) {
-                await webView.getUrl().then((value) {
-                  _currentUrl = value.toString();
-                });
-              }
             },
           ),
         ),
@@ -1543,7 +1535,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
-        print('City tries: $i in $i seconds (max 60 sec)');
+        //print('City tries: $i in $i seconds (max 60 sec)');
         break;
       } else {
         await Future.delayed(const Duration(seconds: 1));
@@ -1870,14 +1862,15 @@ class _WebViewFullState extends State<WebViewFull> {
     });
   }
 
-  Future<void> _openCustomUrlDialog() {
+  Future<void> _openCustomUrlDialog() async {
+    var url = await webView.getUrl();
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _pageTitle,
-          url: _currentUrl,
+          url: url.toString(),
           webview: webView,
         );
       },
