@@ -1565,11 +1565,8 @@ class _WebViewFullState extends State<WebViewFull> {
       });
     }
 
-    print(mapItemsList.length);
-
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      print("calling API");
       dynamic apiResponse =
           await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
