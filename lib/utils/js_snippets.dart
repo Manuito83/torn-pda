@@ -229,7 +229,22 @@ String highlightCityItemsJS() {
       }
     }
     
-    highlightItems();
+    itemsLoaded().then(() => {
+      highlightItems();
+    });
+    
+    function itemsLoaded() {
+      return new Promise((resolve) => {
+        let checker = setInterval(() => {
+          if (document.querySelector("#map .leaflet-marker-pane *")) {
+          setInterval(() => {
+            resolve(true);
+          }, 300);
+          return clearInterval(checker);
+          }
+        });
+      });
+    } 
     
     // Return to avoid iOS WKErrorDomain
     123;

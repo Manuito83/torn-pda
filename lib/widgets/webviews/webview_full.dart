@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
@@ -140,7 +141,7 @@ class _WebViewFullState extends State<WebViewFull> {
   UserScriptsProvider _userScriptsProvider;
   ThemeProvider _themeProvider;
 
-  PullToRefreshController _pullToRefreshController;
+  //PullToRefreshController _pullToRefreshController;
 
   @override
   void initState() {
@@ -154,6 +155,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
+    /*
     _pullToRefreshController = PullToRefreshController(
       options: PullToRefreshOptions(
         color: Colors.orange[800],
@@ -167,9 +169,10 @@ class _WebViewFullState extends State<WebViewFull> {
         distanceToTriggerSync: 150,
       ),
       onRefresh: () async {
-        await webView.reload();
+        await reload();
       },
     );
+    */
 
     //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
@@ -396,7 +399,7 @@ class _WebViewFullState extends State<WebViewFull> {
                                                       .getScrollX();
                                                   _scrollY = await webView
                                                       .getScrollY();
-                                                  await webView.reload();
+                                                  await reload();
                                                   _scrollAfterLoad = true;
                                                 },
                                               ),
@@ -561,7 +564,7 @@ class _WebViewFullState extends State<WebViewFull> {
                 this.progress = progress / 100;
               });
 
-              if (progress > 75) _pullToRefreshController.endRefreshing();
+              //if (progress > 75) _pullToRefreshController.endRefreshing();
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
@@ -762,7 +765,7 @@ class _WebViewFullState extends State<WebViewFull> {
                       onTap: () async {
                         _scrollX = await webView.getScrollX();
                         _scrollY = await webView.getScrollY();
-                        await webView.reload();
+                        await reload();
                         _scrollAfterLoad = true;
 
                         BotToast.showText(
@@ -1505,15 +1508,11 @@ class _WebViewFullState extends State<WebViewFull> {
       return;
     }
 
-    if (mounted) {
-      setState(() {
-        _cityIconActive = true;
-      });
-    }
+    setState(() {
+      _cityIconActive = true;
+    });
 
-    // Stops any successive calls once we are sure that the section is the
-    // correct one. onLoadStop will reset this for the future.
-    // Otherwise we would call the API every time onProgressChanged ticks
+    // Stops any successive calls
     if (_cityTriggered) {
       return;
     }
@@ -1526,6 +1525,13 @@ class _WebViewFullState extends State<WebViewFull> {
       _cityPreferencesLoaded = true;
     }
 
+    if (!_cityEnabled) {
+      setState(() {
+        _cityExpandable = SizedBox.shrink();
+      });
+      return;
+    }
+
     // Retry several times and allow the map to load. If the user lands in the city list, this will
     // also trigger and the user will have 60 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
@@ -1535,7 +1541,6 @@ class _WebViewFullState extends State<WebViewFull> {
 
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
-        //print('City tries: $i in $i seconds (max 60 sec)');
         break;
       } else {
         await Future.delayed(const Duration(seconds: 1));
@@ -1543,22 +1548,11 @@ class _WebViewFullState extends State<WebViewFull> {
         document = parse(updatedHtml);
       }
     }
+
     if (query.length == 0) {
       // Set false so that the page can be reloaded if city widget didn't load
       _cityTriggered = false;
       return;
-    }
-
-    // Assess if we need to show the widget, now that we are in the city
-    // By placing this check here, we also avoid showing the widget if we entered via Quick Links
-    // in the city
-    if (mounted) {
-      setState(() {
-        if (!_cityEnabled) {
-          _cityExpandable = SizedBox.shrink();
-          return;
-        }
-      });
     }
 
     var mapItemsList = <String>[];
@@ -1571,8 +1565,11 @@ class _WebViewFullState extends State<WebViewFull> {
       });
     }
 
+    print(mapItemsList.length);
+
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
+      print("calling API");
       dynamic apiResponse =
           await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
@@ -1651,7 +1648,7 @@ class _WebViewFullState extends State<WebViewFull> {
     _cityEnabled = await SharedPreferencesModel().getCityEnabled();
     // Reset city so that it can be assessed again
     _cityTriggered = false;
-    await webView.reload();
+    await reload();
   }
 
   // BAZAAR
@@ -1850,6 +1847,17 @@ class _WebViewFullState extends State<WebViewFull> {
           },
         ),
       );
+    }
+  }
+
+  Future reload() async {
+    // Reset city so that it can be reloaded and icons don't disappear
+    if (_cityTriggered) _cityTriggered = false;
+
+    if (Platform.isAndroid) {
+      webView.reload();
+    } else if (Platform.isIOS) {
+      webView.loadUrl(urlRequest: URLRequest(url: await webView.getUrl()));
     }
   }
 
