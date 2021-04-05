@@ -161,27 +161,15 @@ Future showNotificationBoth(Map payload, int notId) async {
       ),
     );
 
-    // Two kind of messages might be sent by Firebase
-    try {
-      await flutterLocalNotificationsPlugin.show(
-        notId,
-        payload["notification"]["title"],
-        payload["notification"]["body"],
-        platformChannelSpecifics,
-        // Set payload to be handled by local notifications
-        payload: onTapPayload,
-      );
-    } catch (e) {
-      // Probably not in use anymore as of 2021
-      await flutterLocalNotificationsPlugin.show(
-        notId,
-        payload["aps"]["alert"]["title"],
-        payload["aps"]["alert"]["body"],
-        platformChannelSpecifics,
-        // Set payload to be handled by local notifications
-        payload: onTapPayload,
-      );
-    }
+    await flutterLocalNotificationsPlugin.show(
+      notId,
+      payload["title"],
+      payload["body"],
+      platformChannelSpecifics,
+      // Set payload to be handled by local notifications
+      payload: onTapPayload,
+    );
+
   }
 }
 
