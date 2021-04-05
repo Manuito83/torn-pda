@@ -16,7 +16,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
-import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/utils/notification.dart';
@@ -631,7 +631,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     _userToLoad = false;
                                     _apiError = false;
                                   });
-                                  await FirebaseMessaging().deleteInstanceID();
+                                  await FirebaseMessaging.instance.deleteToken();
                                   await firestore.deleteUserProfile();
                                   await firebaseAuth.signOut();
                                 },

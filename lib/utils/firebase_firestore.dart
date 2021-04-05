@@ -10,7 +10,7 @@ final firestore = _FirestoreHelper();
 
 class _FirestoreHelper {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  FirebaseMessaging _messaging = FirebaseMessaging();
+  FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
   FirebaseUserModel _firebaseUserModel;
 

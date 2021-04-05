@@ -65,6 +65,7 @@ Future<void> main() async {
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
   await Firebase.initializeApp();
+
   if (kDebugMode) {
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);

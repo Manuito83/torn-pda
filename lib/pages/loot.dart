@@ -602,7 +602,7 @@ class _LootPageState extends State<LootPage> {
       }
 
       if (needToGetYata) {
-        var yataFetch = await _fetchYataApi();
+        var yataFetch = await _fetchDatabase();
         if (yataFetch is YataLootModel) {
           _yataLootInfo = yataFetch;
           SharedPreferencesModel()
@@ -623,7 +623,7 @@ class _LootPageState extends State<LootPage> {
       // We update YATA whenever there is a new update
       if (_apiSuccess) {
         if (_yataLootInfo.nextUpdate < tsNow) {
-          var yataFetch = await _fetchYataApi();
+          var yataFetch = await _fetchDatabase();
           if (yataFetch is YataLootModel) {
             _yataLootInfo = yataFetch;
             SharedPreferencesModel()
@@ -638,7 +638,7 @@ class _LootPageState extends State<LootPage> {
         // YATA again every 20 seconds to avoid overloading.
         if (_yataRetryTicks > 20) {
           _yataRetryTicks = 0;
-          var yataFetch = await _fetchYataApi();
+          var yataFetch = await _fetchDatabase();
           if (yataFetch is YataLootModel) {
             _yataLootInfo = yataFetch;
             SharedPreferencesModel()
@@ -696,11 +696,11 @@ class _LootPageState extends State<LootPage> {
     }
   }
 
-  Future<dynamic> _fetchYataApi() async {
+  Future<dynamic> _fetchDatabase() async {
     try {
       // Database API
       String url = 'https://yata.yt/api/v1/loot/';
-      final response = await http.get(url).timeout(Duration(seconds: 10));
+      final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
       if (response.statusCode == 200) {
         var result = yataLootModelFromJson(response.body);
         if (result is YataLootModel) {

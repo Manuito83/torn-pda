@@ -26,14 +26,17 @@ Future showNotificationBoth(Map payload, int notId) async {
   String channel = '';
   String messageId = '';
   String tradeId = '';
-  if (Platform.isAndroid) {
-    channel = payload["data"]["channelId"] ?? '';
-    messageId = payload["data"]["tornMessageId"] ?? '';
-    tradeId = payload["data"]["tornTradeId"] ?? '';
-  } else {
-    channel = payload["channelId"] ?? '';
-    messageId = payload["tornMessageId"] ?? '';
-    tradeId = payload["tornTradeId"] ?? '';
+
+  if (payload.isNotEmpty) {
+    if (Platform.isAndroid) {
+      channel = payload["channelId"] ?? '';
+      messageId = payload["tornMessageId"] ?? '';
+      tradeId = payload["tornTradeId"] ?? '';
+    } else {
+      channel = payload["channelId"] ?? '';
+      messageId = payload["tornMessageId"] ?? '';
+      tradeId = payload["tornTradeId"] ?? '';
+    }
   }
 
   String notificationIcon = "notification_icon";
@@ -137,15 +140,15 @@ Future showNotificationBoth(Map payload, int notId) async {
         color: notificationColor,
         ledOnMs: 1000,
         ledOffMs: 500,
-        ticker: payload["notification"]["title"],
+        ticker: payload["title"],
       ),
       iOS: null,
     );
 
     await flutterLocalNotificationsPlugin.show(
       notId,
-      payload["notification"]["title"],
-      payload["notification"]["body"],
+      payload["title"],
+      payload["body"],
       platformChannelSpecifics,
       // Set payload to be handled by local notifications
       payload: onTapPayload,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 
 class EventsFilterDialog extends StatefulWidget {
   final FirebaseUserModel userModel;
@@ -192,7 +192,7 @@ class _EventsFilterDialogState extends State<EventsFilterDialog> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 15),
-          child: FlatButton(
+          child: TextButton(
             child: Text("Close"),
             onPressed: () {
               Navigator.of(context).pop();

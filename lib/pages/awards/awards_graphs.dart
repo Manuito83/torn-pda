@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -173,8 +174,8 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
         touchCallback: (barTouchResponse) {
           setState(() {
             if (barTouchResponse.spot != null &&
-                barTouchResponse.touchInput is! FlPanEnd &&
-                barTouchResponse.touchInput is! FlLongPressEnd) {
+                barTouchResponse.touchInput is! PointerUpEvent &&
+                barTouchResponse.touchInput is! PointerExitEvent) {
               _touchedIndex = barTouchResponse.spot.touchedBarGroupIndex;
             } else {
               _touchedIndex = -1;

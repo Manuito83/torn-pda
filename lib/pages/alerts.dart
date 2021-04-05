@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import '../main.dart';
 
