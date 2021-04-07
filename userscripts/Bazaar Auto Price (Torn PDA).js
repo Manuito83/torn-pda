@@ -76,7 +76,7 @@ function addOneFocusHandler(elem, itemID) {
 	});
 }
 
-let observer = new MutationObserver((mutations) => {
+let bazaarObserver = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
 	for (const node of mutation.addedNodes) {
 		if (typeof node.classList !== 'undefined' && node.classList) {
@@ -113,7 +113,7 @@ let observer = new MutationObserver((mutations) => {
 let wrapper = document.querySelector('#react-root');
 
 try {
-	observer.observe(wrapper, { subtree: true, childList: true });
+	bazaarObserver.observe(wrapper, { subtree: true, childList: true });
 } catch (e) {
 	// wrapper not found
 }
