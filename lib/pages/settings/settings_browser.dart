@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
@@ -298,16 +297,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ElevatedButton(
                     child: Text("Clear"),
                     onPressed: () async {
-                      var headlessWebView = new HeadlessInAppWebView(
-                        initialUrlRequest: URLRequest(
-                          url: Uri.parse("https://flutter.dev/"),
-                        ),
-                        onWebViewCreated: (controller) async {
-                          await controller.clearCache();
-                        },
-                      );
-                      await headlessWebView.run();
-                      await headlessWebView.dispose();
+                      _settingsProvider.setClearCacheNextOpportunity = true;
                     },
                   ),
                 ],

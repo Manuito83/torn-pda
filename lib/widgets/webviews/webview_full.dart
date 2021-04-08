@@ -143,11 +143,15 @@ class _WebViewFullState extends State<WebViewFull> {
 
   //PullToRefreshController _pullToRefreshController;
 
+  bool _clearCacheFirstOpportunity = false;
+
   @override
   void initState() {
     super.initState();
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
+
     _userScriptsProvider =
         Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
@@ -499,10 +503,10 @@ class _WebViewFullState extends State<WebViewFull> {
             //pullToRefreshController: _pullToRefreshController,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
-                  // This is deactivated as it interferes with hospital timer,
-                  // company applications, etc.
-                  //useShouldInterceptAjaxRequest: true,
-                  ),
+                clearCache: _clearCacheFirstOpportunity,
+                // This is deactivated as it interferes with hospital timer company applications, etc.
+                //useShouldInterceptAjaxRequest: true,
+              ),
               android: AndroidInAppWebViewOptions(
                 useHybridComposition: true,
               ),
@@ -540,8 +544,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 url: uri.toString(),
                 apiKey: _userProvider.basic.userApiKey,
               );
-              for (var group in changes.scriptsToRemove) {
-                c.removeUserScriptsByGroupName(groupName: group);
+              if (Platform.isAndroid) {
+                // Not supported on iOS
+                for (var group in changes.scriptsToRemove) {
+                  c.removeUserScriptsByGroupName(groupName: group);
+                }
               }
               await c.addUserScripts(userScripts: changes.scriptsToAdd);
 
@@ -1538,12 +1545,12 @@ class _WebViewFullState extends State<WebViewFull> {
     List<dom.Element> query;
     for (var i = 0; i < 60; i++) {
       if (!mounted) break;
-
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
         break;
       } else {
         await Future.delayed(const Duration(seconds: 1));
+        if (!mounted) break;
         var updatedHtml = await webView.getHtml();
         document = parse(updatedHtml);
       }
