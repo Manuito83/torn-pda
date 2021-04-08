@@ -90,6 +90,7 @@ class SharedPreferencesModel {
   final String _kLootNotificationAhead = "pda_lootNotificationAhead";
   final String _kLootAlarmAhead = "pda_lootAlarmAhead";
   final String _kLootTimerAhead = "pda_lootTimerAhead";
+  final String _kLootFiltered = "pda_lootFiltered";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
@@ -1063,6 +1064,16 @@ class SharedPreferencesModel {
   Future<bool> setLootTimerAhead(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kLootTimerAhead, value);
+  }
+
+  Future<List<String>> getLootFiltered() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kLootFiltered) ?? <String>[];
+  }
+
+  Future<bool> setLootFiltered(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kLootFiltered, value);
   }
 
   /// ----------------------------
