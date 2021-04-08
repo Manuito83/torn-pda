@@ -104,7 +104,7 @@ class _LootPageState extends State<LootPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    if (_filterOutIds.isNotEmpty)
+                    if (activeNpcsFiltered())
                       Padding(
                         padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
                         child: Text(
@@ -154,9 +154,8 @@ class _LootPageState extends State<LootPage> {
             ? IconButton(
                 icon: Icon(
                   MdiIcons.filterOutline,
-                  color: _filterOutIds.isNotEmpty
-                      ? Colors.orange[400]
-                      : Colors.white,
+                  color:
+                      activeNpcsFiltered() ? Colors.orange[400] : Colors.white,
                 ),
                 onPressed: () {
                   showDialog(
@@ -231,6 +230,11 @@ class _LootPageState extends State<LootPage> {
             : SizedBox.shrink()
       ],
     );
+  }
+
+  bool activeNpcsFiltered() {
+    return _npcIds.where((element) => _filterOutIds.contains(element)).length >
+        0;
   }
 
   Widget _connectError() {
