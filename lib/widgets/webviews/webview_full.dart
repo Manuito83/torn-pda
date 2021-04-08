@@ -535,10 +535,10 @@ class _WebViewFullState extends State<WebViewFull> {
               return x;
             },
             */
-            onWebViewCreated: (InAppWebViewController c) {
+            onWebViewCreated: (c) {
               webView = c;
             },
-            onLoadStart: (InAppWebViewController c, Uri uri) async {
+            onLoadStart: (c, uri) async {
               // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
@@ -560,7 +560,7 @@ class _WebViewFullState extends State<WebViewFull> {
               var document = parse(html);
               _assessGeneral(document);
             },
-            onProgressChanged: (InAppWebViewController c, int progress) async {
+            onProgressChanged: (c, progress) async {
               if (_settingsProvider.removeAirplane) {
                 webView.evaluateJavascript(source: travelRemovePlaneJS());
               }
@@ -580,8 +580,8 @@ class _WebViewFullState extends State<WebViewFull> {
               // time so that they can be called again
               _resetSectionsWithWidgets();
             },
-            onLoadStop: (InAppWebViewController c, Uri url) async {
-              _currentUrl = url.toString();
+            onLoadStop: (c, uri) async {
+              _currentUrl = uri.toString();
 
               _hideChat();
               _highlightChat();
@@ -600,11 +600,11 @@ class _WebViewFullState extends State<WebViewFull> {
               }
             },
             // Allows IOS to open links with target=_blank
-            onCreateWindow: (InAppWebViewController c, CreateWindowAction r) {
-              webView.loadUrl(urlRequest: r.request);
+            onCreateWindow: (c, request) {
+              webView.loadUrl(urlRequest: request.request);
               return;
             },
-            onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+            onConsoleMessage: (controller, consoleMessage) async {
               if (consoleMessage.message != "")
                 print("TORN PDA JS CONSOLE: " + consoleMessage.message);
 
