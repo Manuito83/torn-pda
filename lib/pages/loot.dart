@@ -7,10 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
-import 'package:torn_pda/models/loot/loot_model_yata.dart';
 import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -25,6 +23,7 @@ import '../main.dart';
 import 'loot/loot_notification_android.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 enum LootTimeType {
   dateTime,
@@ -37,10 +36,12 @@ class LootPage extends StatefulWidget {
 }
 
 class _LootPageState extends State<LootPage> {
-  final _npcIds = [4, 10, 15, 17, 19, 20];
+  var _npcIds = [];
+
+  final databaseReference = FirebaseDatabase.instance.reference();
 
   Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
-  YataLootModel _yataLootInfo;
+  Map<String, int> _dbLootInfo = Map<String, int>();
   Future _getInitialLootInformation;
   bool _apiSuccess = false;
 
@@ -50,7 +51,6 @@ class _LootPageState extends State<LootPage> {
 
   bool _firstLoad = true;
   int _tornTicks = 0;
-  int _yataRetryTicks = 0;
   Timer _tickerUpdateTimes;
 
   LootTimeType _lootTimeType;
@@ -105,17 +105,6 @@ class _LootPageState extends State<LootPage> {
                     Padding(
                       padding: const EdgeInsets.all(5),
                       child: _returnNpcCards(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15, top: 5),
-                      child: Text(
-                        'Loot times calculation thanks to YATA.',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                          fontSize: 13,
-                        ),
-                      ),
                     ),
                     SizedBox(height: 20),
                   ],
@@ -216,7 +205,7 @@ class _LootPageState extends State<LootPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            'There was an error contacting with Yata!',
+            'There was an error contacting the database, please try again later!',
             style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20),
@@ -466,14 +455,18 @@ class _LootPageState extends State<LootPage> {
           boxShadow: shadow,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Image(
-            image: _npcIds.contains(int.parse(npcId))
-                ? AssetImage('images/npcs/npc_$npcId.png')
-                : AssetImage('images/npcs/npc_0.png'),
-            height: 60,
-          ),
-        ),
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              'images/npcs/npc_$npcId.png',
+              height: 60,
+              errorBuilder: (BuildContext context, Object exception,
+                  StackTrace stackTrace) {
+                return Image.asset(
+                  "images/npcs/npc_0.png",
+                  height: 60,
+                );
+              },
+            )),
       );
 
       Widget knifeIcon;
@@ -579,86 +572,20 @@ class _LootPageState extends State<LootPage> {
       // See if there is any pending notification (to paint the icon in green)
       await _retrievePendingNotifications();
 
-      // On start, get what's saved from YATA and see if it's current, or otherwise fetch YATA
-      var needToGetYata = false;
-      dynamic cached;
-      try {
-        cached = yataLootModelFromJson(
-            await SharedPreferencesModel().getLootYataCache());
-      } catch (e) {
-        cached = false;
-      }
-
-      if (cached is YataLootModel) {
-        if (cached.nextUpdate < tsNow) {
-          needToGetYata = true;
-        } else {
-          _yataLootInfo = cached;
-          SharedPreferencesModel()
-              .setLootYataCache(yataLootModelToJson(cached));
-        }
-      } else {
-        needToGetYata = true;
-      }
-
-      if (needToGetYata) {
-        var yataFetch = await _fetchDatabase();
-        if (yataFetch is YataLootModel) {
-          _yataLootInfo = yataFetch;
-          SharedPreferencesModel()
-              .setLootYataCache(yataLootModelToJson(yataFetch));
-        } else {
-          return;
-        }
-      }
-
-      // Get Torn API
-      var fillWithTornSuccess = await _fetchTornApi(tsNow);
-      if (fillWithTornSuccess) {
+      // Get real time database
+      var dbSuccess = await _fetchDatabase();
+      if (dbSuccess) {
         _apiSuccess = true;
       }
-    }
-    // If it's not the first execution, fetch only when needed
-    else {
-      // We update YATA whenever there is a new update
-      if (_apiSuccess) {
-        if (_yataLootInfo.nextUpdate < tsNow) {
-          var yataFetch = await _fetchDatabase();
-          if (yataFetch is YataLootModel) {
-            _yataLootInfo = yataFetch;
-            SharedPreferencesModel()
-                .setLootYataCache(yataLootModelToJson(yataFetch));
-          } else {
-            _apiSuccess = false;
-            return;
-          }
-        }
-      } else {
-        // If this is not the first load but it has failed, be will only call
-        // YATA again every 20 seconds to avoid overloading.
-        if (_yataRetryTicks > 20) {
-          _yataRetryTicks = 0;
-          var yataFetch = await _fetchDatabase();
-          if (yataFetch is YataLootModel) {
-            _yataLootInfo = yataFetch;
-            SharedPreferencesModel()
-                .setLootYataCache(yataLootModelToJson(yataFetch));
-            var fillWithTornSuccess = await _fetchTornApi(tsNow);
-            if (fillWithTornSuccess) {
-              _apiSuccess = true;
-            }
-          }
-        }
-        _yataRetryTicks++;
-      }
 
-      if (!_apiSuccess) return;
-
+      // Get Torn API, optional (will ensure times are accurate within 10 minutes
+      await _updateWithTornApi(tsNow);
+    } else {
       // We update Torn every 30 seconds, in case there are some changes
       _tornTicks++;
       if (_tornTicks > 30) {
         await _cancelPassedNotifications();
-        await _fetchTornApi(tsNow);
+        await _updateWithTornApi(tsNow);
         _tornTicks = 0;
       }
     }
@@ -696,24 +623,33 @@ class _LootPageState extends State<LootPage> {
     }
   }
 
-  Future<dynamic> _fetchDatabase() async {
+  Future<bool> _fetchDatabase() async {
     try {
-      // Database API
-      String url = 'https://yata.yt/api/v1/loot/';
-      final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        var result = yataLootModelFromJson(response.body);
-        if (result is YataLootModel) {
-          return result;
-        }
-      }
+      // Get current NPCs
+      String dbNpcsResult = (await FirebaseDatabase.instance
+              .reference()
+              .child("loot/npcs")
+              .once())
+          .value;
+      _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
+
+      // Get their hospital out times
+      Map<dynamic, dynamic> dbHopsResult = (await FirebaseDatabase.instance
+              .reference()
+              .child("loot/hospital")
+              .once())
+          .value;
+      dbHopsResult.forEach((key, value) {
+        _dbLootInfo[key.toString()] = value;
+      });
+
+      return true;
     } catch (e) {
       return false;
     }
-    return false;
   }
 
-  Future<bool> _fetchTornApi(int tsNow) async {
+  Future<bool> _updateWithTornApi(int tsNow) async {
     try {
       for (var id in _npcIds) {
         // Get each target from our static list from Torn
@@ -724,16 +660,16 @@ class _LootPageState extends State<LootPage> {
 
         var newNpcLoot = LootModel();
         if (tornTarget is TargetModel) {
-          _yataLootInfo.hospOut.forEach((yataId, yataHospOut) {
+          _dbLootInfo.forEach((dbId, dbHospOut) {
             // Look for our tornTarget
-            if (yataId == id.toString()) {
+            if (dbId == id.toString()) {
               newNpcLoot.name = tornTarget.name;
 
               // If Torn gives a more up to date hospital out value
-              if (tornTarget.status.until - 60 > yataHospOut) {
+              if (tornTarget.status.until - 60 > dbHospOut) {
                 newNpcLoot.hospout = tornTarget.status.until;
               } else {
-                newNpcLoot.hospout = yataHospOut;
+                newNpcLoot.hospout = dbHospOut;
               }
 
               newNpcLoot.levels = Levels();
@@ -779,7 +715,7 @@ class _LootPageState extends State<LootPage> {
               }
               newNpcLoot.timings = newTimingMap;
 
-              _mainLootInfo.addAll({yataId: newNpcLoot});
+              _mainLootInfo.addAll({dbId: newNpcLoot});
             }
           });
         }
