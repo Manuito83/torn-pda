@@ -78,6 +78,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _backButtonPopsContext = true;
 
   var _travelAbroad = false;
+  var _travelHomeIconTriggered = false;
 
   var _crimesActive = false;
   var _crimesController = ExpandableController();
@@ -1125,20 +1126,64 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Widget _travelHomeIcon() {
+    // We use two buttons with a trigger, so that we need to press twice
     if (_travelAbroad) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          customBorder: new CircleBorder(),
-          splashColor: Colors.blueGrey,
-          child: Icon(
-            Icons.home,
+      if (!_travelHomeIconTriggered) {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: new CircleBorder(),
+            splashColor: Colors.blueGrey,
+            child: Icon(
+              Icons.home,
+            ),
+            onTap: () async {
+              setState(() {
+                _travelHomeIconTriggered = true;
+              });
+              BotToast.showText(
+                text: 'Tap again to travel back!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[800],
+                duration: Duration(seconds: 3),
+                contentPadding: EdgeInsets.all(10),
+              );
+              Future.delayed(Duration(seconds: 3)).then((value) {
+                if (mounted) {
+                  setState(() {
+                    _travelHomeIconTriggered = false;
+                  });
+                }
+              });
+            }
           ),
-          onTap: () async {
-            await webView.evaluateJavascript(source: travelReturnHomeJS());
-          },
-        ),
-      );
+        );
+      } else {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: new CircleBorder(),
+            splashColor: Colors.blueGrey,
+            child: Icon(
+              Icons.home,
+              color: Colors.orange,
+            ),
+            onTap: () async {
+              await webView.evaluateJavascript(source: travelReturnHomeJS());
+              Future.delayed(Duration(seconds: 3)).then((value) {
+                if (mounted) {
+                  setState(() {
+                    _travelHomeIconTriggered = false;
+                  });
+                }
+              });
+            },
+          ),
+        );
+      }
     } else {
       return SizedBox.shrink();
     }
