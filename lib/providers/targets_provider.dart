@@ -316,7 +316,7 @@ class TargetsProvider extends ChangeNotifier {
                 _updateResultAnimation(tar, false);
               }
             }
-            if (targetsIds.length > 75) {
+            if (targetsIds.length > 40) {
               await Future.delayed(const Duration(seconds: 1), () {});
             }
           }
