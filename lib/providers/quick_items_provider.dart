@@ -33,6 +33,10 @@ class QuickItemsProvider extends ChangeNotifier {
     ItemType.MEDICAL,
   ];
 
+  var _quickItemExceptions = [
+    "box of tissues",
+  ];
+
   Future loadItems({@required String apiKey}) async {
     if (_firstLoad) {
       _firstLoad = false;
@@ -141,8 +145,8 @@ class QuickItemsProvider extends ChangeNotifier {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
       allTornItems.items.forEach((itemNumber, itemProperties) {
-        if (_quickItemTypes.contains(itemProperties.type)) {
-
+        if (_quickItemTypes.contains(itemProperties.type) ||
+            _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
           // If the item was saved as active, mark it as such so that we can
           // filter it in our full list
           var savedActive = false;
@@ -173,7 +177,6 @@ class QuickItemsProvider extends ChangeNotifier {
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
     var inventoryItems = await TornApiCaller.items(_apiKey).getInventory;
     if (inventoryItems is InventoryModel) {
-
       if (fullUpdate) {
         for (var quickItem in _fullQuickItemsList) {
           bool found = false;
@@ -183,7 +186,6 @@ class QuickItemsProvider extends ChangeNotifier {
               quickItem.inventory = invItem.quantity;
               break;
             }
-
           }
           if (!found) {
             quickItem.inventory = 0;
