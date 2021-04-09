@@ -27,7 +27,8 @@ class NukeRevive {
     var bodyOut = nukeReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post('https://www.nukefamily.org/dev/reviveme.php',
+      var response = await http.post(
+        Uri.parse('https://www.nukefamily.org/dev/reviveme.php'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

@@ -78,6 +78,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _backButtonPopsContext = true;
 
   var _travelAbroad = false;
+  var _travelHomeIconTriggered = false;
 
   var _crimesActive = false;
   var _crimesController = ExpandableController();
@@ -143,11 +144,15 @@ class _WebViewFullState extends State<WebViewFull> {
 
   //PullToRefreshController _pullToRefreshController;
 
+  bool _clearCacheFirstOpportunity = false;
+
   @override
   void initState() {
     super.initState();
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
+
     _userScriptsProvider =
         Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
@@ -499,10 +504,10 @@ class _WebViewFullState extends State<WebViewFull> {
             //pullToRefreshController: _pullToRefreshController,
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
-                  // This is deactivated as it interferes with hospital timer,
-                  // company applications, etc.
-                  //useShouldInterceptAjaxRequest: true,
-                  ),
+                clearCache: _clearCacheFirstOpportunity,
+                // This is deactivated as it interferes with hospital timer company applications, etc.
+                //useShouldInterceptAjaxRequest: true,
+              ),
               android: AndroidInAppWebViewOptions(
                 useHybridComposition: true,
               ),
@@ -531,17 +536,20 @@ class _WebViewFullState extends State<WebViewFull> {
               return x;
             },
             */
-            onWebViewCreated: (InAppWebViewController c) {
+            onWebViewCreated: (c) {
               webView = c;
             },
-            onLoadStart: (InAppWebViewController c, Uri uri) async {
+            onLoadStart: (c, uri) async {
               // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
                 apiKey: _userProvider.basic.userApiKey,
               );
-              for (var group in changes.scriptsToRemove) {
-                c.removeUserScriptsByGroupName(groupName: group);
+              if (Platform.isAndroid) {
+                // Not supported on iOS
+                for (var group in changes.scriptsToRemove) {
+                  c.removeUserScriptsByGroupName(groupName: group);
+                }
               }
               await c.addUserScripts(userScripts: changes.scriptsToAdd);
 
@@ -553,7 +561,7 @@ class _WebViewFullState extends State<WebViewFull> {
               var document = parse(html);
               _assessGeneral(document);
             },
-            onProgressChanged: (InAppWebViewController c, int progress) async {
+            onProgressChanged: (c, progress) async {
               if (_settingsProvider.removeAirplane) {
                 webView.evaluateJavascript(source: travelRemovePlaneJS());
               }
@@ -573,8 +581,8 @@ class _WebViewFullState extends State<WebViewFull> {
               // time so that they can be called again
               _resetSectionsWithWidgets();
             },
-            onLoadStop: (InAppWebViewController c, Uri url) async {
-              _currentUrl = url.toString();
+            onLoadStop: (c, uri) async {
+              _currentUrl = uri.toString();
 
               _hideChat();
               _highlightChat();
@@ -593,11 +601,11 @@ class _WebViewFullState extends State<WebViewFull> {
               }
             },
             // Allows IOS to open links with target=_blank
-            onCreateWindow: (InAppWebViewController c, CreateWindowAction r) {
-              webView.loadUrl(urlRequest: r.request);
+            onCreateWindow: (c, request) {
+              webView.loadUrl(urlRequest: request.request);
               return;
             },
-            onConsoleMessage: (InAppWebViewController c, consoleMessage) async {
+            onConsoleMessage: (controller, consoleMessage) async {
               if (consoleMessage.message != "")
                 print("TORN PDA JS CONSOLE: " + consoleMessage.message);
 
@@ -1105,7 +1113,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
         // Send to server
         await http.post(
-          'https://yata.yt/api/v1/travel/import/',
+          Uri.parse('https://yata.yt/api/v1/travel/import/'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -1118,20 +1126,64 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Widget _travelHomeIcon() {
+    // We use two buttons with a trigger, so that we need to press twice
     if (_travelAbroad) {
-      return Material(
-        color: Colors.transparent,
-        child: InkWell(
-          customBorder: new CircleBorder(),
-          splashColor: Colors.blueGrey,
-          child: Icon(
-            Icons.home,
+      if (!_travelHomeIconTriggered) {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: new CircleBorder(),
+            splashColor: Colors.blueGrey,
+            child: Icon(
+              Icons.home,
+            ),
+            onTap: () async {
+              setState(() {
+                _travelHomeIconTriggered = true;
+              });
+              BotToast.showText(
+                text: 'Tap again to travel back!',
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[800],
+                duration: Duration(seconds: 3),
+                contentPadding: EdgeInsets.all(10),
+              );
+              Future.delayed(Duration(seconds: 3)).then((value) {
+                if (mounted) {
+                  setState(() {
+                    _travelHomeIconTriggered = false;
+                  });
+                }
+              });
+            }
           ),
-          onTap: () async {
-            await webView.evaluateJavascript(source: travelReturnHomeJS());
-          },
-        ),
-      );
+        );
+      } else {
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: new CircleBorder(),
+            splashColor: Colors.blueGrey,
+            child: Icon(
+              Icons.home,
+              color: Colors.orange,
+            ),
+            onTap: () async {
+              await webView.evaluateJavascript(source: travelReturnHomeJS());
+              Future.delayed(Duration(seconds: 3)).then((value) {
+                if (mounted) {
+                  setState(() {
+                    _travelHomeIconTriggered = false;
+                  });
+                }
+              });
+            },
+          ),
+        );
+      }
     } else {
       return SizedBox.shrink();
     }
@@ -1538,12 +1590,12 @@ class _WebViewFullState extends State<WebViewFull> {
     List<dom.Element> query;
     for (var i = 0; i < 60; i++) {
       if (!mounted) break;
-
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.length > 0) {
         break;
       } else {
         await Future.delayed(const Duration(seconds: 1));
+        if (!mounted) break;
         var updatedHtml = await webView.getHtml();
         document = parse(updatedHtml);
       }

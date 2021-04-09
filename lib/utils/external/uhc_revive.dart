@@ -29,7 +29,8 @@ class UhcRevive {
     var bodyOut = uhcReviveModelToJson(modelOut);
 
     try {
-      var response = await http.post('https://elimination.me/api/request',
+      var response = await http.post(
+        Uri.parse('https://elimination.me/api/request'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

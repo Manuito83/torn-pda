@@ -616,7 +616,7 @@ class _TacPageState extends State<TacPage> {
 
     try {
       var response = await http.get(
-        url,
+        Uri.parse(url),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8'
         },

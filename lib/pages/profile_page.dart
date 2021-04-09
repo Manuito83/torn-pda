@@ -138,8 +138,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _travelNotificationAhead;
   int _travelAlarmAhead;
   int _travelTimerAhead;
-  String _travelNotificationTitle;
-  String _travelNotificationBody;
 
   DateTime _travelArrivalTime;
   DateTime _energyNotificationTime;
@@ -4630,8 +4628,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle = _travelNotificationTitle;
-        notificationSubtitle = _travelNotificationBody;
+        notificationTitle =
+            await SharedPreferencesModel().getTravelNotificationTitle();
+        notificationSubtitle =
+            await SharedPreferencesModel().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
@@ -5140,10 +5140,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // TRAVEL
     var travel = await SharedPreferencesModel().getTravelNotificationType();
-    _travelNotificationTitle =
-        await SharedPreferencesModel().getTravelNotificationTitle();
-    _travelNotificationBody =
-        await SharedPreferencesModel().getTravelNotificationBody();
     var travelNotificationAhead =
         await SharedPreferencesModel().getTravelNotificationAhead();
     var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();

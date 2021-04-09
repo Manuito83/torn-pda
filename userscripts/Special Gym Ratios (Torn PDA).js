@@ -6,7 +6,6 @@
 // @match      	 torn.com/gym.php
 // ==/UserScript==
 
-
 gymLoaded().then(() => {
 	// Maximum amount below the stat limit another stat can be before we start warning the player.
 	var statSafeDistance = localStorage.statSafeDistance;

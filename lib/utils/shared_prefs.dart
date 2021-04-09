@@ -28,6 +28,7 @@ class SharedPreferencesModel {
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
+  final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
@@ -84,12 +85,12 @@ class SharedPreferencesModel {
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kQuickItemsList = "pda_quickItemsList";
-  final String _kLootYataCache = "pda_lootYataCache";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
   final String _kLootNotificationAhead = "pda_lootNotificationAhead";
   final String _kLootAlarmAhead = "pda_lootAlarmAhead";
   final String _kLootTimerAhead = "pda_lootTimerAhead";
+  final String _kLootFiltered = "pda_lootFiltered";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
@@ -410,6 +411,16 @@ class SharedPreferencesModel {
   Future<bool> setUseQuickBrowser(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseQuickBrowser, value);
+  }
+
+  Future<bool> getClearBrowserCacheNextOpportunity() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kClearBrowserCacheNextOpportunity) ?? false;
+  }
+
+  Future<bool> setClearBrowserCacheNextOpportunity(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kClearBrowserCacheNextOpportunity, value);
   }
 
   /// ----------------------------
@@ -1005,16 +1016,6 @@ class SharedPreferencesModel {
   /// ----------------------------
   /// Methods for loot
   /// ----------------------------
-  Future<String> getLootYataCache() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLootYataCache) ?? '';
-  }
-
-  Future<bool> setLootYataCache(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLootYataCache, value);
-  }
-
   Future<String> getLootTimerType() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kLootTimerType) ?? 'timer';
@@ -1063,6 +1064,16 @@ class SharedPreferencesModel {
   Future<bool> setLootTimerAhead(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kLootTimerAhead, value);
+  }
+
+  Future<List<String>> getLootFiltered() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kLootFiltered) ?? <String>[];
+  }
+
+  Future<bool> setLootFiltered(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kLootFiltered, value);
   }
 
   /// ----------------------------

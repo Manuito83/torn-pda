@@ -119,7 +119,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                     ],
                   ),
                   SizedBox(height: 10),
-                  Row(
+                  Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
@@ -128,21 +128,18 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                           fontSize: 13,
                         ),
                       ),
-                      SizedBox(
-                        width: 130,
-                        child: Slider(
-                          value: _capacity.toDouble(),
-                          min: 1,
-                          max: 44,
-                          label: _capacity.round().toString(),
-                          divisions: 44,
-                          onChanged: (double newCapacity) {
-                            setState(() {
-                              _capacity = newCapacity.round();
-                            });
-                            _callBackValues();
-                          },
-                        ),
+                      Slider(
+                        value: _capacity.toDouble(),
+                        min: 1,
+                        max: 44,
+                        label: _capacity.round().toString(),
+                        divisions: 44,
+                        onChanged: (double newCapacity) {
+                          setState(() {
+                            _capacity = newCapacity.round();
+                          });
+                          _callBackValues();
+                        },
                       ),
                     ],
                   ),

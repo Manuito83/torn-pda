@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/travel/travel_notification_text.dart';
 
 class TravelOptionsIOS extends StatefulWidget {
   final Function callback;
@@ -68,7 +70,8 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
                                 padding: const EdgeInsets.all(20.0),
                                 child: Text(
                                     'Here you can specify your preferred notification '
-                                    'trigger time before arrival'),
+                                    'trigger time before arrival. Tap the text icon in the appbar '
+                                        'to change the notification title and body.'),
                               ),
                               _rowsWithTypes(),
                               SizedBox(height: 50),
@@ -105,6 +108,14 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
           Navigator.of(context).pop();
         },
       ),
+      actions: [
+        IconButton(
+          icon: Icon(MdiIcons.commentTextOutline),
+          onPressed: () {
+            return _showNotificationTextDialog();
+          },
+        ),
+      ],
     );
   }
 
@@ -223,5 +234,28 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
   Future<bool> _willPopCallback() async {
     widget.callback();
     return true;
+  }
+
+  Future<void> _showNotificationTextDialog() async {
+    var title = await SharedPreferencesModel().getTravelNotificationTitle();
+    var body = await SharedPreferencesModel().getTravelNotificationBody();
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: TravelNotificationTextDialog(
+            title: title,
+            body: body,
+          ),
+        );
+      },
+    );
   }
 }
