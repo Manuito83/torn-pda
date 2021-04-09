@@ -6,10 +6,8 @@
 // @match        companies.php
 // ==/UserScript==
 
-
 var apiKey = '###PDA-APIKEY###';
 
-	
 function run () {
 	var urlStock = `https://api.torn.com/company/?selections=stock&key=${apiKey}`;
 	var urlStorage = `https://api.torn.com/company/?selections=detailed&key=${apiKey}`;
@@ -92,7 +90,6 @@ function run () {
 	});
 }
 
-
 function stocksLoaded() {
   return new Promise((resolve) => {
 	let checker = setInterval(() => {
@@ -105,7 +102,6 @@ function stocksLoaded() {
 	});
   });
 } 
-
 
 if (document.querySelector(".stock-list-wrap")) {
 	run();
