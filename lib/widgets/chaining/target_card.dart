@@ -794,6 +794,18 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateSeveralTargets(List<String> attackedIds) async {
+
+    BotToast.showText(
+      text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.grey[800],
+      duration: Duration(seconds: 4),
+      contentPadding: EdgeInsets.all(10),
+    );
+
     await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
   }
 

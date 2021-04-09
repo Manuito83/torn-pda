@@ -324,13 +324,8 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    // We want to update twice after attacking, so that we ensure data is
-    // refreshed as soon as possible and effectively. We will only show the
-    // animation the first time
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(Duration(seconds: 15));
     updatePass(true);
-    await Future.delayed(Duration(seconds: 10));
-    updatePass(false);
   }
 
   Future<void> _updateResultAnimation(TargetModel target, bool success) async {
