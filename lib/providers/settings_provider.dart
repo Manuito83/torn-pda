@@ -55,6 +55,20 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _clearCacheNextOpportunity = false;
+  bool get clearCacheNextOpportunity {
+    if (_clearCacheNextOpportunity) {
+      setClearCacheNextOpportunity = false;
+      return true;
+    } else {
+      return false;
+    }
+  }
+  set setClearCacheNextOpportunity(bool active) {
+    _clearCacheNextOpportunity = active;
+    SharedPreferencesModel().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
@@ -235,6 +249,8 @@ class SettingsProvider extends ChangeNotifier {
     _disableTravelSection = await SharedPreferencesModel().getDisableTravelSection();
 
     _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
+
+    _clearCacheNextOpportunity = await SharedPreferencesModel().getClearBrowserCacheNextOpportunity();
 
     _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
 

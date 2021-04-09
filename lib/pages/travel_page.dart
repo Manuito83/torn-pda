@@ -58,13 +58,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   bool _apiError = true;
   String _errorReason = '';
 
-  var _notificationFormKey = GlobalKey<FormState>();
-
-  String _notificationTitle;
-  String _notificationBody;
-  final _notificationTitleController = new TextEditingController();
-  final _notificationBodyController = new TextEditingController();
-
   Future _finishedLoadingPreferences;
 
   @override
@@ -271,14 +264,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           )
         else
           SizedBox.shrink(),
-        IconButton(
-          icon: Icon(Icons.textsms),
-          onPressed: () {
-            _notificationTitleController.text = _notificationTitle;
-            _notificationBodyController.text = _notificationBody;
-            _showNotificationTextDialog(context);
-          },
-        ),
       ],
     );
   }
@@ -870,171 +855,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _showNotificationTextDialog(BuildContext _) {
-    return showDialog<void>(
-      context: _,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 30),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _notificationFormKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: Text('Notification title'),
-                          ),
-                          TextFormField(
-                            style: TextStyle(fontSize: 14),
-                            controller: _notificationTitleController,
-                            maxLength: 15,
-                            minLines: 1,
-                            maxLines: 1,
-                            decoration: InputDecoration(
-                              counterText: "",
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Cannot be empty!";
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 16.0),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: Text('Notification description'),
-                          ),
-                          TextFormField(
-                            style: TextStyle(fontSize: 14),
-                            controller: _notificationBodyController,
-                            maxLength: 50,
-                            minLines: 1,
-                            maxLines: 2,
-                            decoration: InputDecoration(
-                              counterText: "",
-                              border: OutlineInputBorder(),
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Cannot be empty!";
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 16.0),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              ElevatedButton(
-                                child: Text("Change"),
-                                onPressed: () async {
-                                  if (_notificationFormKey.currentState
-                                      .validate()) {
-                                    // Get rid of dialog first, so that it can't
-                                    // be pressed twice
-                                    Navigator.of(context).pop();
-                                    // Copy controller's text ot local variable
-                                    // early and delete the global, so that text
-                                    // does not appear again in case of failure
-                                    _notificationTitle =
-                                        _notificationTitleController.text;
-                                    _notificationBody =
-                                        _notificationBodyController.text;
-                                    SharedPreferencesModel()
-                                        .setTravelNotificationTitle(
-                                            _notificationTitle);
-                                    SharedPreferencesModel()
-                                        .setTravelNotificationBody(
-                                            _notificationBody);
-
-                                    BotToast.showText(
-                                      text: "Notification details changed!",
-                                      textStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.green,
-                                      duration: Duration(seconds: 3),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  }
-                                },
-                              ),
-                              ElevatedButton(
-                                child: Text("Cancel"),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  _notificationTitleController.text = '';
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.background,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.mainText,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 28,
-                        width: 28,
-                        child: Icon(
-                          Icons.textsms,
-                          color: _themeProvider.background,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   void _updateInformation() {
     DateTime now = DateTime.now();
     // We avoid calling the API unnecessarily
@@ -1101,10 +921,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       iOS: iOSPlatformChannelSpecifics,
     );
 
+    var notificationTitle =
+        await SharedPreferencesModel().getTravelNotificationTitle();
+    var notificationSubtitle =
+        await SharedPreferencesModel().getTravelNotificationBody();
+
     await flutterLocalNotificationsPlugin.zonedSchedule(
       201,
-      _notificationTitle,
-      _notificationBody,
+      notificationTitle,
+      notificationSubtitle,
       //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
       tz.TZDateTime.from(scheduledNotificationDateTime, tz.local),
       platformChannelSpecifics,
@@ -1197,10 +1022,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }
-    _notificationTitle =
-        await SharedPreferencesModel().getTravelNotificationTitle();
-    _notificationBody =
-        await SharedPreferencesModel().getTravelNotificationBody();
+
     _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
     _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
 

@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/inventory_model.dart';
-import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:fl_chart/fl_chart.dart';

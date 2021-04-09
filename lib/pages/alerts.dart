@@ -1,8 +1,19 @@
+import 'dart:io';
+
+import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import '../main.dart';
 
@@ -50,11 +61,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         padding: EdgeInsets.all(20),
                         child: Text(
                           "Alerts are automatic notifications that you only "
-                          "need to activate once. However, you will be notified "
-                          "earlier than with manual notifications.",
-                          style: Theme.of(context).textTheme.bodyText2.copyWith(
-                                height: 1.3,
-                              ),
+                          "need to activate once. However, you will normally be notified "
+                          "earlier than with manual notifications; also, notifications might be delayed "
+                          "due to network status or device throttling.",
+                          style: TextStyle(fontSize: 12),
                         ),
                       ),
                       Padding(
@@ -326,6 +336,19 @@ class _AlertsSettingsState extends State<AlertsSettings> {
       actions: <Widget>[
         IconButton(
           icon: Icon(
+            MdiIcons.hammer,
+          ),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return _troubleShootingDialog();
+              },
+            );
+          },
+        ),
+        IconButton(
+          icon: Icon(
             Icons.info_outline,
           ),
           onPressed: () {
@@ -384,28 +407,115 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
-                "This feature is under test. If you find any issue, "
-                "please report it to us (see 'About' section).",
-                style: TextStyle(
-                  fontSize: 15,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
                 "Note: if you don't use Torn PDA for more than 5 days, "
                 "all notifications will be turned off automatically. "
-                "This is to prevent the over usage of resources. "
+                "\n\nThis is to prevent the over usage of resources. "
                 "Please make sure you return back to the app once a "
                 "week to get uninterrupted service.",
-                style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+                style: TextStyle(fontSize: 15),
               ),
             ),
           ],
         ),
       ),
       actions: [
+        TextButton(
+          child: Text("Close"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        )
+      ],
+    );
+  }
+
+  Widget _troubleShootingDialog() {
+    return AlertDialog(
+      title: Text(
+        "Troubleshooting",
+        style: TextStyle(
+          fontSize: 18,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "If you are having issues receiving alerts, this will try to reset your server-based "
+                "configuration and notifications channels. "
+                "\n\nYou won't lose any settings or configurations. "
+                "If it doesn't solve the problem, however, you can contact us directly in Discord."
+                "\n\nTap Reset below to proceed.",
+                style: TextStyle(fontSize: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: Text("Reset"),
+          onPressed: () async {
+
+            Navigator.of(context).pop();
+
+            try {
+              var _userProv = context.read<UserDetailsProvider>();
+
+              // We save the key because the API call will reset it
+              var savedKey = _userProv.basic.userApiKey;
+
+              dynamic myProfile =
+              await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+
+              if (myProfile is OwnProfileBasic) {
+                myProfile
+                  ..userApiKey = savedKey
+                  ..userApiKeyValid = true;
+
+                User mFirebaseUser = await firebaseAuth.signInAnon();
+                firestore.setUID(mFirebaseUser.uid);
+                await firestore.uploadUsersProfileDetail(myProfile,
+                    userTriggered: true);
+                await firestore
+                    .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+
+                if (Platform.isAndroid) {
+                  var alertsVibration =
+                  await SharedPreferencesModel().getVibrationPattern();
+                  // Deletes current channels and create new ones
+                  reconfigureNotificationChannels(mod: alertsVibration);
+                  // Update channel preferences
+                  firestore.setVibrationPattern(alertsVibration);
+                }
+              }
+
+              BotToast.showText(
+                text: "Reset successful",
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[800],
+                duration: Duration(seconds: 5),
+                contentPadding: EdgeInsets.all(10),
+              );
+            } catch (e) {
+              BotToast.showText(
+                text: "There was an error: $e",
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[800],
+                duration: Duration(seconds: 5),
+                contentPadding: EdgeInsets.all(10),
+              );
+            }
+          },
+        ),
         TextButton(
           child: Text("Close"),
           onPressed: () {

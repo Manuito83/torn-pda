@@ -1,4 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -9,6 +11,8 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserScriptsPage extends StatefulWidget {
   @override
@@ -496,58 +500,112 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   _disclaimerDialog() {
     return AlertDialog(
       title: Text("DISCLAIMER"),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "User scripts are small programs written in JavaScript that enhance the browser's "
-              "functionalities. Be careful when using them and ensure that you understand the code "
-              "and what the script accomplishes; otherwise, ensure they come from a reliable "
-              "source and have been checked by someone you trust.\n\n"
-              "As in any other browser, user scripts might be used maliciously to get information "
-              "from your Torn account or other websites you visit.",
-              style: TextStyle(
-                fontSize: 13,
-              ),
+      content: Scrollbar(
+        isAlwaysShown: true,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "User scripts are small programs written in JavaScript that enhance the browser's "
+                  "functionalities. Be careful when using them and ensure that you understand the code "
+                  "and what the script accomplishes; otherwise, ensure they come from a reliable "
+                  "source and have been checked by someone you trust.\n\n"
+                  "As in any other browser, user scripts might be used maliciously to get information "
+                  "from your Torn account or other websites you visit.",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 25),
+                Text(
+                  "TIPS",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                EasyRichText(
+                  "Join our Discord server if you need help or are willing to contribute with new userscripts ideas or working code. "
+                  "There is a list of tested userscripts in our GitHub repository.",
+                  patternList: [
+                    EasyRichTextPattern(
+                      targetString: 'Discord server',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Colors.blue[400],
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          var url = 'https://discord.gg/vyP23kJ';
+                          if (await canLaunch(url)) {
+                            await launch(url, forceSafariVC: false);
+                          }
+                        },
+                    ),
+                    EasyRichTextPattern(
+                      targetString: 'list of tested userscripts',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: Colors.blue[400],
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () async {
+                          await openBrowserDialog(
+                              context,
+                              'https://github.com/Manuito83/torn-pda/tree/master/userscripts',
+                              callBack: null,
+                          );
+                        },
+                    ),
+                  ],
+                  defaultStyle: TextStyle(
+                    fontSize: 13,
+                    color: _themeProvider.mainText,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Activation URLs starting with '@match' in the header are supported; however, wildcards (*) will be ignored. "
+                  "Instead, you can use full URLs or just a part of them (e.g. 'profile.php' or 'torn.com').",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
+                  "Torn PDA will replace it with your API key in runtime.",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "User scripts are isolated from one another on runtime and executed inside anonymous functions. "
+                  "There is no need for you to adapt them this way.",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+                SizedBox(height: 25),
+                Text(
+                  "TROUBLESHOOTING",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "Preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
+                  "code changes to work with Torn PDA if external libraries were used.\n\n"
+                  "If a script does not work as intended after changing its code in Torn PDA, please "
+                  "try resetting your browser cache in the advanced browser settings section.",
+                  style: TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 25),
-            Text(
-              "TROUBLESHOOTING",
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Preexisting Torn user scripts (e.g. for Greasemonkey) may require some "
-              "code changes to work with Torn PDA if external libraries were used.\n\n"
-              "If a script does not work as intended after changing its code in Torn PDA, please "
-              "try resetting your browser cache in the advanced browser settings section.",
-              style: TextStyle(
-                fontSize: 13,
-              ),
-            ),
-            SizedBox(height: 25),
-            Text(
-              "TIPS",
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "Activation URLs, starting with '@match' in some user scripts headers, cannot contain wildcards like "
-              "'*'. Instead, full URLs or part of them (e.g. 'profile.php') are accepted.",
-              style: TextStyle(
-                fontSize: 13,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "You can use the text '###PDA-APIKEY###' in a script instead of your real API key. "
-              "Torn PDA will replace it with your API key in runtime.",
-              style: TextStyle(
-                fontSize: 13,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       actions: [

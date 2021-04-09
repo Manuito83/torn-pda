@@ -24,7 +24,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
-import 'package:torn_pda/utils/firestore.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
@@ -66,7 +66,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
-  final FirebaseMessaging _messaging = FirebaseMessaging();
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics();
 
   Future _finishedWithPreferences;
@@ -107,7 +107,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       ]);
 
       quickActions.initialize((String shortcutType) async {
-
         if (shortcutType == 'open_torn') {
           var browserType = _settingsProvider.currentBrowser;
           switch (browserType) {
@@ -153,40 +152,49 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
 
     // Configures Firebase notification behaviours
-    _messaging.requestNotificationPermissions(IosNotificationSettings(
-      sound: true,
-      badge: true,
+    _messaging.setForegroundNotificationPresentationOptions(
       alert: true,
-      provisional: false,
-    ));
+      badge: true,
+      sound: true,
+    );
 
     _lastMessageReceived = DateTime.now();
 
-    _messaging.configure(
-      onResume: (message) {
-        return _fireLaunchResumeNotifications(message);
-      },
-      onLaunch: (message) {
-        return _fireLaunchResumeNotifications(message);
-      },
-      onMessage: (message) async {
-        // Spaces out several notifications so that all of them show if
-        // the app is open (otherwise only 1 of them shows)
-        if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
-          concurrent++;
-          await Future.delayed(Duration(seconds: 8 * concurrent));
-        } else {
-          concurrent = 0;
-        }
-        _lastMessageReceived = DateTime.now();
-        // Assigns a different id two alerts that come together (otherwise one
-        // deletes the previous one)
-        notId++;
-        if (notId > 990) notId = 900;
-        // This will eventually fire a local notification
-        return showNotification(message, notId);
-      },
-    );
+    _messaging.getInitialMessage().then((RemoteMessage message) {
+      if (message != null && message.data.isNotEmpty) {
+        _fireLaunchResumeNotifications(message.data);
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+      if (message != null && message.data.isNotEmpty) {
+        _fireLaunchResumeNotifications(message.data);
+      }
+    });
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      // This allows for notifications other than predefined ones in functions
+      if (message.data.isEmpty) {
+        message.data["title"] = message.notification.title;
+        message.data["body"] = message.notification.body;
+      }
+
+      // Spaces out several notifications so that all of them show if
+      // the app is open (otherwise only 1 of them shows)
+      if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
+        concurrent++;
+        await Future.delayed(Duration(seconds: 8 * concurrent));
+      } else {
+        concurrent = 0;
+      }
+      _lastMessageReceived = DateTime.now();
+      // Assigns a different id two alerts that come together (otherwise one
+      // deletes the previous one)
+      notId++;
+      if (notId > 990) notId = 900;
+      // This will eventually fire a local notification
+      return showNotification(message.data, notId);
+    });
 
     _tenSecTimer = new Timer.periodic(
         Duration(seconds: 10), (Timer t) => _refreshTctClock());
@@ -261,9 +269,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       messageId = message["tornMessageId"];
       tradeId = message["tornTradeId"];
     } else if (Platform.isAndroid) {
-      channel = message["data"]["channelId"];
-      messageId = message["data"]["tornMessageId"];
-      tradeId = message["data"]["tornTradeId"];
+      channel = message["channelId"];
+      messageId = message["tornMessageId"];
+      tradeId = message["tornTradeId"];
     }
 
     if (channel.contains("Alerts travel")) {
@@ -376,11 +384,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';
-      // Medical is only in manual notifications, payload comes from Profile
+        // Medical is only in manual notifications, payload comes from Profile
       } else if (payload.contains('medical')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
-      // Booster is only in manual notifications, payload comes from Profile
+        // Booster is only in manual notifications, payload comes from Profile
       } else if (payload.contains('booster')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#boosters-items';
@@ -412,7 +420,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         browserUrl = "https://www.torn.com/trade.php";
         if (tradeId[1] != "0") {
           browserUrl =
-          "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
+              "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
       } else if (payload.contains('211')) {
         launchBrowser = true;
@@ -631,7 +639,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       // Otherwise, if the key is valid, we loop all the sections
       for (var i = 0; i < _drawerItemsList.length; i++) {
-        if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
+        if (_settingsProvider.disableTravelSection &&
+            _drawerItemsList[i] == "Travel") {
           continue;
         }
 
@@ -761,7 +770,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     await _settingsProvider.loadPreferences();
 
     // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider =
+        Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
 
     // Set up UserProvider. If key is empty, redirect to the Settings page.

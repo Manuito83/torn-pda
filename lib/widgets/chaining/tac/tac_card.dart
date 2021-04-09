@@ -270,6 +270,7 @@ class _TacCardState extends State<TacCard> {
                   targetId: _target.id,
                   attacks: await targetsProvider.getAttacks(),
                 );
+
                 if (tryAddTarget.success) {
                   BotToast.showText(
                     text: HtmlParser.fix(
@@ -283,12 +284,6 @@ class _TacCardState extends State<TacCard> {
                     duration: Duration(seconds: 5),
                     contentPadding: EdgeInsets.all(10),
                   );
-                  // Update the button
-                  if (mounted) {
-                    setState(() {
-                      _addButtonActive = true;
-                    });
-                  }
                 } else if (!tryAddTarget.success) {
                   BotToast.showText(
                     text: HtmlParser.fix(
@@ -302,6 +297,14 @@ class _TacCardState extends State<TacCard> {
                     contentPadding: EdgeInsets.all(10),
                   );
                 }
+
+                // Update the button
+                if (mounted) {
+                  setState(() {
+                    _addButtonActive = true;
+                  });
+                }
+
               }
             : null,
       );

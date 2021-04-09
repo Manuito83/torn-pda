@@ -35,6 +35,39 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.3.2
+    var v2_3_2 = ChangeLogItem();
+    v2_3_2.main.version = 'BETA v2.3.2';
+    v2_3_2.main.date = 'XX APR 2021';
+    String feat2_3_2_1 = "Userscripts: added another few example scripts and corrected issues with the existing ones (you can import the new ones from the userscripts settings).";
+    String feat2_3_2_2 = "Userscripts: created a list of tested scripts in the GitHub repository, also added a reference in Torn PDA and in the official forums.";
+    String feat2_3_2_3 = "Userscripts: script execution is now isolated and no interference should occur between them.";
+    String feat2_3_2_4 = "Loot: NPCs can now be filtered out.";
+    String feat2_3_2_5 = "Shortcuts: Stock Market URL has been corrected and Portfolio has been removed.";
+    String feat2_3_2_6 = "Travel: the quick return icon now needs to be pressed twice to avoid erroneous activations.";
+    String feat2_3_2_7 = "Travel: increased width of the capacity slider to make selection easier.";
+    String feat2_3_2_8 = "Travel: the custom text notification dialog has been moved to the travel notification options page.";
+    String feat2_3_2_9 = "Alerts: improved travel alerts reliability, even if the API goes down temporarily.";
+    String feat2_3_2_10 = "Alerts: added troubleshooting dialog to reset user and notification channels if something isn't working correctly.";
+    String feat2_3_2_11 = "Fixed URL copying issues in certain devices.";
+    String feat2_3_2_12 = "Fixed Trade widget not activating in certain devices.";
+    String feat2_3_2_13 = "Fixed crash when clearing browser cache in certain devices.";
+    String feat2_3_2_14 = "Fixed scrolling issues causing the browser to freeze in certain sections of the website.";
+    v2_3_2.features.add(feat2_3_2_1);
+    v2_3_2.features.add(feat2_3_2_2);
+    v2_3_2.features.add(feat2_3_2_3);
+    v2_3_2.features.add(feat2_3_2_4);
+    v2_3_2.features.add(feat2_3_2_5);
+    v2_3_2.features.add(feat2_3_2_6);
+    v2_3_2.features.add(feat2_3_2_7);
+    v2_3_2.features.add(feat2_3_2_8);
+    v2_3_2.features.add(feat2_3_2_9);
+    v2_3_2.features.add(feat2_3_2_10);
+    v2_3_2.features.add(feat2_3_2_11);
+    v2_3_2.features.add(feat2_3_2_12);
+    v2_3_2.features.add(feat2_3_2_13);
+    v2_3_2.features.add(feat2_3_2_14);
+
     // VERSION 2.3.1
     var v2_3_1 = ChangeLogItem();
     v2_3_1.main.version = 'Torn PDA v2.3.1';
@@ -596,6 +629,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_3_2);
     itemList.add(v2_3_1);
     itemList.add(v2_3_0);
     itemList.add(v2_2_0);

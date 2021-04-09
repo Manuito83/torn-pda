@@ -10,9 +10,16 @@ export const testGroup = {
     try {
       
       promises.push(sendTestNotification(
-        '', // Then call as "tests.testNotification()" in shell
-        'Test', 
-        'test notification')
+        '### TOKEN HERE ###', // Then call as "tests.testNotification()" in shell
+        'Full Energy Bar', 
+        'Your energy is full, go spend on something!',
+        "notification_energy",
+        "#00FF00",
+        "Alerts energy",
+        "",
+        "",
+        "medium",
+        )
       );
     
     } catch (e) {
@@ -28,11 +35,23 @@ export const testGroup = {
 // FOR TESTING NOTIFICATION
 // *************************
 async function sendTestNotification(
-    token: string,
-    title: string,
-    body: string
-  ): Promise<any> {
-    
+  token: string,
+  title: string,
+  body: string,
+  icon: string,
+  color: string,
+  channelId: string,
+  tornMessageId: string = "",
+  tornTradeId: string = "",
+  vibration: string,
+): Promise<any> {
+  
+  // Give a space to mach channel ids in the app
+  let vibrationPattern = vibration;
+  if (vibrationPattern !== "") {
+    vibrationPattern = ` ${vibrationPattern}`;
+  }
+
   const payload: admin.messaging.Message = {
     token: token,
     notification: {
@@ -43,9 +62,9 @@ async function sendTestNotification(
       priority: 'high',
       ttl: 18000000,
       notification: {
-        channelId: `Test Channel`,
-        //color: color,
-        //icon: icon,
+        channelId: `${channelId}${vibrationPattern}`,
+        color: color,
+        icon: icon,
         sound: "default",
         clickAction: "FLUTTER_NOTIFICATION_CLICK",
       },
@@ -66,17 +85,11 @@ async function sendTestNotification(
       // in onLaundh/onResume message information
       title: title,
       body: body, 
-      channelId: "Test Channel",
-      tornMessageId: "",
-      tornTradeId: "",
+      channelId: channelId,
+      tornMessageId: tornMessageId,
+      tornTradeId: tornTradeId,
     },
   };
 
-  return admin
-    .messaging().send(payload)
-    .catch((error) => {
-      if (error.toString().includes("Requested entity was not found")) {
-        functions.logger.warn(`USER NOT FOUND & STALED`);
-      }
-    });
+  return admin.messaging().send(payload);
 }

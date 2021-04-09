@@ -213,7 +213,7 @@ class _ProfileNotificationsAndroidState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Text("Travel notification timings"),
+                Text("Travel timings & text"),
                 IconButton(
                   icon: Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {

@@ -5,11 +5,14 @@ import 'package:torn_pda/models/trades/torntrader/torntrader_out.dart';
 import 'package:http/http.dart' as http;
 
 class TornTraderComm {
-
   static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
     var authModel = TornTraderAuthModel();
     try {
-      var response = await http.post('https://torntrader.com/api/v1/users?user=$user');
+      var response = await http.post(
+        Uri(
+          path: 'https://torntrader.com/api/v1/users?user=$user',
+        ),
+      );
       if (response.statusCode == 200) {
         authModel = tornTraderAuthModelFromJson(response.body);
         authModel.error = false;
@@ -22,7 +25,8 @@ class TornTraderComm {
     return authModel;
   }
 
-  static Future<TornTraderInModel> submitItems(sellerItems, sellerName, tradeId, buyerId) async {
+  static Future<TornTraderInModel> submitItems(
+      sellerItems, sellerName, tradeId, buyerId) async {
     var inModel = TornTraderInModel();
 
     var authModel = await checkIfUserExists(buyerId);
@@ -42,7 +46,7 @@ class TornTraderComm {
       ..tradeId = tradeId
       ..seller = sellerName
       ..buyer = buyerId
-      ..items = List<ttOutItem>();
+      ..items = <ttOutItem>[];
 
     for (var product in sellerItems) {
       var item = ttOutItem(
@@ -54,7 +58,8 @@ class TornTraderComm {
     }
 
     try {
-      var response = await http.post('https://torntrader.com/api/v1/trades',
+      var response = await http.post(
+        Uri.parse('https://torntrader.com/api/v1/trades'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': authModel.token,
@@ -73,5 +78,4 @@ class TornTraderComm {
 
     return inModel;
   }
-
 }
