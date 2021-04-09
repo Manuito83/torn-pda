@@ -40,7 +40,7 @@ class UserScriptsProvider extends ChangeNotifier {
               injectionTime: Platform.isAndroid
                   ? UserScriptInjectionTime.AT_DOCUMENT_START
                   : UserScriptInjectionTime.AT_DOCUMENT_END,
-              source: script.source.replaceAll("###PDA-APIKEY###", apiKey),
+              source: _adaptSource(script, apiKey),
             ),
           );
         }
@@ -69,8 +69,7 @@ class UserScriptsProvider extends ChangeNotifier {
                     injectionTime: Platform.isAndroid
                         ? UserScriptInjectionTime.AT_DOCUMENT_START
                         : UserScriptInjectionTime.AT_DOCUMENT_END,
-                    source:
-                        script.source.replaceAll("###PDA-APIKEY###", apiKey),
+                    source: _adaptSource(script, apiKey),
                   ),
                 );
                 break;
@@ -87,6 +86,12 @@ class UserScriptsProvider extends ChangeNotifier {
       ..scriptsToAdd = UnmodifiableListView(scriptListToAdd)
       ..scriptsToRemove = scriptListToRemove;
     return changes;
+  }
+
+  String _adaptSource(UserScriptModel script, String apiKey) {
+    String withApiKey = script.source.replaceAll("###PDA-APIKEY###", apiKey);
+    String anonFunction = "(function() {\n$withApiKey\n}());";
+    return anonFunction;
   }
 
   void addUserScript(String name, String source) {
@@ -195,7 +200,8 @@ class UserScriptsProvider extends ChangeNotifier {
     if (matches.length > 0) {
       for (Match match in matches) {
         try {
-          urls.add(match.group(2));
+          var noWildcard = match.group(2).replaceAll("*", "");
+          urls.add(noWildcard);
         } catch (e) {
           //
         }
@@ -205,16 +211,18 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   _sort() {
-    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _userScriptList
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
-  void changeScriptsFirstTime (bool value) {
+  void changeScriptsFirstTime(bool value) {
     _scriptsFirstTime = value;
     SharedPreferencesModel().setUserScriptsFirstTime(value);
   }
 
   Future<void> loadPreferences() async {
-    _scriptsFirstTime = await SharedPreferencesModel().getUserScriptsFirstTime();
+    _scriptsFirstTime =
+        await SharedPreferencesModel().getUserScriptsFirstTime();
 
     var savedScripts = await SharedPreferencesModel().getUserScriptsList();
 
