@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/travel/travel_options_android.dart';
+import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -130,6 +133,45 @@ class _ProfileNotificationsIOSState
   Widget _rowsWithTypes() {
     var types = <Widget>[];
     ProfileNotification.values.forEach((element) {
+      if (element == ProfileNotification.travel) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Travel timings & text"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    if (Platform.isAndroid) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return TravelOptionsAndroid();
+                          },
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return TravelOptionsIOS();
+                          },
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
+      }
+
       if (element == ProfileNotification.energy) {
         types.add(
           Padding(
