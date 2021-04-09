@@ -855,15 +855,17 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Stock Exchange"
         ..nickname = "Stock Exchange"
-        ..url = "https://www.torn.com/stockexchange.php"
+        ..url = "https://www.torn.com/page.php?sid=stocks"
         ..iconUrl = "images/icons/map/stock_exchange.png"
         ..color = Colors.blue[700],
+      /*
       Shortcut()
         ..name = "Stock Exchange: Portfolio"
         ..nickname = "Portfolio"
         ..url = "https://www.torn.com/stockexchange.php?step=portfolio"
         ..iconUrl = "images/icons/map/stock_exchange.png"
         ..color = Colors.blue[700],
+      */
       Shortcut()
         ..name = "City Hall"
         ..nickname = "City Hall"
