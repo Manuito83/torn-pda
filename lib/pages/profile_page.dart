@@ -3367,8 +3367,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 2),
               Row(
                 children: [
-                  Text(
-                    'Battle (effective): ${decimalFormat.format(totalEffective)}',
+                  Flexible(
+                    child: Text(
+                      'Battle (effective): ${decimalFormat.format(totalEffective)}',
+                    ),
                   ),
                   if (totalEffectiveModifier < 0)
                     Text(
