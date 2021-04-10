@@ -18,6 +18,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/property_model.dart';
+import 'package:torn_pda/models/profile/skills_model.dart';
 
 enum ApiType {
   user,
@@ -31,6 +32,7 @@ enum ApiSelection {
   ownBasic,
   ownExtended,
   ownMisc,
+  skills,
   otherProfile,
   target,
   attacks,
@@ -107,6 +109,7 @@ class TornApiCaller {
   TornApiCaller.ownBasic(this.apiKey);
   TornApiCaller.ownExtended(this.apiKey);
   TornApiCaller.ownMisc(this.apiKey);
+  TornApiCaller.skills(this.apiKey);
   TornApiCaller.otherProfile(this.apiKey, this.queryId);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
@@ -167,6 +170,19 @@ class TornApiCaller {
     });
     if (apiResult is http.Response) {
       return OwnProfileMisc.fromJson(json.decode(apiResult.body));
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getSkills async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.skills)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      return SkillsModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -416,6 +432,9 @@ class TornApiCaller {
       case ApiSelection.ownMisc:
         url += '?selections=money,education,workstats,battlestats,jobpoints,properties';
         break;
+      case ApiSelection.skills:
+        url += '?selections=skills';
+        break;
       case ApiSelection.otherProfile:
         url += '$prefix?selections=profile,crimes,personalstats';
         break;
@@ -473,8 +492,6 @@ class TornApiCaller {
       } else {
         return ApiError(errorId: 0);
       }
-    } on TimeoutException catch (e) {
-      return ApiError(errorId: 0);
     } catch (e) {
       return ApiError(errorId: 0);
     }

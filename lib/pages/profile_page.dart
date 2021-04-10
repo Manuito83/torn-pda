@@ -49,6 +49,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/property_model.dart';
+import 'package:torn_pda/models/profile/skills_model.dart';
 
 enum ProfileNotification {
   travel,
@@ -192,6 +193,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
+  SkillsModel _skillsModel;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -3306,6 +3308,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int totalEffectiveModifier =
         ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
 
+    // SKILLS
+    var hunting = "";
+    var racing = "";
+    var reviving = "";
+    if (_skillsModel != null) {
+      hunting = _skillsModel.hunting ?? "";
+      racing = _skillsModel.racing ?? "";
+      reviving = _skillsModel.reviving ?? "";
+    }
+
     return Card(
       child: ExpandablePanel(
         controller: _basicInfoExpController,
@@ -3607,6 +3619,38 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
+              if (_skillsModel != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Row(
+                        children: [
+                          Text(
+                            'SKILLS',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (racing.isNotEmpty) Text('Racing: $racing'),
+                          if (reviving.isNotEmpty) Text('Reviving: $reviving'),
+                          if (hunting.isNotEmpty) Text('Hunting: $hunting'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               SizedBox(height: 10),
             ],
           ),
@@ -4165,14 +4209,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (_customEnergyTrigger > _user.energy.maximum ||
               _customEnergyTrigger == 0) {
             _customEnergyTrigger = _user.energy.maximum;
-            Prefs()
-                .setEnergyNotificationValue(_customEnergyTrigger);
+            Prefs().setEnergyNotificationValue(_customEnergyTrigger);
           }
           if (_customNerveTrigger > _user.nerve.maximum ||
               _customNerveTrigger == 0) {
             _customNerveTrigger = _user.nerve.maximum;
-            Prefs()
-                .setNerveNotificationValue(_customNerveTrigger);
+            Prefs().setNerveNotificationValue(_customNerveTrigger);
           }
 
           if (apiChain is ChainModel) {
@@ -4211,9 +4253,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       var miscApiResponse =
           await TornApiCaller.ownMisc(_userProv.basic.userApiKey)
               .getProfileMisc;
+
       var educationResponse =
           await TornApiCaller.education(_userProv.basic.userApiKey)
               .getEducation;
+
+      var skillsResponse =
+          await TornApiCaller.skills(_userProv.basic.userApiKey).getSkills;
 
       if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
@@ -4234,6 +4280,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _miscApiFetched = true;
           _tornEducationModel = educationResponse;
         });
+      }
+
+      if (skillsResponse is SkillsModel) {
+        _skillsModel = skillsResponse;
       }
     } catch (e) {
       // If something fails, we simple don't show the MISC section
@@ -4628,10 +4678,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle =
-            await Prefs().getTravelNotificationTitle();
-        notificationSubtitle =
-            await Prefs().getTravelNotificationBody();
+        notificationTitle = await Prefs().getTravelNotificationTitle();
+        notificationSubtitle = await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
@@ -5124,8 +5172,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //SharedPreferencesModel().setProfileSectionOrder([]);
 
     // SECTION ORDER
-    var savedUserOrder =
-        await Prefs().getProfileSectionOrder();
+    var savedUserOrder = await Prefs().getProfileSectionOrder();
     // Ensures that new sections are added as high as possible
     bool sectionsModified = false;
     for (var i = 0; i < _originalSectionOrder.length; i++) {
@@ -5140,8 +5187,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // TRAVEL
     var travel = await Prefs().getTravelNotificationType();
-    var travelNotificationAhead =
-        await Prefs().getTravelNotificationAhead();
+    var travelNotificationAhead = await Prefs().getTravelNotificationAhead();
     var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
     var travelTimerAhead = await Prefs().getTravelTimerAhead();
 
@@ -5185,16 +5231,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // TRAVEL ENDS
 
     var energy = await Prefs().getEnergyNotificationType();
-    _customEnergyTrigger =
-        await Prefs().getEnergyNotificationValue();
-    _customEnergyMaxOverride =
-        await Prefs().getEnergyPercentageOverride();
+    _customEnergyTrigger = await Prefs().getEnergyNotificationValue();
+    _customEnergyMaxOverride = await Prefs().getEnergyPercentageOverride();
 
     var nerve = await Prefs().getNerveNotificationType();
-    _customNerveTrigger =
-        await Prefs().getNerveNotificationValue();
-    _customNerveMaxOverride =
-        await Prefs().getNervePercentageOverride();
+    _customNerveTrigger = await Prefs().getNerveNotificationValue();
+    _customNerveMaxOverride = await Prefs().getNervePercentageOverride();
 
     var life = await Prefs().getLifeNotificationType();
     var drugs = await Prefs().getDrugNotificationType();
@@ -5202,12 +5244,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var booster = await Prefs().getBoosterNotificationType();
 
     var hospital = await Prefs().getHospitalNotificationType();
-    _hospitalNotificationAhead =
-        await Prefs().getHospitalNotificationAhead();
-    _hospitalAlarmAhead =
-        await Prefs().getHospitalAlarmAhead();
-    _hospitalTimerAhead =
-        await Prefs().getHospitalTimerAhead();
+    _hospitalNotificationAhead = await Prefs().getHospitalNotificationAhead();
+    _hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
+    _hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
 
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
@@ -5216,8 +5255,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _uhcReviveActive = await Prefs().getUseUhcRevive();
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _shortcutsEnabled = await Prefs().getEnableShortcuts();
-    _dedicatedTravelCard =
-        await Prefs().getDedicatedTravelCard();
+    _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 
     var expandEvents = await Prefs().getExpandEvents();
     var eventsNumber = await Prefs().getEventsShowNumber();
