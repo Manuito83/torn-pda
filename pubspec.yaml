@@ -62,9 +62,9 @@ dependencies:
   device_info: ^2.0.0
   pull_to_refresh: ^1.6.4-nullsafety.0
   flutter_inappwebview: ^5.3.2
+  flutter_app_badger: ^1.2.0
   ffi: ^1.0.0
-
-## ffi ^ to avoid strut errors
+  ## ffi ^ to avoid strut errors
 
 dev_dependencies:
   flutter_test:

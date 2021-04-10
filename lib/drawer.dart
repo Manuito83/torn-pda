@@ -36,6 +36,7 @@ import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -196,6 +197,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       return showNotification(message.data, notId);
     });
 
+    _clearBadge();
+
     _tenSecTimer = new Timer.periodic(
         Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
@@ -213,6 +216,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
+
+      _clearBadge();
 
       // Get rid of notifications
       if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
@@ -925,5 +930,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     setState(() {
       _settingsProvider.changeDisableTravelSection = disable;
     });
+  }
+
+  void _clearBadge() {
+    if (Platform.isIOS) {
+      FlutterAppBadger.removeBadge();
+    }
   }
 }
