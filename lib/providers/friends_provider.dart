@@ -221,7 +221,7 @@ class FriendsProvider extends ChangeNotifier {
     for (var fri in _friends) {
       newPrefs.add(friendModelToJson(fri));
     }
-    SharedPreferencesModel().setFriendsList(newPrefs);
+    Prefs().setFriendsList(newPrefs);
   }
 
   Future<void> _updateResultAnimation(FriendModel friend, bool success) async {
@@ -303,13 +303,13 @@ class FriendsProvider extends ChangeNotifier {
         sortToSave = 'factionAsc';
         break;
     }
-    SharedPreferencesModel().setFriendsSort(sortToSave);
+    Prefs().setFriendsSort(sortToSave);
   }
 
   Future<void> initFriends() async {
     // Friends list
     bool needToSave = false;
-    List<String> jsonFriends = await SharedPreferencesModel().getFriendsList();
+    List<String> jsonFriends = await Prefs().getFriendsList();
     for (var jFri in jsonFriends) {
       var thisFriend = friendModelFromJson(jFri);
 
@@ -328,7 +328,7 @@ class FriendsProvider extends ChangeNotifier {
     }
 
     // Friends sort
-    String friendsSort = await SharedPreferencesModel().getFriendsSort();
+    String friendsSort = await Prefs().getFriendsSort();
     switch (friendsSort) {
       case '':
         _currentSort = FriendSortType.levelDes;

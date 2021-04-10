@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
-class SharedPreferencesModel {
+class Prefs {
   ///
   /// Instantiation of the SharedPreferences library
   ///

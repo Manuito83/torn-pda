@@ -850,6 +850,6 @@ class _TargetsPageState extends State<TargetsPage> {
   }
 
   Future _restorePreferences() async {
-    _yataButtonEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
+    _yataButtonEnabled = await Prefs().getYataTargetsEnabled();
   }
 }

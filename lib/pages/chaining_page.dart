@@ -165,6 +165,6 @@ class _ChainingPageState extends State<ChainingPage> {
   Future _restorePreferences() async {
     var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _myCurrentKey = userDetails.basic.userApiKey;
-    _tacEnabled = await SharedPreferencesModel().getTACEnabled();
+    _tacEnabled = await Prefs().getTACEnabled();
   }
 }

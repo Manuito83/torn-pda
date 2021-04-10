@@ -190,7 +190,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
   void _saveUserScriptsSharedPrefs() {
     var saveString = json.encode(_userScriptList);
-    SharedPreferencesModel().setUserScriptsList(saveString);
+    Prefs().setUserScriptsList(saveString);
   }
 
   List<String> getUrls(String source) {
@@ -217,14 +217,14 @@ class UserScriptsProvider extends ChangeNotifier {
 
   void changeScriptsFirstTime(bool value) {
     _scriptsFirstTime = value;
-    SharedPreferencesModel().setUserScriptsFirstTime(value);
+    Prefs().setUserScriptsFirstTime(value);
   }
 
   Future<void> loadPreferences() async {
     _scriptsFirstTime =
-        await SharedPreferencesModel().getUserScriptsFirstTime();
+        await Prefs().getUserScriptsFirstTime();
 
-    var savedScripts = await SharedPreferencesModel().getUserScriptsList();
+    var savedScripts = await Prefs().getUserScriptsList();
 
     // NULL returned if we installed the app, so we add example scripts
     if (savedScripts == null) {

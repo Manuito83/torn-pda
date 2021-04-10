@@ -198,7 +198,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootNotificationAhead(value);
+        Prefs().setLootNotificationAhead(value);
         setState(() {
           _lootNotificationAheadDropDownValue = value;
         });
@@ -207,7 +207,7 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
   }
 
   Future _restorePreferences() async {
-    var lootNotificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
+    var lootNotificationAhead = await Prefs().getLootNotificationAhead();
 
     setState(() {
       _lootNotificationAheadDropDownValue = lootNotificationAhead;

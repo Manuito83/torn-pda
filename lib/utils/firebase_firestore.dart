@@ -71,7 +71,7 @@ class _FirestoreHelper {
     // If we had already foreign stocks chosen as alerts, we need to update them to the
     // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
     Map<String, dynamic> previous =
-        await json.decode(await SharedPreferencesModel().getActiveRestocks());
+        await json.decode(await Prefs().getActiveRestocks());
     var now = DateTime.now().millisecondsSinceEpoch;
     previous.forEach((key, value) {
       previous[key] = now;
@@ -81,7 +81,7 @@ class _FirestoreHelper {
       "foreignRestockNotification": subscribe,
       "restockActiveAlerts": previous,
     }).then((value) {
-      SharedPreferencesModel().setRestocksNotificationEnabled(subscribe);
+      Prefs().setRestocksNotificationEnabled(subscribe);
     });
   }
 

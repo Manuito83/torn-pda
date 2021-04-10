@@ -332,7 +332,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       setState(() {
                                         _manualAlarmSound = value;
                                       });
-                                      SharedPreferencesModel()
+                                      Prefs()
                                           .setManualAlarmSound(value);
                                     },
                                     activeTrackColor: Colors.lightGreenAccent,
@@ -355,7 +355,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       setState(() {
                                         _manualAlarmVibration = value;
                                       });
-                                      SharedPreferencesModel()
+                                      Prefs()
                                           .setManualAlarmVibration(value);
                                     },
                                     activeTrackColor: Colors.lightGreenAccent,
@@ -921,7 +921,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ],
       onChanged: (value) {
         // TODO: use settings provider for this?
-        SharedPreferencesModel().setDefaultSection(value);
+        Prefs().setDefaultSection(value);
         setState(() {
           _openSectionValue = value;
         });
@@ -1186,7 +1186,7 @@ class _SettingsPageState extends State<SettingsPage> {
         reconfigureNotificationChannels(mod: value);
         // Update channel preferences
         firestore.setVibrationPattern(value);
-        SharedPreferencesModel().setVibrationPattern(value);
+        Prefs().setVibrationPattern(value);
         setState(() {
           _vibrationValue = value;
         });
@@ -1312,7 +1312,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _androidSdk = androidInfo.version.sdkInt;
     }
 
-    await SharedPreferencesModel().getDefaultSection().then((onValue) {
+    await Prefs().getDefaultSection().then((onValue) {
       setState(() {
         _openSectionValue = onValue;
       });
@@ -1383,10 +1383,10 @@ class _SettingsPageState extends State<SettingsPage> {
       appBarPosition ? _appBarPosition = 'top' : _appBarPosition = 'bottom';
     });
 
-    var alertsVibration = await SharedPreferencesModel().getVibrationPattern();
-    var manualAlarmSound = await SharedPreferencesModel().getManualAlarmSound();
+    var alertsVibration = await Prefs().getVibrationPattern();
+    var manualAlarmSound = await Prefs().getManualAlarmSound();
     var manualAlarmVibration =
-        await SharedPreferencesModel().getManualAlarmVibration();
+        await Prefs().getManualAlarmVibration();
 
     setState(() {
       _removeNotificationsLaunch =

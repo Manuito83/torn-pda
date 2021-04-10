@@ -110,7 +110,7 @@ class TradesProvider extends ChangeNotifier {
 
         // TORN TRADER init here (it only takes into account elements sold to us,
         // so we'll only pass this information
-        var tornTraderActive = await SharedPreferencesModel().getTornTraderEnabled();
+        var tornTraderActive = await Prefs().getTornTraderEnabled();
         if (rightItemsElements.isNotEmpty && tornTraderActive) {
           TornTraderInModel tornTraderIn = await TornTraderComm.submitItems(
             newModel.rightItems,

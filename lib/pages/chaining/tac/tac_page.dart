@@ -895,21 +895,21 @@ class _TacPageState extends State<TacPage> {
   }
 
   void _saveFilters() {
-    SharedPreferencesModel().setTACFilters(tacFiltersToJson(_tacFilters));
+    Prefs().setTACFilters(tacFiltersToJson(_tacFilters));
   }
 
   void _saveTargets() {
-    SharedPreferencesModel().setTACTargets(tacModelToJson(_tacModel));
+    Prefs().setTACTargets(tacModelToJson(_tacModel));
   }
 
   Future _restorePreferences() async {
     _tacFilters = TacFilters();
-    var savedFilters = await SharedPreferencesModel().getTACFilters();
+    var savedFilters = await Prefs().getTACFilters();
     if (savedFilters != "") {
       _tacFilters = tacFiltersFromJson(savedFilters);
     }
 
-    var savedModel = await SharedPreferencesModel().getTACTargets();
+    var savedModel = await Prefs().getTACTargets();
     if (savedModel != "") {
       _tacModel = tacModelFromJson(savedModel);
       setState(() {

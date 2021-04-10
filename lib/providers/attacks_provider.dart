@@ -202,7 +202,7 @@ class AttacksProvider extends ChangeNotifier {
         sortToSave = 'dateDes';
         break;
     }
-    SharedPreferencesModel().setAttackSort(sortToSave);
+    Prefs().setAttackSort(sortToSave);
   }
 
   Future<void> restoreSharedPreferences() async {
@@ -211,7 +211,7 @@ class AttacksProvider extends ChangeNotifier {
     _ownId = _userDetails.playerId.toString();
 
     // Attack sort
-    String attackSort = await SharedPreferencesModel().getAttackSort();
+    String attackSort = await Prefs().getAttackSort();
     switch (attackSort) {
       case '':
         _currentSort = AttackSortType.levelDes;

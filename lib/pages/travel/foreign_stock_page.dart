@@ -488,7 +488,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               for (var b in _filteredFlags) {
                 b ? saveList.add('1') : saveList.add('0');
               }
-              SharedPreferencesModel().setStockCountryFilter(saveList);
+              Prefs().setStockCountryFilter(saveList);
 
               // Applying filter
               _filterAndSortMainList();
@@ -543,7 +543,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               for (var b in _filteredTypes) {
                 b ? saveList.add('1') : saveList.add('0');
               }
-              SharedPreferencesModel().setStockTypeFilter(saveList);
+              Prefs().setStockTypeFilter(saveList);
 
               // Applying filter
               _filterAndSortMainList();
@@ -927,58 +927,58 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         case StockSortType.country:
           _filteredStocksCards
               .sort((a, b) => a.country.index.compareTo(b.country.index));
-          SharedPreferencesModel().setStockSort('country');
+          Prefs().setStockSort('country');
           break;
         case StockSortType.name:
           _filteredStocksCards.sort((a, b) => a.name.compareTo(b.name));
-          SharedPreferencesModel().setStockSort('name');
+          Prefs().setStockSort('name');
           break;
         case StockSortType.type:
           _filteredStocksCards.sort(
               (a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
-          SharedPreferencesModel().setStockSort('type');
+          Prefs().setStockSort('type');
           break;
         case StockSortType.quantity:
           _filteredStocksCards.sort((a, b) => b.quantity.compareTo(a.quantity));
-          SharedPreferencesModel().setStockSort('quantity');
+          Prefs().setStockSort('quantity');
           break;
         case StockSortType.price:
           _filteredStocksCards.sort((a, b) => b.cost.compareTo(a.cost));
-          SharedPreferencesModel().setStockSort('price');
+          Prefs().setStockSort('price');
           break;
         case StockSortType.value:
           _filteredStocksCards.sort((a, b) => b.value.compareTo(a.value));
-          SharedPreferencesModel().setStockSort('value');
+          Prefs().setStockSort('value');
           break;
         case StockSortType.profit:
           _filteredStocksCards.sort((a, b) => b.profit.compareTo(a.profit));
-          SharedPreferencesModel().setStockSort('profit');
+          Prefs().setStockSort('profit');
           break;
         case StockSortType.arrivalTime:
           _filteredStocksCards
               .sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
-          SharedPreferencesModel().setStockSort('arrivalTime');
+          Prefs().setStockSort('arrivalTime');
           break;
       }
     });
   }
 
   Future _restoreSharedPreferences() async {
-    var flagStrings = await SharedPreferencesModel().getStockCountryFilter();
+    var flagStrings = await Prefs().getStockCountryFilter();
     for (var i = 0; i < flagStrings.length; i++) {
       flagStrings[i] == '0'
           ? _filteredFlags[i] = false
           : _filteredFlags[i] = true;
     }
 
-    var typesStrings = await SharedPreferencesModel().getStockTypeFilter();
+    var typesStrings = await Prefs().getStockTypeFilter();
     for (var i = 0; i < typesStrings.length; i++) {
       typesStrings[i] == '0'
           ? _filteredTypes[i] = false
           : _filteredTypes[i] = true;
     }
 
-    var sortString = await SharedPreferencesModel().getStockSort();
+    var sortString = await Prefs().getStockSort();
     StockSortType sortType;
     if (sortString == 'country') {
       sortType = StockSortType.country;
@@ -999,12 +999,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
     _currentSort = StockSort(type: sortType);
 
-    _capacity = await SharedPreferencesModel().getStockCapacity();
+    _capacity = await Prefs().getStockCapacity();
     _inventoryEnabled =
-        await SharedPreferencesModel().getShowForeignInventory();
-    _showArrivalTime = await SharedPreferencesModel().getShowArrivalTime();
+        await Prefs().getShowForeignInventory();
+    _showArrivalTime = await Prefs().getShowArrivalTime();
 
-    var ticket = await SharedPreferencesModel().getTravelTicket();
+    var ticket = await Prefs().getTravelTicket();
     switch (ticket) {
       case "standard":
         _ticket = TravelTicket.standard;
@@ -1021,7 +1021,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     _activeRestocks =
-        await json.decode(await SharedPreferencesModel().getActiveRestocks());
+        await json.decode(await Prefs().getActiveRestocks());
   }
 
   Future<void> _showOptionsDialog() {

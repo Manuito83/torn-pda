@@ -1310,7 +1310,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // It's also in the callback from trades options
     if (!_tradesPreferencesLoaded) {
       _tradeCalculatorEnabled =
-          await SharedPreferencesModel().getTradeCalculatorEnabled();
+          await Prefs().getTradeCalculatorEnabled();
       _tradesPreferencesLoaded = true;
     }
     if (!_tradeCalculatorEnabled) {
@@ -1522,7 +1522,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Future _tradesPreferencesLoad() async {
     _tradeCalculatorEnabled =
-        await SharedPreferencesModel().getTradeCalculatorEnabled();
+        await Prefs().getTradeCalculatorEnabled();
     _decideIfCallTrades();
   }
 
@@ -1694,7 +1694,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _cityPreferencesLoad() async {
-    _cityEnabled = await SharedPreferencesModel().getCityEnabled();
+    _cityEnabled = await Prefs().getCityEnabled();
     // Reset city so that it can be assessed again
     _cityTriggered = false;
     await reload();
@@ -1872,7 +1872,7 @@ class _WebViewFullState extends State<WebViewFull> {
           child: Icon(MdiIcons.chatOutline),
           onTap: () async {
             webView.evaluateJavascript(source: removeChatJS());
-            SharedPreferencesModel().setChatRemovalActive(true);
+            Prefs().setChatRemovalActive(true);
             setState(() {
               _chatRemovalActive = true;
             });
@@ -1889,7 +1889,7 @@ class _WebViewFullState extends State<WebViewFull> {
           ),
           onTap: () async {
             webView.evaluateJavascript(source: restoreChatJS());
-            SharedPreferencesModel().setChatRemovalActive(false);
+            Prefs().setChatRemovalActive(false);
             setState(() {
               _chatRemovalActive = false;
             });
@@ -1911,8 +1911,8 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _loadChatPreferences() async {
-    var removalEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
-    var removalActive = await SharedPreferencesModel().getChatRemovalActive();
+    var removalEnabled = await Prefs().getChatRemovalEnabled();
+    var removalActive = await Prefs().getChatRemovalActive();
     setState(() {
       _chatRemovalEnabled = removalEnabled;
       _chatRemovalActive = removalActive;

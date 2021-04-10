@@ -270,7 +270,7 @@ class _ProfileNotificationsAndroidState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel()
+                        Prefs()
                             .setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
@@ -306,7 +306,7 @@ class _ProfileNotificationsAndroidState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel()
+                        Prefs()
                             .setNerveNotificationValue(finalValue.floor());
                       },
                     ),
@@ -427,49 +427,49 @@ class _ProfileNotificationsAndroidState
       onChanged: (value) {
         switch (notificationType) {
           case ProfileNotification.travel:
-            SharedPreferencesModel().setTravelNotificationType(value);
+            Prefs().setTravelNotificationType(value);
             setState(() {
               _travelDropDownValue = value;
             });
             break;
           case ProfileNotification.energy:
-            SharedPreferencesModel().setEnergyNotificationType(value);
+            Prefs().setEnergyNotificationType(value);
             setState(() {
               _energyDropDownValue = value;
             });
             break;
           case ProfileNotification.nerve:
-            SharedPreferencesModel().setNerveNotificationType(value);
+            Prefs().setNerveNotificationType(value);
             setState(() {
               _nerveDropDownValue = value;
             });
             break;
           case ProfileNotification.life:
-            SharedPreferencesModel().setLifeNotificationType(value);
+            Prefs().setLifeNotificationType(value);
             setState(() {
               _lifeDropDownValue = value;
             });
             break;
           case ProfileNotification.drugs:
-            SharedPreferencesModel().setDrugNotificationType(value);
+            Prefs().setDrugNotificationType(value);
             setState(() {
               _drugDropDownValue = value;
             });
             break;
           case ProfileNotification.medical:
-            SharedPreferencesModel().setMedicalNotificationType(value);
+            Prefs().setMedicalNotificationType(value);
             setState(() {
               _medicalDropDownValue = value;
             });
             break;
           case ProfileNotification.booster:
-            SharedPreferencesModel().setBoosterNotificationType(value);
+            Prefs().setBoosterNotificationType(value);
             setState(() {
               _boosterDropDownValue = value;
             });
             break;
           case ProfileNotification.hospital:
-            SharedPreferencesModel().setHospitalNotificationType(value);
+            Prefs().setHospitalNotificationType(value);
             setState(() {
               _hospitalDropDownValue = value;
             });
@@ -480,32 +480,32 @@ class _ProfileNotificationsAndroidState
   }
 
   Future _restorePreferences() async {
-    var travelType = await SharedPreferencesModel().getTravelNotificationType();
+    var travelType = await Prefs().getTravelNotificationType();
 
-    var energyType = await SharedPreferencesModel().getEnergyNotificationType();
+    var energyType = await Prefs().getEnergyNotificationType();
     var energyTrigger =
-        await SharedPreferencesModel().getEnergyNotificationValue();
+        await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
       energyTrigger = widget.energyMax;
     }
 
-    var nerveType = await SharedPreferencesModel().getNerveNotificationType();
+    var nerveType = await Prefs().getNerveNotificationType();
     var nerveTrigger =
-        await SharedPreferencesModel().getNerveNotificationValue();
+        await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
       nerveTrigger = widget.nerveMax;
     }
 
-    var lifeType = await SharedPreferencesModel().getLifeNotificationType();
-    var drugsType = await SharedPreferencesModel().getDrugNotificationType();
+    var lifeType = await Prefs().getLifeNotificationType();
+    var drugsType = await Prefs().getDrugNotificationType();
     var medicalType =
-        await SharedPreferencesModel().getMedicalNotificationType();
+        await Prefs().getMedicalNotificationType();
     var hospitalType =
-        await SharedPreferencesModel().getHospitalNotificationType();
+        await Prefs().getHospitalNotificationType();
     var boosterType =
-        await SharedPreferencesModel().getBoosterNotificationType();
+        await Prefs().getBoosterNotificationType();
 
     setState(() {
       _travelDropDownValue = travelType;

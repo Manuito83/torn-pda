@@ -449,10 +449,10 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           setState(() {
             widget.activeRestocks.addAll({_codeName: time});
           });
-          SharedPreferencesModel().setActiveRestocks(json.encode(tempMap));
+          Prefs().setActiveRestocks(json.encode(tempMap));
 
           var alertsEnabled =
-              await SharedPreferencesModel().getRestocksNotificationEnabled();
+              await Prefs().getRestocksNotificationEnabled();
           if (!alertsEnabled) {
             BotToast.showText(
               text: "Your restocks notifications are OFF, remember to active "
@@ -480,7 +480,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           setState(() {
             widget.activeRestocks.removeWhere((key, value) => key == _codeName);
           });
-          SharedPreferencesModel().setActiveRestocks(json.encode(tempMap));
+          Prefs().setActiveRestocks(json.encode(tempMap));
         }
       });
     }

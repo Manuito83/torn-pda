@@ -57,8 +57,8 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   loadPreferences () async {
-    soundActive = await SharedPreferencesModel().getChainWatcherSound();
-    vibrationActive = await SharedPreferencesModel().getChainWatcherVibration();
+    soundActive = await Prefs().getChainWatcherSound();
+    vibrationActive = await Prefs().getChainWatcherVibration();
     preferencesLoaded = true;
   }
 

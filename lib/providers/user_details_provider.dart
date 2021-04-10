@@ -8,13 +8,13 @@ class UserDetailsProvider extends ChangeNotifier {
 
   void setUserDetails({@required OwnProfileBasic userDetails}) {
     basic = userDetails;
-    SharedPreferencesModel().setOwnDetails(ownProfileBasicToJson(basic));
+    Prefs().setOwnDetails(ownProfileBasicToJson(basic));
     notifyListeners();
   }
 
   void removeUser() {
     basic = OwnProfileBasic();
-    SharedPreferencesModel().setOwnDetails('');
+    Prefs().setOwnDetails('');
     notifyListeners();
   }
 
@@ -22,7 +22,7 @@ class UserDetailsProvider extends ChangeNotifier {
     // Initialize [myUser]. We will configure it in the next few lines.
     basic = OwnProfileBasic();
 
-    var savedUser = await SharedPreferencesModel().getOwnDetails();
+    var savedUser = await Prefs().getOwnDetails();
     // Check if we have an user at all (json is not empty)
     if (savedUser != '') {
       basic = ownProfileBasicFromJson(savedUser);
@@ -43,11 +43,11 @@ class UserDetailsProvider extends ChangeNotifier {
           // Then recreate the basic model
           basic = apiVerify;
 
-          SharedPreferencesModel().setOwnDetails(ownProfileBasicToJson(basic));
+          Prefs().setOwnDetails(ownProfileBasicToJson(basic));
 
           // We delete this deprecated ApiKey from version 1.2.0 since we won't
           // need to use it in the future again
-          SharedPreferencesModel().setApiKey('');
+          Prefs().setApiKey('');
         }
       }
     } else {
@@ -62,15 +62,15 @@ class UserDetailsProvider extends ChangeNotifier {
   }
 
   Future _tryWithDeprecatedSave() async {
-    var oldKeySave = await SharedPreferencesModel().getApiKey();
+    var oldKeySave = await Prefs().getApiKey();
     if (oldKeySave != '') {
       var apiVerify = await TornApiCaller.ownExtended(oldKeySave).getProfileExtended;
       if (apiVerify is OwnProfileBasic) {
         apiVerify.userApiKey = oldKeySave;
         apiVerify.userApiKeyValid = true;
         basic = apiVerify;
-        SharedPreferencesModel().setOwnDetails(ownProfileBasicToJson(basic));
-        SharedPreferencesModel().setApiKey('');
+        Prefs().setOwnDetails(ownProfileBasicToJson(basic));
+        Prefs().setApiKey('');
       }
     }
   }

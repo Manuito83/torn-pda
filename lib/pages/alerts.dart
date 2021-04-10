@@ -484,7 +484,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
                 if (Platform.isAndroid) {
                   var alertsVibration =
-                  await SharedPreferencesModel().getVibrationPattern();
+                  await Prefs().getVibrationPattern();
                   // Deletes current channels and create new ones
                   reconfigureNotificationChannels(mod: alertsVibration);
                   // Update channel preferences

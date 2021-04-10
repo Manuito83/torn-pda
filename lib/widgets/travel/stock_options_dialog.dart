@@ -284,9 +284,9 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
 
   void _callBackValues() {
     widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _ticket);
-    SharedPreferencesModel().setStockCapacity(_capacity);
-    SharedPreferencesModel().setShowForeignInventory(_inventoryEnabled);
-    SharedPreferencesModel().setShowArrivalTime(_showArrivalTime);
+    Prefs().setStockCapacity(_capacity);
+    Prefs().setShowForeignInventory(_inventoryEnabled);
+    Prefs().setShowArrivalTime(_showArrivalTime);
 
     var ticketString;
     switch (_ticket) {
@@ -303,6 +303,6 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
         ticketString = "business";
         break;
     }
-    SharedPreferencesModel().setTravelTicket(ticketString);
+    Prefs().setTravelTicket(ticketString);
   }
 }

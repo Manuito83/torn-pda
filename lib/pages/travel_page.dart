@@ -922,9 +922,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
 
     var notificationTitle =
-        await SharedPreferencesModel().getTravelNotificationTitle();
+        await Prefs().getTravelNotificationTitle();
     var notificationSubtitle =
-        await SharedPreferencesModel().getTravelNotificationBody();
+        await Prefs().getTravelNotificationBody();
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       201,
@@ -1023,14 +1023,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       await _fetchTornApi();
     }
 
-    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
+    _alarmSound = await Prefs().getManualAlarmSound();
+    _alarmVibration = await Prefs().getManualAlarmVibration();
 
     // Ahead timers
     var notificationAhead =
-        await SharedPreferencesModel().getTravelNotificationAhead();
-    var alarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
-    var timerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+        await Prefs().getTravelNotificationAhead();
+    var alarmAhead = await Prefs().getTravelAlarmAhead();
+    var timerAhead = await Prefs().getTravelTimerAhead();
 
     if (notificationAhead == '0') {
       _travelNotificationAhead = 20;

@@ -64,11 +64,11 @@ class ThemeProvider extends ChangeNotifier {
         themeSave = 'dark';
         break;
     }
-    SharedPreferencesModel().setAppTheme(themeSave);
+    Prefs().setAppTheme(themeSave);
   }
 
   Future<void> _restoreSharedPreferences() async {
-    String restoredTheme = await SharedPreferencesModel().getAppTheme();
+    String restoredTheme = await Prefs().getAppTheme();
     switch (restoredTheme) {
       case 'light':
         _currentTheme = AppTheme.light;

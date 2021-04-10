@@ -230,7 +230,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootNotificationType(value);
+        Prefs().setLootNotificationType(value);
         setState(() {
           _lootTypeDropDownValue = value;
         });
@@ -309,7 +309,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootNotificationAhead(value);
+        Prefs().setLootNotificationAhead(value);
         setState(() {
           _lootNotificationAheadDropDownValue = value;
         });
@@ -375,7 +375,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootAlarmAhead(value);
+        Prefs().setLootAlarmAhead(value);
         setState(() {
           _lootAlarmAheadDropDownValue = value;
         });
@@ -454,7 +454,7 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setLootTimerAhead(value);
+        Prefs().setLootTimerAhead(value);
         setState(() {
           _lootTimerAheadDropDownValue = value;
         });
@@ -463,10 +463,10 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   }
 
   Future _restorePreferences() async {
-    var lootType = await SharedPreferencesModel().getLootNotificationType();
-    var lootNotificationAhead = await SharedPreferencesModel().getLootNotificationAhead();
-    var lootAlarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
-    var lootTimerAhead = await SharedPreferencesModel().getLootTimerAhead();
+    var lootType = await Prefs().getLootNotificationType();
+    var lootNotificationAhead = await Prefs().getLootNotificationAhead();
+    var lootAlarmAhead = await Prefs().getLootAlarmAhead();
+    var lootTimerAhead = await Prefs().getLootTimerAhead();
 
     setState(() {
       _lootTypeDropDownValue = lootType;

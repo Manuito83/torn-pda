@@ -273,7 +273,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelNotificationAhead(value);
+        Prefs().setTravelNotificationAhead(value);
         setState(() {
           _travelNotificationAheadDropDownValue = value;
         });
@@ -339,7 +339,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelAlarmAhead(value);
+        Prefs().setTravelAlarmAhead(value);
         setState(() {
           _travelAlarmAheadDropDownValue = value;
         });
@@ -418,7 +418,7 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelTimerAhead(value);
+        Prefs().setTravelTimerAhead(value);
         setState(() {
           _travelTimerAheadDropDownValue = value;
         });
@@ -427,9 +427,9 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   }
 
   Future _restorePreferences() async {
-    var travelNotificationAhead = await SharedPreferencesModel().getTravelNotificationAhead();
-    var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
-    var travelTimerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+    var travelNotificationAhead = await Prefs().getTravelNotificationAhead();
+    var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
+    var travelTimerAhead = await Prefs().getTravelTimerAhead();
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;
@@ -444,8 +444,8 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
   }
 
   Future<void> _showNotificationTextDialog() async {
-    var title = await SharedPreferencesModel().getTravelNotificationTitle();
-    var body = await SharedPreferencesModel().getTravelNotificationBody();
+    var title = await Prefs().getTravelNotificationTitle();
+    var body = await Prefs().getTravelNotificationBody();
 
     return showDialog<void>(
       context: context,

@@ -42,7 +42,7 @@ class SettingsProvider extends ChangeNotifier {
         browserSave = 'external';
         break;
     }
-    SharedPreferencesModel().setDefaultBrowser(browserSave);
+    Prefs().setDefaultBrowser(browserSave);
 
     notifyListeners();
   }
@@ -51,7 +51,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get testBrowserActive => _testBrowserActive;
   set changeTestBrowserActive(bool active) {
     _testBrowserActive = active;
-    SharedPreferencesModel().setTestBrowserActive(_testBrowserActive);
+    Prefs().setTestBrowserActive(_testBrowserActive);
     notifyListeners();
   }
 
@@ -66,14 +66,14 @@ class SettingsProvider extends ChangeNotifier {
   }
   set setClearCacheNextOpportunity(bool active) {
     _clearCacheNextOpportunity = active;
-    SharedPreferencesModel().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
+    Prefs().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
   }
 
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
     _disableTravelSection = disable;
-    SharedPreferencesModel().setDisableTravelSection(_disableTravelSection);
+    Prefs().setDisableTravelSection(_disableTravelSection);
     notifyListeners();
   }
 
@@ -81,7 +81,7 @@ class SettingsProvider extends ChangeNotifier {
   String get onAppExit => _onAppExit;
   set changeOnAppExit(String choice) {
     _onAppExit = choice;
-    SharedPreferencesModel().setOnAppExit(_onAppExit);
+    Prefs().setOnAppExit(_onAppExit);
     notifyListeners();
   }
 
@@ -100,7 +100,7 @@ class SettingsProvider extends ChangeNotifier {
         timeFormatSave = '12';
         break;
     }
-    SharedPreferencesModel().setDefaultTimeFormat(timeFormatSave);
+    Prefs().setDefaultTimeFormat(timeFormatSave);
 
     notifyListeners();
   }
@@ -120,7 +120,7 @@ class SettingsProvider extends ChangeNotifier {
         timeZoneSave = 'torn';
         break;
     }
-    SharedPreferencesModel().setDefaultTimeZone(timeZoneSave);
+    Prefs().setDefaultTimeZone(timeZoneSave);
 
     notifyListeners();
   }
@@ -131,8 +131,8 @@ class SettingsProvider extends ChangeNotifier {
     _appBarTop = value;
 
     _appBarTop
-        ? SharedPreferencesModel().setAppBarPosition('top')
-        : SharedPreferencesModel().setAppBarPosition('bottom');
+        ? Prefs().setAppBarPosition('top')
+        : Prefs().setAppBarPosition('bottom');
 
     notifyListeners();
   }
@@ -141,7 +141,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get loadBarBrowser => _loadBarBrowser;
   set changeLoadBarBrowser(bool value) {
     _loadBarBrowser = value;
-    SharedPreferencesModel().setLoadBarBrowser(_loadBarBrowser);
+    Prefs().setLoadBarBrowser(_loadBarBrowser);
     notifyListeners();
   }
 
@@ -151,13 +151,13 @@ class SettingsProvider extends ChangeNotifier {
     _browserRefreshMethod = value;
     switch (value) {
       case BrowserRefreshSetting.icon:
-        SharedPreferencesModel().setBrowserRefreshMethod("icon");
+        Prefs().setBrowserRefreshMethod("icon");
         break;
       case BrowserRefreshSetting.pull:
-        SharedPreferencesModel().setBrowserRefreshMethod("pull");
+        Prefs().setBrowserRefreshMethod("pull");
         break;
       case BrowserRefreshSetting.both:
-        SharedPreferencesModel().setBrowserRefreshMethod("both");
+        Prefs().setBrowserRefreshMethod("both");
         break;
     }
     notifyListeners();
@@ -167,7 +167,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
     _chatRemoveEnabled = value;
-    SharedPreferencesModel().setChatRemovalEnabled(_chatRemoveEnabled);
+    Prefs().setChatRemovalEnabled(_chatRemoveEnabled);
     notifyListeners();
   }
 
@@ -175,7 +175,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get highlightChat => _highlightChat;
   set changeHighlightChat(bool value) {
     _highlightChat = value;
-    SharedPreferencesModel().setHighlightChat(_highlightChat);
+    Prefs().setHighlightChat(_highlightChat);
     notifyListeners();
   }
 
@@ -183,7 +183,7 @@ class SettingsProvider extends ChangeNotifier {
   int get highlightColor => _highlightColor;
   set changeHighlightColor(int value) {
     _highlightColor = value;
-    SharedPreferencesModel().setHighlightColor(_highlightColor);
+    Prefs().setHighlightColor(_highlightColor);
     notifyListeners();
   }
 
@@ -191,7 +191,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get removeAirplane => _removeAirplane;
   set changeRemoveAirplane(bool value) {
     _removeAirplane = value;
-    SharedPreferencesModel().setRemoveAirplane(_removeAirplane);
+    Prefs().setRemoveAirplane(_removeAirplane);
     notifyListeners();
   }
 
@@ -199,7 +199,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get extraPlayerInformation => _extraPlayerInformation;
   set changeExtraPlayerInformation(bool value) {
     _extraPlayerInformation = value;
-    SharedPreferencesModel().setExtraPlayerInformation(_extraPlayerInformation);
+    Prefs().setExtraPlayerInformation(_extraPlayerInformation);
     notifyListeners();
   }
 
@@ -207,7 +207,7 @@ class SettingsProvider extends ChangeNotifier {
   String get profileStatsEnabled => _profileStatsEnabled;
   set changeProfileStatsEnabled(String value) {
     _profileStatsEnabled = value;
-    SharedPreferencesModel().setProfileStatsEnabled(_profileStatsEnabled);
+    Prefs().setProfileStatsEnabled(_profileStatsEnabled);
     notifyListeners();
   }
 
@@ -215,7 +215,7 @@ class SettingsProvider extends ChangeNotifier {
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
   set setFriendlyFactions(List<FriendlyFaction> faction) {
     _friendlyFactions = faction;
-    SharedPreferencesModel().setFriendlyFactions(json.encode(_friendlyFactions));
+    Prefs().setFriendlyFactions(json.encode(_friendlyFactions));
     notifyListeners();
   }
 
@@ -223,7 +223,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get useQuickBrowser => _useQuickBrowser;
   set changeUseQuickBrowser(bool value) {
     _useQuickBrowser = value;
-    SharedPreferencesModel().setUseQuickBrowser(_useQuickBrowser);
+    Prefs().setUseQuickBrowser(_useQuickBrowser);
     notifyListeners();
   }
 
@@ -231,20 +231,20 @@ class SettingsProvider extends ChangeNotifier {
   bool get removeNotificationsOnLaunch => _removeNotificationsOnLaunch;
   set changeRemoveNotificationsOnLaunch(bool value) {
     _removeNotificationsOnLaunch = value;
-    SharedPreferencesModel().setRemoveNotificationsOnLaunch(_removeNotificationsOnLaunch);
+    Prefs().setRemoveNotificationsOnLaunch(_removeNotificationsOnLaunch);
     notifyListeners();
   }
 
   void updateLastUsed(int timeStamp) {
-    SharedPreferencesModel().setLastAppUse(timeStamp);
+    Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
     notifyListeners();
   }
 
   Future<void> loadPreferences() async {
-    lastAppUse = await SharedPreferencesModel().getLastAppUse();
+    lastAppUse = await Prefs().getLastAppUse();
 
-    String restoredBrowser = await SharedPreferencesModel().getDefaultBrowser();
+    String restoredBrowser = await Prefs().getDefaultBrowser();
     switch (restoredBrowser) {
       case 'app':
         _currentBrowser = BrowserSetting.app;
@@ -254,15 +254,15 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    _disableTravelSection = await SharedPreferencesModel().getDisableTravelSection();
+    _disableTravelSection = await Prefs().getDisableTravelSection();
 
-    _testBrowserActive = await SharedPreferencesModel().getTestBrowserActive();
+    _testBrowserActive = await Prefs().getTestBrowserActive();
 
-    _clearCacheNextOpportunity = await SharedPreferencesModel().getClearBrowserCacheNextOpportunity();
+    _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
 
-    _loadBarBrowser = await SharedPreferencesModel().getLoadBarBrowser();
+    _loadBarBrowser = await Prefs().getLoadBarBrowser();
 
-    var refresh = await SharedPreferencesModel().getBrowserRefreshMethod();
+    var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
       case "icon":
         _browserRefreshMethod = BrowserRefreshSetting.icon;
@@ -275,20 +275,20 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    _onAppExit = await SharedPreferencesModel().getOnAppExit();
+    _onAppExit = await Prefs().getOnAppExit();
 
-    _chatRemoveEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
+    _chatRemoveEnabled = await Prefs().getChatRemovalEnabled();
 
-    _highlightChat = await SharedPreferencesModel().getHighlightChat();
-    _highlightColor = await SharedPreferencesModel().getHighlightColor();
+    _highlightChat = await Prefs().getHighlightChat();
+    _highlightColor = await Prefs().getHighlightColor();
 
-    _removeAirplane = await SharedPreferencesModel().getRemoveAirplane();
+    _removeAirplane = await Prefs().getRemoveAirplane();
 
-    _extraPlayerInformation = await SharedPreferencesModel().getExtraPlayerInformation();
+    _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
-    _profileStatsEnabled = await SharedPreferencesModel().getProfileStatsEnabled();
+    _profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 
-    var savedFriendlyFactions = await SharedPreferencesModel().getFriendlyFactions();
+    var savedFriendlyFactions = await Prefs().getFriendlyFactions();
     if (savedFriendlyFactions.isNotEmpty) {
       var decoded = json.decode(savedFriendlyFactions);
       for (var dec in decoded) {
@@ -296,11 +296,11 @@ class SettingsProvider extends ChangeNotifier {
       }
     }
 
-    _useQuickBrowser = await SharedPreferencesModel().getUseQuickBrowser();
+    _useQuickBrowser = await Prefs().getUseQuickBrowser();
 
-    _removeNotificationsOnLaunch = await SharedPreferencesModel().getRemoveNotificationsOnLaunch();
+    _removeNotificationsOnLaunch = await Prefs().getRemoveNotificationsOnLaunch();
 
-    String restoredTimeFormat = await SharedPreferencesModel().getDefaultTimeFormat();
+    String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
     switch (restoredTimeFormat) {
       case '24':
         _currentTimeFormat = TimeFormatSetting.h24;
@@ -310,7 +310,7 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    String restoredTimeZone = await SharedPreferencesModel().getDefaultTimeZone();
+    String restoredTimeZone = await Prefs().getDefaultTimeZone();
     switch (restoredTimeZone) {
       case 'local':
         _currentTimeZone = TimeZoneSetting.localTime;
@@ -320,7 +320,7 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
-    String restoredAppBar = await SharedPreferencesModel().getAppBarPosition();
+    String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
 
     notifyListeners();

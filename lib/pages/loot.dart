@@ -179,10 +179,10 @@ class _LootPageState extends State<LootPage> {
                   setState(() {
                     if (_lootTimeType == LootTimeType.timer) {
                       _lootTimeType = LootTimeType.dateTime;
-                      SharedPreferencesModel().setLootTimerType('dateTime');
+                      Prefs().setLootTimerType('dateTime');
                     } else {
                       _lootTimeType = LootTimeType.timer;
-                      SharedPreferencesModel().setLootTimerType('timer');
+                      Prefs().setLootTimerType('timer');
                     }
                   });
                 },
@@ -773,18 +773,18 @@ class _LootPageState extends State<LootPage> {
   }
 
   Future _loadPreferences() async {
-    var lootTimeType = await SharedPreferencesModel().getLootTimerType();
+    var lootTimeType = await Prefs().getLootTimerType();
     lootTimeType == 'timer'
         ? _lootTimeType = LootTimeType.timer
         : _lootTimeType = LootTimeType.dateTime;
 
-    var notification = await SharedPreferencesModel().getLootNotificationType();
+    var notification = await Prefs().getLootNotificationType();
     var notificationAhead =
-        await SharedPreferencesModel().getLootNotificationAhead();
-    var alarmAhead = await SharedPreferencesModel().getLootAlarmAhead();
-    var timerAhead = await SharedPreferencesModel().getLootTimerAhead();
-    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
+        await Prefs().getLootNotificationAhead();
+    var alarmAhead = await Prefs().getLootAlarmAhead();
+    var timerAhead = await Prefs().getLootTimerAhead();
+    _alarmSound = await Prefs().getManualAlarmSound();
+    _alarmVibration = await Prefs().getManualAlarmVibration();
 
     setState(() {
       if (notification == '0') {
@@ -830,7 +830,7 @@ class _LootPageState extends State<LootPage> {
       }
     });
 
-    _filterOutIds = await SharedPreferencesModel().getLootFiltered();
+    _filterOutIds = await Prefs().getLootFiltered();
   }
 
   void _scheduleNotification(

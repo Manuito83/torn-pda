@@ -124,10 +124,10 @@ class _TravelNotificationTextDialogState
                               // Copy controller's text to local variable
                               // early and delete the global, so that text
                               // does not appear again in case of failure
-                              SharedPreferencesModel()
+                              Prefs()
                                   .setTravelNotificationTitle(
                                       _notificationTitleController.text);
-                              SharedPreferencesModel()
+                              Prefs()
                                   .setTravelNotificationBody(
                                       _notificationBodyController.text);
 

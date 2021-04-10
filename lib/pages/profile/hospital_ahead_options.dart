@@ -269,7 +269,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setHospitalNotificationAhead(value);
+        Prefs().setHospitalNotificationAhead(value);
         setState(() {
           _hospitalNotificationAheadValue = value;
         });
@@ -335,7 +335,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setHospitalAlarmAhead(value);
+        Prefs().setHospitalAlarmAhead(value);
         setState(() {
           _hospitalAlarmAheadDropDownValue = value;
         });
@@ -414,7 +414,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setHospitalTimerAhead(value);
+        Prefs().setHospitalTimerAhead(value);
         setState(() {
           _hospitalTimerAheadDropDownValue = value;
         });
@@ -424,11 +424,11 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
 
   Future _restorePreferences() async {
     var travelNotificationAhead =
-        await SharedPreferencesModel().getHospitalNotificationAhead();
+        await Prefs().getHospitalNotificationAhead();
     var travelAlarmAhead =
-        await SharedPreferencesModel().getHospitalAlarmAhead();
+        await Prefs().getHospitalAlarmAhead();
     var travelTimerAhead =
-        await SharedPreferencesModel().getHospitalTimerAhead();
+        await Prefs().getHospitalTimerAhead();
 
     setState(() {
       _hospitalNotificationAheadValue = travelNotificationAhead;

@@ -347,7 +347,7 @@ class _AwardsPageState extends State<AwardsPage> {
                 Switch(
                   value: _showAchievedAwards,
                   onChanged: (value) {
-                    SharedPreferencesModel().setShowAchievedAwards(value);
+                    Prefs().setShowAchievedAwards(value);
                     setState(() {
                       _showAchievedAwards = value;
                     });
@@ -684,7 +684,7 @@ class _AwardsPageState extends State<AwardsPage> {
               }
             });
 
-            SharedPreferencesModel()
+            Prefs()
                 .setHiddenAwardCategories(_hiddenCategories);
 
             BotToast.showText(
@@ -1000,16 +1000,16 @@ class _AwardsPageState extends State<AwardsPage> {
     }
     // Only save if we are not loading from shared prefs on init
     if (!initialLoad) {
-      SharedPreferencesModel().setAwardsSort(sortToSave);
+      Prefs().setAwardsSort(sortToSave);
     }
   }
 
   _restorePrefs() async {
-    _savedSort = await SharedPreferencesModel().getAwardsSort();
+    _savedSort = await Prefs().getAwardsSort();
     _showAchievedAwards =
-        await SharedPreferencesModel().getShowAchievedAwards();
+        await Prefs().getShowAchievedAwards();
     _hiddenCategories =
-        await SharedPreferencesModel().getHiddenAwardCategories();
+        await Prefs().getHiddenAwardCategories();
   }
 
   _onPinnedConditionChange() {

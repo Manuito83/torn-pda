@@ -214,7 +214,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setTravelNotificationAhead(value);
+        Prefs().setTravelNotificationAhead(value);
         setState(() {
           _travelNotificationAheadDropDownValue = value;
         });
@@ -224,7 +224,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
 
   Future _restorePreferences() async {
     var travelNotificationAhead =
-        await SharedPreferencesModel().getTravelNotificationAhead();
+        await Prefs().getTravelNotificationAhead();
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;
@@ -237,8 +237,8 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
   }
 
   Future<void> _showNotificationTextDialog() async {
-    var title = await SharedPreferencesModel().getTravelNotificationTitle();
-    var body = await SharedPreferencesModel().getTravelNotificationBody();
+    var title = await Prefs().getTravelNotificationTitle();
+    var body = await Prefs().getTravelNotificationBody();
 
     return showDialog<void>(
       context: context,

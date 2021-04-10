@@ -80,7 +80,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     Switch(
                                       value: _tradeCalculatorEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel().setTradeCalculatorEnabled(value);
+                                        Prefs().setTradeCalculatorEnabled(value);
                                         setState(() {
                                           _tradeCalculatorEnabled = value;
                                           if (!value) {
@@ -201,7 +201,7 @@ class _TradesOptionsState extends State<TradesOptions> {
                 }
 
                 if (auth.allowed) {
-                  SharedPreferencesModel().setTornTraderEnabled(activated);
+                  Prefs().setTornTraderEnabled(activated);
                   setState(() {
                     _tornTraderEnabled = true;
                   });
@@ -231,7 +231,7 @@ class _TradesOptionsState extends State<TradesOptions> {
               } else {
                 setState(() {
                   _tornTraderEnabled = false;
-                  SharedPreferencesModel().setTornTraderEnabled(activated);
+                  Prefs().setTornTraderEnabled(activated);
                 });
               }
             }
@@ -240,8 +240,8 @@ class _TradesOptionsState extends State<TradesOptions> {
   }
 
   Future _restorePreferences() async {
-    var tradeCalculatorActive = await SharedPreferencesModel().getTradeCalculatorEnabled();
-    var tornTraderActive = await SharedPreferencesModel().getTornTraderEnabled();
+    var tradeCalculatorActive = await Prefs().getTradeCalculatorEnabled();
+    var tornTraderActive = await Prefs().getTornTraderEnabled();
 
     setState(() {
       _tradeCalculatorEnabled = tradeCalculatorActive;

@@ -124,7 +124,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 0) {
                                           _shortcutsDisableConfirmationDialog();
                                         } else {
-                                          SharedPreferencesModel()
+                                          Prefs()
                                               .setEnableShortcuts(value);
                                           setState(() {
                                             _shortcutsEnabled = value;
@@ -212,7 +212,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _warnAboutChainsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setWarnAboutChains(value);
                                         setState(() {
                                           _warnAboutChainsEnabled = value;
@@ -261,7 +261,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _dedicatedTravelCard,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setDedicatedTravelCard(value);
                                         setState(() {
                                           _dedicatedTravelCard = value;
@@ -269,7 +269,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
                                         if (!value) {
                                           _disableTravelSection = false;
-                                          SharedPreferencesModel()
+                                          Prefs()
                                               .setDisableTravelSection(value);
                                         }
                                       },
@@ -308,7 +308,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           Switch(
                                             value: _disableTravelSection,
                                             onChanged: (value) {
-                                              SharedPreferencesModel()
+                                              Prefs()
                                                   .setDisableTravelSection(
                                                       value);
                                               setState(() {
@@ -360,7 +360,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _nukeReviveEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setUseNukeRevive(value);
                                         setState(() {
                                           _nukeReviveEnabled = value;
@@ -397,7 +397,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _uhcReviveEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setUseUhcRevive(value);
                                         setState(() {
                                           _uhcReviveEnabled = value;
@@ -461,7 +461,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandEvents,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setExpandEvents(value);
                                         setState(() {
                                           _expandEvents = value;
@@ -503,7 +503,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandMessages,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setExpandMessages(value);
                                         setState(() {
                                           _expandMessages = value;
@@ -545,7 +545,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandBasicInfo,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setExpandBasicInfo(value);
                                         setState(() {
                                           _expandBasicInfo = value;
@@ -568,7 +568,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandNetworth,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setExpandNetworth(value);
                                         setState(() {
                                           _expandNetworth = value;
@@ -606,7 +606,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       _sectionList.removeAt(oldIndex);
                                       _sectionList.insert(newIndex, oldItem);
                                     });
-                                    SharedPreferencesModel()
+                                    Prefs()
                                         .setProfileSectionOrder(_sectionList);
                                   },
                                   children: _currentSectionSort(),
@@ -744,7 +744,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setEventsShowNumber(int.parse(value));
+        Prefs().setEventsShowNumber(int.parse(value));
         setState(() {
           _eventsNumber = int.parse(value);
         });
@@ -836,7 +836,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ),
       ],
       onChanged: (value) {
-        SharedPreferencesModel().setMessagesShowNumber(int.parse(value));
+        Prefs().setMessagesShowNumber(int.parse(value));
         setState(() {
           _messagesNumber = int.parse(value);
         });
@@ -845,20 +845,20 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   }
 
   Future _restorePreferences() async {
-    var useNuke = await SharedPreferencesModel().getUseNukeRevive();
-    var useUhc = await SharedPreferencesModel().getUseUhcRevive();
-    var warnChains = await SharedPreferencesModel().getWarnAboutChains();
-    var shortcuts = await SharedPreferencesModel().getEnableShortcuts();
-    var dedTravel = await SharedPreferencesModel().getDedicatedTravelCard();
+    var useNuke = await Prefs().getUseNukeRevive();
+    var useUhc = await Prefs().getUseUhcRevive();
+    var warnChains = await Prefs().getWarnAboutChains();
+    var shortcuts = await Prefs().getEnableShortcuts();
+    var dedTravel = await Prefs().getDedicatedTravelCard();
     var disableTravel =
-        await SharedPreferencesModel().getDisableTravelSection();
-    var expandEvents = await SharedPreferencesModel().getExpandEvents();
-    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
-    var expandMessages = await SharedPreferencesModel().getExpandMessages();
-    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
-    var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
-    var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
-    var sectionList = await SharedPreferencesModel().getProfileSectionOrder();
+        await Prefs().getDisableTravelSection();
+    var expandEvents = await Prefs().getExpandEvents();
+    var eventsNumber = await Prefs().getEventsShowNumber();
+    var expandMessages = await Prefs().getExpandMessages();
+    var messagesNumber = await Prefs().getMessagesShowNumber();
+    var expandBasicInfo = await Prefs().getExpandBasicInfo();
+    var expandNetworth = await Prefs().getExpandNetworth();
+    var sectionList = await Prefs().getProfileSectionOrder();
 
     setState(() {
       _nukeReviveEnabled = useNuke;
@@ -934,7 +934,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 context
                                     .read<ShortcutsProvider>()
                                     .wipeAllShortcuts();
-                                SharedPreferencesModel()
+                                Prefs()
                                     .setEnableShortcuts(false);
                                 setState(() {
                                   _shortcutsEnabled = false;

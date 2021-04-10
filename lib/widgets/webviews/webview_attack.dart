@@ -394,7 +394,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           child: Icon(MdiIcons.chatOutline),
           onTap: () async {
             _webViewController.evaluateJavascript(removeChatJS());
-            SharedPreferencesModel().setChatRemovalActive(true);
+            Prefs().setChatRemovalActive(true);
             setState(() {
               _chatRemovalActive = true;
             });
@@ -411,7 +411,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           ),
           onTap: () async {
             _webViewController.evaluateJavascript(restoreChatJS());
-            SharedPreferencesModel().setChatRemovalActive(false);
+            Prefs().setChatRemovalActive(false);
             setState(() {
               _chatRemovalActive = false;
             });
@@ -892,18 +892,18 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Future _loadPreferences() async {
-    var removalEnabled = await SharedPreferencesModel().getChatRemovalEnabled();
-    var removalActive = await SharedPreferencesModel().getChatRemovalActive();
+    var removalEnabled = await Prefs().getChatRemovalEnabled();
+    var removalActive = await Prefs().getChatRemovalActive();
 
     setState(() {
       _chatRemovalEnabled = removalEnabled;
       _chatRemovalActive = removalActive;
     });
 
-    _skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
-    _showNotes = await SharedPreferencesModel().getShowTargetsNotes();
+    _skippingEnabled = await Prefs().getTargetSkipping();
+    _showNotes = await Prefs().getShowTargetsNotes();
     _showOnlineFactionWarning =
-        await SharedPreferencesModel().getShowOnlineFactionWarning();
+        await Prefs().getShowOnlineFactionWarning();
 
     // This will show the note of the first target, if applicable
     if (_showNotes) {

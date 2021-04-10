@@ -62,13 +62,13 @@ class ShortcutsProvider extends ChangeNotifier {
 
   void changeShortcutTile(String choice) {
     _shortcutTile = choice;
-    SharedPreferencesModel().setShortcutTile(choice);
+    Prefs().setShortcutTile(choice);
     notifyListeners();
   }
 
   void changeShortcutMenu(String choice) {
     _shortcutMenu = choice;
-    SharedPreferencesModel().setShortcutMenu(choice);
+    Prefs().setShortcutMenu(choice);
     notifyListeners();
   }
 
@@ -78,21 +78,21 @@ class ShortcutsProvider extends ChangeNotifier {
       var save = shortcutToJson(short);
       saveList.add(save);
     }
-    SharedPreferencesModel().setActiveShortcutsList(saveList);
+    Prefs().setActiveShortcutsList(saveList);
   }
 
   Future _initializeStockShortcuts() async {
-    _shortcutTile = await SharedPreferencesModel().getShortcutTile();
-    _shortcutMenu = await SharedPreferencesModel().getShortcutMenu();
+    _shortcutTile = await Prefs().getShortcutTile();
+    _shortcutMenu = await Prefs().getShortcutMenu();
     _userDetails =
-        ownProfileExtendedFromJson(await SharedPreferencesModel().getOwnDetails());
+        ownProfileExtendedFromJson(await Prefs().getOwnDetails());
 
     _configureStockShortcuts();
 
     // In order to properly reconnect saved shortcuts with the stock ones (so that
     // one is a reference of the other), once we load from shared preferences,
     // we look for the stock counterpart and activate it from scratch
-    var savedLoad = await SharedPreferencesModel().getActiveShortcutsList();
+    var savedLoad = await Prefs().getActiveShortcutsList();
     for (var savedShortRaw in savedLoad) {
       var savedShort = shortcutFromJson(savedShortRaw);
       if (savedShort.isCustom) {

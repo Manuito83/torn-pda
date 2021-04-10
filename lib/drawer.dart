@@ -340,7 +340,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // iOS seems to open a blank WebView unless we allow some time onResume
       await Future.delayed(Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
-      var browserType = await SharedPreferencesModel().getDefaultBrowser();
+      var browserType = await Prefs().getDefaultBrowser();
       switch (browserType) {
         case 'app':
           if (_settingsProvider.useQuickBrowser) {
@@ -428,7 +428,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        var browserType = await SharedPreferencesModel().getDefaultBrowser();
+        var browserType = await Prefs().getDefaultBrowser();
         switch (browserType) {
           case 'app':
             if (_settingsProvider.useQuickBrowser) {
@@ -783,7 +783,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
-      var defaultSection = await SharedPreferencesModel().getDefaultSection();
+      var defaultSection = await Prefs().getDefaultSection();
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
@@ -823,9 +823,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   void _handleChangelog() async {
-    String savedVersion = await SharedPreferencesModel().getAppVersion();
+    String savedVersion = await Prefs().getAppVersion();
     if (savedVersion != appVersion) {
-      SharedPreferencesModel().setAppVersion(appVersion);
+      Prefs().setAppVersion(appVersion);
 
       // Exceptions were we don't show a changelog
       /*

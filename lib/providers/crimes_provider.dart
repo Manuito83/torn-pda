@@ -35,12 +35,12 @@ class CrimesProvider extends ChangeNotifier {
       var save = crimeToJson(crime);
       saveList.add(save);
     }
-    SharedPreferencesModel().setActiveCrimesList(saveList);
+    Prefs().setActiveCrimesList(saveList);
   }
 
   Future<void> _loadSavedCrimes() async {
     // Load crimes from shared preferences
-    var rawLoad = await SharedPreferencesModel().getActiveCrimesList();
+    var rawLoad = await Prefs().getActiveCrimesList();
     for (var rawCrime in rawLoad) {
       activeCrimesList.add(crimeFromJson(rawCrime));
     }

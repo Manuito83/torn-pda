@@ -60,7 +60,7 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   Future _loadSaveActiveItems() async {
-    var savedActives = await SharedPreferencesModel().getQuickItemsList();
+    var savedActives = await Prefs().getQuickItemsList();
     for (var rawItem in savedActives) {
       _activeQuickItemsList.add(quickItemFromJson(rawItem));
     }
@@ -129,7 +129,7 @@ class QuickItemsProvider extends ChangeNotifier {
       saveList.add(save);
     }
 
-    SharedPreferencesModel().setQuickItemsList(saveList);
+    Prefs().setQuickItemsList(saveList);
   }
 
   void reorderQuickItem(QuickItem movedItem, int oldIndex, int newIndex) {

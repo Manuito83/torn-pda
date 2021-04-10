@@ -383,7 +383,7 @@ class TargetsProvider extends ChangeNotifier {
 
   void setFilterColorsOut(List<String> newFilter) {
     _currentColorFilterOut = newFilter;
-    SharedPreferencesModel().setTargetsColorFilter(_currentColorFilterOut);
+    Prefs().setTargetsColorFilter(_currentColorFilterOut);
     notifyListeners();
   }
 
@@ -447,7 +447,7 @@ class TargetsProvider extends ChangeNotifier {
     for (var tar in _targets) {
       newPrefs.add(targetModelToJson(tar));
     }
-    SharedPreferencesModel().setTargetsList(newPrefs);
+    Prefs().setTargetsList(newPrefs);
   }
 
   void _saveSortSharedPrefs() {
@@ -478,7 +478,7 @@ class TargetsProvider extends ChangeNotifier {
         sortToSave = 'colorAsc';
         break;
     }
-    SharedPreferencesModel().setTargetsSort(sortToSave);
+    Prefs().setTargetsSort(sortToSave);
   }
 
   Future<void> restorePreferences() async {
@@ -489,7 +489,7 @@ class TargetsProvider extends ChangeNotifier {
 
     // Target list
     bool needToSave = false;
-    List<String> jsonTargets = await SharedPreferencesModel().getTargetsList();
+    List<String> jsonTargets = await Prefs().getTargetsList();
     for (var jTar in jsonTargets) {
       var thisTarget = targetModelFromJson(jTar);
 
@@ -515,7 +515,7 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     // Target sort
-    String targetSort = await SharedPreferencesModel().getTargetsSort();
+    String targetSort = await Prefs().getTargetsSort();
     switch (targetSort) {
       case '':
         _currentSort = TargetSortType.levelDes;
@@ -542,7 +542,7 @@ class TargetsProvider extends ChangeNotifier {
 
     // Targets color filter
     _currentColorFilterOut =
-        await SharedPreferencesModel().getTargetsColorFilter();
+        await Prefs().getTargetsColorFilter();
 
     // Notification
     notifyListeners();

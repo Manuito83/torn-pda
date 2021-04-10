@@ -73,7 +73,7 @@ class _LootFilterDialogState extends State<LootFilterDialog> {
                     widget.filteredNpcs.remove(key);
                   });
                 }
-                SharedPreferencesModel().setLootFiltered(widget.filteredNpcs);
+                Prefs().setLootFiltered(widget.filteredNpcs);
               },
               activeTrackColor: Colors.redAccent[100],
               activeColor: Colors.red,

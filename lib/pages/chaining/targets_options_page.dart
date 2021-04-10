@@ -102,7 +102,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Switch(
                                       value: _showTargetsNotes,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setShowTargetsNotes(value);
                                         setState(() {
                                           _showTargetsNotes = value;
@@ -143,7 +143,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                           Switch(
                                             value: _showOnlineFactionWarning,
                                             onChanged: (value) {
-                                              SharedPreferencesModel()
+                                              Prefs()
                                                   .setShowOnlineFactionWarning(
                                                       value);
                                               setState(() {
@@ -186,7 +186,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Switch(
                                       value: _skippingEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setTargetSkipping(value);
                                         setState(() {
                                           _skippingEnabled = value;
@@ -234,7 +234,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Switch(
                                       value: _soundAlertsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setChainWatcherSound(value);
                                         setState(() {
                                           _soundAlertsEnabled = value;
@@ -257,7 +257,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Switch(
                                       value: _vibrationAlertsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setChainWatcherVibration(value);
                                         setState(() {
                                           _vibrationAlertsEnabled = value;
@@ -292,7 +292,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Switch(
                                       value: _yataTargetsEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setYataTargetsEnabled(value);
                                         setState(() {
                                           _yataTargetsEnabled = value;
@@ -342,7 +342,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                     Switch(
                                       value: _tacEnabled,
                                       onChanged: (value) {
-                                        SharedPreferencesModel()
+                                        Prefs()
                                             .setTACEnabled(value);
                                         setState(() {
                                           _tacEnabled = value;
@@ -402,15 +402,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   }
 
   Future _restorePreferences() async {
-    var showTargetsNotes = await SharedPreferencesModel().getShowTargetsNotes();
+    var showTargetsNotes = await Prefs().getShowTargetsNotes();
     var showOnlineFactionWarning =
-        await SharedPreferencesModel().getShowOnlineFactionWarning();
-    var skippingEnabled = await SharedPreferencesModel().getTargetSkipping();
-    var soundEnabled = await SharedPreferencesModel().getChainWatcherSound();
+        await Prefs().getShowOnlineFactionWarning();
+    var skippingEnabled = await Prefs().getTargetSkipping();
+    var soundEnabled = await Prefs().getChainWatcherSound();
     var vibrationEnabled =
-        await SharedPreferencesModel().getChainWatcherVibration();
-    var yataEnabled = await SharedPreferencesModel().getYataTargetsEnabled();
-    var tacEnabled = await SharedPreferencesModel().getTACEnabled();
+        await Prefs().getChainWatcherVibration();
+    var yataEnabled = await Prefs().getYataTargetsEnabled();
+    var tacEnabled = await Prefs().getTACEnabled();
 
     setState(() {
       _showTargetsNotes = showTargetsNotes;

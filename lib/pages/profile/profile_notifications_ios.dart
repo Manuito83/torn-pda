@@ -197,7 +197,7 @@ class _ProfileNotificationsIOSState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel()
+                        Prefs()
                             .setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
@@ -233,7 +233,7 @@ class _ProfileNotificationsIOSState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        SharedPreferencesModel()
+                        Prefs()
                             .setNerveNotificationValue(finalValue.floor());
                       },
                     ),
@@ -283,14 +283,14 @@ class _ProfileNotificationsIOSState
 
   Future _restorePreferences() async {
     var energyTrigger =
-      await SharedPreferencesModel().getEnergyNotificationValue();
+      await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (energyTrigger < _energyMin || energyTrigger > widget.energyMax ) {
       energyTrigger = widget.energyMax;
     }
 
     var nerveTrigger =
-      await SharedPreferencesModel().getNerveNotificationValue();
+      await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax ) {
       nerveTrigger = widget.nerveMax;

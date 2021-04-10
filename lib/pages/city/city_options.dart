@@ -66,7 +66,7 @@ class _CityOptionsState extends State<CityOptions> {
                                   Switch(
                                     value: _cityEnabled,
                                     onChanged: (value) {
-                                      SharedPreferencesModel().setCityEnabled(value);
+                                      Prefs().setCityEnabled(value);
                                       setState(() {
                                         _cityEnabled = value;
                                       });
@@ -123,7 +123,7 @@ class _CityOptionsState extends State<CityOptions> {
   }
 
   Future _restorePreferences() async {
-    var cityEnabled = await SharedPreferencesModel().getCityEnabled();
+    var cityEnabled = await Prefs().getCityEnabled();
 
     setState(() {
       _cityEnabled = cityEnabled;

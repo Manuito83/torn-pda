@@ -1909,7 +1909,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
           if (!percentageError) {
             _customEnergyMaxOverride = false;
-            SharedPreferencesModel().setEnergyPercentageOverride(false);
+            Prefs().setEnergyPercentageOverride(false);
             notificationSetString =
                 'Energy notification set for $formattedTime (E$_customEnergyTrigger)';
             alarmSetString =
@@ -1918,7 +1918,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 'Energy timer set for $formattedTime (E$_customEnergyTrigger)';
           } else {
             _customEnergyMaxOverride = true;
-            SharedPreferencesModel().setEnergyPercentageOverride(true);
+            Prefs().setEnergyPercentageOverride(true);
             notificationSetString = 'You are already above your chosen value '
                 '(E$_customEnergyTrigger), notification set for full energy at $formattedTime';
             alarmSetString = 'You are already above your chosen value '
@@ -1970,7 +1970,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
           if (!percentageError) {
             _customNerveMaxOverride = false;
-            SharedPreferencesModel().setNervePercentageOverride(false);
+            Prefs().setNervePercentageOverride(false);
             notificationSetString =
                 'Nerve notification set for $formattedTime (E$_customNerveTrigger)';
             alarmSetString =
@@ -1979,7 +1979,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
           } else {
             _customNerveMaxOverride = true;
-            SharedPreferencesModel().setNervePercentageOverride(true);
+            Prefs().setNervePercentageOverride(true);
             notificationSetString = 'You are already above your chosen value '
                 '(N$_customNerveTrigger), notification set for full nerve at $formattedTime';
             alarmSetString = 'You are already above your chosen value '
@@ -4165,13 +4165,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (_customEnergyTrigger > _user.energy.maximum ||
               _customEnergyTrigger == 0) {
             _customEnergyTrigger = _user.energy.maximum;
-            SharedPreferencesModel()
+            Prefs()
                 .setEnergyNotificationValue(_customEnergyTrigger);
           }
           if (_customNerveTrigger > _user.nerve.maximum ||
               _customNerveTrigger == 0) {
             _customNerveTrigger = _user.nerve.maximum;
-            SharedPreferencesModel()
+            Prefs()
                 .setNerveNotificationValue(_customNerveTrigger);
           }
 
@@ -4629,9 +4629,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
         notificationTitle =
-            await SharedPreferencesModel().getTravelNotificationTitle();
+            await Prefs().getTravelNotificationTitle();
         notificationSubtitle =
-            await SharedPreferencesModel().getTravelNotificationBody();
+            await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
@@ -5125,7 +5125,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // SECTION ORDER
     var savedUserOrder =
-        await SharedPreferencesModel().getProfileSectionOrder();
+        await Prefs().getProfileSectionOrder();
     // Ensures that new sections are added as high as possible
     bool sectionsModified = false;
     for (var i = 0; i < _originalSectionOrder.length; i++) {
@@ -5135,15 +5135,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
     if (sectionsModified) {
-      SharedPreferencesModel().setProfileSectionOrder(savedUserOrder);
+      Prefs().setProfileSectionOrder(savedUserOrder);
     }
 
     // TRAVEL
-    var travel = await SharedPreferencesModel().getTravelNotificationType();
+    var travel = await Prefs().getTravelNotificationType();
     var travelNotificationAhead =
-        await SharedPreferencesModel().getTravelNotificationAhead();
-    var travelAlarmAhead = await SharedPreferencesModel().getTravelAlarmAhead();
-    var travelTimerAhead = await SharedPreferencesModel().getTravelTimerAhead();
+        await Prefs().getTravelNotificationAhead();
+    var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
+    var travelTimerAhead = await Prefs().getTravelTimerAhead();
 
     if (travelNotificationAhead == '0') {
       _travelNotificationAhead = 20;
@@ -5184,47 +5184,47 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
     // TRAVEL ENDS
 
-    var energy = await SharedPreferencesModel().getEnergyNotificationType();
+    var energy = await Prefs().getEnergyNotificationType();
     _customEnergyTrigger =
-        await SharedPreferencesModel().getEnergyNotificationValue();
+        await Prefs().getEnergyNotificationValue();
     _customEnergyMaxOverride =
-        await SharedPreferencesModel().getEnergyPercentageOverride();
+        await Prefs().getEnergyPercentageOverride();
 
-    var nerve = await SharedPreferencesModel().getNerveNotificationType();
+    var nerve = await Prefs().getNerveNotificationType();
     _customNerveTrigger =
-        await SharedPreferencesModel().getNerveNotificationValue();
+        await Prefs().getNerveNotificationValue();
     _customNerveMaxOverride =
-        await SharedPreferencesModel().getNervePercentageOverride();
+        await Prefs().getNervePercentageOverride();
 
-    var life = await SharedPreferencesModel().getLifeNotificationType();
-    var drugs = await SharedPreferencesModel().getDrugNotificationType();
-    var medical = await SharedPreferencesModel().getMedicalNotificationType();
-    var booster = await SharedPreferencesModel().getBoosterNotificationType();
+    var life = await Prefs().getLifeNotificationType();
+    var drugs = await Prefs().getDrugNotificationType();
+    var medical = await Prefs().getMedicalNotificationType();
+    var booster = await Prefs().getBoosterNotificationType();
 
-    var hospital = await SharedPreferencesModel().getHospitalNotificationType();
+    var hospital = await Prefs().getHospitalNotificationType();
     _hospitalNotificationAhead =
-        await SharedPreferencesModel().getHospitalNotificationAhead();
+        await Prefs().getHospitalNotificationAhead();
     _hospitalAlarmAhead =
-        await SharedPreferencesModel().getHospitalAlarmAhead();
+        await Prefs().getHospitalAlarmAhead();
     _hospitalTimerAhead =
-        await SharedPreferencesModel().getHospitalTimerAhead();
+        await Prefs().getHospitalTimerAhead();
 
-    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
+    _alarmSound = await Prefs().getManualAlarmSound();
+    _alarmVibration = await Prefs().getManualAlarmVibration();
 
-    _nukeReviveActive = await SharedPreferencesModel().getUseNukeRevive();
-    _uhcReviveActive = await SharedPreferencesModel().getUseUhcRevive();
-    _warnAboutChains = await SharedPreferencesModel().getWarnAboutChains();
-    _shortcutsEnabled = await SharedPreferencesModel().getEnableShortcuts();
+    _nukeReviveActive = await Prefs().getUseNukeRevive();
+    _uhcReviveActive = await Prefs().getUseUhcRevive();
+    _warnAboutChains = await Prefs().getWarnAboutChains();
+    _shortcutsEnabled = await Prefs().getEnableShortcuts();
     _dedicatedTravelCard =
-        await SharedPreferencesModel().getDedicatedTravelCard();
+        await Prefs().getDedicatedTravelCard();
 
-    var expandEvents = await SharedPreferencesModel().getExpandEvents();
-    var eventsNumber = await SharedPreferencesModel().getEventsShowNumber();
-    var expandMessages = await SharedPreferencesModel().getExpandMessages();
-    var messagesNumber = await SharedPreferencesModel().getMessagesShowNumber();
-    var expandBasicInfo = await SharedPreferencesModel().getExpandBasicInfo();
-    var expandNetworth = await SharedPreferencesModel().getExpandNetworth();
+    var expandEvents = await Prefs().getExpandEvents();
+    var eventsNumber = await Prefs().getEventsShowNumber();
+    var expandMessages = await Prefs().getExpandMessages();
+    var messagesNumber = await Prefs().getMessagesShowNumber();
+    var expandBasicInfo = await Prefs().getExpandBasicInfo();
+    var expandNetworth = await Prefs().getExpandNetworth();
 
     setState(() {
       _userSectionOrder = savedUserOrder;

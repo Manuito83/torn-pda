@@ -181,7 +181,7 @@ class VibrationModifier {
 Future<VibrationModifier> getNotificationChannelsModifiers({String mod = ""}) async {
   var savedPattern = mod;
   if (mod == "") {
-    savedPattern = await SharedPreferencesModel().getVibrationPattern();
+    savedPattern = await Prefs().getVibrationPattern();
   }
 
   var vibrationPatternLong = Int64List(8);

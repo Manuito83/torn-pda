@@ -440,7 +440,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
   }
 
   void _restorePreferences() async {
-    _alarmSound = await SharedPreferencesModel().getManualAlarmSound();
-    _alarmVibration = await SharedPreferencesModel().getManualAlarmVibration();
+    _alarmSound = await Prefs().getManualAlarmSound();
+    _alarmVibration = await Prefs().getManualAlarmVibration();
   }
 }
