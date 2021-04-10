@@ -340,20 +340,62 @@ class _AwardsPageState extends State<AwardsPage> {
           ),
           SizedBox(height: 40.0),
           Padding(
-            padding: const EdgeInsets.only(left: 20),
+            padding: const EdgeInsets.only(left: 20, right: 20),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
-                Text("Show achieved awards"),
-                Switch(
-                  value: _showAchievedAwards,
-                  onChanged: (value) {
-                    Prefs().setShowAchievedAwards(value);
-                    setState(() {
-                      _showAchievedAwards = value;
-                    });
+                Row(
+                  children: [
+                    Text("Show achieved"),
+                    Switch(
+                      value: _showAchievedAwards,
+                      onChanged: (value) {
+                        Prefs().setShowAchievedAwards(value);
+                        setState(() {
+                          _showAchievedAwards = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+                RawChip(
+                  showCheckmark: true,
+                  selected: _hiddenCategories.isEmpty ? true : false,
+                  side: BorderSide(
+                      color: _hiddenCategories.isEmpty
+                          ? Colors.green
+                          : Colors.grey[600],
+                      width: 1.5),
+                  avatar: CircleAvatar(
+                    backgroundColor:
+                        _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
+                  ),
+                  label: Text(
+                    "ALL",
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                  selectedColor: Colors.transparent,
+                  disabledColor: Colors.grey,
+                  onSelected: (bool isSelected) {
+                    if (isSelected) {
+                      setState(() {
+                        _hiddenCategories.clear();
+                      });
+                    } else {
+                      var fullList = [];
+                      for (var cat in _allCategories.keys) {
+                        fullList.add(cat);
+                      }
+                      setState(() {
+                        _hiddenCategories = List<String>.from(fullList);
+                      });
+                    }
+                    Prefs().setHiddenAwardCategories(_hiddenCategories);
                   },
-                  activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
                 ),
               ],
             ),
@@ -512,7 +554,7 @@ class _AwardsPageState extends State<AwardsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                RaisedButton(
+                ElevatedButton(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -684,8 +726,7 @@ class _AwardsPageState extends State<AwardsPage> {
               }
             });
 
-            Prefs()
-                .setHiddenAwardCategories(_hiddenCategories);
+            Prefs().setHiddenAwardCategories(_hiddenCategories);
 
             BotToast.showText(
               text: action,
@@ -1006,10 +1047,8 @@ class _AwardsPageState extends State<AwardsPage> {
 
   _restorePrefs() async {
     _savedSort = await Prefs().getAwardsSort();
-    _showAchievedAwards =
-        await Prefs().getShowAchievedAwards();
-    _hiddenCategories =
-        await Prefs().getHiddenAwardCategories();
+    _showAchievedAwards = await Prefs().getShowAchievedAwards();
+    _hiddenCategories = await Prefs().getHiddenAwardCategories();
   }
 
   _onPinnedConditionChange() {
