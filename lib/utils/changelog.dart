@@ -44,15 +44,19 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_2_3 = "Userscripts: script execution is now isolated and no interference should occur between them.";
     String feat2_3_2_4 = "Loot: NPCs can now be filtered out.";
     String feat2_3_2_5 = "Shortcuts: Stock Market URL has been corrected and Portfolio has been removed.";
-    String feat2_3_2_6 = "Travel: the quick return icon now needs to be pressed twice to avoid erroneous activations.";
-    String feat2_3_2_7 = "Travel: increased width of the capacity slider to make selection easier.";
-    String feat2_3_2_8 = "Travel: the custom text notification dialog has been moved to the travel notification options page.";
-    String feat2_3_2_9 = "Alerts: improved travel alerts reliability, even if the API goes down temporarily.";
-    String feat2_3_2_10 = "Alerts: added troubleshooting dialog to reset user and notification channels if something isn't working correctly.";
-    String feat2_3_2_11 = "Fixed URL copying issues in certain devices.";
-    String feat2_3_2_12 = "Fixed Trade widget not activating in certain devices.";
-    String feat2_3_2_13 = "Fixed crash when clearing browser cache in certain devices.";
-    String feat2_3_2_14 = "Fixed scrolling issues causing the browser to freeze in certain sections of the website.";
+    String feat2_3_2_6 = "Settings: you can now optionally hide estimated stats calculation in players' profiles.";
+    String feat2_3_2_7 = "Profile: added racing, reviving and hunting skills to the basic info card.";
+    String feat2_3_2_8 = "Travel: flag filters can now be sorted alphabetically and by flight time.";
+    String feat2_3_2_9 = "Travel: the quick return icon now needs to be pressed twice to avoid erroneous activations.";
+    String feat2_3_2_10 = "Travel: increased width of the capacity slider to make selection easier.";
+    String feat2_3_2_11 = "Travel: the custom text notification dialog has been moved to the travel notification options page.";
+    String feat2_3_2_12 = "Awards: added button to enable or disable all filters at once.";
+    String feat2_3_2_13 = "Alerts: improved travel alerts reliability, even if the API goes down temporarily.";
+    String feat2_3_2_14 = "Alerts: added troubleshooting dialog to reset user and notification channels if something isn't working correctly.";
+    String feat2_3_2_15 = "Fixed URL copying issues in certain devices.";
+    String feat2_3_2_16 = "Fixed Trade widget not activating in certain devices.";
+    String feat2_3_2_17 = "Fixed crash when clearing browser cache in certain devices.";
+    String feat2_3_2_18 = "Fixed scrolling issues causing the browser to freeze in certain sections of the website.";
     v2_3_2.features.add(feat2_3_2_1);
     v2_3_2.features.add(feat2_3_2_2);
     v2_3_2.features.add(feat2_3_2_3);
@@ -67,6 +71,10 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_2.features.add(feat2_3_2_12);
     v2_3_2.features.add(feat2_3_2_13);
     v2_3_2.features.add(feat2_3_2_14);
+    v2_3_2.features.add(feat2_3_2_15);
+    v2_3_2.features.add(feat2_3_2_16);
+    v2_3_2.features.add(feat2_3_2_17);
+    v2_3_2.features.add(feat2_3_2_18);
 
     // VERSION 2.3.1
     var v2_3_1 = ChangeLogItem();
