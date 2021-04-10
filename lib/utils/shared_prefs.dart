@@ -42,6 +42,8 @@ class SharedPreferencesModel {
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
+  final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
+  final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
@@ -103,7 +105,7 @@ class SharedPreferencesModel {
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
-  final String _kFriendlyFactions = "pda_kFriendlyFactions";
+
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -556,7 +558,7 @@ class SharedPreferencesModel {
   /// Methods for extra player information
   /// ----------------------------
 
-  Future<bool> getExtraPlayerInformation() async {
+    Future<bool> getExtraPlayerInformation() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kExtraPlayerInformation) ?? true;
   }
@@ -564,6 +566,28 @@ class SharedPreferencesModel {
   Future<bool> setExtraPlayerInformation(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExtraPlayerInformation, value);
+  }
+
+  // *************
+  Future<String> getProfileStatsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kProfileStatsEnabled) ?? "";
+  }
+
+  Future<bool> setProfileStatsEnabled(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kProfileStatsEnabled, value);
+  }
+
+  // *************
+  Future<String> getFriendlyFactions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFriendlyFactions) ?? "";
+  }
+
+  Future<bool> setFriendlyFactions(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFriendlyFactions, value);
   }
 
   /// ----------------------------
@@ -1247,15 +1271,5 @@ class SharedPreferencesModel {
     return prefs.setBool(_kUserScriptsFirstTime, value);
   }
 
-  // *************
-  Future<String> getFriendlyFactions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kFriendlyFactions) ?? "";
-  }
-
-  Future<bool> setFriendlyFactions(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kFriendlyFactions, value);
-  }
 
 }

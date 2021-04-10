@@ -203,6 +203,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _profileStatsEnabled = "0";
+  String get profileStatsEnabled => _profileStatsEnabled;
+  set changeProfileStatsEnabled(String value) {
+    _profileStatsEnabled = value;
+    SharedPreferencesModel().setProfileStatsEnabled(_profileStatsEnabled);
+    notifyListeners();
+  }
+
   var _friendlyFactions = <FriendlyFaction>[];
   List<FriendlyFaction> get friendlyFactions => _friendlyFactions;
   set setFriendlyFactions(List<FriendlyFaction> faction) {
@@ -277,6 +285,8 @@ class SettingsProvider extends ChangeNotifier {
     _removeAirplane = await SharedPreferencesModel().getRemoveAirplane();
 
     _extraPlayerInformation = await SharedPreferencesModel().getExtraPlayerInformation();
+
+    _profileStatsEnabled = await SharedPreferencesModel().getProfileStatsEnabled();
 
     var savedFriendlyFactions = await SharedPreferencesModel().getFriendlyFactions();
     if (savedFriendlyFactions.isNotEmpty) {

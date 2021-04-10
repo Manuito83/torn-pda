@@ -86,6 +86,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
   Widget _mainDetailsWidget = SizedBox.shrink();
 
+  SettingsProvider _settingsProvider;
+
   UserDetailsProvider _userDetails;
   var _expandableController = ExpandableController();
 
@@ -93,7 +95,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   void initState() {
     super.initState();
     _userDetails = context.read<UserDetailsProvider>();
-
+    _settingsProvider = context.read<SettingsProvider>();
     _checkedPerson = _fetchAndAssess();
   }
 
@@ -153,17 +155,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     var hasEstimatedStats = false;
 
     if (otherProfile is OtherProfileModel) {
+
       String estimatedStats = "";
-      var npcs = [4, 10, 15, 17, 19, 20];
-      if (npcs.contains(otherProfile.playerId)) {
-        estimatedStats = "NPC!";
-        hasEstimatedStats = true;
-      } else {
-        try {
-          estimatedStats = _calculateStats(otherProfile);
+      if (_settingsProvider.profileStatsEnabled == "0") {
+        var npcs = [4, 10, 15, 17, 19, 20];
+        if (npcs.contains(otherProfile.playerId)) {
+          estimatedStats = "NPC!";
           hasEstimatedStats = true;
-        } catch (e) {
-          // Will be empty
+        } else {
+          try {
+            estimatedStats = _calculateStats(otherProfile);
+            hasEstimatedStats = true;
+          } catch (e) {
+            // Will be empty
+          }
         }
       }
 

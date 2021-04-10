@@ -160,6 +160,38 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Text(
+                          "Estimated Stats",
+                        ),
+                        _profileStatsDropdown(),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Optionally hide estimated stats',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            if (_settingsProvider.extraPlayerInformation)
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
                           "Friendly factions",
                         ),
                         IconButton(
@@ -660,6 +692,45 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       onChanged: (value) {
         setState(() {
           _settingsProvider.changeBrowserRefreshMethod = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _profileStatsDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.profileStatsEnabled,
+      items: [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 55,
+            child: Text(
+              "Show",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 55,
+            child: Text(
+              "Hide",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.changeProfileStatsEnabled = value;
         });
       },
     );
