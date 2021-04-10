@@ -51,7 +51,7 @@ dependencies:
   audioplayers: 0.18.3
   vibration: ^1.7.3
   bubble_showcase: ^1.0.0
-  speech_bubble: ^0.0.7
+  speech_bubble: 0.0.7
   cupertino_icons: ^1.0.2
   quick_actions: ^0.6.0
   timezone: ^0.7.0
