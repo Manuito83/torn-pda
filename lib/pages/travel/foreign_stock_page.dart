@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
@@ -77,6 +79,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
   final _filteredFlags = List<bool>.filled(12, true, growable: false);
+
+  bool _alphabeticalFilter = false;
 
   String _countriesFilteredText = '';
   List<String> _countryCodes = [
@@ -413,7 +417,51 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             ],
           ),
           SizedBox(height: 40.0),
-          SizedBox(height: 70, child: _toggleFlagsFilter()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(width: 40),
+              SizedBox(height: 70, child: _toggleFlagsFilter()),
+              SizedBox(
+                width: 40,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GestureDetector(
+                    child: Icon(
+                      MdiIcons.filterOutline,
+                      size: 18,
+                    ),
+                    onTap: () {
+
+
+                      var orderType = "";
+                      if (!_alphabeticalFilter) {
+                        orderType = "Sorting countries alphabetically";
+                      }
+                      // We are changing to time
+                      else {
+                        orderType = "Sorting countries by flight time";
+                      }
+
+                      _transformAlphabeticalTime();
+
+                      BotToast.showText(
+                        text: orderType,
+                        textStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.grey[700],
+                        duration: Duration(seconds: 2),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+
+                    },
+                  ),
+                ),
+              )
+            ],
+          ),
           SizedBox(height: 20.0),
           SizedBox(height: 35, child: _toggleTypeFilter()),
         ],
@@ -421,7 +469,99 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
+  void _transformAlphabeticalTime() {
+    var newFilter = List<bool>.filled(12, true, growable: false);
+
+    // We are changing to alphabetical
+    if (!_alphabeticalFilter) {
+      newFilter[0] = _filteredFlags[5];
+      newFilter[1] = _filteredFlags[2];
+      newFilter[2] = _filteredFlags[1];
+      newFilter[3] = _filteredFlags[8];
+      newFilter[4] = _filteredFlags[3];
+      newFilter[5] = _filteredFlags[7];
+      newFilter[6] = _filteredFlags[0];
+      newFilter[7] = _filteredFlags[10];
+      newFilter[8] = _filteredFlags[6];
+      newFilter[9] = _filteredFlags[9];
+      newFilter[10] = _filteredFlags[4];
+      newFilter[11] = _filteredFlags[11];
+    }
+    // We are changing to time
+    else {
+      newFilter[5] = _filteredFlags[0];
+      newFilter[2] = _filteredFlags[1];
+      newFilter[1] = _filteredFlags[2];
+      newFilter[8] = _filteredFlags[3];
+      newFilter[3] = _filteredFlags[4];
+      newFilter[7] = _filteredFlags[5];
+      newFilter[0] = _filteredFlags[6];
+      newFilter[10] = _filteredFlags[7];
+      newFilter[6] = _filteredFlags[8];
+      newFilter[9] = _filteredFlags[9];
+      newFilter[4] = _filteredFlags[10];
+      newFilter[11] = _filteredFlags[11];
+    }
+
+    setState(() {
+      for (var i = 0; i < _filteredFlags.length; i++) {
+        _filteredFlags[i] = newFilter[i];
+      }
+      _alphabeticalFilter = !_alphabeticalFilter;
+    });
+
+    Prefs().setCountriesAlphabeticalFilter(_alphabeticalFilter);
+    _saveFilteredFlags();
+  }
+
+  void _saveFilteredFlags() {
+    var saveList = <String>[];
+    for (var b in _filteredFlags) {
+      b ? saveList.add('1') : saveList.add('0');
+    }
+    Prefs().setStockCountryFilter(saveList);
+  }
+
   Widget _toggleFlagsFilter() {
+    var flags = [];
+    if (_alphabeticalFilter) {
+      flags = [
+        Image.asset('images/flags/stock/argentina.png', width: 20),
+        Image.asset('images/flags/stock/canada.png', width: 20),
+        Image.asset('images/flags/stock/cayman.png', width: 20),
+        Image.asset('images/flags/stock/china.png', width: 20),
+        Image.asset('images/flags/stock/hawaii.png', width: 20),
+        Image.asset('images/flags/stock/japan.png', width: 20),
+        Image.asset('images/flags/stock/mexico.png', width: 20),
+        Image.asset('images/flags/stock/south-africa.png', width: 20),
+        Image.asset('images/flags/stock/switzerland.png', width: 20),
+        Image.asset('images/flags/stock/uae.png', width: 20),
+        Image.asset('images/flags/stock/uk.png', width: 20),
+        Icon(
+          Icons.select_all,
+          color: _themeProvider.mainText,
+        ),
+      ];
+    } else {
+      flags = [
+        Image.asset('images/flags/stock/mexico.png', width: 20),
+        Image.asset('images/flags/stock/cayman.png', width: 20),
+        Image.asset('images/flags/stock/canada.png', width: 20),
+        Image.asset('images/flags/stock/hawaii.png', width: 20),
+        Image.asset('images/flags/stock/uk.png', width: 20),
+        Image.asset('images/flags/stock/argentina.png', width: 20),
+        Image.asset('images/flags/stock/switzerland.png', width: 20),
+        Image.asset('images/flags/stock/japan.png', width: 20),
+        Image.asset('images/flags/stock/china.png', width: 20),
+        Image.asset('images/flags/stock/uae.png', width: 20),
+        Image.asset('images/flags/stock/south-africa.png', width: 20),
+        Icon(
+          Icons.select_all,
+          color: _themeProvider.mainText,
+        ),
+      ];
+    }
+
     return GridView.count(
         shrinkWrap: true,
         crossAxisCount: 2,
@@ -429,23 +569,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         mainAxisSpacing: 2.0,
         crossAxisSpacing: 2.0,
         childAspectRatio: 1,
-        children: [
-          Image.asset('images/flags/stock/argentina.png', width: 20),
-          Image.asset('images/flags/stock/canada.png', width: 20),
-          Image.asset('images/flags/stock/cayman.png', width: 20),
-          Image.asset('images/flags/stock/china.png', width: 20),
-          Image.asset('images/flags/stock/hawaii.png', width: 20),
-          Image.asset('images/flags/stock/japan.png', width: 20),
-          Image.asset('images/flags/stock/mexico.png', width: 20),
-          Image.asset('images/flags/stock/south-africa.png', width: 20),
-          Image.asset('images/flags/stock/switzerland.png', width: 20),
-          Image.asset('images/flags/stock/uae.png', width: 20),
-          Image.asset('images/flags/stock/uk.png', width: 20),
-          Icon(
-            Icons.select_all,
-            color: _themeProvider.mainText,
-          ),
-        ].asMap().entries.map((widget) {
+        children: flags.asMap().entries.map((widget) {
           return ToggleButtons(
             constraints: BoxConstraints(minWidth: 30.0),
             highlightColor: Colors.orange,
@@ -484,11 +608,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               });
 
               // Saving to shared preferences
-              var saveList = <String>[];
-              for (var b in _filteredFlags) {
-                b ? saveList.add('1') : saveList.add('0');
-              }
-              Prefs().setStockCountryFilter(saveList);
+              _saveFilteredFlags();
 
               // Applying filter
               _filterAndSortMainList();
@@ -647,7 +767,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     try {
       Future yataAPI() async {
         String yataURL = 'https://yata.yt/api/v1/travel/export/';
-        var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
+        var responseDB =
+            await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
         if (responseDB.statusCode == 200) {
           _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
           _apiSuccess = true;
@@ -665,8 +786,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future profileMisc() async {
-        _travelModel =
-            await TornApiCaller.travel(widget.apiKey).getTravel;
+        _travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
       }
 
       // Get all APIs at the same time
@@ -826,59 +946,71 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       stockList.update = countryDetails.update;
 
       for (var stock in countryDetails.stocks) {
+        var argentinaPosition = _alphabeticalFilter ? 0 : 5;
+        var canadaPosition = _alphabeticalFilter ? 1 : 2;
+        var caymanPosition = _alphabeticalFilter ? 2 : 1;
+        var chinaPosition = _alphabeticalFilter ? 3 : 8;
+        var hawaiiPosition = _alphabeticalFilter ? 4 : 3;
+        var japanPosition = _alphabeticalFilter ? 5 : 7;
+        var mexicoPosition = _alphabeticalFilter ? 6 : 0;
+        var africaPosition = _alphabeticalFilter ? 7 : 10;
+        var switzerlandPosition = _alphabeticalFilter ? 8 : 6;
+        var uaePosition = _alphabeticalFilter ? 9 : 9;
+        var ukPosition = _alphabeticalFilter ? 10 : 4;
+
         switch (stock.country) {
           case CountryName.ARGENTINA:
-            if (_filteredFlags[0] && filterDrug(stock)) {
+            if (_filteredFlags[argentinaPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.CANADA:
-            if (_filteredFlags[1] && filterDrug(stock)) {
+            if (_filteredFlags[canadaPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.CAYMAN_ISLANDS:
-            if (_filteredFlags[2] && filterDrug(stock)) {
+            if (_filteredFlags[caymanPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.CHINA:
-            if (_filteredFlags[3] && filterDrug(stock)) {
+            if (_filteredFlags[chinaPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.HAWAII:
-            if (_filteredFlags[4] && filterDrug(stock)) {
+            if (_filteredFlags[hawaiiPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.JAPAN:
-            if (_filteredFlags[5] && filterDrug(stock)) {
+            if (_filteredFlags[japanPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.MEXICO:
-            if (_filteredFlags[6] && filterDrug(stock)) {
+            if (_filteredFlags[mexicoPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.SOUTH_AFRICA:
-            if (_filteredFlags[7] && filterDrug(stock)) {
+            if (_filteredFlags[africaPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.SWITZERLAND:
-            if (_filteredFlags[8] && filterDrug(stock)) {
+            if (_filteredFlags[switzerlandPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.UAE:
-            if (_filteredFlags[9] && filterDrug(stock)) {
+            if (_filteredFlags[uaePosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
           case CountryName.UNITED_KINGDOM:
-            if (_filteredFlags[10] && filterDrug(stock)) {
+            if (_filteredFlags[ukPosition] && filterDrug(stock)) {
               stockList.stocks.add(stock);
             }
             break;
@@ -970,6 +1102,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ? _filteredFlags[i] = false
           : _filteredFlags[i] = true;
     }
+    _alphabeticalFilter = await Prefs().getCountriesAlphabeticalFilter();
+    //_transformAlphabeticalTime();
 
     var typesStrings = await Prefs().getStockTypeFilter();
     for (var i = 0; i < typesStrings.length; i++) {
@@ -1000,8 +1134,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _currentSort = StockSort(type: sortType);
 
     _capacity = await Prefs().getStockCapacity();
-    _inventoryEnabled =
-        await Prefs().getShowForeignInventory();
+    _inventoryEnabled = await Prefs().getShowForeignInventory();
     _showArrivalTime = await Prefs().getShowArrivalTime();
 
     var ticket = await Prefs().getTravelTicket();
@@ -1020,8 +1153,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         break;
     }
 
-    _activeRestocks =
-        await json.decode(await Prefs().getActiveRestocks());
+    _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
+
+
   }
 
   Future<void> _showOptionsDialog() {

@@ -52,6 +52,7 @@ class Prefs {
   final String _kShowArrivalTime = "pda_showArrivalTime";
   final String _kTravelTicket = "pda_travelTicket";
   final String _kActiveRestocks = "pda_activeRestocks";
+  final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
   final String _kRestocksEnabled = "pda_restocksEnabled";
   final String _kTravelNotificationType = "pda_travelNotificationType";
   final String _kEnergyNotificationType = "pda_energyNotificationType";
@@ -683,6 +684,16 @@ class Prefs {
   Future<bool> setActiveRestocks(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kActiveRestocks, value);
+  }
+
+  Future<bool> getCountriesAlphabeticalFilter() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kCountriesAlphabeticalFilter) ?? true;
+  }
+
+  Future<bool> setCountriesAlphabeticalFilter(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kCountriesAlphabeticalFilter, value);
   }
 
   /// ----------------------------
