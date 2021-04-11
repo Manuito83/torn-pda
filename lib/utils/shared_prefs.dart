@@ -572,7 +572,7 @@ class Prefs {
   // *************
   Future<String> getProfileStatsEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kProfileStatsEnabled) ?? "";
+    return prefs.getString(_kProfileStatsEnabled) ?? "0";
   }
 
   Future<bool> setProfileStatsEnabled(String value) async {
