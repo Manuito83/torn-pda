@@ -159,10 +159,10 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
 
   Padding _activeCardsList() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 25),
       child: Consumer<ShortcutsProvider>(
         builder: (context, shortcutProvider, child) {
-          var activeShortcuts = List<Widget>();
+          var activeShortcuts = <Widget>[];
           for (var short in shortcutProvider.activeShortcuts) {
             activeShortcuts.add(
               Slidable(
@@ -305,7 +305,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Consumer<ShortcutsProvider>(
         builder: (context, shortcutProvider, child) {
-          var allShortcuts = List<Widget>();
+          var allShortcuts = <Widget>[];
           for (var short in shortcutProvider.allShortcuts) {
             allShortcuts.add(
               // Don't show those that are active
@@ -569,14 +569,14 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Reset!"),
                               onPressed: () {
                                 _shortcutsProvider.wipeAllShortcuts();
                                 Navigator.of(context).pop();
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
@@ -763,7 +763,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Add"),
                               onPressed: () {
                                 if (!_customNameKey.currentState.validate()) {
@@ -788,7 +788,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 _customURLController.text = '';
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Close"),
                               onPressed: () {
                                 Navigator.of(context).pop();
