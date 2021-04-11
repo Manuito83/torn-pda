@@ -12,6 +12,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 
 enum ProfileCheckType {
@@ -152,6 +153,48 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Widget mainWidgetBox() {
+    double topPadding;
+    double bottomPadding;
+    // If stats are not present but other widget are, set padding to the other up and down
+    if (_estimatedStatsWidget == null &&
+        (_isTornPda ||
+            _isPartner ||
+            _isFriend ||
+            _playerOrFaction ||
+            _isFriendlyFaction ||
+            _isWorkColleague)) {
+      topPadding = 8;
+      bottomPadding = 8;
+    }
+    // If there is both stats and the others, leave a space between both. The stats widget will
+    // handling its top padding
+    else if (_estimatedStatsWidget != null &&
+        (_isTornPda ||
+            _isPartner ||
+            _isFriend ||
+            _playerOrFaction ||
+            _isFriendlyFaction ||
+            _isWorkColleague)) {
+      topPadding = 0;
+      bottomPadding = 8;
+    }
+    // If only the stats widget is present, leave a gap below it (the widget is configured to leave nothing)
+    else if (_estimatedStatsWidget != null &&
+        (!_isTornPda &&
+            !_isPartner &&
+            !_isFriend &&
+            !_playerOrFaction &&
+            !_isFriendlyFaction &&
+            !_isWorkColleague)) {
+      topPadding = 8;
+      bottomPadding = 0;
+    }
+    // If nothing is present, leave no gap
+    else {
+      topPadding = 0;
+      bottomPadding = 0;
+    }
+
     return Container(
       color: _backgroundColor,
       child: Row(
@@ -165,9 +208,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     15,
-                    _estimatedStatsWidget == null ? 8 : 0,
+                    topPadding,
                     15,
-                    8,
+                    bottomPadding,
                   ),
                   child: Column(
                     children: [
@@ -1100,57 +1143,5 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       numberFormatted = '${short.format(moneyInput)}';
     }
     return numberFormatted;
-  }
-}
-
-class CustomOffsetAnimation extends StatefulWidget {
-  final AnimationController controller;
-  final Widget child;
-
-  const CustomOffsetAnimation({Key key, this.controller, this.child})
-      : super(key: key);
-
-  @override
-  _CustomOffsetAnimationState createState() => _CustomOffsetAnimationState();
-}
-
-class _CustomOffsetAnimationState extends State<CustomOffsetAnimation> {
-  Tween<Offset> tweenOffset;
-  Tween<double> tweenScale;
-
-  Animation<double> animation;
-
-  @override
-  void initState() {
-    tweenOffset = Tween<Offset>(
-      begin: const Offset(0.0, 0.8),
-      end: Offset.zero,
-    );
-    tweenScale = Tween<double>(begin: 0.3, end: 1.0);
-    animation =
-        CurvedAnimation(parent: widget.controller, curve: Curves.decelerate);
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      child: widget.child,
-      animation: widget.controller,
-      builder: (BuildContext context, Widget child) {
-        return FractionalTranslation(
-          translation: tweenOffset.evaluate(animation),
-          child: ClipRect(
-            child: Transform.scale(
-              scale: tweenScale.evaluate(animation),
-              child: Opacity(
-                child: child,
-                opacity: animation.value,
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 }
