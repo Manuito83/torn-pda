@@ -398,11 +398,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               color: Colors.orange[800],
             ),
           ]),
-      margin: const EdgeInsets.all(24.0),
+      margin: const EdgeInsets.all(22.0),
       child: Column(
         children: <Widget>[
           SizedBox(
-            height: 12.0,
+            height: 18.0,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -421,15 +421,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(width: 40),
-              SizedBox(height: 70, child: _toggleFlagsFilter()),
+              SizedBox(height: 90, width: 220, child: _toggleFlagsFilter()),
               SizedBox(
                 width: 40,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
                     child: Icon(
-                      MdiIcons.filterOutline,
-                      size: 18,
+                      MdiIcons.filterVariant,
+                      size: 23,
                     ),
                     onTap: () {
 
@@ -564,8 +564,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
     return GridView.count(
         shrinkWrap: true,
-        crossAxisCount: 2,
-        scrollDirection: Axis.horizontal,
+        crossAxisCount: 6,
+        scrollDirection: Axis.vertical,
         mainAxisSpacing: 2.0,
         crossAxisSpacing: 2.0,
         childAspectRatio: 1,
