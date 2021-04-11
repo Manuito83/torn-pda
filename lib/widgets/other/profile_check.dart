@@ -777,43 +777,44 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         } else {
           try {
             estimatedStats = _calculateStats(otherProfile);
-            _estimatedStatsWidget = Container(
-              color: Colors.grey[900],
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(15, 5, 15, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        "(EST) STATS:",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        estimatedStats,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontStyle: estimatedStats == "unk"
-                              ? FontStyle.italic
-                              : FontStyle.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
           } catch (e) {
-            // Will be empty
+            estimatedStats = "unk";
           }
         }
+
+        _estimatedStatsWidget = Container(
+          color: Colors.grey[900],
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(15, 5, 15, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: Text(
+                    "(EST) STATS:",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    estimatedStats,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontStyle: estimatedStats == "unk"
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       }
 
       // This might come a few seconds after the main widget builds, so we are showing
