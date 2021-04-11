@@ -160,7 +160,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
                         Text(
-                          "Estimated Stats",
+                          "Show players' stats",
                         ),
                         _profileStatsDropdown(),
                       ],
@@ -170,12 +170,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        Text(
-                          'Optionally hide estimated stats',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
+                        Flexible(
+                          child: Text(
+                            "If 'always' is selected, you will be shown either spied stats (supported by YATA) or estimated stats "
+                            "(which might be inaccurate) if the former can't be found. Alternatively, select only spied stats or hide all stats entirely.",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
                       ],
@@ -704,9 +707,22 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
-            width: 55,
+            width: 80,
             child: Text(
-              "Show",
+              "All stats",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Spied only",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -717,7 +733,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         DropdownMenuItem(
           value: "1",
           child: SizedBox(
-            width: 55,
+            width: 80,
             child: Text(
               "Hide",
               textAlign: TextAlign.right,
