@@ -38,7 +38,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.3.2
     var v2_3_2 = ChangeLogItem();
     v2_3_2.main.version = 'BETA v2.3.2';
-    v2_3_2.main.date = 'XX APR 2021';
+    v2_3_2.main.date = '15 APR 2021';
     String feat2_3_2_1 = "Browser: added stats from YATA's spies database to players' profiles. You can now also optionally hide estimated stats (much less accurate) in Settings.";
     String feat2_3_2_2 = "Userscripts: added another few example scripts and corrected issues with the existing ones (you can import the new ones from the userscripts settings).";
     String feat2_3_2_3 = "Userscripts: created a list of tested scripts in the GitHub repository, also added a reference in Torn PDA and in the official forums.";
