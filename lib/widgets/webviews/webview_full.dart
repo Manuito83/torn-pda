@@ -901,22 +901,24 @@ class _WebViewFullState extends State<WebViewFull> {
       getTrades = true;
     }
 
-    var profileUrl = 'torn.com/profiles.php?XID=';
-    if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
-        (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
-        (_currentUrl.contains(profileUrl) &&
-            _currentUrl != _lastProfileVisited)) {
-      anySectionTriggered = true;
-      getProfile = true;
-    }
+    if (_settingsProvider.extraPlayerInformation) {
+      var profileUrl = 'torn.com/profiles.php?XID=';
+      if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
+          (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
+          (_currentUrl.contains(profileUrl) &&
+              _currentUrl != _lastProfileVisited)) {
+        anySectionTriggered = true;
+        getProfile = true;
+      }
 
-    var attackUrl = 'loader.php?sid=attack&user2ID=';
-    if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
-        (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
-        (_currentUrl.contains(attackUrl) &&
-            _currentUrl != _lastProfileVisited)) {
-      anySectionTriggered = true;
-      getAttack = true;
+      var attackUrl = 'loader.php?sid=attack&user2ID=';
+      if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
+          (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
+          (_currentUrl.contains(attackUrl) &&
+              _currentUrl != _lastProfileVisited)) {
+        anySectionTriggered = true;
+        getAttack = true;
+      }
     }
 
     if (anySectionTriggered) {
