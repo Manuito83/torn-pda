@@ -347,8 +347,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       child: AbsoluteBubbleSlideChild(
                         positionCalculator: (size) => Position(
-                          top: size.height / 2,
-                          left: (size.width - 200) / 2,
+                          bottom:  MediaQuery.of(context).size.height/2 - 100,
+                          left: (size.width) / 2 - 200,
                         ),
                         widget: SpeechBubble(
                           width: 200,
@@ -358,7 +358,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Padding(
                             padding: EdgeInsets.all(10),
                             child: Text(
-                              'NEW!\n\n'
+                              'Did you know?\n\n'
                               'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
                               'a full browser with a LONG PRESS. You decide.\n\n'
                               'You can deactivate this feature in the Settings section.',
@@ -372,11 +372,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       shape: Rectangle(spreadRadius: 10),
                       widgetKey: _showOne,
                       child: RelativeBubbleSlideChild(
-                        direction: AxisDirection.down,
+                        direction: AxisDirection.up,
                         widget: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: SpeechBubble(
-                            nipLocation: NipLocation.TOP,
+                            nipLocation: NipLocation.BOTTOM,
                             color: Colors.blue,
                             child: Padding(
                               padding: EdgeInsets.all(6),
@@ -400,8 +400,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       child: AbsoluteBubbleSlideChild(
                         positionCalculator: (size) => Position(
-                          top: size.height / 2,
-                          left: (size.width - 200) / 2,
+                          bottom:  MediaQuery.of(context).size.height/2 - 100,
+                          left: (size.width) / 2 - 200,
                         ),
                         widget: SpeechBubble(
                           width: 200,
