@@ -295,8 +295,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _playerOrFaction = true;
       }
 
-      if (otherProfile.faction.factionId ==
-          _userDetails.basic.faction.factionId) {
+      if (_userDetails.basic.faction.factionId != 0 &&
+          otherProfile.faction.factionId ==
+              _userDetails.basic.faction.factionId) {
         _isOwnFaction = true;
         _playerOrFaction = true;
       }
