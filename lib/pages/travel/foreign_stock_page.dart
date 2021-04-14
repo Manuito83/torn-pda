@@ -83,7 +83,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   bool _alphabeticalFilter = false;
 
   String _countriesFilteredText = '';
-  List<String> _countryCodes = [
+  List<String> _countryCodesAlphabetical = [
     'ARG',
     'CAN',
     'CAY',
@@ -95,6 +95,19 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     'SWI',
     'UAE',
     'UK',
+  ];
+  List<String> _countryCodesTime = [
+    'MEX',
+    'CAY',
+    'CAN',
+    'HAW',
+    'UK',
+    'ARG',
+    'SWI',
+    'JPN',
+    'CHN',
+    'UAE',
+    'AFR',
   ];
 
   String _typesFilteredText = '';
@@ -508,6 +521,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         _filteredFlags[i] = newFilter[i];
       }
       _alphabeticalFilter = !_alphabeticalFilter;
+      _filterAndSortTopLists();
     });
 
     Prefs().setCountriesAlphabeticalFilter(_alphabeticalFilter);
@@ -611,7 +625,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               _saveFilteredFlags();
 
               // Applying filter
-              _filterAndSortMainList();
+              _filterAndSortTopLists();
             },
           );
         }).toList());
@@ -666,7 +680,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               Prefs().setStockTypeFilter(saveList);
 
               // Applying filter
-              _filterAndSortMainList();
+              _filterAndSortTopLists();
             },
           );
         }).toList());
@@ -888,21 +902,24 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       });
 
       // This will trigger a filter by flags, types and also sorting
-      _filterAndSortMainList();
+      _filterAndSortTopLists();
     } catch (e) {
       _apiSuccess = false;
     }
   }
 
-  void _filterAndSortMainList() {
+  void _filterAndSortTopLists() {
     // Edit countries string
     _countriesFilteredText = '';
     bool firstCountry = true;
     int totalCountriesShown = 0;
     for (var i = 0; i < _filteredFlags.length - 1; i++) {
       if (_filteredFlags[i]) {
-        _countriesFilteredText +=
-            firstCountry ? _countryCodes[i] : ', ${_countryCodes[i]}';
+        if (_alphabeticalFilter) {
+          _countriesFilteredText += firstCountry ? _countryCodesAlphabetical[i] : ', ${_countryCodesAlphabetical[i]}';
+        } else {
+          _countriesFilteredText += firstCountry ? _countryCodesTime[i] : ', ${_countryCodesTime[i]}';
+        }
         firstCountry = false;
         totalCountriesShown++;
       }
