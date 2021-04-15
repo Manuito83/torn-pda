@@ -6,14 +6,17 @@ export const travelGroup = {
 
   sendTravelNotifications: functions.region('us-east4')
   .pubsub
-  .schedule("*/3 * * * *")
+  .schedule("*/2 * * * *")
   .onRun(async () => {
     
     const promises: Promise<any>[] = [];
+    let errorUID = "";
 
     try {
       const currentDateInSeconds = Date.now() / 1000;
-      const nextFiveMinutes = currentDateInSeconds + 300;
+      // 4 minutes and 20 seconds (240 + 60 = 260), so that earliest rounded notification is 4 minutes
+      // while we still allow for 2 passes leaving a 20 second margin in the worst-case scenario
+      const nextFourMinutes = currentDateInSeconds + 260;
   
       // Get the list of subscribers
       const response = await admin
@@ -22,7 +25,7 @@ export const travelGroup = {
         .where("active", "==", true)
         .where("travelNotification", "==", true)
         .where("travelTimeNotification", ">", 0)
-        .where("travelTimeNotification", "<", nextFiveMinutes)
+        .where("travelTimeNotification", "<", nextFourMinutes)
         .get();
       
       const subscribers = response.docs.map((d) => d.data());
@@ -31,13 +34,23 @@ export const travelGroup = {
       
       for(const key of Array.from(subscribers.keys()) ) {
         const thisUser = subscribers[key];
+        errorUID = thisUser.uid;
         const minutesRemaining = Math.round((thisUser.travelTimeArrival - currentDateInSeconds) / 60);
   
+        let landingBody = "";
+        if (minutesRemaining <= 0) {
+          landingBody = `You have landed in ${thisUser.travelDestination}!`;
+        } else if (minutesRemaining === 1) {
+          landingBody = `You are on final approach to ${thisUser.travelDestination}, landing in one minute or less!`;
+        } else {
+          landingBody = `You are descending towards ${thisUser.travelDestination}, landing in about ${minutesRemaining} minutes!`
+        }
+
         promises.push(
           sendNotificationToUser(
             thisUser.token,
             `Approaching ${thisUser.travelDestination}!`,
-            `You will land in ${thisUser.travelDestination} in about ${minutesRemaining} minutes!`,
+            landingBody,
             "notification_travel",
             "#0000FF",
             "Alerts travel",
@@ -62,7 +75,7 @@ export const travelGroup = {
       await Promise.all(promises);
     
     } catch (e) {
-      functions.logger.warn(`ERROR TRAVEL SEND \n${e}`);
+      functions.logger.warn(`ERROR TRAVEL SEND for ${errorUID}\n${e}`);
     }
     
   }),
