@@ -96,14 +96,14 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                       return "Enter a valid name!";
                     }
                     for (var script in _userScriptsProvider.userScriptList) {
-                      if (script.name == value) {
+                      if (script.name.toLowerCase() == value.toLowerCase()) {
                         if (!widget.editExisting) {
-                          return "Repeated script name!";
+                          return "Script name already taken!";
                         } else {
                           // Allow to save same script, but not if it conflicts
                           // with another existing script
-                          if (script.name != widget.editScript.name) {
-                            return "Repeated script name!";
+                          if (script.name.toLowerCase() != widget.editScript.name.toLowerCase()) {
+                            return "Script name already taken!";
                           }
                         }
                       }

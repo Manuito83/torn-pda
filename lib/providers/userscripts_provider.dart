@@ -155,6 +155,20 @@ class UserScriptsProvider extends ChangeNotifier {
     // Then add the examples ones
     var exampleScripts =
         List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+
+    // But before, ensure that we don't add an example script with an already taken name
+    // in a user-inserted script (with exampleCode == 0)
+    for (var s = 0; s < exampleScripts.length; s++) {
+      for (var existingScript in _userScriptList) {
+        if (existingScript.name.toLowerCase() ==
+                exampleScripts[s].name.toLowerCase() &&
+            existingScript.exampleCode == 0) {
+          exampleScripts[s].name += " (example)";
+          break;
+        }
+      }
+    }
+
     if (onlyRestoreNew) {
       for (var i = 0; i < exampleScripts.length; i++) {
         var newExample = true;
@@ -221,8 +235,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   Future<void> loadPreferences() async {
-    _scriptsFirstTime =
-        await Prefs().getUserScriptsFirstTime();
+    _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
 
     var savedScripts = await Prefs().getUserScriptsList();
 
