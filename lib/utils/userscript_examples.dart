@@ -1129,7 +1129,7 @@ function drawPresetBar() {
 
   static UserScriptModel _specialGymRatios() {
     var source = r"""// ==UserScript==
-// @name         Special Gym Ratios
+// @name         Custom Gym Ratios
 // @version      2.3.1
 // @description  Monitors battle stat ratios and provides warnings if they approach levels that would preclude access to special gyms
 // @author       RGiskard [1953860], assistance by Xiphias [187717] - Torn PDA adaptation v1 [Manuito]
@@ -1462,7 +1462,7 @@ function gymLoaded() {
     return UserScriptModel(
       enabled: true,
       urls: getUrls(source),
-      name: "Special Gym Ratios",
+      name: "Custom Gym Ratios",
       exampleCode: 4,
       source: source,
     );
