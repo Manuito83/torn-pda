@@ -188,6 +188,19 @@ class _LootNotificationsIOSState extends State<LootNotificationsIOS> {
           child: SizedBox(
             width: 80,
             child: Text(
+              "5 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "5",
+          child: SizedBox(
+            width: 80,
+            child: Text(
               "6 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(

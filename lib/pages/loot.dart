@@ -804,6 +804,8 @@ class _LootPageState extends State<LootPage> {
       } else if (notificationAhead == '3') {
         _lootNotificationAhead = 240;
       } else if (notificationAhead == '4') {
+        _lootNotificationAhead = 300;
+      } else if (notificationAhead == '5') {
         _lootNotificationAhead = 360;
       }
 
@@ -814,6 +816,8 @@ class _LootPageState extends State<LootPage> {
       } else if (alarmAhead == '2') {
         _lootAlarmAhead = 4;
       } else if (alarmAhead == '3') {
+        _lootAlarmAhead = 5;
+      } else if (alarmAhead == '4') {
         _lootAlarmAhead = 6;
       }
 
@@ -826,6 +830,8 @@ class _LootPageState extends State<LootPage> {
       } else if (timerAhead == '3') {
         _lootTimerAhead = 240;
       } else if (timerAhead == '4') {
+        _lootTimerAhead = 300;
+      } else if (timerAhead == '5') {
         _lootTimerAhead = 360;
       }
     });

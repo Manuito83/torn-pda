@@ -299,6 +299,19 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
           child: SizedBox(
             width: 80,
             child: Text(
+              "5 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "5",
+          child: SizedBox(
+            width: 80,
+            child: Text(
               "6 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
@@ -362,6 +375,19 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
         DropdownMenuItem(
           value: "3",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "5 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "4",
           child: SizedBox(
             width: 120,
             child: Text(
@@ -441,6 +467,19 @@ class _LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
         ),
         DropdownMenuItem(
           value: "4",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "5 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "5",
           child: SizedBox(
             width: 80,
             child: Text(
