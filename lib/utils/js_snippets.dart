@@ -367,15 +367,28 @@ String quickItemsJS({@required String item}) {
       document.head.append(style);
     } 
         
-    addStyle(`
-      .resultBox {
-        border: 2px dotted black;
-        margin-top: 20px;
-        margin-bottom: 20px;
-        padding:5px;
-        background-color: #fff;
-      }
-    `);
+    var darkModeFound = document.querySelectorAll('#body.dark-mode');
+    if (darkModeFound.length > 0) {
+      addStyle(`
+        .resultBox {
+          border: 2px dotted black;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          padding:5px;
+          background-color: #242424;
+        }
+      `);
+    } else {
+      addStyle(`
+        .resultBox {
+          border: 2px dotted black;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          padding:5px;
+          background-color: #fff;
+        }
+      `);
+    }
     
     // If there any boxes remaining (from previous calls, remove them)
     for (let box of document.querySelectorAll('.resultBox')) {
