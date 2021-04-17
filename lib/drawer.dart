@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
@@ -22,6 +23,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
@@ -79,6 +81,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   DateTime _currentTctTime = DateTime.now().toUtc();
 
   bool _changelogIsActive = false;
+  bool _forceFireUserReload = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -795,11 +798,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Firestore get auth and init
       var user = await firebaseAuth.currentUser();
       if (user == null) {
-        User mFirebaseUser = await firebaseAuth.signInAnon();
-        firestore.setUID(mFirebaseUser.uid);
-        await firestore.uploadUsersProfileDetail(_userProvider.basic);
-        await firestore
-            .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+        _updateFirebaseDetails();
       } else {
         var uid = await firebaseAuth.getUID();
         firestore.setUID(uid);
@@ -819,11 +818,36 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
     // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
-    if (duration.inDays > 2) {
-      var success = await firestore.uploadLastActiveTime(now);
-      if (success) {
-        _settingsProvider.updateLastUsed(now);
-      }
+    // Also update full user in case something is missing!
+    if (duration.inDays > 2 || _forceFireUserReload) {
+      await _updateFirebaseDetails();
+      // This is triggered to true if the changelog activates.
+      _forceFireUserReload = false;
+    }
+  }
+
+  Future<void> _updateFirebaseDetails() async {
+    // We save the key because the API call will reset it
+    // Then get user's profile and update
+    var savedKey = _userProvider.basic.userApiKey;
+    dynamic prof = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+    if (prof is OwnProfileBasic) {
+      // Update profile with the two fields it does not contain
+      prof
+        ..userApiKey = savedKey
+        ..userApiKeyValid = true;
+
+      // Upload information to Firebase (this includes the token)
+      User mFirebaseUser = await firebaseAuth.signInAnon();
+      firestore.setUID(mFirebaseUser.uid);
+      await firestore.uploadUsersProfileDetail(prof, userTriggered: true);
+    }
+
+    // Uploads last active time to Firebase
+    var now = DateTime.now().millisecondsSinceEpoch;
+    var success = await firestore.uploadLastActiveTime(now);
+    if (success) {
+      _settingsProvider.updateLastUsed(now);
     }
   }
 
@@ -841,6 +865,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       _changelogIsActive = true;
       _showChangeLogDialog(context);
+
+      // Will trigger an extra upload to Firebase when version changes
+      _forceFireUserReload = true;
     }
   }
 
@@ -934,7 +961,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   void _clearBadge() {
     if (Platform.isIOS) {
-      FlutterAppBadger.removeBadge();
+      try {
+        FlutterAppBadger.removeBadge();
+      } catch (e) {
+        // Not supported?
+      }
     }
   }
 }
