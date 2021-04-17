@@ -109,7 +109,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   // This one will take own player, own faction or friendly faction (so that
   // we don't show them separately, but by importance (first one self, then
   // own faction and lastly friendly faction)
-  var _playerOrFaction = false;
+  var _networthWidgetEnabled = false;
 
   Widget _tornPdaWidget = SizedBox.shrink();
   Widget _partnerWidget = SizedBox.shrink();
@@ -117,6 +117,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   Widget _friendlyFactionWidget = SizedBox.shrink();
   Widget _workColleagueWidget = SizedBox.shrink();
   Widget _playerOrFactionWidget = SizedBox.shrink();
+  Widget _networthWidget = SizedBox.shrink();
+
   Color _backgroundColor = Colors.grey[900];
 
   @override
@@ -153,112 +155,69 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Widget mainWidgetBox() {
-    double topPadding;
-    double bottomPadding;
-    // If stats are not present but other widget are, set padding to the other up and down
-    if (_estimatedStatsWidget == null &&
-        (_isTornPda ||
-            _isPartner ||
-            _isFriend ||
-            _playerOrFaction ||
-            _isFriendlyFaction ||
-            _isWorkColleague)) {
-      topPadding = 8;
-      bottomPadding = 8;
-    }
-    // If there is both stats and the others, leave a space between both. The stats widget will
-    // handling its top padding
-    else if (_estimatedStatsWidget != null &&
-        (_isTornPda ||
-            _isPartner ||
-            _isFriend ||
-            _playerOrFaction ||
-            _isFriendlyFaction ||
-            _isWorkColleague)) {
-      topPadding = 0;
-      bottomPadding = 8;
-    }
-    // If only the stats widget is present, leave a gap below it (the widget is configured to leave nothing)
-    else if (_estimatedStatsWidget != null &&
-        (!_isTornPda &&
-            !_isPartner &&
-            !_isFriend &&
-            !_playerOrFaction &&
-            !_isFriendlyFaction &&
-            !_isWorkColleague)) {
-      topPadding = 8;
-      bottomPadding = 0;
-    }
-    // If nothing is present, leave no gap
-    else {
-      topPadding = 0;
-      bottomPadding = 0;
-    }
-
-    return Container(
-      color: _backgroundColor,
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_estimatedStatsWidget != null) _estimatedStatsWidget,
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    15,
-                    topPadding,
-                    15,
-                    bottomPadding,
-                  ),
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_estimatedStatsWidget != null) _estimatedStatsWidget,
+              if (_networthWidgetEnabled) _networthWidget,
+              // Container so that the background color can be changed for certain widgets
+              Container(
+                color: _backgroundColor,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
                   child: Column(
                     children: [
-                      if (_estimatedStatsWidget != null && _isTornPda)
-                        SizedBox(height: 8),
-                      _tornPdaWidget,
-                      if ((_estimatedStatsWidget != null || _isTornPda) &&
-                          _isPartner)
-                        SizedBox(height: 8),
-                      _partnerWidget,
-                      if ((_estimatedStatsWidget != null ||
-                              _isTornPda ||
-                              _isPartner) &&
-                          _isFriend)
-                        SizedBox(height: 8),
-                      _friendsWidget,
-                      if ((_estimatedStatsWidget != null ||
-                              _isTornPda ||
-                              _isPartner ||
-                              _isFriend) &&
-                          _playerOrFaction)
-                        SizedBox(height: 8),
-                      _playerOrFactionWidget,
-                      if ((_estimatedStatsWidget != null ||
-                              _isTornPda ||
-                              _isPartner ||
-                              _isFriend ||
-                              _playerOrFaction) &&
-                          _isFriendlyFaction)
-                        SizedBox(height: 8),
-                      _friendlyFactionWidget,
-                      if ((_estimatedStatsWidget != null ||
-                              _isTornPda ||
-                              _isPartner ||
-                              _isFriend ||
-                              _playerOrFaction ||
-                              _isFriendlyFaction) &&
-                          _isWorkColleague)
-                        SizedBox(height: 8),
-                      _workColleagueWidget,
+                      if (_isTornPda)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: _tornPdaWidget,
+                        ),
+                      if (_isPartner)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: _partnerWidget,
+                        ),
+                      if (_isFriend)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: _friendsWidget,
+                        ),
+                      if (_isOwnFaction || _isOwnPlayer)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: _playerOrFactionWidget,
+                        ),
+                      if (_isFriendlyFaction)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: _friendlyFactionWidget,
+                        ),
+                      if (_isWorkColleague)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: _workColleagueWidget,
+                        ),
+                      if (_isTornPda ||
+                          _isWorkColleague ||
+                          _isFriendlyFaction ||
+                          _isFriendlyFaction ||
+                          _isFriend ||
+                          _isOwnFaction ||
+                          _isPartner ||
+                          _isOwnPlayer)
+                        SizedBox(height: 2)
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -292,14 +251,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       if (otherProfile.playerId == _userDetails.basic.playerId) {
         _isOwnPlayer = true;
-        _playerOrFaction = true;
       }
 
       if (_userDetails.basic.faction.factionId != 0 &&
           otherProfile.faction.factionId ==
               _userDetails.basic.faction.factionId) {
         _isOwnFaction = true;
-        _playerOrFaction = true;
       }
 
       var settingsProvider = context.read<SettingsProvider>();
@@ -315,6 +272,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           otherProfile.job.companyId == _userDetails.basic.job.companyId) {
         _isWorkColleague = true;
       }
+
+      _networthWidgetEnabled = _settingsProvider.extraPlayerNetworth;
 
       if (_isTornPda) {
         _tornPdaWidget = Row(
@@ -530,6 +489,35 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       }
 
+      if (_networthWidgetEnabled) {
+        _networthWidget = Container(
+          color: Colors.grey[900],
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  MdiIcons.currencyUsdCircleOutline,
+                  color: Colors.green,
+                  size: 17,
+                ),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    "${_formatBigNumbers(otherProfile.personalstats.networth)}",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
       _infoToShow = true;
       _expandableController.expanded = true;
     } else {
@@ -733,7 +721,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _estimatedStatsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 5, 15, 0),
+            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -786,7 +774,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _estimatedStatsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 5, 15, 0),
+            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [

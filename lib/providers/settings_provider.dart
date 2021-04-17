@@ -219,6 +219,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _extraPlayerNetworth = false;
+  bool get extraPlayerNetworth => _extraPlayerNetworth;
+  set changeExtraPlayerNetworth(bool value) {
+    _extraPlayerNetworth = value;
+    Prefs().setExtraPlayerNetworth(_extraPlayerNetworth);
+    notifyListeners();
+  }
+
   var _useQuickBrowser = true;
   bool get useQuickBrowser => _useQuickBrowser;
   set changeUseQuickBrowser(bool value) {
@@ -295,6 +303,8 @@ class SettingsProvider extends ChangeNotifier {
         _friendlyFactions.add(FriendlyFaction.fromJson(dec));
       }
     }
+
+    _extraPlayerNetworth = await Prefs().getExtraPlayerNetworth();
 
     _useQuickBrowser = await Prefs().getUseQuickBrowser();
 

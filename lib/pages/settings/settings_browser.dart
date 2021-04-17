@@ -224,6 +224,38 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ],
               ),
+            if (_settingsProvider.extraPlayerInformation)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text("Show networth"),
+                    Switch(
+                      value: _settingsProvider.extraPlayerNetworth,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.changeExtraPlayerNetworth = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'If enabled, this will show an additional line with the networth of the '
+                'player you are visiting',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
           ],
         ),
       ],

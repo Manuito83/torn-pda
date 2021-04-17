@@ -44,6 +44,7 @@ class Prefs {
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
+  final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
   final String _kStockCountryFilter = "pda_stockCountryFilter";
   final String _kStockTypeFilter = "pda_stockTypeFilter";
   final String _kStockSort = "pda_stockSort";
@@ -107,13 +108,11 @@ class Prefs {
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
 
-
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
   final String _kTACEnabled = "pda_tacEnabled";
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
-
 
   /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
   /// UserDetailsProvider for retrieving the API key and other details!
@@ -559,7 +558,7 @@ class Prefs {
   /// Methods for extra player information
   /// ----------------------------
 
-    Future<bool> getExtraPlayerInformation() async {
+  Future<bool> getExtraPlayerInformation() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kExtraPlayerInformation) ?? true;
   }
@@ -589,6 +588,17 @@ class Prefs {
   Future<bool> setFriendlyFactions(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kFriendlyFactions, value);
+  }
+
+  // *************
+  Future<bool> getExtraPlayerNetworth() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExtraPlayerNetworth) ?? false;
+  }
+
+  Future<bool> setExtraPlayerNetworth(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExtraPlayerNetworth, value);
   }
 
   /// ----------------------------
@@ -1281,6 +1291,4 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUserScriptsFirstTime, value);
   }
-
-
 }
