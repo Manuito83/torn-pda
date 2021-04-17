@@ -15,7 +15,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
-    "firebase-admin": "^9.4.2",
+    "firebase-admin": "^9.6.0",
     "firebase-functions": "^3.13.0",
     "node-forge": "^0.10.0",
     "npm-watch": "^0.7.0",

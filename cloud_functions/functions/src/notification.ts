@@ -123,11 +123,6 @@ export async function logTravelArrival(userStats: any, subscriber: any) {
 
   try {
 
-    if (userStats.job.company_type === 10 && userStats.job.position ==="Director") {
-      console.log(userStats.name);
-    } 
-
-
     // We are flying register planned landing time ASAP
     // unless the current arrival was already in the DB
     if (travel.time_left > 0 && travel.timestamp !== travelTimeArrival) {
