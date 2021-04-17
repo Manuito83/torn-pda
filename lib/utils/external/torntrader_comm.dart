@@ -9,9 +9,7 @@ class TornTraderComm {
     var authModel = TornTraderAuthModel();
     try {
       var response = await http.post(
-        Uri(
-          path: 'https://torntrader.com/api/v1/users?user=$user',
-        ),
+        Uri.parse('https://torntrader.com/api/v1/users?user=$user'),
       );
       if (response.statusCode == 200) {
         authModel = tornTraderAuthModelFromJson(response.body);

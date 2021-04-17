@@ -42,9 +42,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_3_1 = "Added a 5 minutes option for manual Loot notifications.";
     String feat2_3_3_2 = "Added networth information to players' profiles (disabled by default).";
     String feat2_3_3_3 = "Adapted quick items result box to work with dark mode.";
+    String feat2_3_3_4 = "Fixed an issue preventing Torn Trader from authenticating users.";
     v2_3_3.features.add(feat2_3_3_1);
     v2_3_3.features.add(feat2_3_3_2);
     v2_3_3.features.add(feat2_3_3_3);
+    v2_3_3.features.add(feat2_3_3_4);
 
     // VERSION 2.3.2
     var v2_3_2 = ChangeLogItem();
