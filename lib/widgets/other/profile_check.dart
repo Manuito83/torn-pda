@@ -164,6 +164,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             children: [
               if (_estimatedStatsWidget != null) _estimatedStatsWidget,
               if (_networthWidgetEnabled) _networthWidget,
+              if (_isTornPda) _tornPdaWidget,
               // Container so that the background color can be changed for certain widgets
               Container(
                 color: _backgroundColor,
@@ -171,11 +172,6 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
                   child: Column(
                     children: [
-                      if (_isTornPda)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _tornPdaWidget,
-                        ),
                       if (_isPartner)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -201,8 +197,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: _workColleagueWidget,
                         ),
-                      if (_isTornPda ||
-                          _isWorkColleague ||
+                      if (_isWorkColleague ||
                           _isFriendlyFaction ||
                           _isFriendlyFaction ||
                           _isFriend ||
@@ -276,26 +271,32 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       _networthWidgetEnabled = _settingsProvider.extraPlayerNetworth;
 
       if (_isTornPda) {
-        _tornPdaWidget = Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Image.asset(
-              'images/icons/torn_pda.png',
-              width: 16,
-              height: 16,
-              //color: Colors.brown[400],
-            ),
-            SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                "Hi! Thank you for using Torn PDA!",
-                style: TextStyle(
-                  color: Colors.pink,
-                  fontSize: 12,
+        _tornPdaWidget = Container(
+          color: Colors.grey[900],
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'images/icons/torn_pda.png',
+                  width: 16,
+                  height: 16,
+                  //color: Colors.brown[400],
                 ),
-              ),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    "Hi! Thank you for using Torn PDA!",
+                    style: TextStyle(
+                      color: Colors.pink,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       }
 
