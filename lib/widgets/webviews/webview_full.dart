@@ -146,6 +146,12 @@ class _WebViewFullState extends State<WebViewFull> {
 
   bool _clearCacheFirstOpportunity = false;
 
+  bool _findInPageActive = false;
+  final _findController = new TextEditingController();
+  var _findFocus = new FocusNode();
+  var _findFirstSubmitted = false;
+  var _findPreviousText = "";
+
   @override
   void initState() {
     super.initState();
@@ -159,6 +165,8 @@ class _WebViewFullState extends State<WebViewFull> {
     _pageTitle = widget.customTitle;
 
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    _findController.addListener(onFindInputTextChange);
 
     /*
     _pullToRefreshController = PullToRefreshController(
@@ -185,6 +193,7 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   void dispose() {
     webView = null;
+    _findController.dispose();
     super.dispose();
   }
 
@@ -321,7 +330,7 @@ class _WebViewFullState extends State<WebViewFull> {
                             : _themeProvider.background,
                         height: 38,
                         child: GestureDetector(
-                          onLongPress: () => _openCustomUrlDialog(),
+                          onLongPress: () => _openUrlDialog(),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -695,6 +704,102 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   CustomAppBar buildCustomAppBar() {
+    if (_findInPageActive) {
+      return CustomAppBar(
+        genericAppBar: AppBar(
+          elevation: _settingsProvider.appBarTop ? 2 : 0,
+          brightness: Brightness.dark,
+          leading: IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () async {
+                setState(() {
+                  _findInPageActive = false;
+                });
+                _findController.text = "";
+                webView.clearMatches();
+                _findFirstSubmitted = false;
+              }),
+          title: GestureDetector(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Form(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                          child: Row(
+                            children: <Widget>[
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextField(
+                                    onEditingComplete: () {
+                                      _findPreviousText = _findController.text;
+                                      _findAll();
+                                      _findFocus.unfocus();
+                                    },
+                                    controller: _findController,
+                                    focusNode: _findFocus,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: "What are you looking for?",
+                                      hintStyle: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.grey[300],
+                                          fontSize: 12),
+                                    ),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                _findPreviousText = _findController.text;
+                _findAll();
+                _findFocus.unfocus();
+              },
+            ),
+            if (_findFirstSubmitted)
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.keyboard_arrow_up),
+                    onPressed: () {
+                      _findNext(forward: false);
+                      _findFocus.unfocus();
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.keyboard_arrow_down),
+                    onPressed: () {
+                      _findNext(forward: true);
+                      _findFocus.unfocus();
+                    },
+                  ),
+                ],
+              )
+          ],
+        ),
+      );
+    }
+
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
@@ -728,7 +833,7 @@ class _WebViewFullState extends State<WebViewFull> {
             }),
         title: GestureDetector(
           onTap: () {
-            _openCustomUrlDialog();
+            _openUrlDialog();
           },
           child: DottedBorder(
             borderType: BorderType.Rect,
@@ -1134,34 +1239,33 @@ class _WebViewFullState extends State<WebViewFull> {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            customBorder: new CircleBorder(),
-            splashColor: Colors.blueGrey,
-            child: Icon(
-              Icons.home,
-            ),
-            onTap: () async {
-              setState(() {
-                _travelHomeIconTriggered = true;
-              });
-              BotToast.showText(
-                text: 'Tap again to travel back!',
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.orange[800],
-                duration: Duration(seconds: 3),
-                contentPadding: EdgeInsets.all(10),
-              );
-              Future.delayed(Duration(seconds: 3)).then((value) {
-                if (mounted) {
-                  setState(() {
-                    _travelHomeIconTriggered = false;
-                  });
-                }
-              });
-            }
-          ),
+              customBorder: new CircleBorder(),
+              splashColor: Colors.blueGrey,
+              child: Icon(
+                Icons.home,
+              ),
+              onTap: () async {
+                setState(() {
+                  _travelHomeIconTriggered = true;
+                });
+                BotToast.showText(
+                  text: 'Tap again to travel back!',
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.orange[800],
+                  duration: Duration(seconds: 3),
+                  contentPadding: EdgeInsets.all(10),
+                );
+                Future.delayed(Duration(seconds: 3)).then((value) {
+                  if (mounted) {
+                    setState(() {
+                      _travelHomeIconTriggered = false;
+                    });
+                  }
+                });
+              }),
         );
       } else {
         return Material(
@@ -1311,8 +1415,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // We only get this once and if we are inside a trade
     // It's also in the callback from trades options
     if (!_tradesPreferencesLoaded) {
-      _tradeCalculatorEnabled =
-          await Prefs().getTradeCalculatorEnabled();
+      _tradeCalculatorEnabled = await Prefs().getTradeCalculatorEnabled();
       _tradesPreferencesLoaded = true;
     }
     if (!_tradeCalculatorEnabled) {
@@ -1523,8 +1626,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _tradesPreferencesLoad() async {
-    _tradeCalculatorEnabled =
-        await Prefs().getTradeCalculatorEnabled();
+    _tradeCalculatorEnabled = await Prefs().getTradeCalculatorEnabled();
     _decideIfCallTrades();
   }
 
@@ -1921,7 +2023,7 @@ class _WebViewFullState extends State<WebViewFull> {
     });
   }
 
-  Future<void> _openCustomUrlDialog() async {
+  Future<void> _openUrlDialog() async {
     var url = await webView.getUrl();
     return showDialog<void>(
       context: context,
@@ -1931,9 +2033,39 @@ class _WebViewFullState extends State<WebViewFull> {
           title: _pageTitle,
           url: url.toString(),
           webview: webView,
+          callFindInPage: _activateFindInPage,
         );
       },
     );
+  }
+
+  _activateFindInPage() {
+    setState(() {
+      _findInPageActive = true;
+    });
+    _findFocus.requestFocus();
+  }
+
+  void _findAll() {
+    if (_findController.text.isNotEmpty) {
+      setState(() {
+        _findFirstSubmitted = true;
+      });
+      webView.findAllAsync(find: _findController.text);
+    }
+  }
+
+  void _findNext({@required bool forward}) async {
+    webView.findNext(forward: forward);
+    if (_findFocus.hasFocus) _findFocus.unfocus();
+  }
+
+  void onFindInputTextChange() {
+    if (_findController.text != _findPreviousText) {
+      setState(() {
+        _findFirstSubmitted = false;
+      });
+    }
   }
 
   // UTILS
