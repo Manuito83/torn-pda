@@ -347,7 +347,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       child: AbsoluteBubbleSlideChild(
                         positionCalculator: (size) => Position(
-                          bottom:  MediaQuery.of(context).size.height/2 - 100,
+                          bottom: MediaQuery.of(context).size.height / 2 - 100,
                           left: (size.width) / 2 - 200,
                         ),
                         widget: SpeechBubble(
@@ -400,7 +400,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       child: AbsoluteBubbleSlideChild(
                         positionCalculator: (size) => Position(
-                          bottom:  MediaQuery.of(context).size.height/2 - 100,
+                          bottom: MediaQuery.of(context).size.height / 2 - 100,
                           left: (size.width) / 2 - 200,
                         ),
                         widget: SpeechBubble(
@@ -3309,13 +3309,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
 
     // SKILLS
+    bool skillsExist = false;
     var hunting = "";
     var racing = "";
     var reviving = "";
-    if (_skillsModel != null) {
-      hunting = _skillsModel.hunting ?? "";
-      racing = _skillsModel.racing ?? "";
-      reviving = _skillsModel.reviving ?? "";
+    hunting = _skillsModel.hunting ?? "";
+    racing = _skillsModel.racing ?? "";
+    reviving = _skillsModel.reviving ?? "";
+    if (hunting.isNotEmpty || racing.isNotEmpty || reviving.isNotEmpty) {
+      skillsExist = true;
     }
 
     return Card(
@@ -3621,7 +3623,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              if (_skillsModel != null)
+              if (skillsExist)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
