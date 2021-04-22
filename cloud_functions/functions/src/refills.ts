@@ -13,7 +13,7 @@ export const refillsGroup = {
   sendRefillNotifications: functions.region('us-east4')
   .runWith(runtimeOpts)
   .pubsub
-  .schedule("58 22 * * *")
+  .schedule("58 21 * * *")
   .timeZone('Etc/UTC')
   .onRun(async () => {
     
