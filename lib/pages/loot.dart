@@ -100,29 +100,35 @@ class _LootPageState extends State<LootPage> {
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_apiSuccess) {
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    if (activeNpcsFiltered())
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
-                        child: Text(
-                          "Some NPCs are filtered out",
-                          style: TextStyle(
-                            color: Colors.orange[900],
-                            fontSize: 12,
+              return RefreshIndicator(
+                onRefresh: () async {
+                  await _getLoot();
+                  await Future.delayed(Duration(seconds: 1));
+                },
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (activeNpcsFiltered())
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            "Some NPCs are filtered out",
+                            style: TextStyle(
+                              color: Colors.orange[900],
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                      )
-                    else
-                      SizedBox.shrink(),
-                    Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: _returnNpcCards(),
-                    ),
-                    SizedBox(height: 20),
-                  ],
+                        )
+                      else
+                        SizedBox.shrink(),
+                      Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: _returnNpcCards(),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               );
             } else {
