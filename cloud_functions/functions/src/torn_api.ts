@@ -6,3 +6,10 @@ export async function getUsersStat(apiKey: string) {
     json: true,
   });
 }
+
+export async function getUsersRefills(apiKey: string) {
+  return rp({
+    uri: `https://api.torn.com/user/?selections=refills&key=${apiKey}&comment=PDA-Alerts`,
+    json: true,
+  });
+}

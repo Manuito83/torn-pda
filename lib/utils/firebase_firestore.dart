@@ -153,6 +153,28 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToRefillsNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "refillsNotification": subscribe,
+    });
+  }
+
+  Future<void> addToRefillsRequested(String request) async {
+    List currentRequests = _firebaseUserModel.refillsRequested;
+    currentRequests.add(request);
+    await _firestore.collection("players").doc(_uid).update({
+      "refillsRequested": currentRequests,
+    });
+  }
+
+  Future<void> removeFromRefillsRequested(String request) async {
+    List currentRequests = _firebaseUserModel.refillsRequested;
+    currentRequests.remove(request);
+    await _firestore.collection("players").doc(_uid).update({
+      "refillsRequested": currentRequests,
+    });
+  }
+
   Future<void> subscribeToHospitalNotification(bool subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "hospitalNotification": subscribe,

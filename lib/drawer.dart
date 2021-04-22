@@ -267,6 +267,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool nerve = false;
     bool energy = false;
     bool drugs = false;
+    bool refills = false;
 
     var channel = '';
     var messageId = '';
@@ -302,6 +303,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       energy = true;
     } else if (channel.contains("Alerts drugs")) {
       drugs = true;
+    } else if (channel.contains("Alerts refills")) {
+      refills = true;
     }
 
     if (travel) {
@@ -342,6 +345,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (drugs) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
+    } else if (refills) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/points.php";
     }
 
     if (launchBrowser) {
@@ -433,6 +439,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('211')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
+      } else if (payload.contains('refills')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/points.php';
       }
 
       if (launchBrowser) {
