@@ -39,7 +39,6 @@ export const refillsGroup = {
         errorUID = thisUser.uid;
         
         const userRefills = await getUsersRefills(thisUser.apiKey);
-        console.log(userRefills);
 
         let refillsToSend = [];
 
