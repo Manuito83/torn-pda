@@ -31,14 +31,14 @@ import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:flutter/rendering.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import '../main.dart';
@@ -132,10 +132,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   UserDetailsProvider _userProv;
   ShortcutsProvider _shortcuts;
 
-  // For dial FAB
-  ScrollController scrollController;
-  bool dialVisible = true;
-
   int _travelNotificationAhead;
   int _travelAlarmAhead;
   int _travelTimerAhead;
@@ -222,6 +218,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   int _eventsShowNumber = 25;
 
   var _speedDialSetOpen = ValueNotifier<bool>(false);
+  var _speedDialOpacity = 0.8;
 
   var _showOne = GlobalKey();
 
@@ -246,12 +243,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     _requestIOSPermissions();
     _retrievePendingNotifications();
-
-    scrollController = ScrollController()
-      ..addListener(() {
-        setDialVisible(scrollController.position.userScrollDirection ==
-            ScrollDirection.forward);
-      });
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _shortcuts = context.read<ShortcutsProvider>();
@@ -4335,12 +4326,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      //animatedIcon: AnimatedIcons.menu_close,
-      //animatedIconTheme: IconThemeData(size: 22.0),
       openCloseDial: _speedDialSetOpen,
+      overlayOpacity: _speedDialOpacity,
       onOpen: () {
         setState(() {
           _speedDialSetOpen.value = true;
+          _speedDialOpacity = 0.8;
         });
       },
       backgroundColor: Colors.transparent,
@@ -4360,12 +4351,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
         ),
       ),
-      visible: dialVisible,
+      visible: true,
       curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                _speedDialOpacity = 0;
+              });
               await _launchBrowserOption('https://www.torn.com/city.php');
               setState(() {
                 _speedDialSetOpen.value = false;
@@ -4400,6 +4394,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                _speedDialOpacity = 0;
+              });
               await _launchBrowserOption('https://www.torn.com/trade.php');
               setState(() {
                 _speedDialSetOpen.value = false;
@@ -4434,6 +4431,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                _speedDialOpacity = 0;
+              });
               await _launchBrowserOption('https://www.torn.com/item.php');
               setState(() {
                 _speedDialSetOpen.value = false;
@@ -4468,6 +4468,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                _speedDialOpacity = 0;
+              });
               await _launchBrowserOption(
                   'https://www.torn.com/crimes.php#/step=main');
               setState(() {
@@ -4508,7 +4511,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
-              await _launchBrowserOption('https://www.torn.com/gym.php');
+              setState(() {
+                _speedDialOpacity = 0;
+              });
               if (_warnAboutChains &&
                   _chainModel.chain.current > 10 &&
                   _chainModel.chain.cooldown == 0) {
@@ -4524,12 +4529,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   contentPadding: EdgeInsets.all(10),
                 );
               }
+              await _launchBrowserOption('https://www.torn.com/gym.php');
               setState(() {
                 _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com/gym.php');
               if (_warnAboutChains &&
                   _chainModel.chain.current > 10 &&
                   _chainModel.chain.cooldown == 0) {
@@ -4545,6 +4550,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   contentPadding: EdgeInsets.all(10),
                 );
               }
+              await _launchBrowserFull('https://www.torn.com/gym.php');
               setState(() {
                 _speedDialSetOpen.value = false;
               });
@@ -4572,6 +4578,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         SpeedDialChild(
           child: GestureDetector(
             onTap: () async {
+              setState(() {
+                _speedDialOpacity = 0;
+              });
               await _launchBrowserOption('https://www.torn.com');
               setState(() {
                 _speedDialSetOpen.value = false;
@@ -4637,12 +4646,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
       _updateCallback();
     }
-  }
-
-  void setDialVisible(bool value) {
-    setState(() {
-      dialVisible = value;
-    });
   }
 
   Future _updateCallback() async {
