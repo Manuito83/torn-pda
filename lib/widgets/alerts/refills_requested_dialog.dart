@@ -91,15 +91,15 @@ class _RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                   Text("Casino tokens"),
                   Switch(
                     value:
-                        _firebaseUserModel.refillsRequested.contains('tokens'),
+                        _firebaseUserModel.refillsRequested.contains('token'),
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToRefillsRequested('tokens');
+                          firestore.addToRefillsRequested('token');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromRefillsRequested('tokens');
+                          firestore.removeFromRefillsRequested('token');
                         });
                       }
                     },
