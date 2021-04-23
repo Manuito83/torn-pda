@@ -35,6 +35,19 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.3.4
+    var v2_3_4 = ChangeLogItem();
+    v2_3_4.main.version = 'Torn PDA v2.3.4';
+    v2_3_4.main.date = '01 MAY 2021';
+    String feat2_3_4_1 = "Alerts: added refills (energy, nerve, casino tokens).";
+    String feat2_3_4_2 = "Browser: added search functionality (tap the title or long-press the quick browser bottom bar).";
+    String feat2_3_4_3 = "Profile: added organized crimes calculation from events (if faction API access is unavailable).";
+    String feat2_3_4_4 = "Loot: added pull to refresh functionality.";
+    v2_3_4.features.add(feat2_3_4_1);
+    v2_3_4.features.add(feat2_3_4_2);
+    v2_3_4.features.add(feat2_3_4_3);
+    v2_3_4.features.add(feat2_3_4_4);
+
     // VERSION 2.3.3
     var v2_3_3 = ChangeLogItem();
     v2_3_3.main.version = 'Torn PDA v2.3.3';
@@ -650,6 +663,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_3_4);
     itemList.add(v2_3_3);
     itemList.add(v2_3_2);
     itemList.add(v2_3_1);
