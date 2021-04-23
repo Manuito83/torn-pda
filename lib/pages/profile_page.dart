@@ -34,6 +34,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
@@ -195,11 +196,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = SizedBox.shrink();
 
-  String _factionCrimeName = "";
-  DateTime _factionCrimeTimestamp;
-  int _factionParticipantsNotReady = 0;
-  bool _factionCrimeReady = false;
-  String _factionCrimeTimeString = "";
+  // We will first try to get the full crimes if we have AA access, in which case
+  // we consider it as Complex. Otherwise, with events, it will be Simple.
+  DateTime _ocTime;
+  bool _ocSimpleExists = false;
+  String _ocSimpleTimeString = "";
+  String _ocComplexName = "";
+  int _ocComplexPeopleNotReady = 0;
+  bool _ocComplexReady = false;
+  String _ocComplexTimeString = "";
 
   bool _nukeReviveActive = false;
   bool _uhcReviveActive = false;
@@ -563,6 +568,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _networthExpController.expanded = newOptions.expandNetworth;
               _userSectionOrder = newOptions.sectionSort;
             });
+            // If we reactivated faction crimes, they might take up to a minute
+            // to appear unless we call them directly
+            if (newOptions.oCrimesReactivated) {
+              _getFactionCrimes();
+            }
           },
         )
       ],
@@ -1164,6 +1174,59 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       );
     } else {
+      Widget ocStatus = SizedBox.shrink();
+      if ((_ocComplexName.isNotEmpty || _ocSimpleExists) &&
+          _ocTime.difference(DateTime.now()).inHours < 10) {
+
+        if (!_ocSimpleExists) {
+          ocStatus = Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: Text(
+              "OC $_ocComplexTimeString",
+              style: TextStyle(
+                color: Colors.orange[700],
+                fontSize: 12,
+              ),
+            ),
+          );
+        } else if (_ocSimpleExists) {
+          ocStatus = Row(
+            children: [
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Text(
+                    "$_ocSimpleTimeString",
+                    style: TextStyle(
+                      color: Colors.orange[700],
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                child: Icon(
+                  MdiIcons.closeCircleOutline,
+                  size: 16,
+                  color: Colors.orange[800],
+                ),
+                onTap: () {
+                  return showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      return DisregardCrimeDialog(
+                        disregardCallback: _disregardCrimeCallback,
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          );
+        }
+      }
+
       header = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1220,19 +1283,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               foreignStocksButton,
             ],
           ),
-          if (_factionCrimeName.isNotEmpty &&
-              _factionCrimeTimeString.isNotEmpty &&
-              _factionCrimeTimestamp.difference(DateTime.now()).inHours < 10)
-            Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: Text(
-                "OC $_factionCrimeTimeString",
-                style: TextStyle(
-                  color: Colors.orange[700],
-                  fontSize: 12,
-                ),
-              ),
-            ),
+          ocStatus,
         ],
       );
     }
@@ -3788,27 +3839,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // FACTION CRIMES
     var factionCrimesActive = false;
     Widget factionCrimes = SizedBox.shrink();
-    if (_factionCrimeName.isNotEmpty) {
+    if (_ocComplexName.isNotEmpty) {
       factionCrimesActive = true;
-      _factionCrimeReady = false;
-      _factionCrimeTimeString = "";
-      if (_factionCrimeTimestamp.isAfter(DateTime.now())) {
+      _ocComplexReady = false;
+      _ocComplexTimeString = "";
+      if (_ocTime.isAfter(DateTime.now())) {
         var formattedTime = TimeFormatter(
-          inputTime: _factionCrimeTimestamp,
+          inputTime: _ocTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
-        _factionCrimeTimeString =
-            "will be ready @ $formattedTime${_timeFormatted(_factionCrimeTimestamp)}";
+        _ocComplexTimeString =
+            "will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
       } else {
-        _factionCrimeReady = true;
-        if (_factionParticipantsNotReady == 0) {
-          _factionCrimeTimeString = "and all participants are ready!";
-        } else if (_factionParticipantsNotReady == 1) {
-          _factionCrimeTimeString = "is ready, but 1 participant is not!";
+        _ocComplexReady = true;
+        if (_ocComplexPeopleNotReady == 0) {
+          _ocComplexTimeString = "and all participants are ready!";
+        } else if (_ocComplexPeopleNotReady == 1) {
+          _ocComplexTimeString = "is ready, but 1 participant is not!";
         } else {
-          _factionCrimeTimeString =
-              "is ready, but $_factionParticipantsNotReady participants are not!";
+          _ocComplexTimeString =
+              "is ready, but $_ocComplexPeopleNotReady participants are not!";
         }
       }
 
@@ -3818,17 +3869,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           SizedBox(width: 10),
           Flexible(
             child: Text(
-              "$_factionCrimeName $_factionCrimeTimeString",
+              "$_ocComplexName $_ocComplexTimeString",
               style: TextStyle(
-                color: _factionCrimeReady
-                    ? _factionParticipantsNotReady == 0
+                color: _ocComplexReady
+                    ? _ocComplexPeopleNotReady == 0
                         ? Colors.green
                         : Colors.orange[700]
                     : _themeProvider.mainText,
               ),
             ),
           ),
-          if (_factionCrimeReady)
+          if (_ocComplexReady)
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
@@ -3844,6 +3895,70 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
             ),
+        ],
+      );
+    } else if (_ocSimpleExists) {
+      factionCrimesActive = true;
+      var crimeColor = _themeProvider.mainText;
+      var simpleReady = false;
+      if (_ocTime.isBefore(DateTime.now())) {
+        simpleReady = true;
+        _ocSimpleTimeString = "A faction organised crime might be ready!";
+        crimeColor = Colors.orange[700];
+      } else {
+        var formattedTime = TimeFormatter(
+          inputTime: _ocTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).format;
+        _ocSimpleTimeString = "A faction organized crime will be ready @ "
+            "$formattedTime${_timeFormatted(_ocTime)}";
+      }
+
+      factionCrimes = Row(
+        children: [
+          Icon(MdiIcons.fingerprint),
+          SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              _ocSimpleTimeString,
+              style: TextStyle(color: crimeColor),
+            ),
+          ),
+          if (simpleReady)
+            InkWell(
+              borderRadius: BorderRadius.circular(100),
+              onLongPress: () {
+                _launchBrowserFull(
+                    "https://www.torn.com/factions.php?step=your#/tab=crimes");
+              },
+              onTap: () {
+                _launchBrowserOption(
+                    'https://www.torn.com/factions.php?step=your#/tab=crimes');
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Icon(MdiIcons.openInApp, size: 18),
+              ),
+            ),
+          GestureDetector(
+            child: Icon(
+              MdiIcons.closeCircleOutline,
+              size: 16,
+              color: crimeColor,
+            ),
+            onTap: () {
+              return showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return DisregardCrimeDialog(
+                    disregardCallback: _disregardCrimeCallback,
+                  );
+                },
+              );
+            },
+          ),
         ],
       );
     }
@@ -3996,7 +4111,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return SizedBox.shrink();
     } else {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
         child: Card(
           child: Padding(
             padding: const EdgeInsets.all(15.0),
@@ -4013,49 +4128,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: addictionWidget,
-                ),
-                if (addictionActive && racingActive) SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: racingWidget,
-                ),
-                if ((addictionActive || racingActive) && factionCrimesActive)
-                  SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: factionCrimes,
-                ),
-                if ((addictionActive || racingActive || factionCrimesActive) &&
-                    bankActive)
-                  SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: bankWidget,
-                ),
-                if ((addictionActive ||
-                        racingActive ||
-                        factionCrimesActive ||
-                        bankActive) &&
-                    educationActive)
-                  SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: educationWidget,
-                ),
-                if ((addictionActive ||
-                        racingActive ||
-                        factionCrimesActive ||
-                        bankActive ||
-                        educationActive) &&
-                    propertyActive)
-                  SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: _rentedPropertiesWidget,
-                ),
+                if (addictionActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: addictionWidget,
+                  ),
+                if (racingActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: racingWidget,
+                  ),
+                if (factionCrimesActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: factionCrimes,
+                  ),
+                if (bankActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: bankWidget,
+                  ),
+                if (educationActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: educationWidget,
+                  ),
+                if (propertyActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: _rentedPropertiesWidget,
+                  ),
               ],
             ),
           ),
@@ -4258,8 +4360,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
+
         // Get this async
-        _getFactionCrimes();
+        if (_settingsProvider.oCrimesEnabled) {
+          _getFactionCrimes();
+        }
 
         // Assess properties async, but wait some more time
         if (_rentedPropertiesTick == 0) {
@@ -4304,8 +4409,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             });
 
             if (participant.containsKey(_userProv.basic.playerId.toString())) {
-              _factionCrimeName = crime.crimeName;
-              _factionCrimeTimestamp =
+              _ocComplexName = crime.crimeName;
+              _ocTime =
                   DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
 
               // Breaks loop
@@ -4314,13 +4419,57 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           });
 
           // If found our crime, assign final number of participants not ready
-          if (found) _factionParticipantsNotReady = participantsNotReady;
+          if (found) _ocComplexPeopleNotReady = participantsNotReady;
         }
       });
     }
 
+    // Could indicate that we have no AA access, so we are looking for events!
     if (factionCrimes is ApiError || !found) {
-      _factionCrimeName = "";
+      _ocComplexName = "";
+
+      // Try to find quick crimes in events
+      var events = Map<String, Event>();
+      if (_user.events.length > 0) {
+        events = Map.from(_user.events)
+            .map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
+      }
+
+      bool foundReady = false;
+      bool foundProgress = false;
+      bool error = false;
+      events.forEach((key, value) {
+        if (!foundReady && !foundProgress && !error) {
+          if (value.event.contains("You and your team")) {
+            foundReady = true;
+          } else if (value.event.contains("You have been selected")) {
+            foundProgress = true;
+            RegExp strRaw = RegExp(r"([0-9]+) hours");
+            var matches = strRaw.allMatches(value.event);
+            if (matches.length > 0) {
+              for (var match in matches) {
+                var hoursString = match.group(1);
+                try {
+                  var hours = int.parse(hoursString);
+                  _ocTime = DateTime.fromMillisecondsSinceEpoch(
+                          value.timestamp * 1000)
+                      .add(Duration(hours: hours));
+                  _ocSimpleExists = true;
+                } catch (e) {
+                  foundReady = false;
+                  foundProgress = false;
+                  error = true;
+                }
+              }
+            }
+          }
+        }
+      });
+      // Check if we where disregarding this crime before (in which case we don't show it)
+      if (_settingsProvider.oCrimeDisregarded == _ocTime.millisecondsSinceEpoch) {
+        _ocSimpleExists = false;
+        _ocComplexName = "";
+      }
     }
   }
 
@@ -6396,4 +6545,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _rentedPropertiesWidget = Column(children: propertyLines);
     });
   }
+
+  void _disregardCrimeCallback() {
+    // We first remove the crime from the current screen
+    setState(() {
+      _ocSimpleExists = false;
+      _ocComplexName = "";
+    });
+    // Afterwards, ensure that it does not show again if it's the same one
+    _settingsProvider.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
+  }
+
 }

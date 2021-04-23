@@ -243,6 +243,28 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _oCrimesEnabled = true;
+  bool get oCrimesEnabled => _oCrimesEnabled;
+  set changeOCrimesEnabled(bool value) {
+    _oCrimesEnabled = value;
+    // If disabled, reset as well any crimes that was disregarded (so that it can
+    // be enabled again if desired)
+    if (!value) {
+      _oCrimeDisregarded = 0;
+      Prefs().setOCrimeDisregarded(_oCrimeDisregarded);
+    }
+    Prefs().setOCrimesEnabled(_oCrimesEnabled);
+    notifyListeners();
+  }
+
+  var _oCrimeDisregarded = 0;
+  int get oCrimeDisregarded => _oCrimeDisregarded;
+  set changeOCrimeDisregarded(int value) {
+    _oCrimeDisregarded = value;
+    Prefs().setOCrimeDisregarded(_oCrimeDisregarded);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -332,6 +354,9 @@ class SettingsProvider extends ChangeNotifier {
 
     String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
+
+    _oCrimesEnabled = await Prefs().getOCrimesEnabled();
+    _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
 
     notifyListeners();
   }

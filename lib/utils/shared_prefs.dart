@@ -107,6 +107,8 @@ class Prefs {
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
+  final String _kOCrimesEnabled = "pda_OCrimesEnabled";
+  final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1290,5 +1292,28 @@ class Prefs {
   Future<bool> setUserScriptsFirstTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUserScriptsFirstTime, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR ORGANIZED CRIMES
+  /// -----------------------------
+  Future<bool> getOCrimesEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kOCrimesEnabled) ?? true;
+  }
+
+  Future<bool> setOCrimesEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kOCrimesEnabled, value);
+  }
+
+  Future<int> getOCrimeDisregarded() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOCrimeDisregarded) ?? 0;
+  }
+
+  Future<bool> setOCrimeDisregarded(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kOCrimeDisregarded, value);
   }
 }
