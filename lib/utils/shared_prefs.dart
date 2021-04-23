@@ -109,6 +109,7 @@ class Prefs {
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
+  final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1315,5 +1316,15 @@ class Prefs {
   Future<bool> setOCrimeDisregarded(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kOCrimeDisregarded, value);
+  }
+
+  Future<int> getOCrimeLastKnown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOCrimeLastKnown) ?? 0;
+  }
+
+  Future<bool> setOCrimeLastKnown(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kOCrimeLastKnown, value);
   }
 }

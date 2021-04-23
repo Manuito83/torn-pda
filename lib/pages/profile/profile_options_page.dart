@@ -461,7 +461,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   'Shown in the miscellaneous card and in status when the time approaches. '
                                   'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
                                   'the participants\' status. Otherwise, it will be calculated based on received events (it might be prone to errors '
-                                  'if you delete them or receive too many)',
+                                  'if you delete them)',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,

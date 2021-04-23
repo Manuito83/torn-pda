@@ -265,6 +265,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _oCrimeLastKnown = 0;
+  int get oCrimeLastKnown => _oCrimeLastKnown;
+  set changeOCrimeLastKnown(int value) {
+    _oCrimeLastKnown = value;
+    Prefs().setOCrimeLastKnown(_oCrimeLastKnown);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -357,6 +365,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _oCrimesEnabled = await Prefs().getOCrimesEnabled();
     _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
+    _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
 
     notifyListeners();
   }

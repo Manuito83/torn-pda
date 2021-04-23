@@ -1177,7 +1177,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       Widget ocStatus = SizedBox.shrink();
       if ((_ocComplexName.isNotEmpty || _ocSimpleExists) &&
           _ocTime.difference(DateTime.now()).inHours < 10) {
-
         if (!_ocSimpleExists) {
           ocStatus = Padding(
             padding: const EdgeInsets.only(top: 5),
@@ -4360,7 +4359,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
-
         // Get this async
         if (_settingsProvider.oCrimesEnabled) {
           _getFactionCrimes();
@@ -4435,15 +4433,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             .map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
       }
 
-      bool foundReady = false;
+      bool foundExpired = false;
       bool foundProgress = false;
       bool error = false;
+
+      // Try to find our crime by reviewing the last 100 events. The first one we
+      // can find is the one that counts
       events.forEach((key, value) {
-        if (!foundReady && !foundProgress && !error) {
-          if (value.event.contains("You and your team")) {
-            foundReady = true;
+        if (!foundExpired && !foundProgress && !error) {
+          if (value.event.contains("You and your team") ||
+              (value.event.contains("canceled the") &&
+                  value.event.contains("that you were selected for"))) {
+            foundExpired = true;
           } else if (value.event.contains("You have been selected")) {
-            foundProgress = true;
             RegExp strRaw = RegExp(r"([0-9]+) hours");
             var matches = strRaw.allMatches(value.event);
             if (matches.length > 0) {
@@ -4454,9 +4456,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   _ocTime = DateTime.fromMillisecondsSinceEpoch(
                           value.timestamp * 1000)
                       .add(Duration(hours: hours));
+                  foundProgress = true;
                   _ocSimpleExists = true;
+                  _settingsProvider.changeOCrimeLastKnown = _ocTime.millisecondsSinceEpoch;
                 } catch (e) {
-                  foundReady = false;
+                  foundExpired = false;
                   foundProgress = false;
                   error = true;
                 }
@@ -4465,10 +4469,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
         }
       });
+
+      // If we haven't found anything in 100 events (including no cancellations), but we are still
+      // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
+      // take place after 8 days). If that's the case, show that one anyway.
+      if (!foundProgress && !foundExpired && !error) {
+        var lastKnown = DateTime.fromMillisecondsSinceEpoch(
+            _settingsProvider.oCrimeLastKnown);
+        if (DateTime.now().isBefore(lastKnown)) {
+          _ocSimpleExists = true;
+          _ocTime = lastKnown;
+          foundProgress = true;
+        }
+      }
+
       // Check if we where disregarding this crime before (in which case we don't show it)
-      if (_settingsProvider.oCrimeDisregarded == _ocTime.millisecondsSinceEpoch) {
-        _ocSimpleExists = false;
-        _ocComplexName = "";
+      if (foundProgress) {
+        if (_settingsProvider.oCrimeDisregarded ==
+            _ocTime.millisecondsSinceEpoch) {
+          _ocSimpleExists = false;
+          _ocComplexName = "";
+        }
       }
     }
   }
@@ -6555,5 +6576,4 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Afterwards, ensure that it does not show again if it's the same one
     _settingsProvider.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
   }
-
 }
