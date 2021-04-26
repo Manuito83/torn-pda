@@ -42,11 +42,13 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_4_1 = "Alerts: added refills (energy, nerve, casino tokens).";
     String feat2_3_4_2 = "Browser: added search functionality (tap the title or long-press the quick browser bottom bar).";
     String feat2_3_4_3 = "Profile: added organized crimes calculation from events (if faction API access is unavailable).";
-    String feat2_3_4_4 = "Loot: added pull to refresh functionality.";
+    String feat2_3_4_4 = "Profile: added bazaar status and dialog with details to the status card.";
+    String feat2_3_4_5 = "Loot: added pull to refresh functionality.";
     v2_3_4.features.add(feat2_3_4_1);
     v2_3_4.features.add(feat2_3_4_2);
     v2_3_4.features.add(feat2_3_4_3);
     v2_3_4.features.add(feat2_3_4_4);
+    v2_3_4.features.add(feat2_3_4_5);
 
     // VERSION 2.3.3
     var v2_3_3 = ChangeLogItem();

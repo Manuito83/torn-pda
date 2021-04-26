@@ -34,7 +34,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
+import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/gestures.dart';
@@ -50,7 +52,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
 import 'package:torn_pda/models/property_model.dart';
-import 'package:torn_pda/models/profile/skills_model.dart';
+import 'package:torn_pda/models/profile/bazaar_model.dart';
 
 enum ProfileNotification {
   travel,
@@ -190,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
-  SkillsModel _skillsModel;
+  BazaarModel _bazaarModel;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -263,7 +265,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_miscTick < 2) {
         _miscTick++;
       } else {
-        _getMiscInformation();
+        _getMiscCardInfo();
+        _getBazaarInfo();
         _miscTick = 0;
       }
     });
@@ -301,7 +304,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_apiGoodData) {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
-        _getMiscInformation();
+        _getMiscCardInfo();
       }
     }
   }
@@ -467,10 +470,32 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 50, vertical: 20),
-                        child: Text(
-                          'There was an error: $_apiError\n\n'
-                          'This will retry automatically!',
-                          textAlign: TextAlign.center,
+                        child: Column(
+                          children: [
+                            Text(
+                              'There was an error: $_apiError\n\n'
+                              'Torn PDA will retry automatically!',
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 20),
+                            Text(
+                              'If you have connectivity, it might be an issue with the API. '
+                                  'Try to access Torn directly:',
+                              textAlign: TextAlign.center,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                              child: ElevatedButton(
+                                child: Text("Torn"),
+                                onLongPress: () {
+                                  _launchBrowserFull('https://www.torn.com');
+                                },
+                                onPressed: () async {
+                                  _launchBrowserOption('https://www.torn.com');
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -913,6 +938,58 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
+    Widget bazaarStatus() {
+      if (_bazaarModel?.bazaar == null) return SizedBox.shrink();
+
+      var bazaarNumber = "";
+      _bazaarModel.bazaar.length == 1
+          ? bazaarNumber = "1 item"
+          : bazaarNumber = "${_bazaarModel.bazaar.length} items";
+
+      openTapCallback () {
+        _launchBrowserOption(
+            'https://www.torn.com/bazaar.php');
+      }
+
+      openLongPressCallback () {
+        _launchBrowserOption(
+            'https://www.torn.com/bazaar.php');
+      }
+
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 60,
+              child: Text("Bazaar:"),
+            ),
+            Text(bazaarNumber),
+            SizedBox(width: 8),
+            GestureDetector(
+              child: Icon(
+                MdiIcons.storefrontOutline,
+                size: 20,
+              ),
+              onTap: () {
+                return showDialog<void>(
+                  context: context,
+                  barrierDismissible: false, // user must tap button!
+                  builder: (BuildContext context) {
+                    return BazaarDialog(
+                      bazaarModel: _bazaarModel,
+                      openTapCallback: openTapCallback,
+                      openLongPressCallback: openLongPressCallback,
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -950,6 +1027,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         _notificationIcon(ProfileNotification.hospital)
                     ],
                   ),
+                  bazaarStatus(),
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
                   nukeRevive(),
@@ -2563,7 +2641,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message =
           message.replaceAll(' Please click here to collect your funds.', '');
 
-      Widget insideIcon = _eventsInsideIconCases(message);
+      Widget insideIcon = EventIcons(message: message);
 
       IndicatorStyle iconBubble;
       iconBubble = IndicatorStyle(
@@ -2702,162 +2780,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-
-  Widget _eventsInsideIconCases(String message) {
-    Widget insideIcon;
-    if (message.contains('revive')) {
-      insideIcon = Icon(
-        Icons.local_hospital,
-        color: Colors.green,
-        size: 20,
-      );
-    } else if (message.contains('the director of') ||
-        message.contains('You have been fired from') ||
-        message.contains('You application to join the company')) {
-      insideIcon = Icon(
-        Icons.work,
-        color: Colors.brown[300],
-        size: 20,
-      );
-    } else if (message.contains('jail') || message.contains('arrested you')) {
-      insideIcon = Center(
-        child: Image.asset(
-          'images/icons/jail.png',
-          width: 20,
-          height: 20,
-        ),
-      );
-    } else if (message.contains('trade')) {
-      insideIcon = Icon(
-        Icons.monetization_on,
-        color: Colors.green,
-        size: 20,
-      );
-    } else if (message.contains('has given you') ||
-        message.contains('You were sent') ||
-        message.contains('You have been credited with') ||
-        message.contains('on your doorstep')) {
-      insideIcon = Icon(
-        Icons.card_giftcard,
-        color: Colors.green,
-        size: 20,
-      );
-    } else if (message.contains('Get out of my education') ||
-        message.contains('You must have overdosed')) {
-      insideIcon = Icon(
-        Icons.warning,
-        color: Colors.red,
-        size: 20,
-      );
-    } else if (message.contains('purchased membership')) {
-      insideIcon = Icon(
-        Icons.fitness_center,
-        color: Colors.black54,
-        size: 20,
-      );
-    } else if (message.contains('You upgraded your level')) {
-      insideIcon = Icon(
-        Icons.file_upload,
-        color: Colors.green,
-        size: 20,
-      );
-    } else if (message.contains('won') ||
-        message.contains('lottery') ||
-        message.contains('check has been credited to your') ||
-        message.contains('withdraw your check from the bank') ||
-        message.contains('Your bank investment has ended') ||
-        message.contains('You were given \$')) {
-      insideIcon = Icon(
-        MdiIcons.cash100,
-        color: Colors.green,
-        size: 20,
-      );
-    } else if (message.contains('attacked you') ||
-        message.contains('mugged you and stole') ||
-        message.contains('attacked and hospitalized')) {
-      insideIcon = Container(
-        child: Center(
-          child: Image.asset(
-            'images/icons/ic_target_account_black_48dp.png',
-            width: 20,
-            height: 20,
-            color: Colors.red,
-          ),
-        ),
-      );
-    } else if (message.contains('You and your team') ||
-        message.contains('You have been selected') ||
-        message.contains('canceled the')) {
-      insideIcon = Container(
-        child: Center(
-          child: Image.asset(
-            'images/icons/ic_pistol_black_48dp.png',
-            width: 20,
-            height: 20,
-            color: Colors.blue,
-          ),
-        ),
-      );
-    } else if (message.contains('You left your faction') ||
-        message.contains('Your application to join the faction') ||
-        message.contains('has applied to join your faction')) {
-      insideIcon = Container(
-        child: Center(
-          child: Image.asset(
-            'images/icons/faction.png',
-            width: 15,
-            height: 15,
-            color: Colors.black,
-          ),
-        ),
-      );
-    } else if (message.contains('You came') ||
-        message.contains('race.') ||
-        message.contains('race and have received') ||
-        message.contains('Your best lap was')) {
-      insideIcon = Icon(
-        MdiIcons.gauge,
-        color: Colors.red[500],
-        size: 20,
-      );
-    } else if (message.contains('Your bug report')) {
-      insideIcon = Icon(
-        MdiIcons.bug,
-        color: Colors.red[500],
-        size: 20,
-      );
-    } else if (message.contains('You can begin programming a new virus')) {
-      insideIcon = Icon(
-        MdiIcons.virusOutline,
-        color: Colors.red[500],
-        size: 20,
-      );
-    } else if (message.contains('from your bazaar for')) {
-      insideIcon = Icon(
-        MdiIcons.store,
-        color: Colors.green,
-        size: 20,
-      );
-    } else if (message.contains('Your period of renting the') ||
-        message.contains('has sent an offer for you to rent') ||
-        message.contains('Your rental agreement with')) {
-      insideIcon = Icon(
-        Icons.house_outlined,
-        color: Colors.orange[900],
-        size: 20,
-      );
-    } else {
-      insideIcon = Container(
-        child: Center(
-          child: Text(
-            'T',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-          ),
-        ),
-      );
-    }
-    return insideIcon;
   }
 
   Card _messagesTimeline() {
@@ -3354,9 +3276,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var hunting = "";
     var racing = "";
     var reviving = "";
-    hunting = _skillsModel.hunting ?? "";
-    racing = _skillsModel.racing ?? "";
-    reviving = _skillsModel.reviving ?? "";
+    hunting = _miscModel.hunting ?? "";
+    racing = _miscModel.racing ?? "";
+    reviving = _miscModel.reviving ?? "";
     if (hunting.isNotEmpty || racing.isNotEmpty || reviving.isNotEmpty) {
       skillsExist = true;
     }
@@ -3406,12 +3328,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 4),
               _jobPoints(),
               SizedBox(height: 8),
-              Text('Battle: ${decimalFormat.format(_miscModel.total)}'),
+              SelectableText('Battle: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
-                    child: Text(
+                    child: SelectableText(
                       'Battle (effective): ${decimalFormat.format(totalEffective)}',
                     ),
                   ),
@@ -3432,9 +3354,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
               SizedBox(height: 8),
-              Text('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
-              Text('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
-              Text('END: ${decimalFormat.format(_miscModel.endurance)}'),
+              SelectableText('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
+              SelectableText('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
+              SelectableText('END: ${decimalFormat.format(_miscModel.endurance)}'),
             ],
           ),
         ),
@@ -3448,8 +3370,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Rank: ${_user.rank}'),
-                    Text('Age: ${_user.age}'),
+                    SelectableText('Rank: ${_user.rank}'),
+                    SelectableText('Age: ${_user.age}'),
                   ],
                 ),
               ),
@@ -3475,7 +3397,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                     ),
                     SizedBox(width: 5),
-                    Text('${_miscModel.points}'),
+                    SelectableText('${_miscModel.points}'),
                   ],
                 ),
               ),
@@ -3506,7 +3428,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Strength: ${decimalFormat.format(_miscModel.strength)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
@@ -3516,7 +3438,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Defense: ${decimalFormat.format(_miscModel.defense)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
@@ -3526,7 +3448,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Speed: ${decimalFormat.format(_miscModel.speed)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
@@ -3536,7 +3458,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
@@ -3549,7 +3471,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Divider(
                           color: _themeProvider.mainText, thickness: 0.5),
                     ),
-                    Text('Total: ${decimalFormat.format(_miscModel.total)}'),
+                    SelectableText('Total: ${decimalFormat.format(_miscModel.total)}'),
                   ],
                 ),
               ),
@@ -3575,7 +3497,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
                         strengthModified
                             ? Text(
@@ -3588,7 +3510,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
                         defenseModified
                             ? Text(
@@ -3601,7 +3523,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Speed: ${decimalFormat.format(speedModifiedTotal)}'),
                         speedModified
                             ? Text(
@@ -3614,7 +3536,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        Text(
+                        SelectableText(
                             'Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
                         dexModified
                             ? Text(
@@ -3655,11 +3577,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SelectableText(
                         'Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
-                    Text(
+                    SelectableText(
                         'Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
-                    Text(
+                    SelectableText(
                         'Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
                   ],
                 ),
@@ -3688,9 +3610,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (racing.isNotEmpty) Text('Racing: $racing'),
-                          if (reviving.isNotEmpty) Text('Reviving: $reviving'),
-                          if (hunting.isNotEmpty) Text('Hunting: $hunting'),
+                          if (racing.isNotEmpty) SelectableText('Racing: $racing'),
+                          if (reviving.isNotEmpty) SelectableText('Reviving: $reviving'),
+                          if (hunting.isNotEmpty) SelectableText('Hunting: $hunting'),
                         ],
                       ),
                     ),
@@ -3723,7 +3645,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
         ),
         SizedBox(width: 5),
-        Text('\$${moneyFormat.format(_user.networth["wallet"])}')
+        SelectableText('\$${moneyFormat.format(_user.networth["wallet"])}')
       ]);
     } else {
       return SizedBox.shrink();
@@ -4335,16 +4257,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       });
     }
 
-    // We get education and money (with ProfileMiscModel) separately and only once per load
-    // and then on onResumed
+    // We get other kind of information separately once per minute and onResumed
+    // As part of MiscCardInfo()
+    //  - (sync) Education, money and skills with miscInfo call
+    //  - (async) OC Crimes (both types) with AA call or from events
+    // Separately
+    //  - (async) Bazaar
     if (_apiGoodData && !_miscApiFetched) {
-      await _getMiscInformation();
+      await _getMiscCardInfo();
+      _getBazaarInfo();
     }
 
     _retrievePendingNotifications();
   }
 
-  Future _getMiscInformation() async {
+  Future _getMiscCardInfo() async {
     try {
       var miscApiResponse =
           await TornApiCaller.ownMisc(_userProv.basic.userApiKey)
@@ -4354,9 +4281,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           await TornApiCaller.education(_userProv.basic.userApiKey)
               .getEducation;
 
-      var skillsResponse =
-          await TornApiCaller.skills(_userProv.basic.userApiKey).getSkills;
-
+      // The ones that are inside this condition, show in the MISC card (which
+      // is disabled if the MISC API call is not successful
       if (miscApiResponse is OwnProfileMisc &&
           educationResponse is TornEducationModel) {
         // Get this async
@@ -4378,10 +4304,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _miscApiFetched = true;
           _tornEducationModel = educationResponse;
         });
-      }
-
-      if (skillsResponse is SkillsModel) {
-        _skillsModel = skillsResponse;
       }
     } catch (e) {
       // If something fails, we simple don't show the MISC section
@@ -4458,7 +4380,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       .add(Duration(hours: hours));
                   foundProgress = true;
                   _ocSimpleExists = true;
-                  _settingsProvider.changeOCrimeLastKnown = _ocTime.millisecondsSinceEpoch;
+                  _settingsProvider.changeOCrimeLastKnown =
+                      _ocTime.millisecondsSinceEpoch;
                 } catch (e) {
                   foundExpired = false;
                   foundProgress = false;
@@ -4491,6 +4414,20 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           _ocComplexName = "";
         }
       }
+    }
+  }
+
+  Future _getBazaarInfo() async {
+    try {
+      var bazaarApiResponse =
+          await TornApiCaller.bazaar(_userProv.basic.userApiKey).getBazaar;
+      if (bazaarApiResponse is BazaarModel) {
+        setState(() {
+          _bazaarModel = bazaarApiResponse;
+        });
+      }
+    } catch (e) {
+      // If something fails, we simple don't show the bazaar section
     }
   }
 
@@ -6313,7 +6250,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
           SizedBox(width: 6),
-          Text(headerString),
+          SelectableText(headerString),
           SizedBox(width: 10),
           GestureDetector(
             onTap: () async {
