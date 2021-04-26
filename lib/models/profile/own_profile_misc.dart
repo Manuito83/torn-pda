@@ -31,6 +31,9 @@ class OwnProfileMisc {
     this.defenseModifier,
     this.speedModifier,
     this.dexterityModifier,
+    this.hunting,
+    this.racing,
+    this.reviving,
     this.cityBank,
     this.educationCompleted,
     this.strengthInfo,
@@ -60,6 +63,9 @@ class OwnProfileMisc {
   int defenseModifier;
   int speedModifier;
   int dexterityModifier;
+  String hunting;
+  String racing;
+  String reviving;
   CityBank cityBank;
   List<int> educationCompleted;
   List<String> strengthInfo;
@@ -89,6 +95,9 @@ class OwnProfileMisc {
     defenseModifier: json["defense_modifier"] == null ? null : json["defense_modifier"],
     speedModifier: json["speed_modifier"] == null ? null : json["speed_modifier"],
     dexterityModifier: json["dexterity_modifier"] == null ? null : json["dexterity_modifier"],
+    hunting: json["hunting"] == null ? null : json["hunting"],
+    racing: json["racing"] == null ? null : json["racing"],
+    reviving: json["reviving"] == null ? null : json["reviving"],
     cityBank: json["city_bank"] == null ? null : CityBank.fromJson(json["city_bank"]),
     educationCompleted: json["education_completed"] == null ? null : List<int>.from(json["education_completed"].map((x) => x)),
     strengthInfo: json["strength_info"] == null ? null : List<String>.from(json["strength_info"].map((x) => x)),
@@ -119,6 +128,9 @@ class OwnProfileMisc {
     "defense_modifier": defenseModifier == null ? null : defenseModifier,
     "speed_modifier": speedModifier == null ? null : speedModifier,
     "dexterity_modifier": dexterityModifier == null ? null : dexterityModifier,
+    "hunting": hunting == null ? null : hunting,
+    "racing": racing == null ? null : racing,
+    "reviving": reviving == null ? null : reviving,
     "city_bank": cityBank == null ? null : cityBank.toJson(),
     "education_completed": educationCompleted == null ? null : List<dynamic>.from(educationCompleted.map((x) => x)),
     "strength_info": strengthInfo == null ? null : List<dynamic>.from(strengthInfo.map((x) => x)),
