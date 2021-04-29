@@ -189,7 +189,11 @@ async function sendNotificationForProfile(subscriber: any, stocks: any): Promise
         promises.push(sendForeignRestockNotification(userStats, stocks, subscriber));
 
       await Promise.all(promises);
+
+    } else {
+      functions.logger.warn(`ERROR API \n${subscriber.uid} \n${userStats.error}`);
     }
+    
   } catch (e) {
     functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
 
