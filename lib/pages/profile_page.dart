@@ -1253,13 +1253,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else {
       Widget ocStatus = SizedBox.shrink();
-      if ((_ocComplexName.isNotEmpty || _ocSimpleExists) &&
+      if ((_ocComplexTimeString.isNotEmpty || _ocSimpleExists) &&
           _ocTime.difference(DateTime.now()).inHours < 10) {
         if (!_ocSimpleExists) {
           ocStatus = Padding(
             padding: const EdgeInsets.only(top: 5),
             child: Text(
-              "OC $_ocComplexTimeString",
+              "$_ocComplexTimeString",
               style: TextStyle(
                 color: Colors.orange[700],
                 fontSize: 12,
@@ -3771,16 +3771,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).format;
         _ocComplexTimeString =
-            "will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
+            "OC will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
       } else {
         _ocComplexReady = true;
         if (_ocComplexPeopleNotReady == 0) {
-          _ocComplexTimeString = "and all participants are ready!";
+          _ocComplexTimeString = "OC and all participants are ready!";
         } else if (_ocComplexPeopleNotReady == 1) {
-          _ocComplexTimeString = "is ready, but 1 participant is not!";
+          _ocComplexTimeString = "OC is ready, but 1 participant is not!";
         } else {
           _ocComplexTimeString =
-              "is ready, but $_ocComplexPeopleNotReady participants are not!";
+              "OC is ready, but $_ocComplexPeopleNotReady participants are not!";
         }
       }
 
