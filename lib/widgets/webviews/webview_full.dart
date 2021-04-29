@@ -600,6 +600,7 @@ class _WebViewFullState extends State<WebViewFull> {
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                 clearCache: _clearCacheFirstOpportunity,
+                useOnLoadResource: true,
                 // This is deactivated as it interferes with hospital timer company applications, etc.
                 //useShouldInterceptAjaxRequest: true,
               ),
@@ -700,17 +701,12 @@ class _WebViewFullState extends State<WebViewFull> {
               webView.loadUrl(urlRequest: request.request);
               return;
             },
-            onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "")
-                print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
+            onLoadResource: (c, resource) async {
               /// TRADES
               /// We are calling trades from here because onLoadStop does not
               /// work inside of Trades for iOS. Also, both in Android and iOS
-              /// we need to catch deletions that happen with a console message
-              /// of "hash.step".
-              if (consoleMessage.message.contains('hash.step') &&
-                  _currentUrl.contains('trade.php')) {
+              /// we need to catch deletions.
+              if (resource.url.path.contains("trade.php")) {
                 _tradesTriggered = true;
                 _currentUrl = (await webView.getUrl()).toString();
                 var html = await webView.getHtml();
@@ -718,7 +714,12 @@ class _WebViewFullState extends State<WebViewFull> {
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
                 _assessTrades(document, pageTitle);
               }
+              return;
             },
+            onConsoleMessage: (controller, consoleMessage) async {
+              if (consoleMessage.message != "")
+                print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+              },
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
@@ -1563,7 +1564,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Trade Id
     try {
-      RegExp regId = new RegExp(r"(?:&ID=)([0-9]+)");
+      RegExp regId = new RegExp(r"&ID=([0-9]+)");
       var matches = regId.allMatches(_currentUrl);
       tradeId = int.parse(matches.elementAt(0).group(1));
     } catch (e) {
@@ -2003,7 +2004,7 @@ class _WebViewFullState extends State<WebViewFull> {
         _lastProfileVisited = _currentUrl;
 
         try {
-          RegExp regId = new RegExp(r"(?:php\?XID=)([0-9]+)");
+          RegExp regId = new RegExp(r"php\?XID=([0-9]+)");
           var matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
@@ -2025,7 +2026,7 @@ class _WebViewFullState extends State<WebViewFull> {
         _lastProfileVisited = _currentUrl;
 
         try {
-          RegExp regId = new RegExp(r"(?:&user2ID=)([0-9]+)");
+          RegExp regId = new RegExp(r"&user2ID=([0-9]+)");
           var matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {

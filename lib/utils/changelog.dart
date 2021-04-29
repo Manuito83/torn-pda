@@ -44,11 +44,13 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_4_3 = "Profile: added organized crimes calculation from events (if faction API access is unavailable).";
     String feat2_3_4_4 = "Profile: added bazaar status and dialog with details to the status card.";
     String feat2_3_4_5 = "Loot: added pull to refresh functionality.";
+    String feat2_3_4_6 = "Browser: Fixed issue preventing the Trade Calculator widget from activating.";
     v2_3_4.features.add(feat2_3_4_1);
     v2_3_4.features.add(feat2_3_4_2);
     v2_3_4.features.add(feat2_3_4_3);
     v2_3_4.features.add(feat2_3_4_4);
     v2_3_4.features.add(feat2_3_4_5);
+    v2_3_4.features.add(feat2_3_4_6);
 
     // VERSION 2.3.3
     var v2_3_3 = ChangeLogItem();
