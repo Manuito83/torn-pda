@@ -46,6 +46,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_4_5 = "Profile: you can now copy or share the information in the Basic Info card.";
     String feat2_3_4_6 = "Loot: added pull to refresh functionality.";
     String feat2_3_4_7 = "Browser: fixed issue preventing the Trade Calculator widget from activating.";
+    String feat2_3_4_8 = "Scripts: updated TornCAT example and the repository with new scripts.";
     v2_3_4.features.add(feat2_3_4_1);
     v2_3_4.features.add(feat2_3_4_2);
     v2_3_4.features.add(feat2_3_4_3);
@@ -53,6 +54,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_4.features.add(feat2_3_4_5);
     v2_3_4.features.add(feat2_3_4_6);
     v2_3_4.features.add(feat2_3_4_7);
+    v2_3_4.features.add(feat2_3_4_8);
 
     // VERSION 2.3.3
     var v2_3_3 = ChangeLogItem();
