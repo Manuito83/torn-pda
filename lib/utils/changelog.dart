@@ -37,7 +37,7 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.3.4
     var v2_3_4 = ChangeLogItem();
-    v2_3_4.main.version = 'v2.3.4';
+    v2_3_4.main.version = 'Torn PDA v2.3.4';
     v2_3_4.main.date = '04 MAY 2021';
     String feat2_3_4_1 = "Alerts: added refills (energy, nerve, casino tokens).";
     String feat2_3_4_2 = "Browser: added search functionality (tap the title or long-press the quick browser bottom bar).";
