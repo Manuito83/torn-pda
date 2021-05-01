@@ -45,7 +45,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_4_4 = "Profile: added bazaar status and dialog with details to the status card.";
     String feat2_3_4_5 = "Profile: you can now copy or share the information in the Basic Info card.";
     String feat2_3_4_6 = "Loot: added pull to refresh functionality.";
-    String feat2_3_4_7 = "Browser: Fixed issue preventing the Trade Calculator widget from activating.";
+    String feat2_3_4_7 = "Browser: fixed issue preventing the Trade Calculator widget from activating.";
     v2_3_4.features.add(feat2_3_4_1);
     v2_3_4.features.add(feat2_3_4_2);
     v2_3_4.features.add(feat2_3_4_3);
