@@ -37,20 +37,22 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.3.4
     var v2_3_4 = ChangeLogItem();
-    v2_3_4.main.version = 'BETA v2.3.4'; // TODO
-    v2_3_4.main.date = '01 MAY 2021'; // TODO
+    v2_3_4.main.version = 'v2.3.4';
+    v2_3_4.main.date = '04 MAY 2021';
     String feat2_3_4_1 = "Alerts: added refills (energy, nerve, casino tokens).";
     String feat2_3_4_2 = "Browser: added search functionality (tap the title or long-press the quick browser bottom bar).";
     String feat2_3_4_3 = "Profile: added organized crimes calculation from events (if faction API access is unavailable).";
     String feat2_3_4_4 = "Profile: added bazaar status and dialog with details to the status card.";
-    String feat2_3_4_5 = "Loot: added pull to refresh functionality.";
-    String feat2_3_4_6 = "Browser: Fixed issue preventing the Trade Calculator widget from activating.";
+    String feat2_3_4_5 = "Profile: you can now copy or share the information in the Basic Info card.";
+    String feat2_3_4_6 = "Loot: added pull to refresh functionality.";
+    String feat2_3_4_7 = "Browser: Fixed issue preventing the Trade Calculator widget from activating.";
     v2_3_4.features.add(feat2_3_4_1);
     v2_3_4.features.add(feat2_3_4_2);
     v2_3_4.features.add(feat2_3_4_3);
     v2_3_4.features.add(feat2_3_4_4);
     v2_3_4.features.add(feat2_3_4_5);
     v2_3_4.features.add(feat2_3_4_6);
+    v2_3_4.features.add(feat2_3_4_7);
 
     // VERSION 2.3.3
     var v2_3_3 = ChangeLogItem();

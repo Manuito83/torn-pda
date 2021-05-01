@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:share/share.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
@@ -242,6 +243,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     "Networth",
   ];
   var _userSectionOrder = <String>[];
+
+  var _sharedEffStrength = "";
+  var _sharedEffSpeed = "";
+  var _sharedEffDexterity = "";
+  var _sharedEffDefense = "";
+  var _sharedEffTotal = "";
+  var _sharedJobPoints = "";
 
   @override
   void initState() {
@@ -480,7 +488,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             SizedBox(height: 20),
                             Text(
                               'If you have connectivity, it might be an issue with the API. '
-                                  'Try to access Torn directly:',
+                              'Try to access Torn directly:',
                               textAlign: TextAlign.center,
                             ),
                             Padding(
@@ -946,14 +954,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ? bazaarNumber = "1 item"
           : bazaarNumber = "${_bazaarModel.bazaar.length} items";
 
-      openTapCallback () {
-        _launchBrowserOption(
-            'https://www.torn.com/bazaar.php');
+      openTapCallback() {
+        _launchBrowserOption('https://www.torn.com/bazaar.php');
       }
 
-      openLongPressCallback () {
-        _launchBrowserOption(
-            'https://www.torn.com/bazaar.php');
+      openLongPressCallback() {
+        _launchBrowserOption('https://www.torn.com/bazaar.php');
       }
 
       return Padding(
@@ -3283,6 +3289,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       skillsExist = true;
     }
 
+    _sharedEffStrength =
+        'Strength: ${decimalFormat.format(strengthModifiedTotal)} $strengthString';
+    _sharedEffDefense =
+        'Defense: ${decimalFormat.format(defenseModifiedTotal)} $defenseString';
+    _sharedEffSpeed =
+        'Speed: ${decimalFormat.format(speedModifiedTotal)} $speedString';
+    _sharedEffDexterity =
+        'Dexterity: ${decimalFormat.format(dexModifiedTotal)} $dexString';
+    _sharedEffTotal = 'Total: ${decimalFormat.format(totalEffective)}';
+
     return Card(
       child: ExpandablePanel(
         controller: _basicInfoExpController,
@@ -3296,6 +3312,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+              SizedBox(width: 5),
+              GestureDetector(
+                child: Icon(Icons.copy, size: 14),
+                onTap: () {
+                  _shareMisc();
+                },
               ),
             ],
           ),
@@ -3328,7 +3351,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 4),
               _jobPoints(),
               SizedBox(height: 8),
-              SelectableText('Battle: ${decimalFormat.format(_miscModel.total)}'),
+              SelectableText(
+                  'Battle: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
               Row(
                 children: [
@@ -3354,9 +3378,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
               SizedBox(height: 8),
-              SelectableText('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
-              SelectableText('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
-              SelectableText('END: ${decimalFormat.format(_miscModel.endurance)}'),
+              SelectableText(
+                  'MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
+              SelectableText(
+                  'INT: ${decimalFormat.format(_miscModel.intelligence)}'),
+              SelectableText(
+                  'END: ${decimalFormat.format(_miscModel.endurance)}'),
             ],
           ),
         ),
@@ -3418,6 +3445,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    SizedBox(width: 5),
+                    GestureDetector(
+                      child: Icon(Icons.copy, size: 14),
+                      onTap: () {
+                        _shareMisc(shareType: "battle");
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -3471,7 +3505,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Divider(
                           color: _themeProvider.mainText, thickness: 0.5),
                     ),
-                    SelectableText('Total: ${decimalFormat.format(_miscModel.total)}'),
+                    SelectableText(
+                        'Total: ${decimalFormat.format(_miscModel.total)}'),
                   ],
                 ),
               ),
@@ -3486,6 +3521,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    SizedBox(width: 5),
+                    GestureDetector(
+                      child: Icon(Icons.copy, size: 14),
+                      onTap: () {
+                        _shareMisc(shareType: "effective");
+                      },
                     ),
                   ],
                 ),
@@ -3569,6 +3611,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    SizedBox(width: 5),
+                    GestureDetector(
+                      child: Icon(Icons.copy, size: 14),
+                      onTap: () {
+                        _shareMisc(shareType: "work");
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -3602,6 +3651,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          SizedBox(width: 5),
+                          GestureDetector(
+                            child: Icon(Icons.copy, size: 14),
+                            onTap: () {
+                              _shareMisc(shareType: "skills");
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -3610,9 +3666,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (racing.isNotEmpty) SelectableText('Racing: $racing'),
-                          if (reviving.isNotEmpty) SelectableText('Reviving: $reviving'),
-                          if (hunting.isNotEmpty) SelectableText('Hunting: $hunting'),
+                          if (racing.isNotEmpty)
+                            SelectableText('Racing: $racing'),
+                          if (reviving.isNotEmpty)
+                            SelectableText('Reviving: $reviving'),
+                          if (hunting.isNotEmpty)
+                            SelectableText('Hunting: $hunting'),
                         ],
                       ),
                     ),
@@ -5282,6 +5341,104 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  void _shareMisc({String shareType}) {
+    final decimalFormat = new NumberFormat("#,##0", "en_US");
+    var playerString = "${_user.name} [${_user.playerId}]";
+
+    String getBattle() {
+      var battleString = "\n\nBATTLE STATS";
+      battleString +=
+      '\nStrength: ${decimalFormat.format(_miscModel.strength)} '
+          '(${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)';
+      battleString += '\nDefense: ${decimalFormat.format(_miscModel.defense)} '
+          '(${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)';
+      battleString += '\nSpeed: ${decimalFormat.format(_miscModel.speed)} '
+          '(${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)';
+      battleString +=
+      '\nDexterity: ${decimalFormat.format(_miscModel.dexterity)} '
+          '(${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)';
+      battleString += '\n-------';
+      battleString += '\nTotal: ${decimalFormat.format(_miscModel.total)}';
+      return battleString;
+    }
+
+    String getEffective() {
+      var effectiveString = "\n\nEFFECTIVE STATS";
+      effectiveString += '\n$_sharedEffStrength';
+      effectiveString += '\n$_sharedEffDefense';
+      effectiveString += '\n$_sharedEffSpeed';
+      effectiveString += '\n$_sharedEffDexterity';
+      effectiveString += '\n-------';
+      effectiveString += '\n$_sharedEffTotal';
+      return effectiveString;
+    }
+
+    String getWork() {
+      var workString = "\n\nWORK STATS";
+      workString +=
+      '\nManual labor: ${decimalFormat.format(_miscModel.manualLabor)}';
+      workString +=
+      '\nIntelligence: ${decimalFormat.format(_miscModel.intelligence)}';
+      workString +=
+      '\nEndurance: ${decimalFormat.format(_miscModel.endurance)}';
+      return workString;
+    }
+
+    String getSkills() {
+      var skillExist = false;
+      var skillsString = "\n\nSKILLS";
+      if (_miscModel.hunting != null) {
+        skillsString += '\nRacing: ${_miscModel.racing}';
+        skillExist = true;
+      }
+      if (_miscModel.reviving != null) {
+        skillsString += '\nReviving: ${_miscModel.reviving}';
+        skillExist = true;
+      }
+      if (_miscModel.hunting != null) {
+        skillsString += '\nHunting: ${_miscModel.hunting}';
+        skillExist = true;
+      }
+      if (!skillExist) skillsString = "";
+      return skillsString;
+    }
+
+    switch (shareType) {
+      case "battle":
+        var battle = playerString += getBattle();
+        Share.share(battle);
+        //print(battle);
+        break;
+      case "effective":
+        var effective = playerString += getEffective();
+        Share.share(effective);
+        //print(effective);
+        break;
+      case "work":
+        var work = playerString += getWork();
+        Share.share(work);
+        //print(work);
+        break;
+      case "skills":
+        var skills = playerString += getSkills();
+        Share.share(skills);
+        //print(skills);
+        break;
+      default:
+        var all = playerString;
+        all += "\n\nCash: ${decimalFormat.format(_user.networth["wallet"])}";
+        all += "\nPoints: ${_miscModel.points}";
+        all += "\n$_sharedJobPoints";
+        all += getBattle();
+        all += getEffective();
+        all += getWork();
+        all += getSkills();
+        Share.share(all);
+        //print(all);
+        break;
+    }
+  }
+
   Future _loadPreferences() async {
     //SharedPreferencesModel().setProfileSectionOrder([]);
 
@@ -6233,6 +6390,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (unemployed) {
         headerString = "Unemployed";
       }
+
+      _sharedJobPoints = headerString;
 
       return Row(
         children: [
