@@ -30,7 +30,7 @@ dependencies:
   flutter_slidable: ^0.5.7
   provider: ^4.3.3
   percent_indicator: ^2.1.9+1
-  webview_flutter: ^2.0.3
+  webview_flutter: ^2.0.4
   share: ^0.6.5+4
   html: ^0.14.0+4
   sliding_up_panel: ^1.0.2
@@ -45,7 +45,7 @@ dependencies:
   cloud_firestore: ^1.0.3
   firebase_database: ^6.1.1
   firebase_auth: ^1.0.1
-  firebase_crashlytics: ^1.0.0
+  firebase_crashlytics: ^2.0.2
   easy_rich_text: ^0.5.3
   wakelock: ^0.2.1+1
   audioplayers: 0.18.3
