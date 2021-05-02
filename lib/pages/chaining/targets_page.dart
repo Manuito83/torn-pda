@@ -366,7 +366,9 @@ class _TargetsPageState extends State<TargetsPage> {
                         child: Container(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(),
+                          child: CircularProgressIndicator(
+                            color: Colors.white70,
+                          ),
                         ),
                       ),
                     ),
