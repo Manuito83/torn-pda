@@ -343,90 +343,93 @@ class _WebViewFullState extends State<WebViewFull> {
 
   Widget _quickBrowserBottomBar() {
     if (_findInPageActive) {
-      return Row(
-        children: [
-          IconButton(
-            icon: Icon(Icons.close),
-            onPressed: () async {
-              setState(() {
-                _findInPageActive = false;
-              });
-              _findController.text = "";
-              webView.clearMatches();
-              _findFirstSubmitted = false;
-            },
-          ),
-          Flexible(
-            child: Form(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                    child: Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: TextField(
-                            onEditingComplete: () {
-                              _findPreviousText = _findController.text;
-                              _findAll();
-                              _findFocus.unfocus();
-                            },
-                            controller: _findController,
-                            focusNode: _findFocus,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: "What are you looking for?",
-                              hintStyle: TextStyle(
+      return Container(
+        color: _themeProvider.background,
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () async {
+                setState(() {
+                  _findInPageActive = false;
+                });
+                _findController.text = "";
+                webView.clearMatches();
+                _findFirstSubmitted = false;
+              },
+            ),
+            Flexible(
+              child: Form(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: TextField(
+                              onEditingComplete: () {
+                                _findPreviousText = _findController.text;
+                                _findAll();
+                                _findFocus.unfocus();
+                              },
+                              controller: _findController,
+                              focusNode: _findFocus,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "What are you looking for?",
+                                hintStyle: TextStyle(
                                   fontStyle: FontStyle.italic,
-                                  color: Colors.grey[300],
-                                  fontSize: 12),
-                            ),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              style: TextStyle(
+                                color: _themeProvider.mainText,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.search),
-                onPressed: () {
-                  _findPreviousText = _findController.text;
-                  _findAll();
-                  _findFocus.unfocus();
-                },
-              ),
-              if (_findFirstSubmitted)
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.keyboard_arrow_up),
-                      onPressed: () {
-                        _findNext(forward: false);
-                        _findFocus.unfocus();
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.keyboard_arrow_down),
-                      onPressed: () {
-                        _findNext(forward: true);
-                        _findFocus.unfocus();
-                      },
+                        ],
+                      ),
                     ),
                   ],
-                )
-            ],
-          )
-        ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    _findPreviousText = _findController.text;
+                    _findAll();
+                    _findFocus.unfocus();
+                  },
+                ),
+                if (_findFirstSubmitted)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.keyboard_arrow_up),
+                        onPressed: () {
+                          _findNext(forward: false);
+                          _findFocus.unfocus();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.keyboard_arrow_down),
+                        onPressed: () {
+                          _findNext(forward: true);
+                          _findFocus.unfocus();
+                        },
+                      ),
+                    ],
+                  )
+              ],
+            )
+          ],
+        ),
       );
     }
 
@@ -485,7 +488,12 @@ class _WebViewFullState extends State<WebViewFull> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: TextButton(
-                  child: Text("Close"),
+                  child: Text(
+                    "Close",
+                    style: TextStyle(
+                      color: _themeProvider.mainText,
+                    ),
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -726,7 +734,7 @@ class _WebViewFullState extends State<WebViewFull> {
             onConsoleMessage: (controller, consoleMessage) async {
               if (consoleMessage.message != "")
                 print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-              },
+            },
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
