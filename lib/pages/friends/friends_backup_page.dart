@@ -1,14 +1,21 @@
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share/share.dart';
+
+// Project imports:
+import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/models/friends/friends_backup_model.dart';
 
 class FriendsBackupPage extends StatefulWidget {
   @override
@@ -102,7 +109,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                         children: <Widget>[
                           Padding(
                               padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                              child: RaisedButton.icon(
+                              child: ElevatedButton.icon(
                                 icon: Icon(Icons.share),
                                 label: Text("Export"),
                                 onPressed: () async {
@@ -125,7 +132,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                               )),
                           Padding(
                             padding: EdgeInsets.fromLTRB(10, 10, 10, 0),
-                            child: RaisedButton.icon(
+                            child: ElevatedButton.icon(
                               icon: Icon(Icons.content_copy),
                               label: Text("Clipboard"),
                               onPressed: () async {
@@ -210,7 +217,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                               ),
                               Padding(
                                 padding: EdgeInsets.fromLTRB(10, 10, 10, 10),
-                                child: RaisedButton.icon(
+                                child: ElevatedButton.icon(
                                   icon: Icon(Icons.file_download),
                                   label: Text("Import"),
                                   onPressed: () {
@@ -368,7 +375,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      RaisedButton(
+                      ElevatedButton(
                         child: Text("Add"),
                         onPressed: () async {
                           Navigator.of(context).pop();
@@ -378,7 +385,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                       Padding(
                         padding: const EdgeInsets.only(left: 5, right: 5),
                       ),
-                      RaisedButton(
+                      ElevatedButton(
                         child: Text("Replace"),
                         onPressed: () {
                           Navigator.of(context).pop();
@@ -392,7 +399,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           onPressed: () {
                             Navigator.of(context).pop();
                           },

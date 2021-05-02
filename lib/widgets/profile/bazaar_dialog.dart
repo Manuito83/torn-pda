@@ -1,6 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+// Project imports:
 import 'package:torn_pda/models/profile/bazaar_model.dart';
 
 class BazaarDialog extends StatefulWidget {

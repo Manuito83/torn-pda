@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 
 class OnAppExitDialog extends StatefulWidget {
@@ -48,7 +53,7 @@ class _OnAppExitDialogState extends State<OnAppExitDialog> {
         ),
       ),
       actions: [
-        FlatButton(
+        TextButton(
           child: Text("Exit"),
           onPressed: () {
             if (_remember) {
@@ -57,7 +62,7 @@ class _OnAppExitDialogState extends State<OnAppExitDialog> {
             Navigator.of(context).pop('exit');
           },
         ),
-        FlatButton(
+        TextButton(
           child: Text("Stay"),
           onPressed: () async {
             if (_remember) {

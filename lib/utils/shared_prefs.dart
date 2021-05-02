@@ -1,5 +1,8 @@
-import 'package:shared_preferences/shared_preferences.dart';
+// Dart imports:
 import 'dart:async';
+
+// Package imports:
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
   ///
@@ -117,10 +120,6 @@ class Prefs {
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
 
-  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
-  /// UserDetailsProvider for retrieving the API key and other details!
-  @deprecated
-  final String _kApiKey = "pda_apiKey";
 
   /// ----------------------------
   /// Methods for app version
@@ -159,22 +158,6 @@ class Prefs {
   Future<bool> setLastAppUse(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAppUse, value);
-  }
-
-  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
-  /// UserDetailsProvider for retrieving the API key and other details!
-  @deprecated
-  Future<String> getApiKey() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kApiKey) ?? "";
-  }
-
-  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
-  /// UserDetailsProvider for retrieving the API key and other details!
-  @deprecated
-  Future<bool> setApiKey(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kApiKey, value);
   }
 
   /// ----------------------------

@@ -1,8 +1,13 @@
-import 'package:torn_pda/private/yata_config.dart';
-import 'dart:convert';
+// Dart imports:
 import 'dart:async';
-import 'package:cookie_jar/cookie_jar.dart';
+import 'dart:convert';
 import 'dart:io';
+
+// Package imports:
+import 'package:cookie_jar/cookie_jar.dart';
+
+// Project imports:
+import 'package:torn_pda/private/yata_config.dart';
 
 class YataError {
   String reason;
@@ -26,7 +31,8 @@ class YataComm {
     };
 
     // 2 cookies, for CSRF and SessionId
-    if (_cj.loadForRequest(_authUrl).length < 2) {
+    var cookies = await _cj.loadForRequest(_authUrl);
+    if (cookies.length < 2) {
       // No valid sessionId, calling auth!
       var result = await _getAuth(apiKey);
       if (result is YataError) {
@@ -38,7 +44,7 @@ class YataComm {
 
     try {
       var awardsRequest = await _client.getUrl(_awardsUrl);
-      awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
+      awardsRequest.cookies.addAll(cookies);
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var awardsResponse = await awardsRequest.close();
       var awardsJson = await awardsResponse.transform(utf8.decoder).join();
@@ -54,17 +60,18 @@ class YataComm {
     };
 
     // 2 cookies, for CSRF and SessionId
-    if (_cj.loadForRequest(_authUrl).length < 2) {
+    var cookies = await _cj.loadForRequest(_authUrl);
+    if (cookies.length < 2) {
       // No valid sessionId, calling auth!
       await _getAuth(apiKey);
     }
 
     try {
       // Modify header on the fly to account for the csrf token
-      headers["X-CSRFToken"] = _cj.loadForRequest(_authUrl)[0].value;
+      headers["X-CSRFToken"] = cookies[0].value;
 
       var awardsRequest = await _client.postUrl(_awardsTogglePinUrl);
-      awardsRequest.cookies.addAll(_cj.loadForRequest(_authUrl));
+      awardsRequest.cookies.addAll(await _cj.loadForRequest(_authUrl));
       headers.forEach((key, value) => awardsRequest.headers.add(key, value));
       var body = "{\"awardId\": \"$awardId\"}";
       awardsRequest.write(body);

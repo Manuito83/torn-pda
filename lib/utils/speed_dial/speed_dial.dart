@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'animated_child.dart';
 import 'animated_floating_button.dart';
 import 'background_overlay.dart';

@@ -2,6 +2,7 @@
 //
 //     final friendModel = friendModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 FriendModel friendModelFromJson(String str) => FriendModel.fromJson(json.decode(str));

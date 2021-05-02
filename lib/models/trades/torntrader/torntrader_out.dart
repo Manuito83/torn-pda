@@ -2,6 +2,7 @@
 //
 //     final tornTradesOut = tornTradesOutFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 TornTraderOutModel tornTraderOutFromJson(String str) => TornTraderOutModel.fromJson(json.decode(str));
@@ -20,14 +21,14 @@ class TornTraderOutModel {
   int buyer;
   String seller;
   int tradeId;
-  List<ttOutItem> items;
+  List<TtOutItem> items;
   String appVersion;
 
   factory TornTraderOutModel.fromJson(Map<String, dynamic> json) => TornTraderOutModel(
     buyer: json["buyer"] == null ? null : json["buyer"],
     seller: json["seller"] == null ? null : json["seller"],
     tradeId: json["trade_id"] == null ? null : json["trade_id"],
-    items: json["items"] == null ? null : List<ttOutItem>.from(json["items"].map((x) => ttOutItem.fromJson(x))),
+    items: json["items"] == null ? null : List<TtOutItem>.from(json["items"].map((x) => TtOutItem.fromJson(x))),
     appVersion: json["app_version"] == null ? null : json["app_version"],
   );
 
@@ -40,8 +41,8 @@ class TornTraderOutModel {
   };
 }
 
-class ttOutItem {
-  ttOutItem({
+class TtOutItem {
+  TtOutItem({
     this.name,
     this.quantity,
     this.id,
@@ -51,7 +52,7 @@ class ttOutItem {
   int quantity;
   int id;
 
-  factory ttOutItem.fromJson(Map<String, dynamic> json) => ttOutItem(
+  factory TtOutItem.fromJson(Map<String, dynamic> json) => TtOutItem(
     name: json["name"] == null ? null : json["name"],
     quantity: json["quantity"] == null ? null : json["quantity"],
     id: json["id"] == null ? null : json["id"],

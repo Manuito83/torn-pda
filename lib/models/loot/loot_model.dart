@@ -2,6 +2,7 @@
 //
 //     final lootModel = lootModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 Map<String, LootModel> lootModelFromJson(String str) => Map.from(json.decode(str)).map((k, v) => MapEntry<String, LootModel>(k, LootModel.fromJson(v)));

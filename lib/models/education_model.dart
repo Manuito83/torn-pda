@@ -2,6 +2,7 @@
 //
 //     final tornEducationModel = tornEducationModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 TornEducationModel tornEducationModelFromJson(String str) => TornEducationModel.fromJson(json.decode(str));

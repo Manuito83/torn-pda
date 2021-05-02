@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 

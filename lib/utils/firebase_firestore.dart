@@ -1,10 +1,15 @@
+// Dart imports:
+import 'dart:convert';
 import 'dart:io';
+
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+
+// Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'dart:convert';
 
 final firestore = _FirestoreHelper();
 

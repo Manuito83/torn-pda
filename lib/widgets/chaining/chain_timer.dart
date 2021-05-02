@@ -1,18 +1,25 @@
+// Dart imports:
 import 'dart:async';
-import 'package:audioplayers/audio_cache.dart';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:audioplayers/audio_cache.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
+import 'package:wakelock/wakelock.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:vibration/vibration.dart';
-import 'package:wakelock/wakelock.dart';
 
 enum ChainWatcherColor {
   cooldown,

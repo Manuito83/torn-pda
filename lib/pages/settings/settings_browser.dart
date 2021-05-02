@@ -1,13 +1,20 @@
+// Dart imports:
 import 'dart:async';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/pages/settings/friendly_factions.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);

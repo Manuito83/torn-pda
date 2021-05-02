@@ -1,7 +1,15 @@
+// Dart imports:
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:http/http.dart' as http;
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -12,7 +20,6 @@ import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:http/http.dart' as http;
 
 class AddTargetResult {
   bool success;

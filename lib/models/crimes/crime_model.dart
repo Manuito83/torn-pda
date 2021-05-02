@@ -2,7 +2,10 @@
 //
 //     final crime = crimeFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 Crime crimeFromJson(String str) => Crime.fromJson(json.decode(str));

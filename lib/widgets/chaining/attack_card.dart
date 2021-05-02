@@ -1,17 +1,22 @@
-import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;

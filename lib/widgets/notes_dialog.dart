@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -200,7 +205,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: Text("Insert"),
                           onPressed: () {
                             // Pop and then perform the work
@@ -218,7 +223,7 @@ class _PersonalNotesDialogState extends State<PersonalNotesDialog> {
                             }
                           },
                         ),
-                        FlatButton(
+                        TextButton(
                           child: Text("Cancel"),
                           onPressed: () {
                             Navigator.of(context).pop();

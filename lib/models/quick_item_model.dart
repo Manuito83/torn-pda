@@ -2,6 +2,7 @@
 //
 //     final quickItem = quickItemFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 QuickItem quickItemFromJson(String str) => QuickItem.fromJson(json.decode(str));

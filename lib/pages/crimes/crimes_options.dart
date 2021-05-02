@@ -1,8 +1,13 @@
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/crimes/crime_model.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -34,8 +39,8 @@ class CrimesOptions extends StatefulWidget {
 }
 
 class _CrimesOptionsState extends State<CrimesOptions> {
-  var _mainCrimeList = List<Crime>();
-  var _titleCrimeString = List<String>();
+  var _mainCrimeList = <Crime>[];
+  var _titleCrimeString = <String>[];
 
   CrimesProvider _crimesProvider;
   ThemeProvider _themeProvider;
@@ -150,18 +155,18 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   }
 
   Widget _crimesCards() {
-    var cardList = List<Card>();
+    var cardList = <Card>[];
     // Loop all categories and fill in cards
     crimesCategories.forEach((catNerve, catName) {
       // If nerve are equal, add children crimes
-      var thisCrimesList = List<Crime>();
+      var thisCrimesList = <Crime>[];
       _mainCrimeList.forEach((crime) {
         if (crime.nerve == catNerve) {
           thisCrimesList.add(crime);
         }
       });
 
-      var crimesRows = List<Widget>();
+      var crimesRows = <Widget>[];
       for (var i = 0; i < thisCrimesList.length; i++) {
         crimesRows.add(
           Row(
@@ -205,6 +210,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
       cardList.add(
         Card(
           child: ExpandablePanel(
+            collapsed: null,
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Row(

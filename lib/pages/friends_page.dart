@@ -1,15 +1,19 @@
-import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/models/friends/friends_sort.dart';
+import 'package:torn_pda/pages/friends/friends_backup_page.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/friends/friends_list.dart';
-import 'package:torn_pda/pages/friends/friends_backup_page.dart';
-import 'package:torn_pda/models/friends/friends_sort.dart';
-
 import '../main.dart';
 
 class FriendsPage extends StatefulWidget {

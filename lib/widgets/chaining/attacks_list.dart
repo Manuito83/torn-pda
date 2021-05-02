@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -43,7 +48,7 @@ class AttacksList extends StatelessWidget {
     var targetList = targetsProvider.allTargets;
 
     // Final list we'll show
-    List<Widget> filteredCards = List<Widget>();
+    List<Widget> filteredCards = <Widget>[];
 
     for (var thisAttack in attacks) {
       bool addThisAttack = true;

@@ -1,11 +1,16 @@
-import 'package:flutter/material.dart';
+// Dart imports:
 import 'dart:collection';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/api_caller.dart';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
-import 'package:torn_pda/models/inventory_model.dart';
+import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/emoji_parser.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;

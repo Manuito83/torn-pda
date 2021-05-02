@@ -2,6 +2,7 @@
 //
 //     final bazaarModel = bazaarModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 BazaarModel bazaarModelFromJson(String str) => BazaarModel.fromJson(json.decode(str));

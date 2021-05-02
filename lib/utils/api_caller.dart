@@ -1,6 +1,11 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:convert';
+
+// Package imports:
 import 'package:http/http.dart' as http;
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
@@ -12,13 +17,13 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/profile/bazaar_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/models/travel/travel_model.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/property_model.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
   user,

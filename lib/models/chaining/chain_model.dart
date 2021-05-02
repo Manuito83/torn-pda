@@ -2,6 +2,7 @@
 //
 //     final chainModel = chainModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 ChainModel chainModelFromJson(String str) => ChainModel.fromJson(json.decode(str));

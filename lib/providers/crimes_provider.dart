@@ -1,9 +1,12 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/crimes/crime_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class CrimesProvider extends ChangeNotifier {
-  var activeCrimesList = List<Crime>();
+  var activeCrimesList = <Crime>[];
 
   CrimesProvider() {
     _loadSavedCrimes();
@@ -30,7 +33,7 @@ class CrimesProvider extends ChangeNotifier {
   }
 
   void _saveListAfterChanges() {
-    var saveList = List<String>();
+    var saveList = <String>[];
     for (var crime in activeCrimesList) {
       var save = crimeToJson(crime);
       saveList.add(save);

@@ -1,8 +1,13 @@
-import 'package:expandable/expandable.dart';
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:expandable/expandable.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
+
+// Project imports:
 import 'package:torn_pda/models/items_model.dart';
 
 class CityWidget extends StatefulWidget {

@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/loot/loot_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 

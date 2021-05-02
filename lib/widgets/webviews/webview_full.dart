@@ -1,41 +1,48 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
+import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
+
+// Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/pages/city/city_options.dart';
+import 'package:torn_pda/pages/crimes/crimes_options.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
+import 'package:torn_pda/pages/trades/trades_options.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/trades_provider.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
-import 'package:torn_pda/pages/crimes/crimes_options.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
-import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
-import 'package:http/http.dart' as http;
-import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
-import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
-import 'package:dotted_border/dotted_border.dart';
 
 class VaultsOptions {
   String description;

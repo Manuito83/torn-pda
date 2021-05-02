@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -138,7 +143,7 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   }
 
   List<Widget> _returnTargetsOnlyInYata() {
-    var itemList = List<Widget>();
+    var itemList = <Widget>[];
 
     if (widget.onlyYata.isEmpty) {
       itemList.add(
@@ -162,7 +167,7 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   }
 
   List<Widget> _returnTargetsBothSides() {
-    var itemList = List<Widget>();
+    var itemList = <Widget>[];
 
     if (widget.bothSides.isEmpty) {
       itemList.add(
@@ -186,7 +191,7 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   }
 
   List<Widget> _returnTargetsOnlyInTornPDA() {
-    var itemList = List<Widget>();
+    var itemList = <Widget>[];
 
     if (widget.onlyLocal.isEmpty) {
       itemList.add(

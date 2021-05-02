@@ -1,13 +1,18 @@
-import 'package:bot_toast/bot_toast.dart';
-import 'package:expandable/expandable.dart';
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/trades_provider.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:expandable/expandable.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/trades/trade_item_model.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
 
 class TradesWidget extends StatefulWidget {
   @override
@@ -35,6 +40,7 @@ class _TradesWidgetState extends State<TradesWidget> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: ExpandablePanel(
+        collapsed: null,
         theme: ExpandableThemeData(
           hasIcon: false,
           iconColor: Colors.grey,

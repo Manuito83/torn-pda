@@ -1,10 +1,17 @@
+// Dart imports:
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+
+// Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptChanges {

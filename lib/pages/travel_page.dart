@@ -1,32 +1,39 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/foundation.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
+
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:android_intent/android_intent.dart';
+import 'package:animations/animations.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
+import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:torn_pda/models/travel/travel_model.dart';
-import 'package:android_intent/android_intent.dart';
-import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:animations/animations.dart';
-import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
+import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);

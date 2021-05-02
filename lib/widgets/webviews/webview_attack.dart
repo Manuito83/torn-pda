@@ -1,27 +1,34 @@
+// Dart imports:
+import 'dart:async';
 import 'dart:io';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:expandable/expandable.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:animations/animations.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:expandable/expandable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
-import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
-import 'dart:async';
-import 'package:animations/animations.dart';
-import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
+import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
 class TornWebViewAttack extends StatefulWidget {
   final List<String> attackIdList;

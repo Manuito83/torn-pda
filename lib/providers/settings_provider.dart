@@ -1,7 +1,12 @@
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+
+// Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum BrowserSetting {
   app,

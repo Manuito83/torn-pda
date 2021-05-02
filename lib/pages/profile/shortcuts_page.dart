@@ -1,12 +1,17 @@
-import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:flutter/services.dart';
 
 class ShortcutsPage extends StatefulWidget {
   @override

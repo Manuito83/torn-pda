@@ -2,6 +2,7 @@
 //
 //     final uhcReviveModel = uhcReviveModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 UhcReviveModel uhcReviveModelFromJson(String str) => UhcReviveModel.fromJson(json.decode(str));

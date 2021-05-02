@@ -1,14 +1,22 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
+
+// Package imports:
 import 'package:android_intent/android_intent.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -16,21 +24,32 @@ import 'package:provider/provider.dart';
 import 'package:share/share.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/education_model.dart';
+import 'package:torn_pda/models/faction/faction_crimes_model.dart';
+import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/external/nuke_revive.dart';
 import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
 import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
@@ -38,22 +57,10 @@ import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/profile/event_icons.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/gestures.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:flutter/rendering.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
-import '../main.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
-import 'package:torn_pda/models/faction/faction_crimes_model.dart';
-import 'package:torn_pda/models/property_model.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import '../main.dart';
 
 enum ProfileNotification {
   travel,

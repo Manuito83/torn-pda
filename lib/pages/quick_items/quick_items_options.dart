@@ -1,10 +1,15 @@
-import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/quick_items_provider.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 
 class QuickItemsOptions extends StatefulWidget {
   @override
@@ -510,14 +515,14 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Reset!"),
                               onPressed: () {
                                 _itemsProvider.wipeAllQuickItems();
                                 Navigator.of(context).pop();
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();

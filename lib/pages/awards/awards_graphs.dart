@@ -1,13 +1,20 @@
+// Dart imports:
+import 'dart:math';
+
+// Flutter imports:
 import 'package:flutter/gestures.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/services.dart';
-import 'dart:math';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class AwardsGraphs extends StatefulWidget {
   AwardsGraphs({@required this.graphInfo});

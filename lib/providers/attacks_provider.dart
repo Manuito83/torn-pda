@@ -1,6 +1,11 @@
+// Dart imports:
 import 'dart:collection';
 import 'dart:math';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';

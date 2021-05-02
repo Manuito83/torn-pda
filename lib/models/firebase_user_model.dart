@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 
 class FirebaseUserModel extends OwnProfileExtended {

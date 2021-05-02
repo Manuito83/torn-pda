@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+// Dart imports:
 import 'dart:math';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
 
 class FlippingYata extends StatefulWidget {
   @override
@@ -9,7 +12,7 @@ class FlippingYata extends StatefulWidget {
 class _FlippingYataState extends State<FlippingYata>
     with SingleTickerProviderStateMixin {
   AnimationController _controller;
-  Animation _flip_anim;
+  Animation _flipAnim;
 
   @override
   void initState() {
@@ -20,7 +23,7 @@ class _FlippingYataState extends State<FlippingYata>
       vsync: this,
     );
 
-    _flip_anim = Tween(begin: 0.0, end: 1.0).animate(
+    _flipAnim = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Interval(0.0, 1, curve: Curves.linear),
@@ -47,7 +50,7 @@ class _FlippingYataState extends State<FlippingYata>
               child: Transform(
                 transform: Matrix4.identity()
                   ..setEntry(3, 2, 0.002)
-                  ..rotateY(2 * pi * _flip_anim.value),
+                  ..rotateY(2 * pi * _flipAnim.value),
                 alignment: Alignment.center,
                 child: Container(
                   child: Center(

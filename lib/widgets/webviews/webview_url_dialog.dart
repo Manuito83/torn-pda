@@ -1,12 +1,19 @@
-import 'package:flutter/material.dart';
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 
 class WebviewUrlDialog extends StatefulWidget {

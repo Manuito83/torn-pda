@@ -1,12 +1,17 @@
+// Flutter imports:
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import '../main.dart';
 
 class AboutPage extends StatefulWidget {

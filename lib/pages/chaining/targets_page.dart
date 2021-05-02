@@ -1,9 +1,16 @@
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
@@ -13,8 +20,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
 
@@ -130,14 +137,18 @@ class _TargetsPageState extends State<TargetsPage> {
               children: <Widget>[
                 ButtonTheme(
                   minWidth: 1.0,
-                  child: RaisedButton(
-                    color: _themeProvider.background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 2,
+                      primary: _themeProvider.background,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        side: BorderSide(width: 2, color: Colors.blueGrey),
+                      ),
                     ),
                     child: Icon(
                       Icons.add,
+                      color: _themeProvider.mainText,
                       size: 20,
                     ),
                     onPressed: () {
@@ -148,14 +159,18 @@ class _TargetsPageState extends State<TargetsPage> {
                 SizedBox(width: 15),
                 ButtonTheme(
                   minWidth: 1.0,
-                  child: RaisedButton(
-                    color: _themeProvider.background,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 2,
+                      primary: _themeProvider.background,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        side: BorderSide(width: 2, color: Colors.blueGrey),
+                      ),
                     ),
                     child: Icon(
                       Icons.refresh,
+                      color: _themeProvider.mainText,
                       size: 20,
                     ),
                     onPressed: () async {
@@ -466,7 +481,7 @@ class _TargetsPageState extends State<TargetsPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
-                                FlatButton(
+                                TextButton(
                                   child: Text("Add"),
                                   onPressed: () async {
                                     if (_addFormKey.currentState.validate()) {
@@ -513,7 +528,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                     }
                                   },
                                 ),
-                                FlatButton(
+                                TextButton(
                                   child: Text("Cancel"),
                                   onPressed: () {
                                     Navigator.of(context).pop();
@@ -805,14 +820,14 @@ class _TargetsPageState extends State<TargetsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Wipe!"),
                               onPressed: () {
                                 _targetsProvider.wipeAllTargets();
                                 Navigator.of(context).pop();
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
