@@ -1,9 +1,14 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class WebviewShortcutsDialog extends StatefulWidget {
   final InAppWebViewController webview;

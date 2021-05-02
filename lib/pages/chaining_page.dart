@@ -1,10 +1,15 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
-import 'package:torn_pda/pages/chaining/targets_page.dart';
+
+// Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
+import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
+import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import '../main.dart';
 
@@ -123,8 +128,11 @@ class _ChainingPageState extends State<ChainingPage> {
                       color: _currentPage == 2
                           ? _themeProvider.navSelected
                           : Colors.transparent,
-                      child: FlatButton(
-                        child: Text('TAC'),
+                      child: TextButton(
+                        child: Text('TAC',
+                            style: TextStyle(
+                              color: _themeProvider.mainText,
+                            )),
                         onPressed: () {
                           setState(() {
                             _onSelectedPage(page: 2);

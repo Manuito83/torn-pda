@@ -1,28 +1,34 @@
-import 'dart:async';
-import 'package:expandable/expandable.dart';
-import 'package:flutter/material.dart';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:intl/intl.dart';
-import 'package:torn_pda/models/travel/foreign_stock_in.dart';
-import 'package:torn_pda/models/inventory_model.dart';
-import 'package:torn_pda/utils/firebase_firestore.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:torn_pda/utils/travel/travel_times.dart';
-import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'dart:convert';
+// Dart imports:
 import "dart:collection";
+import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
+// Flutter imports:
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:expandable/expandable.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
+import 'package:torn_pda/models/inventory_model.dart';
+import 'package:torn_pda/models/travel/foreign_stock_in.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class ForeignStockCard extends StatefulWidget {
   final ForeignStock foreignStock;
@@ -140,6 +146,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ExpandablePanel(
+          collapsed: null,
           controller: _expandableController,
           theme: ExpandableThemeData(
             hasIcon: false,

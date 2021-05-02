@@ -2,6 +2,7 @@
 //
 //     final tornTraderInModel = tornTraderInModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 TornTraderInModel tornTraderInModelFromJson(String str) => TornTraderInModel.fromJson(json.decode(str));
@@ -43,14 +44,14 @@ class Trade {
 
   String tradeUrl;
   String tradeTotal;
-  List<ttInItem> items;
+  List<TtInItem> items;
   List<TradeMessage> tradeMessages;
   String totalProfit;
 
   factory Trade.fromJson(Map<String, dynamic> json) => Trade(
     tradeUrl: json["trade_url"] == null ? null : json["trade_url"],
     tradeTotal: json["trade_total"] == null ? null : json["trade_total"],
-    items: json["items"] == null ? null : List<ttInItem>.from(json["items"].map((x) => ttInItem.fromJson(x))),
+    items: json["items"] == null ? null : List<TtInItem>.from(json["items"].map((x) => TtInItem.fromJson(x))),
     tradeMessages: json["trade_messages"] == null ? null : List<TradeMessage>.from(json["trade_messages"].map((x) => TradeMessage.fromJson(x))),
     totalProfit: json["total_profit"] == null ? null : json["total_profit"],
   );
@@ -64,8 +65,8 @@ class Trade {
   };
 }
 
-class ttInItem {
-  ttInItem({
+class TtInItem {
+  TtInItem({
     this.name,
     this.id,
     this.price,
@@ -81,7 +82,7 @@ class ttInItem {
   String total;
   int profit;
 
-  factory ttInItem.fromJson(Map<String, dynamic> json) => ttInItem(
+  factory TtInItem.fromJson(Map<String, dynamic> json) => TtInItem(
     name: json["name"] == null ? null : json["name"],
     id: json["id"] == null ? null : json["id"],
     price: json["price"] == null ? null : json["price"],

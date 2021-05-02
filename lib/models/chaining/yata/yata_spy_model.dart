@@ -2,6 +2,7 @@
 //
 //     final yataSpyModel = yataSpyModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 YataSpyModel yataSpyModelFromJson(String str) => YataSpyModel.fromJson(json.decode(str));

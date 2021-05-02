@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 
@@ -28,8 +31,12 @@ class _EventsFilterDialogState extends State<EventsFilterDialog> {
         child: Column(
           children: [
             Text(
-                "Choose which type of events you would like to filter OUT (you won't receive "
-                "notifications from these)."),
+              "Choose which type of events you would like to "
+              "filter OUT (you won't receive notifications from these).",
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
               child: Row(

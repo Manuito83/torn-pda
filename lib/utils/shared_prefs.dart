@@ -1,5 +1,8 @@
-import 'package:shared_preferences/shared_preferences.dart';
+// Dart imports:
 import 'dart:async';
+
+// Package imports:
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
   ///
@@ -107,6 +110,9 @@ class Prefs {
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
+  final String _kOCrimesEnabled = "pda_OCrimesEnabled";
+  final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
+  final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -114,10 +120,6 @@ class Prefs {
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
 
-  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
-  /// UserDetailsProvider for retrieving the API key and other details!
-  @deprecated
-  final String _kApiKey = "pda_apiKey";
 
   /// ----------------------------
   /// Methods for app version
@@ -156,22 +158,6 @@ class Prefs {
   Future<bool> setLastAppUse(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAppUse, value);
-  }
-
-  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
-  /// UserDetailsProvider for retrieving the API key and other details!
-  @deprecated
-  Future<String> getApiKey() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kApiKey) ?? "";
-  }
-
-  /// This is use for transitioning from v1.2.0 onwards. After 1.2.0, use
-  /// UserDetailsProvider for retrieving the API key and other details!
-  @deprecated
-  Future<bool> setApiKey(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kApiKey, value);
   }
 
   /// ----------------------------
@@ -1290,5 +1276,38 @@ class Prefs {
   Future<bool> setUserScriptsFirstTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUserScriptsFirstTime, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR ORGANIZED CRIMES
+  /// -----------------------------
+  Future<bool> getOCrimesEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kOCrimesEnabled) ?? true;
+  }
+
+  Future<bool> setOCrimesEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kOCrimesEnabled, value);
+  }
+
+  Future<int> getOCrimeDisregarded() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOCrimeDisregarded) ?? 0;
+  }
+
+  Future<bool> setOCrimeDisregarded(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kOCrimeDisregarded, value);
+  }
+
+  Future<int> getOCrimeLastKnown() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOCrimeLastKnown) ?? 0;
+  }
+
+  Future<bool> setOCrimeLastKnown(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kOCrimeLastKnown, value);
   }
 }

@@ -1,41 +1,48 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
+import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
+
+// Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/pages/city/city_options.dart';
+import 'package:torn_pda/pages/crimes/crimes_options.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
+import 'package:torn_pda/pages/trades/trades_options.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/trades_provider.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
-import 'package:torn_pda/pages/crimes/crimes_options.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
-import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
-import 'package:http/http.dart' as http;
-import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
-import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
-import 'package:dotted_border/dotted_border.dart';
 
 class VaultsOptions {
   String description;
@@ -146,6 +153,12 @@ class _WebViewFullState extends State<WebViewFull> {
 
   bool _clearCacheFirstOpportunity = false;
 
+  bool _findInPageActive = false;
+  final _findController = new TextEditingController();
+  var _findFocus = new FocusNode();
+  var _findFirstSubmitted = false;
+  var _findPreviousText = "";
+
   @override
   void initState() {
     super.initState();
@@ -159,6 +172,8 @@ class _WebViewFullState extends State<WebViewFull> {
     _pageTitle = widget.customTitle;
 
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    _findController.addListener(onFindInputTextChange);
 
     /*
     _pullToRefreshController = PullToRefreshController(
@@ -185,6 +200,7 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   void dispose() {
     webView = null;
+    _findController.dispose();
     super.dispose();
   }
 
@@ -315,113 +331,207 @@ class _WebViewFullState extends State<WebViewFull> {
                 ? Column(
                     children: [
                       Expanded(child: mainWebViewColumn()),
-                      Container(
-                        color: _themeProvider.currentTheme == AppTheme.light
-                            ? Colors.white
-                            : _themeProvider.background,
-                        height: 38,
-                        child: GestureDetector(
-                          onLongPress: () => _openCustomUrlDialog(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 100,
-                                child: Row(
-                                  children: [
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        customBorder: new CircleBorder(),
-                                        splashColor: Colors.blueGrey,
-                                        child: SizedBox(
-                                          width: 40,
-                                          child: Icon(
-                                            Icons.arrow_back_ios_outlined,
-                                            size: 20,
-                                          ),
-                                        ),
-                                        onTap: () async {
-                                          _tryGoBack();
-                                        },
-                                      ),
-                                    ),
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        customBorder: new CircleBorder(),
-                                        splashColor: Colors.blueGrey,
-                                        child: SizedBox(
-                                          width: 40,
-                                          child: Icon(
-                                            Icons.arrow_forward_ios_outlined,
-                                            size: 20,
-                                          ),
-                                        ),
-                                        onTap: () async {
-                                          _tryGoForward();
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: TextButton(
-                                    child: Text("Close"),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    _travelHomeIcon(),
-                                    _chatRemovalEnabled
-                                        ? _hideChatIcon()
-                                        : SizedBox.shrink(),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      child: _settingsProvider
-                                                  .browserRefreshMethod !=
-                                              BrowserRefreshSetting.pull
-                                          ? Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                customBorder:
-                                                    new CircleBorder(),
-                                                splashColor: Colors.blueGrey,
-                                                child: Icon(Icons.refresh),
-                                                onTap: () async {
-                                                  _scrollX = await webView
-                                                      .getScrollX();
-                                                  _scrollY = await webView
-                                                      .getScrollY();
-                                                  await reload();
-                                                  _scrollAfterLoad = true;
-                                                },
-                                              ),
-                                            )
-                                          : SizedBox.shrink(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      _quickBrowserBottomBar(),
                     ],
                   )
                 : mainWebViewColumn(),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _quickBrowserBottomBar() {
+    if (_findInPageActive) {
+      return Container(
+        color: _themeProvider.background,
+        child: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () async {
+                setState(() {
+                  _findInPageActive = false;
+                });
+                _findController.text = "";
+                webView.clearMatches();
+                _findFirstSubmitted = false;
+              },
+            ),
+            Flexible(
+              child: Form(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: TextField(
+                              onEditingComplete: () {
+                                _findPreviousText = _findController.text;
+                                _findAll();
+                                _findFocus.unfocus();
+                              },
+                              controller: _findController,
+                              focusNode: _findFocus,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "What are you looking for?",
+                                hintStyle: TextStyle(
+                                  fontStyle: FontStyle.italic,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              style: TextStyle(
+                                color: _themeProvider.mainText,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    _findPreviousText = _findController.text;
+                    _findAll();
+                    _findFocus.unfocus();
+                  },
+                ),
+                if (_findFirstSubmitted)
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.keyboard_arrow_up),
+                        onPressed: () {
+                          _findNext(forward: false);
+                          _findFocus.unfocus();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.keyboard_arrow_down),
+                        onPressed: () {
+                          _findNext(forward: true);
+                          _findFocus.unfocus();
+                        },
+                      ),
+                    ],
+                  )
+              ],
+            )
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? Colors.white
+          : _themeProvider.background,
+      height: 38,
+      child: GestureDetector(
+        onLongPress: () => _openUrlDialog(),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 100,
+              child: Row(
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: new CircleBorder(),
+                      splashColor: Colors.blueGrey,
+                      child: SizedBox(
+                        width: 40,
+                        child: Icon(
+                          Icons.arrow_back_ios_outlined,
+                          size: 20,
+                        ),
+                      ),
+                      onTap: () async {
+                        _tryGoBack();
+                      },
+                    ),
+                  ),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      customBorder: new CircleBorder(),
+                      splashColor: Colors.blueGrey,
+                      child: SizedBox(
+                        width: 40,
+                        child: Icon(
+                          Icons.arrow_forward_ios_outlined,
+                          size: 20,
+                        ),
+                      ),
+                      onTap: () async {
+                        _tryGoForward();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: TextButton(
+                  child: Text(
+                    "Close",
+                    style: TextStyle(
+                      color: _themeProvider.mainText,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ),
+            SizedBox(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _travelHomeIcon(),
+                  _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                    ),
+                    child: _settingsProvider.browserRefreshMethod !=
+                            BrowserRefreshSetting.pull
+                        ? Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              customBorder: new CircleBorder(),
+                              splashColor: Colors.blueGrey,
+                              child: Icon(Icons.refresh),
+                              onTap: () async {
+                                _scrollX = await webView.getScrollX();
+                                _scrollY = await webView.getScrollY();
+                                await reload();
+                                _scrollAfterLoad = true;
+                              },
+                            ),
+                          )
+                        : SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -505,6 +615,7 @@ class _WebViewFullState extends State<WebViewFull> {
             initialOptions: InAppWebViewGroupOptions(
               crossPlatform: InAppWebViewOptions(
                 clearCache: _clearCacheFirstOpportunity,
+                useOnLoadResource: true,
                 // This is deactivated as it interferes with hospital timer company applications, etc.
                 //useShouldInterceptAjaxRequest: true,
               ),
@@ -605,17 +716,12 @@ class _WebViewFullState extends State<WebViewFull> {
               webView.loadUrl(urlRequest: request.request);
               return;
             },
-            onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "")
-                print("TORN PDA JS CONSOLE: " + consoleMessage.message);
-
+            onLoadResource: (c, resource) async {
               /// TRADES
               /// We are calling trades from here because onLoadStop does not
               /// work inside of Trades for iOS. Also, both in Android and iOS
-              /// we need to catch deletions that happen with a console message
-              /// of "hash.step".
-              if (consoleMessage.message.contains('hash.step') &&
-                  _currentUrl.contains('trade.php')) {
+              /// we need to catch deletions.
+              if (resource.url.path.contains("trade.php")) {
                 _tradesTriggered = true;
                 _currentUrl = (await webView.getUrl()).toString();
                 var html = await webView.getHtml();
@@ -623,6 +729,11 @@ class _WebViewFullState extends State<WebViewFull> {
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
                 _assessTrades(document, pageTitle);
               }
+              return;
+            },
+            onConsoleMessage: (controller, consoleMessage) async {
+              if (consoleMessage.message != "")
+                print("TORN PDA JS CONSOLE: " + consoleMessage.message);
             },
           ),
         ),
@@ -695,6 +806,92 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   CustomAppBar buildCustomAppBar() {
+    if (_findInPageActive) {
+      return CustomAppBar(
+        genericAppBar: AppBar(
+          elevation: _settingsProvider.appBarTop ? 2 : 0,
+          brightness: Brightness.dark,
+          leading: IconButton(
+            icon: Icon(Icons.close),
+            onPressed: () async {
+              setState(() {
+                _findInPageActive = false;
+              });
+              _findController.text = "";
+              webView.clearMatches();
+              _findFirstSubmitted = false;
+            },
+          ),
+          title: Form(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                  child: Row(
+                    children: <Widget>[
+                      Flexible(
+                        child: TextField(
+                          onEditingComplete: () {
+                            _findPreviousText = _findController.text;
+                            _findAll();
+                            _findFocus.unfocus();
+                          },
+                          controller: _findController,
+                          focusNode: _findFocus,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: "What are you looking for?",
+                            hintStyle: TextStyle(
+                                fontStyle: FontStyle.italic,
+                                color: Colors.grey[300],
+                                fontSize: 12),
+                          ),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                _findPreviousText = _findController.text;
+                _findAll();
+                _findFocus.unfocus();
+              },
+            ),
+            if (_findFirstSubmitted)
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.keyboard_arrow_up),
+                    onPressed: () {
+                      _findNext(forward: false);
+                      _findFocus.unfocus();
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.keyboard_arrow_down),
+                    onPressed: () {
+                      _findNext(forward: true);
+                      _findFocus.unfocus();
+                    },
+                  ),
+                ],
+              )
+          ],
+        ),
+      );
+    }
+
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
@@ -728,7 +925,7 @@ class _WebViewFullState extends State<WebViewFull> {
             }),
         title: GestureDetector(
           onTap: () {
-            _openCustomUrlDialog();
+            _openUrlDialog();
           },
           child: DottedBorder(
             borderType: BorderType.Rect,
@@ -1134,34 +1331,33 @@ class _WebViewFullState extends State<WebViewFull> {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            customBorder: new CircleBorder(),
-            splashColor: Colors.blueGrey,
-            child: Icon(
-              Icons.home,
-            ),
-            onTap: () async {
-              setState(() {
-                _travelHomeIconTriggered = true;
-              });
-              BotToast.showText(
-                text: 'Tap again to travel back!',
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.orange[800],
-                duration: Duration(seconds: 3),
-                contentPadding: EdgeInsets.all(10),
-              );
-              Future.delayed(Duration(seconds: 3)).then((value) {
-                if (mounted) {
-                  setState(() {
-                    _travelHomeIconTriggered = false;
-                  });
-                }
-              });
-            }
-          ),
+              customBorder: new CircleBorder(),
+              splashColor: Colors.blueGrey,
+              child: Icon(
+                Icons.home,
+              ),
+              onTap: () async {
+                setState(() {
+                  _travelHomeIconTriggered = true;
+                });
+                BotToast.showText(
+                  text: 'Tap again to travel back!',
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.orange[800],
+                  duration: Duration(seconds: 3),
+                  contentPadding: EdgeInsets.all(10),
+                );
+                Future.delayed(Duration(seconds: 3)).then((value) {
+                  if (mounted) {
+                    setState(() {
+                      _travelHomeIconTriggered = false;
+                    });
+                  }
+                });
+              }),
         );
       } else {
         return Material(
@@ -1311,8 +1507,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // We only get this once and if we are inside a trade
     // It's also in the callback from trades options
     if (!_tradesPreferencesLoaded) {
-      _tradeCalculatorEnabled =
-          await Prefs().getTradeCalculatorEnabled();
+      _tradeCalculatorEnabled = await Prefs().getTradeCalculatorEnabled();
       _tradesPreferencesLoaded = true;
     }
     if (!_tradeCalculatorEnabled) {
@@ -1384,7 +1579,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Trade Id
     try {
-      RegExp regId = new RegExp(r"(?:&ID=)([0-9]+)");
+      RegExp regId = new RegExp(r"&ID=([0-9]+)");
       var matches = regId.allMatches(_currentUrl);
       tradeId = int.parse(matches.elementAt(0).group(1));
     } catch (e) {
@@ -1523,8 +1718,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _tradesPreferencesLoad() async {
-    _tradeCalculatorEnabled =
-        await Prefs().getTradeCalculatorEnabled();
+    _tradeCalculatorEnabled = await Prefs().getTradeCalculatorEnabled();
     _decideIfCallTrades();
   }
 
@@ -1825,7 +2019,7 @@ class _WebViewFullState extends State<WebViewFull> {
         _lastProfileVisited = _currentUrl;
 
         try {
-          RegExp regId = new RegExp(r"(?:php\?XID=)([0-9]+)");
+          RegExp regId = new RegExp(r"php\?XID=([0-9]+)");
           var matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
@@ -1847,7 +2041,7 @@ class _WebViewFullState extends State<WebViewFull> {
         _lastProfileVisited = _currentUrl;
 
         try {
-          RegExp regId = new RegExp(r"(?:&user2ID=)([0-9]+)");
+          RegExp regId = new RegExp(r"&user2ID=([0-9]+)");
           var matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
@@ -1921,7 +2115,7 @@ class _WebViewFullState extends State<WebViewFull> {
     });
   }
 
-  Future<void> _openCustomUrlDialog() async {
+  Future<void> _openUrlDialog() async {
     var url = await webView.getUrl();
     return showDialog<void>(
       context: context,
@@ -1931,9 +2125,39 @@ class _WebViewFullState extends State<WebViewFull> {
           title: _pageTitle,
           url: url.toString(),
           webview: webView,
+          callFindInPage: _activateFindInPage,
         );
       },
     );
+  }
+
+  _activateFindInPage() {
+    setState(() {
+      _findInPageActive = true;
+    });
+    _findFocus.requestFocus();
+  }
+
+  void _findAll() {
+    if (_findController.text.isNotEmpty) {
+      setState(() {
+        _findFirstSubmitted = true;
+      });
+      webView.findAllAsync(find: _findController.text);
+    }
+  }
+
+  void _findNext({@required bool forward}) async {
+    webView.findNext(forward: forward);
+    if (_findFocus.hasFocus) _findFocus.unfocus();
+  }
+
+  void onFindInputTextChange() {
+    if (_findController.text != _findPreviousText) {
+      setState(() {
+        _findFirstSubmitted = false;
+      });
+    }
   }
 
   // UTILS

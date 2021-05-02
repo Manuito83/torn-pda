@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 Future<void> openBrowserDialog(BuildContext _, String initUrl,

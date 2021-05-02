@@ -2,7 +2,10 @@
 //
 //     final shortcut = shortcutFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 Shortcut shortcutFromJson(String str) => Shortcut.fromJson(json.decode(str));

@@ -1,8 +1,13 @@
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/pages/chaining/yata/yata_targets_distribution.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -168,7 +173,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         SizedBox(height: 8),
         Divider(),
         SizedBox(height: 5),
-        RaisedButton(
+        ElevatedButton(
           child: Column(
             children: [
               Text(
@@ -192,7 +197,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
               : null,
         ),
         SizedBox(height: 10),
-        RaisedButton(
+        ElevatedButton(
             child: Column(
               children: [
                 Text(
@@ -241,7 +246,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -285,7 +290,7 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("Cancel"),
               onPressed: () {
                 Navigator.of(context).pop();

@@ -1,27 +1,34 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:android_intent/android_intent.dart';
 import 'package:device_info/device_info.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
-import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
+
+// Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:flutter/services.dart';
-import 'package:vibration/vibration.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key key}) : super(key: key);
@@ -556,6 +563,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
         child: Card(
           child: ExpandablePanel(
+            collapsed: null,
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Column(
@@ -655,6 +663,7 @@ class _SettingsPageState extends State<SettingsPage> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
         child: Card(
           child: ExpandablePanel(
+            collapsed: null,
             controller: _expandableController,
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),

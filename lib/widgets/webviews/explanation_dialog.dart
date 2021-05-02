@@ -1,3 +1,4 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 class BrowserExplanationDialog extends StatefulWidget {
@@ -24,7 +25,7 @@ class _BrowserExplanationDialogState extends State<BrowserExplanationDialog> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8),
-          child: FlatButton(
+          child: TextButton(
             child: Text("Understood"),
             onPressed: () {
               Navigator.of(context).pop('exit');

@@ -2,6 +2,7 @@
 //
 //     final barsModel = barsModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 BarsModel barsModelFromJson(String str) => BarsModel.fromJson(json.decode(str));

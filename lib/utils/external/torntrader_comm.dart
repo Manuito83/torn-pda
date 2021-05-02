@@ -1,8 +1,11 @@
+// Package imports:
+import 'package:http/http.dart' as http;
+
+// Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_auth.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_out.dart';
-import 'package:http/http.dart' as http;
 
 class TornTraderComm {
   static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
@@ -44,10 +47,10 @@ class TornTraderComm {
       ..tradeId = tradeId
       ..seller = sellerName
       ..buyer = buyerId
-      ..items = <ttOutItem>[];
+      ..items = <TtOutItem>[];
 
     for (var product in sellerItems) {
-      var item = ttOutItem(
+      var item = TtOutItem(
         name: product.name,
         quantity: product.quantity,
         id: product.id,

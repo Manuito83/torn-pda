@@ -1,6 +1,11 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:convert';
+
+// Package imports:
 import 'package:http/http.dart' as http;
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
@@ -12,13 +17,13 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/profile/bazaar_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/models/travel/travel_model.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/property_model.dart';
-import 'package:torn_pda/models/profile/skills_model.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
   user,
@@ -32,7 +37,7 @@ enum ApiSelection {
   ownBasic,
   ownExtended,
   ownMisc,
-  skills,
+  bazaar,
   otherProfile,
   target,
   attacks,
@@ -109,7 +114,7 @@ class TornApiCaller {
   TornApiCaller.ownBasic(this.apiKey);
   TornApiCaller.ownExtended(this.apiKey);
   TornApiCaller.ownMisc(this.apiKey);
-  TornApiCaller.skills(this.apiKey);
+  TornApiCaller.bazaar(this.apiKey);
   TornApiCaller.otherProfile(this.apiKey, this.queryId);
   TornApiCaller.target(this.apiKey, this.queryId);
   TornApiCaller.attacks(this.apiKey);
@@ -175,14 +180,14 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getSkills async {
+  Future<dynamic> get getBazaar async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.skills)
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.bazaar)
         .then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
-      return SkillsModel.fromJson(json.decode(apiResult.body));
+      return BazaarModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -430,10 +435,10 @@ class TornApiCaller {
             'money,education,messages';
         break;
       case ApiSelection.ownMisc:
-        url += '?selections=money,education,workstats,battlestats,jobpoints,properties';
+        url += '?selections=money,education,workstats,battlestats,jobpoints,properties,skills';
         break;
-      case ApiSelection.skills:
-        url += '?selections=skills';
+      case ApiSelection.bazaar:
+        url += '?selections=bazaar';
         break;
       case ApiSelection.otherProfile:
         url += '$prefix?selections=profile,crimes,personalstats';

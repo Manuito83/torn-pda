@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';

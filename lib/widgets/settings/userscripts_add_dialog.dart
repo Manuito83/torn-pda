@@ -1,8 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 
 class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;

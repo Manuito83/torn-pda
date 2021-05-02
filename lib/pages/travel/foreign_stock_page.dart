@@ -1,28 +1,35 @@
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:torn_pda/models/travel/travel_model.dart';
-import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
-import 'package:bubble_showcase/bubble_showcase.dart';
+import 'dart:convert';
+import 'dart:ui';
+
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:bubble_showcase/bubble_showcase.dart';
+import 'package:http/http.dart' as http;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:speech_bubble/speech_bubble.dart';
+
+// Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
-import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/travel/foreign_stock_in.dart';
+import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
+import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
-import 'package:http/http.dart' as http;
-import 'dart:ui';
-import 'dart:convert';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
+import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
 class ReturnFlagPressed {
   bool flagPressed = false;

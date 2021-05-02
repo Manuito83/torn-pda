@@ -1,12 +1,21 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
-import 'package:torn_pda/utils/notification.dart';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/loot/loot_model.dart';
 import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
@@ -15,16 +24,14 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
 
 enum LootTimeType {
   dateTime,
@@ -100,29 +107,35 @@ class _LootPageState extends State<LootPage> {
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_apiSuccess) {
-              return SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    if (activeNpcsFiltered())
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
-                        child: Text(
-                          "Some NPCs are filtered out",
-                          style: TextStyle(
-                            color: Colors.orange[900],
-                            fontSize: 12,
+              return RefreshIndicator(
+                onRefresh: () async {
+                  await _getLoot();
+                  await Future.delayed(Duration(seconds: 1));
+                },
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (activeNpcsFiltered())
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                          child: Text(
+                            "Some NPCs are filtered out",
+                            style: TextStyle(
+                              color: Colors.orange[900],
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                      )
-                    else
-                      SizedBox.shrink(),
-                    Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: _returnNpcCards(),
-                    ),
-                    SizedBox(height: 20),
-                  ],
+                        )
+                      else
+                        SizedBox.shrink(),
+                      Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: _returnNpcCards(),
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               );
             } else {

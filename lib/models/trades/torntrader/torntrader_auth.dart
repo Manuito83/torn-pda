@@ -2,6 +2,7 @@
 //
 //     final tornTraderAuthModel = tornTraderAuthModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 TornTraderAuthModel tornTraderAuthModelFromJson(String str) => TornTraderAuthModel.fromJson(json.decode(str));

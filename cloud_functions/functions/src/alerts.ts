@@ -27,6 +27,9 @@ export const alertsGroup = {
 
     const promisesGlobal: Promise<any>[] = [];
 
+    let totalChecks = 0;
+    let totalIpBlocks = 0;
+
     const millisAtStart = Date.now();
 
     // Get existing stocks from Realtime DB
@@ -53,15 +56,22 @@ export const alertsGroup = {
         .get();
 
       const subscribers = response.docs.map((d) => d.data());
-      console.log("Manuito check: " + subscribers.length);
+      functions.logger.info("Manuito check: " + subscribers.length);
+      totalChecks += subscribers.length;
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+        promises.push(
+          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+            if (value === "ip-block") {
+              totalIpBlocks++;
+            }
+          })
+        );
       }
 
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        console.log(`Manuito finished: ${difference} seconds`);
+        functions.logger.info(`Manuito finished: ${difference} seconds`);
         return value;
       });
     }
@@ -79,15 +89,22 @@ export const alertsGroup = {
         .get();
 
       const subscribers = response.docs.map((d) => d.data());
-      console.log("iOS check: " + subscribers.length);
+      functions.logger.info("iOS check: " + subscribers.length);
+      totalChecks += subscribers.length;
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+        promises.push(
+          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+            if (value === "ip-block") {
+              totalIpBlocks++;
+            }
+          })
+        );
       }
 
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        console.log(`iOS finished: ${difference} seconds`);
+        functions.logger.info(`iOS finished: ${difference} seconds`);
         return value;
       });
     }
@@ -106,15 +123,22 @@ export const alertsGroup = {
         .get();
       
       const subscribers = response.docs.map((d) => d.data());
-      console.log("Android check LOW: " + subscribers.length);
+      functions.logger.info("Android check LOW: " + subscribers.length);
+      totalChecks += subscribers.length;
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+        promises.push(
+          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+            if (value === "ip-block") {
+              totalIpBlocks++;
+            }
+          })
+        );
       }
   
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        console.log(`Android LOW finished: ${difference} seconds`);
+        functions.logger.info(`Android LOW finished: ${difference} seconds`);
         return value;
       });
     }
@@ -133,18 +157,26 @@ export const alertsGroup = {
         .get();
         
       const subscribers = response.docs.map((d) => d.data());
-      console.log("Android check HIGH: " + subscribers.length);
+      functions.logger.info("Android check HIGH: " + subscribers.length);
+      totalChecks += subscribers.length;
       for(const key of Array.from(subscribers.keys()) ) {
-        promises.push(sendNotificationForProfile(subscribers[key], foreignStocks));
+        promises.push(
+          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+            if (value === "ip-block") {
+              totalIpBlocks++;
+            }
+          })
+        );
       }
   
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        console.log(`Android HIGH finished: ${difference} seconds`);
+        functions.logger.info(`Android HIGH finished: ${difference} seconds`);
         return value;
       });
     }
+
 
     // FOR TESTING
     if (debugManuito) {
@@ -156,6 +188,7 @@ export const alertsGroup = {
     }
 
     await Promise.all(promisesGlobal);
+    functions.logger.info(`TOTAL checks: ${totalChecks}\nIP blocks: ${totalIpBlocks}`);
 
   }),
 
@@ -169,6 +202,7 @@ async function sendNotificationForProfile(subscriber: any, stocks: any): Promise
     const userStats = await getUsersStat(subscriber.apiKey);
 
     if (!userStats.error) {
+
       if (subscriber.energyNotification)
         promises.push(sendEnergyNotification(userStats, subscriber));
       if (subscriber.nerveNotification)
@@ -189,7 +223,16 @@ async function sendNotificationForProfile(subscriber: any, stocks: any): Promise
         promises.push(sendForeignRestockNotification(userStats, stocks, subscriber));
 
       await Promise.all(promises);
+
+    } else {
+      
+      // Return API errors for certain statistics
+      if (userStats.error.error.includes("IP block")) {
+        return "ip-block";
+      }
+      
     }
+    
   } catch (e) {
     functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
 

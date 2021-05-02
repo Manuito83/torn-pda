@@ -1,20 +1,29 @@
-import 'package:flutter/material.dart';
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 
 class WebviewUrlDialog extends StatefulWidget {
+  final Function callFindInPage;
   final String title;
   final String url;
   final InAppWebViewController webview;
 
   WebviewUrlDialog({
+    @required this.callFindInPage,
     @required this.title,
     @required this.url,
     @required this.webview,
@@ -153,12 +162,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ],
                     ),
                     SizedBox(height: 10),
-                    RaisedButton(
+                    ElevatedButton(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         //mainAxisAlignment: MainAxisAlign,
                         children: [
-                          Icon(Icons.paste),
+                          Icon(Icons.copy),
                           SizedBox(width: 5),
                           Text('Copy URL'),
                         ],
@@ -190,7 +199,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       },
                     ),
                     SizedBox(height: 10),
-                    RaisedButton(
+                    ElevatedButton(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           //mainAxisAlignment: MainAxisAlign,
@@ -198,6 +207,10 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Image.asset(
                               'images/icons/heart.png',
                               width: 22,
+                              color:
+                                  _shortcutsProvider.activeShortcuts.length > 0
+                                      ? Colors.white
+                                      : Colors.grey,
                             ),
                             SizedBox(width: 5),
                             Text('Browse shortcuts'),
@@ -211,7 +224,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               }
                             : null),
                     SizedBox(height: 10),
-                    RaisedButton(
+                    ElevatedButton(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         //mainAxisAlignment: MainAxisAlign,
@@ -219,6 +232,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           Image.asset(
                             'images/icons/heart_add.png',
                             width: 22,
+                            color: Colors.white,
                           ),
                           SizedBox(width: 8),
                           Text('Save as shortcut'),
@@ -230,8 +244,24 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         _customURLController.text = "";
                       },
                     ),
+                    SizedBox(height: 10),
+                    ElevatedButton(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        //mainAxisAlignment: MainAxisAlign,
+                        children: [
+                          Icon(Icons.search),
+                          SizedBox(width: 8),
+                          Text('Find in page'),
+                        ],
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        widget.callFindInPage();
+                      },
+                    ),
                     SizedBox(height: 8),
-                    FlatButton(
+                    TextButton(
                       child: Text("Close"),
                       onPressed: () {
                         _customURLController.text = "";
@@ -414,7 +444,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
-                            FlatButton(
+                            TextButton(
                               child: Text("Add"),
                               onPressed: () {
                                 if (!_customShortcutURLKey.currentState
@@ -442,7 +472,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 _customURLController.text = '';
                               },
                             ),
-                            FlatButton(
+                            TextButton(
                               child: Text("Close"),
                               onPressed: () {
                                 Navigator.of(context).pop();

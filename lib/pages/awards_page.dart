@@ -1,25 +1,32 @@
+// Dart imports:
 import 'dart:async';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/utils/external/yata_comm.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:torn_pda/widgets/other/flipping_yata.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:torn_pda/widgets/awards/award_card.dart';
-import 'package:torn_pda/widgets/awards/award_card_pin.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:provider/provider.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/models/awards/awards_sort.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/pages/awards/awards_graphs.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:torn_pda/providers/awards_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/external/yata_comm.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/awards/award_card.dart';
+import 'package:torn_pda/widgets/awards/award_card_pin.dart';
+import 'package:torn_pda/widgets/other/flipping_yata.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:torn_pda/main.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -781,7 +788,7 @@ class _AwardsPageState extends State<AwardsPage> {
 
       awardsMap.forEach((key, value) {
         try {
-          Image image;
+          Widget image;
           if (value["awardType"] == "Medal") {
             image = Image.asset(
               'images/awards/medals/${value["img"]}.png',

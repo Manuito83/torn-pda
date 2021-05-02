@@ -1,17 +1,24 @@
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
-import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 
@@ -137,11 +144,13 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         if (snapshot.connectionState == ConnectionState.done) {
           if (_infoToShow) {
             return ExpandablePanel(
+              collapsed: null,
               controller: _expandableController,
               expanded: mainWidgetBox(),
             );
           } else if (_errorToShow) {
             return ExpandablePanel(
+              collapsed: null,
               controller: _expandableController,
               expanded: _errorDetailsWidget,
             );

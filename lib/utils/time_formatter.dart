@@ -1,6 +1,11 @@
-import 'package:intl/intl.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:intl/intl.dart';
+
+// Project imports:
+import 'package:torn_pda/providers/settings_provider.dart';
 
 class TimeFormatter {
   final DateTime inputTime;

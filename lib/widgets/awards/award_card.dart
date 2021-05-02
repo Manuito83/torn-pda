@@ -1,13 +1,18 @@
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:intl/intl.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:torn_pda/utils/html_parser.dart';
+import 'package:intl/intl.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 
 class AwardCard extends StatefulWidget {
   AwardCard({@required this.award, @required this.pinConditionChange});

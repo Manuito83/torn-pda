@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+// Dart imports:
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
 
 class ChangeLogItem {
   var main = ChangeLogTitleDate();
@@ -34,6 +37,27 @@ class _ChangeLogState extends State<ChangeLog> {
 
   void _createItems() {
     var itemList = <ChangeLogItem>[];
+
+    // VERSION 2.3.4
+    var v2_3_4 = ChangeLogItem();
+    v2_3_4.main.version = 'Torn PDA v2.3.4';
+    v2_3_4.main.date = '04 MAY 2021';
+    String feat2_3_4_1 = "Alerts: added refills (energy, nerve, casino tokens).";
+    String feat2_3_4_2 = "Browser: added search functionality (tap the title or long-press the quick browser bottom bar).";
+    String feat2_3_4_3 = "Profile: added organized crimes calculation from events (if faction API access is unavailable).";
+    String feat2_3_4_4 = "Profile: added bazaar status and dialog with details to the status card.";
+    String feat2_3_4_5 = "Profile: you can now copy or share the information in the Basic Info card.";
+    String feat2_3_4_6 = "Loot: added pull to refresh functionality.";
+    String feat2_3_4_7 = "Browser: fixed issue preventing the Trade Calculator widget from activating.";
+    String feat2_3_4_8 = "Scripts: updated TornCAT example and the repository with new scripts.";
+    v2_3_4.features.add(feat2_3_4_1);
+    v2_3_4.features.add(feat2_3_4_2);
+    v2_3_4.features.add(feat2_3_4_3);
+    v2_3_4.features.add(feat2_3_4_4);
+    v2_3_4.features.add(feat2_3_4_5);
+    v2_3_4.features.add(feat2_3_4_6);
+    v2_3_4.features.add(feat2_3_4_7);
+    v2_3_4.features.add(feat2_3_4_8);
 
     // VERSION 2.3.3
     var v2_3_3 = ChangeLogItem();
@@ -650,6 +674,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_3_4);
     itemList.add(v2_3_3);
     itemList.add(v2_3_2);
     itemList.add(v2_3_1);

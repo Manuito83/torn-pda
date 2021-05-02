@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -20,6 +25,7 @@ class ProfileOptionsReturn {
   bool expandBasicInfo;
   bool expandNetworth;
   List<String> sectionSort;
+  bool oCrimesReactivated;
 }
 
 class ProfileOptionsPage extends StatefulWidget {
@@ -38,6 +44,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _expandMessages = false;
   bool _expandBasicInfo = false;
   bool _expandNetworth = false;
+  bool _oCrimesReactivated = false;
 
   List<String> _sectionList;
 
@@ -124,8 +131,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 0) {
                                           _shortcutsDisableConfirmationDialog();
                                         } else {
-                                          Prefs()
-                                              .setEnableShortcuts(value);
+                                          Prefs().setEnableShortcuts(value);
                                           setState(() {
                                             _shortcutsEnabled = value;
                                           });
@@ -212,8 +218,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _warnAboutChainsEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setWarnAboutChains(value);
+                                        Prefs().setWarnAboutChains(value);
                                         setState(() {
                                           _warnAboutChainsEnabled = value;
                                         });
@@ -261,8 +266,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _dedicatedTravelCard,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setDedicatedTravelCard(value);
+                                        Prefs().setDedicatedTravelCard(value);
                                         setState(() {
                                           _dedicatedTravelCard = value;
                                         });
@@ -308,9 +312,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           Switch(
                                             value: _disableTravelSection,
                                             onChanged: (value) {
-                                              Prefs()
-                                                  .setDisableTravelSection(
-                                                      value);
+                                              Prefs().setDisableTravelSection(
+                                                  value);
                                               setState(() {
                                                 _disableTravelSection = value;
                                               });
@@ -360,8 +363,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _nukeReviveEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setUseNukeRevive(value);
+                                        Prefs().setUseNukeRevive(value);
                                         setState(() {
                                           _nukeReviveEnabled = value;
                                         });
@@ -397,8 +399,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _uhcReviveEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setUseUhcRevive(value);
+                                        Prefs().setUseUhcRevive(value);
                                         setState(() {
                                           _uhcReviveEnabled = value;
                                         });
@@ -416,6 +417,56 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   'If active, when you are in hospital you\'ll have the option to call '
                                   'a reviver from Universal Health Care. NOTE: this is an external '
                                   'service not affiliated to Torn PDA.',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'ORGANIZED CRIMES',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Show organized crimes"),
+                                    Switch(
+                                      value: _settingsProvider.oCrimesEnabled,
+                                      onChanged: (value) {
+                                        _oCrimesReactivated = value;
+                                        setState(() {
+                                          _settingsProvider
+                                              .changeOCrimesEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Shown in the miscellaneous card and in status when the time approaches. '
+                                  'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
+                                  'the participants\' status. Otherwise, it will be calculated based on received events (it might be prone to errors '
+                                  'if you delete them)',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -461,8 +512,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandEvents,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setExpandEvents(value);
+                                        Prefs().setExpandEvents(value);
                                         setState(() {
                                           _expandEvents = value;
                                         });
@@ -503,8 +553,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandMessages,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setExpandMessages(value);
+                                        Prefs().setExpandMessages(value);
                                         setState(() {
                                           _expandMessages = value;
                                         });
@@ -545,8 +594,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandBasicInfo,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setExpandBasicInfo(value);
+                                        Prefs().setExpandBasicInfo(value);
                                         setState(() {
                                           _expandBasicInfo = value;
                                         });
@@ -568,8 +616,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Switch(
                                       value: _expandNetworth,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setExpandNetworth(value);
+                                        Prefs().setExpandNetworth(value);
                                         setState(() {
                                           _expandNetworth = value;
                                         });
@@ -850,8 +897,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var warnChains = await Prefs().getWarnAboutChains();
     var shortcuts = await Prefs().getEnableShortcuts();
     var dedTravel = await Prefs().getDedicatedTravelCard();
-    var disableTravel =
-        await Prefs().getDisableTravelSection();
+    var disableTravel = await Prefs().getDisableTravelSection();
     var expandEvents = await Prefs().getExpandEvents();
     var eventsNumber = await Prefs().getEventsShowNumber();
     var expandMessages = await Prefs().getExpandMessages();
@@ -934,8 +980,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 context
                                     .read<ShortcutsProvider>()
                                     .wipeAllShortcuts();
-                                Prefs()
-                                    .setEnableShortcuts(false);
+                                Prefs().setEnableShortcuts(false);
                                 setState(() {
                                   _shortcutsEnabled = false;
                                 });
@@ -994,7 +1039,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..messagesShowNumber = _messagesNumber
         ..expandBasicInfo = _expandBasicInfo
         ..expandNetworth = _expandNetworth
-        ..sectionSort = _sectionList,
+        ..sectionSort = _sectionList
+        ..oCrimesReactivated = _oCrimesReactivated,
     );
     return true;
   }

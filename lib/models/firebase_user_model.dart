@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 
 class FirebaseUserModel extends OwnProfileExtended {
@@ -16,6 +17,8 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool messagesNotification = false;
   bool eventsNotification = false;
   List eventsFilter = [];
+  bool refillsNotification = false;
+  List refillsRequested = [];
   bool racingSent = false;
 
   FirebaseUserModel();
@@ -49,6 +52,8 @@ class FirebaseUserModel extends OwnProfileExtended {
       "messagesNotification": messagesNotification,
       "eventsNotification": eventsNotification,
       "eventsFilter": eventsFilter,
+      "refillsNotification": refillsNotification,
+      "refillsRequested": refillsRequested,
       "racingSent": racingSent,
     };
   }
@@ -68,6 +73,8 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..messagesNotification = data["messagesNotification"] ?? false
       ..eventsNotification = data["eventsNotification"] ?? false
       ..eventsFilter = data["eventsFilter"] ?? []
+      ..refillsNotification = data["refillsNotification"] ?? false
+      ..refillsRequested = data["refillsRequested"] ?? []
       ..racingSent = data["racingSent"] ?? false
       ..playerId = data["playerId"]
       ..level = data["level"]

@@ -1,10 +1,16 @@
+// Dart imports:
 import 'dart:io';
 
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -15,6 +21,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
+import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import '../main.dart';
 
 class AlertsSettings extends StatefulWidget {
@@ -306,6 +313,60 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                             ],
                           ),
                         ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.refillsNotification ?? false,
+                          title: Text("Refills"),
+                          subtitle: Text(
+                            "Get notified (22:00 TCT) if you still have unused refills",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.refillsNotification = value;
+                            });
+                            firestore.subscribeToRefillsNotification(value);
+                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel?.refillsNotification)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Choose refills",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                  icon:
+                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return RefillsRequestedDialog(
+                                          userModel: _firebaseUserModel,
+                                        );
+                                      },
+                                    );
+                                  }),
+                            ],
+                          ),
+                        ),
                       SizedBox(height: 60),
                     ],
                   ),
@@ -458,7 +519,6 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         TextButton(
           child: Text("Reset"),
           onPressed: () async {
-
             Navigator.of(context).pop();
 
             try {
@@ -468,7 +528,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               var savedKey = _userProv.basic.userApiKey;
 
               dynamic myProfile =
-              await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+                  await TornApiCaller.ownBasic(savedKey).getProfileBasic;
 
               if (myProfile is OwnProfileBasic) {
                 myProfile
@@ -479,12 +539,11 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                 firestore.setUID(mFirebaseUser.uid);
                 await firestore.uploadUsersProfileDetail(myProfile,
                     userTriggered: true);
-                await firestore
-                    .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+                await firestore.uploadLastActiveTime(
+                    DateTime.now().millisecondsSinceEpoch);
 
                 if (Platform.isAndroid) {
-                  var alertsVibration =
-                  await Prefs().getVibrationPattern();
+                  var alertsVibration = await Prefs().getVibrationPattern();
                   // Deletes current channels and create new ones
                   reconfigureNotificationChannels(mod: alertsVibration);
                   // Update channel preferences

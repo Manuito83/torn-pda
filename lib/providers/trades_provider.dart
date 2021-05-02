@@ -1,11 +1,16 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:html/dom.dart' as dom;
+
+// Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/external/torntrader_comm.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
-import 'package:html/dom.dart' as dom;
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesContainer {
@@ -26,7 +31,7 @@ class TradesContainer {
   String ttUrl = "";
   bool ttServerError = false;
   bool ttAuthError = false;
-  var ttItems = <ttInItem>[];
+  var ttItems = <TtInItem>[];
   var ttMessages = <TradeMessage>[];
 }
 

@@ -2,8 +2,10 @@
 //
 //     final foreignStockInModel = foreignStockInModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
+// Project imports:
 import 'package:torn_pda/models/items_model.dart';
 
 ForeignStockInModel foreignStockInModelFromJson(String str) =>

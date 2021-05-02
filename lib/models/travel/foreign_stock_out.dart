@@ -1,4 +1,7 @@
+// Dart imports:
 import 'dart:convert';
+
+// Project imports:
 import '../../main.dart';
 
 ForeignStockOutModel foreignStockOutModelFromJson(String str) =>
@@ -49,7 +52,7 @@ class ForeignStockOutModel {
       this.items}) {
     client = "Torn PDA";
     version = appVersion;
-    items = List<ForeignStockOutItem>();
+    items = <ForeignStockOutItem>[];
   }
 
   factory ForeignStockOutModel.fromJson(Map<String, dynamic> json) =>

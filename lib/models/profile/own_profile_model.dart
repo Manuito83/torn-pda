@@ -2,6 +2,7 @@
 //
 //     final ownProfileModel = ownProfileModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 OwnProfileExtended ownProfileExtendedFromJson(String str) => OwnProfileExtended.fromJson(json.decode(str));

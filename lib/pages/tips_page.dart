@@ -1,8 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/main.dart';
+// Dart imports:
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/main.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 
 enum TipClass {
   general,

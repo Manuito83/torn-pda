@@ -2,6 +2,7 @@
 //
 //     final inventoryModel = inventoryModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 InventoryModel inventoryModelFromJson(String str) => InventoryModel.fromJson(json.decode(str));

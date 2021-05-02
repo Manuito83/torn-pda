@@ -2,6 +2,7 @@
 //
 //     final attackFullModel = attackFullModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 AttackFullModel attackFullModelFromJson(String str) => AttackFullModel.fromJson(json.decode(str));

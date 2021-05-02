@@ -1,5 +1,8 @@
-import 'package:torn_pda/models/travel/foreign_stock_in.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 
 enum TravelTicket {
   standard,
@@ -116,6 +119,9 @@ class TravelTimes {
         break;
       case CountryName.UNITED_KINGDOM:
         return tripUK;
+        break;
+      case CountryName.TORN:
+        // no travel time
         break;
     }
 

@@ -1,7 +1,12 @@
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+
+// Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum BrowserSetting {
   app,
@@ -243,6 +248,36 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _oCrimesEnabled = true;
+  bool get oCrimesEnabled => _oCrimesEnabled;
+  set changeOCrimesEnabled(bool value) {
+    _oCrimesEnabled = value;
+    // If disabled, reset as well any crimes that was disregarded (so that it can
+    // be enabled again if desired)
+    if (!value) {
+      _oCrimeDisregarded = 0;
+      Prefs().setOCrimeDisregarded(_oCrimeDisregarded);
+    }
+    Prefs().setOCrimesEnabled(_oCrimesEnabled);
+    notifyListeners();
+  }
+
+  var _oCrimeDisregarded = 0;
+  int get oCrimeDisregarded => _oCrimeDisregarded;
+  set changeOCrimeDisregarded(int value) {
+    _oCrimeDisregarded = value;
+    Prefs().setOCrimeDisregarded(_oCrimeDisregarded);
+    notifyListeners();
+  }
+
+  var _oCrimeLastKnown = 0;
+  int get oCrimeLastKnown => _oCrimeLastKnown;
+  set changeOCrimeLastKnown(int value) {
+    _oCrimeLastKnown = value;
+    Prefs().setOCrimeLastKnown(_oCrimeLastKnown);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -332,6 +367,10 @@ class SettingsProvider extends ChangeNotifier {
 
     String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
+
+    _oCrimesEnabled = await Prefs().getOCrimesEnabled();
+    _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
+    _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
 
     notifyListeners();
   }

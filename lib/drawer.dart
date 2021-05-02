@@ -1,27 +1,40 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:quick_actions/quick_actions.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
+import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/loot.dart';
-import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
-import 'package:torn_pda/main.dart';
+import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
@@ -29,16 +42,10 @@ import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:quick_actions/quick_actions.dart';
-import 'main.dart';
-import 'package:flutter/services.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import 'main.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -267,6 +274,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool nerve = false;
     bool energy = false;
     bool drugs = false;
+    bool refills = false;
 
     var channel = '';
     var messageId = '';
@@ -302,6 +310,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       energy = true;
     } else if (channel.contains("Alerts drugs")) {
       drugs = true;
+    } else if (channel.contains("Alerts refills")) {
+      refills = true;
     }
 
     if (travel) {
@@ -342,6 +352,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (drugs) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/item.php#drugs-items";
+    } else if (refills) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/points.php";
     }
 
     if (launchBrowser) {
@@ -433,6 +446,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('211')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
+      } else if (payload.contains('refills')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/points.php';
       }
 
       if (launchBrowser) {

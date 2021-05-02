@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -44,34 +47,10 @@ class UserDetailsProvider extends ChangeNotifier {
           basic = apiVerify;
 
           Prefs().setOwnDetails(ownProfileBasicToJson(basic));
-
-          // We delete this deprecated ApiKey from version 1.2.0 since we won't
-          // need to use it in the future again
-          Prefs().setApiKey('');
         }
       }
-    } else {
-      // In v1.3.0 we deprecate getApiKey and setApiKey, but to avoid a logout
-      // when transitioning to a newer version, we check if
-      // there is still a key saved. If there is, we call with it
-      // and erase it. Otherwise we do nothing else.
-      await _tryWithDeprecatedSave();
     }
 
     notifyListeners();
-  }
-
-  Future _tryWithDeprecatedSave() async {
-    var oldKeySave = await Prefs().getApiKey();
-    if (oldKeySave != '') {
-      var apiVerify = await TornApiCaller.ownExtended(oldKeySave).getProfileExtended;
-      if (apiVerify is OwnProfileBasic) {
-        apiVerify.userApiKey = oldKeySave;
-        apiVerify.userApiKeyValid = true;
-        basic = apiVerify;
-        Prefs().setOwnDetails(ownProfileBasicToJson(basic));
-        Prefs().setApiKey('');
-      }
-    }
   }
 }

@@ -2,6 +2,7 @@
 //
 //     final otherProfileModel = otherProfileModelFromJson(jsonString);
 
+// Dart imports:
 import 'dart:convert';
 
 OtherProfileModel otherProfileModelFromJson(String str) => OtherProfileModel.fromJson(json.decode(str));

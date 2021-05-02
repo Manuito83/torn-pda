@@ -1,12 +1,20 @@
+// Dart imports:
 import 'dart:async';
-import 'package:animations/animations.dart';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:animations/animations.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/pages/chaining/target_details_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -15,7 +23,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/webviews/webview_attack.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../notes_dialog.dart';
 
 class TargetCard extends StatefulWidget {

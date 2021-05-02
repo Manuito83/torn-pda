@@ -1,11 +1,18 @@
+// Dart imports:
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+// Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:flutter/services.dart';
 
 // IDS
 // 101 -> 107 profile cooldowns
@@ -122,6 +129,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts trades';
     channelName = 'Alerts trades';
     channelDescription = 'Automatic alerts for trades';
+  } else if (channel.contains("Alerts refills")) {
+    notificationIcon = "notification_refills";
+    notificationColor = Colors.blue;
+    onTapPayload += 'refills';
+    channelId = 'Alerts refills';
+    channelName = 'Alerts refills';
+    channelDescription = 'Automatic alerts for refills';
   }
 
   if (Platform.isAndroid) {
@@ -496,6 +510,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts stale user ${modifier.channelIdModifier}',
       'Alerts stale user ${modifier.channelIdModifier}',
       'Automatic alerts for inactivity',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts refills ${modifier.channelIdModifier}',
+      'Alerts refills ${modifier.channelIdModifier}',
+      'Automatic alerts for refills',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

@@ -1,13 +1,20 @@
+// Dart imports:
+import 'dart:io';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
 import 'package:torn_pda/pages/profile_page.dart';
+import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'dart:io';
-import 'package:torn_pda/pages/travel/travel_options_android.dart';
-import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
 
 class ProfileNotificationsAndroid extends StatefulWidget {
   final Function callback;

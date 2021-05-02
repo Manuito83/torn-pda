@@ -1,10 +1,17 @@
+// Dart imports:
 import 'dart:async';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+// Project imports:
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class QuickItemsWidget extends StatefulWidget {

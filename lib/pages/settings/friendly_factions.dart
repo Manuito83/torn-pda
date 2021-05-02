@@ -1,13 +1,18 @@
-import 'package:bot_toast/bot_toast.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/models/faction/faction_model.dart';
-import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override

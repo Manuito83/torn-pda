@@ -1,35 +1,42 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:io';
+
+// Flutter imports:
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
-import 'package:torn_pda/drawer.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
-import 'package:torn_pda/providers/crimes_provider.dart';
-import 'package:torn_pda/providers/quick_items_provider.dart';
-import 'package:torn_pda/providers/shortcuts_provider.dart';
-import 'package:torn_pda/providers/trades_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/providers/attacks_provider.dart';
-import 'package:torn_pda/providers/friends_provider.dart';
-import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/targets_provider.dart';
-import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/awards_provider.dart';
-import 'package:torn_pda/providers/userscripts_provider.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:timezone/data/latest.dart' as tz;
 
+// Project imports:
+import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/attacks_provider.dart';
+import 'package:torn_pda/providers/awards_provider.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/crimes_provider.dart';
+import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
+import 'package:torn_pda/providers/targets_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
+
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-final String appVersion = '2.3.3';
+final String appVersion = '2.3.4';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 

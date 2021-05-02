@@ -1,8 +1,15 @@
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:torn_pda/models/chaining/attack_sort.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';

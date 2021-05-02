@@ -1,11 +1,15 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
-
 
 class CrimesWidget extends StatefulWidget {
   final InAppWebViewController controller;

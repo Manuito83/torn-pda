@@ -1,27 +1,34 @@
+// Dart imports:
 import 'dart:async';
-import 'package:bot_toast/bot_toast.dart';
+
+// Flutter imports:
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:expandable/expandable.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// Project imports:
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/models/chaining/tac/tac_filters_model.dart';
+import 'package:torn_pda/models/chaining/tac/tac_in_model.dart';
+import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
+import 'package:torn_pda/private/tac_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_timer.dart';
-import 'package:http/http.dart' as http;
-import 'package:torn_pda/main.dart';
-import 'package:torn_pda/models/chaining/tac/tac_in_model.dart';
-import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
-import 'package:torn_pda/models/chaining/tac/tac_filters_model.dart';
 import 'package:torn_pda/widgets/chaining/tac/tac_card.dart';
-import 'package:expandable/expandable.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
-import 'package:flutter/gestures.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:torn_pda/private/tac_config.dart';
 
 class TacPage extends StatefulWidget {
   final String userKey;

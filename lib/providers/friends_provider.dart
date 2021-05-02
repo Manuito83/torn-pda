@@ -1,9 +1,14 @@
+// Dart imports:
 import 'dart:collection';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
+import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
