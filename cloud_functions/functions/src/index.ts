@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import { alertsGroup } from "./alerts";
+//import { alertsTestGroup } from "./alerts";
 import { travelGroup } from "./travel_check";
 import { staleGroup } from "./stale_users"
 import { playersGroup } from "./players";
@@ -17,6 +18,7 @@ databaseURL: "https://torn-pda-manuito.firebaseio.com"
 });
 
 export const alerts = alertsGroup;
+//export const alertsTest = alertsTestGroup;
 export const travel = travelGroup
 export const stale = staleGroup;
 export const players = playersGroup;
