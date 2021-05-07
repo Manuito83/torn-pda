@@ -56,13 +56,14 @@ export const alertsGroup = {
         .get();
 
       const subscribers = response.docs.map((d) => d.data());
-      functions.logger.info("Manuito check: " + subscribers.length);
       totalChecks += subscribers.length;
+      let manuitoBlocks = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
           sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
             if (value === "ip-block") {
               totalIpBlocks++;
+              manuitoBlocks++;
             }
           })
         );
@@ -71,7 +72,7 @@ export const alertsGroup = {
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        functions.logger.info(`Manuito finished: ${difference} seconds`);
+        functions.logger.info(`Manuito: ${subscribers.length}. Blocks: ${manuitoBlocks}. Time: ${difference}`);
         return value;
       });
     }
@@ -89,13 +90,14 @@ export const alertsGroup = {
         .get();
 
       const subscribers = response.docs.map((d) => d.data());
-      functions.logger.info("iOS check: " + subscribers.length);
       totalChecks += subscribers.length;
+      let iOSBlocks = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
           sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
             if (value === "ip-block") {
               totalIpBlocks++;
+              iOSBlocks++;
             }
           })
         );
@@ -104,7 +106,7 @@ export const alertsGroup = {
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        functions.logger.info(`iOS finished: ${difference} seconds`);
+        functions.logger.info(`iOS: ${subscribers.length}. Blocks: ${iOSBlocks}. Time: ${difference}`);
         return value;
       });
     }
@@ -123,13 +125,14 @@ export const alertsGroup = {
         .get();
       
       const subscribers = response.docs.map((d) => d.data());
-      functions.logger.info("Android check LOW: " + subscribers.length);
       totalChecks += subscribers.length;
+      let androidLow = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
           sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
             if (value === "ip-block") {
               totalIpBlocks++;
+              androidLow++;
             }
           })
         );
@@ -138,7 +141,7 @@ export const alertsGroup = {
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        functions.logger.info(`Android LOW finished: ${difference} seconds`);
+        functions.logger.info(`Android Low: ${subscribers.length}. Blocks: ${androidLow}. Time: ${difference}`);
         return value;
       });
     }
@@ -157,13 +160,14 @@ export const alertsGroup = {
         .get();
         
       const subscribers = response.docs.map((d) => d.data());
-      functions.logger.info("Android check HIGH: " + subscribers.length);
       totalChecks += subscribers.length;
+      let androidHigh = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
           sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
             if (value === "ip-block") {
               totalIpBlocks++;
+              androidHigh++;
             }
           })
         );
@@ -172,7 +176,7 @@ export const alertsGroup = {
       return Promise.all(promises).then(function(value) {
         const millisAfterFinish = Date.now();
         const difference = (millisAfterFinish - millisAtStart) / 1000;
-        functions.logger.info(`Android HIGH finished: ${difference} seconds`);
+        functions.logger.info(`Android High: ${subscribers.length}. Blocks: ${androidHigh}. Time: ${difference}`);
         return value;
       });
     }
