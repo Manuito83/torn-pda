@@ -40,7 +40,8 @@ export const refillsGroup = {
         
         const userRefills = await getUsersRefills(thisUser.apiKey);
 
-        if (!userRefills.error) {
+        // If API does not return error and refillsRequested field exists
+        if (!userRefills.error && thisUser.refillsRequested) {
           let refillsToSend = [];
 
           if (thisUser.refillsRequested.includes("energy") && !userRefills.refills.energy_refill_used) {
