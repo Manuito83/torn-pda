@@ -4,17 +4,16 @@
 
 import 'dart:convert';
 
-VaultModel vaultModelFromJson(String str) => VaultModel.fromJson(json.decode(str));
+VaultTransactionModel vaultTransactionModelFromJson(String str) => VaultTransactionModel.fromJson(json.decode(str));
 
-String vaultModelToJson(VaultModel data) => json.encode(data.toJson());
+String vaultTransactionModelToJson(VaultTransactionModel data) => json.encode(data.toJson());
 
-class VaultModel {
-  VaultModel({
+class VaultTransactionModel {
+  VaultTransactionModel({
     this.date,
     this.playerTransaction,
     this.amount,
     this.isDeposit,
-    this.marketPrice,
     this.balance,
   });
 
@@ -22,15 +21,13 @@ class VaultModel {
   bool playerTransaction;
   int amount;
   bool isDeposit;
-  int marketPrice;
   int balance;
 
-  factory VaultModel.fromJson(Map<String, dynamic> json) => VaultModel(
+  factory VaultTransactionModel.fromJson(Map<String, dynamic> json) => VaultTransactionModel(
     date: json["date"] == null ? null : json["date"],
     playerTransaction: json["playerTransaction"] == null ? null : json["playerTransaction"],
     amount: json["amount"] == null ? null : json["amount"],
     isDeposit: json["isDeposit"] == null ? null : json["isDeposit"],
-    marketPrice: json["market_price"] == null ? null : json["market_price"],
     balance: json["balance"] == null ? null : json["balance"],
   );
 
@@ -39,7 +36,6 @@ class VaultModel {
     "playerTransaction": playerTransaction == null ? null : playerTransaction,
     "amount": amount == null ? null : amount,
     "isDeposit": isDeposit == null ? null : isDeposit,
-    "market_price": marketPrice == null ? null : marketPrice,
     "balance": balance == null ? null : balance,
   };
 }

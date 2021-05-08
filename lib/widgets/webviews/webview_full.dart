@@ -42,6 +42,7 @@ import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
+import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 
@@ -103,7 +104,9 @@ class _WebViewFullState extends State<WebViewFull> {
   // way we allow it to trigger again.
   bool _lastTradeCallWasIn = false;
 
-  var _vaultIconActive = false;
+  bool _vaultEnabled = false;
+  bool _vaultPreferencesLoaded = false;
+  bool _vaultIconActive = false;
   Widget _vaultExpandable = SizedBox.shrink();
 
   var _cityEnabled = false;
@@ -1102,7 +1105,7 @@ class _WebViewFullState extends State<WebViewFull> {
       getTrades = true;
     }
 
-    if (!_currentUrl.contains("properties.php") && _tradesTriggered) {
+    if (!_currentUrl.contains("properties.php") && _vaultTriggered) {
       // This is different to the others, here we call only so that properties is deactivated
       anySectionTriggered = true;
       getVault = true;
@@ -1740,66 +1743,30 @@ class _WebViewFullState extends State<WebViewFull> {
       _vaultIconActive = true;
     });
 
-    // Stops any successive calls
-    //if (_vaultTriggered) return;
-    _vaultTriggered = true;
-
-    var total = doc.querySelector(".vault-cont .wvalue")?.text?.replaceAll(",", "");
-
-    var allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
-    for (var trans in allTransactions) {
-      var day = trans.querySelector(".date .transaction-date")?.text?.trim();
-      var hour = trans.querySelector(".date .transaction-time")?.text?.trim();
-      var format = DateFormat("dd/MM/yy HH:mm:ss");
-      var date = format.parse(day + " " + hour);
-
-      var playerTransaction = false;
-      var name = trans
-          .querySelector(".user.t-overflow > .d-hide > .user.name > span")
-          ?.attributes["title"];
-      if (name.contains("[${_userProvider.basic.playerId}]")) {
-        playerTransaction = true;
-      }
-
-      var isDeposit = false;
-      var type = trans.querySelector(".type")?.text?.trim();
-      if (type.contains("Deposit")) {
-        isDeposit = true;
-      }
-
-      var amountString = trans.querySelector("li.amount")?.text;
-      amountString = amountString
-          .replaceAll("\$", "")
-          .replaceAll("\n", "")
-          .replaceAll("+", "")
-          .replaceAll("-", "")
-          .replaceAll(",", "");
-      var amount = int.tryParse(amountString);
-
-      print(date);
-      print("player: $playerTransaction");
-      print("amount: $amount");
-      print("deposit: $isDeposit");
-      print("*************");
+    // We only get this once and if we are inside the vault
+    // It's also in the callback from vault options
+    if (!_vaultPreferencesLoaded) {
+      await _vaultPreferencesLoad();
+      _vaultPreferencesLoaded = true;
     }
 
-    /*
-    if (query.length == 0) {
-      // Set false so that the page can be reloaded if city widget didn't load
-      _cityTriggered = false;
+    if (!_vaultEnabled) {
+      setState(() {
+        _vaultExpandable = SizedBox.shrink();
+      });
       return;
     }
 
-    var mapItemsList = <String>[];
-    for (var mapFind in query) {
-      mapFind.attributes.forEach((key, value) {
-        if (key == "src" &&
-            value.contains("https://www.torn.com/images/items/")) {
-          mapItemsList.add(value.split("items/")[1].split("/")[0]);
-        }
-      });
-    }
-    */
+    // Stops any successive calls
+    if (_vaultTriggered) return;
+    _vaultTriggered = true;
+
+    var total = doc.querySelector(".vault-cont .wvalue")?.text?.replaceAll(",", "");
+    var allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
+    _vaultExpandable = VaultWidget(
+      vaultHtml: allTransactions,
+      playerId: _userProvider.basic.playerId,
+    );
   }
 
   Widget _vaultMenuIcon() {
@@ -1810,7 +1777,7 @@ class _WebViewFullState extends State<WebViewFull> {
         openBuilder: (BuildContext context, VoidCallback _) {
           // TODO: RETURN VAULT OPTIONS
           return CityOptions(
-            callback: _cityPreferencesLoad,
+            callback: _vaultPreferencesLoad,
           );
         },
         closedElevation: 0,
@@ -1826,7 +1793,7 @@ class _WebViewFullState extends State<WebViewFull> {
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.cityVariantOutline),
+              child: Icon(MdiIcons.safeSquareOutline),
             ),
           );
         },
@@ -1834,6 +1801,20 @@ class _WebViewFullState extends State<WebViewFull> {
     } else {
       return SizedBox.shrink();
     }
+  }
+
+  Future _vaultPreferencesLoad() async {
+    // TODO
+    _vaultEnabled = true;
+    _vaultTriggered = false;
+    await reload();
+
+    /*
+    _cityEnabled = await Prefs().getCityEnabled();
+    // Reset city so that it can be assessed again
+    _cityTriggered = false;
+    await reload();
+    */
   }
 
   // CITY

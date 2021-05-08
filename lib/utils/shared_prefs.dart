@@ -113,6 +113,9 @@ class Prefs {
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+  // Vault sharing
+  final String _kVaultShareEnabled = "pda_vaultShareEnabled";
+  final String _kVaultShareCurrent = "pda_vaultShareCurrent";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1310,4 +1313,29 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kOCrimeLastKnown, value);
   }
+
+  /// -----------------------------
+  /// METHODS FOR VAULT SHARE
+  /// -----------------------------
+  Future<bool> getVaultEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kVaultShareEnabled) ?? true;
+  }
+
+  Future<bool> setVaultEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kVaultShareEnabled, value);
+  }
+
+  Future<String> getVaultShareCurrent() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kVaultShareCurrent) ?? "";
+  }
+
+  Future<bool> setVaultShareCurrent(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kVaultShareCurrent, value);
+  }
+
+
 }
