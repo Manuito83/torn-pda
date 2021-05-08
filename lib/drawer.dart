@@ -94,6 +94,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   // Allows to space alerts when app is on the foreground
   DateTime _lastMessageReceived;
+  String _lastBody;
   int concurrent = 0;
   // Assigns different ids to alerts when the app is on the foreground
   var notId = 900;
@@ -170,6 +171,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     );
 
     _lastMessageReceived = DateTime.now();
+    _lastBody = "";
 
     _messaging.getInitialMessage().then((RemoteMessage message) {
       if (message != null && message.data.isNotEmpty) {
@@ -190,21 +192,36 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         message.data["body"] = message.notification.body;
       }
 
-      // Spaces out several notifications so that all of them show if
-      // the app is open (otherwise only 1 of them shows)
+      // Space messages and skip repeated
+      bool skip = false;
       if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
-        concurrent++;
-        await Future.delayed(Duration(seconds: 8 * concurrent));
+        if (message.data["body"] == _lastBody) {
+          // Skips messages with the same body that come repeated in less than 2 seconds, which is
+          // a glitch for some mobile devices with the app in the foreground!
+          skip = true;
+        } else {
+          // Spaces out several notifications so that all of them show if
+          // the app is open (otherwise only 1 of them shows)
+          concurrent++;
+          await Future.delayed(Duration(seconds: 8 * concurrent));
+        }
       } else {
         concurrent = 0;
       }
-      _lastMessageReceived = DateTime.now();
-      // Assigns a different id two alerts that come together (otherwise one
-      // deletes the previous one)
-      notId++;
-      if (notId > 990) notId = 900;
-      // This will eventually fire a local notification
-      return showNotification(message.data, notId);
+
+      if (!skip) {
+        _lastMessageReceived = DateTime.now();
+        _lastBody = message.data["body"];
+        // Assigns a different id two alerts that come together (otherwise one
+        // deletes the previous one)
+        notId++;
+        if (notId > 990) notId = 900;
+        // This will eventually fire a local notification
+        return showNotification(message.data, notId);
+      } else {
+        return null;
+      }
+
     });
 
     _clearBadge();
