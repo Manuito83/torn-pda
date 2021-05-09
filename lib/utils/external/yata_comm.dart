@@ -40,6 +40,8 @@ class YataComm {
           return result;
         }
       }
+      // Get cookies again after the new auth
+      cookies = await _cj.loadForRequest(_authUrl);
     }
 
     try {
@@ -99,7 +101,8 @@ class YataComm {
       return YataError()..reason = "user";
     }
 
-    _cj.saveFromResponse(_authUrl, authResponse.cookies);
+    await _cj.saveFromResponse(_authUrl, authResponse.cookies);
+    return true;
   }
 
 }
