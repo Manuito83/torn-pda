@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name         TornCAT Faction Player Filters
 // @namespace    torncat
-// @version      1.2.0
+// @version      1.2.2
 // @description  This script adds player filters on various pages (see matches below).
 // @author       Wingmanjd[2127679]
-// @match        https://www.torn.com/factions.php
-// @match        https://www.torn.com/friendlist.php
-// @match        https://www.torn.com/blacklist.php
-// @match        https://www.torn.com/hospitalview.php
-// @match        https://www.torn.com/jailview.php
-// @match        https://www.torn.com/index.php?page=people
+// @match        https://www.torn.com/factions.php*
+// @match        https://www.torn.com/hospitalview.php*
+// @match        https://www.torn.com/jailview.php*
+// @match        https://www.torn.com/index.php?page=people*
+// @match        https://www.torn.com/friendlist.php*
+// @match        https://www.torn.com/blacklist.php*
+
 // ==/UserScript==
 
 'use strict';
@@ -820,14 +821,17 @@ var styles= `
     display: flex;
     justify-content: center;
 }
+
 .torncat-filters {
     width: 100%
 }
+
 .torncat-filter {
     display: inline-block;
     margin: 0 10px 0 10px;
     text-align: center;
 }
+
 .torncat-update {
     background: rgba(76, 200, 76, 0.2) !important;
 }
@@ -840,6 +844,7 @@ var styles= `
 .torncat-hide-offline {
     display:none !important
 }
+
 .torncat-icon {
     background-image: url("data:image/svg+xml,%3Csvg data-v-fde0c5aa='' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300' class='icon'%3E%3C!----%3E%3Cdefs data-v-fde0c5aa=''%3E%3C!----%3E%3C/defs%3E%3C!----%3E%3C!----%3E%3Cdefs data-v-fde0c5aa=''%3E%3C!----%3E%3C/defs%3E%3Cg data-v-fde0c5aa='' id='761e8856-1551-45a8-83d8-eb3e49301c32' fill='black' stroke='none' transform='matrix(2.200000047683716,0,0,2.200000047683716,39.999999999999986,39.99999999999999)'%3E%3Cpath d='M93.844 43.76L52.389 70.388V85.92L100 55.314zM0 55.314L47.611 85.92V70.384L6.174 43.718zM50 14.08L9.724 39.972 50 65.887l40.318-25.888L50 14.08zm0 15.954L29.95 42.929l-5.027-3.228L50 23.576l25.077 16.125-5.026 3.228L50 30.034z'%3E%3C/path%3E%3C/g%3E%3C!----%3E%3C/svg%3E");
     background-position: center center;
@@ -849,6 +854,7 @@ var styles= `
     display: inline-block;
     width: 32px;
 }
+
 `;
 // eslint-disable-next-line no-undef
 GM_addStyle(styles);
