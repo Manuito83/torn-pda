@@ -28,6 +28,7 @@ import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
+import 'package:torn_pda/pages/vault/vault_options.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -108,6 +109,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _vaultPreferencesLoaded = false;
   bool _vaultIconActive = false;
   Widget _vaultExpandable = SizedBox.shrink();
+  int _totalMoneyVault = 0;
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -960,7 +962,7 @@ class _WebViewFullState extends State<WebViewFull> {
           _quickItemsMenuIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
-          _vaultMenuIcon(),
+          _vaultOptionsIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
           _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
@@ -1149,11 +1151,20 @@ class _WebViewFullState extends State<WebViewFull> {
   void _resetSectionsWithWidgets() {
     if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
+      _quickItemsTriggered = false;
+      _vaultTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
+    } else if (_currentUrl.contains('properties.php') && _vaultTriggered) {
+      _crimesTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
@@ -1161,30 +1172,35 @@ class _WebViewFullState extends State<WebViewFull> {
       _attackTriggered = false;
     } else if (_currentUrl.contains('city.php') && _cityTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains("trade.php") && _tradesTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains("torn.com/profiles.php?XID=") && _profileTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
       _cityTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") && _attackTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
       _cityTriggered = false;
       _profileTriggered = false;
     } else {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
@@ -1761,22 +1777,26 @@ class _WebViewFullState extends State<WebViewFull> {
     if (_vaultTriggered) return;
     _vaultTriggered = true;
 
+    // Get total so that we can pass it to options in order to initialise or change quantities
     var total = doc.querySelector(".vault-cont .wvalue")?.text?.replaceAll(",", "");
+    _totalMoneyVault = int.tryParse(total);
+
+    // Activate the vault widget itself
     var allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
     _vaultExpandable = VaultWidget(
       vaultHtml: allTransactions,
       playerId: _userProvider.basic.playerId,
+      userProvider: _userProvider,
     );
   }
 
-  Widget _vaultMenuIcon() {
+  Widget _vaultOptionsIcon() {
     if (_vaultIconActive) {
       return OpenContainer(
         transitionDuration: Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
-          // TODO: RETURN VAULT OPTIONS
-          return CityOptions(
+          return VaultOptions(
             callback: _vaultPreferencesLoad,
           );
         },
@@ -1804,17 +1824,10 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _vaultPreferencesLoad() async {
-    // TODO
-    _vaultEnabled = true;
+    _vaultEnabled = await Prefs().getVaultEnabled();
+    // Reset vault so that it can be assessed again
     _vaultTriggered = false;
     await reload();
-
-    /*
-    _cityEnabled = await Prefs().getCityEnabled();
-    // Reset city so that it can be assessed again
-    _cityTriggered = false;
-    await reload();
-    */
   }
 
   // CITY

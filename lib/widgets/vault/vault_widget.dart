@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -7,19 +8,24 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 import 'package:html/dom.dart' as dom;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/vault/vault_status_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/vault/vault_transaction_model.dart';
+import 'package:torn_pda/pages/vault/vault_configuration.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultWidget extends StatefulWidget {
   final List<dom.Element> vaultHtml;
   final int playerId;
+  final UserDetailsProvider userProvider;
 
   VaultWidget({
     @required this.vaultHtml,
     @required this.playerId,
+    @required this.userProvider,
   });
 
   @override
@@ -107,42 +113,40 @@ class _VaultWidgetState extends State<VaultWidget> {
   }
 
   Widget _vaultMain() {
-    Widget vault = SizedBox.shrink();
-    if (_firstUse) {
-      vault = Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Flexible(
-            child: Text(
-              "Please use the vault button (appbar, full browser) to configure the money "
-              "shared with your spouse (or to deactivate this widget)",
-              style: TextStyle(color: Colors.orange, fontSize: 11),
-            ),
-          ),
-        ],
-      );
-    } else {
-      vault = Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Flexible(
-            child: Text(
-              // TODO!!!
-              _vaultStatus.total.toString(),
-              style: TextStyle(color: Colors.orange, fontSize: 11),
-            ),
-          ),
-        ],
-      );
-    }
-
     return FutureBuilder(
         future: _vaultAssessed,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return vault;
+            if (_firstUse) {
+              return Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      "Initialise vault values",
+                      style: TextStyle(color: Colors.orange, fontSize: 12),
+                    ),
+                  ),
+                  SizedBox(width: 6),
+                  _vaultConfigurationIcon(),
+                ],
+              );
+            } else {
+              return Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      // TODO!!!
+                      _vaultStatus.total.toString(),
+                      style: TextStyle(color: Colors.orange, fontSize: 11),
+                    ),
+                  ),
+                ],
+              );
+            }
           } else {
             return Row(
               mainAxisSize: MainAxisSize.max,
@@ -171,6 +175,7 @@ class _VaultWidgetState extends State<VaultWidget> {
         // TODO
       } else {
         _firstUse = true;
+        _vaultStatus.total = transactions[0].balance;
       }
     } else {
       // TODO: implement error
@@ -231,5 +236,40 @@ class _VaultWidgetState extends State<VaultWidget> {
     } catch (e) {
       return Future<List<VaultTransactionModel>>.value([]);
     }
+  }
+
+  Widget _vaultConfigurationIcon() {
+    return OpenContainer(
+      transitionDuration: Duration(milliseconds: 500),
+      transitionType: ContainerTransitionType.fadeThrough,
+      openBuilder: (BuildContext context, VoidCallback _) {
+        return VaultConfiguration(
+          callback: _configurationCallback,
+          userProvider: widget.userProvider,
+          totalInVault: _vaultStatus.total,
+        );
+      },
+      closedElevation: 0,
+      closedShape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(
+          Radius.circular(56 / 2),
+        ),
+      ),
+      closedColor: Colors.transparent,
+      closedBuilder: (BuildContext context, VoidCallback openContainer) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 5),
+          child: SizedBox(
+            height: 20,
+            width: 20,
+            child: Icon(Icons.settings, size: 16, color: Colors.orange),
+          ),
+        );
+      },
+    );
+  }
+
+  _configurationCallback() {
+    print("HEY");
   }
 }

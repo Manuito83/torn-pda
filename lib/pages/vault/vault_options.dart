@@ -1,19 +1,20 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/vault/vault_status_model.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultOptions extends StatefulWidget {
   final Function callback;
 
-  VaultOptions({
-    @required this.callback,
-  });
+  VaultOptions({@required this.callback});
 
   @override
   _VaultOptionsState createState() => _VaultOptionsState();
@@ -21,6 +22,7 @@ class VaultOptions extends StatefulWidget {
 
 class _VaultOptionsState extends State<VaultOptions> {
   bool _vaultEnabled = true;
+
   SettingsProvider _settingsProvider;
   Future _preferencesLoaded;
 
@@ -42,9 +44,9 @@ class _VaultOptionsState extends State<VaultOptions> {
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
-            height: AppBar().preferredSize.height,
-            child: buildAppBar(),
-          )
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
               : null,
           body: Builder(
             builder: (BuildContext context) {
@@ -108,14 +110,14 @@ class _VaultOptionsState extends State<VaultOptions> {
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
-          Navigator.of(context).pop();},
+          Navigator.of(context).pop();
+        },
       ),
     );
   }
 
   Future _restorePreferences() async {
     var vaultEnabled = await Prefs().getVaultEnabled();
-
     setState(() {
       _vaultEnabled = vaultEnabled;
     });
@@ -126,4 +128,3 @@ class _VaultOptionsState extends State<VaultOptions> {
     return true;
   }
 }
-
