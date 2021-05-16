@@ -1084,7 +1084,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         inputTime: dateTimeArrival,
         timeFormatSetting: _settingsProvider.currentTimeFormat,
         timeZoneSetting: _settingsProvider.currentTimeZone,
-      ).format;
+      ).formatHour;
 
       return Padding(
         padding: const EdgeInsets.only(top: 10),
@@ -1863,7 +1863,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
@@ -1882,7 +1882,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
@@ -1901,7 +1901,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
@@ -1920,7 +1920,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: time,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
           return Row(
             children: <Widget>[
               SizedBox(width: 65),
@@ -1963,7 +1963,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         var alarmTime =
             _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
@@ -1971,7 +1971,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         var timerTime =
             _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
@@ -1979,7 +1979,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         notificationSetString =
             'Travel notification set for $formattedTimeNotification';
@@ -2039,7 +2039,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: _energyNotificationTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
 
           if (!percentageError) {
             _customEnergyMaxOverride = false;
@@ -2100,7 +2100,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: _nerveNotificationTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
 
           if (!percentageError) {
             _customNerveMaxOverride = false;
@@ -2138,7 +2138,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _lifeNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
         notificationSetString = 'Life notification set for $formattedTime';
         notificationCancelString = 'Life notification cancelled!';
         alarmSetString = 'Life alarm set for $formattedTime';
@@ -2156,7 +2156,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _drugsNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
         notificationSetString =
             'Drugs cooldown notification set for $formattedTime';
         notificationCancelString = 'Drugs cooldown notification cancelled!';
@@ -2175,7 +2175,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _medicalNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
         notificationSetString =
             'Medical cooldown notification set for $formattedTime';
         notificationCancelString = 'Medical cooldown notification cancelled!';
@@ -2194,7 +2194,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _boosterNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
         notificationSetString =
             'Booster cooldown notification set for $formattedTime';
         notificationCancelString = 'Booster cooldown notification cancelled!';
@@ -2216,7 +2216,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         var alarmTime = _hospitalReleaseTime
             .add(Duration(seconds: -_hospitalNotificationAhead));
@@ -2224,7 +2224,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         var timerTime = _hospitalReleaseTime
             .add(Duration(seconds: -_hospitalNotificationAhead));
@@ -2232,7 +2232,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         notificationSetString =
             'Hospital release notification set for $formattedTime';
@@ -2525,7 +2525,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
-    ).format;
+    ).formatHour;
     String diff = _timeFormatted(timeEnd);
     return Flexible(
         child: Padding(
@@ -2540,7 +2540,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
-    ).format;
+    ).formatHour;
     String diff = _timeFormatted(timeEnd);
     return Flexible(
         child: Padding(
@@ -2555,7 +2555,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       inputTime: timeEnd,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
-    ).format;
+    ).formatHour;
     String diff = _timeFormatted(timeEnd);
     return Flexible(
         child: Padding(
@@ -2578,7 +2578,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         inputTime: timeEnd,
         timeFormatSetting: _settingsProvider.currentTimeFormat,
         timeZoneSetting: _settingsProvider.currentTimeZone,
-      ).dayWeek;
+      ).formatDayWeek;
       diff = ' $dayWeek, in '
           '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
     }
@@ -3835,7 +3835,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _ocTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
         _ocComplexTimeString =
             "OC will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
       } else {
@@ -3897,7 +3897,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           inputTime: _ocTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
         _ocSimpleTimeString = "A faction organized crime will be ready @ "
             "$formattedTime${_timeFormatted(_ocTime)}";
       }

@@ -443,7 +443,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
       inputTime: time,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
-    ).format;
+    ).formatHour;
   }
 
   void _restorePreferences() async {

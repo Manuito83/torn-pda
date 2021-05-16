@@ -1292,7 +1292,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       inputTime: time,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
-    ).format;
+    ).formatHour;
   }
 
   void _timerUpdate() {

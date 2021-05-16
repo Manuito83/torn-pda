@@ -633,7 +633,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           inputTime: _travelModel.timeArrival,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).format;
+        ).formatHour;
 
         // Calculations for travel bar
         var startTime = _travelModel.departed;
@@ -1083,7 +1083,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       inputTime: inputTime,
       timeFormatSetting: _settingsProvider.currentTimeFormat,
       timeZoneSetting: _settingsProvider.currentTimeZone,
-    ).format;
+    ).formatHour;
   }
 
   _callBackFromTravelOptions() async {
