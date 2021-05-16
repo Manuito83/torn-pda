@@ -10,36 +10,28 @@ import 'package:torn_pda/models/vault/vault_status_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/vault/vault_configuration_dialog.dart';
 
-class VaultConfiguration extends StatefulWidget {
+class VaultConfigurationPage extends StatefulWidget {
   final Function callback;
   final UserDetailsProvider userProvider;
-  final int totalInVault;
+  final VaultStatusModel vaultStatus;
 
-  VaultConfiguration({
+  VaultConfigurationPage({
     @required this.callback,
     @required this.userProvider,
-    @required this.totalInVault,
+    @required this.vaultStatus,
   });
 
   @override
-  _VaultConfigurationState createState() => _VaultConfigurationState();
+  _VaultConfigurationPageState createState() => _VaultConfigurationPageState();
 }
 
-class _VaultConfigurationState extends State<VaultConfiguration> {
-  var _savedVault = VaultStatusModel();
-
+class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
 
   SettingsProvider _settingsProvider;
-  Future _preferencesLoaded;
-
-  @override
-  void initState() {
-    super.initState();
-    _preferencesLoaded = _restorePreferences();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,29 +51,14 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
               : null,
           body: Builder(
             builder: (BuildContext context) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: FutureBuilder(
-                  future: _preferencesLoaded,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SizedBox(height: 10),
-                            _setupContainer(),
-                            SizedBox(height: 50),
-                          ],
-                        ),
-                      );
-                    } else {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                  },
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SizedBox(height: 10),
+                    _setupContainer(),
+                    SizedBox(height: 50),
+                  ],
                 ),
               );
             },
@@ -107,7 +84,7 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
   }
 
   Widget _setupContainer() {
-    if (widget.totalInVault == null) {
+    if (widget.vaultStatus.total == null) {
       return Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -132,11 +109,11 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
     Widget options = SizedBox.shrink();
 
     // If we have never initialise (or we deleted) the share
-    if (_savedVault.timestamp == null) {
+    if (widget.vaultStatus.player == null) {
       top = Text("You have not initialised the vault share yet!");
       share = Column(
         children: [
-          Text("Total: \$${_moneyFormat.format(widget.totalInVault)}"),
+          Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
           SizedBox(height: 10),
           Text("${widget.userProvider.basic.name}: ?"),
           Text("${widget.userProvider.basic.married.spouseName}: ?"),
@@ -147,6 +124,41 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
         onPressed: () {
           _showVaultConfigurationDialog();
         },
+      );
+    } else {
+      var time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp);
+      var formatter = TimeFormatter(
+          inputTime: time,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone);
+      top = Text("Last transaction on ${formatter.formatMonthDay} @${formatter.formatHour}");
+      share = Column(
+        children: [
+          Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
+          SizedBox(height: 10),
+          Text("${widget.userProvider.basic.name}: "
+              "${_moneyFormat.format(widget.vaultStatus.player)}"),
+          Text("${widget.userProvider.basic.married.spouseName}: "
+              "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
+        ],
+      );
+      options = Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ElevatedButton(
+            child: Text("Change"),
+            onPressed: () {
+              _showVaultConfigurationDialog();
+            },
+          ),
+          SizedBox(width: 10),
+          ElevatedButton(
+            child: Icon(Icons.delete_outline),
+            onPressed: () {
+              _showResetVaultConfiguration();
+            },
+          ),
+        ],
       );
     }
 
@@ -172,12 +184,6 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
     );
   }
 
-  Future _restorePreferences() async {
-    // Get the last vault values we saved (if any)
-    var savedVault = await Prefs().getVaultShareCurrent();
-    _savedVault = vaultStatusModelFromJson(savedVault);
-  }
-
   Future<void> _showVaultConfigurationDialog() async {
     return showDialog<void>(
       context: context,
@@ -190,8 +196,8 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: VaultConfigurationDialog(
-            total: widget.totalInVault,
-            vaultStatus: _savedVault,
+            total: widget.vaultStatus.total,
+            vaultStatus: widget.vaultStatus,
             userProvider: widget.userProvider,
             callbackShares: _onDialogSendData,
           ),
@@ -200,8 +206,47 @@ class _VaultConfigurationState extends State<VaultConfiguration> {
     );
   }
 
-  _onDialogSendData (List<int> shares) {
-    print(shares); // TODO
+  Future<void> _showResetVaultConfiguration() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Reset vault distribution"),
+          content: Text("Caution: this will reset your vault distribution!"),
+          actions: [
+            TextButton(
+              child: Text("Do it!"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  widget.vaultStatus
+                    ..player = null
+                    ..spouse = null;
+                });
+                Prefs().setVaultShareCurrent("");
+              },
+            ),
+            TextButton(
+              child: Text("Oh no!"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  _onDialogSendData() {
+    setState(() {
+      // Shares info has been added
+    });
+
+    var save = vaultStatusModelToJson(widget.vaultStatus);
+    Prefs().setVaultShareCurrent(save);
+
   }
 
   Future<bool> _willPopCallback() async {

@@ -18,7 +18,6 @@ class VaultConfigurationDialog extends StatefulWidget {
   final int total;
   final VaultStatusModel vaultStatus;
   final UserDetailsProvider userProvider;
-  /// List with [own, spouse]
   final Function callbackShares;
 
   VaultConfigurationDialog({
@@ -231,10 +230,10 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                               if (success) {
                                 Navigator.of(context).pop();
 
-                                widget.callbackShares([
-                                  _cleanNumber(_ownAmountController.text),
-                                  _cleanNumber(_spouseAmountController.text),
-                                ]);
+                                widget.vaultStatus
+                                  ..player = _cleanNumber(_ownAmountController.text)
+                                  ..spouse = _cleanNumber(_spouseAmountController.text);
+                                widget.callbackShares();
 
                                 BotToast.showText(
                                   text: "Vault distribution saved!",

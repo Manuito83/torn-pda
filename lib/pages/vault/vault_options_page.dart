@@ -11,16 +11,16 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class VaultOptions extends StatefulWidget {
+class VaultOptionsPage extends StatefulWidget {
   final Function callback;
 
-  VaultOptions({@required this.callback});
+  VaultOptionsPage({@required this.callback});
 
   @override
-  _VaultOptionsState createState() => _VaultOptionsState();
+  _VaultOptionsPageState createState() => _VaultOptionsPageState();
 }
 
-class _VaultOptionsState extends State<VaultOptions> {
+class _VaultOptionsPageState extends State<VaultOptionsPage> {
   bool _vaultEnabled = true;
 
   SettingsProvider _settingsProvider;

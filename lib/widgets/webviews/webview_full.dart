@@ -28,7 +28,7 @@ import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
-import 'package:torn_pda/pages/vault/vault_options.dart';
+import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -1796,7 +1796,7 @@ class _WebViewFullState extends State<WebViewFull> {
         transitionDuration: Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
-          return VaultOptions(
+          return VaultOptionsPage(
             callback: _vaultPreferencesLoad,
           );
         },
