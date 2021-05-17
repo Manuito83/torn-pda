@@ -286,17 +286,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     });
 
-    _oneSecTimer = new Timer.periodic(
-        Duration(seconds: 1), (Timer t) => _refreshTctClock());
+    _oneSecTimer = new Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshTctClock());
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'profile'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
   }
 
   void _requestIOSPermissions() {
     flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(
           alert: true,
           badge: true,
@@ -471,48 +468,38 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 );
               } else {
-                return Center(
+                return SingleChildScrollView(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
+                      SizedBox(height: 50),
                       Text(
                         'OOPS!',
-                        style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                        style:
+                            TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
                         child: Column(
                           children: [
                             Text(
                               'There was an error: $_apiError\n\n'
-                              'Torn PDA will retry automatically!',
+                              'Torn PDA is retrying automatically.',
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 20),
                             Text(
                               'If you have connectivity, it might be an issue with the API. '
-                              'Try to access Torn directly:',
+                              'You can still try to access Torn through shortcuts or the main '
+                              'Torn menu icon below.',
                               textAlign: TextAlign.center,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-                              child: ElevatedButton(
-                                child: Text("Torn"),
-                                onLongPress: () {
-                                  _launchBrowserFull('https://www.torn.com');
-                                },
-                                onPressed: () async {
-                                  _launchBrowserOption('https://www.torn.com');
-                                },
-                              ),
                             ),
                           ],
                         ),
                       ),
+                      SizedBox(height: 50),
+                      _shortcutsCarrousel(),
+                      SizedBox(height: 50),
                     ],
                   ),
                 );
@@ -546,8 +533,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -896,9 +882,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           width: 13,
           height: 13,
           decoration: BoxDecoration(
-              color: stateColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.black)),
+              color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
         ),
       );
     }
@@ -1072,12 +1056,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       var endTime = _user.travel.timestamp;
       var totalSeconds = endTime - startTime;
 
-      var dateTimeArrival =
-          DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
+      var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
       var timeDifference = dateTimeArrival.difference(DateTime.now());
       String twoDigits(int n) => n.toString().padLeft(2, "0");
-      String twoDigitMinutes =
-          twoDigits(timeDifference.inMinutes.remainder(60));
+      String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
       String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
       var formattedTime = TimeFormatter(
@@ -1118,8 +1100,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ? const EdgeInsets.only(top: 6, right: 6)
                             : const EdgeInsets.only(top: 6, left: 10),
                         child: RotatedBox(
-                          quarterTurns:
-                              _user.travel.destination == "Torn" ? 3 : 1,
+                          quarterTurns: _user.travel.destination == "Torn" ? 3 : 1,
                           child: Icon(
                             Icons.airplanemode_active,
                             color: Colors.blue[900],
@@ -1136,16 +1117,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     percent: _getTravelPercentage(totalSeconds),
                   ),
                 ),
-                if (!_dedicatedTravelCard)
-                  _notificationIcon(ProfileNotification.travel),
+                if (!_dedicatedTravelCard) _notificationIcon(ProfileNotification.travel),
               ],
             ),
             SizedBox(height: 10),
             Row(
               children: <Widget>[
                 Flexible(
-                  child: Text(
-                      'Arriving in ${_user.travel.destination} at $formattedTime'),
+                  child: Text('Arriving in ${_user.travel.destination} at $formattedTime'),
                 ),
               ],
             ),
@@ -1395,9 +1374,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             padding: EdgeInsets.all(5.0),
             shape: RoundedRectangleBorder(
               side: BorderSide(
-                color: _travelNotificationsPending
-                    ? Colors.green
-                    : Colors.blueGrey,
+                color: _travelNotificationsPending ? Colors.green : Colors.blueGrey,
                 width: 2,
                 style: BorderStyle.solid,
               ),
@@ -1631,8 +1608,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 );
                               }
 
-                              _launchBrowserFull(
-                                  'https://www.torn.com/gym.php');
+                              _launchBrowserFull('https://www.torn.com/gym.php');
                             },
                             onTap: () async {
                               if (_warnAboutChains &&
@@ -1651,8 +1627,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 );
                               }
 
-                              _launchBrowserOption(
-                                  'https://www.torn.com/gym.php');
+                              _launchBrowserOption('https://www.torn.com/gym.php');
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -1663,9 +1638,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 '${_user.energy.current}',
                                 style: TextStyle(color: Colors.black),
                               ),
-                              percent: _user.energy.current /
-                                          _user.energy.maximum >
-                                      1.0
+                              percent: _user.energy.current / _user.energy.maximum > 1.0
                                   ? 1.0
                                   : _user.energy.current / _user.energy.maximum,
                             ),
@@ -1715,12 +1688,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
-                              _launchBrowserFull(
-                                  'https://www.torn.com/crimes.php#/step=main');
+                              _launchBrowserFull('https://www.torn.com/crimes.php#/step=main');
                             },
                             onTap: () async {
-                              _launchBrowserOption(
-                                  'https://www.torn.com/crimes.php#/step=main');
+                              _launchBrowserOption('https://www.torn.com/crimes.php#/step=main');
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -1731,9 +1702,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 '${_user.nerve.current}',
                                 style: TextStyle(color: Colors.black),
                               ),
-                              percent: _user.nerve.current /
-                                          _user.nerve.maximum >
-                                      1.0
+                              percent: _user.nerve.current / _user.nerve.maximum > 1.0
                                   ? 1.0
                                   : _user.nerve.current / _user.nerve.maximum,
                             ),
@@ -1761,12 +1730,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       SizedBox(width: 10),
                       GestureDetector(
                         onLongPress: () {
-                          _launchBrowserFull(
-                              'https://www.torn.com/item.php#candy-items');
+                          _launchBrowserFull('https://www.torn.com/item.php#candy-items');
                         },
                         onTap: () async {
-                          _launchBrowserOption(
-                              'https://www.torn.com/item.php#candy-items');
+                          _launchBrowserOption('https://www.torn.com/item.php#candy-items');
                         },
                         child: LinearPercentIndicator(
                           width: 150,
@@ -1777,10 +1744,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             '${_user.happy.current}',
                             style: TextStyle(color: Colors.black),
                           ),
-                          percent:
-                              _user.happy.current / _user.happy.maximum > 1.0
-                                  ? 1.0
-                                  : _user.happy.current / _user.happy.maximum,
+                          percent: _user.happy.current / _user.happy.maximum > 1.0
+                              ? 1.0
+                              : _user.happy.current / _user.happy.maximum,
                         ),
                       ),
                     ],
@@ -1807,12 +1773,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
-                              _launchBrowserFull(
-                                  'https://www.torn.com/item.php#medical-items');
+                              _launchBrowserFull('https://www.torn.com/item.php#medical-items');
                             },
                             onTap: () async {
-                              _launchBrowserOption(
-                                  'https://www.torn.com/item.php#medical-items');
+                              _launchBrowserOption('https://www.torn.com/item.php#medical-items');
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -1823,10 +1787,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 '${_user.life.current}',
                                 style: TextStyle(color: Colors.black),
                               ),
-                              percent:
-                                  _user.life.current / _user.life.maximum > 1.0
-                                      ? 1.0
-                                      : _user.life.current / _user.life.maximum,
+                              percent: _user.life.current / _user.life.maximum > 1.0
+                                  ? 1.0
+                                  : _user.life.current / _user.life.maximum,
                             ),
                           ),
                           _user.status.state == "Hospital"
@@ -1854,8 +1817,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Widget _barTime(String type) {
     switch (type) {
       case "energy":
-        if (_user.energy.fulltime == 0 ||
-            _user.energy.current > _user.energy.maximum) {
+        if (_user.energy.fulltime == 0 || _user.energy.current > _user.energy.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.energy.fulltime));
@@ -1873,8 +1835,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
         break;
       case "nerve":
-        if (_user.nerve.fulltime == 0 ||
-            _user.nerve.current > _user.nerve.maximum) {
+        if (_user.nerve.fulltime == 0 || _user.nerve.current > _user.nerve.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.nerve.fulltime));
@@ -1892,8 +1853,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
         break;
       case "happy":
-        if (_user.happy.fulltime == 0 ||
-            _user.happy.current > _user.happy.maximum) {
+        if (_user.happy.fulltime == 0 || _user.happy.current > _user.happy.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.happy.fulltime));
@@ -1911,8 +1871,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
         break;
       case "life":
-        if (_user.life.fulltime == 0 ||
-            _user.life.current > _user.life.maximum) {
+        if (_user.life.fulltime == 0 || _user.life.current > _user.life.maximum) {
           return SizedBox.shrink();
         } else {
           var time = _serverTime.add(Duration(seconds: _user.life.fulltime));
@@ -1951,38 +1910,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        _travelArrivalTime = new DateTime.fromMillisecondsSinceEpoch(
-            _user.travel.timestamp * 1000);
+        _travelArrivalTime = new DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
         var timeDifference = _travelArrivalTime.difference(DateTime.now());
         secondsToGo = timeDifference.inSeconds;
         notificationsPending = _travelNotificationsPending;
 
-        var notificationTime = _travelArrivalTime
-            .add(Duration(seconds: -_travelNotificationAhead));
+        var notificationTime = _travelArrivalTime.add(Duration(seconds: -_travelNotificationAhead));
         var formattedTimeNotification = TimeFormatter(
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
 
-        var alarmTime =
-            _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
+        var alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
         var formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
 
-        var timerTime =
-            _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
+        var timerTime = _travelArrivalTime.add(Duration(seconds: -_travelTimerAhead));
         var formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
 
-        notificationSetString =
-            'Travel notification set for $formattedTimeNotification';
+        notificationSetString = 'Travel notification set for $formattedTimeNotification';
         notificationCancelString = 'Travel notification cancelled!';
         alarmSetString = 'Travel alarm set for $formattedTimeAlarm';
         timerSetString = 'Travel timer set for $formattedTimeTimer';
@@ -2016,9 +1970,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             // the interval, and decrease for the current tick consumed
             if (energyTicksToGo > 1) {
               var consumedTick = _user.energy.interval - _user.energy.ticktime;
-              secondsToGo =
-                  (energyTicksToGo * _user.energy.interval - consumedTick)
-                      .floor();
+              secondsToGo = (energyTicksToGo * _user.energy.interval - consumedTick).floor();
             }
             // If we are in the current tick or example in the next one,
             // we just take into consideration the tick time left
@@ -2033,8 +1985,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             secondsToGo = _user.energy.fulltime;
           }
 
-          _energyNotificationTime =
-              DateTime.now().add(Duration(seconds: secondsToGo));
+          _energyNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
           var formattedTime = TimeFormatter(
             inputTime: _energyNotificationTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -2046,10 +1997,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Prefs().setEnergyPercentageOverride(false);
             notificationSetString =
                 'Energy notification set for $formattedTime (E$_customEnergyTrigger)';
-            alarmSetString =
-                'Energy alarm set for $formattedTime (E$_customEnergyTrigger)';
-            timerSetString =
-                'Energy timer set for $formattedTime (E$_customEnergyTrigger)';
+            alarmSetString = 'Energy alarm set for $formattedTime (E$_customEnergyTrigger)';
+            timerSetString = 'Energy timer set for $formattedTime (E$_customEnergyTrigger)';
           } else {
             _customEnergyMaxOverride = true;
             Prefs().setEnergyPercentageOverride(true);
@@ -2077,9 +2026,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             // the interval, and decrease for the current tick consumed
             if (nerveTicksToGo > 1) {
               var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
-              secondsToGo =
-                  (nerveTicksToGo * _user.nerve.interval - consumedTick)
-                      .floor();
+              secondsToGo = (nerveTicksToGo * _user.nerve.interval - consumedTick).floor();
             }
             // If we are in the current tick or example in the next one,
             // we just take into consideration the tick time left
@@ -2094,8 +2041,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             secondsToGo = _user.nerve.fulltime;
           }
 
-          _nerveNotificationTime =
-              DateTime.now().add(Duration(seconds: secondsToGo));
+          _nerveNotificationTime = DateTime.now().add(Duration(seconds: secondsToGo));
           var formattedTime = TimeFormatter(
             inputTime: _nerveNotificationTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -2107,10 +2053,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Prefs().setNervePercentageOverride(false);
             notificationSetString =
                 'Nerve notification set for $formattedTime (E$_customNerveTrigger)';
-            alarmSetString =
-                'Nerve alarm set for $formattedTime (E$_customNerveTrigger)';
-            timerSetString =
-                'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
+            alarmSetString = 'Nerve alarm set for $formattedTime (E$_customNerveTrigger)';
+            timerSetString = 'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
           } else {
             _customNerveMaxOverride = true;
             Prefs().setNervePercentageOverride(true);
@@ -2132,8 +2076,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.life:
         secondsToGo = _user.life.fulltime;
         notificationsPending = _lifeNotificationsPending;
-        _lifeNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.life.fulltime));
+        _lifeNotificationTime = DateTime.now().add(Duration(seconds: _user.life.fulltime));
         var formattedTime = TimeFormatter(
           inputTime: _lifeNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -2150,15 +2093,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.drugs:
         secondsToGo = _user.cooldowns.drug;
         notificationsPending = _drugsNotificationsPending;
-        _drugsNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+        _drugsNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
         var formattedTime = TimeFormatter(
           inputTime: _drugsNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
-        notificationSetString =
-            'Drugs cooldown notification set for $formattedTime';
+        notificationSetString = 'Drugs cooldown notification set for $formattedTime';
         notificationCancelString = 'Drugs cooldown notification cancelled!';
         alarmSetString = 'Drugs cooldown alarm set for $formattedTime';
         timerSetString = 'Drugs cooldown timer set for $formattedTime';
@@ -2169,15 +2110,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.medical:
         secondsToGo = _user.cooldowns.medical;
         notificationsPending = _medicalNotificationsPending;
-        _medicalNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
+        _medicalNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.medical));
         var formattedTime = TimeFormatter(
           inputTime: _medicalNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
-        notificationSetString =
-            'Medical cooldown notification set for $formattedTime';
+        notificationSetString = 'Medical cooldown notification set for $formattedTime';
         notificationCancelString = 'Medical cooldown notification cancelled!';
         alarmSetString = 'Medical cooldown alarm set for $formattedTime';
         timerSetString = 'Medical cooldown timer set for $formattedTime';
@@ -2188,15 +2127,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.booster:
         secondsToGo = _user.cooldowns.booster;
         notificationsPending = _boosterNotificationsPending;
-        _boosterNotificationTime =
-            DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
+        _boosterNotificationTime = DateTime.now().add(Duration(seconds: _user.cooldowns.booster));
         var formattedTime = TimeFormatter(
           inputTime: _boosterNotificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
-        notificationSetString =
-            'Booster cooldown notification set for $formattedTime';
+        notificationSetString = 'Booster cooldown notification set for $formattedTime';
         notificationCancelString = 'Booster cooldown notification cancelled!';
         alarmSetString = 'Booster cooldown alarm set for $formattedTime';
         timerSetString = 'Booster cooldown timer set for $formattedTime';
@@ -2205,37 +2142,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
 
       case ProfileNotification.hospital:
-        _hospitalReleaseTime =
-            DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
+        _hospitalReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
         secondsToGo = _hospitalReleaseTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _hospitalNotificationsPending;
 
-        var notificationTime = _hospitalReleaseTime
-            .add(Duration(seconds: -_hospitalNotificationAhead));
+        var notificationTime =
+            _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
         var formattedTime = TimeFormatter(
           inputTime: notificationTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
 
-        var alarmTime = _hospitalReleaseTime
-            .add(Duration(seconds: -_hospitalNotificationAhead));
+        var alarmTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
         var formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
 
-        var timerTime = _hospitalReleaseTime
-            .add(Duration(seconds: -_hospitalNotificationAhead));
+        var timerTime = _hospitalReleaseTime.add(Duration(seconds: -_hospitalNotificationAhead));
         var formattedTimeTimer = TimeFormatter(
           inputTime: timerTime,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
 
-        notificationSetString =
-            'Hospital release notification set for $formattedTime';
+        notificationSetString = 'Hospital release notification set for $formattedTime';
         notificationCancelString = 'Hospital release notification cancelled!';
         alarmSetString = 'Hospital release alarm set for $formattedTimeAlarm';
         timerSetString = 'Hospital release timer set for $formattedTimeTimer';
@@ -2248,8 +2181,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return SizedBox.shrink();
     } else {
       Color thisColor;
-      if (notificationsPending &&
-          notificationType == NotificationType.notification) {
+      if (notificationsPending && notificationType == NotificationType.notification) {
         thisColor = Colors.green;
       } else {
         if (percentageError) {
@@ -2330,9 +2262,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Card _coolDowns() {
     Widget cooldownItems;
-    if (_user.cooldowns.drug > 0 ||
-        _user.cooldowns.booster > 0 ||
-        _user.cooldowns.medical > 0) {
+    if (_user.cooldowns.drug > 0 || _user.cooldowns.booster > 0 || _user.cooldowns.medical > 0) {
       cooldownItems = Padding(
         padding: const EdgeInsets.only(left: 8),
         child: Column(
@@ -2480,16 +2410,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user.cooldowns.medical > 0 && _user.cooldowns.medical < 21600) {
       return Image.asset('images/icons/cooldowns/medical1.png', width: 20);
     } // 6-12 hours
-    else if (_user.cooldowns.medical >= 21600 &&
-        _user.cooldowns.medical < 43200) {
+    else if (_user.cooldowns.medical >= 21600 && _user.cooldowns.medical < 43200) {
       return Image.asset('images/icons/cooldowns/medical2.png', width: 20);
     } // 12-18 hours
-    else if (_user.cooldowns.medical >= 43200 &&
-        _user.cooldowns.medical < 64800) {
+    else if (_user.cooldowns.medical >= 43200 && _user.cooldowns.medical < 64800) {
       return Image.asset('images/icons/cooldowns/medical3.png', width: 20);
     } // 18-24 hours
-    else if (_user.cooldowns.medical >= 64800 &&
-        _user.cooldowns.medical < 86400) {
+    else if (_user.cooldowns.medical >= 64800 && _user.cooldowns.medical < 86400) {
       return Image.asset('images/icons/cooldowns/medical4.png', width: 20);
     } // 24+ hours
     else {
@@ -2502,16 +2429,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user.cooldowns.booster > 0 && _user.cooldowns.booster < 21600) {
       return Image.asset('images/icons/cooldowns/booster1.png', width: 20);
     } // 6-12 hours
-    else if (_user.cooldowns.booster >= 21600 &&
-        _user.cooldowns.booster < 43200) {
+    else if (_user.cooldowns.booster >= 21600 && _user.cooldowns.booster < 43200) {
       return Image.asset('images/icons/cooldowns/booster2.png', width: 20);
     } // 12-18 hours
-    else if (_user.cooldowns.booster >= 43200 &&
-        _user.cooldowns.booster < 64800) {
+    else if (_user.cooldowns.booster >= 43200 && _user.cooldowns.booster < 64800) {
       return Image.asset('images/icons/cooldowns/booster3.png', width: 20);
     } // 18-24 hours
-    else if (_user.cooldowns.booster >= 64800 &&
-        _user.cooldowns.booster < 86400) {
+    else if (_user.cooldowns.booster >= 64800 && _user.cooldowns.booster < 86400) {
       return Image.asset('images/icons/cooldowns/booster4.png', width: 20);
     } // 24+ hours
     else {
@@ -2593,8 +2517,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // create a map in a new variable. Otherwise, we return an empty Card.
     var events = Map<String, Event>();
     if (_user.events.length > 0) {
-      events = Map.from(_user.events)
-          .map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
+      events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
     } else {
       return Card(
         child: Row(
@@ -2651,8 +2574,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll(' [view]', '.');
       message = message.replaceAll(' [View]', '');
       message = message.replaceAll(' Please click here.', '');
-      message =
-          message.replaceAll(' Please click here to collect your funds.', '');
+      message = message.replaceAll(' Please click here to collect your funds.', '');
 
       Widget insideIcon = EventIcons(message: message);
 
@@ -2758,12 +2680,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               InkWell(
                 borderRadius: BorderRadius.circular(100),
                 onLongPress: () {
-                  _launchBrowserFull(
-                      "https://www.torn.com/events.php#/step=all");
+                  _launchBrowserFull("https://www.torn.com/events.php#/step=all");
                 },
                 onTap: () {
-                  _launchBrowserOption(
-                      'https://www.torn.com/events.php#/step=all');
+                  _launchBrowserOption('https://www.torn.com/events.php#/step=all');
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(right: 5),
@@ -2779,8 +2699,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             unreadString,
             style: TextStyle(
               color: unreadCount == 0 ? Colors.green : Colors.red,
-              fontWeight:
-                  unreadCount == 0 ? FontWeight.normal : FontWeight.bold,
+              fontWeight: unreadCount == 0 ? FontWeight.normal : FontWeight.bold,
             ),
           ),
         ),
@@ -2803,8 +2722,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // create a map in a new variable. Otherwise, we return an empty Card.
     var messages = Map<String, TornMessage>();
     if (_user.messages.length > 0) {
-      messages = Map.from(_user.messages).map(
-          (k, v) => MapEntry<String, TornMessage>(k, TornMessage.fromJson(v)));
+      messages = Map.from(_user.messages)
+          .map((k, v) => MapEntry<String, TornMessage>(k, TornMessage.fromJson(v)));
     } else {
       return Card(
         child: Row(
@@ -2892,8 +2811,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
 
-      var messageTime =
-          DateTime.fromMillisecondsSinceEpoch(msg.timestamp * 1000);
+      var messageTime = DateTime.fromMillisecondsSinceEpoch(msg.timestamp * 1000);
 
       var messageRow = TimelineTile(
         isFirst: loopCount == 1 ? true : false,
@@ -2933,26 +2851,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ? GestureDetector(
                         child: Icon(Icons.markunread, color: Colors.green[600]),
                         onLongPress: () {
-                          _launchBrowserFull(
-                              "https://www.torn.com/messages.php#/p=read&ID="
+                          _launchBrowserFull("https://www.torn.com/messages.php#/p=read&ID="
                               "${messages.keys.elementAt(i)}&suffix=inbox");
                         },
                         onTap: () {
-                          _launchBrowserOption(
-                              "https://www.torn.com/messages.php#/p=read&ID="
+                          _launchBrowserOption("https://www.torn.com/messages.php#/p=read&ID="
                               "${messages.keys.elementAt(i)}&suffix=inbox");
                         },
                       )
                     : GestureDetector(
                         child: Icon(Icons.mark_as_unread),
                         onLongPress: () {
-                          _launchBrowserFull(
-                              "https://www.torn.com/messages.php#/p=read&ID="
+                          _launchBrowserFull("https://www.torn.com/messages.php#/p=read&ID="
                               "${messages.keys.elementAt(i)}&suffix=inbox");
                         },
                         onTap: () {
-                          _launchBrowserOption(
-                              "https://www.torn.com/messages.php#/p=read&ID="
+                          _launchBrowserOption("https://www.torn.com/messages.php#/p=read&ID="
                               "${messages.keys.elementAt(i)}&suffix=inbox");
                         },
                       ),
@@ -3007,8 +2921,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     var unreadTotalString = '';
-    var lastMessageDate = DateTime.fromMillisecondsSinceEpoch(
-        messages.values.last.timestamp * 1000);
+    var lastMessageDate =
+        DateTime.fromMillisecondsSinceEpoch(messages.values.last.timestamp * 1000);
     if (unreadTotalCount == 0) {
       unreadTotalString = 'No unread messages '
           '(since ${_occurrenceTimeFormatted(lastMessageDate)})';
@@ -3060,9 +2974,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 unreadRecentString,
                 style: TextStyle(
                   color: unreadRecentCount == 0 ? Colors.green : Colors.red,
-                  fontWeight: unreadRecentCount == 0
-                      ? FontWeight.normal
-                      : FontWeight.bold,
+                  fontWeight: unreadRecentCount == 0 ? FontWeight.normal : FontWeight.bold,
                 ),
               ),
               SizedBox(height: 4),
@@ -3276,10 +3188,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
-    double totalEffective = strengthModifiedTotal +
-        speedModifiedTotal +
-        defenseModifiedTotal +
-        dexModifiedTotal;
+    double totalEffective =
+        strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
 
     int totalEffectiveModifier =
         ((totalEffective - _miscModel.total) * 100 / _miscModel.total).round();
@@ -3296,14 +3206,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       skillsExist = true;
     }
 
-    _sharedEffStrength =
-        'Strength: ${decimalFormat.format(strengthModifiedTotal)} $strengthString';
-    _sharedEffDefense =
-        'Defense: ${decimalFormat.format(defenseModifiedTotal)} $defenseString';
-    _sharedEffSpeed =
-        'Speed: ${decimalFormat.format(speedModifiedTotal)} $speedString';
-    _sharedEffDexterity =
-        'Dexterity: ${decimalFormat.format(dexModifiedTotal)} $dexString';
+    _sharedEffStrength = 'Strength: ${decimalFormat.format(strengthModifiedTotal)} $strengthString';
+    _sharedEffDefense = 'Defense: ${decimalFormat.format(defenseModifiedTotal)} $defenseString';
+    _sharedEffSpeed = 'Speed: ${decimalFormat.format(speedModifiedTotal)} $speedString';
+    _sharedEffDexterity = 'Dexterity: ${decimalFormat.format(dexModifiedTotal)} $dexString';
     _sharedEffTotal = 'Total: ${decimalFormat.format(totalEffective)}';
 
     return Card(
@@ -3358,8 +3264,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 4),
               _jobPoints(),
               SizedBox(height: 8),
-              SelectableText(
-                  'Battle: ${decimalFormat.format(_miscModel.total)}'),
+              SelectableText('Battle: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
               Row(
                 children: [
@@ -3385,12 +3290,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ],
               ),
               SizedBox(height: 8),
-              SelectableText(
-                  'MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
-              SelectableText(
-                  'INT: ${decimalFormat.format(_miscModel.intelligence)}'),
-              SelectableText(
-                  'END: ${decimalFormat.format(_miscModel.endurance)}'),
+              SelectableText('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
+              SelectableText('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
+              SelectableText('END: ${decimalFormat.format(_miscModel.endurance)}'),
             ],
           ),
         ),
@@ -3469,8 +3371,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SelectableText(
-                            'Strength: ${decimalFormat.format(_miscModel.strength)}'),
+                        SelectableText('Strength: ${decimalFormat.format(_miscModel.strength)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3479,8 +3380,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText(
-                            'Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                        SelectableText('Defense: ${decimalFormat.format(_miscModel.defense)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3489,8 +3389,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText(
-                            'Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                        SelectableText('Speed: ${decimalFormat.format(_miscModel.speed)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3499,8 +3398,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText(
-                            'Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                        SelectableText('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3509,11 +3407,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     SizedBox(
                       width: 50,
-                      child: Divider(
-                          color: _themeProvider.mainText, thickness: 0.5),
+                      child: Divider(color: _themeProvider.mainText, thickness: 0.5),
                     ),
-                    SelectableText(
-                        'Total: ${decimalFormat.format(_miscModel.total)}'),
+                    SelectableText('Total: ${decimalFormat.format(_miscModel.total)}'),
                   ],
                 ),
               ),
@@ -3546,47 +3442,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SelectableText(
-                            'Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
+                        SelectableText('Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
                         strengthModified
                             ? Text(
                                 " $strengthString",
-                                style: TextStyle(
-                                    color: strengthColor, fontSize: 12),
+                                style: TextStyle(color: strengthColor, fontSize: 12),
                               )
                             : SizedBox.shrink(),
                       ],
                     ),
                     Row(
                       children: [
-                        SelectableText(
-                            'Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
+                        SelectableText('Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
                         defenseModified
                             ? Text(
                                 " $defenseString",
-                                style: TextStyle(
-                                    color: defenseColor, fontSize: 12),
+                                style: TextStyle(color: defenseColor, fontSize: 12),
                               )
                             : SizedBox.shrink(),
                       ],
                     ),
                     Row(
                       children: [
-                        SelectableText(
-                            'Speed: ${decimalFormat.format(speedModifiedTotal)}'),
+                        SelectableText('Speed: ${decimalFormat.format(speedModifiedTotal)}'),
                         speedModified
                             ? Text(
                                 " $speedString",
-                                style:
-                                    TextStyle(color: speedColor, fontSize: 12),
+                                style: TextStyle(color: speedColor, fontSize: 12),
                               )
                             : SizedBox.shrink(),
                       ],
                     ),
                     Row(
                       children: [
-                        SelectableText(
-                            'Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
+                        SelectableText('Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
                         dexModified
                             ? Text(
                                 " $dexString",
@@ -3597,8 +3486,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     SizedBox(
                       width: 50,
-                      child: Divider(
-                          color: _themeProvider.mainText, thickness: 0.5),
+                      child: Divider(color: _themeProvider.mainText, thickness: 0.5),
                     ),
                     Text(
                       'Total: ${decimalFormat.format(totalEffective)}',
@@ -3633,12 +3521,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SelectableText(
-                        'Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
+                    SelectableText('Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
                     SelectableText(
                         'Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
-                    SelectableText(
-                        'Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
+                    SelectableText('Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
                   ],
                 ),
               ),
@@ -3673,12 +3559,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (racing.isNotEmpty)
-                            SelectableText('Racing: $racing'),
-                          if (reviving.isNotEmpty)
-                            SelectableText('Reviving: $reviving'),
-                          if (hunting.isNotEmpty)
-                            SelectableText('Hunting: $hunting'),
+                          if (racing.isNotEmpty) SelectableText('Racing: $racing'),
+                          if (reviving.isNotEmpty) SelectableText('Reviving: $reviving'),
+                          if (hunting.isNotEmpty) SelectableText('Hunting: $hunting'),
                         ],
                       ),
                     ),
@@ -3807,12 +3690,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              _launchBrowserFull(
-                  'https://www.torn.com/loader.php?sid=racing');
+              _launchBrowserFull('https://www.torn.com/loader.php?sid=racing');
             },
             onTap: () {
-              _launchBrowserOption(
-                  'https://www.torn.com/loader.php?sid=racing');
+              _launchBrowserOption('https://www.torn.com/loader.php?sid=racing');
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),
@@ -3836,8 +3717,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone,
         ).formatHour;
-        _ocComplexTimeString =
-            "OC will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
+        _ocComplexTimeString = "OC will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
       } else {
         _ocComplexReady = true;
         if (_ocComplexPeopleNotReady == 0) {
@@ -3845,8 +3725,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         } else if (_ocComplexPeopleNotReady == 1) {
           _ocComplexTimeString = "OC is ready, but 1 participant is not!";
         } else {
-          _ocComplexTimeString =
-              "OC is ready, but $_ocComplexPeopleNotReady participants are not!";
+          _ocComplexTimeString = "OC is ready, but $_ocComplexPeopleNotReady participants are not!";
         }
       }
 
@@ -3870,12 +3749,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
-                _launchBrowserFull(
-                    "https://www.torn.com/factions.php?step=your#/tab=crimes");
+                _launchBrowserFull("https://www.torn.com/factions.php?step=your#/tab=crimes");
               },
               onTap: () {
-                _launchBrowserOption(
-                    'https://www.torn.com/factions.php?step=your#/tab=crimes');
+                _launchBrowserOption('https://www.torn.com/factions.php?step=your#/tab=crimes');
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 5),
@@ -3916,12 +3793,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
-                _launchBrowserFull(
-                    "https://www.torn.com/factions.php?step=your#/tab=crimes");
+                _launchBrowserFull("https://www.torn.com/factions.php?step=your#/tab=crimes");
               },
               onTap: () {
-                _launchBrowserOption(
-                    'https://www.torn.com/factions.php?step=your#/tab=crimes');
+                _launchBrowserOption('https://www.torn.com/factions.php?step=your#/tab=crimes');
               },
               child: Padding(
                 padding: const EdgeInsets.only(right: 5),
@@ -3956,8 +3831,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       showMisc = true;
       bankActive = true;
       final moneyFormat = new NumberFormat("#,##0", "en_US");
-      var timeExpiry =
-          DateTime.now().add(Duration(seconds: _miscModel.cityBank.timeLeft));
+      var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.cityBank.timeLeft));
       var timeDifference = timeExpiry.difference(DateTime.now());
       Color expiryColor = Colors.orange[800];
       String expiryString;
@@ -4009,8 +3883,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_miscModel.educationTimeleft > 0) {
       showMisc = true;
       educationActive = true;
-      var timeExpiry =
-          DateTime.now().add(Duration(seconds: _miscModel.educationTimeleft));
+      var timeExpiry = DateTime.now().add(Duration(seconds: _miscModel.educationTimeleft));
       var timeDifference = timeExpiry.difference(DateTime.now());
       Color expiryColor = Colors.orange[800];
       String expiryString;
@@ -4069,8 +3942,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     else {
       // If the number of courses studied and available are not the same, we have forgotten
       // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-      if (_miscModel.educationCompleted.length <
-          _tornEducationModel.education.length - 1) {
+      if (_miscModel.educationCompleted.length < _tornEducationModel.education.length - 1) {
         showMisc = true;
         educationActive = true;
         educationWidget = Row(
@@ -4275,28 +4147,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _fetchApi() async {
     var apiResponse =
-        await TornApiCaller.ownExtended(_userProv.basic.userApiKey)
-            .getProfileExtended;
-    var apiChain =
-        await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
+        await TornApiCaller.ownExtended(_userProv.basic.userApiKey).getProfileExtended;
+    var apiChain = await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
 
     if (mounted) {
       setState(() {
         if (apiResponse is OwnProfileExtended) {
           _apiRetries = 0;
           _user = apiResponse;
-          _serverTime =
-              DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
+          _serverTime = DateTime.fromMillisecondsSinceEpoch(_user.serverTime * 1000);
           _apiGoodData = true;
 
           // If max values have decreased or were never initialized
-          if (_customEnergyTrigger > _user.energy.maximum ||
-              _customEnergyTrigger == 0) {
+          if (_customEnergyTrigger > _user.energy.maximum || _customEnergyTrigger == 0) {
             _customEnergyTrigger = _user.energy.maximum;
             Prefs().setEnergyNotificationValue(_customEnergyTrigger);
           }
-          if (_customNerveTrigger > _user.nerve.maximum ||
-              _customNerveTrigger == 0) {
+          if (_customNerveTrigger > _user.nerve.maximum || _customNerveTrigger == 0) {
             _customNerveTrigger = _user.nerve.maximum;
             Prefs().setNerveNotificationValue(_customNerveTrigger);
           }
@@ -4339,18 +4206,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse =
-          await TornApiCaller.ownMisc(_userProv.basic.userApiKey)
-              .getProfileMisc;
+      var miscApiResponse = await TornApiCaller.ownMisc(_userProv.basic.userApiKey).getProfileMisc;
 
       var educationResponse =
-          await TornApiCaller.education(_userProv.basic.userApiKey)
-              .getEducation;
+          await TornApiCaller.education(_userProv.basic.userApiKey).getEducation;
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
-      if (miscApiResponse is OwnProfileMisc &&
-          educationResponse is TornEducationModel) {
+      if (miscApiResponse is OwnProfileMisc && educationResponse is TornEducationModel) {
         // Get this async
         if (_settingsProvider.oCrimesEnabled) {
           _getFactionCrimes();
@@ -4378,8 +4241,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _getFactionCrimes() async {
     var factionCrimes =
-        await TornApiCaller.factionCrimes(_userProv.basic.userApiKey)
-            .getFactionCrimes;
+        await TornApiCaller.factionCrimes(_userProv.basic.userApiKey).getFactionCrimes;
 
     var found = false;
     if (factionCrimes is FactionCrimesModel) {
@@ -4396,8 +4258,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
             if (participant.containsKey(_userProv.basic.playerId.toString())) {
               _ocComplexName = crime.crimeName;
-              _ocTime =
-                  DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
+              _ocTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
 
               // Breaks loop
               found = true;
@@ -4417,8 +4278,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // Try to find quick crimes in events
       var events = Map<String, Event>();
       if (_user.events.length > 0) {
-        events = Map.from(_user.events)
-            .map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
+        events =
+            Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
       }
 
       bool foundExpired = false;
@@ -4441,13 +4302,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 var hoursString = match.group(1);
                 try {
                   var hours = int.parse(hoursString);
-                  _ocTime = DateTime.fromMillisecondsSinceEpoch(
-                          value.timestamp * 1000)
+                  _ocTime = DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000)
                       .add(Duration(hours: hours));
                   foundProgress = true;
                   _ocSimpleExists = true;
-                  _settingsProvider.changeOCrimeLastKnown =
-                      _ocTime.millisecondsSinceEpoch;
+                  _settingsProvider.changeOCrimeLastKnown = _ocTime.millisecondsSinceEpoch;
                 } catch (e) {
                   foundExpired = false;
                   foundProgress = false;
@@ -4463,8 +4322,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
       // take place after 8 days). If that's the case, show that one anyway.
       if (!foundProgress && !foundExpired && !error) {
-        var lastKnown = DateTime.fromMillisecondsSinceEpoch(
-            _settingsProvider.oCrimeLastKnown);
+        var lastKnown = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.oCrimeLastKnown);
         if (DateTime.now().isBefore(lastKnown)) {
           _ocSimpleExists = true;
           _ocTime = lastKnown;
@@ -4474,8 +4332,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // Check if we where disregarding this crime before (in which case we don't show it)
       if (foundProgress) {
-        if (_settingsProvider.oCrimeDisregarded ==
-            _ocTime.millisecondsSinceEpoch) {
+        if (_settingsProvider.oCrimeDisregarded == _ocTime.millisecondsSinceEpoch) {
           _ocSimpleExists = false;
           _ocComplexName = "";
         }
@@ -4485,8 +4342,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getBazaarInfo() async {
     try {
-      var bazaarApiResponse =
-          await TornApiCaller.bazaar(_userProv.basic.userApiKey).getBazaar;
+      var bazaarApiResponse = await TornApiCaller.bazaar(_userProv.basic.userApiKey).getBazaar;
       if (bazaarApiResponse is BazaarModel) {
         setState(() {
           _bazaarModel = bazaarApiResponse;
@@ -4644,15 +4500,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               setState(() {
                 _speedDialOpacity = 0;
               });
-              await _launchBrowserOption(
-                  'https://www.torn.com/crimes.php#/step=main');
+              await _launchBrowserOption('https://www.torn.com/crimes.php#/step=main');
               setState(() {
                 _speedDialSetOpen.value = false;
               });
             },
             onLongPress: () async {
-              await _launchBrowserFull(
-                  'https://www.torn.com/crimes.php#/step=main');
+              await _launchBrowserFull('https://www.torn.com/crimes.php#/step=main');
               setState(() {
                 _speedDialSetOpen.value = false;
               });
@@ -4853,8 +4707,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.travel:
         notificationId = 201;
         secondsToNotification =
-            _travelArrivalTime.difference(DateTime.now()).inSeconds -
-                _travelNotificationAhead;
+            _travelArrivalTime.difference(DateTime.now()).inSeconds - _travelNotificationAhead;
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
@@ -4866,30 +4719,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.energy:
         notificationId = 101;
-        secondsToNotification =
-            _energyNotificationTime.difference(DateTime.now()).inSeconds;
+        secondsToNotification = _energyNotificationTime.difference(DateTime.now()).inSeconds;
         channelTitle = 'Manual energy';
         channelSubtitle = 'Manual energy';
         channelDescription = 'Manual notifications for energy';
         notificationTitle = 'Energy bar';
         notificationSubtitle = 'Here is your energy reminder!';
-        var myTimeStamp =
-            (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
+        var myTimeStamp = (_energyNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_energy";
         notificationIconColor = Colors.green;
         break;
       case ProfileNotification.nerve:
         notificationId = 102;
-        secondsToNotification =
-            _nerveNotificationTime.difference(DateTime.now()).inSeconds;
+        secondsToNotification = _nerveNotificationTime.difference(DateTime.now()).inSeconds;
         channelTitle = 'Manual nerve';
         channelSubtitle = 'Manual nerve';
         channelDescription = 'Manual notifications for nerve';
         notificationTitle = 'Nerve bar';
         notificationSubtitle = 'Here is your nerve reminder!';
-        var myTimeStamp =
-            (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
+        var myTimeStamp = (_nerveNotificationTime.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_nerve";
         notificationIconColor = Colors.red;
@@ -4903,8 +4752,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationTitle = 'Life bar';
         notificationSubtitle = 'Here is your life reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.life.fulltime;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.life.fulltime;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.drugs:
@@ -4916,8 +4764,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationTitle = 'Drug Cooldown';
         notificationSubtitle = 'Here is your drugs cooldown reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.cooldowns.drug;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.drug;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.medical:
@@ -4929,8 +4776,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationTitle = 'Medical Cooldown';
         notificationSubtitle = 'Here is your medical cooldown reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.cooldowns.medical;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.medical;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.booster:
@@ -4942,15 +4788,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationTitle = 'Booster Cooldown';
         notificationSubtitle = 'Here is your booster cooldown reminder!';
         var myTimeStamp =
-            (DateTime.now().millisecondsSinceEpoch / 1000).floor() +
-                _user.cooldowns.booster;
+            (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user.cooldowns.booster;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         break;
       case ProfileNotification.hospital:
         notificationId = 107;
         secondsToNotification =
-            _hospitalReleaseTime.difference(DateTime.now()).inSeconds -
-                _hospitalNotificationAhead;
+            _hospitalReleaseTime.difference(DateTime.now()).inSeconds - _hospitalNotificationAhead;
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
@@ -4992,8 +4836,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: notificationPayload,
       androidAllowWhileIdle: true, // Deliver at exact time
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
@@ -5052,8 +4895,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _cancelNotifications(
-      ProfileNotification profileNotification) async {
+  Future<void> _cancelNotifications(ProfileNotification profileNotification) async {
     switch (profileNotification) {
       case ProfileNotification.travel:
         await flutterLocalNotificationsPlugin.cancel(201);
@@ -5110,8 +4952,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (notification.payload.contains('energy')) {
         var customTriggerRoundedUp = (_customEnergyTrigger + 4) / 5 * 5;
         if (_user.energy.current >= _user.energy.maximum ||
-            (!_customEnergyMaxOverride &&
-                _user.energy.current > customTriggerRoundedUp)) {
+            (!_customEnergyMaxOverride && _user.energy.current > customTriggerRoundedUp)) {
           _cancelNotifications(ProfileNotification.energy);
           BotToast.showText(
             text: 'Energy notification expired, removing!',
@@ -5126,12 +4967,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           continue;
         }
         // If override and still below it, we compare with full
-        if (_customEnergyMaxOverride &&
-            _customEnergyTrigger < _user.energy.current) {
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: _user.energy.fulltime))
-                  .millisecondsSinceEpoch /
-              1000;
+        if (_customEnergyMaxOverride && _customEnergyTrigger < _user.energy.current) {
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: _user.energy.fulltime)).millisecondsSinceEpoch /
+                  1000;
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.energy);
@@ -5153,37 +4992,30 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             var energyTicksToGo = energyToGo / _user.energy.increment;
             if (energyTicksToGo > 1) {
               var consumedTick = _user.energy.interval - _user.energy.ticktime;
-              newSecondsToGo =
-                  (energyTicksToGo * _user.energy.interval - consumedTick)
-                      .floor();
+              newSecondsToGo = (energyTicksToGo * _user.energy.interval - consumedTick).floor();
             } else if (energyTicksToGo > 0 && energyTicksToGo <= 1) {
               newSecondsToGo = _user.energy.ticktime;
             }
           }
 
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: newSecondsToGo))
-                  .millisecondsSinceEpoch /
-              1000;
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: newSecondsToGo)).millisecondsSinceEpoch / 1000;
 
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.energy);
-            _energyNotificationTime =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            _energyNotificationTime = DateTime.now().add(Duration(seconds: newSecondsToGo));
             _scheduleNotification(ProfileNotification.energy);
             triggered = true;
             updatedTypes.add('energy');
-            var energyCurrentSchedule =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            var energyCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
             updatedTimes.add(formatter.format(energyCurrentSchedule));
           }
         }
         // NERVE
       } else if (notification.payload.contains('nerve')) {
         if (_user.nerve.current >= _user.nerve.maximum ||
-            (!_customNerveMaxOverride &&
-                _user.nerve.current > _customNerveTrigger)) {
+            (!_customNerveMaxOverride && _user.nerve.current > _customNerveTrigger)) {
           _cancelNotifications(ProfileNotification.nerve);
           BotToast.showText(
             text: 'Nerve notification expired, removing!',
@@ -5198,20 +5030,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           continue;
         }
         // If override and still below it, we compare with full
-        if (_customNerveMaxOverride &&
-            _customNerveTrigger < _user.nerve.current) {
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: _user.nerve.fulltime))
-                  .millisecondsSinceEpoch /
-              1000;
+        if (_customNerveMaxOverride && _customNerveTrigger < _user.nerve.current) {
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: _user.nerve.fulltime)).millisecondsSinceEpoch /
+                  1000;
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.nerve);
             _scheduleNotification(ProfileNotification.nerve);
             triggered = true;
             updatedTypes.add('nerve');
-            var nerveCurrentSchedule =
-                DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
+            var nerveCurrentSchedule = DateTime.now().add(Duration(seconds: _user.nerve.fulltime));
             updatedTimes.add(formatter.format(nerveCurrentSchedule));
           }
         }
@@ -5225,70 +5054,59 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             var nerveTicksToGo = nerveToGo / _user.nerve.increment;
             if (nerveTicksToGo > 1) {
               var consumedTick = _user.nerve.interval - _user.nerve.ticktime;
-              newSecondsToGo =
-                  (nerveTicksToGo * _user.nerve.interval - consumedTick)
-                      .floor();
+              newSecondsToGo = (nerveTicksToGo * _user.nerve.interval - consumedTick).floor();
             } else if (nerveTicksToGo > 0 && nerveTicksToGo <= 1) {
               newSecondsToGo = _user.nerve.ticktime;
             }
           }
 
-          var newCalculation = DateTime.now()
-                  .add(Duration(seconds: newSecondsToGo))
-                  .millisecondsSinceEpoch /
-              1000;
+          var newCalculation =
+              DateTime.now().add(Duration(seconds: newSecondsToGo)).millisecondsSinceEpoch / 1000;
 
           var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
           if (compareTimeStamps > 120) {
             _cancelNotifications(ProfileNotification.nerve);
-            _nerveNotificationTime =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            _nerveNotificationTime = DateTime.now().add(Duration(seconds: newSecondsToGo));
             _scheduleNotification(ProfileNotification.nerve);
             triggered = true;
             updatedTypes.add('nerve');
-            var nerveCurrentSchedule =
-                DateTime.now().add(Duration(seconds: newSecondsToGo));
+            var nerveCurrentSchedule = DateTime.now().add(Duration(seconds: newSecondsToGo));
             updatedTimes.add(formatter.format(nerveCurrentSchedule));
           }
         }
         // LIFE
       } else if (notification.payload.contains('life')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.life.fulltime))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.life.fulltime)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.life);
           _scheduleNotification(ProfileNotification.life);
           triggered = true;
           updatedTypes.add('life');
-          var lifeCurrentSchedule =
-              DateTime.now().add(Duration(seconds: _user.life.fulltime));
+          var lifeCurrentSchedule = DateTime.now().add(Duration(seconds: _user.life.fulltime));
           updatedTimes.add(formatter.format(lifeCurrentSchedule));
         }
         // DRUGS
       } else if (notification.payload.contains('drugs')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.cooldowns.drug))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.drug)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.drugs);
           _scheduleNotification(ProfileNotification.drugs);
           triggered = true;
           updatedTypes.add('drugs');
-          var drugsCurrentSchedule =
-              DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
+          var drugsCurrentSchedule = DateTime.now().add(Duration(seconds: _user.cooldowns.drug));
           updatedTimes.add(formatter.format(drugsCurrentSchedule));
         }
         // MEDICAL
       } else if (notification.payload.contains('medical')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.cooldowns.medical))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.medical)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.medical);
@@ -5301,10 +5119,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
         // BOOSTER
       } else if (notification.payload.contains('booster')) {
-        var newCalculation = DateTime.now()
-                .add(Duration(seconds: _user.cooldowns.booster))
-                .millisecondsSinceEpoch /
-            1000;
+        var newCalculation =
+            DateTime.now().add(Duration(seconds: _user.cooldowns.booster)).millisecondsSinceEpoch /
+                1000;
         var compareTimeStamps = (newCalculation - oldTimeStamp).abs().floor();
         if (compareTimeStamps > 120) {
           _cancelNotifications(ProfileNotification.booster);
@@ -5354,15 +5171,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     String getBattle() {
       var battleString = "\n\nBATTLE STATS";
-      battleString +=
-      '\nStrength: ${decimalFormat.format(_miscModel.strength)} '
+      battleString += '\nStrength: ${decimalFormat.format(_miscModel.strength)} '
           '(${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)';
       battleString += '\nDefense: ${decimalFormat.format(_miscModel.defense)} '
           '(${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)';
       battleString += '\nSpeed: ${decimalFormat.format(_miscModel.speed)} '
           '(${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)';
-      battleString +=
-      '\nDexterity: ${decimalFormat.format(_miscModel.dexterity)} '
+      battleString += '\nDexterity: ${decimalFormat.format(_miscModel.dexterity)} '
           '(${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)';
       battleString += '\n-------';
       battleString += '\nTotal: ${decimalFormat.format(_miscModel.total)}';
@@ -5382,12 +5197,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     String getWork() {
       var workString = "\n\nWORK STATS";
-      workString +=
-      '\nManual labor: ${decimalFormat.format(_miscModel.manualLabor)}';
-      workString +=
-      '\nIntelligence: ${decimalFormat.format(_miscModel.intelligence)}';
-      workString +=
-      '\nEndurance: ${decimalFormat.format(_miscModel.endurance)}';
+      workString += '\nManual labor: ${decimalFormat.format(_miscModel.manualLabor)}';
+      workString += '\nIntelligence: ${decimalFormat.format(_miscModel.intelligence)}';
+      workString += '\nEndurance: ${decimalFormat.format(_miscModel.endurance)}';
       return workString;
     }
 
@@ -5649,8 +5461,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        var alarmTime =
-            _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
+        var alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Travel';
@@ -5686,8 +5497,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         message = 'Torn PDA Booster';
         break;
       case ProfileNotification.hospital:
-        var alarmTime =
-            _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
+        var alarmTime = _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Hospital';
@@ -5745,44 +5555,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     switch (profileNotification) {
       case ProfileNotification.travel:
-        totalSeconds = _travelArrivalTime.difference(DateTime.now()).inSeconds -
-            _travelTimerAhead;
+        totalSeconds = _travelArrivalTime.difference(DateTime.now()).inSeconds - _travelTimerAhead;
         message = 'Torn PDA Travel';
         break;
       case ProfileNotification.energy:
-        totalSeconds =
-            _energyNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _energyNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Energy';
         break;
       case ProfileNotification.nerve:
-        totalSeconds =
-            _nerveNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _nerveNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Nerve';
         break;
       case ProfileNotification.life:
-        totalSeconds =
-            _lifeNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _lifeNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Life';
         break;
       case ProfileNotification.drugs:
-        totalSeconds =
-            _drugsNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _drugsNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Drugs';
         break;
       case ProfileNotification.medical:
-        totalSeconds =
-            _medicalNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _medicalNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Medical';
         break;
       case ProfileNotification.booster:
-        totalSeconds =
-            _boosterNotificationTime.difference(DateTime.now()).inSeconds;
+        totalSeconds = _boosterNotificationTime.difference(DateTime.now()).inSeconds;
         message = 'Torn PDA Booster';
         break;
       case ProfileNotification.hospital:
         totalSeconds =
-            _hospitalReleaseTime.difference(DateTime.now()).inSeconds -
-                _hospitalTimerAhead;
+            _hospitalReleaseTime.difference(DateTime.now()).inSeconds - _hospitalTimerAhead;
         message = 'Torn PDA Hospital';
         break;
     }
@@ -5847,8 +5649,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -5858,9 +5659,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               Flexible(
                                 child: Text(
                                   "REQUEST A REVIVE FROM NUKE",
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: _themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
                                 ),
                               ),
                             ],
@@ -5871,8 +5670,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             "Nuke is a premium Torn reviving service consisting in more than "
                             "300 revivers. You can find more information in the forums or "
                             "in the Central Hospital Discord server.",
-                            defaultStyle: TextStyle(
-                                fontSize: 13, color: _themeProvider.mainText),
+                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
                             patternList: [
                               EasyRichTextPattern(
                                 targetString: 'forums',
@@ -5902,8 +5700,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text(
                             "Each revive must be paid directly to the reviver (unless under a "
                             "contract with Nuke) and costs \$1 million or 1 Xanax.",
-                            style: TextStyle(
-                                fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -5911,8 +5708,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text(
                             "Please keep in mind if you don't pay for the requested revive, "
                             "you risk getting blocked from Nuke!",
-                            style: TextStyle(
-                                fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 15),
@@ -5942,8 +5738,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     );
                                   } else {
                                     BotToast.showText(
-                                      text:
-                                          'There was an error contacting Nuke, try again later '
+                                      text: 'There was an error contacting Nuke, try again later '
                                           'or contact them through Central Hospital\'s Discord '
                                           'server!',
                                       textStyle: TextStyle(
@@ -6034,8 +5829,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -6045,9 +5839,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               Flexible(
                                 child: Text(
                                   "REQUEST A REVIVE FROM UHC",
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: _themeProvider.mainText),
+                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
                                 ),
                               ),
                             ],
@@ -6058,8 +5850,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             "Universal Health Care (UHC for short) is a revive alliance consisting "
                             "of factions. You can find more information in the forums or "
                             "in the UHC Discord server.",
-                            defaultStyle: TextStyle(
-                                fontSize: 13, color: _themeProvider.mainText),
+                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
                             patternList: [
                               EasyRichTextPattern(
                                 targetString: 'forums',
@@ -6090,8 +5881,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             "Each revive must be paid directly to the reviver and costs "
                             "\$1 million or 1 Xanax. There are special prices for faction contracts "
                             "(more information in the forums).",
-                            style: TextStyle(
-                                fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -6099,8 +5889,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Text(
                             "Please keep in mind if you don't pay for the requested revive, "
                             "you risk getting blocked from UHC!",
-                            style: TextStyle(
-                                fontSize: 13, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 15),
@@ -6122,8 +5911,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   var resultColor = Colors.transparent;
 
                                   if (value == "200") {
-                                    resultString =
-                                        "Request received by UHC!\n\n"
+                                    resultString = "Request received by UHC!\n\n"
                                         "Please pay your reviver "
                                         "1 Xanax or \$1M";
                                     resultColor = Colors.green[800];
@@ -6305,8 +6093,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 ],
                               ),
                               onPressed: () async {
-                                var url =
-                                    'https://www.torn.com/companies.php#/option=funds';
+                                var url = 'https://www.torn.com/companies.php#/option=funds';
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _launchBrowserFull(url);
@@ -6589,8 +6376,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int number = 0;
     await Future.forEach(keys, (element) async {
       var rentDetails =
-          await TornApiCaller.property(_userProv.basic.userApiKey, element)
-              .getProperty;
+          await TornApiCaller.property(_userProv.basic.userApiKey, element).getProperty;
 
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;
@@ -6638,8 +6424,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              openBrowserDialog(context,
-                  'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize');
+              openBrowserDialog(
+                  context, 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize');
             },
             onTap: () {
               _launchBrowserOption(
