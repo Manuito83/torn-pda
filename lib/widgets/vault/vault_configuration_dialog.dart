@@ -12,7 +12,6 @@ import 'package:torn_pda/models/vault/vault_status_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultConfigurationDialog extends StatefulWidget {
   final int total;
@@ -149,7 +148,9 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 3),
                       child: Text(
-                        "${widget.userProvider.basic.married.spouseName}'s share",
+                        widget.userProvider.basic.married?.spouseId == 0
+                            ? "Spouse's share"
+                            : "${widget.userProvider.basic.married.spouseName}'s share",
                         style: TextStyle(fontSize: 13),
                       ),
                     ),

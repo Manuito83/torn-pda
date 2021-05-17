@@ -108,6 +108,10 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
     Widget share = SizedBox.shrink();
     Widget options = SizedBox.shrink();
 
+    var spouseName = widget.userProvider.basic.married?.spouseId == 0
+        ? "Spouse"
+        : widget.userProvider.basic.married.spouseName;
+
     // If we have never initialise (or we deleted) the share
     if (widget.vaultStatus.player == null) {
       top = Text("You have not initialised the vault share yet!");
@@ -116,7 +120,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
           Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
           SizedBox(height: 10),
           Text("${widget.userProvider.basic.name}: ?"),
-          Text("${widget.userProvider.basic.married.spouseName}: ?"),
+          Text("$spouseName: ?"),
         ],
       );
       options = ElevatedButton(
@@ -138,7 +142,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
           SizedBox(height: 10),
           Text("${widget.userProvider.basic.name}: "
               "${_moneyFormat.format(widget.vaultStatus.player)}"),
-          Text("${widget.userProvider.basic.married.spouseName}: "
+          Text("$spouseName: "
               "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
         ],
       );

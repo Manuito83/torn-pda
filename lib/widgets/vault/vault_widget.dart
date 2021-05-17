@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:expandable/expandable.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 import 'package:html/dom.dart' as dom;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/vault/vault_status_model.dart';
 
 // Project imports:
@@ -23,10 +21,11 @@ class VaultWidget extends StatefulWidget {
   final UserDetailsProvider userProvider;
 
   VaultWidget({
+    Key key,
     @required this.vaultHtml,
     @required this.playerId,
     @required this.userProvider,
-  });
+  }) : super(key: key);
 
   @override
   _VaultWidgetState createState() => _VaultWidgetState();
@@ -161,7 +160,9 @@ class _VaultWidgetState extends State<VaultWidget> {
                     child: Column(
                       children: [
                         Text(
-                          widget.userProvider.basic.married.spouseName,
+                          widget.userProvider.basic.married?.spouseId == 0
+                              ? "Spouse"
+                              : widget.userProvider.basic.married.spouseName,
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
                         Text(
@@ -220,7 +221,9 @@ class _VaultWidgetState extends State<VaultWidget> {
         _vaultStatus.total = transactions[0].balance;
       }
     } else {
-      // TODO: implement error
+      setState(() {
+        _notFountError = true;
+      });
     }
   }
 
@@ -324,7 +327,7 @@ class _VaultWidgetState extends State<VaultWidget> {
         setState(() {
           _vaultStatus.player = newPlayerAmount;
           _vaultStatus.spouse = newSpouseAmount;
-          _vaultStatus.timestamp = _lastTransaction.balance;
+          _vaultStatus.total = _lastTransaction.balance;
           _vaultStatus.timestamp = _lastTransaction.date;
         });
         Prefs().setVaultShareCurrent(vaultStatusModelToJson(_vaultStatus));
@@ -346,10 +349,6 @@ class _VaultWidgetState extends State<VaultWidget> {
       // If we have transactions, pass the last transaction timestamp
       if (_lastTransaction.date != null) {
         _vaultStatus.timestamp = _lastTransaction.date;
-      }
-      // Otherwise, pass the current time  // TODO: ????
-      else {
-        _vaultStatus.timestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
       }
     }
 
@@ -391,7 +390,7 @@ class _VaultWidgetState extends State<VaultWidget> {
       });
     } else {
       setState(() {
-        _buildVault();
+        _firstUse = false;
       });
     }
   }

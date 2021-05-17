@@ -16,7 +16,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
@@ -81,6 +80,8 @@ class WebViewFull extends StatefulWidget {
 
 class _WebViewFullState extends State<WebViewFull> {
   InAppWebViewController webView;
+  var _initialWebViewOptions = InAppWebViewGroupOptions();
+
   URLRequest _initialUrl;
   String _pageTitle = "";
   String _currentUrl = '';
@@ -109,7 +110,6 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _vaultPreferencesLoaded = false;
   bool _vaultIconActive = false;
   Widget _vaultExpandable = SizedBox.shrink();
-  int _totalMoneyVault = 0;
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -183,6 +183,19 @@ class _WebViewFullState extends State<WebViewFull> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _findController.addListener(onFindInputTextChange);
+
+    _initialWebViewOptions = InAppWebViewGroupOptions(
+      crossPlatform: InAppWebViewOptions(
+        clearCache: _clearCacheFirstOpportunity,
+        useOnLoadResource: true,
+        // This is deactivated sometimes as it interferes with hospital timer,
+        // company applications, etc. Only activate it following the vault's pattern
+        useShouldInterceptAjaxRequest: false,
+      ),
+      android: AndroidInAppWebViewOptions(
+        useHybridComposition: true,
+      ),
+    );
 
     /*
     _pullToRefreshController = PullToRefreshController(
@@ -615,20 +628,24 @@ class _WebViewFullState extends State<WebViewFull> {
             ),
             // Temporarily deactivated as it is affecting chats
             //pullToRefreshController: _pullToRefreshController,
-            initialOptions: InAppWebViewGroupOptions(
-              crossPlatform: InAppWebViewOptions(
-                clearCache: _clearCacheFirstOpportunity,
-                useOnLoadResource: true,
-                // This is deactivated as it interferes with hospital timer company applications, etc.
-                //useShouldInterceptAjaxRequest: true,
-              ),
-              android: AndroidInAppWebViewOptions(
-                useHybridComposition: true,
-              ),
-            ),
-            /*
-            shouldInterceptAjaxRequest:
-                (InAppWebViewController c, AjaxRequest x) async {
+            initialOptions: _initialWebViewOptions,
+            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+              // VAULT EVENTS
+              if (_vaultTriggered) {
+                if (x.data.toString().contains("step=vaultProperty&withdraw") ||
+                    x.data.toString().contains("step=vaultProperty&deposit")) {
+                  // Wait a couple of seconds to let the html load
+                  Future.delayed(Duration(seconds: 2)).then((value) async {
+                    // Reset _vaultTriggered so that we can call _assessVault() again
+                    _reassessVault();
+                  });
+                }
+              }
+
+              // MAIN AJAX REQUEST RETURN
+              return x;
+
+              /*
               // This will intercept ajax calls performed when the bazaar reached 100 items
               // and needs to be reloaded, so that we can remove and add again the fill buttons
               if (x == null) return x;
@@ -639,17 +656,13 @@ class _WebViewFullState extends State<WebViewFull> {
                   x.url.contains('inventory.php') &&
                   _bazaarActive &&
                   _bazaarFillActive) {
-                webView.evaluateJavascript(
-                    source: removeBazaarFillButtonsJS());
-                Future.delayed(const Duration(seconds: 2))
-                    .then((value) {
-                  webView.evaluateJavascript(
-                      source: addBazaarFillButtonsJS());
+                webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                Future.delayed(const Duration(seconds: 2)).then((value) {
+                  webView.evaluateJavascript(source: addBazaarFillButtonsJS());
                 });
               }
-              return x;
+              */
             },
-            */
             onWebViewCreated: (c) {
               webView = c;
             },
@@ -1752,6 +1765,8 @@ class _WebViewFullState extends State<WebViewFull> {
         _vaultIconActive = false;
         _vaultExpandable = SizedBox.shrink();
       });
+      // Restore options to deactivate ajax intercept
+      await webView.setOptions(options: _initialWebViewOptions);
       return;
     }
 
@@ -1759,10 +1774,24 @@ class _WebViewFullState extends State<WebViewFull> {
       _vaultIconActive = true;
     });
 
+    // Set options to allow ajax interception (to detect vault operations)
+    webView.setOptions(
+      options: InAppWebViewGroupOptions(
+        crossPlatform: InAppWebViewOptions(
+          clearCache: _clearCacheFirstOpportunity,
+          useOnLoadResource: true,
+          useShouldInterceptAjaxRequest: true,
+        ),
+        android: AndroidInAppWebViewOptions(
+          useHybridComposition: true,
+        ),
+      ),
+    );
+
     // We only get this once and if we are inside the vault
     // It's also in the callback from vault options
     if (!_vaultPreferencesLoaded) {
-      await _vaultPreferencesLoad();
+      await _reassessVault();
       _vaultPreferencesLoaded = true;
     }
 
@@ -1777,17 +1806,16 @@ class _WebViewFullState extends State<WebViewFull> {
     if (_vaultTriggered) return;
     _vaultTriggered = true;
 
-    // Get total so that we can pass it to options in order to initialise or change quantities
-    var total = doc.querySelector(".vault-cont .wvalue")?.text?.replaceAll(",", "");
-    _totalMoneyVault = int.tryParse(total);
-
     // Activate the vault widget itself
     var allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
-    _vaultExpandable = VaultWidget(
-      vaultHtml: allTransactions,
-      playerId: _userProvider.basic.playerId,
-      userProvider: _userProvider,
-    );
+    setState(() {
+      _vaultExpandable = VaultWidget(
+        key: UniqueKey(),
+        vaultHtml: allTransactions,
+        playerId: _userProvider.basic.playerId,
+        userProvider: _userProvider,
+      );
+    });
   }
 
   Widget _vaultOptionsIcon() {
@@ -1797,7 +1825,7 @@ class _WebViewFullState extends State<WebViewFull> {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return VaultOptionsPage(
-            callback: _vaultPreferencesLoad,
+            callback: _reassessVault,
           );
         },
         closedElevation: 0,
@@ -1823,11 +1851,14 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  Future _vaultPreferencesLoad() async {
+  Future _reassessVault() async {
     _vaultEnabled = await Prefs().getVaultEnabled();
-    // Reset vault so that it can be assessed again
+    // Reset _vaultTriggered so that we can call _assessVault() again
     _vaultTriggered = false;
-    await reload();
+    var html = await webView.getHtml();
+    var document = parse(html);
+    var pageTitle = (await _getPageTitle(document)).toLowerCase();
+    _assessVault(doc: document, pageTitle: pageTitle);
   }
 
   // CITY
