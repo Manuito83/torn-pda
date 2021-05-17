@@ -3807,8 +3807,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              openBrowserDialog(
-                  context, 'https://www.torn.com/loader.php?sid=racing');
+              _launchBrowserFull(
+                  'https://www.torn.com/loader.php?sid=racing');
             },
             onTap: () {
               _launchBrowserOption(
