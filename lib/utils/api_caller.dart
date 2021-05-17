@@ -480,7 +480,7 @@ class TornApiCaller {
         url += '$prefix?selections=property';
         break;
     }
-    url += '&key=$apiKey&comment=TornPDA';
+    url += '&key=$apiKey&comment=PDA-App';
 
     //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
     //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2
