@@ -484,14 +484,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           children: [
                             Text(
                               'There was an error: $_apiError\n\n'
-                              'Torn PDA is retrying automatically.',
+                              'Torn PDA is retrying automatically. '
+                              'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
                               textAlign: TextAlign.center,
                             ),
                             SizedBox(height: 20),
                             Text(
-                              'If you have connectivity, it might be an issue with the API. '
                               'You can still try to access Torn through shortcuts or the main '
-                              'Torn menu icon below.',
+                              'menu icon below.',
                               textAlign: TextAlign.center,
                             ),
                           ],
