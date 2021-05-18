@@ -461,7 +461,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           children: <Widget>[
                             Flexible(
                               child: Text(
-                                "Allow screen rotation",
+                                "Allow auto rotation",
                               ),
                             ),
                             Switch(
