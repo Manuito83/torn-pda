@@ -137,8 +137,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.arrivalTime),
   ];
 
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -153,9 +152,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
-          : Colors.grey[900],
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
@@ -172,8 +169,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             children: <Widget>[
               FutureBuilder(
                 future: _apiCalled,
-                builder:
-                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     if (_apiSuccess) {
                       return BubbleShowcase(
@@ -240,13 +236,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                               Text(
                                 'OPS!',
                                 style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
+                                    color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 20),
+                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                                 child: Text(
                                   'There was an error getting the information, please '
                                   'try again later or pull to refresh!',
@@ -295,8 +288,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               // Sliding panel
               FutureBuilder(
                 future: _apiCalled,
-                builder:
-                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     if (_apiSuccess) {
                       return SlidingUpPanel(
@@ -314,8 +306,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                         ),
                         onPanelSlide: (double pos) => setState(() {
                           _fabHeight =
-                              pos * (_panelHeightOpen - _panelHeightClosed) +
-                                  _initFabHeight;
+                              pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
                         }),
                       );
                     } else {
@@ -330,8 +321,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               // FAB
               FutureBuilder(
                 future: _apiCalled,
-                builder:
-                    (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
                     if (_apiSuccess) {
                       return Positioned(
@@ -431,8 +421,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                 width: 30,
                 height: 5,
                 decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                    color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
               ),
             ],
           ),
@@ -452,8 +441,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                       size: 23,
                     ),
                     onTap: () {
-
-
                       var orderType = "";
                       if (!_alphabeticalFilter) {
                         orderType = "Sorting countries alphabetically";
@@ -475,7 +462,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                         duration: Duration(seconds: 2),
                         contentPadding: EdgeInsets.all(10),
                       );
-
                     },
                   ),
                 ),
@@ -788,8 +774,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     try {
       Future yataAPI() async {
         String yataURL = 'https://yata.yt/api/v1/travel/export/';
-        var responseDB =
-            await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
+        var responseDB = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
         if (responseDB.statusCode == 200) {
           _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
           _apiSuccess = true;
@@ -923,9 +908,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     for (var i = 0; i < _filteredFlags.length - 1; i++) {
       if (_filteredFlags[i]) {
         if (_alphabeticalFilter) {
-          _countriesFilteredText += firstCountry ? _countryCodesAlphabetical[i] : ', ${_countryCodesAlphabetical[i]}';
+          _countriesFilteredText +=
+              firstCountry ? _countryCodesAlphabetical[i] : ', ${_countryCodesAlphabetical[i]}';
         } else {
-          _countriesFilteredText += firstCountry ? _countryCodesTime[i] : ', ${_countryCodesTime[i]}';
+          _countriesFilteredText +=
+              firstCountry ? _countryCodesTime[i] : ', ${_countryCodesTime[i]}';
         }
         firstCountry = false;
         totalCountriesShown++;
@@ -1081,8 +1068,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     setState(() {
       switch (choice.type) {
         case StockSortType.country:
-          _filteredStocksCards
-              .sort((a, b) => a.country.index.compareTo(b.country.index));
+          _filteredStocksCards.sort((a, b) => a.country.index.compareTo(b.country.index));
           Prefs().setStockSort('country');
           break;
         case StockSortType.name:
@@ -1090,8 +1076,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           Prefs().setStockSort('name');
           break;
         case StockSortType.type:
-          _filteredStocksCards.sort(
-              (a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
+          _filteredStocksCards
+              .sort((a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
           Prefs().setStockSort('type');
           break;
         case StockSortType.quantity:
@@ -1111,8 +1097,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           Prefs().setStockSort('profit');
           break;
         case StockSortType.arrivalTime:
-          _filteredStocksCards
-              .sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
+          _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
           Prefs().setStockSort('arrivalTime');
           break;
       }
@@ -1122,18 +1107,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Future _restoreSharedPreferences() async {
     var flagStrings = await Prefs().getStockCountryFilter();
     for (var i = 0; i < flagStrings.length; i++) {
-      flagStrings[i] == '0'
-          ? _filteredFlags[i] = false
-          : _filteredFlags[i] = true;
+      flagStrings[i] == '0' ? _filteredFlags[i] = false : _filteredFlags[i] = true;
     }
     _alphabeticalFilter = await Prefs().getCountriesAlphabeticalFilter();
     //_transformAlphabeticalTime();
 
     var typesStrings = await Prefs().getStockTypeFilter();
     for (var i = 0; i < typesStrings.length; i++) {
-      typesStrings[i] == '0'
-          ? _filteredTypes[i] = false
-          : _filteredTypes[i] = true;
+      typesStrings[i] == '0' ? _filteredTypes[i] = false : _filteredTypes[i] = true;
     }
 
     var sortString = await Prefs().getStockSort();
@@ -1178,8 +1159,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
-
-
   }
 
   Future<void> _showOptionsDialog() {
@@ -1207,8 +1186,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled,
-      bool showArrivalTime, TravelTicket ticket) {
+  void _onStocksOptionsChanged(
+      int newCapacity, bool inventoryEnabled, bool showArrivalTime, TravelTicket ticket) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;

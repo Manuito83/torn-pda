@@ -121,60 +121,69 @@ class _TacPageState extends State<TacPage> {
             if (snapshot.connectionState == ConnectionState.done) {
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () =>
-                    FocusScope.of(context).requestFocus(new FocusNode()),
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: 5),
-                    ChainTimer(
-                      userKey: widget.userKey,
-                      alwaysDarkBackground: false,
-                      chainTimerParent: ChainTimerParent.targets,
-                    ),
-                    _filtersCard(),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: _optimalWidget(),
-                        ),
-                        Expanded(
-                          child: _getTargetsButton(),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    _incorrectPremium
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40),
-                            child: Text(
-                              'NOTE: you requested optimal targets but your account is '
-                              'not premium, only showing standard targets!',
-                              style: TextStyle(
-                                color: Colors.orange[900],
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          )
-                        : SizedBox.shrink(),
-                    SizedBox(height: 10),
-                    _apiCall
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 50),
-                              child: CircularProgressIndicator(),
-                            ),
-                          )
-                        : Flexible(child: _targetsListView()),
-                  ],
-                ),
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: MediaQuery.of(context).orientation == Orientation.portrait
+                    ? _mainColumn()
+                    : SingleChildScrollView(
+                        child: _mainColumn(),
+                      ),
               );
             } else {
               return Center(child: CircularProgressIndicator());
             }
           }),
+    );
+  }
+
+  Column _mainColumn() {
+    return Column(
+      children: <Widget>[
+        SizedBox(height: 5),
+        ChainTimer(
+          userKey: widget.userKey,
+          alwaysDarkBackground: false,
+          chainTimerParent: ChainTimerParent.targets,
+        ),
+        _filtersCard(),
+        SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: _optimalWidget(),
+            ),
+            Expanded(
+              child: _getTargetsButton(),
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+        _incorrectPremium
+            ? Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  'NOTE: you requested optimal targets but your account is '
+                  'not premium, only showing standard targets!',
+                  style: TextStyle(
+                    color: Colors.orange[900],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            : SizedBox.shrink(),
+        SizedBox(height: 10),
+        _apiCall
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 50),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : MediaQuery.of(context).orientation == Orientation.portrait
+                ? Flexible(child: _targetsListView())
+                : _targetsListView(),
+      ],
     );
   }
 
@@ -205,12 +214,9 @@ class _TacPageState extends State<TacPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Min. level: ${_tacFilters.minLevel}',
-                      style: TextStyle(fontSize: 12)),
-                  Text('Max. level: ${_tacFilters.maxLevel}',
-                      style: TextStyle(fontSize: 12)),
-                  Text('Max. life: ${_tacFilters.maxLife}',
-                      style: TextStyle(fontSize: 12)),
+                  Text('Min. level: ${_tacFilters.minLevel}', style: TextStyle(fontSize: 12)),
+                  Text('Max. level: ${_tacFilters.maxLevel}', style: TextStyle(fontSize: 12)),
+                  Text('Max. life: ${_tacFilters.maxLife}', style: TextStyle(fontSize: 12)),
                 ],
               ),
               Column(
@@ -218,8 +224,7 @@ class _TacPageState extends State<TacPage> {
                 children: [
                   Text('Battle stats: ${_statsMap[_tacFilters.battleStats]}',
                       style: TextStyle(fontSize: 12)),
-                  Text('${_ranksMap[_tacFilters.rank]}',
-                      style: TextStyle(fontSize: 12)),
+                  Text('${_ranksMap[_tacFilters.rank]}', style: TextStyle(fontSize: 12)),
                 ],
               ),
             ],
@@ -536,8 +541,7 @@ class _TacPageState extends State<TacPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -587,13 +591,20 @@ class _TacPageState extends State<TacPage> {
       );
     }
 
-    return ListView(children: targetCards);
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      return ListView(children: targetCards);
+    } else {
+      return ListView(
+        children: targetCards,
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+      );
+    }
   }
 
   Future _fetchTac() async {
     int currentChainHit = 0;
-    var chainResponse =
-        await TornApiCaller.chain(widget.userKey).getChainStatus;
+    var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
     if (chainResponse is ChainModel) {
       currentChainHit = chainResponse.chain.current;
     }
@@ -624,9 +635,7 @@ class _TacPageState extends State<TacPage> {
     try {
       var response = await http.get(
         Uri.parse(url),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8'
-        },
+        headers: <String, String>{'Content-Type': 'application/json; charset=UTF-8'},
       );
 
       if (response.statusCode == 200) {
@@ -737,8 +746,7 @@ class _TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://tornattackcentral.eu/premium.php';
-                if (_settingsProvider.currentBrowser ==
-                    BrowserSetting.external) {
+                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                   if (await canLaunch(url)) {
                     await launch(url, forceSafariVC: false);
                   }
@@ -759,8 +767,7 @@ class _TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                if (_settingsProvider.currentBrowser ==
-                    BrowserSetting.external) {
+                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                   if (await canLaunch(url)) {
                     await launch(url, forceSafariVC: false);
                   }
@@ -818,8 +825,7 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://tornattackcentral.eu';
-                  if (_settingsProvider.currentBrowser ==
-                      BrowserSetting.external) {
+                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                     if (await canLaunch(url)) {
                       await launch(url, forceSafariVC: false);
                     }
@@ -829,8 +835,7 @@ class _TacPageState extends State<TacPage> {
                         : _openTornBrowser(url);
                   }
                 },
-              style: TextStyle(
-                  decoration: TextDecoration.underline, color: Colors.blue),
+              style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
             EasyRichTextPattern(
               targetString: 'Fr00t',
@@ -838,8 +843,7 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                  if (_settingsProvider.currentBrowser ==
-                      BrowserSetting.external) {
+                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                     if (await canLaunch(url)) {
                       await launch(url, forceSafariVC: false);
                     }
@@ -849,18 +853,15 @@ class _TacPageState extends State<TacPage> {
                         : _openTornBrowser(url);
                   }
                 },
-              style: TextStyle(
-                  decoration: TextDecoration.underline, color: Colors.blue),
+              style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
             EasyRichTextPattern(
               targetString: 'forum',
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
                   Navigator.of(context).pop();
-                  var url =
-                      'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
-                  if (_settingsProvider.currentBrowser ==
-                      BrowserSetting.external) {
+                  var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
+                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                     if (await canLaunch(url)) {
                       await launch(url, forceSafariVC: false);
                     }
@@ -870,8 +871,7 @@ class _TacPageState extends State<TacPage> {
                         : _openTornBrowser(url);
                   }
                 },
-              style: TextStyle(
-                  decoration: TextDecoration.underline, color: Colors.blue),
+              style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
           ],
         ),

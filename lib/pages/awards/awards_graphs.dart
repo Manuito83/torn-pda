@@ -45,9 +45,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
-          : Colors.grey[900],
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
       child: WillPopScope(
         onWillPop: _willPopCallback,
         child: SafeArea(
@@ -111,8 +109,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           GestureDetector(
               onTap: () {
                 BotToast.showText(
-                  text:
-                      "This section is part of YATA's mobile interface, all details "
+                  text: "This section is part of YATA's mobile interface, all details "
                       "information and actions are directly linked to your YATA account.",
                   textStyle: TextStyle(
                     fontSize: 13,
@@ -133,25 +130,28 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
         },
       ),
       actions: [
-        IconButton(
-          icon: Icon(
-            Icons.screen_rotation_outlined,
-            color: _themeProvider.buttonText,
-          ),
-          onPressed: () {
-            if (_landScape) {
-              _landScape = false;
-              SystemChrome.setPreferredOrientations(
-                  [DeviceOrientation.portraitUp]);
-            } else {
-              _landScape = true;
-              SystemChrome.setPreferredOrientations([
-                DeviceOrientation.landscapeRight,
-                DeviceOrientation.landscapeLeft
-              ]);
-            }
-          },
-        )
+        // Only give option to rotate if it's not already been allowed app-wide
+        if (!_settingsProvider.allowScreenRotation)
+          IconButton(
+            icon: Icon(
+              Icons.screen_rotation_outlined,
+              color: _themeProvider.buttonText,
+            ),
+            onPressed: () {
+              if (_landScape) {
+                _landScape = false;
+                SystemChrome.setPreferredOrientations([
+                  DeviceOrientation.portraitUp,
+                ]);
+              } else {
+                _landScape = true;
+                SystemChrome.setPreferredOrientations([
+                  DeviceOrientation.landscapeRight,
+                  DeviceOrientation.landscapeLeft,
+                ]);
+              }
+            },
+          )
       ],
     );
   }
@@ -165,9 +165,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
             fitInsideHorizontally: true,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final decimalFormat = new NumberFormat("#,##0", "en_US");
-              var achieved = widget.graphInfo[group.x][2] == 0
-                  ? "NOT ACHIEVED"
-                  : "ACHIEVED";
+              var achieved = widget.graphInfo[group.x][2] == 0 ? "NOT ACHIEVED" : "ACHIEVED";
               return BarTooltipItem(
                 "${widget.graphInfo[group.x][0]}\n"
                 "Circulation ${decimalFormat.format(widget.graphInfo[group.x][1])}\n"
@@ -275,7 +273,11 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   }
 
   Future<bool> _willPopCallback() async {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    // Only revert rotation if it's not allowed app-wide
+    if (!_settingsProvider.allowScreenRotation) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
+
     Navigator.of(context).pop();
     return true;
   }

@@ -17,6 +17,7 @@ import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -51,8 +52,6 @@ import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
@@ -231,9 +230,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   int _messagesShowNumber = 25;
   int _eventsShowNumber = 25;
-
-  var _speedDialSetOpen = ValueNotifier<bool>(false);
-  var _speedDialOpacity = 0.8;
 
   var _showOne = GlobalKey();
 
@@ -4355,14 +4351,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      openCloseDial: _speedDialSetOpen,
-      overlayOpacity: _speedDialOpacity,
-      onOpen: () {
-        setState(() {
-          _speedDialSetOpen.value = true;
-          _speedDialOpacity = 0.8;
-        });
-      },
+      animationSpeed: 500,
+      direction: MediaQuery.of(context).orientation == Orientation.portrait
+          ? SpeedDialDirection.Up
+          : SpeedDialDirection.Left,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
@@ -4384,32 +4376,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
-          child: GestureDetector(
-            onTap: () async {
-              setState(() {
-                _speedDialOpacity = 0;
-              });
-              await _launchBrowserOption('https://www.torn.com/city.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com/city.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            // Needs a container and color to allow taps on the full circle, not
-            // only on the icon.
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.transparent,
-              child: Icon(
-                MdiIcons.cityVariantOutline,
-                color: Colors.black,
-              ),
+          onTap: () {
+            _launchBrowserOption('https://www.torn.com/city.php');
+          },
+          onLongPress: () {
+            _launchBrowserFull('https://www.torn.com/city.php');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.transparent,
+            child: Icon(
+              MdiIcons.cityVariantOutline,
+              color: Colors.black,
             ),
           ),
           backgroundColor: Colors.purple[500],
@@ -4421,32 +4400,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.purple[500],
         ),
         SpeedDialChild(
-          child: GestureDetector(
-            onTap: () async {
-              setState(() {
-                _speedDialOpacity = 0;
-              });
-              await _launchBrowserOption('https://www.torn.com/trade.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com/trade.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            // Needs a container and color to allow taps on the full circle, not
-            // only on the icon.
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.transparent,
-              child: Icon(
-                MdiIcons.accountSwitchOutline,
-                color: Colors.black,
-              ),
+          onTap: () {
+            _launchBrowserOption('https://www.torn.com/trade.php');
+          },
+          onLongPress: () async {
+            _launchBrowserFull('https://www.torn.com/trade.php');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.transparent,
+            child: Icon(
+              MdiIcons.accountSwitchOutline,
+              color: Colors.black,
             ),
           ),
           backgroundColor: Colors.yellow[800],
@@ -4458,32 +4424,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.yellow[800],
         ),
         SpeedDialChild(
-          child: GestureDetector(
-            onTap: () async {
-              setState(() {
-                _speedDialOpacity = 0;
-              });
-              await _launchBrowserOption('https://www.torn.com/item.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com/item.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            // Needs a container and color to allow taps on the full circle, not
-            // only on the icon.
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.transparent,
-              child: Icon(
-                Icons.card_giftcard,
-                color: Colors.black,
-              ),
+          onTap: () {
+            _launchBrowserOption('https://www.torn.com/item.php');
+          },
+          onLongPress: () {
+            _launchBrowserFull('https://www.torn.com/item.php');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.transparent,
+            child: Icon(
+              Icons.card_giftcard,
+              color: Colors.black,
             ),
           ),
           backgroundColor: Colors.blue[400],
@@ -4495,35 +4448,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.blue[400],
         ),
         SpeedDialChild(
-          child: GestureDetector(
-            onTap: () async {
-              setState(() {
-                _speedDialOpacity = 0;
-              });
-              await _launchBrowserOption('https://www.torn.com/crimes.php#/step=main');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com/crimes.php#/step=main');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            // Needs a container and color to allow taps on the full circle, not
-            // only on the icon.
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.transparent,
-              child: Center(
-                child: Image.asset(
-                  'images/icons/ic_pistol_black_48dp.png',
-                  width: 25,
-                  height: 25,
-                  color: Colors.black,
-                ),
+          onTap: () {
+            _launchBrowserOption('https://www.torn.com/crimes.php#/step=main');
+          },
+          onLongPress: () {
+            _launchBrowserFull('https://www.torn.com/crimes.php#/step=main');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.transparent,
+            child: Center(
+              child: Image.asset(
+                'images/icons/ic_pistol_black_48dp.png',
+                width: 25,
+                height: 25,
+                color: Colors.black,
               ),
             ),
           ),
@@ -4536,62 +4476,49 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.deepOrange[400],
         ),
         SpeedDialChild(
-          child: GestureDetector(
-            onTap: () async {
-              setState(() {
-                _speedDialOpacity = 0;
-              });
-              if (_warnAboutChains &&
-                  _chainModel.chain.current > 10 &&
-                  _chainModel.chain.cooldown == 0) {
-                BotToast.showText(
-                  text: 'Caution: your faction is chaining!',
-                  align: Alignment(0, 0),
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  duration: Duration(seconds: 2),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              }
-              await _launchBrowserOption('https://www.torn.com/gym.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            onLongPress: () async {
-              if (_warnAboutChains &&
-                  _chainModel.chain.current > 10 &&
-                  _chainModel.chain.cooldown == 0) {
-                BotToast.showText(
-                  text: 'Caution: your faction is chaining!',
-                  align: Alignment(0, 0),
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue,
-                  duration: Duration(seconds: 2),
-                  contentPadding: EdgeInsets.all(10),
-                );
-              }
-              await _launchBrowserFull('https://www.torn.com/gym.php');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            // Needs a container and color to allow taps on the full circle, not
-            // only on the icon.
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.transparent,
-              child: Icon(
-                Icons.fitness_center,
-                color: Colors.black,
-              ),
+          onTap: () {
+            if (_warnAboutChains &&
+                _chainModel.chain.current > 10 &&
+                _chainModel.chain.cooldown == 0) {
+              BotToast.showText(
+                text: 'Caution: your faction is chaining!',
+                align: Alignment(0, 0),
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: Duration(seconds: 2),
+                contentPadding: EdgeInsets.all(10),
+              );
+            }
+            _launchBrowserOption('https://www.torn.com/gym.php');
+          },
+          onLongPress: () {
+            if (_warnAboutChains &&
+                _chainModel.chain.current > 10 &&
+                _chainModel.chain.cooldown == 0) {
+              BotToast.showText(
+                text: 'Caution: your faction is chaining!',
+                align: Alignment(0, 0),
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: Duration(seconds: 2),
+                contentPadding: EdgeInsets.all(10),
+              );
+            }
+            _launchBrowserFull('https://www.torn.com/gym.php');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.transparent,
+            child: Icon(
+              Icons.fitness_center,
+              color: Colors.black,
             ),
           ),
           backgroundColor: Colors.green[400],
@@ -4603,32 +4530,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.green[400],
         ),
         SpeedDialChild(
-          child: GestureDetector(
-            onTap: () async {
-              setState(() {
-                _speedDialOpacity = 0;
-              });
-              await _launchBrowserOption('https://www.torn.com');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            onLongPress: () async {
-              await _launchBrowserFull('https://www.torn.com');
-              setState(() {
-                _speedDialSetOpen.value = false;
-              });
-            },
-            // Needs a container and color to allow taps on the full circle, not
-            // only on the icon.
-            child: Container(
-              width: 100,
-              height: 100,
-              color: Colors.transparent,
-              child: Icon(
-                Icons.home_outlined,
-                color: Colors.black,
-              ),
+          onTap: () {
+            _launchBrowserOption('https://www.torn.com');
+          },
+          onLongPress: () {
+            _launchBrowserFull('https://www.torn.com');
+          },
+          child: Container(
+            width: 100,
+            height: 100,
+            color: Colors.transparent,
+            child: Icon(
+              Icons.home_outlined,
+              color: Colors.black,
             ),
           ),
           backgroundColor: Colors.grey[400],

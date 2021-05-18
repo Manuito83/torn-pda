@@ -77,10 +77,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
-    _ticker = new Timer.periodic(
-        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'settings'});
+    _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'settings'});
   }
 
   @override
@@ -100,8 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
           if (snapshot.connectionState == ConnectionState.done) {
             return GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () =>
-                    FocusScope.of(context).requestFocus(new FocusNode()),
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                 child: SingleChildScrollView(
                   child: Column(
                     children: <Widget>[
@@ -117,8 +114,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 0, right: 20, bottom: 10),
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 10),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -162,13 +158,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                 "Advanced browser settings",
                               ),
                               IconButton(
-                                  icon:
-                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                  icon: Icon(Icons.keyboard_arrow_right_outlined),
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (BuildContext context) =>
-                                            SettingsBrowserPage(),
+                                        builder: (BuildContext context) => SettingsBrowserPage(),
                                       ),
                                     );
                                   }),
@@ -188,8 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 0, right: 20, bottom: 5),
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 5),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -208,8 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 10, right: 20, bottom: 5),
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -247,11 +239,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               ],
                             ),
                             Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 20, top: 0, right: 20, bottom: 0),
+                              padding:
+                                  const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Flexible(
                                     child: Text(
@@ -261,9 +252,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   Switch(
                                     value: _removeNotificationsLaunch,
                                     onChanged: (value) {
-                                      _settingsProvider
-                                              .changeRemoveNotificationsOnLaunch =
-                                          value;
+                                      _settingsProvider.changeRemoveNotificationsOnLaunch = value;
                                       setState(() {
                                         _removeNotificationsLaunch = value;
                                       });
@@ -275,8 +264,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Text(
                                 'This will remove all Torn PDA notifications from your notifications bar '
                                 'when you launch the app. Deactivate it if you would prefer to keep them '
@@ -290,11 +278,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             SizedBox(height: 5),
                             Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 20, top: 10, right: 20, bottom: 5),
+                              padding:
+                                  const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Flexible(
                                     child: Text(
@@ -312,8 +299,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Text(
                                 'This vibration applies to the automatic alerts only, with the '
                                 'app in use or in the background',
@@ -326,11 +312,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                             SizedBox(height: 5),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Text("Manual alarm sound"),
                                   Switch(
@@ -339,8 +323,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       setState(() {
                                         _manualAlarmSound = value;
                                       });
-                                      Prefs()
-                                          .setManualAlarmSound(value);
+                                      Prefs().setManualAlarmSound(value);
                                     },
                                     activeTrackColor: Colors.lightGreenAccent,
                                     activeColor: Colors.green,
@@ -349,11 +332,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: <Widget>[
                                   Text("Manual alarm vibration"),
                                   Switch(
@@ -362,8 +343,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       setState(() {
                                         _manualAlarmVibration = value;
                                       });
-                                      Prefs()
-                                          .setManualAlarmVibration(value);
+                                      Prefs().setManualAlarmVibration(value);
                                     },
                                     activeTrackColor: Colors.lightGreenAccent,
                                     activeColor: Colors.green,
@@ -372,12 +352,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: RichText(
                                 text: TextSpan(
-                                  text:
-                                      'Applies to manually activated alarms in all sections '
+                                  text: 'Applies to manually activated alarms in all sections '
                                       '(Travel, Loot, Profile, etc.). '
                                       'Some Android clock applications do not work well '
                                       'with more than 1 timer or do not allow to choose '
@@ -396,8 +374,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                         ..onTap = () async {
                                           AndroidIntent intent = AndroidIntent(
                                             action: 'action_view',
-                                            data:
-                                                'https://play.google.com/store'
+                                            data: 'https://play.google.com/store'
                                                 '/apps/details?id=com.google.android.deskclock',
                                           );
                                           await intent.launch();
@@ -427,8 +404,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 0, right: 20, bottom: 0),
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -460,8 +436,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 10, right: 20, bottom: 5),
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -480,8 +455,44 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20, top: 10, right: 20, bottom: 5),
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Allow screen rotation",
+                              ),
+                            ),
+                            Switch(
+                              value: _settingsProvider.allowScreenRotation,
+                              onChanged: (value) {
+                                setState(() {
+                                  _settingsProvider.changeAllowScreenRotation = value;
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
+                          'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
+                          'to be manually scrolled and some elements might look too big).',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -534,8 +545,7 @@ class _SettingsPageState extends State<SettingsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -614,8 +624,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ElevatedButton(
                                 child: Text("Reload"),
                                 onPressed: () {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
+                                  FocusScope.of(context).requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
@@ -628,8 +637,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ElevatedButton(
                                 child: Text("Remove"),
                                 onPressed: () async {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
+                                  FocusScope.of(context).requestFocus(new FocusNode());
                                   // Removes the form error
                                   _formKey.currentState.reset();
                                   _apiKeyInputController.clear();
@@ -715,8 +723,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               ElevatedButton(
                                 child: Text("Load"),
                                 onPressed: () {
-                                  FocusScope.of(context)
-                                      .requestFocus(new FocusNode());
+                                  FocusScope.of(context).requestFocus(new FocusNode());
                                   if (_formKey.currentState.validate()) {
                                     _myCurrentKey = _apiKeyInputController.text;
                                     _getApiDetails(userTriggered: true);
@@ -1263,8 +1270,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile =
-          await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
+      dynamic myProfile = await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -1282,10 +1288,8 @@ class _SettingsPageState extends State<SettingsPage> {
         if (userTriggered) {
           User mFirebaseUser = await firebaseAuth.signInAnon();
           firestore.setUID(mFirebaseUser.uid);
-          await firestore.uploadUsersProfileDetail(myProfile,
-              userTriggered: true);
-          await firestore
-              .uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+          await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+          await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
           if (Platform.isAndroid) {
             firestore.setVibrationPattern(_vibrationValue);
@@ -1307,9 +1311,8 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      FirebaseCrashlytics.instance
-          .log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
-              "Error: $e. Stack: $stack");
+      FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+          "Error: $e. Stack: $stack");
       FirebaseCrashlytics.instance.recordError(e, null);
     }
   }
@@ -1394,12 +1397,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     var alertsVibration = await Prefs().getVibrationPattern();
     var manualAlarmSound = await Prefs().getManualAlarmSound();
-    var manualAlarmVibration =
-        await Prefs().getManualAlarmVibration();
+    var manualAlarmVibration = await Prefs().getManualAlarmVibration();
 
     setState(() {
-      _removeNotificationsLaunch =
-          _settingsProvider.removeNotificationsOnLaunch;
+      _removeNotificationsLaunch = _settingsProvider.removeNotificationsOnLaunch;
       _vibrationValue = alertsVibration;
       _manualAlarmSound = manualAlarmSound;
       _manualAlarmVibration = manualAlarmVibration;

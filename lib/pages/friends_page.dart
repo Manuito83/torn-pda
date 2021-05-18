@@ -55,8 +55,7 @@ class _FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'friends'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'friends'});
   }
 
   @override
@@ -74,107 +73,106 @@ class _FriendsPageState extends State<FriendsPage> {
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-        child: Column(
+        child: MediaQuery.of(context).orientation == Orientation.portrait
+            ? _mainColumn()
+            : SingleChildScrollView(
+                child: _mainColumn(),
+              ),
+      ),
+    );
+  }
+
+  _mainColumn() {
+    return Column(
+      children: <Widget>[
+        SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                ButtonTheme(
-                  minWidth: 1.0,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                          _themeProvider.background),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          side: BorderSide(
-                              width: 2, color: Colors.blueGrey),
-                        ),
-                      ),
+            ButtonTheme(
+              minWidth: 1.0,
+              child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
+                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(width: 2, color: Colors.blueGrey),
                     ),
-                    child: Icon(
-                      Icons.add,
-                      size: 20,
-                      color: _themeProvider.mainText,
-                    ),
-                    onPressed: () {
-                      _showAddDialog(context);
-                    },
                   ),
                 ),
-                SizedBox(width: 15),
-                ButtonTheme(
-                  minWidth: 1.0,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                          _themeProvider.background),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
-                        RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                          side: BorderSide(
-                              width: 2, color: Colors.blueGrey),
-                        ),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.refresh,
-                      size: 20,
-                      color: _themeProvider.mainText,
-                    ),
-                    onPressed: () async {
-                      var updateResult =
-                          await _friendsProvider.updateAllFriends();
-                      if (updateResult.success) {
-                        BotToast.showText(
-                          text: updateResult.numberSuccessful > 0
-                              ? 'Successfully updated '
-                                  '${updateResult.numberSuccessful} '
-                                  'friends!'
-                              : 'No friends to update!',
-                          textStyle: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          contentColor: updateResult.numberSuccessful > 0
-                              ? Colors.green
-                              : Colors.red,
-                          duration: Duration(seconds: 3),
-                          contentPadding: EdgeInsets.all(10),
-                        );
-                      } else {
-                        BotToast.showText(
-                          text:
-                              'Update with errors: ${updateResult.numberErrors} errors '
-                              'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                              'total friends!',
-                          textStyle: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          contentColor: Colors.red,
-                          duration: Duration(seconds: 3),
-                          contentPadding: EdgeInsets.all(10),
-                        );
-                      }
-                    },
-                  ),
+                child: Icon(
+                  Icons.add,
+                  size: 20,
+                  color: _themeProvider.mainText,
                 ),
-              ],
+                onPressed: () {
+                  _showAddDialog(context);
+                },
+              ),
             ),
-            SizedBox(height: 15),
-            Flexible(
-              child: Consumer<FriendsProvider>(
-                builder: (context, friendsModel, child) => FriendsList(
-                  friends: friendsModel.allFriends,
+            SizedBox(width: 15),
+            ButtonTheme(
+              minWidth: 1.0,
+              child: ElevatedButton(
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
+                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                      side: BorderSide(width: 2, color: Colors.blueGrey),
+                    ),
+                  ),
                 ),
+                child: Icon(
+                  Icons.refresh,
+                  size: 20,
+                  color: _themeProvider.mainText,
+                ),
+                onPressed: () async {
+                  var updateResult = await _friendsProvider.updateAllFriends();
+                  if (updateResult.success) {
+                    BotToast.showText(
+                      text: updateResult.numberSuccessful > 0
+                          ? 'Successfully updated '
+                              '${updateResult.numberSuccessful} '
+                              'friends!'
+                          : 'No friends to update!',
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
+                      duration: Duration(seconds: 3),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  } else {
+                    BotToast.showText(
+                      text: 'Update with errors: ${updateResult.numberErrors} errors '
+                          'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                          'total friends!',
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.red,
+                      duration: Duration(seconds: 3),
+                      contentPadding: EdgeInsets.all(10),
+                    );
+                  }
+                },
               ),
             ),
           ],
         ),
-      ),
+        SizedBox(height: 15),
+        Consumer<FriendsProvider>(
+          builder: (context, targetsModel, child) =>
+              MediaQuery.of(context).orientation == Orientation.portrait
+                  ? Flexible(child: FriendsList(friends: targetsModel.allFriends))
+                  : FriendsList(friends: targetsModel.allFriends),
+        ),
+      ],
     );
   }
 
@@ -186,8 +184,7 @@ class _FriendsPageState extends State<FriendsPage> {
       leading: IconButton(
         icon: Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -327,8 +324,7 @@ class _FriendsPageState extends State<FriendsPage> {
                     child: Form(
                       key: _addFormKey,
                       child: Column(
-                        mainAxisSize:
-                            MainAxisSize.min, // To make the card compact
+                        mainAxisSize: MainAxisSize.min, // To make the card compact
                         children: <Widget>[
                           TextFormField(
                             style: TextStyle(fontSize: 14),
@@ -371,12 +367,10 @@ class _FriendsPageState extends State<FriendsPage> {
                                     var inputId = _addIdController.text;
                                     _addIdController.text = '';
                                     AddFriendResult tryAddFriend =
-                                        await friendsProvider
-                                            .addFriend(inputId);
+                                        await friendsProvider.addFriend(inputId);
                                     if (tryAddFriend.success) {
                                       BotToast.showText(
-                                        text:
-                                            'Added ${tryAddFriend.friendName} '
+                                        text: 'Added ${tryAddFriend.friendName} '
                                             '[${tryAddFriend.friendId}]',
                                         textStyle: TextStyle(
                                           fontSize: 14,
@@ -442,8 +436,7 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void onSearchInputTextChange() {
-    Provider.of<FriendsProvider>(context, listen: false)
-        .setFilterText(_searchController.text);
+    Provider.of<FriendsProvider>(context, listen: false).setFilterText(_searchController.text);
 
     setState(() {
       if (_searchController.text != '') {
@@ -497,11 +490,10 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
-  Future _restoreFriends () async {
+  Future _restoreFriends() async {
     _friendsProvider = context.read<FriendsProvider>();
     if (!_friendsProvider.initialized) {
       _friendsProvider.initFriends();
     }
   }
-
 }

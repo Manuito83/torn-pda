@@ -90,7 +90,7 @@ class _FriendCardState extends State<FriendCard> {
             }),
       ],
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
         child: Card(
           shape: RoundedRectangleBorder(
               side: BorderSide(color: _cardBorderColor(), width: 1.5),

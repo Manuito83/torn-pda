@@ -12,6 +12,7 @@ import 'package:android_intent/android_intent.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -29,8 +30,6 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial.dart';
-import 'package:torn_pda/utils/speed_dial/speed_dial_child.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
@@ -47,8 +46,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   Timer _ticker;
 
   int _apiRetries = 0;
-
-  bool dialVisible = true;
 
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
@@ -74,10 +71,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
-    _ticker = new Timer.periodic(
-        Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'travel'});
+    _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'travel'});
   }
 
   @override
@@ -126,9 +121,11 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         ),
       ),
       floatingActionButtonAnimator: FabOverrideAnimation(),
-      floatingActionButtonLocation: _travelModel.abroad
+      floatingActionButtonLocation: MediaQuery.of(context).orientation == Orientation.landscape
           ? FloatingActionButtonLocation.endFloat
-          : FloatingActionButtonLocation.centerFloat,
+          : _travelModel.abroad
+              ? FloatingActionButtonLocation.endFloat
+              : FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FutureBuilder(
         future: _finishedLoadingPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -151,8 +148,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 onClosed: (ReturnFlagPressed returnFlag) async {
                   if (returnFlag.flagPressed) {
                     var url = 'https://www.torn.com/travelagency.php';
-                    if (_settingsProvider.currentBrowser ==
-                        BrowserSetting.external) {
+                    if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                       if (await canLaunch(url)) {
                         await launch(url, forceSafariVC: false);
                       }
@@ -167,16 +163,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                             : await _openTornBrowser(url);
                         _updateInformation();
                       } else {
-                        await _openTornBrowser(
-                            'https://www.torn.com/travelagency.php');
+                        await _openTornBrowser('https://www.torn.com/travelagency.php');
                         _updateInformation();
                       }
                     }
                   }
                 },
                 closedColor: Colors.orange,
-                closedBuilder:
-                    (BuildContext context, VoidCallback openContainer) {
+                closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     height: 56,
                     width: 56,
@@ -205,8 +199,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -285,51 +278,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         color: Colors.black,
       ),
       labelBackgroundColor: Colors.orange,
-      child: OpenContainer(
-        transitionDuration: Duration(seconds: 1),
-        transitionType: ContainerTransitionType.fadeThrough,
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return ForeignStockPage(apiKey: _myCurrentKey);
-        },
-        onClosed: (ReturnFlagPressed returnFlag) async {
-          if (returnFlag.flagPressed) {
-            var url = 'https://www.torn.com/travelagency.php';
-            if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-            } else {
-              if (returnFlag.shortTap) {
-                _settingsProvider.useQuickBrowser
-                    ? await openBrowserDialog(
-                        context,
-                        url,
-                        callBack: null,
-                      )
-                    : await _openTornBrowser(url);
-                _updateInformation();
-              } else {
-                await _openTornBrowser('https://www.torn.com/travelagency.php');
-                _updateInformation();
-              }
-            }
-          }
-        },
-        closedElevation: 6.0,
-        closedShape: CircleBorder(),
-        closedColor: Colors.orange,
-        closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return SizedBox(
-            height: 56,
-            width: 56,
-            child: Center(
-              child: Image.asset(
-                'images/icons/box.png',
-                width: 24,
-              ),
+      backgroundColor: Colors.orange,
+      onTap: () async {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => ForeignStockPage(
+              apiKey: _myCurrentKey,
             ),
-          );
-        },
+          ),
+        ).then((value) => _onStocksPageClosed(value));
+      },
+      child: SizedBox(
+        height: 56,
+        width: 56,
+        child: Center(
+          child: Image.asset(
+            'images/icons/box.png',
+            width: 24,
+          ),
+        ),
       ),
     );
 
@@ -464,6 +431,9 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
 
     return SpeedDial(
+      direction: MediaQuery.of(context).orientation == Orientation.portrait
+          ? SpeedDialDirection.Up
+          : SpeedDialDirection.Left,
       elevation: 2,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
@@ -480,10 +450,37 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           shape: BoxShape.circle,
         ),
       ),
-      visible: dialVisible,
+      visible: true,
       curve: Curves.bounceIn,
       children: dials,
     );
+  }
+
+  _onStocksPageClosed(ReturnFlagPressed returnFlag) async {
+    if (_travelModel.abroad) return;
+
+    if (returnFlag.flagPressed) {
+      var url = 'https://www.torn.com/travelagency.php';
+      if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+      } else {
+        if (returnFlag.shortTap) {
+          _settingsProvider.useQuickBrowser
+              ? await openBrowserDialog(
+                  context,
+                  url,
+                  callBack: null,
+                )
+              : await _openTornBrowser(url);
+          _updateInformation();
+        } else {
+          await _openTornBrowser('https://www.torn.com/travelagency.php');
+          _updateInformation();
+        }
+      }
+    }
   }
 
   List<Widget> _travelMain() {
@@ -642,10 +639,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         var dateTimeArrival = _travelModel.timeArrival;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
-        String twoDigitMinutes =
-            twoDigits(timeDifference.inMinutes.remainder(60));
-        String diff =
-            '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+        String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
+        String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
 
         return <Widget>[
           Padding(
@@ -682,8 +677,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 },
                 onTap: () async {
                   var url = 'https://www.torn.com/';
-                  if (_settingsProvider.currentBrowser ==
-                      BrowserSetting.external) {
+                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                     if (await canLaunch(url)) {
                       await launch(url, forceSafariVC: false);
                     }
@@ -718,8 +712,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                           ? const EdgeInsets.only(top: 6, right: 6)
                           : const EdgeInsets.only(top: 6, left: 10),
                       child: RotatedBox(
-                        quarterTurns:
-                            _travelModel.destination == "Torn" ? 3 : 1,
+                        quarterTurns: _travelModel.destination == "Torn" ? 3 : 1,
                         child: Icon(
                           Icons.airplanemode_active,
                           color: Colors.blue[900],
@@ -865,8 +858,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   void _updateInformation() {
     DateTime now = DateTime.now();
     // We avoid calling the API unnecessarily
-    if (now
-        .isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
+    if (now.isAfter(_travelModel.timeArrival.subtract(Duration(seconds: 120)))) {
       _fetchTornApi();
     }
     _retrievePendingNotifications();
@@ -902,8 +894,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime = _travelModel.timeArrival
-        .subtract(Duration(seconds: _travelNotificationAhead));
+    var scheduledNotificationDateTime =
+        _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
 
     var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
@@ -928,10 +920,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       iOS: iOSPlatformChannelSpecifics,
     );
 
-    var notificationTitle =
-        await Prefs().getTravelNotificationTitle();
-    var notificationSubtitle =
-        await Prefs().getTravelNotificationBody();
+    var notificationTitle = await Prefs().getTravelNotificationTitle();
+    var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       201,
@@ -942,8 +932,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       platformChannelSpecifics,
       payload: 'travel',
       androidAllowWhileIdle: true, // Deliver at exact time
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
@@ -979,8 +968,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _setAlarm() async {
-    var alarmTime =
-        _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
+    var alarmTime = _travelModel.timeArrival.add(Duration(minutes: -_travelAlarmAhead));
     int hour = alarmTime.hour;
     int minute = alarmTime.minute;
 
@@ -1010,8 +998,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',
       arguments: <String, dynamic>{
-        'android.intent.extra.alarm.LENGTH':
-            _travelModel.timeLeft - _travelTimerAhead,
+        'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
@@ -1019,8 +1006,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
     intent.launch();
 
-    return DateTime.now()
-        .add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
+    return DateTime.now().add(Duration(seconds: _travelModel.timeLeft - _travelTimerAhead));
   }
 
   Future _restorePreferences() async {
@@ -1034,8 +1020,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _alarmVibration = await Prefs().getManualAlarmVibration();
 
     // Ahead timers
-    var notificationAhead =
-        await Prefs().getTravelNotificationAhead();
+    var notificationAhead = await Prefs().getTravelNotificationAhead();
     var alarmAhead = await Prefs().getTravelAlarmAhead();
     var timerAhead = await Prefs().getTravelTimerAhead();
 

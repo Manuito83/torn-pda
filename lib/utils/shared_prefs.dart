@@ -27,6 +27,7 @@ class Prefs {
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
@@ -477,6 +478,20 @@ class Prefs {
   Future<bool> setAppBarPosition(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAppBarPosition, value);
+  }
+
+  /// ----------------------------
+  /// Methods for screen rotation
+  /// ----------------------------
+
+  Future<bool> getAllowScreenRotation() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAllowScreenRotation) ?? false;
+  }
+
+  Future<bool> setAllowScreenRotation(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAllowScreenRotation, value);
   }
 
   /// ----------------------------
