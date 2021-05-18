@@ -47,7 +47,9 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -64,20 +66,17 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () =>
-                      FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text(
-                                    'Here you can specify your preferred notification '
+                                child: Text('Here you can specify your preferred notification '
                                     'trigger time before hospital release'),
                               ),
                               _rowsWithTypes(),
@@ -429,12 +428,9 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   }
 
   Future _restorePreferences() async {
-    var travelNotificationAhead =
-        await Prefs().getHospitalNotificationAhead();
-    var travelAlarmAhead =
-        await Prefs().getHospitalAlarmAhead();
-    var travelTimerAhead =
-        await Prefs().getHospitalTimerAhead();
+    var travelNotificationAhead = await Prefs().getHospitalNotificationAhead();
+    var travelAlarmAhead = await Prefs().getHospitalAlarmAhead();
+    var travelTimerAhead = await Prefs().getHospitalTimerAhead();
 
     setState(() {
       _hospitalNotificationAheadValue = travelNotificationAhead;

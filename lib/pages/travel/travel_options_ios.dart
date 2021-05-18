@@ -44,7 +44,9 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -61,22 +63,19 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () =>
-                      FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text(
-                                    'Here you can specify your preferred notification '
+                                child: Text('Here you can specify your preferred notification '
                                     'trigger time before arrival. Tap the text icon in the appbar '
-                                        'to change the notification title and body.'),
+                                    'to change the notification title and body.'),
                               ),
                               _rowsWithTypes(),
                               SizedBox(height: 50),
@@ -228,8 +227,7 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
   }
 
   Future _restorePreferences() async {
-    var travelNotificationAhead =
-        await Prefs().getTravelNotificationAhead();
+    var travelNotificationAhead = await Prefs().getTravelNotificationAhead();
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;

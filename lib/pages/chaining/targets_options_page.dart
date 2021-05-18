@@ -58,7 +58,9 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -75,12 +77,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () =>
-                      FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
@@ -97,18 +97,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Show targets notes"),
                                     Switch(
                                       value: _showTargetsNotes,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setShowTargetsNotes(value);
+                                        Prefs().setShowTargetsNotes(value);
                                         setState(() {
                                           _showTargetsNotes = value;
                                         });
@@ -120,8 +117,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you will be shown the note you have saved for every '
                                   'target and its color as you progress with the chain. For TAC targets this '
@@ -138,34 +134,27 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 15),
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: <Widget>[
                                           Text("Last online & faction warning"),
                                           Switch(
                                             value: _showOnlineFactionWarning,
                                             onChanged: (value) {
-                                              Prefs()
-                                                  .setShowOnlineFactionWarning(
-                                                      value);
+                                              Prefs().setShowOnlineFactionWarning(value);
                                               setState(() {
-                                                _showOnlineFactionWarning =
-                                                    value;
+                                                _showOnlineFactionWarning = value;
                                               });
                                             },
-                                            activeTrackColor:
-                                                Colors.lightGreenAccent,
+                                            activeTrackColor: Colors.lightGreenAccent,
                                             activeColor: Colors.green,
                                           ),
                                         ],
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 15),
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
                                       child: Text(
                                         'If enabled, in addition to the target\'s note (if any) you\'ll be shown if the '
                                         'target has been online in the last 7 days. If so, a faction check will also be performed. '
@@ -181,18 +170,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ],
                                 ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Skip red/blue targets"),
                                     Switch(
                                       value: _skippingEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setTargetSkipping(value);
+                                        Prefs().setTargetSkipping(value);
                                         setState(() {
                                           _skippingEnabled = value;
                                         });
@@ -204,8 +190,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, targets that are in hospital, jail or in another '
                                   'country will be skipped (max 3 at a time, to avoid delays)',
@@ -229,18 +214,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Sound alerts"),
                                     Switch(
                                       value: _soundAlertsEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setChainWatcherSound(value);
+                                        Prefs().setChainWatcherSound(value);
                                         setState(() {
                                           _soundAlertsEnabled = value;
                                         });
@@ -252,18 +234,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Vibration"),
                                     Switch(
                                       value: _vibrationAlertsEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setChainWatcherVibration(value);
+                                        Prefs().setChainWatcherVibration(value);
                                         setState(() {
                                           _vibrationAlertsEnabled = value;
                                         });
@@ -287,18 +266,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Show YATA icon"),
                                     Switch(
                                       value: _yataTargetsEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setYataTargetsEnabled(value);
+                                        Prefs().setYataTargetsEnabled(value);
                                         setState(() {
                                           _yataTargetsEnabled = value;
                                         });
@@ -310,8 +286,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you\'ll have access to a \'Y\' icon in the top bar from '
                                   'where you can import and export to YATA. Please note that deletions '
@@ -337,18 +312,15 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
                                     Text("Show TAC tab"),
                                     Switch(
                                       value: _tacEnabled,
                                       onChanged: (value) {
-                                        Prefs()
-                                            .setTACEnabled(value);
+                                        Prefs().setTACEnabled(value);
                                         setState(() {
                                           _tacEnabled = value;
                                         });
@@ -360,8 +332,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 15),
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you\'ll have access to TAC through a third '
                                   'bottom tab in the Chaining section.',
@@ -408,12 +379,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   Future _restorePreferences() async {
     var showTargetsNotes = await Prefs().getShowTargetsNotes();
-    var showOnlineFactionWarning =
-        await Prefs().getShowOnlineFactionWarning();
+    var showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
     var skippingEnabled = await Prefs().getTargetSkipping();
     var soundEnabled = await Prefs().getChainWatcherSound();
-    var vibrationEnabled =
-        await Prefs().getChainWatcherVibration();
+    var vibrationEnabled = await Prefs().getChainWatcherVibration();
     var yataEnabled = await Prefs().getYataTargetsEnabled();
     var tacEnabled = await Prefs().getTACEnabled();
 

@@ -35,8 +35,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (_userScriptsProvider.scriptsFirstTime) {
@@ -61,7 +60,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -87,13 +88,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                _themeProvider.background),
+                            backgroundColor:
+                                MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                    width: 2, color: Colors.blueGrey),
+                                side: BorderSide(width: 2, color: Colors.blueGrey),
                               ),
                             ),
                           ),
@@ -112,8 +112,8 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                _themeProvider.background),
+                            backgroundColor:
+                                MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -153,8 +153,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   SizedBox(height: 10),
                   Flexible(
                     child: Consumer<UserScriptsProvider>(
-                      builder: (context, settingsProvider, child) =>
-                          scriptsCards(),
+                      builder: (context, settingsProvider, child) => scriptsCards(),
                     ),
                   ),
                 ],
@@ -189,8 +188,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                           activeColor: Colors.green,
                           inactiveThumbColor: Colors.red[100],
                           onChanged: (value) {
-                            _userScriptsProvider.changeUserScriptEnabled(
-                                script, value);
+                            _userScriptsProvider.changeUserScriptEnabled(script, value);
                           },
                         ),
                       ),
@@ -325,8 +323,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
@@ -338,16 +335,14 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         Flexible(
                           child: Text(
                             "This will remove all user scripts!",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -434,14 +429,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
                             "Remove ${script.name}?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -557,9 +550,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       recognizer: TapGestureRecognizer()
                         ..onTap = () async {
                           await openBrowserDialog(
-                              context,
-                              'https://github.com/Manuito83/torn-pda/tree/master/userscripts',
-                              callBack: null,
+                            context,
+                            'https://github.com/Manuito83/torn-pda/tree/master/userscripts',
+                            callBack: null,
                           );
                         },
                     ),

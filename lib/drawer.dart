@@ -495,7 +495,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
             return Container(
               color: _themeProvider.currentTheme == AppTheme.light
-                  ? Colors.blueGrey
+                  ? MediaQuery.of(context).orientation == Orientation.portrait
+                      ? Colors.blueGrey
+                      : Colors.grey[900]
                   : Colors.grey[900],
               child: SafeArea(
                 top: _settingsProvider.appBarTop ? false : true,

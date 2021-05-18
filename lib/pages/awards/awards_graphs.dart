@@ -45,7 +45,11 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : Colors.grey[900]
+          : Colors.grey[900],
       child: WillPopScope(
         onWillPop: _willPopCallback,
         child: SafeArea(

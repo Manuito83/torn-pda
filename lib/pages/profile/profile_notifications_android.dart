@@ -28,12 +28,10 @@ class ProfileNotificationsAndroid extends StatefulWidget {
   });
 
   @override
-  _ProfileNotificationsAndroidState createState() =>
-      _ProfileNotificationsAndroidState();
+  _ProfileNotificationsAndroidState createState() => _ProfileNotificationsAndroidState();
 }
 
-class _ProfileNotificationsAndroidState
-    extends State<ProfileNotificationsAndroid> {
+class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
@@ -70,7 +68,9 @@ class _ProfileNotificationsAndroidState
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -87,20 +87,17 @@ class _ProfileNotificationsAndroidState
               builder: (BuildContext context) {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () =>
-                      FocusScope.of(context).requestFocus(new FocusNode()),
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text(
-                                    'Here you can specify your preferred alerting '
+                                child: Text('Here you can specify your preferred alerting '
                                     'method for each type of event.'),
                               ),
                               _rowsWithTypes(),
@@ -277,8 +274,7 @@ class _ProfileNotificationsAndroidState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        Prefs()
-                            .setEnergyNotificationValue(finalValue.floor());
+                        Prefs().setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -313,8 +309,7 @@ class _ProfileNotificationsAndroidState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        Prefs()
-                            .setNerveNotificationValue(finalValue.floor());
+                        Prefs().setNerveNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -490,16 +485,14 @@ class _ProfileNotificationsAndroidState
     var travelType = await Prefs().getTravelNotificationType();
 
     var energyType = await Prefs().getEnergyNotificationType();
-    var energyTrigger =
-        await Prefs().getEnergyNotificationValue();
+    var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
       energyTrigger = widget.energyMax;
     }
 
     var nerveType = await Prefs().getNerveNotificationType();
-    var nerveTrigger =
-        await Prefs().getNerveNotificationValue();
+    var nerveTrigger = await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
     if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
       nerveTrigger = widget.nerveMax;
@@ -507,12 +500,9 @@ class _ProfileNotificationsAndroidState
 
     var lifeType = await Prefs().getLifeNotificationType();
     var drugsType = await Prefs().getDrugNotificationType();
-    var medicalType =
-        await Prefs().getMedicalNotificationType();
-    var hospitalType =
-        await Prefs().getHospitalNotificationType();
-    var boosterType =
-        await Prefs().getBoosterNotificationType();
+    var medicalType = await Prefs().getMedicalNotificationType();
+    var hospitalType = await Prefs().getHospitalNotificationType();
+    var boosterType = await Prefs().getBoosterNotificationType();
 
     setState(() {
       _travelDropDownValue = travelType;

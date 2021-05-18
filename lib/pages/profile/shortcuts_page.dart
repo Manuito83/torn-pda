@@ -42,7 +42,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -191,8 +193,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       borderRadius: BorderRadius.circular(4.0),
                     ),
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                       child: Row(
                         children: [
                           Padding(
@@ -341,8 +342,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 SizedBox(width: 10),
                                 Expanded(
                                   child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Flexible(child: Text(short.name)),
                                       TextButton(
@@ -355,12 +355,10 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                                   short.visible = false;
                                                 });
 
-                                                await Future.delayed(Duration(
-                                                    milliseconds: 300));
+                                                await Future.delayed(Duration(milliseconds: 300));
 
                                                 setState(() {
-                                                  shortcutProvider
-                                                      .activateShortcut(short);
+                                                  shortcutProvider.activateShortcut(short);
                                                 });
 
                                                 // Reset visibility after animation
@@ -368,8 +366,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                               },
                                         child: Text(
                                           'ADD',
-                                          style: TextStyle(
-                                              color: Colors.green[500]),
+                                          style: TextStyle(color: Colors.green[500]),
                                         ),
                                       ),
                                     ],
@@ -559,15 +556,13 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
                             "This will reset all your active shortcuts and order, "
                             "are you sure?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -654,31 +649,27 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
                             "Add a name and URL for your custom shortcut. Note: "
                             "ensure URL begins with 'https://'",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 15),
                         Form(
                           key: _customNameKey,
                           child: Column(
-                            mainAxisSize:
-                                MainAxisSize.min, // To make the card compact
+                            mainAxisSize: MainAxisSize.min, // To make the card compact
                             children: <Widget>[
                               TextFormField(
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: _themeProvider.mainText,
                                 ),
-                                textCapitalization:
-                                    TextCapitalization.sentences,
+                                textCapitalization: TextCapitalization.sentences,
                                 controller: _customNameController,
                                 maxLength: 20,
                                 maxLines: 1,
@@ -705,8 +696,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                               child: Form(
                                 key: _customURLKey,
                                 child: Column(
-                                  mainAxisSize: MainAxisSize
-                                      .min, // To make the card compact
+                                  mainAxisSize: MainAxisSize.min, // To make the card compact
                                   children: <Widget>[
                                     TextFormField(
                                       style: TextStyle(
@@ -726,12 +716,8 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                         if (value.replaceAll(' ', '').isEmpty) {
                                           return "Cannot be empty!";
                                         }
-                                        if (!value
-                                            .toLowerCase()
-                                            .contains('https://')) {
-                                          if (value
-                                              .toLowerCase()
-                                              .contains('http://')) {
+                                        if (!value.toLowerCase().contains('https://')) {
+                                          if (value.toLowerCase().contains('http://')) {
                                             return "Invalid, HTTPS needed!";
                                           }
                                         }
@@ -745,8 +731,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                             IconButton(
                               icon: Icon(Icons.paste),
                               onPressed: () async {
-                                ClipboardData data =
-                                    await Clipboard.getData('text/plain');
+                                ClipboardData data = await Clipboard.getData('text/plain');
                                 _customURLController.text = data.text;
                               },
                             ),
@@ -786,8 +771,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   ..color = Colors.orange[500]
                                   ..isCustom = true;
 
-                                _shortcutsProvider
-                                    .activateShortcut(customShortcut);
+                                _shortcutsProvider.activateShortcut(customShortcut);
                                 Navigator.of(context).pop();
                                 _customNameController.text = '';
                                 _customURLController.text = '';

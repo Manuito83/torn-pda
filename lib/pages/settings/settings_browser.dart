@@ -39,8 +39,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
   }
 
@@ -51,7 +50,9 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -70,8 +71,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 if (snapshot.connectionState == ConnectionState.done) {
                   return GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () =>
-                        FocusScope.of(context).requestFocus(new FocusNode()),
+                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                     child: SingleChildScrollView(
                       child: Column(
                         children: <Widget>[
@@ -209,8 +209,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      FriendlyFactionsPage(),
+                                  builder: (BuildContext context) => FriendlyFactionsPage(),
                                 ),
                               );
                             }),
@@ -330,8 +329,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    UserScriptsPage(),
+                                builder: (BuildContext context) => UserScriptsPage(),
                               ),
                             );
                           },

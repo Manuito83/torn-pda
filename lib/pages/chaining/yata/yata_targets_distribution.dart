@@ -39,7 +39,9 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : Colors.grey[900]
           : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,

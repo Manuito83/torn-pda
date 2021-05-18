@@ -28,13 +28,10 @@ class ProfileNotificationsIOS extends StatefulWidget {
   });
 
   @override
-  _ProfileNotificationsIOSState createState() =>
-      _ProfileNotificationsIOSState();
+  _ProfileNotificationsIOSState createState() => _ProfileNotificationsIOSState();
 }
 
-class _ProfileNotificationsIOSState
-    extends State<ProfileNotificationsIOS> {
-
+class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   final _energyMin = 10.0;
   final _nerveMin = 2.0;
 
@@ -62,7 +59,9 @@ class _ProfileNotificationsIOSState
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -71,9 +70,9 @@ class _ProfileNotificationsIOSState
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
                 : null,
             body: Builder(
               builder: (BuildContext context) {
@@ -82,16 +81,14 @@ class _ProfileNotificationsIOSState
                   onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
                   child: FutureBuilder(
                     future: _preferencesLoaded,
-                    builder:
-                        (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         return SingleChildScrollView(
                           child: Column(
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text(
-                                    'Here you can specify your preferred alerting '
+                                child: Text('Here you can specify your preferred alerting '
                                     'values for each type of event.'),
                               ),
                               _rowsWithTypes(),
@@ -204,8 +201,7 @@ class _ProfileNotificationsIOSState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        Prefs()
-                            .setEnergyNotificationValue(finalValue.floor());
+                        Prefs().setEnergyNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -240,8 +236,7 @@ class _ProfileNotificationsIOSState
                         });
                       },
                       onChangeEnd: (double finalValue) {
-                        Prefs()
-                            .setNerveNotificationValue(finalValue.floor());
+                        Prefs().setNerveNotificationValue(finalValue.floor());
                       },
                     ),
                   ],
@@ -279,9 +274,7 @@ class _ProfileNotificationsIOSState
         );
         types.add(SizedBox(height: 10));
       }
-
     });
-
 
     return Column(
       children: types,
@@ -289,17 +282,15 @@ class _ProfileNotificationsIOSState
   }
 
   Future _restorePreferences() async {
-    var energyTrigger =
-      await Prefs().getEnergyNotificationValue();
+    var energyTrigger = await Prefs().getEnergyNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax ) {
+    if (energyTrigger < _energyMin || energyTrigger > widget.energyMax) {
       energyTrigger = widget.energyMax;
     }
 
-    var nerveTrigger =
-      await Prefs().getNerveNotificationValue();
+    var nerveTrigger = await Prefs().getNerveNotificationValue();
     // In case we pass some incorrect values, we correct them here
-    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax ) {
+    if (nerveTrigger < _nerveMin || nerveTrigger > widget.nerveMax) {
       nerveTrigger = widget.nerveMax;
     }
 
@@ -308,7 +299,6 @@ class _ProfileNotificationsIOSState
       _energyTrigger = energyTrigger.toDouble();
       _nerveTrigger = nerveTrigger.toDouble();
     });
-
   }
 
   Future<bool> _willPopCallback() async {

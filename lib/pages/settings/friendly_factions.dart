@@ -45,7 +45,9 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -72,13 +74,12 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                _themeProvider.background),
+                            backgroundColor:
+                                MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                    width: 2, color: Colors.blueGrey),
+                                side: BorderSide(width: 2, color: Colors.blueGrey),
                               ),
                             ),
                           ),
@@ -97,8 +98,8 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                                _themeProvider.background),
+                            backgroundColor:
+                                MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -181,10 +182,8 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         color: Colors.red[300],
                       ),
                       onPressed: () {
-                        var currentFactions =
-                            _settingsProvider.friendlyFactions;
-                        currentFactions
-                            .removeWhere((element) => element.id == fact.id);
+                        var currentFactions = _settingsProvider.friendlyFactions;
+                        currentFactions.removeWhere((element) => element.id == fact.id);
                         _settingsProvider.setFriendlyFactions = currentFactions;
 
                         BotToast.showText(
@@ -278,8 +277,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                           Form(
                             key: _addFormKey,
                             child: Column(
-                              mainAxisSize:
-                                  MainAxisSize.min, // To make the card compact
+                              mainAxisSize: MainAxisSize.min, // To make the card compact
                               children: <Widget>[
                                 TextFormField(
                                   style: TextStyle(fontSize: 14),
@@ -490,8 +488,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
@@ -503,16 +500,14 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         Flexible(
                           child: Text(
                             "This will remove all friendly factions!",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),
@@ -522,8 +517,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                             TextButton(
                               child: Text("Do it!"),
                               onPressed: () {
-                                _settingsProvider.setFriendlyFactions =
-                                    <FriendlyFaction>[];
+                                _settingsProvider.setFriendlyFactions = <FriendlyFaction>[];
                                 Navigator.of(context).pop();
                               },
                             ),
