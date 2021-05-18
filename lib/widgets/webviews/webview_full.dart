@@ -455,11 +455,8 @@ class _WebViewFullState extends State<WebViewFull> {
     }
 
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.of(context).orientation == Orientation.portrait
-              ? Colors.blueGrey
-              : Colors.grey[900]
-          : Colors.grey[900],
+      color:
+          _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.background,
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),
