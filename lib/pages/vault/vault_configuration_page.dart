@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/vault/vault_status_model.dart';
+import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -17,11 +18,13 @@ class VaultConfigurationPage extends StatefulWidget {
   final Function callback;
   final UserDetailsProvider userProvider;
   final VaultStatusModel vaultStatus;
+  final VaultTransactionModel lastTransaction;
 
   VaultConfigurationPage({
     @required this.callback,
     @required this.userProvider,
     @required this.vaultStatus,
+    @required this.lastTransaction,
   });
 
   @override
@@ -105,6 +108,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
     }
 
     Widget top = SizedBox.shrink();
+    Widget topError = SizedBox.shrink();
     Widget share = SizedBox.shrink();
     Widget options = SizedBox.shrink();
 
@@ -117,7 +121,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
       top = Text("You have not initialised the vault share yet!");
       share = Column(
         children: [
-          Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
+          Text("Total: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
           SizedBox(height: 10),
           Text("${widget.userProvider.basic.name}: ?"),
           Text("$spouseName: ?"),
@@ -130,27 +134,84 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
         },
       );
     } else {
+      var firstButtonText = "Change";
       var time = DateTime.fromMillisecondsSinceEpoch(widget.vaultStatus.timestamp);
       var formatter = TimeFormatter(
           inputTime: time,
           timeFormatSetting: _settingsProvider.currentTimeFormat,
           timeZoneSetting: _settingsProvider.currentTimeZone);
-      top = Text("Last transaction on ${formatter.formatMonthDay} @${formatter.formatHour}");
-      share = Column(
-        children: [
-          Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
-          SizedBox(height: 10),
-          Text("${widget.userProvider.basic.name}: "
-              "${_moneyFormat.format(widget.vaultStatus.player)}"),
-          Text("$spouseName: "
-              "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
-        ],
-      );
+
+      if (!widget.vaultStatus.error) {
+        top = Text("Last transaction on ${formatter.formatMonthDay} @${formatter.formatHour}");
+        share = Column(
+          children: [
+            Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
+            SizedBox(height: 10),
+            Text("${widget.userProvider.basic.name}: "
+                "${_moneyFormat.format(widget.vaultStatus.player)}"),
+            Text("$spouseName: "
+                "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
+          ],
+        );
+      } else {
+        top = Text(
+          "There was an error identifying your last saved transaction (this might happen if "
+          "there are too many transactions since the last time you visited the vault).\n\n"
+          "Last known distribution on ${formatter.formatMonthDay} @${formatter.formatHour}",
+          style: TextStyle(
+            color: Colors.orange[800],
+          ),
+        );
+        topError = Column(
+          children: [
+            Text(
+              "Total: \$${_moneyFormat.format(widget.vaultStatus.total)}",
+              style: TextStyle(
+                color: Colors.orange[800],
+              ),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "${widget.userProvider.basic.name}: "
+              "${_moneyFormat.format(widget.vaultStatus.player)}",
+              style: TextStyle(
+                color: Colors.orange[800],
+              ),
+            ),
+            Text(
+              "$spouseName: "
+              "${_moneyFormat.format(widget.vaultStatus.spouse)}",
+              style: TextStyle(
+                color: Colors.orange[800],
+              ),
+            ),
+          ],
+        );
+        share = Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Column(
+            children: [
+              Divider(),
+              SizedBox(height: 20),
+              Text(
+                  "Please, calculate your totals from the last known transaction (above) and reset the vault "
+                  "distribution with the correct values"),
+              SizedBox(height: 20),
+              Text("In the vault now: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
+              SizedBox(height: 10),
+              Text("${widget.userProvider.basic.name}: ?"),
+              Text("$spouseName: ?"),
+            ],
+          ),
+        );
+        firstButtonText = "Reset";
+      }
+
       options = Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           ElevatedButton(
-            child: Text("Change"),
+            child: Text(firstButtonText),
             onPressed: () {
               _showVaultConfigurationDialog();
             },
@@ -177,6 +238,10 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
               children: [
                 top,
                 SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: topError,
+                ),
                 share,
                 SizedBox(height: 20),
                 options,
@@ -200,7 +265,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: VaultConfigurationDialog(
-            total: widget.vaultStatus.total,
+            lastTransaction: widget.lastTransaction,
             vaultStatus: widget.vaultStatus,
             userProvider: widget.userProvider,
             callbackShares: _onDialogSendData,
@@ -227,6 +292,9 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
                   widget.vaultStatus
                     ..player = null
                     ..spouse = null;
+                  if (widget.vaultStatus.error) {
+                    widget.vaultStatus.total = widget.lastTransaction.balance;
+                  }
                 });
                 Prefs().setVaultShareCurrent("");
               },
@@ -250,7 +318,6 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
 
     var save = vaultStatusModelToJson(widget.vaultStatus);
     Prefs().setVaultShareCurrent(save);
-
   }
 
   Future<bool> _willPopCallback() async {

@@ -35,7 +35,6 @@ class _VaultWidgetState extends State<VaultWidget> {
   Future _vaultAssessed;
   var _vaultStatus = VaultStatusModel();
   bool _firstUse = false;
-  bool _notFountError = false;
 
   final _scrollController = ScrollController();
   final _moneyFormat = new NumberFormat("#,##0", "en_US");
@@ -76,7 +75,7 @@ class _VaultWidgetState extends State<VaultWidget> {
             ),
             if (_firstUse)
               SizedBox.shrink()
-            else if (!_firstUse && !_notFountError)
+            else if (!_firstUse && !_vaultStatus.error)
               Padding(
                 padding: const EdgeInsets.only(left: 5),
                 child: _vaultConfigurationIcon(),
@@ -97,7 +96,7 @@ class _VaultWidgetState extends State<VaultWidget> {
         future: _vaultAssessed,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            if (_notFountError) {
+            if (_vaultStatus.error) {
               return Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -116,18 +115,38 @@ class _VaultWidgetState extends State<VaultWidget> {
             }
 
             if (_firstUse) {
-              return Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
+              return Column(
                 children: [
-                  Flexible(
-                    child: Text(
-                      "Initialise vault values",
-                      style: TextStyle(color: Colors.orange, fontSize: 12),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "Initialise vault values",
+                          style: TextStyle(color: Colors.orange, fontSize: 12),
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      _vaultConfigurationIcon(),
+                    ],
                   ),
-                  SizedBox(width: 6),
-                  _vaultConfigurationIcon(),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          "(alternatively, deactivate the widget through the appbar icon)",
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               );
             } else {
@@ -206,11 +225,11 @@ class _VaultWidgetState extends State<VaultWidget> {
         var foundSaved = await _findSavedTransactionAndUpdate(transactions);
         if (!foundSaved) {
           setState(() {
-            _notFountError = true;
+            _vaultStatus.error = true;
           });
         } else {
           setState(() {
-            _notFountError = false;
+            _vaultStatus.error = false;
           });
         }
       } else {
@@ -222,7 +241,7 @@ class _VaultWidgetState extends State<VaultWidget> {
       }
     } else {
       setState(() {
-        _notFountError = true;
+        _vaultStatus.error = true;
       });
     }
   }
@@ -360,6 +379,7 @@ class _VaultWidgetState extends State<VaultWidget> {
           callback: _configurationCallback,
           userProvider: widget.userProvider,
           vaultStatus: _vaultStatus,
+          lastTransaction: _lastTransaction,
         );
       },
       closedElevation: 0,
@@ -386,7 +406,7 @@ class _VaultWidgetState extends State<VaultWidget> {
     if (_vaultStatus.player == null) {
       setState(() {
         _firstUse = true;
-        _notFountError = false;
+        _vaultStatus.error = false;
       });
     } else {
       setState(() {

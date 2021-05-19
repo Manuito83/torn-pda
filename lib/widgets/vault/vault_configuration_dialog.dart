@@ -8,19 +8,20 @@ import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/vault/vault_status_model.dart';
+import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 
 class VaultConfigurationDialog extends StatefulWidget {
-  final int total;
   final VaultStatusModel vaultStatus;
+  final VaultTransactionModel lastTransaction;
   final UserDetailsProvider userProvider;
   final Function callbackShares;
 
   VaultConfigurationDialog({
-    @required this.total,
+    @required this.lastTransaction,
     @required this.vaultStatus,
     @required this.userProvider,
     @required this.callbackShares,
@@ -88,7 +89,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
                       child: Text(
                         "Total"
-                        "\n\$${_moneyFormat.format(widget.total)}",
+                        "\n\$${_moneyFormat.format(widget.lastTransaction.balance)}",
                         style: TextStyle(fontSize: 13),
                       ),
                     ),
@@ -127,9 +128,9 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           );
 
                           // Set the other fields value
-                          if (ownAmount <= widget.total) {
+                          if (ownAmount <= widget.lastTransaction.balance) {
                             setState(() {
-                              var spouse = '\$${_moneyFormat.format(widget.total - ownAmount)}';
+                              var spouse = '\$${_moneyFormat.format(widget.lastTransaction.balance - ownAmount)}';
                               _spouseAmountController.text = spouse;
                             });
                           } else {
@@ -180,9 +181,9 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           );
 
                           // Set the other fields value
-                          if (spouseAmount <= widget.total) {
+                          if (spouseAmount <= widget.lastTransaction.balance) {
                             setState(() {
-                              var own = '\$${_moneyFormat.format(widget.total - spouseAmount)}';
+                              var own = '\$${_moneyFormat.format(widget.lastTransaction.balance - spouseAmount)}';
                               _ownAmountController.text = own;
                             });
                           } else {
@@ -212,7 +213,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                               try {
                                 var own = _cleanNumber(_ownAmountController.text);
                                 var spouse = _cleanNumber(_spouseAmountController.text);
-                                if (own + spouse == widget.total) {
+                                if (own + spouse == widget.lastTransaction.balance) {
                                   success = true;
                                 }
                               } catch (e) {
@@ -232,8 +233,11 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                                 Navigator.of(context).pop();
 
                                 widget.vaultStatus
+                                  ..total = widget.lastTransaction.balance
+                                  ..timestamp = widget.lastTransaction.date
                                   ..player = _cleanNumber(_ownAmountController.text)
-                                  ..spouse = _cleanNumber(_spouseAmountController.text);
+                                  ..spouse = _cleanNumber(_spouseAmountController.text)
+                                  ..error = false;
                                 widget.callbackShares();
 
                                 BotToast.showText(
