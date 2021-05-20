@@ -49,7 +49,9 @@ class _TradesOptionsState extends State<TradesOptions> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -174,7 +176,8 @@ class _TradesOptionsState extends State<TradesOptions> {
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
-          Navigator.of(context).pop();},
+          Navigator.of(context).pop();
+        },
       ),
     );
   }

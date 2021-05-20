@@ -3,6 +3,7 @@ import 'dart:convert';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
@@ -69,6 +70,7 @@ class SettingsProvider extends ChangeNotifier {
       return false;
     }
   }
+
   set setClearCacheNextOpportunity(bool active) {
     _clearCacheNextOpportunity = active;
     Prefs().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
@@ -135,9 +137,7 @@ class SettingsProvider extends ChangeNotifier {
   set changeAppBarTop(bool value) {
     _appBarTop = value;
 
-    _appBarTop
-        ? Prefs().setAppBarPosition('top')
-        : Prefs().setAppBarPosition('bottom');
+    _appBarTop ? Prefs().setAppBarPosition('top') : Prefs().setAppBarPosition('bottom');
 
     notifyListeners();
   }
@@ -278,6 +278,28 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _allowScreenRotation = false;
+  bool get allowScreenRotation => _allowScreenRotation;
+  set changeAllowScreenRotation(bool allow) {
+    _allowScreenRotation = allow;
+
+    if (allow) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    }
+
+    Prefs().setAllowScreenRotation(_allowScreenRotation);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -371,6 +393,8 @@ class SettingsProvider extends ChangeNotifier {
     _oCrimesEnabled = await Prefs().getOCrimesEnabled();
     _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
     _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
+
+    _allowScreenRotation = await Prefs().getAllowScreenRotation();
 
     notifyListeners();
   }

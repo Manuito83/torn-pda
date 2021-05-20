@@ -38,6 +38,23 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.3.5
+    var v2_3_5 = ChangeLogItem();
+    v2_3_5.main.version = 'Torn PDA v2.3.5';
+    v2_3_5.main.date = 'XX MAY 2021';
+    String feat2_3_5_1 = "Browser: added vault share widget";
+    String feat2_3_5_2 = "Settings: added auto rotation option";
+    String feat2_3_5_3 = "Profile: added shortcuts below error message when Torn API is down";
+    String feat2_3_5_4 = "Fixed duplicated notifications in some devices with the app on the foreground";
+    String feat2_3_5_5 = "Fixed error when using Awards for the first time in a while";
+    String feat2_3_5_6 = "Fixed other user interface issues";
+    v2_3_5.features.add(feat2_3_5_1);
+    v2_3_5.features.add(feat2_3_5_2);
+    v2_3_5.features.add(feat2_3_5_3);
+    v2_3_5.features.add(feat2_3_5_4);
+    v2_3_5.features.add(feat2_3_5_5);
+    v2_3_5.features.add(feat2_3_5_6);
+
     // VERSION 2.3.4
     var v2_3_4 = ChangeLogItem();
     v2_3_4.main.version = 'Torn PDA v2.3.4';
@@ -674,6 +691,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_3_5);
     itemList.add(v2_3_4);
     itemList.add(v2_3_3);
     itemList.add(v2_3_2);

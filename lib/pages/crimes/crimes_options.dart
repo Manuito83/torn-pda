@@ -61,7 +61,9 @@ class _CrimesOptionsState extends State<CrimesOptions> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : Colors.grey[900]
           : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
@@ -181,9 +183,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
                       style: TextStyle(
                         fontSize: 13,
                         color: thisCrimesList[i].active ? Colors.green : null,
-                        fontWeight: thisCrimesList[i].active
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                        fontWeight: thisCrimesList[i].active ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -920,7 +920,6 @@ class _CrimesOptionsState extends State<CrimesOptions> {
         action: 'hackfbi',
         active: false,
       ),
-
     ]);
   }
 }

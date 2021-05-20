@@ -94,6 +94,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   // Allows to space alerts when app is on the foreground
   DateTime _lastMessageReceived;
+  String _lastBody;
   int concurrent = 0;
   // Assigns different ids to alerts when the app is on the foreground
   var notId = 900;
@@ -111,10 +112,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       quickActions.setShortcutItems(<ShortcutItem>[
         // NOTE: keep the same file name for both platforms
-        const ShortcutItem(
-            type: 'open_torn',
-            localizedTitle: 'Torn Home',
-            icon: "action_torn"),
+        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
       ]);
 
       quickActions.initialize((String shortcutType) async {
@@ -170,6 +168,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     );
 
     _lastMessageReceived = DateTime.now();
+    _lastBody = "";
 
     _messaging.getInitialMessage().then((RemoteMessage message) {
       if (message != null && message.data.isNotEmpty) {
@@ -190,27 +189,40 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         message.data["body"] = message.notification.body;
       }
 
-      // Spaces out several notifications so that all of them show if
-      // the app is open (otherwise only 1 of them shows)
+      // Space messages and skip repeated
+      bool skip = false;
       if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
-        concurrent++;
-        await Future.delayed(Duration(seconds: 8 * concurrent));
+        if (message.data["body"] == _lastBody) {
+          // Skips messages with the same body that come repeated in less than 2 seconds, which is
+          // a glitch for some mobile devices with the app in the foreground!
+          skip = true;
+        } else {
+          // Spaces out several notifications so that all of them show if
+          // the app is open (otherwise only 1 of them shows)
+          concurrent++;
+          await Future.delayed(Duration(seconds: 8 * concurrent));
+        }
       } else {
         concurrent = 0;
       }
-      _lastMessageReceived = DateTime.now();
-      // Assigns a different id two alerts that come together (otherwise one
-      // deletes the previous one)
-      notId++;
-      if (notId > 990) notId = 900;
-      // This will eventually fire a local notification
-      return showNotification(message.data, notId);
+
+      if (!skip) {
+        _lastMessageReceived = DateTime.now();
+        _lastBody = message.data["body"];
+        // Assigns a different id two alerts that come together (otherwise one
+        // deletes the previous one)
+        notId++;
+        if (notId > 990) notId = 900;
+        // This will eventually fire a local notification
+        return showNotification(message.data, notId);
+      } else {
+        return null;
+      }
     });
 
     _clearBadge();
 
-    _tenSecTimer = new Timer.periodic(
-        Duration(seconds: 10), (Timer t) => _refreshTctClock());
+    _tenSecTimer = new Timer.periodic(Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
 
   @override
@@ -232,11 +244,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Get rid of notifications
       if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
         // Gets the active (already shown) notifications
-        final List<ActiveNotification> activeNotifications =
-            await flutterLocalNotificationsPlugin
-                .resolvePlatformSpecificImplementation<
-                    AndroidFlutterLocalNotificationsPlugin>()
-                ?.getActiveNotifications();
+        final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            ?.getActiveNotifications();
 
         for (var not in activeNotifications) {
           // Platform channel to cancel direct Firebase notifications (we can call
@@ -422,8 +432,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('400-')) {
         launchBrowser = true;
         var npcId = payload.split('-')[1];
-        browserUrl =
-            'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+        browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
       } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
         var messageId = payload.split(':');
@@ -440,8 +449,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         var tradeId = payload.split(':');
         browserUrl = "https://www.torn.com/trade.php";
         if (tradeId[1] != "0") {
-          browserUrl =
-              "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
+          browserUrl = "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
         }
       } else if (payload.contains('211')) {
         launchBrowser = true;
@@ -484,11 +492,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       child: FutureBuilder(
         future: _finishedWithPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done &&
-              !_changelogIsActive) {
+          if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
             return Container(
               color: _themeProvider.currentTheme == AppTheme.light
-                  ? Colors.blueGrey
+                  ? MediaQuery.of(context).orientation == Orientation.portrait
+                      ? Colors.blueGrey
+                      : Colors.grey[900]
                   : Colors.grey[900],
               child: SafeArea(
                 top: _settingsProvider.appBarTop ? false : true,
@@ -535,7 +544,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Widget _getDrawerHeader() {
     return Container(
-      height: 300,
+      height: MediaQuery.of(context).orientation == Orientation.portrait ? 300 : 250,
       child: DrawerHeader(
         child: Container(
           child: Column(
@@ -565,17 +574,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     Row(
                       children: <Widget>[
                         Text(
-                          _themeProvider.currentTheme == AppTheme.light
-                              ? 'Light'
-                              : 'Dark',
+                          _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
                         ),
                         Padding(
                           padding: EdgeInsets.only(left: 10),
                         ),
                         Switch(
-                          value: _themeProvider.currentTheme == AppTheme.dark
-                              ? true
-                              : false,
+                          value: _themeProvider.currentTheme == AppTheme.dark ? true : false,
                           onChanged: (bool value) {
                             if (value) {
                               _themeProvider.changeTheme = AppTheme.dark;
@@ -583,10 +588,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                               _themeProvider.changeTheme = AppTheme.light;
                             }
                             setState(() {
-                              SystemChrome.setSystemUIOverlayStyle(
-                                  SystemUiOverlayStyle(
-                                statusBarColor: _themeProvider.currentTheme ==
-                                        AppTheme.light
+                              SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+                                statusBarColor: _themeProvider.currentTheme == AppTheme.light
                                     ? Colors.blueGrey
                                     : Colors.grey[900],
                               ));
@@ -641,16 +644,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             selectedColor: Colors.red,
             iconColor: _themeProvider.mainText,
             child: Ink(
-              color:
-                  position == _selected ? Colors.grey[300] : Colors.transparent,
+              color: position == _selected ? Colors.grey[300] : Colors.transparent,
               child: ListTile(
                 leading: _returnDrawerIcons(drawerPosition: position),
                 title: Text(
                   _drawerItemsList[position],
                   style: TextStyle(
-                    fontWeight: position == _selected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: position == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: position == _selected,
@@ -663,8 +663,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       // Otherwise, if the key is valid, we loop all the sections
       for (var i = 0; i < _drawerItemsList.length; i++) {
-        if (_settingsProvider.disableTravelSection &&
-            _drawerItemsList[i] == "Travel") {
+        if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
           continue;
         }
 
@@ -683,8 +682,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 title: Text(
                   _drawerItemsList[i],
                   style: TextStyle(
-                    fontWeight:
-                        i == _selected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: i == _selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
                 selected: i == _selected,
@@ -790,12 +788,27 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   Future<void> _loadInitPreferences() async {
     // Set up SettingsProvider so that user preferences are applied
+    // ## Leave this first as other options below need this to be initialized ##
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
 
+    // Change device preferences
+    var allowRotation = _settingsProvider.allowScreenRotation;
+    if (allowRotation) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+    }
+
     // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
 
     // Set up UserProvider. If key is empty, redirect to the Settings page.

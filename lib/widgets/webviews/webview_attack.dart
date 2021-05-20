@@ -107,8 +107,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
     _loadPreferences();
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    _initialUrl =
-        'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
+    _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
     _chainStatusProvider = context.read<ChainStatusProvider>();
@@ -130,7 +129,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -245,8 +246,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     var intColor = Color(_settingsProvider.highlightColor);
     var background =
         'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    var senderColor =
-        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    var senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
     String hlMap =
         '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
@@ -271,17 +271,14 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       genericAppBar: AppBar(
         brightness: Brightness.dark,
         leading: IconButton(
-            icon: _backButtonPopsContext
-                ? Icon(Icons.close)
-                : Icon(Icons.arrow_back_ios),
+            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
                 if (widget.attacksCallback != null) {
                   widget.attacksCallback(_attackedIds);
                 }
-                _chainStatusProvider.watcherAssignParent(
-                    newParent: ChainTimerParent.targets);
+                _chainStatusProvider.watcherAssignParent(newParent: ChainTimerParent.targets);
                 Navigator.pop(context);
               } else {
                 // But we can change and go back to previous page in certain
@@ -499,8 +496,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 for (var i = 0; i < 3; i++) {
                   // Get the status of our next target
                   var nextTarget = await TornApiCaller.target(
-                          _userProv.basic.userApiKey,
-                          widget.attackIdList[_attackNumber + 1])
+                          _userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
                       .getTarget;
 
                   if (nextTarget is TargetModel) {
@@ -514,12 +510,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     // place, we can attack him)
                     else if (nextTarget.status.color == "blue") {
                       var user = await TornApiCaller.target(
-                              _userProv.basic.userApiKey,
-                              _userProv.basic.playerId.toString())
+                              _userProv.basic.userApiKey, _userProv.basic.playerId.toString())
                           .getTarget;
                       if (user is TargetModel) {
-                        if (user.status.description !=
-                            nextTarget.status.description) {
+                        if (user.status.description != nextTarget.status.description) {
                           targetsSkipped++;
                           skippedNames.add(nextTarget.name);
                           _attackNumber++;
@@ -591,8 +585,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               else {
                 if (_showOnlineFactionWarning) {
                   var nextTarget = await TornApiCaller.target(
-                          _userProv.basic.userApiKey,
-                          widget.attackIdList[_attackNumber + 1])
+                          _userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
                       .getTarget;
 
                   if (nextTarget is TargetModel) {
@@ -606,8 +599,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               }
 
               _attackNumber++;
-              await _webViewController
-                  .loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+              await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
               _attackedIds.add(widget.attackIdList[_attackNumber]);
               setState(() {
                 _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
@@ -684,8 +676,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     String extraInfo = "";
     if (_lastOnline > 0) {
       var now = DateTime.now();
-      var lastOnlineDiff = now
-          .difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
+      var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
       if (lastOnlineDiff.inDays < 7) {
         if (widget.attackNotesList[_attackNumber].isNotEmpty) {
           extraInfo += "\n\n";
@@ -745,8 +736,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                         ),
                       ],
                     ),
-                  if (widget.attackNotesList[_attackNumber].isNotEmpty)
-                    SizedBox(height: 12),
+                  if (widget.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
@@ -829,8 +819,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             return SizedBox(
               height: 20,
               width: 20,
-              child: Image.asset('images/icons/quick_items.png',
-                  color: Colors.white),
+              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
             );
           },
         ),
@@ -909,15 +898,14 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
     _skippingEnabled = await Prefs().getTargetSkipping();
     _showNotes = await Prefs().getShowTargetsNotes();
-    _showOnlineFactionWarning =
-        await Prefs().getShowOnlineFactionWarning();
+    _showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
 
     // This will show the note of the first target, if applicable
     if (_showNotes) {
       if (_showOnlineFactionWarning) {
-        var nextTarget = await TornApiCaller.target(
-                _userProv.basic.userApiKey, widget.attackIdList[0])
-            .getTarget;
+        var nextTarget =
+            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0])
+                .getTarget;
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
@@ -945,8 +933,7 @@ class HealingPages {
         url = 'https://www.torn.com/item.php#medical-items';
         break;
       case "Faction":
-        url =
-            'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+        url = 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
         break;
     }
   }

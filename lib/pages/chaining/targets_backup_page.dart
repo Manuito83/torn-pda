@@ -35,13 +35,11 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
   final _importFormKey = GlobalKey<FormState>();
   final _importInputController = new TextEditingController();
 
-  String _exportInfo =
-      "In order to export & backup your targets, you can either copy/paste "
+  String _exportInfo = "In order to export & backup your targets, you can either copy/paste "
       "to a text file manually, or share and save it at your desired location. "
       "In any case, please keep the text original structure.";
 
-  String _importInfo =
-      "In order to import targets, please paste here the string that "
+  String _importInfo = "In order to import targets, please paste here the string that "
       "you exported in the past. You can make changes outside of Torn PDA, "
       "but ensure that the main structure is kept!";
 
@@ -66,7 +64,9 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     _importHintStyle = _themeProvider.mainText;
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : Colors.grey[900]
           : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
@@ -90,8 +90,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                         padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                         child: Text(
                           "HOW TO EXPORT TARGETS",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Padding(
@@ -175,8 +174,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                         padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
                         child: Text(
                           "HOW TO IMPORT TARGETS",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Padding(
@@ -236,8 +234,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                                           contentPadding: EdgeInsets.all(10),
                                         );
                                       } else {
-                                        FocusScope.of(context)
-                                            .requestFocus(new FocusNode());
+                                        FocusScope.of(context).requestFocus(new FocusNode());
                                         _showImportDialog();
                                       }
                                     }
@@ -288,8 +285,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
           '$_importSuccessEvents/${_tentativeImportModel.targetBackup.length}',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        percent:
-            _importSuccessEvents / _tentativeImportModel.targetBackup.length,
+        percent: _importSuccessEvents / _tentativeImportModel.targetBackup.length,
       ),
     );
   }
@@ -305,9 +301,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
         if (tar.notesColor.length > 200) {
           tar.notesColor = tar.notesColor.substring(0, 199);
         }
-        if (tar.notesColor != "red" &&
-            tar.notesColor != "green" &&
-            tar.notesColor != "blue") {
+        if (tar.notesColor != "red" && tar.notesColor != "green" && tar.notesColor != "blue") {
           tar.notesColor = "";
         }
       }
@@ -357,8 +351,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
                       "How would you like to import?",
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(

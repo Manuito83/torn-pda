@@ -293,7 +293,7 @@ class _LootPageState extends State<LootPage> {
             inputTime: levelDateTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
             timeZoneSetting: _settingsProvider.currentTimeZone,
-          ).format;
+          ).formatHour;
 
           // Text string styling
           bool isPast = false;

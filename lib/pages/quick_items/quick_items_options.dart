@@ -45,7 +45,9 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -213,8 +215,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   height: 60,
                   child: Card(
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -342,9 +343,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
             builder: (context, itemsProvider, child) {
               var allQuickItems = <Widget>[];
               for (var item in itemsProvider.fullQuickItems) {
-                if (item.name
-                    .toLowerCase()
-                    .contains(_itemsProvider.searchFilter.toLowerCase())) {
+                if (item.name.toLowerCase().contains(_itemsProvider.searchFilter.toLowerCase())) {
                   allQuickItems.add(
                     // Don't show those that are active
                     !item.active
@@ -355,8 +354,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                               height: 60,
                               child: Card(
                                 child: Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 8.0),
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
                                   child: Row(
                                     children: [
                                       Padding(
@@ -370,10 +368,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       SizedBox(width: 10),
                                       Flexible(
                                         child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Flexible(
                                               child: Row(
@@ -381,8 +377,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                                   Flexible(
                                                     child: Text(
                                                       item.name,
-                                                      style: TextStyle(
-                                                          fontSize: 13),
+                                                      style: TextStyle(fontSize: 13),
                                                     ),
                                                   ),
                                                 ],
@@ -398,8 +393,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       GestureDetector(
                                         onTap: () {
                                           BotToast.showText(
-                                            text:
-                                                '${item.name}\n\n${item.description}\n\n'
+                                            text: '${item.name}\n\n${item.description}\n\n'
                                                 'You have ${item.inventory} in your inventory',
                                             textStyle: TextStyle(
                                               fontSize: 14,
@@ -425,12 +419,10 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                                   item.visible = false;
                                                 });
 
-                                                await Future.delayed(Duration(
-                                                    milliseconds: 300));
+                                                await Future.delayed(Duration(milliseconds: 300));
 
                                                 setState(() {
-                                                  itemsProvider
-                                                      .activateQuickItem(item);
+                                                  itemsProvider.activateQuickItem(item);
                                                 });
 
                                                 // Reset visibility after animation
@@ -438,8 +430,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               },
                                         child: Text(
                                           'ADD',
-                                          style: TextStyle(
-                                              color: Colors.green[500]),
+                                          style: TextStyle(color: Colors.green[500]),
                                         ),
                                       ),
                                     ],
@@ -500,15 +491,13 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
                             "This will reset all your quick items and order, "
                             "are you sure?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),

@@ -27,6 +27,7 @@ import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
+import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -41,6 +42,7 @@ import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
+import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 
@@ -78,6 +80,8 @@ class WebViewFull extends StatefulWidget {
 
 class _WebViewFullState extends State<WebViewFull> {
   InAppWebViewController webView;
+  var _initialWebViewOptions = InAppWebViewGroupOptions();
+
   URLRequest _initialUrl;
   String _pageTitle = "";
   String _currentUrl = '';
@@ -102,6 +106,11 @@ class _WebViewFullState extends State<WebViewFull> {
   // way we allow it to trigger again.
   bool _lastTradeCallWasIn = false;
 
+  bool _vaultEnabled = false;
+  bool _vaultPreferencesLoaded = false;
+  bool _vaultIconActive = false;
+  Widget _vaultExpandable = SizedBox.shrink();
+
   var _cityEnabled = false;
   var _cityIconActive = false;
   bool _cityPreferencesLoaded = false;
@@ -124,6 +133,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _quickItemsTriggered = false;
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
+  bool _vaultTriggered = false;
 
   Widget _profileAttackWidget = SizedBox.shrink();
   var _lastProfileVisited = "";
@@ -166,14 +176,26 @@ class _WebViewFullState extends State<WebViewFull> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
 
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
     _pageTitle = widget.customTitle;
 
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
     _findController.addListener(onFindInputTextChange);
+
+    _initialWebViewOptions = InAppWebViewGroupOptions(
+      crossPlatform: InAppWebViewOptions(
+        clearCache: _clearCacheFirstOpportunity,
+        useOnLoadResource: true,
+        // This is deactivated sometimes as it interferes with hospital timer,
+        // company applications, etc. Only activate it following the vault's pattern
+        useShouldInterceptAjaxRequest: false,
+      ),
+      android: AndroidInAppWebViewOptions(
+        useHybridComposition: true,
+      ),
+    );
 
     /*
     _pullToRefreshController = PullToRefreshController(
@@ -269,15 +291,12 @@ class _WebViewFullState extends State<WebViewFull> {
                   shape: Rectangle(spreadRadius: 10),
                   widgetKey: _showOne,
                   child: RelativeBubbleSlideChild(
-                    direction: _settingsProvider.appBarTop
-                        ? AxisDirection.down
-                        : AxisDirection.up,
+                    direction: _settingsProvider.appBarTop ? AxisDirection.down : AxisDirection.up,
                     widget: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SpeechBubble(
-                        nipLocation: _settingsProvider.appBarTop
-                            ? NipLocation.TOP
-                            : NipLocation.BOTTOM,
+                        nipLocation:
+                            _settingsProvider.appBarTop ? NipLocation.TOP : NipLocation.BOTTOM,
                         color: Colors.green[800],
                         child: Padding(
                           padding: EdgeInsets.all(6),
@@ -303,7 +322,9 @@ class _WebViewFullState extends State<WebViewFull> {
   Widget buildScaffold(BuildContext context) {
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : Colors.grey[900]
           : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
@@ -434,9 +455,8 @@ class _WebViewFullState extends State<WebViewFull> {
     }
 
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.white
-          : _themeProvider.background,
+      color:
+          _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.background,
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),
@@ -510,8 +530,7 @@ class _WebViewFullState extends State<WebViewFull> {
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                     ),
-                    child: _settingsProvider.browserRefreshMethod !=
-                            BrowserRefreshSetting.pull
+                    child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
                         ? Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -547,8 +566,7 @@ class _WebViewFullState extends State<WebViewFull> {
                     ? LinearProgressIndicator(
                         value: progress,
                         backgroundColor: Colors.blueGrey[100],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.deepOrange[300]),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
                       )
                     : Container(height: 2),
               )
@@ -601,6 +619,8 @@ class _WebViewFullState extends State<WebViewFull> {
             : SizedBox.shrink(),
         // Trades widget
         _tradesExpandable,
+        // Vault widget
+        _vaultExpandable,
         // City widget
         _cityExpandable,
         // Actual WebView
@@ -612,20 +632,24 @@ class _WebViewFullState extends State<WebViewFull> {
             ),
             // Temporarily deactivated as it is affecting chats
             //pullToRefreshController: _pullToRefreshController,
-            initialOptions: InAppWebViewGroupOptions(
-              crossPlatform: InAppWebViewOptions(
-                clearCache: _clearCacheFirstOpportunity,
-                useOnLoadResource: true,
-                // This is deactivated as it interferes with hospital timer company applications, etc.
-                //useShouldInterceptAjaxRequest: true,
-              ),
-              android: AndroidInAppWebViewOptions(
-                useHybridComposition: true,
-              ),
-            ),
-            /*
-            shouldInterceptAjaxRequest:
-                (InAppWebViewController c, AjaxRequest x) async {
+            initialOptions: _initialWebViewOptions,
+            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+              // VAULT EVENTS
+              if (_vaultTriggered) {
+                if (x.data.toString().contains("step=vaultProperty&withdraw") ||
+                    x.data.toString().contains("step=vaultProperty&deposit")) {
+                  // Wait a couple of seconds to let the html load
+                  Future.delayed(Duration(seconds: 2)).then((value) async {
+                    // Reset _vaultTriggered so that we can call _assessVault() again
+                    _reassessVault();
+                  });
+                }
+              }
+
+              // MAIN AJAX REQUEST RETURN
+              return x;
+
+              /*
               // This will intercept ajax calls performed when the bazaar reached 100 items
               // and needs to be reloaded, so that we can remove and add again the fill buttons
               if (x == null) return x;
@@ -636,17 +660,13 @@ class _WebViewFullState extends State<WebViewFull> {
                   x.url.contains('inventory.php') &&
                   _bazaarActive &&
                   _bazaarFillActive) {
-                webView.evaluateJavascript(
-                    source: removeBazaarFillButtonsJS());
-                Future.delayed(const Duration(seconds: 2))
-                    .then((value) {
-                  webView.evaluateJavascript(
-                      source: addBazaarFillButtonsJS());
+                webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                Future.delayed(const Duration(seconds: 2)).then((value) {
+                  webView.evaluateJavascript(source: addBazaarFillButtonsJS());
                 });
               }
-              return x;
+              */
             },
-            */
             onWebViewCreated: (c) {
               webView = c;
             },
@@ -729,6 +749,16 @@ class _WebViewFullState extends State<WebViewFull> {
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
                 _assessTrades(document, pageTitle);
               }
+
+              // Properties (vault)
+              if (resource.url.path.contains("properties")) {
+                _currentUrl = (await webView.getUrl()).toString();
+                var html = await webView.getHtml();
+                var document = parse(html);
+                var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                _assessVault(doc: document, pageTitle: pageTitle);
+              }
+
               return;
             },
             onConsoleMessage: (controller, consoleMessage) async {
@@ -787,8 +817,7 @@ class _WebViewFullState extends State<WebViewFull> {
     var intColor = Color(_settingsProvider.highlightColor);
     var background =
         'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    var senderColor =
-        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    var senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
     String hlMap =
         '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
@@ -843,9 +872,7 @@ class _WebViewFullState extends State<WebViewFull> {
                             border: InputBorder.none,
                             hintText: "What are you looking for?",
                             hintStyle: TextStyle(
-                                fontStyle: FontStyle.italic,
-                                color: Colors.grey[300],
-                                fontSize: 12),
+                                fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
                           ),
                           style: TextStyle(
                             color: Colors.white,
@@ -900,9 +927,7 @@ class _WebViewFullState extends State<WebViewFull> {
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         brightness: Brightness.dark,
         leading: IconButton(
-            icon: _backButtonPopsContext
-                ? Icon(Icons.close)
-                : Icon(Icons.arrow_back_ios),
+            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
@@ -954,13 +979,13 @@ class _WebViewFullState extends State<WebViewFull> {
           _quickItemsMenuIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
+          _vaultOptionsIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
           _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _settingsProvider.browserRefreshMethod !=
-                    BrowserRefreshSetting.pull
+            child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
                 ? Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -1071,6 +1096,7 @@ class _WebViewFullState extends State<WebViewFull> {
     bool getCrimes = false;
     bool getCity = false;
     bool getTrades = false;
+    bool getVault = false;
     bool getProfile = false;
     bool getAttack = false;
 
@@ -1098,12 +1124,17 @@ class _WebViewFullState extends State<WebViewFull> {
       getTrades = true;
     }
 
+    if (!_currentUrl.contains("properties.php") && _vaultTriggered) {
+      // This is different to the others, here we call only so that properties is deactivated
+      anySectionTriggered = true;
+      getVault = true;
+    }
+
     if (_settingsProvider.extraPlayerInformation) {
       var profileUrl = 'torn.com/profiles.php?XID=';
       if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
           (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
-          (_currentUrl.contains(profileUrl) &&
-              _currentUrl != _lastProfileVisited)) {
+          (_currentUrl.contains(profileUrl) && _currentUrl != _lastProfileVisited)) {
         anySectionTriggered = true;
         getProfile = true;
       }
@@ -1111,8 +1142,7 @@ class _WebViewFullState extends State<WebViewFull> {
       var attackUrl = 'loader.php?sid=attack&user2ID=';
       if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
           (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
-          (_currentUrl.contains(attackUrl) &&
-              _currentUrl != _lastProfileVisited)) {
+          (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
         anySectionTriggered = true;
         getAttack = true;
       }
@@ -1129,6 +1159,7 @@ class _WebViewFullState extends State<WebViewFull> {
       if (getCrimes) _assessCrimes(pageTitle);
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
+      if (getVault) _assessVault(doc: doc, pageTitle: pageTitle);
       if (getProfile) _assessProfileAttack();
       if (getAttack) _assessProfileAttack();
     }
@@ -1137,11 +1168,20 @@ class _WebViewFullState extends State<WebViewFull> {
   void _resetSectionsWithWidgets() {
     if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
+      _quickItemsTriggered = false;
+      _vaultTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
+    } else if (_currentUrl.contains('properties.php') && _vaultTriggered) {
+      _crimesTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
@@ -1149,32 +1189,35 @@ class _WebViewFullState extends State<WebViewFull> {
       _attackTriggered = false;
     } else if (_currentUrl.contains('city.php') && _cityTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains("trade.php") && _tradesTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
-    } else if (_currentUrl.contains("torn.com/profiles.php?XID=") &&
-        _profileTriggered) {
+    } else if (_currentUrl.contains("torn.com/profiles.php?XID=") && _profileTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
       _cityTriggered = false;
       _attackTriggered = false;
-    } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") &&
-        _attackTriggered) {
+    } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") && _attackTriggered) {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
       _cityTriggered = false;
       _profileTriggered = false;
     } else {
       _crimesTriggered = false;
+      _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
@@ -1186,8 +1229,7 @@ class _WebViewFullState extends State<WebViewFull> {
   void _assessBackButtonBehaviour() async {
     // If we are NOT moving to a place with a vault, we show an X and close upon button press
     if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
-        !_currentUrl.contains(
-            'factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
+        !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
         !_currentUrl.contains('companies.php#/option=funds')) {
       _backButtonPopsContext = true;
     }
@@ -1197,9 +1239,7 @@ class _WebViewFullState extends State<WebViewFull> {
       var history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
       if (history.currentIndex > 0) {
-        if (history.list[history.currentIndex - 1].url
-            .toString()
-            .contains('trade.php')) {
+        if (history.list[history.currentIndex - 1].url.toString().contains('trade.php')) {
           _backButtonPopsContext = false;
         }
       }
@@ -1297,16 +1337,11 @@ class _WebViewFullState extends State<WebViewFull> {
         RegExp expId = new RegExp(r"[0-9]+");
         for (var el in elements) {
           var stockItem = ForeignStockOutItem();
-          stockItem.id =
-              int.parse(expId.firstMatch(el.querySelector('[id^=item]').id)[0]);
-          stockItem.quantity = int.parse(el
-              .querySelector(".stck-amount")
-              .innerHtml
-              .replaceAll(RegExp(r"[^0-9]"), ""));
-          stockItem.cost = int.parse(el
-              .querySelector(".c-price")
-              .innerHtml
-              .replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.id = int.parse(expId.firstMatch(el.querySelector('[id^=item]').id)[0]);
+          stockItem.quantity = int.parse(
+              el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.cost =
+              int.parse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
           stockModel.items.add(stockItem);
         }
 
@@ -1474,8 +1509,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // Check that we are in Trades, but also inside an existing trade
     // (step=view) or just created one (step=initiateTrade)
     //var pageTitle = (await _getPageTitle(document)).toLowerCase();
-    var easyUrl =
-        _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+    var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
       if (mounted) {
@@ -1484,8 +1518,7 @@ class _WebViewFullState extends State<WebViewFull> {
         });
       }
       _lastTradeCallWasIn = true;
-      if (!easyUrl[0].contains('step=initiateTrade') &&
-          !easyUrl[0].contains('step=view')) {
+      if (!easyUrl[0].contains('step=initiateTrade') && !easyUrl[0].contains('step=view')) {
         if (_tradesFullActive) {
           _toggleTradesWidget(active: false);
         }
@@ -1531,47 +1564,32 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Because only the frame reloads, if we can't find anything
     // we'll wait 1 second, get the html again and query again
-    var totalFinds = document.querySelectorAll(
-        ".color1 .left , .color2 .left , .color1 .right , .color2 .right");
+    var totalFinds = document
+        .querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
 
     try {
       if (totalFinds.length == 0) {
         await Future.delayed(const Duration(seconds: 1));
         var updatedHtml = await webView.getHtml();
         var updatedDoc = parse(updatedHtml);
-        leftMoneyElements =
-            updatedDoc.querySelectorAll("#trade-container .left .color1 .name");
-        leftItemsElements =
-            updatedDoc.querySelectorAll("#trade-container .left .color2 .name");
-        leftPropertyElements =
-            updatedDoc.querySelectorAll("#trade-container .left .color3 .name");
-        leftSharesElements =
-            updatedDoc.querySelectorAll("#trade-container .left .color4 .name");
-        rightMoneyElements = updatedDoc
-            .querySelectorAll("#trade-container .right .color1 .name");
-        rightItemsElements = updatedDoc
-            .querySelectorAll("#trade-container .right .color2 .name");
-        rightPropertyElements = updatedDoc
-            .querySelectorAll("#trade-container .right .color3 .name");
-        rightSharesElements = updatedDoc
-            .querySelectorAll("#trade-container .right .color4 .name");
-      } else {
-        leftMoneyElements =
-            document.querySelectorAll("#trade-container .left .color1 .name");
-        leftItemsElements =
-            document.querySelectorAll("#trade-container .left .color2 .name");
-        leftPropertyElements =
-            document.querySelectorAll("#trade-container .left .color3 .name");
-        leftSharesElements =
-            document.querySelectorAll("#trade-container .left .color4 .name");
-        rightMoneyElements =
-            document.querySelectorAll("#trade-container .right .color1 .name");
-        rightItemsElements =
-            document.querySelectorAll("#trade-container .right .color2 .name");
+        leftMoneyElements = updatedDoc.querySelectorAll("#trade-container .left .color1 .name");
+        leftItemsElements = updatedDoc.querySelectorAll("#trade-container .left .color2 .name");
+        leftPropertyElements = updatedDoc.querySelectorAll("#trade-container .left .color3 .name");
+        leftSharesElements = updatedDoc.querySelectorAll("#trade-container .left .color4 .name");
+        rightMoneyElements = updatedDoc.querySelectorAll("#trade-container .right .color1 .name");
+        rightItemsElements = updatedDoc.querySelectorAll("#trade-container .right .color2 .name");
         rightPropertyElements =
-            document.querySelectorAll("#trade-container .right .color3 .name");
-        rightSharesElements =
-            document.querySelectorAll("#trade-container .right .color4 .name");
+            updatedDoc.querySelectorAll("#trade-container .right .color3 .name");
+        rightSharesElements = updatedDoc.querySelectorAll("#trade-container .right .color4 .name");
+      } else {
+        leftMoneyElements = document.querySelectorAll("#trade-container .left .color1 .name");
+        leftItemsElements = document.querySelectorAll("#trade-container .left .color2 .name");
+        leftPropertyElements = document.querySelectorAll("#trade-container .left .color3 .name");
+        leftSharesElements = document.querySelectorAll("#trade-container .left .color4 .name");
+        rightMoneyElements = document.querySelectorAll("#trade-container .right .color1 .name");
+        rightItemsElements = document.querySelectorAll("#trade-container .right .color2 .name");
+        rightPropertyElements = document.querySelectorAll("#trade-container .right .color3 .name");
+        rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
       }
     } catch (e) {
       return;
@@ -1660,8 +1678,7 @@ class _WebViewFullState extends State<WebViewFull> {
       case "Personal vault":
         webView.loadUrl(
           urlRequest: URLRequest(
-            url: Uri.parse(
-                "https://www.torn.com/properties.php#/p=options&tab=vault"),
+            url: Uri.parse("https://www.torn.com/properties.php#/p=options&tab=vault"),
           ),
         );
         break;
@@ -1745,6 +1762,109 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
+  // PROPERTIES
+  Future _assessVault({dom.Document doc, String pageTitle = ""}) async {
+    if (!pageTitle.contains('properties')) {
+      setState(() {
+        _vaultIconActive = false;
+        _vaultExpandable = SizedBox.shrink();
+      });
+      // Restore options to deactivate ajax intercept
+      await webView.setOptions(options: _initialWebViewOptions);
+      return;
+    }
+
+    setState(() {
+      _vaultIconActive = true;
+    });
+
+    // Set options to allow ajax interception (to detect vault operations)
+    webView.setOptions(
+      options: InAppWebViewGroupOptions(
+        crossPlatform: InAppWebViewOptions(
+          clearCache: _clearCacheFirstOpportunity,
+          useOnLoadResource: true,
+          useShouldInterceptAjaxRequest: true,
+        ),
+        android: AndroidInAppWebViewOptions(
+          useHybridComposition: true,
+        ),
+      ),
+    );
+
+    // We only get this once and if we are inside the vault
+    // It's also in the callback from vault options
+    if (!_vaultPreferencesLoaded) {
+      await _reassessVault();
+      _vaultPreferencesLoaded = true;
+    }
+
+    if (!_vaultEnabled) {
+      setState(() {
+        _vaultExpandable = SizedBox.shrink();
+      });
+      return;
+    }
+
+    // Stops any successive calls
+    if (_vaultTriggered) return;
+    _vaultTriggered = true;
+
+    // Activate the vault widget itself
+    var allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
+    setState(() {
+      _vaultExpandable = VaultWidget(
+        key: UniqueKey(),
+        vaultHtml: allTransactions,
+        playerId: _userProvider.basic.playerId,
+        userProvider: _userProvider,
+      );
+    });
+  }
+
+  Widget _vaultOptionsIcon() {
+    if (_vaultIconActive) {
+      return OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return VaultOptionsPage(
+            callback: _reassessVault,
+          );
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(MdiIcons.safeSquareOutline),
+            ),
+          );
+        },
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+  Future _reassessVault() async {
+    _vaultEnabled = await Prefs().getVaultEnabled();
+    // Reset _vaultTriggered so that we can call _assessVault() again
+    _vaultTriggered = false;
+    var html = await webView.getHtml();
+    var document = parse(html);
+    var pageTitle = (await _getPageTitle(document)).toLowerCase();
+    _assessVault(doc: document, pageTitle: pageTitle);
+  }
+
   // CITY
   Future _assessCity(dom.Document document, String pageTitle) async {
     //var pageTitle = (await _getPageTitle(document)).toLowerCase();
@@ -1806,8 +1926,7 @@ class _WebViewFullState extends State<WebViewFull> {
     var mapItemsList = <String>[];
     for (var mapFind in query) {
       mapFind.attributes.forEach((key, value) {
-        if (key == "src" &&
-            value.contains("https://www.torn.com/images/items/")) {
+        if (key == "src" && value.contains("https://www.torn.com/images/items/")) {
           mapItemsList.add(value.split("items/")[1].split("/")[0]);
         }
       });
@@ -1815,8 +1934,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      dynamic apiResponse =
-          await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
+      dynamic apiResponse = await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
         var tornItems = apiResponse.items.values.toList();
         var itemsFound = <Item>[];
@@ -1911,16 +2029,12 @@ class _WebViewFullState extends State<WebViewFull> {
       return TextButton(
         onPressed: () async {
           _bazaarFillActive
-              ? await webView.evaluateJavascript(
-                  source: removeBazaarFillButtonsJS())
-              : await webView.evaluateJavascript(
-                  source: addBazaarFillButtonsJS());
+              ? await webView.evaluateJavascript(source: removeBazaarFillButtonsJS())
+              : await webView.evaluateJavascript(source: addBazaarFillButtonsJS());
 
           if (mounted) {
             setState(() {
-              _bazaarFillActive
-                  ? _bazaarFillActive = false
-                  : _bazaarFillActive = true;
+              _bazaarFillActive ? _bazaarFillActive = false : _bazaarFillActive = true;
             });
           }
         },
@@ -1988,8 +2102,7 @@ class _WebViewFullState extends State<WebViewFull> {
             return SizedBox(
               height: 20,
               width: 20,
-              child: Image.asset('images/icons/quick_items.png',
-                  color: Colors.white),
+              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
             );
           },
         ),

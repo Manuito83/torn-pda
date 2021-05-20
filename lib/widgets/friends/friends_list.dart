@@ -16,9 +16,15 @@ class FriendsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: getChildrenFriends(context),
-    );
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      return ListView(children: getChildrenFriends(context));
+    } else {
+      return ListView(
+        children: getChildrenFriends(context),
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+      );
+    }
   }
 
   List<Widget> getChildrenFriends(BuildContext _) {

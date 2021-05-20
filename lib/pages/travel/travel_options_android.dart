@@ -46,7 +46,9 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
       onWillPop: _willPopCallback,
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? Colors.blueGrey
+            ? MediaQuery.of(context).orientation == Orientation.portrait
+                ? Colors.blueGrey
+                : Colors.grey[900]
             : Colors.grey[900],
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
@@ -55,9 +57,9 @@ class _TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
                 : null,
             body: Builder(
               builder: (BuildContext context) {

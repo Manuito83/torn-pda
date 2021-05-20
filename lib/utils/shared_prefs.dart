@@ -27,6 +27,7 @@ class Prefs {
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
+  final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
@@ -113,6 +114,9 @@ class Prefs {
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
+  // Vault sharing
+  final String _kVaultShareEnabled = "pda_vaultShareEnabled";
+  final String _kVaultShareCurrent = "pda_vaultShareCurrent";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -474,6 +478,20 @@ class Prefs {
   Future<bool> setAppBarPosition(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAppBarPosition, value);
+  }
+
+  /// ----------------------------
+  /// Methods for screen rotation
+  /// ----------------------------
+
+  Future<bool> getAllowScreenRotation() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAllowScreenRotation) ?? false;
+  }
+
+  Future<bool> setAllowScreenRotation(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAllowScreenRotation, value);
   }
 
   /// ----------------------------
@@ -1310,4 +1328,29 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kOCrimeLastKnown, value);
   }
+
+  /// -----------------------------
+  /// METHODS FOR VAULT SHARE
+  /// -----------------------------
+  Future<bool> getVaultEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kVaultShareEnabled) ?? true;
+  }
+
+  Future<bool> setVaultEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kVaultShareEnabled, value);
+  }
+
+  Future<String> getVaultShareCurrent() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kVaultShareCurrent) ?? "";
+  }
+
+  Future<bool> setVaultShareCurrent(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kVaultShareCurrent, value);
+  }
+
+
 }

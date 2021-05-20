@@ -16,9 +16,15 @@ class TargetsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: getChildrenTargets(context),
-    );
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      return ListView(children: getChildrenTargets(context));
+    } else {
+      return ListView(
+        children: getChildrenTargets(context),
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+      );
+    }
   }
 
   List<Widget> getChildrenTargets(BuildContext _) {

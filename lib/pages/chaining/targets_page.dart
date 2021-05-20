@@ -51,8 +51,7 @@ class TargetsPage extends StatefulWidget {
   final String userKey;
   final Function tabCallback;
 
-  const TargetsPage(
-      {Key key, @required this.userKey, @required this.tabCallback})
+  const TargetsPage({Key key, @required this.userKey, @required this.tabCallback})
       : super(key: key);
 
   @override
@@ -129,114 +128,117 @@ class _TargetsPageState extends State<TargetsPage> {
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-        child: Column(
-          children: <Widget>[
-            SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                ButtonTheme(
-                  minWidth: 1.0,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      elevation: 2,
-                      primary: _themeProvider.background,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(width: 2, color: Colors.blueGrey),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      color: _themeProvider.mainText,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      _showAddDialog(context);
-                    },
-                  ),
-                ),
-                SizedBox(width: 15),
-                ButtonTheme(
-                  minWidth: 1.0,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      elevation: 2,
-                      primary: _themeProvider.background,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(width: 2, color: Colors.blueGrey),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.refresh,
-                      color: _themeProvider.mainText,
-                      size: 20,
-                    ),
-                    onPressed: () async {
-                      var updateResult =
-                          await _targetsProvider.updateAllTargets();
-                      if (mounted) {
-                        if (updateResult.success) {
-                          BotToast.showText(
-                            text: updateResult.numberSuccessful > 0
-                                ? 'Successfully updated '
-                                    '${updateResult.numberSuccessful} targets!'
-                                : 'No targets to update!',
-                            textStyle: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: updateResult.numberSuccessful > 0
-                                ? Colors.green
-                                : Colors.red,
-                            duration: Duration(seconds: 3),
-                            contentPadding: EdgeInsets.all(10),
-                          );
-                        } else {
-                          BotToast.showText(
-                            text:
-                                'Update with errors: ${updateResult.numberErrors} errors '
-                                'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                                'total targets!',
-                            textStyle: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: Colors.red,
-                            duration: Duration(seconds: 3),
-                            contentPadding: EdgeInsets.all(10),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-            ChainTimer(
-              userKey: widget.userKey,
-              alwaysDarkBackground: false,
-              chainTimerParent: ChainTimerParent.targets,
-            ),
-            if (_targetsProvider.currentColorFilterOut.length > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  "NOTE: there is an active color filter!",
-                  style: TextStyle(color: Colors.orange[800], fontSize: 12),
-                ),
+        child: MediaQuery.of(context).orientation == Orientation.portrait
+            ? _mainColumn()
+            : SingleChildScrollView(
+                child: _mainColumn(),
               ),
-            Flexible(
-              child: Consumer<TargetsProvider>(
-                builder: (context, targetsModel, child) => TargetsList(
-                  targets: targetsModel.allTargets,
+      ),
+    );
+  }
+
+  _mainColumn() {
+    return Column(
+      children: <Widget>[
+        SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ButtonTheme(
+              minWidth: 1.0,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 2,
+                  primary: _themeProvider.background,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(width: 2, color: Colors.blueGrey),
+                  ),
                 ),
+                child: Icon(
+                  Icons.add,
+                  color: _themeProvider.mainText,
+                  size: 20,
+                ),
+                onPressed: () {
+                  _showAddDialog(context);
+                },
+              ),
+            ),
+            SizedBox(width: 15),
+            ButtonTheme(
+              minWidth: 1.0,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 2,
+                  primary: _themeProvider.background,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(width: 2, color: Colors.blueGrey),
+                  ),
+                ),
+                child: Icon(
+                  Icons.refresh,
+                  color: _themeProvider.mainText,
+                  size: 20,
+                ),
+                onPressed: () async {
+                  var updateResult = await _targetsProvider.updateAllTargets();
+                  if (mounted) {
+                    if (updateResult.success) {
+                      BotToast.showText(
+                        text: updateResult.numberSuccessful > 0
+                            ? 'Successfully updated '
+                                '${updateResult.numberSuccessful} targets!'
+                            : 'No targets to update!',
+                        textStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
+                        duration: Duration(seconds: 3),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+                    } else {
+                      BotToast.showText(
+                        text: 'Update with errors: ${updateResult.numberErrors} errors '
+                            'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                            'total targets!',
+                        textStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+                    }
+                  }
+                },
               ),
             ),
           ],
         ),
-      ),
+        ChainTimer(
+          userKey: widget.userKey,
+          alwaysDarkBackground: false,
+          chainTimerParent: ChainTimerParent.targets,
+        ),
+        if (_targetsProvider.currentColorFilterOut.length > 0)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              "NOTE: there is an active color filter!",
+              style: TextStyle(color: Colors.orange[800], fontSize: 12),
+            ),
+          ),
+        Consumer<TargetsProvider>(
+          builder: (context, targetsModel, child) =>
+              MediaQuery.of(context).orientation == Orientation.portrait
+                  ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
+                  : TargetsList(targets: targetsModel.allTargets),
+        ),
+      ],
     );
   }
 
@@ -248,8 +250,7 @@ class _TargetsPageState extends State<TargetsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -327,19 +328,15 @@ class _TargetsPageState extends State<TargetsPage> {
                       setState(() {
                         _yataButtonInProgress = false;
                       });
-                      var yataTargets =
-                          await _targetsProvider.getTargetsFromYata();
-                      if (!yataTargets.errorConnection &&
-                          !yataTargets.errorPlayer) {
+                      var yataTargets = await _targetsProvider.getTargetsFromYata();
+                      if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
                         _openYataDialog(yataTargets);
                       } else {
                         String error;
                         if (yataTargets.errorPlayer) {
-                          error =
-                              "We could not find your user in Yata, do you have an account?";
+                          error = "We could not find your user in Yata, do you have an account?";
                         } else {
-                          error =
-                              "There was an error contacting YATA, please try again later!";
+                          error = "There was an error contacting YATA, please try again later!";
                         }
                         BotToast.showText(
                           text: error,
@@ -452,8 +449,7 @@ class _TargetsPageState extends State<TargetsPage> {
                       child: Form(
                         key: _addFormKey,
                         child: Column(
-                          mainAxisSize:
-                              MainAxisSize.min, // To make the card compact
+                          mainAxisSize: MainAxisSize.min, // To make the card compact
                           children: <Widget>[
                             TextFormField(
                               style: TextStyle(fontSize: 14),
@@ -498,13 +494,11 @@ class _TargetsPageState extends State<TargetsPage> {
                                       AddTargetResult tryAddTarget =
                                           await targetsProvider.addTarget(
                                         targetId: inputId,
-                                        attacks:
-                                            await _targetsProvider.getAttacks(),
+                                        attacks: await _targetsProvider.getAttacks(),
                                       );
                                       if (tryAddTarget.success) {
                                         BotToast.showText(
-                                          text:
-                                              'Added ${tryAddTarget.targetName} '
+                                          text: 'Added ${tryAddTarget.targetName} '
                                               '[${tryAddTarget.targetId}]',
                                           textStyle: TextStyle(
                                             fontSize: 14,
@@ -572,8 +566,7 @@ class _TargetsPageState extends State<TargetsPage> {
   }
 
   void onSearchInputTextChange() {
-    Provider.of<TargetsProvider>(context, listen: false)
-        .setFilterText(_searchController.text);
+    Provider.of<TargetsProvider>(context, listen: false).setFilterText(_searchController.text);
   }
 
   void _selectSortPopup(TargetSort choice) {
@@ -792,8 +785,7 @@ class _TargetsPageState extends State<TargetsPage> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
@@ -806,16 +798,14 @@ class _TargetsPageState extends State<TargetsPage> {
                           child: Text(
                             "This will wipe all your targets (consider performing a backup or "
                             "exporting to YATA).",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 8),
