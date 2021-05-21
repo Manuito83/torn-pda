@@ -87,7 +87,8 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
   }
 
   Widget _setupContainer() {
-    if (widget.vaultStatus.total == null) {
+    // Check for null both the current total and last transaction (in case it can't be detected)
+    if (widget.vaultStatus.total == null || widget.lastTransaction.balance == null) {
       return Padding(
         padding: const EdgeInsets.all(20),
         child: Row(

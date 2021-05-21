@@ -110,6 +110,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _vaultPreferencesLoaded = false;
   bool _vaultIconActive = false;
   Widget _vaultExpandable = SizedBox.shrink();
+  DateTime _vaultTriggeredTime = DateTime.now();
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -188,8 +189,10 @@ class _WebViewFullState extends State<WebViewFull> {
       crossPlatform: InAppWebViewOptions(
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
-        // This is deactivated sometimes as it interferes with hospital timer,
-        // company applications, etc. Only activate it following the vault's pattern
+
+        /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
+        /// hospital timer, company applications, etc. There is a but on iOS if we activate it
+        /// and deactivate it dynamically, where onLoadResource stops triggering!
         useShouldInterceptAjaxRequest: false,
       ),
       android: AndroidInAppWebViewOptions(
@@ -633,42 +636,14 @@ class _WebViewFullState extends State<WebViewFull> {
             // Temporarily deactivated as it is affecting chats
             //pullToRefreshController: _pullToRefreshController,
             initialOptions: _initialWebViewOptions,
-            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-              // VAULT EVENTS
-              if (_vaultTriggered) {
-                if (x.data.toString().contains("step=vaultProperty&withdraw") ||
-                    x.data.toString().contains("step=vaultProperty&deposit")) {
-                  // Wait a couple of seconds to let the html load
-                  Future.delayed(Duration(seconds: 2)).then((value) async {
-                    // Reset _vaultTriggered so that we can call _assessVault() again
-                    _reassessVault();
-                  });
-                }
-              }
-
-              // MAIN AJAX REQUEST RETURN
-              return x;
-
-              /*
-              // This will intercept ajax calls performed when the bazaar reached 100 items
-              // and needs to be reloaded, so that we can remove and add again the fill buttons
-              if (x == null) return x;
-              if (x.data == null) return x;
-              if (x.url == null) return x;
-
-              if (x.data.contains("step=getList&type=All&start=") &&
-                  x.url.contains('inventory.php') &&
-                  _bazaarActive &&
-                  _bazaarFillActive) {
-                webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                Future.delayed(const Duration(seconds: 2)).then((value) {
-                  webView.evaluateJavascript(source: addBazaarFillButtonsJS());
-                });
-              }
-              */
-            },
+            // EVENTS
             onWebViewCreated: (c) {
               webView = c;
+            },
+            onCreateWindow: (c, request) {
+              // Allows IOS to open links with target=_blank
+              webView.loadUrl(urlRequest: request.request);
+              return;
             },
             onLoadStart: (c, uri) async {
               // Userscripts
@@ -721,7 +696,7 @@ class _WebViewFullState extends State<WebViewFull> {
               var html = await webView.getHtml();
               var document = parse(html);
               // Force to show title
-              _getPageTitle(document, showTitle: true);
+              await (_getPageTitle(document, showTitle: true));
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -730,11 +705,6 @@ class _WebViewFullState extends State<WebViewFull> {
                 webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                 _scrollAfterLoad = false;
               }
-            },
-            // Allows IOS to open links with target=_blank
-            onCreateWindow: (c, request) {
-              webView.loadUrl(urlRequest: request.request);
-              return;
             },
             onLoadResource: (c, resource) async {
               /// TRADES
@@ -750,21 +720,71 @@ class _WebViewFullState extends State<WebViewFull> {
                 _assessTrades(document, pageTitle);
               }
 
-              // Properties (vault)
+              // Properties (vault) for initialisation and live transactions
               if (resource.url.path.contains("properties")) {
-                _currentUrl = (await webView.getUrl()).toString();
-                var html = await webView.getHtml();
-                var document = parse(html);
-                var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                _assessVault(doc: document, pageTitle: pageTitle);
-              }
+                if (!_vaultTriggered) {
+                  // If vault is not triggered, we are accessing the vault for the first time
 
+                  // Wait a couple of seconds to let the html load
+                  _currentUrl = (await webView.getUrl()).toString();
+                  var html = await webView.getHtml();
+                  var document = parse(html);
+                  var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                  _assessVault(doc: document, pageTitle: pageTitle);
+                } else {
+                  // If it's triggered, it's because we are inside and we performed an operation
+                  // (deposit or withdrawal). In this case, we need to give a couple of seconds
+                  // so that the new html elements appear and we can analyse them
+
+                  // Wait a couple of seconds to let the html load
+                  Future.delayed(Duration(seconds: 2)).then((value) async {
+                    // Reset _vaultTriggered so that we can call _assessVault() again
+                    _reassessVault();
+                  });
+                }
+              }
               return;
             },
             onConsoleMessage: (controller, consoleMessage) async {
               if (consoleMessage.message != "")
                 print("TORN PDA JS CONSOLE: " + consoleMessage.message);
             },
+            /*
+            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+              // VAULT EVENTS
+              if (_vaultTriggered) {
+                if (x.data.toString().contains("step=vaultProperty&withdraw") ||
+                    x.data.toString().contains("step=vaultProperty&deposit")) {
+                  // Wait a couple of seconds to let the html load
+                  Future.delayed(Duration(seconds: 2)).then((value) async {
+                    // Reset _vaultTriggered so that we can call _assessVault() again
+                    _reassessVault();
+                  });
+                }
+              }
+
+              /*
+              // This will intercept ajax calls performed when the bazaar reached 100 items
+              // and needs to be reloaded, so that we can remove and add again the fill buttons
+              if (x == null) return x;
+              if (x.data == null) return x;
+              if (x.url == null) return x;
+
+              if (x.data.contains("step=getList&type=All&start=") &&
+                  x.url.contains('inventory.php') &&
+                  _bazaarActive &&
+                  _bazaarFillActive) {
+                webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                Future.delayed(const Duration(seconds: 2)).then((value) {
+                  webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+                });
+              }
+              */
+
+              // MAIN AJAX REQUEST RETURN
+              return x;
+            },
+            */
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
@@ -1764,33 +1784,17 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // PROPERTIES
   Future _assessVault({dom.Document doc, String pageTitle = ""}) async {
-    if (!pageTitle.contains('properties')) {
+    if (!pageTitle.toLowerCase().contains('properties')) {
       setState(() {
         _vaultIconActive = false;
         _vaultExpandable = SizedBox.shrink();
       });
-      // Restore options to deactivate ajax intercept
-      await webView.setOptions(options: _initialWebViewOptions);
       return;
     }
 
     setState(() {
       _vaultIconActive = true;
     });
-
-    // Set options to allow ajax interception (to detect vault operations)
-    webView.setOptions(
-      options: InAppWebViewGroupOptions(
-        crossPlatform: InAppWebViewOptions(
-          clearCache: _clearCacheFirstOpportunity,
-          useOnLoadResource: true,
-          useShouldInterceptAjaxRequest: true,
-        ),
-        android: AndroidInAppWebViewOptions(
-          useHybridComposition: true,
-        ),
-      ),
-    );
 
     // We only get this once and if we are inside the vault
     // It's also in the callback from vault options
@@ -1808,10 +1812,31 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Stops any successive calls
     if (_vaultTriggered) return;
-    _vaultTriggered = true;
 
-    // Activate the vault widget itself
-    var allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
+    // Prevents double activation because onLoadResource triggers twice when the vault loads for the
+    // first time, with one activation coming from reassessVault() and resetting _vaultTriggered
+    if (DateTime.now().difference(_vaultTriggeredTime).inSeconds < 3) return;
+
+    _vaultTriggered = true;
+    _vaultTriggeredTime = DateTime.now();
+
+    // Android should get all elements every time, as it takes 100ms to load. iOS loads at the
+    // very beginning and might need a few tries. So we give 5 seconds.
+    List<dom.Element> allTransactions;
+    for (var i = 0; i < 10; i++) {
+      if (!mounted) break;
+      allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
+      if (allTransactions.length > 0) {
+        break;
+      } else {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) break;
+        var updatedHtml = await webView.getHtml();
+        doc = parse(updatedHtml);
+      }
+    }
+
+    // Activate the vault widget itself. UniqueKey so that we load a new widget when values change
     setState(() {
       _vaultExpandable = VaultWidget(
         key: UniqueKey(),
