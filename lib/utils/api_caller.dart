@@ -23,6 +23,8 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/property_model.dart';
+import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
+import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
 
 enum ApiType {
@@ -51,6 +53,7 @@ enum ApiSelection {
   factionCrimes,
   friends,
   property,
+  stocks,
 }
 
 class ApiError {
@@ -127,11 +130,11 @@ class TornApiCaller {
   TornApiCaller.factionCrimes(this.apiKey);
   TornApiCaller.friends(this.apiKey, this.queryId);
   TornApiCaller.property(this.apiKey, this.queryId);
+  TornApiCaller.stockmarket(this.apiKey);
 
   Future<dynamic> get getTravel async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.travel)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.travel).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -143,8 +146,7 @@ class TornApiCaller {
 
   Future<dynamic> get getProfileBasic async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownBasic)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownBasic).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -156,8 +158,7 @@ class TornApiCaller {
 
   Future<dynamic> get getProfileExtended async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -169,8 +170,7 @@ class TornApiCaller {
 
   Future<dynamic> get getProfileMisc async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownMisc)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownMisc).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -182,8 +182,7 @@ class TornApiCaller {
 
   Future<dynamic> get getBazaar async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.bazaar)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.bazaar).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -195,8 +194,7 @@ class TornApiCaller {
 
   Future<dynamic> get getOtherProfile async {
     dynamic apiResult;
-    await _apiCall(ApiType.user,
-        prefix: this.queryId, apiSelection: ApiSelection.otherProfile)
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.otherProfile)
         .then((value) {
       apiResult = value;
     });
@@ -209,8 +207,7 @@ class TornApiCaller {
 
   Future<dynamic> get getTarget async {
     dynamic apiResult;
-    await _apiCall(ApiType.user,
-            prefix: this.queryId, apiSelection: ApiSelection.target)
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.target)
         .then((value) {
       apiResult = value;
     });
@@ -223,8 +220,7 @@ class TornApiCaller {
 
   Future<dynamic> get getAttacks async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.attacks)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.attacks).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -236,8 +232,7 @@ class TornApiCaller {
 
   Future<dynamic> get getAttacksFull async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.attacksFull)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.attacksFull).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -249,8 +244,7 @@ class TornApiCaller {
 
   Future<dynamic> get getChainStatus async {
     dynamic apiResult;
-    await _apiCall(ApiType.faction, apiSelection: ApiSelection.chainStatus)
-        .then((value) {
+    await _apiCall(ApiType.faction, apiSelection: ApiSelection.chainStatus).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -282,8 +276,7 @@ class TornApiCaller {
 
   Future<dynamic> get getItems async {
     dynamic apiResult;
-    await _apiCall(ApiType.torn, apiSelection: ApiSelection.items)
-        .then((value) {
+    await _apiCall(ApiType.torn, apiSelection: ApiSelection.items).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -299,8 +292,7 @@ class TornApiCaller {
 
   Future<dynamic> get getInventory async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.inventory)
-        .then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.inventory).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -316,8 +308,7 @@ class TornApiCaller {
 
   Future<dynamic> get getEducation async {
     dynamic apiResult;
-    await _apiCall(ApiType.torn, apiSelection: ApiSelection.education)
-        .then((value) {
+    await _apiCall(ApiType.torn, apiSelection: ApiSelection.education).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -353,8 +344,7 @@ class TornApiCaller {
 
   Future<dynamic> get getFactionCrimes async {
     dynamic apiResult;
-    await _apiCall(ApiType.faction, apiSelection: ApiSelection.factionCrimes)
-        .then((value) {
+    await _apiCall(ApiType.faction, apiSelection: ApiSelection.factionCrimes).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -370,8 +360,7 @@ class TornApiCaller {
 
   Future<dynamic> get getFriends async {
     dynamic apiResult;
-    await _apiCall(ApiType.user,
-            prefix: this.queryId, apiSelection: ApiSelection.friends)
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.friends)
         .then((value) {
       apiResult = value;
     });
@@ -388,8 +377,7 @@ class TornApiCaller {
 
   Future<dynamic> get getProperty async {
     dynamic apiResult;
-    await _apiCall(ApiType.property,
-        prefix: this.queryId, apiSelection: ApiSelection.property)
+    await _apiCall(ApiType.property, prefix: this.queryId, apiSelection: ApiSelection.property)
         .then((value) {
       apiResult = value;
     });
@@ -404,8 +392,41 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> _apiCall(ApiType apiType,
-      {String prefix, ApiSelection apiSelection}) async {
+  Future<dynamic> get getAllStocks async {
+    dynamic apiResult;
+    await _apiCall(ApiType.torn, prefix: this.queryId, apiSelection: ApiSelection.stocks)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return StockMarketModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getUserStocks async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.stocks)
+        .then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return StockMarketUserModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> _apiCall(ApiType apiType, {String prefix, ApiSelection apiSelection}) async {
     String url = 'https://api.torn.com/';
     switch (apiType) {
       case ApiType.user:
@@ -478,6 +499,9 @@ class TornApiCaller {
         break;
       case ApiSelection.property:
         url += '$prefix?selections=property';
+        break;
+      case ApiSelection.stocks:
+        url += '$prefix?selections=stocks';
         break;
     }
     url += '&key=$apiKey&comment=PDA-App';
