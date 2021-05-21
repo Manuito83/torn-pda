@@ -1783,7 +1783,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   // PROPERTIES
-  Future _assessVault({dom.Document doc, String pageTitle = ""}) async {
+  Future _assessVault({dom.Document doc, String pageTitle = "", bool fromReassess = false}) async {
     if (!pageTitle.toLowerCase().contains('properties')) {
       setState(() {
         _vaultIconActive = false;
@@ -1816,7 +1816,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Prevents double activation because onLoadResource triggers twice when the vault loads for the
     // first time, with one activation coming from reassessVault() and resetting _vaultTriggered
-    if (DateTime.now().difference(_vaultTriggeredTime).inSeconds < 3) return;
+    if (fromReassess && DateTime.now().difference(_vaultTriggeredTime).inSeconds < 3) return;
     _vaultTriggeredTime = DateTime.now();
 
     // Android should get all elements every time, as it takes 100ms to load. iOS loads at the
@@ -1886,7 +1886,7 @@ class _WebViewFullState extends State<WebViewFull> {
     var html = await webView.getHtml();
     var document = parse(html);
     var pageTitle = (await _getPageTitle(document)).toLowerCase();
-    _assessVault(doc: document, pageTitle: pageTitle);
+    _assessVault(doc: document, pageTitle: pageTitle, fromReassess: true);
   }
 
   // CITY
