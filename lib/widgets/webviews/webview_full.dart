@@ -1812,12 +1812,11 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Stops any successive calls
     if (_vaultTriggered) return;
+    _vaultTriggered = true;
 
     // Prevents double activation because onLoadResource triggers twice when the vault loads for the
     // first time, with one activation coming from reassessVault() and resetting _vaultTriggered
     if (DateTime.now().difference(_vaultTriggeredTime).inSeconds < 3) return;
-
-    _vaultTriggered = true;
     _vaultTriggeredTime = DateTime.now();
 
     // Android should get all elements every time, as it takes 100ms to load. iOS loads at the
