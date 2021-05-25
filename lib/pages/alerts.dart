@@ -374,7 +374,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) {
-                                        return StockMarketAlertsPage();
+                                        return StockMarketAlertsPage(
+                                          fbUser: _firebaseUserModel,
+                                        );
                                       },
                                     ),
                                   );

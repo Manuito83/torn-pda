@@ -37,6 +37,8 @@ class StockMarketStock {
 
   // State
   int owned = 0;
+  int alertGain;
+  int alertLoss;
 
   int stockId;
   String name;

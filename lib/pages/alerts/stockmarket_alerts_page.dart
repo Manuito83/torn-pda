@@ -2,11 +2,11 @@
 import 'dart:io';
 
 // Flutter imports:
-import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 
@@ -15,9 +15,13 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/alerts/share_pice_card.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
+  final FirebaseUserModel fbUser;
+
+  StockMarketAlertsPage({@required this.fbUser});
+
   @override
   _StockMarketAlertsPageState createState() => _StockMarketAlertsPageState();
 }
@@ -161,68 +165,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
         insideUserStocks = true;
       }
 
-      Widget header = Column(
-        children: [
-          // First Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Text("(${stock.acronym}) ", style: TextStyle(fontSize: 12)),
-                  Text(stock.name, style: TextStyle(fontSize: 12)),
-                ],
-              ),
-              Row(
-                children: [
-                  if (stock.owned == 1)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: Text(
-                        "OWNED",
-                        style: TextStyle(color: Colors.green[700], fontSize: 10),
-                      ),
-                    ),
-                  Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
-                ],
-              ),
-            ],
-          )
-        ],
-      );
-
-      Widget expanded = Padding(
-        padding: EdgeInsets.all(8),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Text("Switches..."),
-                // TODO
-              ],
-            ),
-          ],
-        ),
-      );
-
-      stockCards.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                ),
-                collapsed: null,
-                expanded: expanded,
-                header: header,
-              ),
-            ),
-          ),
-        ),
-      );
+      stockCards.add(SharePriceCard(stock: stock));
     }
 
     return ListView(
