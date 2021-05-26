@@ -125,7 +125,9 @@ class OwnProfileExtended {
       // For some reason this is the only place where this happens if user is idle for some days
       icons: json["icons"] is List<dynamic>
           ? json["icons"] = TornIcons()
-          : json["icons"] = TornIcons.fromJson(json["icons"]),
+          : json["icons"] == null
+              ? null
+              : TornIcons.fromJson(json["icons"]),
     );
   }
 
