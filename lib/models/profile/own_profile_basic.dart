@@ -46,7 +46,7 @@ class OwnProfileBasic {
     this.job,
     this.faction,
     this.married,
-    this.basicicons,
+    this.basicIcons,
     this.states,
     this.lastAction,
     this.strengthInfo,
@@ -90,7 +90,7 @@ class OwnProfileBasic {
   Job job;
   Faction faction;
   Married married;
-  Basicicons basicicons;
+  dynamic basicIcons;
   States states;
   LastAction lastAction;
   List<String> strengthInfo;
@@ -133,7 +133,12 @@ class OwnProfileBasic {
     job: json["job"] == null ? null : Job.fromJson(json["job"]),
     faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
     married: json["married"] == null ? null : Married.fromJson(json["married"]),
-    basicicons: json["basicicons"] == null ? null : Basicicons.fromJson(json["basicicons"]),
+    // If it's List<dynamic>, it's empty [], so we initialise values to null (there is a null check
+    // afterwards in Profile). Otherwise, it's a map that can be generated from the class.
+    // For some reason this is the only place where this happens if user is idle for some days
+    basicIcons: json["basicicons"] is List<dynamic>
+        ? json["basicicons"] = BasicIcons()
+        : json["basicicons"] = BasicIcons.fromJson(json["basicicons"]),
     states: json["states"] == null ? null : States.fromJson(json["states"]),
     lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
     strengthInfo: json["strength_info"] == null ? null : List<String>.from(json["strength_info"].map((x) => x)),
@@ -177,7 +182,7 @@ class OwnProfileBasic {
     "job": job == null ? null : job.toJson(),
     "faction": faction == null ? null : faction.toJson(),
     "married": married == null ? null : married.toJson(),
-    "basicicons": basicicons == null ? null : basicicons.toJson(),
+    "basicicons": basicIcons == null ? null : basicIcons.toJson(),
     "states": states == null ? null : states.toJson(),
     "last_action": lastAction == null ? null : lastAction.toJson(),
     "strength_info": strengthInfo == null ? null : List<dynamic>.from(strengthInfo.map((x) => x)),
@@ -187,8 +192,8 @@ class OwnProfileBasic {
   };
 }
 
-class Basicicons {
-  Basicicons({
+class BasicIcons {
+  BasicIcons({
     this.icon6,
     this.icon4,
     this.icon8,
@@ -202,7 +207,7 @@ class Basicicons {
   String icon27;
   String icon81;
 
-  factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
+  factory BasicIcons.fromJson(Map<String, dynamic> json) => BasicIcons(
     icon6: json["icon6"] == null ? null : json["icon6"],
     icon4: json["icon4"] == null ? null : json["icon4"],
     icon8: json["icon8"] == null ? null : json["icon8"],
