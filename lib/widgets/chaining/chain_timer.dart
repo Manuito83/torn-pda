@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:audioplayers/audio_cache.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -119,7 +119,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
     _tickerDecreaseCount.cancel();
     _tickerCallChainApi.cancel();
     _chainBorderController.dispose();
-    audioCache.clearCache();
+    audioCache.clearAll();
     Wakelock.disable();
     super.dispose();
   }
