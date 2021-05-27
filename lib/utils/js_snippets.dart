@@ -471,96 +471,93 @@ String chatHighlightJS({@required String highlightMap}) {
     
     // Example var highlights = [ { name: "Manuito", highlight: "rgba(124, 169, 0, 0.4)", sender: "rgba(124, 169, 0, 1)" } ];
     var highlights = $highlightMap;
-
+  
     chatsLoaded().then(() => {
-
-    String.prototype.replaceAll = function (text, replace) {
-    let str = this.toString();
-  
-    if (typeof text === "string") {
-      while (str.includes(text)) {
-      str = str.replace(text, replace);
-      }
-    } else if (typeof text === "object") {
-      if (Array.isArray(text)) {
-      for (let t of text) {
-      str = str.replaceAll(t, replace);
-      }
-      }
-    }
-  
-    return str;
-    };
-  
-  
-    if (document.querySelector(".chat-box-wrap_2pTum")) {
-    manipulateChat();
-    }
-  
-    function manipulateChat() {
-    for (let chat of document.querySelectorAll(".chat-box-content_3wOdX")) {
-      for (let message of chat.querySelectorAll(".message_3aSi-")) {
-      applyChatHighlights(message);
-      }
-    }
-    }
-  
-    function applyChatHighlights(message) {
-    let sender = message.querySelector("a").innerText.replace(":", "").trim();
-    let text = simplify(message.querySelector("span").innerText);
-    const words = text.split(" ").map(simplify);
-  
-    for (let entry of highlights) {
-      if (entry["name"] === sender) {
-      // Color for name of sender
-      message.querySelector("a").style.color = entry["sender"];
-      }
-    }
-  
-    for (let entry of highlights) {
-      if (!words.includes(entry["name"].toLowerCase())) continue;
-      let color = entry["highlight"];
-      // Color for messages background
-      message.querySelector("span").parentElement.style.backgroundColor = color;
-      break;
-    }
-  
-    function simplify(text) {
-      return text.toLowerCase().replaceAll([".", "?", ":", "!", '"', "'", ";", "`", ","], "");
-    }
-    }  
-  
-    new MutationObserver((mutationsList) => {
-    for (let mutation of mutationsList) {
-      for (let addedNode of mutation.addedNodes) {
       
-      if (addedNode.classList && addedNode.classList.contains("chat-box-content_3wOdX")) {
+      String.prototype.replaceAll = function (text, replace) {
+        let str = this.toString();
+      
+        if (typeof text === "string") {
+          while (str.includes(text)) {
+            str = str.replace(text, replace);
+          }
+        } else if (typeof text === "object") {
+          if (Array.isArray(text)) {
+            for (let t of text) {
+              str = str.replaceAll(t, replace);
+            }
+          }
+        }
+      
+        return str;
+      };
+    
+      if (document.querySelector(".chat-box-wrap_2pTum")) {
         manipulateChat();
       }
     
-      if (addedNode.classList && addedNode.classList.contains("message_3aSi")) {
-        applyChatHighlights(addedNode);
+      function manipulateChat() {
+        for (let chat of document.querySelectorAll(".chat-box-content_3wOdX")) {
+          for (let message of chat.querySelectorAll(".message_3aSi-")) {
+            applyChatHighlights(message);
+          }
+        }
       }
-      }
-    }
-    }).observe(document.querySelector("#chatRoot"), { childList: true, subtree: true });  
-  
-  });
-  
-  function chatsLoaded() {
-    return new Promise((resolve) => {
-    let checker = setInterval(() => {
-      if (document.querySelector(".chat-box-wrap_2pTum")) {
-      setInterval(() => {
-        resolve(true);
-      }, 300);
-      return clearInterval(checker);
-      }
+    
+      function applyChatHighlights(message) {
+        let sender = message.querySelector("a").innerText.replace(":", "").trim();
+        let text = simplify(message.querySelector("span").innerText);
+        const words = text.split(" ").map(simplify);
+      
+        for (let entry of highlights) {
+          if (entry["name"] === sender) {
+            // Color for name of sender
+            message.querySelector("a").style.color = entry["sender"];
+          }
+        }
+      
+        for (let entry of highlights) {
+          if (!words.includes(entry["name"].toLowerCase())) continue;
+          let color = entry["highlight"];
+          // Color for messages background
+          message.querySelector("span").parentElement.style.backgroundColor = color;
+          break;
+        }
+      
+        function simplify(text) {
+          return text.toLowerCase().replaceAll([".", "?", ":", "!", '"', "'", ";", "`", ","], "");
+        }
+      }  
+    
+      new MutationObserver((mutationsList) => {
+        for (let mutation of mutationsList) {
+          for (let addedNode of mutation.addedNodes) {
+            if (addedNode.classList && addedNode.classList.contains("chat-box-content_3wOdX")) {
+              manipulateChat();
+            }
+          
+            if (addedNode.classList && addedNode.classList.contains("message_3aSi-")) {
+              applyChatHighlights(addedNode);
+            }
+          }
+        }
+      }).observe(document.querySelector("#chatRoot"), { childList: true, subtree: true });  
     });
-    });
-  } 
-  
-  // Return to avoid iOS WKErrorDomain
-  123;
+    
+    function chatsLoaded() {
+      return new Promise((resolve) => {
+        let checker = setInterval(() => {
+          if (document.querySelector(".chat-box-wrap_2pTum")) {
+            setInterval(() => {
+              resolve(true);
+            }, 300);
+            return clearInterval(checker);
+          }
+        });
+      });
+    } 
+    
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }

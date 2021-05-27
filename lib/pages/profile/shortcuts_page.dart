@@ -226,18 +226,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
           }
 
           return Container(
-            // TODO: watch out or ReorderableListView for updates to fix:
-            // Issue 1: ReorderableListView should be getting a shrinkWrap and
-            //   physics as in https://github.com/flutter/flutter/issues/66080
-            // Issue 2: Height 100 as the reorderableListView leaves that gap at the
-            //   bottom in '_defaultDropAreaExtent'. We extend the container by that size
-            //   Otherwise, we just assign 40 as a margin with the list below
-            height: _shortcutsProvider.activeShortcuts.length > 0
-                ? _shortcutsProvider.activeShortcuts.length * 50 + 100.0
-                : 20.0,
             child: ReorderableListView(
-              //shrinkWrap: true,
-              //physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
               onReorder: (int oldIndex, int newIndex) {
                 if (oldIndex < newIndex) {
                   // removing the item at oldIndex will shorten the list by 1
