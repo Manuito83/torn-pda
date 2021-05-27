@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-//import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -79,7 +79,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
   ChainWatcherColor _chainWatcherColor = ChainWatcherColor.off;
   Color _chainBorderColor = Colors.transparent;
   AnimationController _chainBorderController;
-  //AudioCache audioCache = new AudioCache();
+  AudioCache audioCache = new AudioCache();
 
   @override
   void initState() {
@@ -119,7 +119,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
     _tickerDecreaseCount.cancel();
     _tickerCallChainApi.cancel();
     _chainBorderController.dispose();
-    //audioCache.clearAll();
+    audioCache.clearAll();
     Wakelock.disable();
     super.dispose();
   }
@@ -535,7 +535,6 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
             widget.chainTimerParent == ChainTimerParent.targets) ||
         (!_chainStatusProvider.watcherActiveWebView &&
             widget.chainTimerParent == ChainTimerParent.webView)) {
-
       if (_chainWatcherColor != ChainWatcherColor.off) {
         _chainBorderController.stop();
         setState(() {
@@ -585,8 +584,8 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
           // If another chain widget already raised an alert (which is controlled by the provider),
           // we won't raise it again. Otherwise, sound/vibrate as applicable.
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.red) {
-            if (_chainStatusProvider.soundActive){
-              //audioCache.play('../sounds/alerts/warning.wav');
+            if (_chainStatusProvider.soundActive) {
+              audioCache.play('../sounds/alerts/warning.wav');
             }
             if (_chainStatusProvider.vibrationActive) {
               _vibrate(3);
@@ -607,8 +606,8 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
             duration: new Duration(milliseconds: 1500),
           )..repeat();
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.orange2) {
-            if (_chainStatusProvider.soundActive){
-              //audioCache.play('../sounds/alerts/alert2.wav');
+            if (_chainStatusProvider.soundActive) {
+              audioCache.play('../sounds/alerts/alert2.wav');
             }
             if (_chainStatusProvider.vibrationActive) {
               _vibrate(2);
@@ -624,8 +623,8 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
         if (_chainWatcherColor != ChainWatcherColor.orange1) {
           _chainBorderController.stop();
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.orange1) {
-            if (_chainStatusProvider.soundActive){
-              //audioCache.play('../sounds/alerts/alert1.wav');
+            if (_chainStatusProvider.soundActive) {
+              audioCache.play('../sounds/alerts/alert1.wav');
             }
             _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.orange1;
           }
