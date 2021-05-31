@@ -12,7 +12,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/widgets/alerts/share_pice_card.dart';
+import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
   final FirebaseUserModel fbUser;
