@@ -4353,7 +4353,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      animationSpeed: 500,
+      animationSpeed: 150,
       direction: MediaQuery.of(context).orientation == Orientation.portrait
           ? SpeedDialDirection.Up
           : SpeedDialDirection.Left,
