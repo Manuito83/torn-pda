@@ -191,9 +191,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
     // Get owned stocks
     for (var stockOwned in ownedStocks) {
-      for (var stockAvailable in _stockList) {
-        if (stockOwned.stockId == stockAvailable.stockId) {
-          stockAvailable.owned = 1;
+      for (var listedStock in _stockList) {
+        if (stockOwned.stockId == listedStock.stockId) {
+          listedStock.owned = 1;
 
           // Calculate gains
           int totalShares = 0;
@@ -201,15 +201,35 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           double totalMoneySpent = 0;
           stockOwned.transactions.forEach((key, transaction) {
             totalShares += transaction.shares;
-            var singleGain = stockAvailable.currentPrice - transaction.boughtPrice;
+            var singleGain = listedStock.currentPrice - transaction.boughtPrice;
             totalMoneyGain += singleGain * transaction.shares;
             totalMoneySpent += transaction.boughtPrice * transaction.shares;
           });
 
           var averageGain = totalMoneyGain/totalShares;
           var averageBought = totalMoneySpent/totalShares;
-          stockAvailable.gain = totalMoneyGain;
-          stockAvailable.percentageGain = averageGain * 100 / averageBought;
+          listedStock.gain = totalMoneyGain;
+          listedStock.percentageGain = averageGain * 100 / averageBought;
+          listedStock.sharesOwned = totalShares;
+        }
+      }
+    }
+
+    // Complete details based on what's saved in Firebase
+    for (var fbAlert in widget.fbUser.stockMarketShares) {
+      var acronym = fbAlert.toString().substring(0, 3);
+      var regex = RegExp(r"[A-Z]+-G-([0-9]+|n)-L-([0-9]+|n)");
+      var match = regex.firstMatch(fbAlert.toString());
+      var fbGain = match.group(1);
+      var fbLoss = match.group(2);
+      for (var listedStock in _stockList) {
+        if (listedStock.acronym == acronym) {
+          if (fbGain != "n") {
+            listedStock.alertGain = int.tryParse(fbGain);
+          }
+          if (fbLoss != "n") {
+            listedStock.alertLoss = int.tryParse(fbLoss);
+          }
         }
       }
     }

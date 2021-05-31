@@ -46,7 +46,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     super.initState();
 
     if (widget.stock.alertGain == null) {
-      _gainHint = "\$${widget.stock.currentPrice}";
+      _gainHint = "\$${widget.stock.currentPrice.toInt() + 10}";
     } else {
       var gainExisting = "\$${_moneyFormat.format(widget.stock.alertGain)}";
       _gainController.value = TextEditingValue(
@@ -56,7 +56,7 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     }
 
     if (widget.stock.alertLoss == null) {
-      _lossHint = "\$${widget.stock.currentPrice}";
+      _lossHint = "\$${widget.stock.currentPrice.toInt() - 10}";
     } else {
       var lossExisting = "\$${_moneyFormat.format(widget.stock.alertLoss)}";
       _lossController.value = TextEditingValue(
@@ -109,8 +109,10 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
                       child: Text(
-                        "Configure your price alerts here."
-                        "\n\nUse the red bin icon to the right to remove the current alert.",
+                        "Configure your price alerts here. "
+                        "Use the red bin icon to the right to remove the current alert."
+                        "\n\n"
+                        "${widget.stock.acronym}'s price: \$${widget.stock.currentPrice}",
                         style: TextStyle(fontSize: 13),
                       ),
                     ),
@@ -130,9 +132,10 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                             child: TextFormField(
                               style: TextStyle(
                                   fontSize: 13,
-                                  color: _cleanNumber(_gainController.text) < widget.stock.currentPrice
-                                      ? Colors.orange[800]
-                                      : _themeProvider.mainText),
+                                  color:
+                                      _cleanNumber(_gainController.text) < widget.stock.currentPrice
+                                          ? Colors.orange[800]
+                                          : _themeProvider.mainText),
                               controller: _gainController,
                               maxLength: 20,
                               minLines: 1,
@@ -212,9 +215,10 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                             child: TextFormField(
                               style: TextStyle(
                                   fontSize: 13,
-                                  color: _cleanNumber(_lossController.text) > widget.stock.currentPrice
-                                      ? Colors.orange[800]
-                                      : _themeProvider.mainText),
+                                  color:
+                                      _cleanNumber(_lossController.text) > widget.stock.currentPrice
+                                          ? Colors.orange[800]
+                                          : _themeProvider.mainText),
                               controller: _lossController,
                               maxLength: 20,
                               minLines: 1,

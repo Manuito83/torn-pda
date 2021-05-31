@@ -1,4 +1,5 @@
 import 'package:expandable/expandable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
@@ -72,17 +73,21 @@ class _SharePriceCardState extends State<SharePriceCard> {
                 Text(widget.stock.name, style: TextStyle(fontSize: 12)),
               ],
             ),
-            Row(
+            Column(
               children: [
-                if (widget.stock.owned == 1)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: Text(
-                      "OWNED",
-                      style: TextStyle(color: Colors.green[700], fontSize: 10),
-                    ),
-                  ),
-                Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
+                Row(
+                  children: [
+                    if (widget.stock.owned == 1)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Text(
+                          "OWNED (x${formatProfit(widget.stock.sharesOwned)})",
+                          style: TextStyle(color: Colors.green[700], fontSize: 10),
+                        ),
+                      ),
+                    Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
+                  ],
+                ),
               ],
             ),
           ],
@@ -104,7 +109,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
 
   Widget expanded() {
     return Padding(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 10, 20, 10),
       child: Row(
         children: [
           IconButton(
@@ -115,6 +120,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
           ),
           SizedBox(width: 20),
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
@@ -129,7 +135,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
                   else
                     Row(
                       children: [
-                        Text("TODO!", style: TextStyle(fontSize: 12)),
+                        Text("\$${widget.stock.alertGain}", style: TextStyle(fontSize: 12)),
                         SizedBox(width: 10),
                       ],
                     )
@@ -139,7 +145,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
               Row(
                 children: [
                   Text("Loss alert: ", style: TextStyle(fontSize: 12)),
-                  if (widget.stock.alertGain == null)
+                  if (widget.stock.alertLoss == null)
                     Row(
                       children: [
                         Text("not set", style: TextStyle(fontSize: 12)),
@@ -149,7 +155,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
                   else
                     Row(
                       children: [
-                        Text("TODO!", style: TextStyle(fontSize: 12)),
+                        Text("\$${widget.stock.alertLoss}", style: TextStyle(fontSize: 12)),
                         SizedBox(width: 10),
                       ],
                     )
