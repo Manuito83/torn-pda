@@ -39,6 +39,8 @@ class StockMarketStock {
   int owned = 0;
   int alertGain;
   int alertLoss;
+  double gain;
+  double percentageGain;
 
   int stockId;
   String name;

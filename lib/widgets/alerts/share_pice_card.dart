@@ -2,6 +2,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
+import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_dialog.dart';
 
 class SharePriceCard extends StatefulWidget {
@@ -44,6 +45,21 @@ class _SharePriceCardState extends State<SharePriceCard> {
   }
 
   Widget header() {
+    Widget gain = SizedBox.shrink();
+    if (widget.stock.owned == 1) {
+      var priceGain = widget.stock.gain.toInt();
+      gain = Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: Text(
+          "[\$${formatProfit(priceGain.abs())}, ${widget.stock.percentageGain.toStringAsFixed(2)}%]",
+          style: TextStyle(
+            color: priceGain >= 0 ? Colors.green[700] : Colors.red[700],
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+
     return Column(
       children: [
         // First Row
@@ -79,6 +95,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
               "Price: \$${widget.stock.currentPrice}",
               style: TextStyle(fontSize: 12),
             ),
+            gain,
           ],
         ),
       ],

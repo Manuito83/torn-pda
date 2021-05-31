@@ -1,6 +1,3 @@
-// Dart imports:
-import 'dart:io';
-
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -197,6 +194,22 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       for (var stockAvailable in _stockList) {
         if (stockOwned.stockId == stockAvailable.stockId) {
           stockAvailable.owned = 1;
+
+          // Calculate gains
+          int totalShares = 0;
+          double totalMoneyGain = 0;
+          double totalMoneySpent = 0;
+          stockOwned.transactions.forEach((key, transaction) {
+            totalShares += transaction.shares;
+            var singleGain = stockAvailable.currentPrice - transaction.boughtPrice;
+            totalMoneyGain += singleGain * transaction.shares;
+            totalMoneySpent += transaction.boughtPrice * transaction.shares;
+          });
+
+          var averageGain = totalMoneyGain/totalShares;
+          var averageBought = totalMoneySpent/totalShares;
+          stockAvailable.gain = totalMoneyGain;
+          stockAvailable.percentageGain = averageGain * 100 / averageBought;
         }
       }
     }
