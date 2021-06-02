@@ -51,7 +51,7 @@ final BehaviorSubject<String> selectNotificationSubject =
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.data["channelId"].contains("Alerts stocks")){
     // Reload isolate (as we are reading from background)
-    Prefs().reload();
+    await Prefs().reload();
     var oldData = await Prefs().getDataStockMarket();
     var newData = "";
     if (oldData.isNotEmpty) {
