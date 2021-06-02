@@ -722,7 +722,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
-export async function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
+export async function sendForeignRestockNotification(dbStocks: any, subscriber: any) {
   const promises: Promise<any>[] = [];
 
   try {
@@ -781,6 +781,104 @@ export async function sendForeignRestockNotification(userStats: any, dbStocks: a
   return Promise.all(promises);
 }
 
+export async function sendStockMarketNotification(tornStocks: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+
+  try {
+
+    let updates = 0;
+    const stocksMarketUpdates: any[] = [];
+    const newUserAlerts: any[] = [];
+
+    // Loop user selected alerts
+    const userAlerts = subscriber.stockMarketShares;
+    for (const alert of userAlerts) {
+      const regexp = RegExp("[A-Z]+-G-([0-9]+|n)-L-([0-9]+|n)");
+      const match = alert.match(regexp);
+
+      const acronym = alert.substring(0,3);
+      let alertHigh = match[1];
+      
+      let alertLow = match[2];
+      if (alertLow !== "n") {
+        alertLow = +alertLow;
+      }
+      
+      // Locate the share in Torn's stock market
+      for (const value of Object.values(tornStocks.stocks)) {
+        if (value["acronym"] === acronym) {
+          if (alertHigh !== "n") {
+            alertHigh = +alertHigh; // Parse to int
+            if (value["current_price"] > alertHigh) {
+              stocksMarketUpdates.push(`${acronym} above \$${alertHigh}!`);
+              alertHigh = "n";
+              updates++; 
+            }
+          } 
+          
+          if (alertLow !== "n") {
+            alertLow = +alertLow; // Parse to int
+            if (value["current_price"] < alertLow) {
+              stocksMarketUpdates.push(`${acronym} below \$${alertLow}!`);
+              alertLow = "n";
+              updates++; 
+            }
+          }
+        }
+      }
+
+      // Rebuild user alerts only if there is still gain or loss valid
+      // Otherwise skip it, so that it get deleted
+      if (alertHigh !== "n" || alertLow !== "n") {
+        newUserAlerts.push(`${acronym}-G-${alertHigh}-L-${alertLow}`);
+      }
+    }
+
+    if (updates > 0) {
+      let notificationTitle = "";
+      let notificationSubtitle = "";
+
+      if (updates === 1) {
+        notificationTitle = "Stock market alert!";
+        notificationSubtitle = `${stocksMarketUpdates[0]}`;
+      }
+      else if (updates > 1) {
+        notificationTitle = `Stock market alerts!`;
+        notificationSubtitle = `- ${stocksMarketUpdates.join('\n- ')}`.trim();
+      }
+
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            stockMarketShares: newUserAlerts,
+        })
+      );
+      
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          notificationTitle,
+          notificationSubtitle,
+          "notification_stock_market",
+          "#389500",
+          "Alerts stocks",
+          "",
+          "",
+          subscriber.vibration,
+        )
+      );
+
+    }
+    
+  } catch (error) {
+    functions.logger.warn(`ERROR STOCK MARKET \n${subscriber.uid} \n${error}`);
+  }
+
+  return Promise.all(promises);
+}
 
 export async function sendNotificationToUser(
   token: string,

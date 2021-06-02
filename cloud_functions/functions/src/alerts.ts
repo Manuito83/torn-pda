@@ -4,12 +4,21 @@ import { sendEnergyNotification, sendNerveNotification,
   logTravelArrival, sendHospitalNotification, 
   sendDrugsNotification, sendRacingNotification, 
   sendMessagesNotification, sendEventsNotification, 
-  sendForeignRestockNotification } from "./notification";
+  sendForeignRestockNotification, sendStockMarketNotification } from "./notification";
 import { getUsersStat } from "./torn_api";
 
+const privateKey = require("../key/torn_key");
+const rp = require("request-promise");
 const runtimeOpts = {
   timeoutSeconds: 120,
   memory: "512MB" as "512MB",
+}
+
+export async function getStockMarket(apiKey: string) {
+  return rp({
+    uri: `https://api.torn.com/torn/?selections=stocks&key=${apiKey}`,
+    json: true,
+  });
 }
 
 export const alertsGroup = {
@@ -26,6 +35,9 @@ export const alertsGroup = {
     const promisesGlobal: Promise<any>[] = [];
 
     const millisAtStart = Date.now();
+
+    // Get stock market
+    const stockMarket = await getStockMarket(privateKey.tornKey);
 
     // Get existing stocks from Realtime DB
     const firebaseAdmin = require("firebase-admin");
@@ -54,7 +66,7 @@ export const alertsGroup = {
       let iOSBlocks = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
-          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+          sendNotificationForProfile(subscribers[key], foreignStocks, stockMarket).then(function(value) {
             if (value === "ip-block") {
               iOSBlocks++;
             }
@@ -88,6 +100,9 @@ export const alertsGroup = {
 
     const millisAtStart = Date.now();
 
+    // Get stock market
+    const stockMarket = await getStockMarket(privateKey.tornKey);
+
     // Get existing stocks from Realtime DB
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
@@ -116,7 +131,7 @@ export const alertsGroup = {
       let androidLow = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
-          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+          sendNotificationForProfile(subscribers[key], foreignStocks, stockMarket).then(function(value) {
             if (value === "ip-block") {
               androidLow++;
             }
@@ -150,6 +165,9 @@ export const alertsGroup = {
 
     const millisAtStart = Date.now();
 
+    // Get stock market
+    const stockMarket = await getStockMarket(privateKey.tornKey);
+
     // Get existing stocks from Realtime DB
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
@@ -178,7 +196,7 @@ export const alertsGroup = {
       let androidHigh = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
-          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+          sendNotificationForProfile(subscribers[key], foreignStocks, stockMarket).then(function(value) {
             if (value === "ip-block") {
               androidHigh++;
             }
@@ -218,6 +236,9 @@ export const alertsTestGroup = {
 
     const millisAtStart = Date.now();
 
+    // Get stock market
+    const stockMarket = await getStockMarket(privateKey.tornKey);
+
     // Get existing stocks from Realtime DB
     const firebaseAdmin = require("firebase-admin");
     const db = firebaseAdmin.database();
@@ -245,7 +266,7 @@ export const alertsTestGroup = {
       let manuitoBlocks = 0;
       for(const key of Array.from(subscribers.keys()) ) {
         promises.push(
-          sendNotificationForProfile(subscribers[key], foreignStocks).then(function(value) {
+          sendNotificationForProfile(subscribers[key], foreignStocks, stockMarket).then(function(value) {
             if (value === "ip-block") {
               manuitoBlocks++;
             }
@@ -266,7 +287,7 @@ export const alertsTestGroup = {
   }),
 };
 
-async function sendNotificationForProfile(subscriber: any, stocks: any): Promise<any> {
+async function sendNotificationForProfile(subscriber: any, foreignStocks: any, stockMarket: any): Promise<any> {
   const promises: Promise<any>[] = [];
 
   try {
@@ -292,7 +313,9 @@ async function sendNotificationForProfile(subscriber: any, stocks: any): Promise
       if (subscriber.eventsNotification)
         promises.push(sendEventsNotification(userStats, subscriber));
       if (subscriber.foreignRestockNotification)
-        promises.push(sendForeignRestockNotification(userStats, stocks, subscriber));
+        promises.push(sendForeignRestockNotification(foreignStocks, subscriber));
+      if (subscriber.stockMarketNotification)
+        promises.push(sendStockMarketNotification(stockMarket, subscriber));
 
       await Promise.all(promises);
 
