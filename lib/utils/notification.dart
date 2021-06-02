@@ -103,7 +103,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     notificationColor = Colors.purple[700];
     // If payload comes from Firebase with a torn message (mail) id
     if (messageId != '') {
-      onTapPayload += 'tornMessageId:$messageId}';
+      onTapPayload += 'tornMessageId:$messageId';
     } else {
       onTapPayload += 'tornMessageId:0';
     }
