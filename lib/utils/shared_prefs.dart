@@ -117,6 +117,8 @@ class Prefs {
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
+  // Data notification received for stock market
+  final String _kDataStockMarket = "pda_dataStockMarket";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -124,6 +126,15 @@ class Prefs {
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
 
+
+  /// SharedPreferences can be used on background events handlers.
+  /// The problem is that the background handler run in a different isolate so, when we try to
+  /// get a data, the shared preferences instance is empty.
+  /// To avoid this, simply force a refresh
+  Future reload () async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+  }
 
   /// ----------------------------
   /// Methods for app version
@@ -1350,6 +1361,19 @@ class Prefs {
   Future<bool> setVaultShareCurrent(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kVaultShareCurrent, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR DATA STOCK MARKET
+  /// -----------------------------
+  Future<String> getDataStockMarket() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDataStockMarket) ?? "";
+  }
+
+  Future<bool> setDataStockMarket(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDataStockMarket, value);
   }
 
 

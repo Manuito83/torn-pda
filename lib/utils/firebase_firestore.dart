@@ -214,6 +214,12 @@ class _FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToStockMarketNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "stockMarketNotification": subscribe,
+    });
+  }
+
   Future<bool> addStockMarketShare(String ticker, String action) async {
     List currentStocks = _firebaseUserModel.stockMarketShares;
     // Code is ticker-gain-price-loss-price. 'n' for empty.

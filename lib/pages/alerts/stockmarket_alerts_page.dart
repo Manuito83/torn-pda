@@ -12,6 +12,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
@@ -76,7 +77,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                           return SingleChildScrollView(
                             child: Column(
                               children: <Widget>[
-                                SizedBox(height: 50),
+                                _alertActivator(),
                                 Divider(),
                                 SizedBox(height: 10),
                                 Text("Traded Companies"),
@@ -137,6 +138,31 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
           Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  _alertActivator() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+      child: CheckboxListTile(
+        checkColor: Colors.white,
+        activeColor: Colors.blueGrey,
+        value: widget.fbUser.stockMarketNotification ?? false,
+        title: Text(
+          "Stock Market notification",
+          style: TextStyle(fontSize: 14),
+        ),
+        subtitle: Text(
+          "Main toggle for the custom price alerts you set up below",
+          style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+        ),
+        onChanged: (value) {
+          setState(() {
+            widget.fbUser?.stockMarketNotification = value;
+          });
+          firestore.subscribeToStockMarketNotification(value);
         },
       ),
     );
@@ -206,8 +232,8 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
             totalMoneySpent += transaction.boughtPrice * transaction.shares;
           });
 
-          var averageGain = totalMoneyGain/totalShares;
-          var averageBought = totalMoneySpent/totalShares;
+          var averageGain = totalMoneyGain / totalShares;
+          var averageBought = totalMoneySpent / totalShares;
           listedStock.gain = totalMoneyGain;
           listedStock.percentageGain = averageGain * 100 / averageBought;
           listedStock.sharesOwned = totalShares;

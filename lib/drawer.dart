@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -220,7 +221,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
     });
 
-    _clearBadge();
+    // Handle notifications
+    _getBackGroundNotifications();
+    _removeExistingNotifications();
 
     _tenSecTimer = new Timer.periodic(Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
@@ -239,29 +242,59 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Update Firebase active parameter
       _updateLastActiveTime();
 
+      // Handle notifications
+      _getBackGroundNotifications();
+      _removeExistingNotifications();
+    }
+  }
+
+  Future<void> _removeExistingNotifications() async {
+    // Get rid of iOS badge (notifications will be removed by the system)
+    if (Platform.isIOS) {
       _clearBadge();
+    }
+    // Get rid of notifications in Android
+    if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
+      // Gets the active (already shown) notifications
+      final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.getActiveNotifications();
 
-      // Get rid of notifications
-      if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
-        // Gets the active (already shown) notifications
-        final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-            ?.getActiveNotifications();
-
-        for (var not in activeNotifications) {
-          // Platform channel to cancel direct Firebase notifications (we can call
-          // "cancelAll()" there without affecting scheduled notifications, which is
-          // a problem with the local plugin
-          if (not.id == 0) {
-            await platform.invokeMethod('cancelNotifications');
-          }
-          // This cancels the Firebase alerts that have been triggered locally
-          else {
-            flutterLocalNotificationsPlugin.cancel(not.id);
-          }
+      for (var not in activeNotifications) {
+        // Platform channel to cancel direct Firebase notifications (we can call
+        // "cancelAll()" there without affecting scheduled notifications, which is
+        // a problem with the local plugin)
+        if (not.id == 0) {
+          await platform.invokeMethod('cancelNotifications');
+        }
+        // This cancels the Firebase alerts that have been triggered locally
+        else {
+          flutterLocalNotificationsPlugin.cancel(not.id);
         }
       }
     }
+  }
+
+  void _getBackGroundNotifications() async {
+    // Reload isolate (as we are reading from background)
+    await Prefs().reload();
+    // Get the save alerts
+    Prefs().getDataStockMarket().then((value) {
+      if (value.isNotEmpty) {
+        BotToast.showText(
+          text: value,
+          align: Alignment(0, 0),
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.blue,
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+        Prefs().setDataStockMarket("");
+      }
+    });
   }
 
   // TODO Missing bits:
@@ -285,6 +318,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool energy = false;
     bool drugs = false;
     bool refills = false;
+    bool stockMarket = false;
 
     var channel = '';
     var messageId = '';
@@ -322,6 +356,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       drugs = true;
     } else if (channel.contains("Alerts refills")) {
       refills = true;
+    } else if (channel.contains("Alerts stocks")) {
+      stockMarket = true;
     }
 
     if (travel) {
@@ -365,6 +401,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
+    } else if (stockMarket) {
+      // Not implemented (there is a box showing in _getBackGroundNotifications)
     }
 
     if (launchBrowser) {
@@ -457,6 +495,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('refills')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/points.php';
+      } else if (payload.contains('stockMarket')) {
+        // Not implemented (there is a box showing in _getBackGroundNotifications)
       }
 
       if (launchBrowser) {
@@ -989,12 +1029,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   void _clearBadge() {
-    if (Platform.isIOS) {
-      try {
-        FlutterAppBadger.removeBadge();
-      } catch (e) {
-        // Not supported?
-      }
+    try {
+      FlutterAppBadger.removeBadge();
+    } catch (e) {
+      // Not supported?
     }
   }
 }
