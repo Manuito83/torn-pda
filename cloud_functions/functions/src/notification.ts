@@ -400,8 +400,10 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
     const newMessagesSenders: any[] = [];
     const newMessagesSubjects: any[] = [];
     const knownMessages = subscriber.knownMessages || [];
+    const allTornKeys: any[] = [];
 
     Object.keys(userStats.messages).forEach(function (key){
+      allTornKeys.push(key);
       if (userStats.messages[key].seen === 0 && 
         userStats.messages[key].read === 0 &&
         !knownMessages.includes(key)) {
@@ -425,6 +427,21 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
           }
       }
     });
+
+    // Ensure that deleted messages are deleted from the database, as they
+    // won't be caught by the conditions above if they get deleted immediately
+    for (const key of knownMessages) {
+      if (!allTornKeys.includes(key)) {
+        changes = true;
+        for(let i = 0; i < knownMessages.length; i++){ 
+          console.log("bingo");
+          if ( knownMessages[i] === key) { 
+            knownMessages.splice(i, 1); 
+            break;
+          }
+        }
+      }
+    }
 
     if (changes) {
       promises.push(
