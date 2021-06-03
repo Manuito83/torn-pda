@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/painting.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -58,53 +59,57 @@ class _AttackCardState extends State<AttackCard> {
                 children: <Widget>[
                   Row(
                     mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       SizedBox(
                         height: 20,
-                        width: 20,
-                        child: GestureDetector(
-                          child: Icon(
-                            Icons.remove_red_eye,
-                            size: 20,
-                          ),
-                          onTap: () async {
-                            var url = 'https://www.torn.com/profiles.php?'
-                                'XID=${_attack.targetId}';
-                            if (_settingsProvider.currentBrowser ==
-                                BrowserSetting.external) {
-                              if (await canLaunch(url)) {
-                                await launch(url, forceSafariVC: false);
-                              }
-                            } else {
-                              _settingsProvider.useQuickBrowser
-                                  ? openBrowserDialog(context, url)
-                                  : _openTornBrowser(url);
-                            }
-                          },
-                          onLongPress: () async {
-                            var url = 'https://www.torn.com/profiles.php?'
-                                'XID=${_attack.targetId}';
-                            if (_settingsProvider.currentBrowser ==
-                                BrowserSetting.external) {
-                              if (await canLaunch(url)) {
-                                await launch(url, forceSafariVC: false);
-                              }
-                            } else {
-                              _openTornBrowser(url);
-                            }
-                          },
-                        ),
+                        width: _attack.targetName.isNotEmpty ? 20 : 0,
+                        child: _attack.targetName.isNotEmpty
+                            ? GestureDetector(
+                                child: Icon(
+                                  Icons.remove_red_eye,
+                                  size: 20,
+                                ),
+                                onTap: () async {
+                                  var url = 'https://www.torn.com/profiles.php?'
+                                      'XID=${_attack.targetId}';
+                                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                  } else {
+                                    _settingsProvider.useQuickBrowser
+                                        ? openBrowserDialog(context, url)
+                                        : _openTornBrowser(url);
+                                  }
+                                },
+                                onLongPress: () async {
+                                  var url = 'https://www.torn.com/profiles.php?'
+                                      'XID=${_attack.targetId}';
+                                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+                                    if (await canLaunch(url)) {
+                                      await launch(url, forceSafariVC: false);
+                                    }
+                                  } else {
+                                    _openTornBrowser(url);
+                                  }
+                                },
+                              )
+                            : SizedBox.shrink(),
                       ),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 5),
                       ),
                       SizedBox(
-                        width: 70,
+                        width: _attack.targetName.isNotEmpty ? 70 : 175,
                         child: Text(
-                          '${_attack.targetName}',
+                          _attack.targetName.isNotEmpty ? '${_attack.targetName}' : "anonymous",
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                _attack.targetName.isNotEmpty ? FontWeight.bold : FontWeight.normal,
+                            fontStyle:
+                                _attack.targetName.isNotEmpty ? FontStyle.normal : FontStyle.italic,
                           ),
                         ),
                       ),
@@ -116,9 +121,9 @@ class _AttackCardState extends State<AttackCard> {
                       mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         SizedBox(
-                          width: 85,
+                          width: _attack.targetName.isNotEmpty ? 85 : 0,
                           child: Text(
-                            ' [${_attack.targetId}]',
+                            _attack.targetName.isNotEmpty ? ' [${_attack.targetId}]' : "",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -137,7 +142,9 @@ class _AttackCardState extends State<AttackCard> {
                             SizedBox(
                               height: 20,
                               width: 20,
-                              child: _returnAddTargetButton(),
+                              child: _attack.targetName.isNotEmpty
+                                  ? _returnAddTargetButton()
+                                  : SizedBox.shrink(),
                             ),
                           ],
                         ),
@@ -241,8 +248,7 @@ class _AttackCardState extends State<AttackCard> {
           );
           if (tryAddTarget.success) {
             BotToast.showText(
-              text: HtmlParser.fix(
-                  'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),
+              text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'),
               textStyle: TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -259,8 +265,7 @@ class _AttackCardState extends State<AttackCard> {
             }
           } else if (!tryAddTarget.success) {
             BotToast.showText(
-              text: HtmlParser.fix(
-                  'Error adding ${_attack.targetId}. ${tryAddTarget.errorReason}'),
+              text: HtmlParser.fix('Error adding ${_attack.targetId}. ${tryAddTarget.errorReason}'),
               textStyle: TextStyle(
                 fontSize: 14,
                 color: Colors.white,
@@ -303,8 +308,7 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   String _returnDateFormatted() {
-    var date =
-        new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
+    var date = new DateTime.fromMillisecondsSinceEpoch(_attack.timestampEnded * 1000);
     var formatter = new DateFormat('dd MMMM HH:mm');
     return formatter.format(date);
   }
@@ -442,17 +446,17 @@ class _AttackCardState extends State<AttackCard> {
   }
 
   Widget _factionIcon() {
-    String factionName;
-    int factionId;
+    String factionName = "";
+    int factionId = 0;
     if (_attack.attackInitiated) {
-      if (_attack.defenderFactionname != null) {
+      if (_attack.defenderFactionname != null && _attack.defenderFactionname != "") {
         factionName = _attack.defenderFactionname;
         factionId = _attack.defenderFaction;
       } else {
         return SizedBox.shrink();
       }
     } else {
-      if (_attack.attackerFactionname != null) {
+      if (_attack.attackerFactionname != null && _attack.attackerFactionname != "") {
         factionName = _attack.attackerFactionname;
         factionId = _attack.attackerFaction;
       } else {
@@ -469,8 +473,7 @@ class _AttackCardState extends State<AttackCard> {
     void showFactionToast() {
       if (factionId == _userProvider.basic.faction.factionId) {
         BotToast.showText(
-          text: HtmlParser.fix(
-              "${_attack.targetName} belongs to your same faction ($factionName)"),
+          text: HtmlParser.fix("${_attack.targetName} belongs to your same faction ($factionName)"),
           textStyle: TextStyle(
             fontSize: 14,
             color: Colors.white,
@@ -481,8 +484,7 @@ class _AttackCardState extends State<AttackCard> {
         );
       } else {
         BotToast.showText(
-          text: HtmlParser.fix(
-              "${_attack.targetName} belongs to faction $factionName"),
+          text: HtmlParser.fix("${_attack.targetName} belongs to faction $factionName"),
           textStyle: TextStyle(
             fontSize: 14,
             color: Colors.white,
