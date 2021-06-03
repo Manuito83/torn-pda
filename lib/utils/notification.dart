@@ -103,7 +103,7 @@ Future showNotificationBoth(Map payload, int notId) async {
     notificationColor = Colors.purple[700];
     // If payload comes from Firebase with a torn message (mail) id
     if (messageId != '') {
-      onTapPayload += 'tornMessageId:$messageId}';
+      onTapPayload += 'tornMessageId:$messageId';
     } else {
       onTapPayload += 'tornMessageId:0';
     }
@@ -136,6 +136,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts refills';
     channelName = 'Alerts refills';
     channelDescription = 'Automatic alerts for refills';
+  } else if (channel.contains("Alerts stocks")) {
+    notificationIcon = "notification_stock_market";
+    notificationColor = Colors.green;
+    onTapPayload += 'stockMarket';
+    channelId = 'Alerts stocks';
+    channelName = 'Alerts stocks';
+    channelDescription = 'Automatic alerts for stocks';
   }
 
   if (Platform.isAndroid) {
@@ -523,6 +530,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts refills ${modifier.channelIdModifier}',
       'Alerts refills ${modifier.channelIdModifier}',
       'Automatic alerts for refills',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts stocks ${modifier.channelIdModifier}',
+      'Alerts stocks ${modifier.channelIdModifier}',
+      'Automatic alerts for stocks',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

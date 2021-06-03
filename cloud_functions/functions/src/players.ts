@@ -77,6 +77,10 @@ export const playersGroup = {
         promises.push(manageStats("refillsNotification", -1));
       }
 
+      if (beforeStat.stockMarketNotification) {
+        promises.push(manageStats("stockMarketNotification", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -159,10 +163,16 @@ export const playersGroup = {
       );
 
       if (beforeStat.refillsNotification !== afterStat.refillsNotification)
-      promises.push(
-        manageStats("refillsNotification", afterStat.refillsNotification ? 1 : -1
-      )
-    );
+        promises.push(
+          manageStats("refillsNotification", afterStat.refillsNotification ? 1 : -1
+        )
+      );
+
+      if (beforeStat.stockMarketNotification !== afterStat.stockMarketNotification)
+        promises.push(
+          manageStats("stockMarketNotification", afterStat.stockMarketNotification ? 1 : -1
+        )
+      );
 
       if (
         !afterStat.energyNotification &&
@@ -175,6 +185,7 @@ export const playersGroup = {
         !afterStat.messagesNotification &&
         !afterStat.eventsNotification &&
         !afterStat.refillsNotification &&
+        !afterStat.stockMarketNotification &&
         afterStat.alertsEnabled
       )
         promises.push(
@@ -197,7 +208,8 @@ export const playersGroup = {
          || afterStat.racingNotification
          || afterStat.messagesNotification
          || afterStat.eventsNotification
-         || afterStat.refillsNotification) 
+         || afterStat.refillsNotification
+         || afterStat.stockMarketNotification) 
          && !afterStat.alertsEnabled
       )
         promises.push(

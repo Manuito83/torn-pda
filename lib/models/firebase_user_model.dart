@@ -20,6 +20,8 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool refillsNotification = false;
   List refillsRequested = [];
   bool racingSent = false;
+  bool stockMarketNotification = false;
+  List stockMarketShares = [];
 
   FirebaseUserModel();
 
@@ -55,6 +57,8 @@ class FirebaseUserModel extends OwnProfileExtended {
       "refillsNotification": refillsNotification,
       "refillsRequested": refillsRequested,
       "racingSent": racingSent,
+      "stockMarketNotification": stockMarketNotification,
+      "stockMarketShares": stockMarketShares,
     };
   }
 
@@ -80,6 +84,8 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..level = data["level"]
       ..name = data["name"]
       ..life = Life()
-      ..life.current = data["life"];
+      ..life.current = data["life"]
+      ..stockMarketNotification = data["stockMarketNotification"] ?? false
+      ..stockMarketShares = data["stockMarketShares"] ?? [];
   }
 }

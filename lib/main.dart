@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 final String appVersion = '2.3.5';
@@ -45,6 +47,21 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 final BehaviorSubject<String> selectNotificationSubject =
     BehaviorSubject<String>();
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (message.data["channelId"].contains("Alerts stocks")){
+    // Reload isolate (as we are reading from background)
+    await Prefs().reload();
+    var oldData = await Prefs().getDataStockMarket();
+    var newData = "";
+    if (oldData.isNotEmpty) {
+      newData = oldData + "\n${message.notification.body}";
+    } else {
+      newData = oldData + "${message.notification.body}";
+    }
+    Prefs().setDataStockMarket(newData);
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +89,7 @@ Future<void> main() async {
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
   await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
     // Only 'true' intended for debugging, otherwise leave in false

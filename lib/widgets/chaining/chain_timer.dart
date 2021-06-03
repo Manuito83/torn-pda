@@ -535,7 +535,6 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
             widget.chainTimerParent == ChainTimerParent.targets) ||
         (!_chainStatusProvider.watcherActiveWebView &&
             widget.chainTimerParent == ChainTimerParent.webView)) {
-
       if (_chainWatcherColor != ChainWatcherColor.off) {
         _chainBorderController.stop();
         setState(() {
@@ -585,7 +584,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
           // If another chain widget already raised an alert (which is controlled by the provider),
           // we won't raise it again. Otherwise, sound/vibrate as applicable.
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.red) {
-            if (_chainStatusProvider.soundActive){
+            if (_chainStatusProvider.soundActive) {
               audioCache.play('../sounds/alerts/warning.wav');
             }
             if (_chainStatusProvider.vibrationActive) {
@@ -607,7 +606,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
             duration: new Duration(milliseconds: 1500),
           )..repeat();
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.orange2) {
-            if (_chainStatusProvider.soundActive){
+            if (_chainStatusProvider.soundActive) {
               audioCache.play('../sounds/alerts/alert2.wav');
             }
             if (_chainStatusProvider.vibrationActive) {
@@ -624,7 +623,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
         if (_chainWatcherColor != ChainWatcherColor.orange1) {
           _chainBorderController.stop();
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.orange1) {
-            if (_chainStatusProvider.soundActive){
+            if (_chainStatusProvider.soundActive) {
               audioCache.play('../sounds/alerts/alert1.wav');
             }
             _chainStatusProvider.watcherColorReportedByActive = ChainWatcherColor.orange1;

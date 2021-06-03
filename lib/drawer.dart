@@ -226,7 +226,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
     });
 
-    _clearBadge();
+    // Handle notifications
+    _getBackGroundNotifications();
+    _removeExistingNotifications();
 
     _tenSecTimer = new Timer.periodic(Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
@@ -245,29 +247,49 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Update Firebase active parameter
       _updateLastActiveTime();
 
+      // Handle notifications
+      _getBackGroundNotifications();
+      _removeExistingNotifications();
+    }
+  }
+
+  Future<void> _removeExistingNotifications() async {
+    // Get rid of iOS badge (notifications will be removed by the system)
+    if (Platform.isIOS) {
       _clearBadge();
+    }
+    // Get rid of notifications in Android
+    if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
+      // Gets the active (already shown) notifications
+      final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.getActiveNotifications();
 
-      // Get rid of notifications
-      if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
-        // Gets the active (already shown) notifications
-        final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-            ?.getActiveNotifications();
-
-        for (var not in activeNotifications) {
-          // Platform channel to cancel direct Firebase notifications (we can call
-          // "cancelAll()" there without affecting scheduled notifications, which is
-          // a problem with the local plugin
-          if (not.id == 0) {
-            await platform.invokeMethod('cancelNotifications');
-          }
-          // This cancels the Firebase alerts that have been triggered locally
-          else {
-            flutterLocalNotificationsPlugin.cancel(not.id);
-          }
+      for (var not in activeNotifications) {
+        // Platform channel to cancel direct Firebase notifications (we can call
+        // "cancelAll()" there without affecting scheduled notifications, which is
+        // a problem with the local plugin)
+        if (not.id == 0) {
+          await platform.invokeMethod('cancelNotifications');
+        }
+        // This cancels the Firebase alerts that have been triggered locally
+        else {
+          flutterLocalNotificationsPlugin.cancel(not.id);
         }
       }
     }
+  }
+
+  void _getBackGroundNotifications() async {
+    // Reload isolate (as we are reading from background)
+    await Prefs().reload();
+    // Get the save alerts
+    Prefs().getDataStockMarket().then((stocks) {
+      if (stocks.isNotEmpty) {
+        Prefs().setDataStockMarket("");
+        Future.delayed(Duration(seconds: 1)).then((value) => _openBackgroundStockDialog(stocks));
+      }
+    });
   }
 
   // TODO Missing bits:
@@ -291,6 +313,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool energy = false;
     bool drugs = false;
     bool refills = false;
+    bool stockMarket = false;
 
     var channel = '';
     var messageId = '';
@@ -328,6 +351,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       drugs = true;
     } else if (channel.contains("Alerts refills")) {
       refills = true;
+    } else if (channel.contains("Alerts stocks")) {
+      stockMarket = true;
     }
 
     if (travel) {
@@ -371,31 +396,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
+    } else if (stockMarket) {
+      // Not implemented (there is a box showing in _getBackGroundNotifications)
     }
 
     if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
       await Future.delayed(Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
-      var browserType = await Prefs().getDefaultBrowser();
-      switch (browserType) {
-        case 'app':
-          if (_settingsProvider.useQuickBrowser) {
-            openBrowserDialog(
-              context,
-              browserUrl,
-            );
-          } else {
-            _openTornBrowser(browserUrl);
-          }
-          break;
-        case 'external':
-          var url = browserUrl;
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
+      await _openBrowserPreference(browserUrl);
     }
   }
 
@@ -463,28 +472,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('refills')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/points.php';
+      } else if (payload.contains('stockMarket')) {
+        // Not implemented (there is a box showing in _getBackGroundNotifications)
       }
 
       if (launchBrowser) {
-        var browserType = await Prefs().getDefaultBrowser();
-        switch (browserType) {
-          case 'app':
-            if (_settingsProvider.useQuickBrowser) {
-              openBrowserDialog(
-                context,
-                browserUrl,
-              );
-            } else {
-              _openTornBrowser(browserUrl);
-            }
-            break;
-          case 'external':
-            var url = browserUrl;
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
-            }
-            break;
-        }
+        await _openBrowserPreference(browserUrl);
       }
     });
   }
@@ -936,7 +929,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _getPages();
   }
 
-  Future _openTornBrowser(String page) async {
+  Future _openBrowserFull(String page) async {
     var browserType = _settingsProvider.currentBrowser;
 
     switch (browserType) {
@@ -995,12 +988,141 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   void _clearBadge() {
-    if (Platform.isIOS) {
-      try {
-        FlutterAppBadger.removeBadge();
-      } catch (e) {
-        // Not supported?
-      }
+    try {
+      FlutterAppBadger.removeBadge();
+    } catch (e) {
+      // Not supported?
     }
+  }
+
+  Future<void> _openBrowserPreference(String browserUrl) async {
+    var browserType = await Prefs().getDefaultBrowser();
+    switch (browserType) {
+      case 'app':
+        if (_settingsProvider.useQuickBrowser) {
+          openBrowserDialog(
+            context,
+            browserUrl,
+          );
+        } else {
+          _openBrowserFull(browserUrl);
+        }
+        break;
+      case 'external':
+        var url = browserUrl;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBackgroundStockDialog(String update) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  "STOCK MARKET UPDATE!",
+                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            update,
+                            style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: Text(
+                                "Stock Exchange",
+                              ),
+                              onPressed: () async {
+                                _openBrowserPreference("https://www.torn.com/page.php?sid=stocks");
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            SizedBox(width: 10),
+                            TextButton(
+                              child: Text("Close"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(MdiIcons.chartLine, color: Colors.green),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

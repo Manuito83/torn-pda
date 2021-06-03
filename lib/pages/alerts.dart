@@ -23,6 +23,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 import '../main.dart';
+import 'alerts/stockmarket_alerts_page.dart';
 
 class AlertsSettings extends StatefulWidget {
   @override
@@ -41,8 +42,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _firestoreProfileReceived = firestore.getUserProfile(force: false);
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
   }
 
   @override
@@ -101,9 +101,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value:
-                              _firebaseUserModel.foreignRestockNotification ??
-                                  false,
+                          value: _firebaseUserModel.foreignRestockNotification ?? false,
                           title: Text("Foreign stocks"),
                           subtitle: Text(
                             "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
@@ -115,11 +113,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           ),
                           onChanged: (value) {
                             setState(() {
-                              _firebaseUserModel?.foreignRestockNotification =
-                                  value;
+                              _firebaseUserModel?.foreignRestockNotification = value;
                             });
-                            firestore
-                                .subscribeToForeignRestockNotification(value);
+                            firestore.subscribeToForeignRestockNotification(value);
                           },
                         ),
                       ),
@@ -172,8 +168,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value:
-                              _firebaseUserModel.hospitalNotification ?? false,
+                          value: _firebaseUserModel.hospitalNotification ?? false,
                           title: Text("Hospital admission and release"),
                           subtitle: Text(
                             "If you are offline, you'll be notified if you are "
@@ -241,8 +236,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value:
-                              _firebaseUserModel.messagesNotification ?? false,
+                          value: _firebaseUserModel.messagesNotification ?? false,
                           title: Text("Messages"),
                           subtitle: Text(
                             "Get notified when you receive new messages",
@@ -298,8 +292,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                 ),
                               ),
                               IconButton(
-                                  icon:
-                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                  icon: Icon(Icons.keyboard_arrow_right_outlined),
                                   onPressed: () {
                                     showDialog(
                                       context: context,
@@ -352,21 +345,54 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                 ),
                               ),
                               IconButton(
-                                  icon:
-                                      Icon(Icons.keyboard_arrow_right_outlined),
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return RefillsRequestedDialog(
-                                          userModel: _firebaseUserModel,
-                                        );
-                                      },
-                                    );
-                                  }),
+                                icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return RefillsRequestedDialog(
+                                        userModel: _firebaseUserModel,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 15, 0),
+                        child: ListTile(
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Stock market gain/loss"),
+                              GestureDetector(
+                                child: Icon(Icons.keyboard_arrow_right_outlined),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return StockMarketAlertsPage(
+                                          fbUser: _firebaseUserModel,
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          subtitle: Text(
+                            "Configure price gain/loss alerts for any traded company",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 60),
                     ],
                   ),
@@ -389,8 +415,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -527,8 +552,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               // We save the key because the API call will reset it
               var savedKey = _userProv.basic.userApiKey;
 
-              dynamic myProfile =
-                  await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+              dynamic myProfile = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
 
               if (myProfile is OwnProfileBasic) {
                 myProfile
@@ -537,10 +561,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
                 User mFirebaseUser = await firebaseAuth.signInAnon();
                 firestore.setUID(mFirebaseUser.uid);
-                await firestore.uploadUsersProfileDetail(myProfile,
-                    userTriggered: true);
-                await firestore.uploadLastActiveTime(
-                    DateTime.now().millisecondsSinceEpoch);
+                await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
                 if (Platform.isAndroid) {
                   var alertsVibration = await Prefs().getVibrationPattern();

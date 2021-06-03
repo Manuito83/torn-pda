@@ -29,7 +29,6 @@ class _FirestoreHelper {
     OwnProfileBasic profile, {
     bool userTriggered = false,
   }) async {
-
     if (_alreadyUploaded && !userTriggered) return;
     _alreadyUploaded = true;
     _firebaseUserModel = FirebaseUserModel();
@@ -75,8 +74,7 @@ class _FirestoreHelper {
   Future<void> subscribeToForeignRestockNotification(bool subscribe) async {
     // If we had already foreign stocks chosen as alerts, we need to update them to the
     // current timestamp, so that alerts are not sent on first pass (if restocks alerts were off)
-    Map<String, dynamic> previous =
-        await json.decode(await Prefs().getActiveRestocks());
+    Map<String, dynamic> previous = await json.decode(await Prefs().getActiveRestocks());
     var now = DateTime.now().millisecondsSinceEpoch;
     previous.forEach((key, value) {
       previous[key] = now;
@@ -213,6 +211,31 @@ class _FirestoreHelper {
   Future<void> setVibrationPattern(String pattern) async {
     await _firestore.collection("players").doc(_uid).update({
       "vibration": pattern,
+    });
+  }
+
+  Future<void> subscribeToStockMarketNotification(bool subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "stockMarketNotification": subscribe,
+    });
+  }
+
+  Future<bool> addStockMarketShare(String ticker, String action) async {
+    List currentStocks = _firebaseUserModel.stockMarketShares;
+    // Code is ticker-gain-price-loss-price. 'n' for empty.
+    // Example: YAZ-G-840-L-n
+    // Example to delete: YAZ-remove
+    currentStocks.removeWhere((element) => element.contains(ticker));
+    if (!action.contains("remove")) {
+      currentStocks.add(action);
+    }
+
+    return _firestore.collection("players").doc(_uid).update({
+      "stockMarketShares": currentStocks,
+    }).then((value) {
+      return true;
+    }).catchError((error) {
+      return false;
     });
   }
 }
