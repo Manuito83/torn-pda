@@ -464,6 +464,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 );
               } else {
+                var error = _apiError.isEmpty ? "" : ": $_apiError";
                 return SingleChildScrollView(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -479,7 +480,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         child: Column(
                           children: [
                             Text(
-                              'There was an error: $_apiError\n\n'
+                              'There was an error$error\n\n'
                               'Torn PDA is retrying automatically. '
                               'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
                               textAlign: TextAlign.center,
@@ -934,7 +935,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     Widget bazaarStatus() {
-      if (_bazaarModel?.bazaar == null) return SizedBox.shrink();
+      // Check null as it loads after a while, then empty to see if bazaar is open
+      if (_bazaarModel == null || _bazaarModel.bazaar.isEmpty) return SizedBox.shrink();
 
       var bazaarNumber = "";
       _bazaarModel.bazaar.length == 1
@@ -4351,7 +4353,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      animationSpeed: 500,
+      animationSpeed: 150,
       direction: MediaQuery.of(context).orientation == Orientation.portrait
           ? SpeedDialDirection.Up
           : SpeedDialDirection.Left,

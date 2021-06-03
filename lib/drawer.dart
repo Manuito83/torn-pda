@@ -160,12 +160,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       configureNotificationChannels();
     }
 
-    // Configures Firebase notification behaviours
-    _messaging.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    // Defaulted to false so that onMessage is the entry point on iOS as it happens on Android (
+    // otherwise we get duplicated notifications). Choose one or the other for iOS.
+    // On Android we have no option since Firebase Android SDK will block displaying any FCM
+    // notification no matter what Notification Channel has been set
+    // See https://firebase.flutter.dev/docs/messaging/notifications/
+    if (Platform.isIOS) {
+      _messaging.setForegroundNotificationPresentationOptions(
+        alert: false,
+        badge: false,
+        sound: false,
+      );
+    }
 
     _lastMessageReceived = DateTime.now();
     _lastBody = "";

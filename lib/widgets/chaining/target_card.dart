@@ -608,6 +608,17 @@ class _TargetCardState extends State<TargetCard> {
       _lifeTicker?.cancel();
     }
 
+    // Found players in federal jail with a higher life than their maximum. Correct it if it's the
+    // case to avoid issues with percentage bar
+    double lifePercentage;
+    if (_target.life.current / _target.life.maximum > 1) {
+      lifePercentage = 1;
+    } else if (_target.life.current / _target.life.maximum > 1) {
+      lifePercentage = 0;
+    } else {
+      lifePercentage = _target.life.current / _target.life.maximum;
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -622,7 +633,7 @@ class _TargetCardState extends State<TargetCard> {
             lifeText,
             style: TextStyle(color: Colors.black, fontSize: 12),
           ),
-          percent: (_target.life.current / _target.life.maximum),
+          percent: lifePercentage,
         ),
         hospitalWarning,
       ],

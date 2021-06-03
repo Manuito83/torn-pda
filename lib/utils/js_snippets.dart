@@ -320,7 +320,7 @@ String removeChatOnLoadStartJS() {
     try {
       var style = document.createElement('style');
       style.type = 'text/css';
-      style.innerHTML = '.chat-box-wrap_20_R_ { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
+      style.innerHTML = '.chat-box-wrap_2pTum { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
       document.getElementsByTagName('head')[0].appendChild(style);
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
@@ -335,7 +335,7 @@ String removeChatJS() {
   return '''
     try {
       var doc = document;
-      var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
+      var chatBox = document.getElementsByClassName("chat-box-wrap_2pTum");
       chatBox[0].style.display = 'none';
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
@@ -349,7 +349,7 @@ String removeChatJS() {
 String restoreChatJS() {
   return '''
     var doc = document;
-    var chatBox = document.getElementsByClassName("chat-box-wrap_20_R_");
+    var chatBox = document.getElementsByClassName("chat-box-wrap_2pTum");
     chatBox[0].style.display = 'block';
     
     // Return to avoid iOS WKErrorDomain
@@ -469,13 +469,14 @@ String chatHighlightJS({@required String highlightMap}) {
   return '''
     // Credit: Torn Tools
     
+    // Example var highlights = [ { name: "Manuito", highlight: "rgba(124, 169, 0, 0.4)", sender: "rgba(124, 169, 0, 1)" } ];
     var highlights = $highlightMap;
-
+  
     chatsLoaded().then(() => {
-    
+      
       String.prototype.replaceAll = function (text, replace) {
         let str = this.toString();
-    
+      
         if (typeof text === "string") {
           while (str.includes(text)) {
             str = str.replace(text, replace);
@@ -483,22 +484,21 @@ String chatHighlightJS({@required String highlightMap}) {
         } else if (typeof text === "object") {
           if (Array.isArray(text)) {
             for (let t of text) {
-            str = str.replaceAll(t, replace);
+              str = str.replaceAll(t, replace);
             }
           }
         }
-    
+      
         return str;
       };
     
-    
-      if (document.querySelector(".chat-box-content_2C5UJ .overview_1MoPG .message_oP8oM")) {
+      if (document.querySelector(".chat-box-wrap_2pTum")) {
         manipulateChat();
       }
     
       function manipulateChat() {
-        for (let chat of document.querySelectorAll(".chat-box-content_2C5UJ")) {
-          for (let message of chat.querySelectorAll(".message_oP8oM")) {
+        for (let chat of document.querySelectorAll(".chat-box-content_3wOdX")) {
+          for (let message of chat.querySelectorAll(".message_3aSi-")) {
             applyChatHighlights(message);
           }
         }
@@ -508,14 +508,14 @@ String chatHighlightJS({@required String highlightMap}) {
         let sender = message.querySelector("a").innerText.replace(":", "").trim();
         let text = simplify(message.querySelector("span").innerText);
         const words = text.split(" ").map(simplify);
-    
+      
         for (let entry of highlights) {
           if (entry["name"] === sender) {
             // Color for name of sender
             message.querySelector("a").style.color = entry["sender"];
           }
         }
-    
+      
         for (let entry of highlights) {
           if (!words.includes(entry["name"].toLowerCase())) continue;
           let color = entry["highlight"];
@@ -523,7 +523,7 @@ String chatHighlightJS({@required String highlightMap}) {
           message.querySelector("span").parentElement.style.backgroundColor = color;
           break;
         }
-    
+      
         function simplify(text) {
           return text.toLowerCase().replaceAll([".", "?", ":", "!", '"', "'", ";", "`", ","], "");
         }
@@ -532,24 +532,22 @@ String chatHighlightJS({@required String highlightMap}) {
       new MutationObserver((mutationsList) => {
         for (let mutation of mutationsList) {
           for (let addedNode of mutation.addedNodes) {
-            
-            if (addedNode.classList && addedNode.classList.contains("chat-box-content_2C5UJ")) {
+            if (addedNode.classList && addedNode.classList.contains("chat-box-content_3wOdX")) {
               manipulateChat();
             }
-      
-            if (addedNode.classList && addedNode.classList.contains("message_oP8oM")) {
+          
+            if (addedNode.classList && addedNode.classList.contains("message_3aSi-")) {
               applyChatHighlights(addedNode);
             }
           }
         }
       }).observe(document.querySelector("#chatRoot"), { childList: true, subtree: true });  
-    
     });
     
     function chatsLoaded() {
       return new Promise((resolve) => {
         let checker = setInterval(() => {
-          if (document.querySelector(".overview_1MoPG")) {
+          if (document.querySelector(".chat-box-wrap_2pTum")) {
             setInterval(() => {
               resolve(true);
             }, 300);
