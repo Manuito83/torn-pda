@@ -808,7 +808,7 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
     const newUserAlerts: any[] = [];
 
     // Loop user selected alerts
-    const userAlerts = subscriber.stockMarketShares;
+    const userAlerts = subscriber.stockMarketShares || [];
     for (const alert of userAlerts) {
       const regexp = RegExp("[A-Z]+-G-([0-9]+|n)-L-([0-9]+|n)");
       const match = alert.match(regexp);
