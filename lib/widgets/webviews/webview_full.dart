@@ -1913,7 +1913,7 @@ class _WebViewFullState extends State<WebViewFull> {
     // We only get this once and if we are inside the city
     // It's also in the callback from city options
     if (!_cityPreferencesLoaded) {
-      await _cityPreferencesLoad();
+      await _cityPreferencesLoad(init: true);
       _cityPreferencesLoaded = true;
     }
 
@@ -2031,11 +2031,15 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  Future _cityPreferencesLoad() async {
+  Future _cityPreferencesLoad({bool init = false}) async {
     _cityEnabled = await Prefs().getCityEnabled();
     // Reset city so that it can be assessed again
     _cityTriggered = false;
-    await reload();
+    // Do not reload upon first city activation, otherwise we get a reload glitch. Do it only
+    // after we have activated/deactivated the city
+    if (!init) {
+      await reload();
+    }
   }
 
   // BAZAAR
