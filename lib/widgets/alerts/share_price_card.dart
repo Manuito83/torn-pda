@@ -54,7 +54,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
         child: Text(
           "[\$${formatProfit(priceGain.abs())}, ${widget.stock.percentageGain.toStringAsFixed(2)}%]",
           style: TextStyle(
-            color: priceGain >= 0 ? Colors.green[700] : Colors.red[700],
+            color: priceGain >= 0 ? Colors.green : Colors.red,
             fontSize: 12,
           ),
         ),
@@ -82,7 +82,7 @@ class _SharePriceCardState extends State<SharePriceCard> {
                         padding: const EdgeInsets.only(right: 10),
                         child: Text(
                           "OWNED (x${formatProfit(widget.stock.sharesOwned)})",
-                          style: TextStyle(color: Colors.green[700], fontSize: 10),
+                          style: TextStyle(color: Colors.green, fontSize: 10),
                         ),
                       ),
                     Icon(Icons.arrow_drop_down_circle_outlined, size: 16),

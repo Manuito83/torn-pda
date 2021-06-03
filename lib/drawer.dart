@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -279,20 +278,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     // Get the save alerts
-    Prefs().getDataStockMarket().then((value) {
-      if (value.isNotEmpty) {
-        BotToast.showText(
-          text: value,
-          align: Alignment(0, 0),
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.blue,
-          duration: Duration(seconds: 5),
-          contentPadding: EdgeInsets.all(10),
-        );
+    Prefs().getDataStockMarket().then((stocks) {
+      if (stocks.isNotEmpty) {
         Prefs().setDataStockMarket("");
+        Future.delayed(Duration(seconds: 1)).then((value) => _openBackgroundStockDialog(stocks));
       }
     });
   }
@@ -409,25 +398,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // iOS seems to open a blank WebView unless we allow some time onResume
       await Future.delayed(Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
-      var browserType = await Prefs().getDefaultBrowser();
-      switch (browserType) {
-        case 'app':
-          if (_settingsProvider.useQuickBrowser) {
-            openBrowserDialog(
-              context,
-              browserUrl,
-            );
-          } else {
-            _openTornBrowser(browserUrl);
-          }
-          break;
-        case 'external':
-          var url = browserUrl;
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-          break;
-      }
+      await _openBrowserPreference(browserUrl);
     }
   }
 
@@ -500,25 +471,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        var browserType = await Prefs().getDefaultBrowser();
-        switch (browserType) {
-          case 'app':
-            if (_settingsProvider.useQuickBrowser) {
-              openBrowserDialog(
-                context,
-                browserUrl,
-              );
-            } else {
-              _openTornBrowser(browserUrl);
-            }
-            break;
-          case 'external':
-            var url = browserUrl;
-            if (await canLaunch(url)) {
-              await launch(url, forceSafariVC: false);
-            }
-            break;
-        }
+        await _openBrowserPreference(browserUrl);
       }
     });
   }
@@ -970,7 +923,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _getPages();
   }
 
-  Future _openTornBrowser(String page) async {
+  Future _openBrowserFull(String page) async {
     var browserType = _settingsProvider.currentBrowser;
 
     switch (browserType) {
@@ -1034,5 +987,136 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } catch (e) {
       // Not supported?
     }
+  }
+
+  Future<void> _openBrowserPreference(String browserUrl) async {
+    var browserType = await Prefs().getDefaultBrowser();
+    switch (browserType) {
+      case 'app':
+        if (_settingsProvider.useQuickBrowser) {
+          openBrowserDialog(
+            context,
+            browserUrl,
+          );
+        } else {
+          _openBrowserFull(browserUrl);
+        }
+        break;
+      case 'external':
+        var url = browserUrl;
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
+  }
+
+  Future<void> _openBackgroundStockDialog(String update) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  "STOCK MARKET UPDATE!",
+                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Flexible(
+                          child: Text(
+                            update,
+                            style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: Text(
+                                "Stock Exchange",
+                              ),
+                              onPressed: () async {
+                                _openBrowserPreference("https://www.torn.com/page.php?sid=stocks");
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            SizedBox(width: 10),
+                            TextButton(
+                              child: Text("Close"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(MdiIcons.chartLine, color: Colors.green),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

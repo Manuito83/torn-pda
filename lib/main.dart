@@ -55,9 +55,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     var oldData = await Prefs().getDataStockMarket();
     var newData = "";
     if (oldData.isNotEmpty) {
-      newData = oldData + "\n- ${message.notification.body}";
+      newData = oldData + "\n${message.notification.body}";
     } else {
-      newData = oldData + "- ${message.notification.body}";
+      newData = oldData + "${message.notification.body}";
     }
     Prefs().setDataStockMarket(newData);
   }
