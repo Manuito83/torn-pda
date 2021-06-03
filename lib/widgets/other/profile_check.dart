@@ -364,7 +364,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
       } else if (_isOwnFaction) {
         String factionText = "This is a fellow faction member "
-            "(${otherProfile.faction.position.toLowerCase()})!";
+            "(${otherProfile.faction.position})!";
         Color factionColor = Colors.green;
         if (widget.profileCheckType == ProfileCheckType.attack) {
           factionColor = Colors.black;
