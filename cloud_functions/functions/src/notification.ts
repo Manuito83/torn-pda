@@ -434,7 +434,6 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
       if (!allTornKeys.includes(key)) {
         changes = true;
         for(let i = 0; i < knownMessages.length; i++){ 
-          console.log("bingo");
           if ( knownMessages[i] === key) { 
             knownMessages.splice(i, 1); 
             break;
