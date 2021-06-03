@@ -1842,6 +1842,7 @@ class _WebViewFullState extends State<WebViewFull> {
         vaultHtml: allTransactions,
         playerId: _userProvider.basic.playerId,
         userProvider: _userProvider,
+        isBrowserDialog: widget.dialog,
       );
     });
   }
