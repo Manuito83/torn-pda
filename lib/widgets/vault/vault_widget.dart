@@ -403,14 +403,14 @@ class _VaultWidgetState extends State<VaultWidget> {
   }
 
   _configurationCallback() {
-    if (_vaultStatus.player == null) {
+    if (_vaultStatus.player != null) {
       setState(() {
-        _firstUse = true;
-        _vaultStatus.error = false;
+        _firstUse = false;
       });
     } else {
       setState(() {
-        _firstUse = false;
+        _firstUse = true;
+        _vaultStatus.error = false;
       });
     }
   }
