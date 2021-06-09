@@ -1144,7 +1144,7 @@ class _WebViewFullState extends State<WebViewFull> {
       getTrades = true;
     }
 
-    if (!_currentUrl.contains("properties.php") && _vaultTriggered) {
+    if (!_currentUrl.contains("properties.php") && (_vaultTriggered || _vaultIconActive)) {
       // This is different to the others, here we call only so that properties is deactivated
       anySectionTriggered = true;
       getVault = true;
