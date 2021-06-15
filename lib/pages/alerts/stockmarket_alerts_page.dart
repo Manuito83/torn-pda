@@ -244,17 +244,17 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     // Complete details based on what's saved in Firebase
     for (var fbAlert in widget.fbUser.stockMarketShares) {
       var acronym = fbAlert.toString().substring(0, 3);
-      var regex = RegExp(r"[A-Z]+-G-([0-9]+|n)-L-([0-9]+|n)");
+      var regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
       var match = regex.firstMatch(fbAlert.toString());
       var fbGain = match.group(1);
       var fbLoss = match.group(2);
       for (var listedStock in _stockList) {
         if (listedStock.acronym == acronym) {
           if (fbGain != "n") {
-            listedStock.alertGain = int.tryParse(fbGain);
+            listedStock.alertGain = double.tryParse(fbGain);
           }
           if (fbLoss != "n") {
-            listedStock.alertLoss = int.tryParse(fbLoss);
+            listedStock.alertLoss = double.tryParse(fbLoss);
           }
         }
       }

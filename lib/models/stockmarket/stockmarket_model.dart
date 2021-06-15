@@ -37,8 +37,8 @@ class StockMarketStock {
 
   // State
   int owned = 0;
-  int alertGain;
-  int alertLoss;
+  double alertGain;
+  double alertLoss;
   double gain;
   double percentageGain;
   int sharesOwned;

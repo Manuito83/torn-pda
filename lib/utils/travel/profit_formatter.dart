@@ -1,6 +1,13 @@
 import 'package:intl/intl.dart';
 
-String formatProfit(int moneyInput) {
+String formatProfit({int inputInt, double inputDouble}) {
+  double moneyInput = 0;
+  if (inputInt != null) {
+    moneyInput = inputInt.toDouble();
+  } else {
+    moneyInput = inputDouble;
+  }
+
   final profitCurrencyHigh = new NumberFormat("#,##0.0", "en_US");
   final costCurrencyLow = new NumberFormat("#,##0", "en_US");
   String profitFormat;

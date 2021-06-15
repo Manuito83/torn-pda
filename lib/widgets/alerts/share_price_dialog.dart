@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
@@ -39,16 +38,14 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
   String _gainHint = "";
   String _lossHint = "";
 
-  final _moneyFormat = new NumberFormat("#,##0", "en_US");
-
   @override
   void initState() {
     super.initState();
 
     if (widget.stock.alertGain == null) {
-      _gainHint = "\$${widget.stock.currentPrice.toInt() + 10}";
+      _gainHint = "\$${removeZeroDecimals(widget.stock.currentPrice + 10)}";
     } else {
-      var gainExisting = "\$${_moneyFormat.format(widget.stock.alertGain)}";
+      var gainExisting = "${(removeZeroDecimals(widget.stock.alertGain))}";
       _gainController.value = TextEditingValue(
         text: gainExisting,
         selection: TextSelection.collapsed(offset: gainExisting.length),
@@ -56,9 +53,9 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     }
 
     if (widget.stock.alertLoss == null) {
-      _lossHint = "\$${widget.stock.currentPrice.toInt() - 10}";
+      _lossHint = "\$${removeZeroDecimals(widget.stock.currentPrice - 10)}";
     } else {
-      var lossExisting = "\$${_moneyFormat.format(widget.stock.alertLoss)}";
+      var lossExisting = "${removeZeroDecimals(widget.stock.alertLoss)}";
       _lossController.value = TextEditingValue(
         text: lossExisting,
         selection: TextSelection.collapsed(offset: lossExisting.length),
@@ -137,38 +134,39 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                           ? Colors.orange[800]
                                           : _themeProvider.mainText),
                               controller: _gainController,
-                              maxLength: 20,
+                              maxLength: 7,
                               minLines: 1,
                               maxLines: 1,
                               decoration: InputDecoration(
+                                prefixText: "\$ ",
                                 labelText: _gainHint,
+                                labelStyle: TextStyle(fontStyle: FontStyle.italic),
                                 //hintText: _gainHint,
                                 counterText: "",
                                 isDense: true,
                                 border: OutlineInputBorder(),
                               ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+(\.)?(\d{1,2})?'),
+                                )
                               ],
                               onChanged: (gainString) {
-                                if (gainString.isNotEmpty || gainString != "\$") {
+                                if (gainString.isNotEmpty) {
                                   var gainAmount = _cleanNumber(gainString);
-                                  gainString = '\$${_moneyFormat.format(gainAmount)}';
-                                  _gainController.value = TextEditingValue(
-                                    text: gainString,
-                                    selection: TextSelection.collapsed(offset: gainString.length),
-                                  );
                                   // Calculate percentage and show as hint
                                   setState(() {
                                     var sign = "";
                                     if (gainAmount > widget.stock.currentPrice) {
                                       sign = "+";
-                                    } else if (gainAmount < widget.stock.currentPrice) {
-                                      sign = "-";
                                     }
                                     var per = (gainAmount * 100 / widget.stock.currentPrice) - 100;
-                                    _gainHint = "$sign${per.floor()}%";
+                                    _gainHint = "$sign${per.toStringAsFixed(2)}%";
+                                  });
+                                } else {
+                                  setState(() {
+                                    _gainHint = "";
                                   });
                                 }
                               },
@@ -220,38 +218,39 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                           ? Colors.orange[800]
                                           : _themeProvider.mainText),
                               controller: _lossController,
-                              maxLength: 20,
+                              maxLength: 7,
                               minLines: 1,
                               maxLines: 2,
                               decoration: InputDecoration(
+                                prefixText: "\$ ",
                                 labelText: _lossHint,
+                                labelStyle: TextStyle(fontStyle: FontStyle.italic),
                                 //hintText: _lossHint,
                                 counterText: "",
                                 isDense: true,
                                 border: OutlineInputBorder(),
                               ),
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                FilteringTextInputFormatter.digitsOnly
+                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+(\.)?(\d{1,2})?'),
+                                )
                               ],
                               onChanged: (lossString) {
-                                if (lossString.isNotEmpty || lossString != "\$") {
+                                if (lossString.isNotEmpty) {
                                   var lossAmount = _cleanNumber(lossString);
-                                  lossString = '\$${_moneyFormat.format(lossAmount)}';
-                                  _lossController.value = TextEditingValue(
-                                    text: lossString,
-                                    selection: TextSelection.collapsed(offset: lossString.length),
-                                  );
                                   // Calculate percentage and show as hint
                                   setState(() {
                                     var sign = "";
                                     if (lossAmount > widget.stock.currentPrice) {
                                       sign = "+";
-                                    } else if (lossAmount < widget.stock.currentPrice) {
-                                      sign = "-";
                                     }
                                     var per = (lossAmount * 100 / widget.stock.currentPrice) - 100;
-                                    _lossHint = "$sign${per.floor()}%";
+                                    _lossHint = "$sign${per.toStringAsFixed(2)}%";
+                                  });
+                                } else {
+                                  setState(() {
+                                    _lossHint = "";
                                   });
                                 }
                               },
@@ -288,15 +287,16 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         TextButton(
                           child: Text("Set"),
                           onPressed: () async {
-                            Navigator.of(context).pop();
+
                             bool success = false;
 
                             // Might be passed as null if we are removing
-                            int gain;
-                            int loss;
+                            double gain;
+                            double loss;
 
                             try {
                               if (_formKey.currentState.validate()) {
+                                Navigator.of(context).pop();
                                 String action = "${widget.stock.acronym}-";
                                 // If all is empty, we'll delete the
                                 if (_gainController.text.isEmpty && _lossController.text.isEmpty) {
@@ -320,6 +320,9 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 // Upload
                                 success = await firestore.addStockMarketShare(
                                     widget.stock.acronym, action);
+                              } else {
+                                // Return with no validation
+                                return;
                               }
                             } catch (e) {
                               success = false;
@@ -393,9 +396,12 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     );
   }
 
-  int _cleanNumber(String text) {
-    if (text.isEmpty || text == "\$") return 0;
-    var number = text.replaceAll("\$", "").replaceAll(".", "").replaceAll(",", "");
-    return int.parse(number);
+  double _cleanNumber(String text) {
+    if (text.isEmpty) return 0;
+    return double.parse(text);
+  }
+
+  String removeZeroDecimals(double input) {
+    return input.toString().replaceAll(RegExp(r"([.]*0)(?!.*\d)"), "");
   }
 }

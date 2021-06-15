@@ -809,20 +809,23 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
     // Loop user selected alerts
     const userAlerts = subscriber.stockMarketShares || [];
     for (const alert of userAlerts) {
-      const regexp = RegExp("[A-Z]+-G-([0-9]+|n)-L-([0-9]+|n)");
+      
+      const regexp = /[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)/;
       const match = alert.match(regexp);
+      
+      if (match === null) {
+        functions.logger.warn(`Stock Market regex error \n${subscriber.uid}`);
+        continue;
+      }
 
       const acronym = alert.substring(0,3);
       let alertHigh = match[1];
-      
       let alertLow = match[2];
-      if (alertLow !== "n") {
-        alertLow = +alertLow;
-      }
       
       // Locate the share in Torn's stock market
       for (const value of Object.values(tornStocks.stocks)) {
         if (value["acronym"] === acronym) {
+          
           if (alertHigh !== "n") {
             alertHigh = +alertHigh; // Parse to int
             if (value["current_price"] > alertHigh) {

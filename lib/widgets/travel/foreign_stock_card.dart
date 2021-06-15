@@ -686,7 +686,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     Widget profitPerMinuteWidget;
     final profitColor = stock.value <= 0 ? Colors.red : Colors.green;
 
-    String profitFormatted = formatProfit(stock.value.abs());
+    String profitFormatted = formatProfit(inputInt: stock.value.abs());
     if (stock.value <= 0) {
       profitFormatted = '-\$$profitFormatted';
     } else {
@@ -700,7 +700,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     // Profit per hour
     String profitPerHourFormatted =
-        formatProfit((stock.profit * widget.capacity).abs());
+        formatProfit(inputInt: (stock.profit * widget.capacity).abs());
     if (stock.profit <= 0) {
       profitPerHourFormatted = '-\$$profitPerHourFormatted';
     } else {
