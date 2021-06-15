@@ -15,7 +15,9 @@ Future<void> openBrowserDialog(BuildContext _, String initUrl,
   }
   return showDialog(
     context: _,
-    barrierDismissible: true,
+    // Avoids browser going back if user taps the screen side (in which case, willPopCallback
+    // triggers as if the back button had been pressed
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return Dialog(
         insetPadding: EdgeInsets.symmetric(horizontal: hPad, vertical: 15),
