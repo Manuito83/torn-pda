@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 
 class JobPointsDialog extends StatefulWidget {
   final int currentType;
@@ -147,7 +148,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
             Text(
               widget.job.companyName == 'None'
                   ? widget.job.position
-                  : widget.job.companyName,
+                  : HtmlParser.fix(widget.job.companyName),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
