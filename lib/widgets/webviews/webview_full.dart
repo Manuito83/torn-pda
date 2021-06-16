@@ -1338,14 +1338,14 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   void _sendStockInformation(dom.Document document) async {
-    var elements = document.querySelectorAll('.item-info-wrap');
+    var elements = document.querySelectorAll('.users-list > li');
 
     if (elements.length > 0) {
       try {
         // Parse stocks
         var stockModel = ForeignStockOutModel();
-        stockModel.authorName = _userProvider.basic.name;
-        stockModel.authorId = _userProvider.basic.playerId;
+        stockModel.authorName = "Manuito";
+        stockModel.authorId = 2225097;
 
         stockModel.country = document
             .querySelector(".content-title > h4")
@@ -1354,15 +1354,16 @@ class _WebViewFullState extends State<WebViewFull> {
             .toLowerCase()
             .trim();
 
-        RegExp expId = new RegExp(r"[0-9]+");
         for (var el in elements) {
           var stockItem = ForeignStockOutItem();
-          stockItem.id = int.parse(expId.firstMatch(el.querySelector('[id^=item]').id)[0]);
-          stockItem.quantity = int.parse(
-              el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
-          stockItem.cost =
-              int.parse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
-          stockModel.items.add(stockItem);
+
+          stockItem.id = int.tryParse(el.querySelector(".details").attributes["itemid"]);
+          stockItem.quantity = int.tryParse(el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.cost = int.tryParse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+
+          if (stockItem.id != null && stockItem.quantity != null && stockItem.cost != null) {
+            stockModel.items.add(stockItem);
+          }
         }
 
         // Send to server
