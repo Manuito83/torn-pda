@@ -79,10 +79,8 @@ class _LootPageState extends State<LootPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'loot'});
-    _tickerUpdateTimes =
-        new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
+    _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
 
   @override
@@ -157,8 +155,7 @@ class _LootPageState extends State<LootPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -167,8 +164,7 @@ class _LootPageState extends State<LootPage> {
             ? IconButton(
                 icon: Icon(
                   MdiIcons.filterOutline,
-                  color:
-                      activeNpcsFiltered() ? Colors.orange[400] : Colors.white,
+                  color: activeNpcsFiltered() ? Colors.orange[400] : Colors.white,
                 ),
                 onPressed: () {
                   showDialog(
@@ -246,8 +242,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   bool activeNpcsFiltered() {
-    return _npcIds.where((element) => _filterOutIds.contains(element)).length >
-        0;
+    return _npcIds.where((element) => _filterOutIds.contains(element)).length > 0;
   }
 
   Widget _connectError() {
@@ -287,8 +282,7 @@ class _LootPageState extends State<LootPage> {
 
         npcDetails.timings.forEach((levelNumber, levelDetails) {
           // Time formatting
-          var levelDateTime =
-              DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
+          var levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts * 1000);
           var time = TimeFormatter(
             inputTime: levelDateTime,
             timeFormatSetting: _settingsProvider.currentTimeFormat,
@@ -368,8 +362,7 @@ class _LootPageState extends State<LootPage> {
               child: Icon(
                 iconData,
                 size: 20,
-                color: _lootNotificationType == NotificationType.notification &&
-                        isPending
+                color: _lootNotificationType == NotificationType.notification && isPending
                     ? Colors.green
                     : null,
               ),
@@ -382,14 +375,13 @@ class _LootPageState extends State<LootPage> {
                       });
                       await flutterLocalNotificationsPlugin
                           .cancel(int.parse('400$npcId$levelNumber'));
-                      _activeNotificationsIds.removeWhere((element) =>
-                          element == int.parse('400$npcId$levelNumber'));
+                      _activeNotificationsIds
+                          .removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
                     } else {
                       setState(() {
                         isPending = true;
                       });
-                      _activeNotificationsIds
-                          .add(int.parse('400$npcId$levelNumber'));
+                      _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
                       _scheduleNotification(
                         levelDateTime,
                         int.parse('400$npcId$levelNumber'),
@@ -498,25 +490,41 @@ class _LootPageState extends State<LootPage> {
           shadow = null;
         }
 
-        npcImage = Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.grey[900], width: 2),
-            boxShadow: shadow,
+        npcImage = GestureDetector(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: Colors.grey[900], width: 2),
+              boxShadow: shadow,
+            ),
+            child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset(
+                  'images/npcs/npc_$npcId.png',
+                  height: 60,
+                  errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+                    return Image.asset(
+                      "images/npcs/npc_0.png",
+                      height: 60,
+                    );
+                  },
+                )),
           ),
-          child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                'images/npcs/npc_$npcId.png',
-                height: 60,
-                errorBuilder: (BuildContext context, Object exception,
-                    StackTrace stackTrace) {
-                  return Image.asset(
-                    "images/npcs/npc_0.png",
-                    height: 60,
-                  );
-                },
-              )),
+          onTap: () async {
+            var url = 'https://www.torn.com/profiles.php?XID=$npcId';
+            if (_settingsProvider.currentBrowser == BrowserSetting.external) {
+              if (await canLaunch(url)) {
+                await launch(url, forceSafariVC: false);
+              }
+            } else {
+              _settingsProvider.useQuickBrowser
+                  ? openBrowserDialog(context, url)
+                  : _openTornBrowser(url);
+            }
+          },
+          onLongPress: () {
+            _openTornBrowser('https://www.torn.com/profiles.php?XID=$npcId');
+          },
         );
 
         Widget knifeIcon;
@@ -525,13 +533,10 @@ class _LootPageState extends State<LootPage> {
           child: GestureDetector(
             child: Icon(
               MdiIcons.knifeMilitary,
-              color: npcDetails.levels.current >= 4
-                  ? Colors.red
-                  : _themeProvider.mainText,
+              color: npcDetails.levels.current >= 4 ? Colors.red : _themeProvider.mainText,
             ),
             onTap: () async {
-              var url =
-                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+              var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               if (_settingsProvider.currentBrowser == BrowserSetting.external) {
                 if (await canLaunch(url)) {
                   await launch(url, forceSafariVC: false);
@@ -543,8 +548,7 @@ class _LootPageState extends State<LootPage> {
               }
             },
             onLongPress: () {
-              _openTornBrowser(
-                  'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
+              _openTornBrowser('https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
             },
           ),
         );
@@ -678,19 +682,13 @@ class _LootPageState extends State<LootPage> {
   Future<bool> _fetchDatabase() async {
     try {
       // Get current NPCs
-      String dbNpcsResult = (await FirebaseDatabase.instance
-              .reference()
-              .child("loot/npcs")
-              .once())
-          .value;
+      String dbNpcsResult =
+          (await FirebaseDatabase.instance.reference().child("loot/npcs").once()).value;
       _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
       // Get their hospital out times
-      Map<dynamic, dynamic> dbHopsResult = (await FirebaseDatabase.instance
-              .reference()
-              .child("loot/hospital")
-              .once())
-          .value;
+      Map<dynamic, dynamic> dbHopsResult =
+          (await FirebaseDatabase.instance.reference().child("loot/hospital").once()).value;
       dbHopsResult.forEach((key, value) {
         _dbLootInfo[key.toString()] = value;
       });
@@ -792,8 +790,7 @@ class _LootPageState extends State<LootPage> {
         : _lootTimeType = LootTimeType.dateTime;
 
     var notification = await Prefs().getLootNotificationType();
-    var notificationAhead =
-        await Prefs().getLootNotificationAhead();
+    var notificationAhead = await Prefs().getLootNotificationAhead();
     var alarmAhead = await Prefs().getLootAlarmAhead();
     var timerAhead = await Prefs().getLootTimerAhead();
     _alarmSound = await Prefs().getManualAlarmSound();
@@ -900,8 +897,7 @@ class _LootPageState extends State<LootPage> {
         platformChannelSpecifics,
         payload: notificationPayload,
         androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime);
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
 
     // DEBUG
     //print('Notification for $notificationTitle @ '
