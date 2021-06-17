@@ -674,9 +674,11 @@ class _WebViewFullState extends State<WebViewFull> {
 
               _hideChat();
 
-              setState(() {
-                this.progress = progress / 100;
-              });
+              if (mounted) {
+                setState(() {
+                  this.progress = progress / 100;
+                });
+              }
 
               //if (progress > 75) _pullToRefreshController.endRefreshing();
 
