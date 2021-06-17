@@ -85,6 +85,7 @@ class Prefs {
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kUseUhcRevive = "pda_useUhcRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
+  final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
@@ -952,6 +953,16 @@ class Prefs {
   Future<bool> setWarnAboutChains(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kWarnAboutChains, value);
+  }
+
+  Future<bool> getWarnAboutExcessEnergy() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWarnAboutExcessEnergy) ?? true;
+  }
+
+  Future<bool> setWarnAboutExcessEnergy(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWarnAboutExcessEnergy, value);
   }
 
   Future<bool> getExpandEvents() async {
