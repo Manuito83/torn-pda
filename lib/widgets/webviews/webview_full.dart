@@ -713,9 +713,8 @@ class _WebViewFullState extends State<WebViewFull> {
               /// We are calling trades from here because onLoadStop does not
               /// work inside of Trades for iOS. Also, both in Android and iOS
               /// we need to catch deletions.
-              if (resource.url.path.contains("trade.php")) {
+              if (_currentUrl.contains("trade.php")) {
                 _tradesTriggered = true;
-                _currentUrl = (await webView.getUrl()).toString();
                 var html = await webView.getHtml();
                 var document = parse(html);
                 var pageTitle = (await _getPageTitle(document)).toLowerCase();
@@ -723,12 +722,8 @@ class _WebViewFullState extends State<WebViewFull> {
               }
 
               // Properties (vault) for initialisation and live transactions
-              if (resource.url.path.contains("properties")) {
+              if (_currentUrl.contains("properties.php")) {
                 if (!_vaultTriggered) {
-                  // If vault is not triggered, we are accessing the vault for the first time
-
-                  // Wait a couple of seconds to let the html load
-                  _currentUrl = (await webView.getUrl()).toString();
                   var html = await webView.getHtml();
                   var document = parse(html);
                   var pageTitle = (await _getPageTitle(document)).toLowerCase();
@@ -737,8 +732,6 @@ class _WebViewFullState extends State<WebViewFull> {
                   // If it's triggered, it's because we are inside and we performed an operation
                   // (deposit or withdrawal). In this case, we need to give a couple of seconds
                   // so that the new html elements appear and we can analyse them
-
-                  // Wait a couple of seconds to let the html load
                   Future.delayed(Duration(seconds: 2)).then((value) async {
                     // Reset _vaultTriggered so that we can call _assessVault() again
                     _reassessVault();
@@ -1360,8 +1353,10 @@ class _WebViewFullState extends State<WebViewFull> {
           var stockItem = ForeignStockOutItem();
 
           stockItem.id = int.tryParse(el.querySelector(".details").attributes["itemid"]);
-          stockItem.quantity = int.tryParse(el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
-          stockItem.cost = int.tryParse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.quantity = int.tryParse(
+              el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.cost = int.tryParse(
+              el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
 
           if (stockItem.id != null && stockItem.quantity != null && stockItem.cost != null) {
             stockModel.items.add(stockItem);

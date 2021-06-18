@@ -14,6 +14,8 @@ import 'package:torn_pda/utils/html_parser.dart' as pdaParser;
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesContainer {
+  String sellerName = "";
+  int tradeId = 0;
   bool firstLoad = true;
   int leftMoney = 0;
   List<TradeItem> leftItems = [];
@@ -33,27 +35,34 @@ class TradesContainer {
   bool ttAuthError = false;
   var ttItems = <TtInItem>[];
   var ttMessages = <TradeMessage>[];
+
+  // Arson Warehouse
+  bool awhActive = false;
 }
 
 class TradesProvider extends ChangeNotifier {
   int playerId;
   var container = TradesContainer();
 
-  void updateTrades(
-      {@required playerId,
-      @required String userApiKey,
-      @required String sellerName,
-      @required int tradeId,
-      @required List<dom.Element> leftMoneyElements,
-      @required List<dom.Element> leftItemsElements,
-      @required List<dom.Element> leftPropertyElements,
-      @required List<dom.Element> leftSharesElements,
-      @required List<dom.Element> rightMoneyElements,
-      @required List<dom.Element> rightItemsElements,
-      @required List<dom.Element> rightPropertyElements,
-      @required List<dom.Element> rightSharesElements}) async {
+  void updateTrades({
+    @required playerId,
+    @required String userApiKey,
+    @required String sellerName,
+    @required int tradeId,
+    @required List<dom.Element> leftMoneyElements,
+    @required List<dom.Element> leftItemsElements,
+    @required List<dom.Element> leftPropertyElements,
+    @required List<dom.Element> leftSharesElements,
+    @required List<dom.Element> rightMoneyElements,
+    @required List<dom.Element> rightItemsElements,
+    @required List<dom.Element> rightPropertyElements,
+    @required List<dom.Element> rightSharesElements,
+  }) async {
     this.playerId = playerId;
-    var newModel = TradesContainer();
+
+    var newModel = TradesContainer()
+      ..tradeId = tradeId
+      ..sellerName = sellerName;
 
     // Color 1 is money
     int colors1(List<dom.Element> sideMoneyElement) {
@@ -112,6 +121,9 @@ class TradesProvider extends ChangeNotifier {
         for (var itemLine in rightItemsElements) {
           addColor2Items(itemLine, allTornItems, newModel.rightItems);
         }
+
+        // Initialize Arson Warehouse
+        newModel..awhActive = await Prefs().getAWHEnabled();
 
         // TORN TRADER init here (it only takes into account elements sold to us,
         // so we'll only pass this information

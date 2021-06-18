@@ -1,4 +1,7 @@
 // Flutter imports:
+import 'dart:convert';
+
+import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,10 +12,12 @@ import 'package:expandable/expandable.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/trades/awh_out.dart';
 
 // Project imports:
 import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/widgets/webviews/webview_full_single.dart';
 
 class TradesWidget extends StatefulWidget {
   @override
@@ -49,47 +54,33 @@ class _TradesWidgetState extends State<TradesWidget> {
         ),
         header: Column(
           children: <Widget>[
-            if (!_tradesProv.container.ttActive)
-              Column(
-                children: [
-                  Text(
-                    'Trade Calculator',
-                    style: TextStyle(
-                      color: Colors.orange,
-                    ),
-                  ),
-                  Text(
-                    '(TAP TO EXPAND)',
-                    style: TextStyle(
-                      color: Colors.orange,
-                      fontSize: 8,
-                    ),
-                  ),
-                ],
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  SizedBox(width: 80),
-                  Column(
-                    children: [
-                      Text(
-                        'Trade Calculator',
-                        style: TextStyle(
-                          color: Colors.orange,
-                        ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                if (!_tradesProv.container.awhActive)
+                  SizedBox(width: 90)
+                else
+                  SizedBox(width: 90, child: _awhContainer()),
+                Column(
+                  children: [
+                    Text(
+                      'Trade Calculator',
+                      style: TextStyle(
+                        color: Colors.orange,
                       ),
-                      Text(
-                        '(TAP TO EXPAND)',
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontSize: 8,
-                        ),
+                    ),
+                    Text(
+                      '(TAP TO EXPAND)',
+                      style: TextStyle(
+                        color: Colors.orange,
+                        fontSize: 8,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                if (!_tradesProv.container.ttActive)
+                  SizedBox(width: 90)
+                else
                   SizedBox(
                     width: 90,
                     child: Row(
@@ -162,8 +153,8 @@ class _TradesWidgetState extends State<TradesWidget> {
                       ],
                     ),
                   ),
-                ],
-              ),
+              ],
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 10, 0, 2),
               child: Row(
@@ -190,7 +181,7 @@ class _TradesWidgetState extends State<TradesWidget> {
               constraints: _tradesProv.container.ttActive &&
                       (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
                   ? BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
-                          kToolbarHeight*3 -
+                          kToolbarHeight * 3 -
                           AppBar().preferredSize.height)) /
                       3)
                   : BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
@@ -484,7 +475,6 @@ class _TradesWidgetState extends State<TradesWidget> {
     if (_tradesProv.container.ttActive &&
         side == 'right' &&
         (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)) {
-
       var ttItems = _tradesProv.container.ttItems;
 
       for (var ttProduct in ttItems) {
@@ -877,5 +867,56 @@ class _TradesWidgetState extends State<TradesWidget> {
         },
       );
     }
+  }
+
+  Widget _awhContainer() {
+    var awhBaseUrl = "https://arsonwarehouse.com/pda?key=123&trade=";  // TODO
+    var awhContainer = ArsonWarehouseOut();
+
+    var awhItems = <AwhItem>[];
+    for (var item in _tradesProv.container.rightItems) {
+      var awhItem = AwhItem()
+        ..name = item.name
+        ..quantity = item.quantity;
+      awhItems.add(awhItem);
+    }
+
+    awhContainer
+      ..sellerName = _tradesProv.container.sellerName
+      ..tradeId = _tradesProv.container.tradeId
+      ..version = 1
+      ..items = awhItems;
+
+    var awhJson = arsonWarehouseOutToJson(awhContainer);
+    var bytes = utf8.encode(awhJson);
+    var jsonEncoded = base64.encode(bytes);
+    var ticketURL = awhBaseUrl + jsonEncoded;
+
+    return OpenContainer(
+      transitionDuration: Duration(seconds: 1),
+      transitionType: ContainerTransitionType.fadeThrough,
+      openBuilder: (BuildContext context, VoidCallback _) {
+        return WebViewFullSingle(
+          customUrl: ticketURL,
+          customTitle: "Arson Warehouse",
+          customCallBack: null,
+        );
+      },
+      closedElevation: 0,
+      closedColor: Colors.transparent,
+      closedBuilder: (BuildContext context, VoidCallback openContainer) {
+        return SizedBox(
+          height: 30,
+          width: 40,
+          child: Center(
+            child: Image.asset(
+              'images/icons/awh_logo.png',
+              width: 35,
+              color: Colors.orange,
+            ),
+          ),
+        );
+      },
+    );
   }
 }

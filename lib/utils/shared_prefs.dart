@@ -101,6 +101,7 @@ class Prefs {
   final String _kLootTimerAhead = "pda_lootTimerAhead";
   final String _kLootFiltered = "pda_lootFiltered";
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
+  final String _kAWHEnabled = "pda_awhActive";
   final String _kTornTraderEnabled = "pda_tornTraderActive";
   final String _kCityFinderEnabled = "pda_cityFinderActive";
   final String _kAwardsSort = "pda_awardsSort";
@@ -1158,6 +1159,16 @@ class Prefs {
   Future<bool> setTradeCalculatorEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTradeCalculatorEnabled, value);
+  }
+
+  Future<bool> getAWHEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAWHEnabled) ?? true;
+  }
+
+  Future<bool> setAWHEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAWHEnabled, value);
   }
 
   Future<bool> getTornTraderEnabled() async {
