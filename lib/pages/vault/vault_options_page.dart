@@ -1,14 +1,11 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/vault/vault_status_model.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultOptionsPage extends StatefulWidget {
