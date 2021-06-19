@@ -358,6 +358,51 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
+                                    'BARS BEHAVIOUR',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Flexible(
+                                      child: Text(
+                                        "Life bar",
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 20),
+                                    ),
+                                    Flexible(
+                                      flex: 2,
+                                      child: _lifeBarDropdown(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Text(
+                                  "Choose which medical section to open when taping on the life bar. "
+                                  "If 'ask' is chosen a dialog will appear every time",
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
                                     'REVIVING SERVICES',
                                     style: TextStyle(fontSize: 10),
                                   ),
@@ -388,7 +433,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Text(
                                   'If active, when you are in hospital you\'ll have the option to call '
                                   'a reviver from Central Hospital. NOTE: this is an external '
-                                  'service not affiliated to Torn PDA.',
+                                  'service not affiliated to Torn PDA',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -421,7 +466,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Text(
                                   'If active, when you are in hospital you\'ll have the option to call '
                                   'a reviver from Universal Health Care. NOTE: this is an external '
-                                  'service not affiliated to Torn PDA.',
+                                  'service not affiliated to Torn PDA',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -1064,5 +1109,57 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       );
     }
     return myList;
+  }
+
+  DropdownButton _lifeBarDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.lifeBarOption,
+      items: [
+        DropdownMenuItem(
+          value: "ask",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Ask",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "inventory",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Inventory",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "faction",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Faction",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.changeLifeBarOption = value;
+        });
+      },
+    );
   }
 }

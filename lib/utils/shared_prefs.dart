@@ -39,6 +39,7 @@ class Prefs {
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
+  final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
   final String _kTravelNotificationBody = "pda_travelNotificationBody";
   final String _kTravelNotificationAhead = "pda_travelNotificationAhead";
@@ -569,6 +570,19 @@ class Prefs {
   Future<bool> setRemoveAirplane(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRemoveAirplane, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Profile Bars
+  /// ----------------------------
+  Future<String> getLifeBarOption() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLifeBarOption) ?? 'ask';
+  }
+
+  Future<bool> setLifeBarOption(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLifeBarOption, value);
   }
 
   /// ----------------------------

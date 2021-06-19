@@ -1759,10 +1759,24 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           SizedBox(width: 10),
                           GestureDetector(
                             onLongPress: () {
-                              _launchBrowserFull('https://www.torn.com/item.php#medical-items');
+                              if (_settingsProvider.lifeBarOption == "ask") {
+                                _showLifeBarDialog(context, longPress: true);
+                              } else if (_settingsProvider.lifeBarOption == "inventory") {
+                                _launchBrowserFull('https://www.torn.com/item.php#medical-items');
+                              } else if (_settingsProvider.lifeBarOption == "faction") {
+                                _launchBrowserFull(
+                                    'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical');
+                              }
                             },
                             onTap: () async {
-                              _launchBrowserOption('https://www.torn.com/item.php#medical-items');
+                              if (_settingsProvider.lifeBarOption == "ask") {
+                                _showLifeBarDialog(context, longPress: false);
+                              } else if (_settingsProvider.lifeBarOption == "inventory") {
+                                _launchBrowserOption('https://www.torn.com/item.php#medical-items');
+                              } else if (_settingsProvider.lifeBarOption == "faction") {
+                                _launchBrowserOption(
+                                    'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical');
+                              }
                             },
                             child: LinearPercentIndicator(
                               width: 150,
@@ -4471,8 +4485,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 _chainModel.chain.current > 10 &&
                 _chainModel.chain.cooldown == 0) {
               _showFactionChainingToast();
-            } else if (_warnAboutExcessEnergy &&
-                _user.energy.current > _user.energy.maximum) {
+            } else if (_warnAboutExcessEnergy && _user.energy.current > _user.energy.maximum) {
               _showExcessEnergyToast();
             }
 
@@ -4483,8 +4496,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 _chainModel.chain.current > 10 &&
                 _chainModel.chain.cooldown == 0) {
               _showFactionChainingToast();
-            } else if (_warnAboutExcessEnergy &&
-                _user.energy.current > _user.energy.maximum) {
+            } else if (_warnAboutExcessEnergy && _user.energy.current > _user.energy.maximum) {
               _showExcessEnergyToast();
             }
 
@@ -5904,7 +5916,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
     return showDialog<void>(
       context: _,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -6050,6 +6062,134 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         child: Icon(
                           MdiIcons.cashUsdOutline,
                           color: Colors.green,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showLifeBarDialog(BuildContext _, {bool longPress = false}) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                      padding: EdgeInsets.only(
+                        top: 45,
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                      ),
+                      margin: EdgeInsets.only(top: 15),
+                      decoration: new BoxDecoration(
+                        color: _themeProvider.background,
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 10.0,
+                            offset: const Offset(0.0, 10.0),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: ElevatedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Icon(Icons.person),
+                                  SizedBox(width: 15),
+                                  Text("Inventory"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url = "https://www.torn.com/item.php#medical-items";
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _launchBrowserFull(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  _launchBrowserOption(url);
+                                }
+                              },
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            child: ElevatedButton(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Image.asset(
+                                    'images/icons/faction.png',
+                                    width: 25,
+                                    height: 15,
+                                    color: Colors.white70,
+                                  ),
+                                  SizedBox(width: 15),
+                                  Text("Faction"),
+                                ],
+                              ),
+                              onPressed: () async {
+                                var url =
+                                    'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+                                if (longPress) {
+                                  Navigator.of(context).pop();
+                                  await _launchBrowserFull(url);
+                                } else {
+                                  Navigator.of(context).pop();
+                                  await openBrowserDialog(context, url);
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          TextButton(
+                            child: Text("Cancel"),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      )),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(
+                          MdiIcons.hospitalBox,
+                          color: Colors.red,
                         ),
                       ),
                     ),

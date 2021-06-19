@@ -300,6 +300,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _lifeBarOption = 'ask';
+  String get lifeBarOption => _lifeBarOption;
+  set changeLifeBarOption(String choice) {
+    _lifeBarOption = choice;
+    Prefs().setLifeBarOption(_lifeBarOption);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -395,6 +403,8 @@ class SettingsProvider extends ChangeNotifier {
     _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
 
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
+
+    _lifeBarOption = await Prefs().getLifeBarOption();
 
     notifyListeners();
   }
