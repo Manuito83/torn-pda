@@ -43,13 +43,25 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_6.main.version = 'Torn PDA v2.3.6';
     v2_3_6.main.date = 'XX JUN 2021';
     String feat2_3_6_1 = "Added alerts for stock exchange price gain/loss";
-    String feat2_3_6_2 = "Fixed issues caused by targets with life over max";
-    String feat2_3_6_3 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_3_6_4 = "Fixed other UI related issues reported by users";
+    String feat2_3_6_2 = "Added Arson Warehouse support in the Trade Calculator";
+    String feat2_3_6_3 = "Loot: added Tiny";
+    String feat2_3_6_4 = "Loot: click the NPC's portrait to visit the profile";
+    String feat2_3_6_5 = "Profile: you can now choose which section to visit then taping the life bar";
+    String feat2_3_6_6 = "Profile: added caution message if visiting the gym while stacking";
+    String feat2_3_6_7 = "Fixed foreign stock items identification and uploads";
+    String feat2_3_6_8 = "Fixed issues caused by targets with life over max";
+    String feat2_3_6_9 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_3_6_10 = "Fixed other UI related issues reported by users";
     v2_3_6.features.add(feat2_3_6_1);
     v2_3_6.features.add(feat2_3_6_2);
     v2_3_6.features.add(feat2_3_6_3);
     v2_3_6.features.add(feat2_3_6_4);
+    v2_3_6.features.add(feat2_3_6_5);
+    v2_3_6.features.add(feat2_3_6_6);
+    v2_3_6.features.add(feat2_3_6_7);
+    v2_3_6.features.add(feat2_3_6_8);
+    v2_3_6.features.add(feat2_3_6_9);
+    v2_3_6.features.add(feat2_3_6_10);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
