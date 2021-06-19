@@ -615,7 +615,6 @@ class _WebViewFullState extends State<WebViewFull> {
                         inAppWebViewController: webView,
                         appBarTop: _settingsProvider.appBarTop,
                         browserDialog: widget.dialog,
-                        webviewType: 'inapp',
                       )
                     : SizedBox.shrink(),
               )
@@ -817,7 +816,6 @@ class _WebViewFullState extends State<WebViewFull> {
                         inAppWebViewController: webView,
                         appBarTop: _settingsProvider.appBarTop,
                         browserDialog: widget.dialog,
-                        webviewType: 'inapp',
                       )
                     : SizedBox.shrink(),
               )
@@ -2264,7 +2262,7 @@ class _WebViewFullState extends State<WebViewFull> {
         return WebviewUrlDialog(
           title: _pageTitle,
           url: url.toString(),
-          webview: webView,
+          inAppWebview: webView,
           callFindInPage: _activateFindInPage,
         );
       },

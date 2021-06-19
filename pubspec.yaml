@@ -67,7 +67,7 @@ dependencies:
   url_launcher: ^6.0.3
   vibration: ^1.7.4-nullsafety.0
   wakelock: ^0.5.2
-  webview_flutter: ^2.0.4
+  webview_flutter: ^2.0.8
 
 dev_dependencies:
   flutter_test:

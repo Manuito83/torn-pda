@@ -9,12 +9,15 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewShortcutsDialog extends StatefulWidget {
-  final InAppWebViewController webview;
+  final InAppWebViewController inAppWebView;
+  final WebViewController stockWebview;
 
   WebviewShortcutsDialog({
-    @required this.webview,
+    this.inAppWebView,
+    this.stockWebview,
   });
 
   @override
@@ -115,11 +118,18 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
     return InkWell(
       onTap: () async {
-        widget.webview.loadUrl(
-          urlRequest: URLRequest(
-            url: Uri.parse(thisShortcut.url),
-          ),
-        );
+        if (widget.inAppWebView != null) {
+          widget.inAppWebView.loadUrl(
+            urlRequest: URLRequest(
+              url: Uri.parse(thisShortcut.url),
+            ),
+          );
+        } else {
+          widget.stockWebview.loadUrl(
+            thisShortcut.url,
+          );
+        }
+
         Navigator.of(context).pop();
       },
       child: Card(

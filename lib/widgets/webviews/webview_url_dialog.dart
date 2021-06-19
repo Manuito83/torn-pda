@@ -15,18 +15,21 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class WebviewUrlDialog extends StatefulWidget {
   final Function callFindInPage;
   final String title;
   final String url;
-  final InAppWebViewController webview;
+  final InAppWebViewController inAppWebview;
+  final WebViewController stockWebView;
 
   WebviewUrlDialog({
-    @required this.callFindInPage,
+    this.callFindInPage,
     @required this.title,
     @required this.url,
-    @required this.webview,
+    this.inAppWebview,
+    this.stockWebView,
   });
 
   @override
@@ -97,8 +100,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     Flexible(
                       child: Text(
                         "OPTIONS",
-                        style: TextStyle(
-                            fontSize: 12, color: _themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
                     SizedBox(height: 15),
@@ -108,8 +110,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           child: Form(
                             key: _customURLKey,
                             child: Column(
-                              mainAxisSize:
-                                  MainAxisSize.min, // To make the card compact
+                              mainAxisSize: MainAxisSize.min, // To make the card compact
                               children: <Widget>[
                                 TextFormField(
                                   style: TextStyle(
@@ -134,17 +135,12 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       return "Cannot be empty!";
                                     }
                                     // Try to force https
-                                    if (value
-                                        .toLowerCase()
-                                        .contains('http://')) {
-                                      _customURLController.text
-                                          .replaceAll('http://', 'https://');
+                                    if (value.toLowerCase().contains('http://')) {
+                                      _customURLController.text.replaceAll('http://', 'https://');
                                     }
-                                    if (!value
-                                        .toLowerCase()
-                                        .contains('https://')) {
-                                      _customURLController.text = 'https://' +
-                                          _customURLController.text;
+                                    if (!value.toLowerCase().contains('https://')) {
+                                      _customURLController.text =
+                                          'https://' + _customURLController.text;
                                     }
                                     return null;
                                   },
@@ -207,10 +203,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Image.asset(
                               'images/icons/heart.png',
                               width: 22,
-                              color:
-                                  _shortcutsProvider.activeShortcuts.length > 0
-                                      ? Colors.white
-                                      : Colors.grey,
+                              color: _shortcutsProvider.activeShortcuts.length > 0
+                                  ? Colors.white
+                                  : Colors.grey,
                             ),
                             SizedBox(width: 5),
                             Text('Browse shortcuts'),
@@ -244,22 +239,25 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         _customURLController.text = "";
                       },
                     ),
-                    SizedBox(height: 10),
-                    ElevatedButton(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        //mainAxisAlignment: MainAxisAlign,
-                        children: [
-                          Icon(Icons.search),
-                          SizedBox(width: 8),
-                          Text('Find in page'),
-                        ],
+                    if (widget.inAppWebview != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: ElevatedButton(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            //mainAxisAlignment: MainAxisAlign,
+                            children: [
+                              Icon(Icons.search),
+                              SizedBox(width: 8),
+                              Text('Find in page'),
+                            ],
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            widget.callFindInPage();
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        widget.callFindInPage();
-                      },
-                    ),
                     SizedBox(height: 8),
                     TextButton(
                       child: Text("Close"),
@@ -302,11 +300,18 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
-      widget.webview.loadUrl(
-        urlRequest: URLRequest(
-          url: Uri.parse(_customURLController.text),
-        ),
-      );
+      if (widget.inAppWebview != null) {
+        widget.inAppWebview.loadUrl(
+          urlRequest: URLRequest(
+            url: Uri.parse(_customURLController.text),
+          ),
+        );
+      } else {
+        widget.stockWebView.loadUrl(
+          _customURLController.text,
+        );
+      }
+
       _customURLController.text = "";
       Navigator.of(context).pop();
     }
@@ -350,31 +355,27 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ],
                     ),
                     child: Column(
-                      mainAxisSize:
-                          MainAxisSize.min, // To make the card compact
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
                         Flexible(
                           child: Text(
                             "Add a name and URL for your custom shortcut. Note: "
                             "ensure URL begins with 'https://'",
-                            style: TextStyle(
-                                fontSize: 12, color: _themeProvider.mainText),
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
                         SizedBox(height: 15),
                         Form(
                           key: _customShortcutNameKey,
                           child: Column(
-                            mainAxisSize:
-                                MainAxisSize.min, // To make the card compact
+                            mainAxisSize: MainAxisSize.min, // To make the card compact
                             children: <Widget>[
                               TextFormField(
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: _themeProvider.mainText,
                                 ),
-                                textCapitalization:
-                                    TextCapitalization.sentences,
+                                textCapitalization: TextCapitalization.sentences,
                                 controller: _customShortcutNameController,
                                 maxLength: 20,
                                 maxLines: 1,
@@ -401,8 +402,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               child: Form(
                                 key: _customShortcutURLKey,
                                 child: Column(
-                                  mainAxisSize: MainAxisSize
-                                      .min, // To make the card compact
+                                  mainAxisSize: MainAxisSize.min, // To make the card compact
                                   children: <Widget>[
                                     TextFormField(
                                       style: TextStyle(
@@ -422,12 +422,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                         if (value.replaceAll(' ', '').isEmpty) {
                                           return "Cannot be empty!";
                                         }
-                                        if (!value
-                                            .toLowerCase()
-                                            .contains('https://')) {
-                                          if (value
-                                              .toLowerCase()
-                                              .contains('http://')) {
+                                        if (!value.toLowerCase().contains('https://')) {
+                                          if (value.toLowerCase().contains('http://')) {
                                             return "Invalid, HTTPS needed!";
                                           }
                                         }
@@ -447,26 +443,22 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             TextButton(
                               child: Text("Add"),
                               onPressed: () {
-                                if (!_customShortcutURLKey.currentState
-                                    .validate()) {
+                                if (!_customShortcutURLKey.currentState.validate()) {
                                   return;
                                 }
-                                if (!_customShortcutNameKey.currentState
-                                    .validate()) {
+                                if (!_customShortcutNameKey.currentState.validate()) {
                                   return;
                                 }
 
                                 var customShortcut = Shortcut()
                                   ..name = _customShortcutNameController.text
-                                  ..nickname =
-                                      _customShortcutNameController.text
+                                  ..nickname = _customShortcutNameController.text
                                   ..url = _customShortcutURLController.text
                                   ..iconUrl = 'images/icons/pda_icon.png'
                                   ..color = Colors.orange[500]
                                   ..isCustom = true;
 
-                                _shortcutsProvider
-                                    .activateShortcut(customShortcut);
+                                _shortcutsProvider.activateShortcut(customShortcut);
                                 Navigator.of(context).pop();
                                 _customShortcutNameController.text = '';
                                 _customURLController.text = '';
@@ -521,9 +513,15 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return WebviewShortcutsDialog(
-          webview: widget.webview,
-        );
+        if (widget.inAppWebview != null) {
+          return WebviewShortcutsDialog(
+            inAppWebView: widget.inAppWebview,
+          );
+        } else {
+          return WebviewShortcutsDialog(
+            stockWebview: widget.stockWebView,
+          );
+        }
       },
     );
   }

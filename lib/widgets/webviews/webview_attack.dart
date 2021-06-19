@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -12,6 +13,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 // Project imports:
@@ -297,24 +299,27 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               }
             }),
         title: GestureDetector(
-          child: Text(_currentPageTitle),
-          onLongPress: () async {
-            var url = await _webViewController.currentUrl();
-            Clipboard.setData(ClipboardData(text: url));
-            if (url.length > 60) {
-              url = url.substring(0, 60) + "...";
-            }
-            BotToast.showText(
-              text: "Current URL copied to the clipboard [$url]",
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.green,
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
+          onTap: () {
+            _openUrlDialog();
           },
+          child: DottedBorder(
+            borderType: BorderType.Rect,
+            padding: EdgeInsets.all(6),
+            dashPattern: [1, 4],
+            color: Colors.white70,
+            child: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              child: Row(
+                children: [
+                  Flexible(
+                      child: Text(
+                    _currentPageTitle,
+                    overflow: TextOverflow.fade,
+                  )),
+                ],
+              ),
+            ),
+          ),
         ),
         actions: _actionButtons(),
       ),
@@ -383,6 +388,21 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         contentPadding: EdgeInsets.all(10),
       );
     }
+  }
+
+  Future<void> _openUrlDialog() async {
+    var url = await _webViewController.currentUrl();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return WebviewUrlDialog(
+          title: _currentPageTitle,
+          url: url.toString(),
+          stockWebView: _webViewController,
+        );
+      },
+    );
   }
 
   List<Widget> _actionButtons() {
@@ -848,7 +868,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         _lastProfileVisited = page;
 
         try {
-          RegExp regId = new RegExp(r"(?:php\?XID=)([0-9]+)");
+          RegExp regId = new RegExp(r"php\?XID=([0-9]+)");
           var matches = regId.allMatches(page);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
@@ -869,7 +889,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         _lastProfileVisited = page;
 
         try {
-          RegExp regId = new RegExp(r"(?:&user2ID=)([0-9]+)");
+          RegExp regId = new RegExp(r"&user2ID=([0-9]+)");
           var matches = regId.allMatches(page);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
