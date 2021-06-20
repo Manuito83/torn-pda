@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -19,9 +20,9 @@ import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 
 class TacCard extends StatefulWidget {
   final TacTarget target;
-  final List<TacTarget> targetList;
+  final TacProvider tacProvider;
 
-  TacCard({@required this.target, this.targetList, @required Key key}) : super(key: key);
+  TacCard({@required this.target, @required this.tacProvider, @required Key key}) : super(key: key);
 
   @override
   _TacCardState createState() => _TacCardState();
@@ -29,7 +30,6 @@ class TacCard extends StatefulWidget {
 
 class _TacCardState extends State<TacCard> {
   TacTarget _target;
-  List<TacTarget> _targetsList;
 
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
@@ -42,7 +42,6 @@ class _TacCardState extends State<TacCard> {
   void initState() {
     super.initState();
     _target = widget.target;
-    _targetsList = widget.targetList;
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
   }
@@ -51,101 +50,106 @@ class _TacCardState extends State<TacCard> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4.0),
-        ),
-        elevation: 2,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // LINE 1
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-              child: Row(
-                children: <Widget>[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      _attackIcon(),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 5),
-                      ),
-                      SizedBox(
-                        width: 100,
-                        child: Text(
-                          '${_target.username}',
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
+      child: GestureDetector(
+        onTap: () {
+          _startAttack();
+        },
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          elevation: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // LINE 1
+              Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 10, 0),
+                child: Row(
+                  children: <Widget>[
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
+                        _attackIcon(),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 5),
+                        ),
                         SizedBox(
-                          width: 85,
+                          width: 100,
                           child: Text(
-                            ' [${_target.id}]',
+                            '${_target.username}',
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                        Text('Level ${_target.userLevel}'),
-                        SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: _returnAddTargetButton(),
-                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            // LINE 2
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Flexible(
-                    child: Text(
-                      _target.optimal
-                          ? 'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}'
-                          : 'Stats (est.): ${_target.battleStats}',
-                      style: TextStyle(fontSize: 12),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          SizedBox(
+                            width: 85,
+                            child: Text(
+                              ' [${_target.id}]',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Text('Level ${_target.userLevel}'),
+                          SizedBox(
+                            height: 22,
+                            width: 30,
+                            child: _returnAddTargetButton(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Flexible(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                  ],
+                ),
+              ),
+              // LINE 2
+              Padding(
+                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
                       child: Text(
-                        '${_target.rank}',
+                        _target.optimal
+                            ? 'Stats (est.): ${decimalFormat.format(_target.estimatedStats)}'
+                            : 'Stats (est.): ${_target.battleStats}',
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Text('FF: ${_target.fairfight ?? 'unk'}', style: TextStyle(fontSize: 12)),
-                      Text(' / R: ${_target.respect ?? 'unk'}', style: TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                ],
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: Text(
+                          '${_target.rank}',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text('FF: ${_target.fairfight ?? 'unk'}', style: TextStyle(fontSize: 12)),
+                        Text(' / R: ${_target.respect ?? 'unk'}', style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // LINE 3 (optional)
-            if (_target.currentLife != null)
-              _lifeBar(),
-            SizedBox(height: 10),
-          ],
+              // LINE 3 (optional)
+              if (_target.currentLife != null)
+                _lifeBar(),
+              SizedBox(height: 10),
+            ],
+          ),
         ),
       ),
     );
@@ -155,63 +159,61 @@ class _TacCardState extends State<TacCard> {
     return SizedBox(
       height: 20,
       width: 20,
-      child: IconButton(
-        padding: EdgeInsets.all(0.0),
-        iconSize: 20,
-        icon: Image.asset(
-          'images/icons/ic_target_account_black_48dp.png',
-          color: Colors.red,
-        ),
-        onPressed: () async {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              // For app browser, we are going to pass a list of attacks
-              // so that we can move to the next one
-              var myTargetList = List<TacTarget>.from(_targetsList);
-              // First, find out where we are in the list
-              for (var i = 0; i < myTargetList.length; i++) {
-                if (_target.id == myTargetList[i].id) {
-                  myTargetList.removeRange(0, i);
-                  break;
-                }
-              }
-              List<String> attacksIds = <String>[];
-              List<String> attacksNames = <String>[];
-              List<String> attackNotes = <String>[];
-              List<String> attacksNotesColor = <String>[];
-              for (var tar in myTargetList) {
-                attacksIds.add(tar.id.toString());
-                attacksNames.add(tar.username);
-                _target.optimal
-                    ? attackNotes.add('Stats (est.): ${decimalFormat.format(tar.estimatedStats)}')
-                    : attackNotes.add('Stats (est.): ${tar.battleStats}');
-                attacksNotesColor.add("");
-              }
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewAttack(
-                    attackIdList: attacksIds,
-                    attackNameList: attacksNames,
-                    attackNotesList: attackNotes,
-                    attackNotesColorList: attacksNotesColor,
-                    //attacksCallback: _updateSeveralTargets,
-                    userKey: _userProvider.basic.userApiKey,
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url = 'https://www.torn.com/loader.php?sid='
-                  'attack&user2ID=${_target.id}';
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
-        },
+      child: Image.asset(
+        'images/icons/ic_target_account_black_48dp.png',
+        color: Colors.red,
+        width: 20,
       ),
     );
+  }
+
+  Future<void> _startAttack() async {
+    var browserType = _settingsProvider.currentBrowser;
+    switch (browserType) {
+      case BrowserSetting.app:
+        // For app browser, we are going to pass a list of attacks
+        // so that we can move to the next one
+        var myTargetList = List<TacTarget>.from(widget.tacProvider.targetsList);
+        // First, find out where we are in the list
+        for (var i = 0; i < myTargetList.length; i++) {
+          if (_target.id == myTargetList[i].id) {
+            myTargetList.removeRange(0, i);
+            break;
+          }
+        }
+        List<String> attacksIds = <String>[];
+        List<String> attacksNames = <String>[];
+        List<String> attackNotes = <String>[];
+        List<String> attacksNotesColor = <String>[];
+        for (var tar in myTargetList) {
+          attacksIds.add(tar.id.toString());
+          attacksNames.add(tar.username);
+          _target.optimal
+              ? attackNotes.add('Stats (est.): ${decimalFormat.format(tar.estimatedStats)}')
+              : attackNotes.add('Stats (est.): ${tar.battleStats}');
+          attacksNotesColor.add("");
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => TornWebViewAttack(
+              attackIdList: attacksIds,
+              attackNameList: attacksNames,
+              attackNotesList: attackNotes,
+              attackNotesColorList: attacksNotesColor,
+              //attacksCallback: _updateSeveralTargets,
+              userKey: _userProvider.basic.userApiKey,
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = 'https://www.torn.com/loader.php?sid='
+            'attack&user2ID=${_target.id}';
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
+    }
   }
 
   Widget _returnAddTargetButton() {

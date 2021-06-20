@@ -53,7 +53,6 @@ class _TacPageState extends State<TacPage> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
 
-  TacInModel _tacModel;
   TacFilters _tacFilters;
   bool _apiCall = false;
   bool _getButtonActive = true;
@@ -640,7 +639,10 @@ class _TacPageState extends State<TacPage> {
 
   Widget _targetsListView() {
     return Consumer<TacProvider>(
-      builder: (context, targetsModel, child) => TacList(targets: targetsModel.targetsList),
+      builder: (context, targetsModel, child) => TacList(
+        targets: targetsModel.targetsList,
+        tacProvider: _tacProvider,
+      ),
     );
   }
 
@@ -648,7 +650,6 @@ class _TacPageState extends State<TacPage> {
     setState(() {
       _tacProvider.targetsList.clear();
       _targetCards.clear();
-      _tacModel = null;
     });
     int currentChainHit = 0;
     var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
@@ -724,9 +725,8 @@ class _TacPageState extends State<TacPage> {
               );
 
               _incorrectPremium = model.incorrectPremium;
-              _tacModel = model;
-              _createCards();
-              _saveTargets();
+              _createTargets(model);
+              _saveTargets(model);
             } else {
               _showSuccessToast(
                 'No targets found with the current filters!',
@@ -953,38 +953,26 @@ class _TacPageState extends State<TacPage> {
     Prefs().setTACFilters(tacFiltersToJson(_tacFilters));
   }
 
-  void _createCards() {
-    if (_tacModel != null) {
-      _tacModel.targets.forEach((targetId, value) {
-        var thisTacModel = TacTarget();
-        thisTacModel
-          ..id = targetId
-          ..optimal = value.optimal
-          ..username = value.username
-          ..rank = value.rank
-          ..battleStats = value.battlestats
-          ..estimatedStats = value.estimatedstats
-          ..userLevel = value.userlevel
-          ..fairfight = value.fairfight
-          ..respect = value.respect;
+  void _createTargets(TacInModel model) {
+    model.targets.forEach((targetId, value) {
+      var thisTacTarget = TacTarget();
+      thisTacTarget
+        ..id = targetId
+        ..optimal = value.optimal
+        ..username = value.username
+        ..rank = value.rank
+        ..battleStats = value.battlestats
+        ..estimatedStats = value.estimatedstats
+        ..userLevel = value.userlevel
+        ..fairfight = value.fairfight
+        ..respect = value.respect;
 
-        _tacProvider.targetsList.add(thisTacModel);
-      });
-    }
-
-    for (var model in _tacProvider.targetsList) {
-      _targetCards.add(
-        TacCard(
-          target: model,
-          targetList: _tacProvider.targetsList,
-          key: UniqueKey(),
-        ),
-      );
-    }
+      _tacProvider.targetsList.add(thisTacTarget);
+    });
   }
 
-  void _saveTargets() {
-    Prefs().setTACTargets(tacModelToJson(_tacModel));
+  void _saveTargets(TacInModel model) {
+    Prefs().setTACTargets(tacModelToJson(model));
   }
 
   Future _restorePreferences() async {
@@ -996,10 +984,10 @@ class _TacPageState extends State<TacPage> {
 
     var savedModel = await Prefs().getTACTargets();
     if (savedModel != "") {
-      _tacModel = tacModelFromJson(savedModel);
-      _createCards();
+      var model = tacModelFromJson(savedModel);
+      _createTargets(model);
       setState(() {
-        if (_tacModel.incorrectPremium) {
+        if (model.incorrectPremium) {
           _incorrectPremium = true;
         }
       });

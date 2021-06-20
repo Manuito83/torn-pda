@@ -52,8 +52,8 @@ class _TargetCardState extends State<TargetCard> {
   @override
   void initState() {
     super.initState();
-    _updatedTicker = new Timer.periodic(
-        Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _updatedTicker =
+        new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
@@ -80,8 +80,7 @@ class _TargetCardState extends State<TargetCard> {
           color: Colors.red,
           icon: Icons.delete,
           onTap: () {
-            Provider.of<TargetsProvider>(context, listen: false)
-                .deleteTarget(_target);
+            Provider.of<TargetsProvider>(context, listen: false).deleteTarget(_target);
             BotToast.showText(
               text: 'Deleted ${_target.name}!',
               textStyle: TextStyle(
@@ -97,208 +96,212 @@ class _TargetCardState extends State<TargetCard> {
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
-        child: Card(
-          shape: RoundedRectangleBorder(
-              side: BorderSide(color: _borderColor(), width: 1.5),
-              borderRadius: BorderRadius.circular(4.0)),
-          elevation: 2,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              // LINE 1
-              Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-                child: Row(
-                  children: <Widget>[
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        _attackIcon(),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
-                        ),
-                        SizedBox(
-                          width: 95,
-                          child: Text(
-                            '${_target.name}',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        mainAxisSize: MainAxisSize.max,
+        child: GestureDetector(
+          onTap: () {
+            _startAttack();
+          },
+          child: Card(
+            shape: RoundedRectangleBorder(
+                side: BorderSide(color: _borderColor(), width: 1.5),
+                borderRadius: BorderRadius.circular(4.0)),
+            elevation: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                // LINE 1
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(15, 5, 10, 0),
+                  child: Row(
+                    children: <Widget>[
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(width: 5),
-                              OpenContainer(
-                                transitionDuration: Duration(milliseconds: 500),
-                                transitionType:
-                                    ContainerTransitionType.fadeThrough,
-                                openBuilder:
-                                    (BuildContext context, VoidCallback _) {
-                                  return TargetDetailsPage(target: _target);
-                                },
-                                closedElevation: 0,
-                                closedShape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(56 / 2),
-                                  ),
-                                ),
-                                closedColor: Colors.transparent,
-                                closedBuilder: (BuildContext context,
-                                    VoidCallback openContainer) {
-                                  return SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: Icon(
-                                      Icons.info_outline,
-                                      size: 20,
-                                    ),
-                                  );
-                                },
-                              ),
-                              SizedBox(width: 5),
-                              _factionIcon(),
-                            ],
-                          ),
-                          Text(
-                            'Lvl ${_target.level}',
+                          _attackIcon(),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 5),
                           ),
                           SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: _refreshIcon(),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // LINE 2
-              Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  mainAxisSize: MainAxisSize.max,
-                  children: <Widget>[
-                    _returnRespectFF(_target.respectGain, _target.fairFight),
-                    _returnHealth(_target),
-                  ],
-                ),
-              ),
-              // LINE 3
-              Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(17, 5, 15, 0),
-                child: Row(
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        _travelIcon(),
-                        Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            color:
-                                _returnStatusColor(_target.lastAction.status),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 12),
-                          child: Text(
-                            'Action: ',
-                          ),
-                        ),
-                        Text(
-                          _target.lastAction.relative == "0 minutes ago"
-                              ? 'now'
-                              : _target.lastAction.relative
-                                  .replaceAll(' ago', ''),
-                        ),
-                      ],
-                    ),
-                    Expanded(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          Text(
-                            'Updated $_lastUpdatedString',
-                            style: TextStyle(
-                              color: _lastUpdatedMinutes <= 120
-                                  ? _themeProvider.mainText
-                                  : Colors.deepOrangeAccent,
-                              fontStyle: _lastUpdatedMinutes <= 120
-                                  ? FontStyle.normal
-                                  : FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // LINE 4
-              Padding(
-                padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Row(
-                        children: <Widget>[
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: IconButton(
-                              padding: EdgeInsets.all(0),
-                              iconSize: 20,
-                              icon: Icon(
-                                MdiIcons.notebookEditOutline,
-                                color: _returnTargetNoteColor(),
-                              ),
-                              onPressed: () {
-                                _showNotesDialog();
-                              },
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Text('Notes: '),
-                          Flexible(
+                            width: 95,
                             child: Text(
-                              '${_target.personalNote}',
+                              '${_target.name}',
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: _returnTargetNoteColor(),
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      '${_targetsProvider.allTargets.indexOf(_target) + 1}'
-                      '/${_targetsProvider.allTargets.length}',
-                      style: TextStyle(
-                        color: Colors.brown[400],
-                        fontSize: 11,
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.max,
+                          children: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(width: 5),
+                                OpenContainer(
+                                  transitionDuration: Duration(milliseconds: 500),
+                                  transitionType: ContainerTransitionType.fadeThrough,
+                                  openBuilder: (BuildContext context, VoidCallback _) {
+                                    return TargetDetailsPage(target: _target);
+                                  },
+                                  closedElevation: 0,
+                                  closedShape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(56 / 2),
+                                    ),
+                                  ),
+                                  closedColor: Colors.transparent,
+                                  closedBuilder:
+                                      (BuildContext context, VoidCallback openContainer) {
+                                    return SizedBox(
+                                      height: 22,
+                                      width: 30,
+                                      child: Icon(
+                                        Icons.info_outline,
+                                        size: 20,
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SizedBox(width: 5),
+                                _factionIcon(),
+                              ],
+                            ),
+                            Text(
+                              'Lvl ${_target.level}',
+                            ),
+                            SizedBox(
+                              height: 22,
+                              width: 30,
+                              child: _refreshIcon(),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 10),
-            ],
+                // LINE 2
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: <Widget>[
+                      _returnRespectFF(_target.respectGain, _target.fairFight),
+                      _returnHealth(_target),
+                    ],
+                  ),
+                ),
+                // LINE 3
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(17, 5, 15, 0),
+                  child: Row(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          _travelIcon(),
+                          Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: _returnStatusColor(_target.lastAction.status),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 12),
+                            child: Text(
+                              'Action: ',
+                            ),
+                          ),
+                          Text(
+                            _target.lastAction.relative == "0 minutes ago"
+                                ? 'now'
+                                : _target.lastAction.relative.replaceAll(' ago', ''),
+                          ),
+                        ],
+                      ),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            Text(
+                              'Updated $_lastUpdatedString',
+                              style: TextStyle(
+                                color: _lastUpdatedMinutes <= 120
+                                    ? _themeProvider.mainText
+                                    : Colors.deepOrangeAccent,
+                                fontStyle: _lastUpdatedMinutes <= 120
+                                    ? FontStyle.normal
+                                    : FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // LINE 4
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(10, 5, 15, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Row(
+                          children: <Widget>[
+                            SizedBox(
+                              width: 30,
+                              height: 20,
+                              child: IconButton(
+                                padding: EdgeInsets.all(0),
+                                iconSize: 20,
+                                icon: Icon(
+                                  MdiIcons.notebookEditOutline,
+                                  color: _returnTargetNoteColor(),
+                                ),
+                                onPressed: () {
+                                  _showNotesDialog();
+                                },
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text('Notes: '),
+                            Flexible(
+                              child: Text(
+                                '${_target.personalNote}',
+                                style: TextStyle(
+                                  color: _returnTargetNoteColor(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: Text(
+                          '${_targetsProvider.allTargets.indexOf(_target) + 1}'
+                          '/${_targetsProvider.allTargets.length}',
+                          style: TextStyle(
+                            color: Colors.brown[400],
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
           ),
         ),
       ),
@@ -309,60 +312,10 @@ class _TargetCardState extends State<TargetCard> {
     return SizedBox(
       height: 20,
       width: 20,
-      child: IconButton(
-        padding: EdgeInsets.all(0.0),
-        iconSize: 20,
-        icon: Image.asset(
-          'images/icons/ic_target_account_black_48dp.png',
-          color: Colors.red,
-        ),
-        onPressed: () async {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              // For app browser, we are going to pass a list of attacks
-              // so that we can move to the next one
-              var myTargetList =
-                  List<TargetModel>.from(_targetsProvider.allTargets);
-              // First, find out where we are in the list
-              for (var i = 0; i < myTargetList.length; i++) {
-                if (_target.playerId == myTargetList[i].playerId) {
-                  myTargetList.removeRange(0, i);
-                  break;
-                }
-              }
-              List<String> attacksIds = <String>[];
-              List<String> attacksNames = <String>[];
-              List<String> attackNotes = <String>[];
-              List<String> attacksNotesColor = <String>[];
-              for (var tar in myTargetList) {
-                attacksIds.add(tar.playerId.toString());
-                attacksNames.add(tar.name);
-                attackNotes.add(tar.personalNote);
-                attacksNotesColor.add(tar.personalNoteColor);
-              }
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => TornWebViewAttack(
-                    attackIdList: attacksIds,
-                    attackNameList: attacksNames,
-                    attackNotesList: attackNotes,
-                    attackNotesColorList: attacksNotesColor,
-                    attacksCallback: _updateSeveralTargets,
-                    userKey: _userProvider.basic.userApiKey,
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url = 'https://www.torn.com/loader.php?sid='
-                  'attack&user2ID=${_target.playerId}';
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
-        },
+      child: Image.asset(
+        'images/icons/ic_target_account_black_48dp.png',
+        color: Colors.red,
+        width: 20,
       ),
     );
   }
@@ -376,7 +329,7 @@ class _TargetCardState extends State<TargetCard> {
     } else {
       return IconButton(
         padding: EdgeInsets.all(0.0),
-        iconSize: 20,
+        iconSize: 22,
         icon: Icon(Icons.refresh),
         onPressed: () async {
           _updateThisTarget();
@@ -394,8 +347,7 @@ class _TargetCardState extends State<TargetCard> {
       }
 
       void showFactionToast() {
-        if (_target.faction.factionId ==
-            _userProvider.basic.faction.factionId) {
+        if (_target.faction.factionId == _userProvider.basic.faction.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_target.name} belongs to your same faction "
                 "(${_target.faction.factionName}) as "
@@ -504,8 +456,6 @@ class _TargetCardState extends State<TargetCard> {
       );
     }
 
-
-
     if (fairFight == -1) {
       fairFightResult = TextSpan(
         text: 'unk',
@@ -514,7 +464,6 @@ class _TargetCardState extends State<TargetCard> {
         ),
       );
     } else {
-
       var ffColor = Colors.red;
       if (fairFight >= 2.2 && fairFight < 2.8) {
         ffColor = Colors.orange;
@@ -581,11 +530,10 @@ class _TargetCardState extends State<TargetCard> {
       var now = DateTime.now().millisecondsSinceEpoch / 1000.floor();
 
       if (target.status.until > now) {
-        var endTimeStamp =
-            DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
+        var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
         if (_lifeTicker == null) {
-          _lifeTicker = Timer.periodic(Duration(seconds: 1),
-              (Timer t) => _refreshLifeClock(endTimeStamp));
+          _lifeTicker =
+              Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         }
         _refreshLifeClock(endTimeStamp);
         lifeText = _currentLifeString;
@@ -689,12 +637,11 @@ class _TargetCardState extends State<TargetCard> {
               Padding(
                 padding: const EdgeInsets.only(right: 3),
                 child: RotatedBox(
-                  quarterTurns:
-                      _target.status.description.contains('Traveling to ')
-                          ? 1 // If traveling to another country
-                          : _target.status.description.contains('Returning ')
-                              ? 3 // If returning to Torn
-                              : 0, // If staying abroad (blue but not moving)
+                  quarterTurns: _target.status.description.contains('Traveling to ')
+                      ? 1 // If traveling to another country
+                      : _target.status.description.contains('Returning ')
+                          ? 3 // If returning to Torn
+                          : 0, // If staying abroad (blue but not moving)
                   child: Icon(
                     _target.status.description.contains('In ')
                         ? Icons.location_city_outlined
@@ -812,7 +759,6 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   void _updateSeveralTargets(List<String> attackedIds) async {
-
     BotToast.showText(
       text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
       textStyle: TextStyle(
@@ -870,8 +816,8 @@ class _TargetCardState extends State<TargetCard> {
 
       if (_lifeTicker != null) {
         _lifeTicker.cancel();
-        _lifeTicker = Timer.periodic(Duration(seconds: timerCadence),
-            (Timer t) => _refreshLifeClock(timeEnd));
+        _lifeTicker = Timer.periodic(
+            Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
       if (diff.inSeconds < 2) {
@@ -886,10 +832,56 @@ class _TargetCardState extends State<TargetCard> {
     if (_lifeTicker != null) {
       _lifeTicker.cancel();
     }
-    _target.status.until =
-        (DateTime.now().millisecondsSinceEpoch / 1000).floor();
+    _target.status.until = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  void _startAttack() async {
+    var browserType = _settingsProvider.currentBrowser;
+    switch (browserType) {
+      case BrowserSetting.app:
+        // For app browser, we are going to pass a list of attacks
+        // so that we can move to the next one
+        var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
+        // First, find out where we are in the list
+        for (var i = 0; i < myTargetList.length; i++) {
+          if (_target.playerId == myTargetList[i].playerId) {
+            myTargetList.removeRange(0, i);
+            break;
+          }
+        }
+        List<String> attacksIds = <String>[];
+        List<String> attacksNames = <String>[];
+        List<String> attackNotes = <String>[];
+        List<String> attacksNotesColor = <String>[];
+        for (var tar in myTargetList) {
+          attacksIds.add(tar.playerId.toString());
+          attacksNames.add(tar.name);
+          attackNotes.add(tar.personalNote);
+          attacksNotesColor.add(tar.personalNoteColor);
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => TornWebViewAttack(
+              attackIdList: attacksIds,
+              attackNameList: attacksNames,
+              attackNotesList: attackNotes,
+              attackNotesColorList: attacksNotesColor,
+              attacksCallback: _updateSeveralTargets,
+              userKey: _userProvider.basic.userApiKey,
+            ),
+          ),
+        );
+        break;
+      case BrowserSetting.external:
+        var url = 'https://www.torn.com/loader.php?sid='
+            'attack&user2ID=${_target.playerId}';
+        if (await canLaunch(url)) {
+          await launch(url, forceSafariVC: false);
+        }
+        break;
     }
   }
 }
