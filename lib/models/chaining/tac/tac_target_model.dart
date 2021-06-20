@@ -11,6 +11,11 @@ String tacTargetToJson(TacTarget data) => json.encode(data.toJson());
 
 class TacTarget {
   TacTarget({
+    this.currentLife,
+    this.maxLife,
+    this.hospital,
+    this.abroad,
+
     this.battleStats = "",
     this.estimatedStats = 0,
     this.rank = "",
@@ -21,6 +26,12 @@ class TacTarget {
     this.fairfight = 0,
     this.respect = 0,
   });
+
+  // Does not get saved
+  int currentLife;
+  int maxLife;
+  bool hospital;
+  bool abroad;
 
   bool optimal;
   String id;

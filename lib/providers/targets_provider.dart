@@ -27,11 +27,7 @@ class AddTargetResult {
   String targetId = "";
   String targetName = "";
 
-  AddTargetResult(
-      {@required this.success,
-      this.errorReason,
-      this.targetId,
-      this.targetName});
+  AddTargetResult({@required this.success, this.errorReason, this.targetId, this.targetName});
 }
 
 class UpdateTargetsResult {
@@ -40,15 +36,12 @@ class UpdateTargetsResult {
   int numberSuccessful;
 
   UpdateTargetsResult(
-      {@required this.success,
-      @required this.numberErrors,
-      @required this.numberSuccessful});
+      {@required this.success, @required this.numberErrors, @required this.numberSuccessful});
 }
 
 class TargetsProvider extends ChangeNotifier {
   List<TargetModel> _targets = [];
-  UnmodifiableListView<TargetModel> get allTargets =>
-      UnmodifiableListView(_targets);
+  UnmodifiableListView<TargetModel> get allTargets => UnmodifiableListView(_targets);
 
   List<TargetModel> _oldTargetsList = [];
 
@@ -84,8 +77,7 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewTargetModel =
-        await TornApiCaller.target(_userKey, targetId).getTarget;
+    dynamic myNewTargetModel = await TornApiCaller.target(_userKey, targetId).getTarget;
 
     if (myNewTargetModel is TargetModel) {
       _getRespectFF(attacks, myNewTargetModel);
@@ -147,16 +139,14 @@ class TargetsProvider extends ChangeNotifier {
           }
 
           if (myNewTargetModel.playerId == value.defenderId) {
-            if (value.result == Result.LOST ||
-                value.result == Result.STALEMATE) {
+            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
               // If we attacked and lost
               userWonOrDefended.add(false);
             } else {
               userWonOrDefended.add(true);
             }
           } else if (myNewTargetModel.playerId == value.attackerId) {
-            if (value.result == Result.LOST ||
-                value.result == Result.STALEMATE) {
+            if (value.result == Result.LOST || value.result == Result.STALEMATE) {
               // If we were attacked and the attacker lost
               userWonOrDefended.add(true);
             } else {
@@ -200,9 +190,8 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel = await TornApiCaller.target(
-              _userKey, targetToUpdate.playerId.toString())
-          .getTarget;
+      dynamic myUpdatedTargetModel =
+          await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(attacks, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
@@ -240,9 +229,8 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel = await TornApiCaller.target(
-                _userKey, _targets[i].playerId.toString())
-            .getTarget;
+        dynamic myUpdatedTargetModel =
+            await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(attacks, myUpdatedTargetModel);
           _getTargetFaction(myUpdatedTargetModel);
@@ -280,8 +268,7 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks(
-      {@required List<String> targetsIds}) async {
+  Future<void> updateTargetsAfterAttacks({@required List<String> targetsIds}) async {
     // Get attacks full to use later
     dynamic attacks = await getAttacks();
 
@@ -296,14 +283,12 @@ class TargetsProvider extends ChangeNotifier {
             }
             try {
               dynamic myUpdatedTargetModel =
-                  await TornApiCaller.target(_userKey, tar.playerId.toString())
-                      .getTarget;
+                  await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
               if (myUpdatedTargetModel is TargetModel) {
                 _getRespectFF(attacks, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
                 _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-                var newTarget =
-                    _targets[_targets.indexOf(myUpdatedTargetModel)];
+                var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
                 if (showUpdateAnimation) {
                   _updateResultAnimation(newTarget, true);
                 }
@@ -410,22 +395,18 @@ class TargetsProvider extends ChangeNotifier {
         _targets.sort((a, b) => a.respectGain.compareTo(b.respectGain));
         break;
       case TargetSortType.nameDes:
-        _targets.sort(
-            (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        _targets.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
         break;
       case TargetSortType.nameAsc:
-        _targets.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
       case TargetSortType.colorDes:
-        _targets.sort((a, b) => b.personalNoteColor
-            .toLowerCase()
-            .compareTo(a.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) =>
+            b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
         break;
       case TargetSortType.colorAsc:
-        _targets.sort((a, b) => a.personalNoteColor
-            .toLowerCase()
-            .compareTo(b.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) =>
+            a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
         break;
     }
     _saveSortSharedPrefs();
@@ -548,8 +529,7 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     // Targets color filter
-    _currentColorFilterOut =
-        await Prefs().getTargetsColorFilter();
+    _currentColorFilterOut = await Prefs().getTargetsColorFilter();
 
     // Notification
     notifyListeners();
@@ -624,10 +604,8 @@ class TargetsProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);
         var answer = result.values.first;
-        if (answer.contains("No new targets added") ||
-            answer.contains("You added")) {
-          answer +=
-              ". Any existing notes and colors have been exported and overwritten in YATA";
+        if (answer.contains("No new targets added") || answer.contains("You added")) {
+          answer += ". Any existing notes and colors have been exported and overwritten in YATA";
         }
 
         return answer;

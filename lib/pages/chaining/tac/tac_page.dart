@@ -10,7 +10,11 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:expandable/expandable.dart';
 import 'package:http/http.dart' as http;
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/tac_provider.dart';
+import 'package:torn_pda/widgets/chaining/tac/tac_list.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -40,8 +44,11 @@ class TacPage extends StatefulWidget {
 }
 
 class _TacPageState extends State<TacPage> {
+  var _targetCards = <TacCard>[];
+
   Future _preferencesLoaded;
 
+  TacProvider _tacProvider;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
@@ -96,6 +103,7 @@ class _TacPageState extends State<TacPage> {
   @override
   void initState() {
     super.initState();
+    _tacProvider = Provider.of<TacProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
@@ -358,10 +366,11 @@ class _TacPageState extends State<TacPage> {
   }
 
   Widget _getTargetsButton() {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ElevatedButton(
-          child: Text('Get targets'),
+          child: Text('Fetch', style: TextStyle(fontSize: 12)),
           onPressed: _getButtonActive
               ? () {
                   setState(() {
@@ -380,7 +389,75 @@ class _TacPageState extends State<TacPage> {
                 }
               : null,
         ),
+        if (_tacProvider.targetsList.isNotEmpty)
+          TextButton(
+            child: Icon(
+              MdiIcons.hospitalBox,
+              color: Colors.red[700],
+            ),
+            onPressed: () {
+              _getTargetStatus();
+            },
+          ),
       ],
+    );
+  }
+
+  Future<void> _getTargetStatus() async {
+    BotToast.showText(
+      text: "Updating targets' information...",
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green,
+      duration: Duration(seconds: 3),
+      contentPadding: EdgeInsets.all(10),
+    );
+
+    var success = 0;
+    var fails = 0;
+
+    for (var i = 0; i < _tacProvider.targetsList.length; i++) {
+      if (mounted) {
+        dynamic target = await TornApiCaller.target(
+          _userProvider.basic.userApiKey,
+          _tacProvider.targetsList[i].id.toString(),
+        ).getTarget;
+
+        if (target is TargetModel) {
+          _tacProvider.getSingleStatus(i, target);
+          success++;
+        } else {
+          fails++;
+        }
+      }
+    }
+
+    var resultColor = Colors.green;
+    var resultString = "";
+    if (success > 0 && fails == 0) {
+      resultString = "Successfully updated $success targets!";
+    } else if (success == 0 && fails > 0) {
+      resultColor = Colors.red;
+      resultString = "There was an issue updating targets, perhaps too many API calls? "
+          "Please wait a minute and try again.";
+    } else if (success > 0 && fails > 0) {
+      resultColor = Colors.orange;
+      resultString = "$success targets updated successfully, but $fails did not! Perhaps "
+          "too many API calls? Please wait a minute and try again.";
+    }
+
+    if (resultString.isNotEmpty) {}
+    BotToast.showText(
+      text: resultString,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: resultColor,
+      duration: Duration(seconds: 3),
+      contentPadding: EdgeInsets.all(10),
     );
   }
 
@@ -401,7 +478,7 @@ class _TacPageState extends State<TacPage> {
             ),
             Text(
               "OPTIMAL TARGETS",
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 11),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 4),
@@ -416,14 +493,14 @@ class _TacPageState extends State<TacPage> {
                 },
                 child: Icon(
                   Icons.info_outline,
-                  size: 18,
+                  size: 16,
                 ),
               ),
             ),
           ],
         ),
         SizedBox(
-          width: 200,
+          width: 180,
           child: SizedBox(
             width: 150,
             height: 20,
@@ -562,47 +639,17 @@ class _TacPageState extends State<TacPage> {
   }
 
   Widget _targetsListView() {
-    var targetsList = <TacTarget>[];
-    if (_tacModel != null) {
-      _tacModel.targets.forEach((targetId, value) {
-        var thisTacModel = TacTarget();
-        thisTacModel
-          ..id = targetId
-          ..optimal = value.optimal
-          ..username = value.username
-          ..rank = value.rank
-          ..battleStats = value.battlestats
-          ..estimatedStats = value.estimatedstats
-          ..userLevel = value.userlevel
-          ..fairfight = value.fairfight
-          ..respect = value.respect;
-
-        targetsList.add(thisTacModel);
-      });
-    }
-
-    var targetCards = <TacCard>[];
-    for (var model in targetsList) {
-      targetCards.add(
-        TacCard(
-          target: model,
-          targetList: targetsList,
-        ),
-      );
-    }
-
-    if (MediaQuery.of(context).orientation == Orientation.portrait) {
-      return ListView(children: targetCards);
-    } else {
-      return ListView(
-        children: targetCards,
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-      );
-    }
+    return Consumer<TacProvider>(
+      builder: (context, targetsModel, child) => TacList(targets: targetsModel.targetsList),
+    );
   }
 
   Future _fetchTac() async {
+    setState(() {
+      _tacProvider.targetsList.clear();
+      _targetCards.clear();
+      _tacModel = null;
+    });
     int currentChainHit = 0;
     var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
     if (chainResponse is ChainModel) {
@@ -678,6 +725,7 @@ class _TacPageState extends State<TacPage> {
 
               _incorrectPremium = model.incorrectPremium;
               _tacModel = model;
+              _createCards();
               _saveTargets();
             } else {
               _showSuccessToast(
@@ -905,6 +953,36 @@ class _TacPageState extends State<TacPage> {
     Prefs().setTACFilters(tacFiltersToJson(_tacFilters));
   }
 
+  void _createCards() {
+    if (_tacModel != null) {
+      _tacModel.targets.forEach((targetId, value) {
+        var thisTacModel = TacTarget();
+        thisTacModel
+          ..id = targetId
+          ..optimal = value.optimal
+          ..username = value.username
+          ..rank = value.rank
+          ..battleStats = value.battlestats
+          ..estimatedStats = value.estimatedstats
+          ..userLevel = value.userlevel
+          ..fairfight = value.fairfight
+          ..respect = value.respect;
+
+        _tacProvider.targetsList.add(thisTacModel);
+      });
+    }
+
+    for (var model in _tacProvider.targetsList) {
+      _targetCards.add(
+        TacCard(
+          target: model,
+          targetList: _tacProvider.targetsList,
+          key: UniqueKey(),
+        ),
+      );
+    }
+  }
+
   void _saveTargets() {
     Prefs().setTACTargets(tacModelToJson(_tacModel));
   }
@@ -919,6 +997,7 @@ class _TacPageState extends State<TacPage> {
     var savedModel = await Prefs().getTACTargets();
     if (savedModel != "") {
       _tacModel = tacModelFromJson(savedModel);
+      _createCards();
       setState(() {
         if (_tacModel.incorrectPremium) {
           _incorrectPremium = true;
