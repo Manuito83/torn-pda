@@ -50,10 +50,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_6_6 = "Profile: added caution message if visiting the gym while stacking";
     String feat2_3_6_7 = "Chaining: you can now check targets' status after fetching them from TAC";
     String feat2_3_6_8 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
-    String feat2_3_6_9 = "Fixed foreign stock items identification and uploads";
-    String feat2_3_6_10 = "Fixed issues caused by targets with life over max";
-    String feat2_3_6_11 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_3_6_12 = "Fixed other UI related issues reported by users";
+    String feat2_3_6_9 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
+    String feat2_3_6_10 = "Fixed foreign stock items identification and uploads";
+    String feat2_3_6_11 = "Fixed issues caused by targets with life over max";
+    String feat2_3_6_12 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_3_6_13 = "Fixed other UI related issues reported by users";
     v2_3_6.features.add(feat2_3_6_1);
     v2_3_6.features.add(feat2_3_6_2);
     v2_3_6.features.add(feat2_3_6_3);
@@ -66,6 +67,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_6.features.add(feat2_3_6_10);
     v2_3_6.features.add(feat2_3_6_11);
     v2_3_6.features.add(feat2_3_6_12);
+    v2_3_6.features.add(feat2_3_6_13);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
