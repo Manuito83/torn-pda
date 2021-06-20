@@ -615,6 +615,7 @@ class _WebViewFullState extends State<WebViewFull> {
                         inAppWebViewController: webView,
                         appBarTop: _settingsProvider.appBarTop,
                         browserDialog: widget.dialog,
+                        webviewType: 'inapp',
                       )
                     : SizedBox.shrink(),
               )
@@ -712,7 +713,13 @@ class _WebViewFullState extends State<WebViewFull> {
               /// We are calling trades from here because onLoadStop does not
               /// work inside of Trades for iOS. Also, both in Android and iOS
               /// we need to catch deletions.
-              if (_currentUrl.contains("trade.php")) {
+
+              // Two possible scenarios.
+              // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
+              //    we check for url once, limiting it to TradesTriggered
+              // 2. For the rest of the cases (updates, additions), we use the resource
+              if (resource.url.toString().contains("trade.php") ||
+                  (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
                 _tradesTriggered = true;
                 var html = await webView.getHtml();
                 var document = parse(html);
@@ -721,7 +728,8 @@ class _WebViewFullState extends State<WebViewFull> {
               }
 
               // Properties (vault) for initialisation and live transactions
-              if (_currentUrl.contains("properties.php")) {
+              if (resource.url.toString().contains("properties.php") ||
+                  (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
                 if (!_vaultTriggered) {
                   var html = await webView.getHtml();
                   var document = parse(html);
@@ -816,6 +824,7 @@ class _WebViewFullState extends State<WebViewFull> {
                         inAppWebViewController: webView,
                         appBarTop: _settingsProvider.appBarTop,
                         browserDialog: widget.dialog,
+                        webviewType: 'inapp',
                       )
                     : SizedBox.shrink(),
               )
@@ -1653,7 +1662,10 @@ class _WebViewFullState extends State<WebViewFull> {
       if (mounted) {
         setState(() {
           _tradesFullActive = true;
-          _tradesExpandable = TradesWidget();
+          _tradesExpandable = TradesWidget(
+            themeProv: _themeProvider,
+            userProv: _userProvider,
+          );
         });
       }
     } else {

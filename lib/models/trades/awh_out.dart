@@ -12,27 +12,35 @@ class ArsonWarehouseOut {
   ArsonWarehouseOut({
     this.version,
     this.tradeId,
-    this.sellerName,
-    this.items,
+    this.me,
+    this.them,
+    this.theirItems,
+    this.myItems,
   });
 
   int version;
   int tradeId;
-  String sellerName;
-  List<AwhItem> items;
+  int me;
+  String them;
+  List<AwhItem> theirItems;
+  List<AwhItem> myItems;
 
   factory ArsonWarehouseOut.fromJson(Map<String, dynamic> json) => ArsonWarehouseOut(
     version: json["version"] == null ? null : json["version"],
     tradeId: json["trade_id"] == null ? null : json["trade_id"],
-    sellerName: json["seller_name"] == null ? null : json["seller_name"],
-    items: json["items"] == null ? null : List<AwhItem>.from(json["items"].map((x) => AwhItem.fromJson(x))),
+    me: json["me"] == null ? null : json["me"],
+    them: json["them"] == null ? null : json["them"],
+    theirItems: json["their_items"] == null ? null : List<AwhItem>.from(json["their_items"].map((x) => AwhItem.fromJson(x))),
+    myItems: json["my_items"] == null ? null : List<AwhItem>.from(json["my_items"].map((x) => AwhItem.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
     "version": version == null ? null : version,
     "trade_id": tradeId == null ? null : tradeId,
-    "seller_name": sellerName == null ? null : sellerName,
-    "items": items == null ? null : List<dynamic>.from(items.map((x) => x.toJson())),
+    "me": me == null ? null : me,
+    "them": them == null ? null : them,
+    "their_items": theirItems == null ? null : List<dynamic>.from(theirItems.map((x) => x.toJson())),
+    "my_items": myItems == null ? null : List<dynamic>.from(myItems.map((x) => x.toJson())),
   };
 }
 

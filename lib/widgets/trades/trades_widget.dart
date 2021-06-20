@@ -16,10 +16,17 @@ import 'package:torn_pda/models/trades/awh_out.dart';
 
 // Project imports:
 import 'package:torn_pda/models/trades/trade_item_model.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_full_single.dart';
 
 class TradesWidget extends StatefulWidget {
+  ThemeProvider themeProv;
+  UserDetailsProvider userProv;
+
+  TradesWidget({@required this.themeProv, @required this.userProv,});
+
   @override
   _TradesWidgetState createState() => _TradesWidgetState();
 }
@@ -870,22 +877,41 @@ class _TradesWidgetState extends State<TradesWidget> {
   }
 
   Widget _awhContainer() {
-    var awhBaseUrl = "https://arsonwarehouse.com/pda?key=123&trade=";  // TODO
+    var dark = "";
+    if (widget.themeProv.currentTheme == AppTheme.dark) {
+      dark = "dark&";
+    }
+
+    var awhBaseUrl = "https://arsonwarehouse.com/pda?${dark}&trade=";
     var awhContainer = ArsonWarehouseOut();
 
-    var awhItems = <AwhItem>[];
+    var theirItems = <AwhItem>[];
     for (var item in _tradesProv.container.rightItems) {
-      var awhItem = AwhItem()
-        ..name = item.name
-        ..quantity = item.quantity;
-      awhItems.add(awhItem);
+      if (!item.name.contains("No items in trade")) {
+        var awhItem = AwhItem()
+          ..name = item.name
+          ..quantity = item.quantity;
+        theirItems.add(awhItem);
+      }
+    }
+
+    var myItems = <AwhItem>[];
+    for (var item in _tradesProv.container.leftItems) {
+      if (!item.name.contains("No items in trade")) {
+        var awhItem = AwhItem()
+          ..name = item.name
+          ..quantity = item.quantity;
+        myItems.add(awhItem);
+      }
     }
 
     awhContainer
-      ..sellerName = _tradesProv.container.sellerName
+      ..me = widget.userProv.basic.playerId
+      ..them = _tradesProv.container.sellerName
       ..tradeId = _tradesProv.container.tradeId
       ..version = 1
-      ..items = awhItems;
+      ..theirItems = theirItems
+      ..myItems = myItems;
 
     var awhJson = arsonWarehouseOutToJson(awhContainer);
     var bytes = utf8.encode(awhJson);
