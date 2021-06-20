@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:intl/intl.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -20,7 +21,7 @@ class TacCard extends StatefulWidget {
   final TacTarget target;
   final List<TacTarget> targetList;
 
-  TacCard({@required this.target, this.targetList});
+  TacCard({@required this.target, this.targetList, @required Key key}) : super(key: key);
 
   @override
   _TacCardState createState() => _TacCardState();
@@ -133,15 +134,16 @@ class _TacCardState extends State<TacCard> {
                   ),
                   Row(
                     children: [
-                      Text('FF: ${_target.fairfight ?? 'unk'}',
-                          style: TextStyle(fontSize: 12)),
-                      Text(' / R: ${_target.respect ?? 'unk'}',
-                          style: TextStyle(fontSize: 12)),
+                      Text('FF: ${_target.fairfight ?? 'unk'}', style: TextStyle(fontSize: 12)),
+                      Text(' / R: ${_target.respect ?? 'unk'}', style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ],
               ),
             ),
+            // LINE 3 (optional)
+            if (_target.currentLife != null)
+              _lifeBar(),
             SizedBox(height: 10),
           ],
         ),
@@ -182,8 +184,7 @@ class _TacCardState extends State<TacCard> {
                 attacksIds.add(tar.id.toString());
                 attacksNames.add(tar.username);
                 _target.optimal
-                    ? attackNotes.add(
-                        'Stats (est.): ${decimalFormat.format(tar.estimatedStats)}')
+                    ? attackNotes.add('Stats (est.): ${decimalFormat.format(tar.estimatedStats)}')
                     : attackNotes.add('Stats (est.): ${tar.battleStats}');
                 attacksNotesColor.add("");
               }
@@ -291,8 +292,7 @@ class _TacCardState extends State<TacCard> {
                   );
                 } else if (!tryAddTarget.success) {
                   BotToast.showText(
-                    text: HtmlParser.fix(
-                        'Error adding ${_target.id}. ${tryAddTarget.errorReason}'),
+                    text: HtmlParser.fix('Error adding ${_target.id}. ${tryAddTarget.errorReason}'),
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
@@ -309,10 +309,69 @@ class _TacCardState extends State<TacCard> {
                     _addButtonActive = true;
                   });
                 }
-
               }
             : null,
       );
     }
+  }
+
+  Widget _lifeBar() {
+    Color lifeBarColor = Colors.green;
+    Widget hospitalWarning = SizedBox.shrink();
+    Widget abroadWarning = SizedBox.shrink();
+    String lifeText = _target.currentLife.toString();
+
+    if (_target.hospital != null && _target.hospital) {
+        lifeBarColor = Colors.red[300];
+        hospitalWarning = Icon(
+          Icons.local_hospital,
+          size: 20,
+          color: Colors.red,
+        );
+    }
+
+    if (_target.abroad != null && _target.abroad) {
+      abroadWarning = Icon(
+        Icons.airplanemode_active_outlined,
+        size: 20,
+        color: Colors.blue,
+      );
+    }
+
+    // Found players in federal jail with a higher life than their maximum. Correct it if it's the
+    // case to avoid issues with percentage bar
+    double lifePercentage;
+    if (_target.currentLife / _target.maxLife > 1) {
+      lifePercentage = 1;
+    } else if (_target.currentLife / _target.maxLife > 1) {
+      lifePercentage = 0;
+    } else {
+      lifePercentage = _target.currentLife / _target.maxLife;
+    }
+
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            'Life ',
+            style: TextStyle(fontSize: 12),
+          ),
+          LinearPercentIndicator(
+            width: 100,
+            lineHeight: 12,
+            progressColor: lifeBarColor,
+            center: Text(
+              lifeText,
+              style: TextStyle(color: Colors.black, fontSize: 10),
+            ),
+            percent: lifePercentage,
+          ),
+          hospitalWarning,
+          abroadWarning,
+        ],
+      ),
+    );
   }
 }

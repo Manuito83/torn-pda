@@ -48,11 +48,12 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_6_4 = "Loot: click the NPC's portrait to visit the profile";
     String feat2_3_6_5 = "Profile: you can now choose which section to visit then taping the life bar";
     String feat2_3_6_6 = "Profile: added caution message if visiting the gym while stacking";
-    String feat2_3_6_7 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
-    String feat2_3_6_8 = "Fixed foreign stock items identification and uploads";
-    String feat2_3_6_9 = "Fixed issues caused by targets with life over max";
-    String feat2_3_6_10 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_3_6_11 = "Fixed other UI related issues reported by users";
+    String feat2_3_6_7 = "Chaining: you can now check targets' status after fetching them from TAC";
+    String feat2_3_6_8 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
+    String feat2_3_6_9 = "Fixed foreign stock items identification and uploads";
+    String feat2_3_6_10 = "Fixed issues caused by targets with life over max";
+    String feat2_3_6_11 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_3_6_12 = "Fixed other UI related issues reported by users";
     v2_3_6.features.add(feat2_3_6_1);
     v2_3_6.features.add(feat2_3_6_2);
     v2_3_6.features.add(feat2_3_6_3);
@@ -64,6 +65,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_6.features.add(feat2_3_6_9);
     v2_3_6.features.add(feat2_3_6_10);
     v2_3_6.features.add(feat2_3_6_11);
+    v2_3_6.features.add(feat2_3_6_12);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
