@@ -198,6 +198,9 @@ class _WebViewFullState extends State<WebViewFull> {
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
       ),
+      ios: IOSInAppWebViewOptions(
+        allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
+      ),
     );
 
     /*

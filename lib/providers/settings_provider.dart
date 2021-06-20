@@ -308,6 +308,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _iosAllowLinkPreview = true;
+  bool get iosAllowLinkPreview => _iosAllowLinkPreview;
+  set changeIosAllowLinkPreview(bool choice) {
+    _iosAllowLinkPreview = choice;
+    Prefs().setIosAllowLinkPreview(_iosAllowLinkPreview);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -405,6 +413,8 @@ class SettingsProvider extends ChangeNotifier {
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 
     _lifeBarOption = await Prefs().getLifeBarOption();
+
+    _iosAllowLinkPreview = await Prefs().getIosAllowLinkPreview();
 
     notifyListeners();
   }

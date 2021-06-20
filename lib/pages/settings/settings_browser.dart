@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -93,6 +94,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           Divider(),
                           SizedBox(height: 10),
                           _profile(),
+                          if (Platform.isIOS)
+                            Column(
+                              children: [
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 10),
+                                _linkPreview(),
+                              ],
+                            ),
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
@@ -339,6 +349,57 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ],
               ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column _linkPreview() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'LINKS PREVIEW',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Allow links preview"),
+                  Switch(
+                    value: _settingsProvider.iosAllowLinkPreview,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.changeIosAllowLinkPreview = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'Allow browser to open an iOS native preview windows when '
+                    'long-pressing a link (only iOS 9+)',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
           ],
         ),
       ],

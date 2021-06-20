@@ -28,6 +28,7 @@ class Prefs {
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
+  final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
@@ -506,6 +507,20 @@ class Prefs {
   Future<bool> setAllowScreenRotation(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAllowScreenRotation, value);
+  }
+
+  /// ----------------------------
+  /// Methods for iOS Link Preview
+  /// ----------------------------
+
+  Future<bool> getIosAllowLinkPreview() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kIosAllowLinkPreview) ?? true;
+  }
+
+  Future<bool> setIosAllowLinkPreview(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kIosAllowLinkPreview, value);
   }
 
   /// ----------------------------
