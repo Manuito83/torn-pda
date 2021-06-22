@@ -52,10 +52,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_6_8 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
     String feat2_3_6_9 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
     String feat2_3_6_10 = "Fixed foreign stock items identification and uploads";
-    String feat2_3_6_11 = "Browser: [iOS] you can now disable the native link preview windows when long-pressing";
-    String feat2_3_6_12 = "Fixed issues caused by targets with life over max";
-    String feat2_3_6_13 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_3_6_14 = "Fixed other UI related issues reported by users";
+    String feat2_3_6_11 = "Browser: added MAX buttons when buying from the bazaar";
+    String feat2_3_6_12 = "Browser: [iOS] you can now disable the native link preview windows when long-pressing";
+    String feat2_3_6_13 = "Fixed issues caused by targets with life over max";
+    String feat2_3_6_14 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_3_6_15 = "Fixed other UI related issues reported by users";
     v2_3_6.features.add(feat2_3_6_1);
     v2_3_6.features.add(feat2_3_6_2);
     v2_3_6.features.add(feat2_3_6_3);
@@ -66,10 +67,11 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_3_6.features.add(feat2_3_6_8);
     v2_3_6.features.add(feat2_3_6_9);
     v2_3_6.features.add(feat2_3_6_10);
-    if (Platform.isIOS) v2_3_6.features.add(feat2_3_6_11);
-    v2_3_6.features.add(feat2_3_6_12);
+    v2_3_6.features.add(feat2_3_6_11);
+    if (Platform.isIOS) v2_3_6.features.add(feat2_3_6_12);
     v2_3_6.features.add(feat2_3_6_13);
     v2_3_6.features.add(feat2_3_6_14);
+    v2_3_6.features.add(feat2_3_6_15);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
