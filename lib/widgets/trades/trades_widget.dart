@@ -923,7 +923,7 @@ class _TradesWidgetState extends State<TradesWidget> {
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
         return WebViewFullSingle(
-          customUrl: ticketURL,
+          customUrl: "https://www.google.com", // TODO ticketURL,
           customTitle: "Arson Warehouse",
           customCallBack: null,
         );
