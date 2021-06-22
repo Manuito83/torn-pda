@@ -9,9 +9,10 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class VaultOptionsPage extends StatefulWidget {
+  final bool vaultDetected;
   final Function callback;
 
-  VaultOptionsPage({@required this.callback});
+  VaultOptionsPage({@required this.vaultDetected, @required this.callback});
 
   @override
   _VaultOptionsPageState createState() => _VaultOptionsPageState();
@@ -58,6 +59,21 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
+                            if (!widget.vaultDetected)
+                              Column(
+                                children: [
+                                  SizedBox(height: 20),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Text(
+                                      "NOTE: Torn PDA did not detect a vault in your property, either "
+                                      "because there is none, you don\'t have access to it or there "
+                                      "no transactions listed.",
+                                      style: TextStyle(color: Colors.orange),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             SizedBox(height: 10),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 15),

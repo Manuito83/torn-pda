@@ -109,6 +109,7 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _vaultEnabled = false;
   bool _vaultPreferencesLoaded = false;
   bool _vaultIconActive = false;
+  bool _vaultDetected = false;
   Widget _vaultExpandable = SizedBox.shrink();
   DateTime _vaultTriggeredTime = DateTime.now();
 
@@ -119,7 +120,7 @@ class _WebViewFullState extends State<WebViewFull> {
   var _cityItemsFound = <Item>[];
   Widget _cityExpandable = SizedBox.shrink();
 
-  var _bazaarActive = false;
+  var _bazaarActiveOwn = false;
   var _bazaarFillActive = false;
 
   var _chatRemovalEnabled = false;
@@ -1112,7 +1113,8 @@ class _WebViewFullState extends State<WebViewFull> {
   Future _assessGeneral(dom.Document document) async {
     _assessBackButtonBehaviour();
     _assessTravel(document);
-    _assessBazaar(document);
+    _assessBazaarOwn(document);
+    _assessBazaarOthers(document);
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -1339,7 +1341,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _insertTravelFillMaxButtons() async {
-    await webView.evaluateJavascript(source: buyMaxJS());
+    await webView.evaluateJavascript(source: buyMaxAbroadJS());
   }
 
   void _sendStockInformation(dom.Document document) async {
@@ -1846,6 +1848,13 @@ class _WebViewFullState extends State<WebViewFull> {
       }
     }
 
+    if (allTransactions.length == 0) {
+      _vaultDetected = false;
+      return;
+    } else {
+      _vaultDetected = true;
+    }
+
     // Activate the vault widget itself. UniqueKey so that we load a new widget when values change
     setState(() {
       _vaultExpandable = VaultWidget(
@@ -1865,6 +1874,7 @@ class _WebViewFullState extends State<WebViewFull> {
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return VaultOptionsPage(
+            vaultDetected: _vaultDetected,
             callback: _reassessVault,
           );
         },
@@ -2054,23 +2064,31 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  // BAZAAR
-  Future _assessBazaar(dom.Document document) async {
+  // BAZAAR (OWN)
+  Future _assessBazaarOwn(dom.Document document) async {
     var easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php/add')) {
-      _bazaarActive = true;
+      _bazaarActiveOwn = true;
     } else {
-      _bazaarActive = false;
+      _bazaarActiveOwn = false;
+    }
+  }
+
+  // BAZAAR (OTHERS)
+  Future _assessBazaarOthers(dom.Document document) async {
+    var easyUrl = _currentUrl.replaceAll('#', '');
+    if (easyUrl.contains('bazaar.php?userId=')) {
+      await webView.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
     }
   }
 
   Widget _bazaarFillIcon() {
-    if (_bazaarActive) {
+    if (_bazaarActiveOwn) {
       return TextButton(
         onPressed: () async {
           _bazaarFillActive
-              ? await webView.evaluateJavascript(source: removeBazaarFillButtonsJS())
-              : await webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+              ? await webView.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
+              : await webView.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
 
           if (mounted) {
             setState(() {
