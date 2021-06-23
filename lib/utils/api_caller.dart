@@ -61,6 +61,11 @@ class ApiError {
   String errorReason;
   ApiError({int errorId}) {
     switch (errorId) {
+      // Torn PDA codes
+      case 100:
+        errorReason = 'connection timed out';
+        break;
+      // Torn codes
       case 0:
         errorReason = 'no connection';
         break;
@@ -104,6 +109,9 @@ class ApiError {
         break;
       case 13:
         errorReason = 'key is temporary disabled due to owner inactivity';
+        break;
+      case 14:
+        errorReason = 'daily read limit reached.';
         break;
     }
   }
@@ -509,7 +517,7 @@ class TornApiCaller {
     //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
     //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2
     try {
-      final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 10));
+      final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 20));
       if (response.statusCode == 200) {
         // Check if json is responding with errors
         var jsonResponse = json.decode(response.body);
@@ -521,7 +529,9 @@ class TornApiCaller {
       } else {
         return ApiError(errorId: 0);
       }
-    } catch (e) {
+    } on TimeoutException catch (_) {
+      return ApiError(errorId: 100);
+    } catch (_) {
       return ApiError(errorId: 0);
     }
   }
