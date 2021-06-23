@@ -46,7 +46,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_3_6_2 = "Added Arson Warehouse support in the Trade Calculator";
     String feat2_3_6_3 = "Loot: added Tiny";
     String feat2_3_6_4 = "Loot: click the NPC's portrait to visit the profile";
-    String feat2_3_6_5 = "Profile: you can now choose which section to visit when taping the life bar";
+    String feat2_3_6_5 = "Profile: you can now choose which section to visit when tapping the life bar";
     String feat2_3_6_6 = "Profile: added caution message if visiting the gym while stacking";
     String feat2_3_6_7 = "Chaining: you can now check targets' status after fetching them from TAC";
     String feat2_3_6_8 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
