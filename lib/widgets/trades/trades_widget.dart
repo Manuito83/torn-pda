@@ -882,7 +882,7 @@ class _TradesWidgetState extends State<TradesWidget> {
       dark = "dark&";
     }
 
-    var awhBaseUrl = "https://arsonwarehouse.com/pda?${dark}&trade=";
+    var awhBaseUrl = "https://arsonwarehouse.com/pda?$dark&trade=";
     var awhContainer = ArsonWarehouseOut();
 
     var theirItems = <AwhItem>[];
@@ -923,7 +923,7 @@ class _TradesWidgetState extends State<TradesWidget> {
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
         return WebViewFullSingle(
-          customUrl: "https://www.google.com", // TODO ticketURL,
+          customUrl: ticketURL,
           customTitle: "Arson Warehouse",
           customCallBack: null,
         );
