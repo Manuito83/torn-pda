@@ -142,7 +142,8 @@ String buyMaxAbroadJS() {
       let input = element; 
       let lastValue = input.value;
       input.value = newValue;
-      let event = new Event('input', { bubbles: true });
+      // "input" is not working for foreign stock wide, instead use "blur"
+      let event = new Event('blur', { bubbles: true });
       // hack React15 (Torn seems to be using React 16)
       event.simulated = true;
       // hack React16 (This is what Torn uses)
