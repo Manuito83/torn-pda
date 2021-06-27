@@ -113,7 +113,18 @@ class ShortcutsProvider extends ChangeNotifier {
       if (savedShort.isCustom) {
         activateShortcut(savedShort);
       } else {
+        bool convertOldShortcuts = false; // See note
         for (var stockShort in _allShortcuts) {
+          // This first check converts active shortcuts older than version 2.4.0 to avoid getting
+          // deleted upon update. It just add the 3 new parameters to the active shortcut and save the list.
+          // Can be safely deleted after a while, along with 'convertOldShortcuts', leaving just the second if.
+          if (savedShort.originalName == "") {
+            convertOldShortcuts = true;
+            savedShort.originalName = savedShort.name;
+            savedShort.originalNickname = savedShort.nickname;
+            savedShort.originalUrl = savedShort.url;
+          }
+
           if (savedShort.originalName == stockShort.originalName) {
             stockShort
               ..name = savedShort.name
@@ -121,6 +132,9 @@ class ShortcutsProvider extends ChangeNotifier {
               ..url = savedShort.url;
             activateShortcut(stockShort);
           }
+        }
+        if (convertOldShortcuts) {
+          _saveListAfterChanges(); // See note
         }
       }
     }
