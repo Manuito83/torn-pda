@@ -19,9 +19,13 @@ class Shortcut {
     this.name = '',
     this.nickname = '',
     this.url = '',
+    this.originalName = '',
+    this.originalNickname = '',
+    this.originalUrl = '',
     this.iconUrl = '',
     this.color = Colors.grey,
     this.isCustom = false,
+
   });
 
   bool active;
@@ -29,6 +33,9 @@ class Shortcut {
   String name;
   String nickname;
   String url;
+  String originalName;
+  String originalNickname;
+  String originalUrl;
   String iconUrl;
   Color color;
   bool isCustom;
@@ -39,6 +46,9 @@ class Shortcut {
     name: json["name"] == null ? null : json["name"],
     nickname: json["nickname"] == null ? null : json["nickname"],
     url: json["url"] == null ? null : json["url"],
+    originalName: json["originalName"] == null ? null : json["originalName"],
+    originalNickname: json["originalNickname"] == null ? null : json["originalNickname"],
+    originalUrl: json["originalUrl"] == null ? null : json["originalUrl"],
     iconUrl: json["iconUrl"] == null ? null : json["iconUrl"],
     color: json["color"] == null ? null : Color(int.parse(json["color"].split('(0x')[1].split(')')[0], radix: 16)),
     isCustom: json["isCustom"] == null ? null : json["isCustom"],
@@ -50,6 +60,9 @@ class Shortcut {
     "name": name == null ? null : name,
     "nickname": nickname == null ? null : nickname,
     "url": url == null ? null : url,
+    "originalName": originalName == null ? null : originalName,
+    "originalNickname": originalNickname == null ? null : originalNickname,
+    "originalUrl": originalUrl == null ? null : originalUrl,
     "iconUrl": iconUrl == null ? null : iconUrl,
     "color": color == null ? null : color.toString(),
     "isCustom": isCustom == null ? null : isCustom,

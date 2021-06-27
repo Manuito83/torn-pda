@@ -106,28 +106,35 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: SizedBox(
-                        width: 200,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text("ACTIVE SHORTCUTS"),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                'SWIPE TO REMOVE',
-                                style: TextStyle(fontSize: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text("ACTIVE SHORTCUTS"),
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 10),
+                                    child: Text(
+                                      'SWIPE RIGHT TO REMOVE, LEFT TO EDIT',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 10),
+                                    child: Text(
+                                      'LONG-PRESS TO SORT',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(
-                                'LONG-PRESS TO SORT',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(height: 10),
@@ -182,6 +189,17 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                     icon: Icons.remove_circle_outline_outlined,
                     onTap: () {
                       _shortcutsProvider.deactivateShortcut(short);
+                    },
+                  ),
+                ],
+                secondaryActions: <Widget>[
+                  IconSlideAction(
+                    color: Colors.blue,
+                    icon: Icons.edit,
+                    onTap: () {
+                      _customNameController.text = short.nickname;
+                      _customURLController.text = short.url;
+                      _openEditDialog(short);
                     },
                   ),
                 ],
@@ -763,6 +781,210 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                   ..isCustom = true;
 
                                 _shortcutsProvider.activateShortcut(customShortcut);
+                                Navigator.of(context).pop();
+                                _customNameController.text = '';
+                                _customURLController.text = '';
+                              },
+                            ),
+                            TextButton(
+                              child: Text("Close"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                _customNameController.text = '';
+                                _customURLController.text = '';
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 25,
+                        width: 25,
+                        child: Image.asset(
+                          "images/icons/pda_icon.png",
+                          width: 18,
+                          height: 18,
+                          color: _themeProvider.mainText,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openEditDialog(Shortcut shortcut) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: new BoxDecoration(
+                      color: _themeProvider.background,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: const Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "Add a name and URL for your custom shortcut. Note: "
+                            "ensure URL begins with 'https://'",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Form(
+                          key: _customNameKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min, // To make the card compact
+                            children: <Widget>[
+                              TextFormField(
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: _themeProvider.mainText,
+                                ),
+                                textCapitalization: TextCapitalization.sentences,
+                                controller: _customNameController,
+                                maxLength: 20,
+                                maxLines: 1,
+                                decoration: InputDecoration(
+                                  counterText: "",
+                                  isDense: true,
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Name',
+                                ),
+                                validator: (value) {
+                                  if (value.replaceAll(' ', '').isEmpty) {
+                                    return "Cannot be empty!";
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Form(
+                                key: _customURLKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min, // To make the card compact
+                                  children: <Widget>[
+                                    TextFormField(
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: _themeProvider.mainText,
+                                      ),
+                                      controller: _customURLController,
+                                      maxLength: 300,
+                                      maxLines: 1,
+                                      decoration: InputDecoration(
+                                        counterText: "",
+                                        isDense: true,
+                                        border: OutlineInputBorder(),
+                                        labelText: 'URL',
+                                      ),
+                                      validator: (value) {
+                                        if (value.replaceAll(' ', '').isEmpty) {
+                                          return "Cannot be empty!";
+                                        }
+                                        if (!value.toLowerCase().contains('https://')) {
+                                          if (value.toLowerCase().contains('http://')) {
+                                            return "Invalid, HTTPS needed!";
+                                          }
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.paste),
+                              onPressed: () async {
+                                ClipboardData data = await Clipboard.getData('text/plain');
+                                _customURLController.text = data.text;
+                              },
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Flexible(
+                          child: Text(
+                            "Tip: long-press the app bar in the browser to copy the "
+                            "current URL you are visiting. Then paste it here.",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: Text("Save"),
+                              onPressed: () {
+                                if (!_customNameKey.currentState.validate()) {
+                                  return;
+                                }
+                                if (!_customURLKey.currentState.validate()) {
+                                  return;
+                                }
+
+                                shortcut.name = _customNameController.text;
+                                shortcut.nickname = _customNameController.text;
+                                shortcut.url = _customURLController.text;
+                                _shortcutsProvider.editShortcut(shortcut);
+
                                 Navigator.of(context).pop();
                                 _customNameController.text = '';
                                 _customURLController.text = '';
