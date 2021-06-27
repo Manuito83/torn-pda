@@ -38,40 +38,46 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // VERSION 2.3.6
-    var v2_3_6 = ChangeLogItem();
-    v2_3_6.main.version = 'Torn PDA v2.3.6';
-    v2_3_6.main.date = 'XX JUN 2021';
-    String feat2_3_6_1 = "Added alerts for stock exchange price gain/loss";
-    String feat2_3_6_2 = "Added Arson Warehouse support in the Trade Calculator";
-    String feat2_3_6_3 = "Loot: added Tiny";
-    String feat2_3_6_4 = "Loot: click the NPC's portrait to visit the profile";
-    String feat2_3_6_5 = "Profile: you can now choose which section to visit when tapping the life bar";
-    String feat2_3_6_6 = "Profile: added caution message if visiting the gym while stacking";
-    String feat2_3_6_7 = "Chaining: you can now check targets' status after fetching them from TAC";
-    String feat2_3_6_8 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
-    String feat2_3_6_9 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
-    String feat2_3_6_10 = "Fixed foreign stock items identification and uploads";
-    String feat2_3_6_11 = "Browser: added MAX buttons when buying from the bazaar";
-    String feat2_3_6_12 = "Browser: [iOS] you can now disable the native link preview windows when long-pressing";
-    String feat2_3_6_13 = "Fixed issues caused by targets with life over max";
-    String feat2_3_6_14 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_3_6_15 = "Fixed other UI related issues reported by users";
-    v2_3_6.features.add(feat2_3_6_1);
-    v2_3_6.features.add(feat2_3_6_2);
-    v2_3_6.features.add(feat2_3_6_3);
-    v2_3_6.features.add(feat2_3_6_4);
-    v2_3_6.features.add(feat2_3_6_5);
-    v2_3_6.features.add(feat2_3_6_6);
-    v2_3_6.features.add(feat2_3_6_7);
-    v2_3_6.features.add(feat2_3_6_8);
-    v2_3_6.features.add(feat2_3_6_9);
-    v2_3_6.features.add(feat2_3_6_10);
-    v2_3_6.features.add(feat2_3_6_11);
-    if (Platform.isIOS) v2_3_6.features.add(feat2_3_6_12);
-    v2_3_6.features.add(feat2_3_6_13);
-    v2_3_6.features.add(feat2_3_6_14);
-    v2_3_6.features.add(feat2_3_6_15);
+    // VERSION 2.4.0
+    var v2_4_0 = ChangeLogItem();
+    v2_4_0.main.version = 'Torn PDA v2.4.0';
+    v2_4_0.main.date = 'XX JUL 2021';
+    String feat2_4_0_1 = "Added alerts for stock exchange price gain/loss";
+    String feat2_4_0_2 = "Added Arson Warehouse support in the Trade Calculator";
+    String feat2_4_0_3 = "Loot: added Tiny";
+    String feat2_4_0_4 = "Loot: click the NPC's portrait to visit the profile";
+    String feat2_4_0_5 = "Profile: you can now choose which section to visit when tapping the life bar";
+    String feat2_4_0_6 = "Profile: you can now edit active shortcuts (left swipe)";
+    String feat2_4_0_7 = "Profile: added caution message if visiting the gym while stacking";
+    String feat2_4_0_8 = "Chaining: you can now check targets' status after fetching them from TAC";
+    String feat2_4_0_9 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
+    String feat2_4_0_10 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
+    String feat2_4_0_11 = "Browser: added MAX buttons when buying from the bazaar";
+    String feat2_4_0_12 = "Browser: [iOS] you can now disable the native link preview windows when long-pressing";
+    String feat2_4_0_13 = "Fixed issue with screen turning off when chain watcher is in use";
+    String feat2_4_0_14 = "Fixed connectivity with some bluetooth devices";
+    String feat2_4_0_15 = "Fixed foreign stock items identification and uploads";
+    String feat2_4_0_16 = "Fixed issues caused by targets with life over max";
+    String feat2_4_0_17 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_4_0_18 = "Fixed other UI related issues reported by users";
+    v2_4_0.features.add(feat2_4_0_1);
+    v2_4_0.features.add(feat2_4_0_2);
+    v2_4_0.features.add(feat2_4_0_3);
+    v2_4_0.features.add(feat2_4_0_4);
+    v2_4_0.features.add(feat2_4_0_5);
+    v2_4_0.features.add(feat2_4_0_6);
+    v2_4_0.features.add(feat2_4_0_7);
+    v2_4_0.features.add(feat2_4_0_8);
+    v2_4_0.features.add(feat2_4_0_9);
+    v2_4_0.features.add(feat2_4_0_10);
+    v2_4_0.features.add(feat2_4_0_11);
+    if (Platform.isIOS) v2_4_0.features.add(feat2_4_0_12);
+    v2_4_0.features.add(feat2_4_0_13);
+    v2_4_0.features.add(feat2_4_0_14);
+    v2_4_0.features.add(feat2_4_0_15);
+    v2_4_0.features.add(feat2_4_0_16);
+    v2_4_0.features.add(feat2_4_0_17);
+    v2_4_0.features.add(feat2_4_0_18);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
@@ -728,7 +734,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v2_3_6);
+    itemList.add(v2_4_0);
     itemList.add(v2_3_5);
     itemList.add(v2_3_4);
     itemList.add(v2_3_3);
