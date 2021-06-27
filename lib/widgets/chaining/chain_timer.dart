@@ -109,9 +109,17 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
     }
     // If we exit the section and reenter, activate the wakelock if watcher is active
     if (_chainStatusProvider.watcherActive) {
-      Wakelock.enable();
-      print('enabled!');
+      _enableWakelock();
     }
+  }
+
+  void _enableWakelock() {
+    Wakelock.enabled.then((enabled) {
+      if (!enabled) {
+        Wakelock.enable();
+        print('wakelock enabled!');
+      }
+    });
   }
 
   @override
@@ -120,7 +128,10 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
     _tickerCallChainApi.cancel();
     _chainBorderController.dispose();
     audioCache.clearAll();
-    Wakelock.disable();
+    if (widget.chainTimerParent == ChainTimerParent.targets) {
+      Wakelock.disable();
+      print('wakelock disposed!');
+    }
     super.dispose();
   }
 
@@ -216,9 +227,8 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
                                     width: 150,
                                     lineHeight: 16,
                                     backgroundColor: Colors.grey,
-                                    progressColor: _chainModel.chain.cooldown > 0
-                                        ? Colors.green[200]
-                                        : Colors.blue[200],
+                                    progressColor:
+                                        _chainModel.chain.cooldown > 0 ? Colors.green[200] : Colors.blue[200],
                                     center: Text(
                                       _chainModel.chain.cooldown > 0
                                           ? '${_chainModel.chain.current} hits'
@@ -234,8 +244,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
                             } else {
                               return Text(
                                 'Cannot retrieve chain details!',
-                                style: TextStyle(
-                                    fontStyle: FontStyle.italic, color: Colors.orange[800]),
+                                style: TextStyle(fontStyle: FontStyle.italic, color: Colors.orange[800]),
                               );
                             }
                           } else {
@@ -264,11 +273,9 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
                                       style: TextStyle(color: Colors.black),
                                     ),
                                     // Take drugs into account
-                                    percent:
-                                        (_barsModel.energy.current / _barsModel.energy.maximum) >
-                                                1.0
-                                            ? 1.0
-                                            : _barsModel.energy.current / _barsModel.energy.maximum,
+                                    percent: (_barsModel.energy.current / _barsModel.energy.maximum) > 1.0
+                                        ? 1.0
+                                        : _barsModel.energy.current / _barsModel.energy.maximum,
                                   ),
                                   Padding(
                                     padding: EdgeInsets.symmetric(vertical: 2),
@@ -279,8 +286,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
                                     lineHeight: 3,
                                     backgroundColor: Colors.green[100],
                                     progressColor: Colors.green,
-                                    percent:
-                                        1 - _barsModel.energy.ticktime / _barsModel.energy.interval,
+                                    percent: 1 - _barsModel.energy.ticktime / _barsModel.energy.interval,
                                   ),
                                 ],
                               );
@@ -326,8 +332,7 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
       */
 
       // OPTION 1, NOT CHAINING
-      if ((_chainModel.chain.current == 0 || _chainModel.chain.timeout == 0) &&
-          _chainModel.chain.cooldown == 0) {
+      if ((_chainModel.chain.current == 0 || _chainModel.chain.timeout == 0) && _chainModel.chain.cooldown == 0) {
         // If we are not chaining, reset everything
         _lastChainCount = 0;
         _currentSecondsCounter = 0;
@@ -445,9 +450,11 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
 
   Future<void> _getEnergy() async {
     dynamic myBars = await TornApiCaller.bars(widget.userKey).getBars;
-    setState(() {
-      _barsModel = myBars;
-    });
+    if (mounted) {
+      setState(() {
+        _barsModel = myBars;
+      });
+    }
   }
 
   void _getAllStatus() {
@@ -494,23 +501,24 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
       );
     }
 
-    Wakelock.enable();
+    _enableWakelock();
     _chainWatchCheck();
     BotToast.showText(
-      text: 'Chain watcher activated!\n\nYour phone screen will '
-          'remain on, consider plugging it in.',
+      text: 'Chain watcher activated! Please stay in the chaining section or browser to receive alerts.'
+          '\n\nYour phone screen will remain on, consider plugging it in.',
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.green[700],
-      duration: Duration(seconds: 5),
+      duration: Duration(seconds: 7),
       contentPadding: EdgeInsets.all(10),
     );
   }
 
   void _deactivateChainWatcher() {
     Wakelock.disable();
+    print("wakelock disabled!");
     _chainBorderController.stop();
     setState(() {
       _chainStatusProvider.watcherDeactivate();
@@ -531,10 +539,8 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
 
   Future<void> _chainWatchCheck() async {
     // Return if this is not the visible chain widget
-    if ((!_chainStatusProvider.watcherActiveTargets &&
-            widget.chainTimerParent == ChainTimerParent.targets) ||
-        (!_chainStatusProvider.watcherActiveWebView &&
-            widget.chainTimerParent == ChainTimerParent.webView)) {
+    if ((!_chainStatusProvider.watcherActiveTargets && widget.chainTimerParent == ChainTimerParent.targets) ||
+        (!_chainStatusProvider.watcherActiveWebView && widget.chainTimerParent == ChainTimerParent.webView)) {
       if (_chainWatcherColor != ChainWatcherColor.off) {
         _chainBorderController.stop();
         setState(() {
@@ -578,9 +584,10 @@ class _ChainTimerState extends State<ChainTimer> with TickerProviderStateMixin {
           // We stop and restart the animation otherwise. This will continue and repeat until
           // replaced by another animation
           _chainBorderController.stop();
-          _chainBorderController =
-              new AnimationController(vsync: this, duration: new Duration(milliseconds: 750))
-                ..repeat();
+          _chainBorderController = new AnimationController(
+            vsync: this,
+            duration: new Duration(milliseconds: 750),
+          )..repeat();
           // If another chain widget already raised an alert (which is controlled by the provider),
           // we won't raise it again. Otherwise, sound/vibrate as applicable.
           if (_chainStatusProvider.watcherColorReportedByActive != ChainWatcherColor.red) {
