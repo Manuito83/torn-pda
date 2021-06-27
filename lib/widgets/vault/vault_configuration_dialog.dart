@@ -107,21 +107,21 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                       minLines: 1,
                       maxLines: 1,
                       decoration: InputDecoration(
-                        hintText: widget.vaultStatus.player == null
-                            ? "\$0"
-                            : "\$${_moneyFormat.format(widget.vaultStatus.player)}",
+                        prefixText: "\$ ",
+                        labelText: widget.vaultStatus.player == null
+                            ? "\$ 0"
+                            : "\$ ${_moneyFormat.format(widget.vaultStatus.player)}",
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
                         counterText: "",
                         isDense: true,
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp('[0-9\$,.]')),
-                      ],
+                      keyboardType: TextInputType.numberWithOptions(signed: true, decimal: false),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]?[\d,]*$'))],
                       onChanged: (ownString) {
-                        if (ownString.isNotEmpty || ownString != "\$") {
+                        if (ownString.isNotEmpty && ownString != "-")  {
                           var ownAmount = _cleanNumber(ownString);
-                          ownString = '\$${_moneyFormat.format(ownAmount)}';
+                          ownString = _moneyFormat.format(ownAmount);
                           _ownAmountController.value = TextEditingValue(
                             text: ownString,
                             selection: TextSelection.collapsed(offset: ownString.length),
@@ -130,7 +130,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           // Set the other fields value
                           if (ownAmount <= widget.lastTransaction.balance) {
                             setState(() {
-                              var spouse = '\$${_moneyFormat.format(widget.lastTransaction.balance - ownAmount)}';
+                              var spouse = _moneyFormat.format(widget.lastTransaction.balance - ownAmount);
                               _spouseAmountController.text = spouse;
                             });
                           } else {
@@ -162,19 +162,21 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                       minLines: 1,
                       maxLines: 2,
                       decoration: InputDecoration(
-                        hintText: widget.vaultStatus.spouse == null
-                            ? "\$0"
-                            : "\$${_moneyFormat.format(widget.vaultStatus.spouse)}",
+                        prefixText: "\$ ",
+                        labelText: widget.vaultStatus.spouse == null
+                            ? "\$ 0"
+                            : "\$ ${_moneyFormat.format(widget.vaultStatus.spouse)}",
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
                         counterText: "",
                         isDense: true,
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                      keyboardType: TextInputType.numberWithOptions(signed: true, decimal: false),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]?[\d,]*$'))],
                       onChanged: (spouseString) {
-                        if (spouseString.isNotEmpty || spouseString != "\$") {
+                        if (spouseString.isNotEmpty && spouseString != "-") {
                           var spouseAmount = _cleanNumber(spouseString);
-                          spouseString = '\$${_moneyFormat.format(spouseAmount)}';
+                          spouseString = _moneyFormat.format(spouseAmount);
                           _spouseAmountController.value = TextEditingValue(
                             text: spouseString,
                             selection: TextSelection.collapsed(offset: spouseString.length),
@@ -183,7 +185,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                           // Set the other fields value
                           if (spouseAmount <= widget.lastTransaction.balance) {
                             setState(() {
-                              var own = '\$${_moneyFormat.format(widget.lastTransaction.balance - spouseAmount)}';
+                              var own = _moneyFormat.format(widget.lastTransaction.balance - spouseAmount);
                               _ownAmountController.text = own;
                             });
                           } else {
@@ -295,7 +297,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
   }
 
   int _cleanNumber(String text) {
-    if (text.isEmpty || text == "\$") return 0;
+    if (text.isEmpty) return 0;
     var number = text.replaceAll("\$", "").replaceAll(".", "").replaceAll(",", "");
     return int.parse(number);
   }
