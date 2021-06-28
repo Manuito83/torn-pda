@@ -118,7 +118,7 @@ class ShortcutsProvider extends ChangeNotifier {
           // This first check converts active shortcuts older than version 2.4.0 to avoid getting
           // deleted upon update. It just add the 3 new parameters to the active shortcut and save the list.
           // Can be safely deleted after a while, along with 'convertOldShortcuts', leaving just the second if.
-          if (savedShort.originalName == "") {
+          if (savedShort.originalName == null) {
             convertOldShortcuts = true;
             savedShort.originalName = savedShort.name;
             savedShort.originalNickname = savedShort.nickname;
