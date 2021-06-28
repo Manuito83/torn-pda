@@ -2,6 +2,7 @@
 import 'dart:async';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,22 +15,26 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
-class WebViewFullSingle extends StatefulWidget {
+class WebViewFullAwh extends StatefulWidget {
   final String customTitle;
   final String customUrl;
-  final Function customCallBack;
+  final String sellerName;
+  final int sellerId;
+  final Function awhMessageCallback;
 
-  WebViewFullSingle({
-    this.customUrl = 'https://www.torn.com',
-    this.customTitle = '',
-    this.customCallBack,
+  WebViewFullAwh({
+    @required this.customUrl ,
+    @required this.customTitle,
+    @required this.sellerName,
+    @required this.sellerId,
+    @required this.awhMessageCallback,
   });
 
   @override
-  _WebViewFullSingleState createState() => _WebViewFullSingleState();
+  _WebViewFullAwhState createState() => _WebViewFullAwhState();
 }
 
-class _WebViewFullSingleState extends State<WebViewFullSingle> {
+class _WebViewFullAwhState extends State<WebViewFullAwh> {
   InAppWebViewController webView;
   var _initialWebViewOptions = InAppWebViewGroupOptions();
 
@@ -123,6 +128,37 @@ class _WebViewFullSingleState extends State<WebViewFullSingle> {
             initialOptions: _initialWebViewOptions,
             onWebViewCreated: (c) {
               webView = c;
+              // For Arson Warehouse
+              webView.addJavaScriptHandler(handlerName: 'copyToClipboard', callback: (args) {
+                if (args.length > 0) {
+                  // Copy custom message or total
+                  String toastMessage = "";
+                  if (args[1] == "total") {
+                    toastMessage = "Total of \$${args[0]} copied to the clipboard!";
+                    Clipboard.setData(ClipboardData(text: "\$${args[0]}"));
+                  } else if (args[1] == "message") {
+                    if (widget.sellerId > 0) {
+                      toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
+                      Clipboard.setData(ClipboardData(text: args[0]));
+                      widget.awhMessageCallback();
+                    } else {
+                      toastMessage = "Message copied to the clipboard!";
+                      Clipboard.setData(ClipboardData(text: args[0]));
+                    }
+                  }
+
+                  BotToast.showText(
+                    text: toastMessage,
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[800],
+                    duration: Duration(seconds: 2),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                }
+              });
             },
             onCreateWindow: (c, request) {
               // Allows IOS to open links with target=_blank

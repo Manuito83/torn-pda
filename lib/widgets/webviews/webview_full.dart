@@ -302,8 +302,7 @@ class _WebViewFullState extends State<WebViewFull> {
                     widget: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: SpeechBubble(
-                        nipLocation:
-                            _settingsProvider.appBarTop ? NipLocation.TOP : NipLocation.BOTTOM,
+                        nipLocation: _settingsProvider.appBarTop ? NipLocation.TOP : NipLocation.BOTTOM,
                         color: Colors.green[800],
                         child: Padding(
                           padding: EdgeInsets.all(6),
@@ -462,8 +461,7 @@ class _WebViewFullState extends State<WebViewFull> {
     }
 
     return Container(
-      color:
-          _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.background,
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.background,
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),
@@ -752,8 +750,7 @@ class _WebViewFullState extends State<WebViewFull> {
               return;
             },
             onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "")
-                print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+              if (consoleMessage.message != "") print("TORN PDA JS CONSOLE: " + consoleMessage.message);
             },
             /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -841,11 +838,9 @@ class _WebViewFullState extends State<WebViewFull> {
     if (!_currentUrl.contains('torn.com')) return;
 
     var intColor = Color(_settingsProvider.highlightColor);
-    var background =
-        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
+    var background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
     var senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    String hlMap =
-        '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
+    String hlMap = '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       webView.evaluateJavascript(
@@ -897,8 +892,7 @@ class _WebViewFullState extends State<WebViewFull> {
                           decoration: InputDecoration(
                             border: InputBorder.none,
                             hintText: "What are you looking for?",
-                            hintStyle: TextStyle(
-                                fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
+                            hintStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
                           ),
                           style: TextStyle(
                             color: Colors.white,
@@ -1302,8 +1296,7 @@ class _WebViewFullState extends State<WebViewFull> {
     }
 
     if (title != null) {
-      if (title.toLowerCase().contains('error') ||
-          title.toLowerCase().contains('please validate')) {
+      if (title.toLowerCase().contains('error') || title.toLowerCase().contains('please validate')) {
         if (mounted) {
           setState(() {
             _pageTitle = 'Torn';
@@ -1354,21 +1347,16 @@ class _WebViewFullState extends State<WebViewFull> {
         stockModel.authorName = "Manuito";
         stockModel.authorId = 2225097;
 
-        stockModel.country = document
-            .querySelector(".content-title > h4")
-            .innerHtml
-            .substring(0, 4)
-            .toLowerCase()
-            .trim();
+        stockModel.country =
+            document.querySelector(".content-title > h4").innerHtml.substring(0, 4).toLowerCase().trim();
 
         for (var el in elements) {
           var stockItem = ForeignStockOutItem();
 
           stockItem.id = int.tryParse(el.querySelector(".details").attributes["itemid"]);
-          stockItem.quantity = int.tryParse(
-              el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
-          stockItem.cost = int.tryParse(
-              el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.quantity =
+              int.tryParse(el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+          stockItem.cost = int.tryParse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
 
           if (stockItem.id != null && stockItem.quantity != null && stockItem.cost != null) {
             stockModel.items.add(stockItem);
@@ -1581,6 +1569,7 @@ class _WebViewFullState extends State<WebViewFull> {
     }
 
     String sellerName;
+    int sellerId = 0;
     int tradeId;
     // Element containers
     List<dom.Element> leftMoneyElements;
@@ -1594,33 +1583,37 @@ class _WebViewFullState extends State<WebViewFull> {
 
     // Because only the frame reloads, if we can't find anything
     // we'll wait 1 second, get the html again and query again
-    var totalFinds = document
-        .querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
+    var totalFinds = document.querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
 
     try {
       if (totalFinds.length == 0) {
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 2));
         var updatedHtml = await webView.getHtml();
         var updatedDoc = parse(updatedHtml);
-        leftMoneyElements = updatedDoc.querySelectorAll("#trade-container .left .color1 .name");
-        leftItemsElements = updatedDoc.querySelectorAll("#trade-container .left .color2 .name");
-        leftPropertyElements = updatedDoc.querySelectorAll("#trade-container .left .color3 .name");
-        leftSharesElements = updatedDoc.querySelectorAll("#trade-container .left .color4 .name");
-        rightMoneyElements = updatedDoc.querySelectorAll("#trade-container .right .color1 .name");
-        rightItemsElements = updatedDoc.querySelectorAll("#trade-container .right .color2 .name");
-        rightPropertyElements =
-            updatedDoc.querySelectorAll("#trade-container .right .color3 .name");
-        rightSharesElements = updatedDoc.querySelectorAll("#trade-container .right .color4 .name");
-      } else {
-        leftMoneyElements = document.querySelectorAll("#trade-container .left .color1 .name");
-        leftItemsElements = document.querySelectorAll("#trade-container .left .color2 .name");
-        leftPropertyElements = document.querySelectorAll("#trade-container .left .color3 .name");
-        leftSharesElements = document.querySelectorAll("#trade-container .left .color4 .name");
-        rightMoneyElements = document.querySelectorAll("#trade-container .right .color1 .name");
-        rightItemsElements = document.querySelectorAll("#trade-container .right .color2 .name");
-        rightPropertyElements = document.querySelectorAll("#trade-container .right .color3 .name");
-        rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
+        document = updatedDoc;
       }
+
+      leftMoneyElements = document.querySelectorAll("#trade-container .left .color1 .name");
+      leftItemsElements = document.querySelectorAll("#trade-container .left .color2 .name");
+      leftPropertyElements = document.querySelectorAll("#trade-container .left .color3 .name");
+      leftSharesElements = document.querySelectorAll("#trade-container .left .color4 .name");
+      rightMoneyElements = document.querySelectorAll("#trade-container .right .color1 .name");
+      rightItemsElements = document.querySelectorAll("#trade-container .right .color2 .name");
+      rightPropertyElements = document.querySelectorAll("#trade-container .right .color3 .name");
+      rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
+      sellerName = document.querySelector(".right .title-black").innerHtml ?? "";
+
+      var sellerIdString = document.querySelectorAll("#trade-container .log li .desc a");
+      for (var html in sellerIdString) {
+        RegExp regId = new RegExp(r"XID=([0-9]+)");
+        var matches = regId.allMatches(html.attributes["href"]);
+        var id = int.parse(matches.elementAt(0).group(1));
+        if (id != _userProvider.basic.playerId) {
+          sellerId = id;
+          break;
+        }
+      }
+
     } catch (e) {
       return;
     }
@@ -1634,13 +1627,6 @@ class _WebViewFullState extends State<WebViewFull> {
       tradeId = 0;
     }
 
-    // Name of seller
-    try {
-      sellerName = document.querySelector(".right .title-black").innerHtml;
-    } catch (e) {
-      sellerName = "";
-    }
-
     // Activate trades widget
     _toggleTradesWidget(active: true);
 
@@ -1650,6 +1636,7 @@ class _WebViewFullState extends State<WebViewFull> {
       userApiKey: _userProvider.basic.userApiKey,
       playerId: _userProvider.basic.playerId,
       sellerName: sellerName,
+      sellerId: sellerId,
       tradeId: tradeId,
       leftMoneyElements: leftMoneyElements,
       leftItemsElements: leftItemsElements,
@@ -1670,6 +1657,7 @@ class _WebViewFullState extends State<WebViewFull> {
           _tradesExpandable = TradesWidget(
             themeProv: _themeProvider,
             userProv: _userProvider,
+            webView: webView,
           );
         });
       }
@@ -1718,8 +1706,7 @@ class _WebViewFullState extends State<WebViewFull> {
       case "Faction vault":
         webView.loadUrl(
           urlRequest: URLRequest(
-            url: Uri.parse(
-                "https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate"),
+            url: Uri.parse("https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate"),
           ),
         );
         break;

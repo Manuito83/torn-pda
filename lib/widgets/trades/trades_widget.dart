@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -19,13 +20,18 @@ import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/widgets/webviews/webview_full_single.dart';
+import 'package:torn_pda/widgets/webviews/webview_full_awh.dart';
 
 class TradesWidget extends StatefulWidget {
-  ThemeProvider themeProv;
-  UserDetailsProvider userProv;
+  final ThemeProvider themeProv;
+  final UserDetailsProvider userProv;
+  final InAppWebViewController webView;
 
-  TradesWidget({@required this.themeProv, @required this.userProv,});
+  TradesWidget({
+    @required this.themeProv,
+    @required this.userProv,
+    @required this.webView,
+  });
 
   @override
   _TradesWidgetState createState() => _TradesWidgetState();
@@ -101,8 +107,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                             fit: BoxFit.fill,
                           ),
                         ),
-                        if (_tradesProv.container.ttServerError ||
-                            _tradesProv.container.ttAuthError)
+                        if (_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
                           Row(
                             children: [
                               Text(
@@ -187,13 +192,11 @@ class _TradesWidgetState extends State<TradesWidget> {
               // Take into account Torn Trader to leave more or less space
               constraints: _tradesProv.container.ttActive &&
                       (!_tradesProv.container.ttServerError || _tradesProv.container.ttAuthError)
-                  ? BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
-                          kToolbarHeight * 3 -
-                          AppBar().preferredSize.height)) /
+                  ? BoxConstraints.loose(Size.fromHeight(
+                          (MediaQuery.of(context).size.height - kToolbarHeight * 3 - AppBar().preferredSize.height)) /
                       3)
-                  : BoxConstraints.loose(Size.fromHeight((MediaQuery.of(context).size.height -
-                          kToolbarHeight -
-                          AppBar().preferredSize.height)) /
+                  : BoxConstraints.loose(Size.fromHeight(
+                          (MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
                       3),
               child: Scrollbar(
                 controller: _scrollController,
@@ -294,8 +297,7 @@ class _TradesWidgetState extends State<TradesWidget> {
         onPressed: () {
           String amountCopied;
           if (_tradesProv.container.ttActive && side == 'right') {
-            amountCopied =
-                _tradesProv.container.ttTotalMoney.replaceAll("\$", "").replaceAll(",", "");
+            amountCopied = _tradesProv.container.ttTotalMoney.replaceAll("\$", "").replaceAll(",", "");
             _copyToClipboard(amountCopied, _tradesProv.container.ttTotalMoney);
           } else {
             amountCopied = _moneyFormat.format(total);
@@ -321,9 +323,7 @@ class _TradesWidgetState extends State<TradesWidget> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          side == 'left'
-              ? Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon)
-              : SizedBox.shrink(),
+          side == 'left' ? Padding(padding: const EdgeInsets.only(right: 5), child: clipboardIcon) : SizedBox.shrink(),
           Flexible(
             child: Text(
               '\$${_moneyFormat.format(total)}',
@@ -335,9 +335,7 @@ class _TradesWidgetState extends State<TradesWidget> {
             ),
           ),
           propertyIcon(),
-          side == 'right'
-              ? Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon)
-              : SizedBox.shrink(),
+          side == 'right' ? Padding(padding: const EdgeInsets.only(left: 5), child: clipboardIcon) : SizedBox.shrink(),
         ],
       );
     } else {
@@ -922,10 +920,12 @@ class _TradesWidgetState extends State<TradesWidget> {
       transitionDuration: Duration(seconds: 1),
       transitionType: ContainerTransitionType.fadeThrough,
       openBuilder: (BuildContext context, VoidCallback _) {
-        return WebViewFullSingle(
+        return WebViewFullAwh(
           customUrl: ticketURL,
           customTitle: "Arson Warehouse",
-          customCallBack: null,
+          awhMessageCallback: _backFromAwhWithMessage,
+          sellerName: _tradesProv.container.sellerName,
+          sellerId: _tradesProv.container.sellerId,
         );
       },
       closedElevation: 0,
@@ -945,4 +945,9 @@ class _TradesWidgetState extends State<TradesWidget> {
       },
     );
   }
+
+  void _backFromAwhWithMessage() async {
+    await widget.webView.evaluateJavascript(source: "chat.r(${_tradesProv.container.sellerId})");
+  }
+
 }

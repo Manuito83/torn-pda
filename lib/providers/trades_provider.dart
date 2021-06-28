@@ -15,6 +15,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TradesContainer {
   String sellerName = "";
+  int sellerId = 0;
   int tradeId = 0;
   bool firstLoad = true;
   int leftMoney = 0;
@@ -48,6 +49,7 @@ class TradesProvider extends ChangeNotifier {
     @required playerId,
     @required String userApiKey,
     @required String sellerName,
+    @required int sellerId,
     @required int tradeId,
     @required List<dom.Element> leftMoneyElements,
     @required List<dom.Element> leftItemsElements,
@@ -62,7 +64,8 @@ class TradesProvider extends ChangeNotifier {
 
     var newModel = TradesContainer()
       ..tradeId = tradeId
-      ..sellerName = sellerName;
+      ..sellerName = sellerName
+      ..sellerId = sellerId;
 
     // Color 1 is money
     int colors1(List<dom.Element> sideMoneyElement) {
@@ -89,9 +92,7 @@ class TradesProvider extends ChangeNotifier {
       var thisItem = TradeItem();
       var row = pdaParser.HtmlParser.fix(itemLine.innerHtml.trim());
       thisItem.name = row.split(" x")[0].trim();
-      row.split(" x").length > 1
-          ? thisItem.quantity = int.parse(row.split(" x")[1])
-          : thisItem.quantity = 1;
+      row.split(" x").length > 1 ? thisItem.quantity = int.parse(row.split(" x")[1]) : thisItem.quantity = 1;
       allTornItems.items.forEach((key, value) {
         if (thisItem.name == value.name) {
           thisItem.id = int.parse(key);
@@ -185,14 +186,14 @@ class TradesProvider extends ChangeNotifier {
       thisShare.name = row.split(" x")[0].trim();
 
       try {
-        RegExp regQuantity = new RegExp(
-            r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
+        RegExp regQuantity =
+            new RegExp(r"([A-Z]{3}) (?:x)([0-9]+) (?:at) (?:\$)((?:[0-9]|[.]|[,])+) (?:\()(?:\$)((?:[0-9]|[,])+)");
         var matches = regQuantity.allMatches(shareLine.innerHtml);
         thisShare.name = matches.elementAt(0).group(1);
         thisShare.quantity = int.parse(matches.elementAt(0).group(2));
         var singlePriceSplit = matches.elementAt(0).group(3).split('.');
-        thisShare.shareUnit = double.parse(singlePriceSplit[0].replaceAll(',', '')) +
-            double.parse('0.${singlePriceSplit[1]}');
+        thisShare.shareUnit =
+            double.parse(singlePriceSplit[0].replaceAll(',', '')) + double.parse('0.${singlePriceSplit[1]}');
         thisShare.totalPrice = int.parse(matches.elementAt(0).group(4).replaceAll(',', ''));
       } catch (e) {
         thisShare.quantity = 0;
