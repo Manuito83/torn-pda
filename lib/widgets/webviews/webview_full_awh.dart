@@ -135,7 +135,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
                   String toastMessage = "";
                   if (args[1] == "total") {
                     toastMessage = "Total of \$${args[0]} copied to the clipboard!";
-                    Clipboard.setData(ClipboardData(text: "\$${args[0]}"));
+                    Clipboard.setData(ClipboardData(text: args[0]));
                   } else if (args[1] == "message") {
                     if (widget.sellerId > 0) {
                       toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
