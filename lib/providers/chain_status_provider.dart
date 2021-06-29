@@ -198,8 +198,8 @@ class ChainStatusProvider extends ChangeNotifier {
       //
       /*
       chainModel.chain
-        ..timeout = 80
-        ..current = 1810
+        ..timeout = 90
+        ..current = 1815
         ..max = 2500
         ..start = 1230000
         ..modifier = 1.23
