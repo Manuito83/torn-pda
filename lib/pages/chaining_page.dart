@@ -8,10 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import '../main.dart';
 
 class ChainingPage extends StatefulWidget {
   @override
@@ -22,6 +22,7 @@ class _ChainingPageState extends State<ChainingPage> {
   String _myCurrentKey = '';
 
   ThemeProvider _themeProvider;
+  ChainStatusProvider _chainStatusProvider;
   Future _preferencesLoaded;
 
   int _currentPage = 0;
@@ -32,33 +33,41 @@ class _ChainingPageState extends State<ChainingPage> {
   @override
   void initState() {
     super.initState();
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
     _bottomNavPageController = PageController(
       initialPage: 0,
     );
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'chaining'});
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      body: PageView(
-        physics: NeverScrollableScrollPhysics(),
-        controller: _bottomNavPageController,
-        children: <Widget>[
-          TargetsPage(
-            userKey: _myCurrentKey,
-            tabCallback: _tabCallback,
-          ),
-          AttacksPage(
-            userKey: _myCurrentKey,
-          ),
-          TacPage(
-            userKey: _myCurrentKey,
-          ),
-        ],
+      body: FutureBuilder(
+        future: _preferencesLoaded,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return PageView(
+              physics: NeverScrollableScrollPhysics(),
+              controller: _bottomNavPageController,
+              children: <Widget>[
+                TargetsPage(
+                  userKey: _myCurrentKey,
+                  tabCallback: _tabCallback,
+                ),
+                AttacksPage(
+                  userKey: _myCurrentKey,
+                ),
+                TacPage(
+                  userKey: _myCurrentKey,
+                ),
+              ],
+            );
+          } else {
+            return CircularProgressIndicator();
+          }
+        },
       ),
       bottomNavigationBar: _bottomNavBar(),
     );
@@ -90,9 +99,7 @@ class _ChainingPageState extends State<ChainingPage> {
               children: <Widget>[
                 Expanded(
                   child: Container(
-                    color: _currentPage == 0
-                        ? _themeProvider.navSelected
-                        : Colors.transparent,
+                    color: _currentPage == 0 ? _themeProvider.navSelected : Colors.transparent,
                     child: IconButton(
                       icon: Image.asset(
                         'images/icons/ic_target_account_black_48dp.png',
@@ -106,9 +113,7 @@ class _ChainingPageState extends State<ChainingPage> {
                 ),
                 Expanded(
                   child: Container(
-                    color: _currentPage == 1
-                        ? _themeProvider.navSelected
-                        : Colors.transparent,
+                    color: _currentPage == 1 ? _themeProvider.navSelected : Colors.transparent,
                     child: IconButton(
                       icon: Icon(
                         Icons.person,
@@ -125,9 +130,7 @@ class _ChainingPageState extends State<ChainingPage> {
                 if (_tacEnabled)
                   Expanded(
                     child: Container(
-                      color: _currentPage == 2
-                          ? _themeProvider.navSelected
-                          : Colors.transparent,
+                      color: _currentPage == 2 ? _themeProvider.navSelected : Colors.transparent,
                       child: TextButton(
                         child: Text('TAC',
                             style: TextStyle(
@@ -174,5 +177,9 @@ class _ChainingPageState extends State<ChainingPage> {
     var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _myCurrentKey = userDetails.basic.userApiKey;
     _tacEnabled = await Prefs().getTACEnabled();
+
+    if (!_chainStatusProvider.initialised) {
+      await _chainStatusProvider.loadPreferences(apiKey: _myCurrentKey);
+    }
   }
 }

@@ -27,7 +27,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
@@ -62,6 +62,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   ChainStatusProvider _chainStatusProvider;
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
+
+  final _chainWidgetKey = GlobalKey();
 
   String _initialUrl = "";
   String _currentPageTitle = "";
@@ -162,10 +164,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                         collapsed: SizedBox.shrink(),
                         controller: _chainWidgetController,
                         header: SizedBox.shrink(),
-                        expanded: ChainTimer(
+                        expanded: ChainWidget(
+                          key: _chainWidgetKey,
                           userKey: widget.userKey,
                           alwaysDarkBackground: true,
-                          chainTimerParent: ChainTimerParent.webView,
                         ),
                       ),
                       // Quick items widget. NOTE: this one will open at the bottom if
@@ -280,7 +282,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 if (widget.attacksCallback != null) {
                   widget.attacksCallback(_attackedIds);
                 }
-                _chainStatusProvider.watcherAssignParent(newParent: ChainTimerParent.targets);
                 Navigator.pop(context);
               } else {
                 // But we can change and go back to previous page in certain

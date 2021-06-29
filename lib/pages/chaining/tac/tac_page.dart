@@ -29,7 +29,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/tac/tac_card.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
@@ -52,6 +52,8 @@ class _TacPageState extends State<TacPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
+
+  final _chainWidgetKey = GlobalKey();
 
   TacFilters _tacFilters;
   bool _apiCall = false;
@@ -146,10 +148,10 @@ class _TacPageState extends State<TacPage> {
     return Column(
       children: <Widget>[
         SizedBox(height: 5),
-        ChainTimer(
+        ChainWidget(
+          key: _chainWidgetKey,
           userKey: widget.userKey,
           alwaysDarkBackground: false,
-          chainTimerParent: ChainTimerParent.targets,
         ),
         _filtersCard(),
         SizedBox(height: 10),

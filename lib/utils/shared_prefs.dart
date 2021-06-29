@@ -19,6 +19,7 @@ class Prefs {
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
   final String _kChainWatcherSound = "pda_chainWatcherSound";
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
+  final String _kChainWatcherNotifications = "pda_chainWatcherNotifications";
   final String _kYataTargetsEnabled = "pda_yataTargetsEnabled";
   final String _kAttacksSort = "pda_attacksSort";
   final String _kFriendsList = "pda_friendsList";
@@ -276,6 +277,16 @@ class Prefs {
   Future<bool> setChainWatcherVibration(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kChainWatcherVibration, value);
+  }
+
+  Future<bool> getChainWatcherNotificationsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kChainWatcherNotifications) ?? true;
+  }
+
+  Future<bool> setChainWatcherNotificationsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kChainWatcherNotifications, value);
   }
 
   Future<bool> getYataTargetsEnabled() async {
