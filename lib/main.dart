@@ -43,14 +43,12 @@ final String appVersion = '2.4.0';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-final BehaviorSubject<String> selectNotificationSubject =
-    BehaviorSubject<String>();
+final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (message.data["channelId"].contains("Alerts stocks")){
+  if (message.data["channelId"].contains("Alerts stocks")) {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     var oldData = await Prefs().getDataStockMarket();
@@ -105,28 +103,22 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         // UserDetailsProvider has to go first to initialize the others!
-        ChangeNotifierProvider<UserDetailsProvider>(
-            create: (context) => UserDetailsProvider()),
+        ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
           create: (context) => TargetsProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider,
-                  TargetsProvider targetsProvider) =>
+          update: (BuildContext context, UserDetailsProvider userProvider, TargetsProvider targetsProvider) =>
               TargetsProvider(userProvider.basic),
         ),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
           create: (context) => AttacksProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider,
-                  AttacksProvider attacksProvider) =>
+          update: (BuildContext context, UserDetailsProvider userProvider, AttacksProvider attacksProvider) =>
               AttacksProvider(userProvider.basic),
         ),
-        ChangeNotifierProvider<ThemeProvider>(
-            create: (context) => ThemeProvider()),
-        ChangeNotifierProvider<SettingsProvider>(
-            create: (context) => SettingsProvider()),
+        ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, FriendsProvider>(
           create: (context) => FriendsProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider,
-                  FriendsProvider friendsProvider) =>
+          update: (BuildContext context, UserDetailsProvider userProvider, FriendsProvider friendsProvider) =>
               FriendsProvider(userProvider.basic),
         ),
         ChangeNotifierProvider<UserScriptsProvider>(
@@ -159,30 +151,46 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ChainStatusProvider _chainStatusProvider;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-
+    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
-          : Colors.grey[900],
+      statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
     ));
 
-    return MaterialApp(
-      builder: BotToastInit(),
-      navigatorObservers: [BotToastNavigatorObserver()],
-      title: 'Torn PDA',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        brightness: _themeProvider.currentTheme == AppTheme.light
-            ? Brightness.light
-            : Brightness.dark,
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          width: _chainStatusProvider.watcherActive ? 3 : 0,
+          color: _chainStatusProvider.borderColor,
+        ),
       ),
-      home: DrawerPage(),
+      child: MaterialApp(
+        builder: BotToastInit(),
+        navigatorObservers: [BotToastNavigatorObserver()],
+        title: 'Torn PDA',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blueGrey,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+        ),
+        home: DrawerPage(),
+      ),
     );
   }
 }
@@ -192,7 +200,6 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
   }
 }

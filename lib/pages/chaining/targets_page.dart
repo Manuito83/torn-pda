@@ -20,10 +20,12 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/chaining/chain_timer.dart';
+import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
+
+import '../../main.dart';
 
 class TargetsOptions {
   String description;
@@ -51,8 +53,7 @@ class TargetsPage extends StatefulWidget {
   final String userKey;
   final Function tabCallback;
 
-  const TargetsPage({Key key, @required this.userKey, @required this.tabCallback})
-      : super(key: key);
+  const TargetsPage({Key key, @required this.userKey, @required this.tabCallback}) : super(key: key);
 
   @override
   _TargetsPageState createState() => _TargetsPageState();
@@ -65,6 +66,8 @@ class _TargetsPageState extends State<TargetsPage> {
   var _addFormKey = GlobalKey<FormState>();
 
   Future _preferencesLoaded;
+
+  final _chainWidgetKey = GlobalKey();
 
   TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
@@ -110,6 +113,8 @@ class _TargetsPageState extends State<TargetsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<TargetsProvider>(context, listen: false).setFilterText('');
     });
+
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
   }
 
   @override
@@ -219,10 +224,10 @@ class _TargetsPageState extends State<TargetsPage> {
             ),
           ],
         ),
-        ChainTimer(
+        ChainWidget(
+          key: _chainWidgetKey,
           userKey: widget.userKey,
           alwaysDarkBackground: false,
-          chainTimerParent: ChainTimerParent.targets,
         ),
         if (_targetsProvider.currentColorFilterOut.length > 0)
           Padding(
@@ -233,10 +238,9 @@ class _TargetsPageState extends State<TargetsPage> {
             ),
           ),
         Consumer<TargetsProvider>(
-          builder: (context, targetsModel, child) =>
-              MediaQuery.of(context).orientation == Orientation.portrait
-                  ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
-                  : TargetsList(targets: targetsModel.allTargets),
+          builder: (context, targetsModel, child) => MediaQuery.of(context).orientation == Orientation.portrait
+              ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
+              : TargetsList(targets: targetsModel.allTargets),
         ),
       ],
     );
@@ -286,9 +290,10 @@ class _TargetsPageState extends State<TargetsPage> {
                                     border: InputBorder.none,
                                     hintText: "search targets",
                                     hintStyle: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.grey[300],
-                                        fontSize: 12),
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.grey[300],
+                                      fontSize: 12,
+                                    ),
                                   ),
                                   style: TextStyle(
                                     color: Colors.white,
@@ -491,8 +496,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                       // does not appear again in case of failure
                                       var inputId = _addIdController.text;
                                       _addIdController.text = '';
-                                      AddTargetResult tryAddTarget =
-                                          await targetsProvider.addTarget(
+                                      AddTargetResult tryAddTarget = await targetsProvider.addTarget(
                                         targetId: inputId,
                                         attacks: await _targetsProvider.getAttacks(),
                                       );

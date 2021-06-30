@@ -76,6 +76,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
+
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -105,7 +106,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // STARTS QUICK ACTIONS
       final QuickActions quickActions = QuickActions();
@@ -508,9 +508,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     elevation: 2, // This avoids shadow over SafeArea
                     child: Container(
                       decoration: BoxDecoration(
-                          color: _themeProvider.currentTheme == AppTheme.light
-                              ? Colors.grey[100]
-                              : Colors.transparent,
+                          color: _themeProvider.currentTheme == AppTheme.light ? Colors.grey[100] : Colors.transparent,
                           backgroundBlendMode: BlendMode.multiply),
                       child: ListView(
                         padding: EdgeInsets.zero,
@@ -588,9 +586,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                             }
                             setState(() {
                               SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-                                statusBarColor: _themeProvider.currentTheme == AppTheme.light
-                                    ? Colors.blueGrey
-                                    : Colors.grey[900],
+                                statusBarColor:
+                                    _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
                               ));
                             });
                           },

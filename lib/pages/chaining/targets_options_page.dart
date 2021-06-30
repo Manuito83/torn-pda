@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Project imports:
-import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -32,6 +31,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Chain watcher
   bool _soundAlertsEnabled = true;
   bool _vibrationAlertsEnabled = true;
+  bool _watcherNotificationsEnabled = true;
 
   // Yata import
   bool _yataTargetsEnabled = true;
@@ -253,6 +253,26 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ],
                                 ),
                               ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Notification"),
+                                    Switch(
+                                      value: _watcherNotificationsEnabled,
+                                      onChanged: (value) {
+                                        Prefs().setChainWatcherNotificationsEnabled(value);
+                                        setState(() {
+                                          _watcherNotificationsEnabled = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
                               SizedBox(height: 15),
                               Divider(),
                               SizedBox(height: 5),
@@ -385,6 +405,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     var vibrationEnabled = await Prefs().getChainWatcherVibration();
     var yataEnabled = await Prefs().getYataTargetsEnabled();
     var tacEnabled = await Prefs().getTACEnabled();
+    var notifications = await Prefs().getChainWatcherNotificationsEnabled();
 
     setState(() {
       _showTargetsNotes = showTargetsNotes;
@@ -394,12 +415,11 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
       _vibrationAlertsEnabled = vibrationEnabled;
       _yataTargetsEnabled = yataEnabled;
       _tacEnabled = tacEnabled;
+      _watcherNotificationsEnabled = notifications;
     });
   }
 
   Future<bool> _willPopCallback() async {
-    var chainStatusProvider = context.read<ChainStatusProvider>();
-    chainStatusProvider.loadPreferences();
     Navigator.of(context).pop(
       TargetsOptionsReturn()
         ..yataEnabled = _yataTargetsEnabled

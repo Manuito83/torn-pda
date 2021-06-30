@@ -19,6 +19,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 // 201 travel arrival
 // 211 travel departure
 // 400 loot
+// 555 chain watcher
 
 Future showNotification(Map payload, int notId) async {
   showNotificationBoth(payload, notId);
@@ -543,6 +544,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Alerts stocks ${modifier.channelIdModifier}',
       'Alerts stocks ${modifier.channelIdModifier}',
       'Automatic alerts for stocks',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual chain ${modifier.channelIdModifier}',
+      'Manual chain ${modifier.channelIdModifier}',
+      'Manual notifications for chain',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

@@ -362,9 +362,7 @@ class _LootPageState extends State<LootPage> {
               child: Icon(
                 iconData,
                 size: 20,
-                color: _lootNotificationType == NotificationType.notification && isPending
-                    ? Colors.green
-                    : null,
+                color: _lootNotificationType == NotificationType.notification && isPending ? Colors.green : null,
               ),
               onTap: () async {
                 switch (_lootNotificationType) {
@@ -373,10 +371,8 @@ class _LootPageState extends State<LootPage> {
                       setState(() {
                         isPending = false;
                       });
-                      await flutterLocalNotificationsPlugin
-                          .cancel(int.parse('400$npcId$levelNumber'));
-                      _activeNotificationsIds
-                          .removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
+                      await flutterLocalNotificationsPlugin.cancel(int.parse('400$npcId$levelNumber'));
+                      _activeNotificationsIds.removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
                     } else {
                       setState(() {
                         isPending = true;
@@ -517,9 +513,7 @@ class _LootPageState extends State<LootPage> {
                 await launch(url, forceSafariVC: false);
               }
             } else {
-              _settingsProvider.useQuickBrowser
-                  ? openBrowserDialog(context, url)
-                  : _openTornBrowser(url);
+              _settingsProvider.useQuickBrowser ? openBrowserDialog(context, url) : _openTornBrowser(url);
             }
           },
           onLongPress: () {
@@ -542,9 +536,7 @@ class _LootPageState extends State<LootPage> {
                   await launch(url, forceSafariVC: false);
                 }
               } else {
-                _settingsProvider.useQuickBrowser
-                    ? openBrowserDialog(context, url)
-                    : _openTornBrowser(url);
+                _settingsProvider.useQuickBrowser ? openBrowserDialog(context, url) : _openTornBrowser(url);
               }
             },
             onLongPress: () {
@@ -564,8 +556,7 @@ class _LootPageState extends State<LootPage> {
         npcBoxes.add(
           Card(
             shape: RoundedRectangleBorder(
-                side: BorderSide(color: cardBorderColor(), width: 1.5),
-                borderRadius: BorderRadius.circular(4.0)),
+                side: BorderSide(color: cardBorderColor(), width: 1.5), borderRadius: BorderRadius.circular(4.0)),
             elevation: 3,
             child: Padding(
               padding: const EdgeInsets.all(10.0),
@@ -682,8 +673,7 @@ class _LootPageState extends State<LootPage> {
   Future<bool> _fetchDatabase() async {
     try {
       // Get current NPCs
-      String dbNpcsResult =
-          (await FirebaseDatabase.instance.reference().child("loot/npcs").once()).value;
+      String dbNpcsResult = (await FirebaseDatabase.instance.reference().child("loot/npcs").once()).value;
       _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
       // Get their hospital out times
@@ -785,9 +775,7 @@ class _LootPageState extends State<LootPage> {
 
   Future _loadPreferences() async {
     var lootTimeType = await Prefs().getLootTimerType();
-    lootTimeType == 'timer'
-        ? _lootTimeType = LootTimeType.timer
-        : _lootTimeType = LootTimeType.dateTime;
+    lootTimeType == 'timer' ? _lootTimeType = LootTimeType.timer : _lootTimeType = LootTimeType.dateTime;
 
     var notification = await Prefs().getLootNotificationType();
     var notificationAhead = await Prefs().getLootNotificationAhead();
@@ -892,8 +880,7 @@ class _LootPageState extends State<LootPage> {
         notificationTitle,
         notificationSubtitle,
         //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.from(notificationTime, tz.local)
-            .subtract(Duration(seconds: _lootNotificationAhead)),
+        tz.TZDateTime.from(notificationTime, tz.local).subtract(Duration(seconds: _lootNotificationAhead)),
         platformChannelSpecifics,
         payload: notificationPayload,
         androidAllowWhileIdle: true, // Deliver at exact time
@@ -905,8 +892,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   Future _retrievePendingNotifications() async {
-    var pendingNotificationRequests =
-        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     for (var not in pendingNotificationRequests) {
       var id = not.id.toString();
@@ -917,8 +903,7 @@ class _LootPageState extends State<LootPage> {
   }
 
   Future _cancelPassedNotifications() async {
-    var pendingNotificationRequests =
-        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     // Check which notifications are still in our active list but have
     // already been issued
