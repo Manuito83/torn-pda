@@ -357,17 +357,14 @@ class ChainStatusProvider extends ChangeNotifier {
         }
       }
       // GREEN 2
-      else if (currentSecondsCounter >= 120 && currentSecondsCounter < 180) {
+      else if (currentSecondsCounter >= 120 && currentSecondsCounter < 150) {
         if (_chainWatcherDefcon != ChainWatcherDefcon.green2) {
           _chainWatcherDefcon = ChainWatcherDefcon.green2;
-          if (_vibrationActive) {
-            _vibrate(3);
-          }
         } else {
-          _borderColor = Colors.green;
+          _borderColor == Colors.transparent ? _borderColor = Colors.green : _borderColor = Colors.transparent;
         }
-        // GREEN 2
-      } else {
+        // GREEN 1
+      } else if (currentSecondsCounter >= 150) {
         if (_chainWatcherDefcon != ChainWatcherDefcon.green1) {
           _chainWatcherDefcon = ChainWatcherDefcon.green1;
           _borderColor = Colors.green;

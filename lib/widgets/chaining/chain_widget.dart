@@ -77,16 +77,18 @@ class _ChainWidgetState extends State<ChainWidget> {
               SizedBox(
                 width: 40,
                 child: !_chainStatusProvider.modelError
-                    ? IconButton(
-                        icon: Icon(MdiIcons.eyeOutline),
-                        color: _chainStatusProvider.watcherActive
-                            ? widget.alwaysDarkBackground
-                                ? Colors.orange[700]
-                                : Colors.orange[900]
-                            : widget.alwaysDarkBackground
-                                ? Colors.grey
-                                : _themeProvider.mainText,
-                        onPressed: () {
+                    ? GestureDetector(
+                        child: Icon(
+                          MdiIcons.eyeOutline,
+                          color: _chainStatusProvider.watcherActive
+                              ? widget.alwaysDarkBackground
+                                  ? Colors.orange[700]
+                                  : Colors.orange[900]
+                              : widget.alwaysDarkBackground
+                                  ? Colors.grey
+                                  : _themeProvider.mainText,
+                        ),
+                        onTap: () {
                           setState(() {
                             if (_chainStatusProvider.watcherActive) {
                               _deactivateChainWatcher();
