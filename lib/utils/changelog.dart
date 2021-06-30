@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.4.0
     var v2_4_0 = ChangeLogItem();
     v2_4_0.main.version = 'Torn PDA v2.4.0';
-    v2_4_0.main.date = 'XX JUL 2021';
+    v2_4_0.main.date = '05 JUL 2021';
     String feat2_4_0_1 = "Added alerts for stock exchange price gain/loss";
     String feat2_4_0_2 = "Added Arson Warehouse support in the Trade Calculator";
     String feat2_4_0_3 = "Loot: added Tiny";
@@ -49,17 +49,18 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_4_0_5 = "Profile: you can now choose which section to visit when tapping the life bar";
     String feat2_4_0_6 = "Profile: you can now edit active shortcuts (left swipe)";
     String feat2_4_0_7 = "Profile: added caution message if visiting the gym while stacking";
-    String feat2_4_0_8 = "Chaining: you can now check targets' status after fetching them from TAC";
-    String feat2_4_0_9 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
-    String feat2_4_0_10 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
-    String feat2_4_0_11 = "Browser: added MAX buttons when buying from the bazaar";
-    String feat2_4_0_12 = "Browser: [iOS] you can now disable the native link preview windows when long-pressing";
-    String feat2_4_0_13 = "Fixed issue with screen turning off when chain watcher is in use";
-    String feat2_4_0_14 = "Fixed connectivity with some bluetooth devices";
-    String feat2_4_0_15 = "Fixed foreign stock items identification and uploads";
-    String feat2_4_0_16 = "Fixed issues caused by targets with life over max";
-    String feat2_4_0_17 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_4_0_18 = "Fixed other UI related issues reported by users";
+    String feat2_4_0_8 = "Chaining: chain watcher can now be seen anywhere in the app, also added improvements in timings and local notifications";
+    String feat2_4_0_9 = "Chaining: you can now check targets' status after fetching them from TAC";
+    String feat2_4_0_10 = "Chaining: added options (URL copy, navigation, shortcuts) to chaining browser";
+    String feat2_4_0_11 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
+    String feat2_4_0_12 = "Browser: added MAX buttons when buying from the bazaar";
+    String feat2_4_0_13 = "Browser: [iOS] you can now disable the native link preview windows when long-pressing";
+    String feat2_4_0_14 = "Fixed issue with screen turning off when chain watcher is in use";
+    String feat2_4_0_15 = "Fixed connectivity with some bluetooth devices";
+    String feat2_4_0_16 = "Fixed foreign stock items identification and uploads";
+    String feat2_4_0_17 = "Fixed issues caused by targets with life over max";
+    String feat2_4_0_18 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_4_0_19 = "Fixed other UI related issues reported by users";
     v2_4_0.features.add(feat2_4_0_1);
     v2_4_0.features.add(feat2_4_0_2);
     v2_4_0.features.add(feat2_4_0_3);
@@ -71,13 +72,14 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_4_0.features.add(feat2_4_0_9);
     v2_4_0.features.add(feat2_4_0_10);
     v2_4_0.features.add(feat2_4_0_11);
-    if (Platform.isIOS) v2_4_0.features.add(feat2_4_0_12);
-    v2_4_0.features.add(feat2_4_0_13);
+    v2_4_0.features.add(feat2_4_0_12);
+    if (Platform.isIOS) v2_4_0.features.add(feat2_4_0_13);
     v2_4_0.features.add(feat2_4_0_14);
     v2_4_0.features.add(feat2_4_0_15);
     v2_4_0.features.add(feat2_4_0_16);
     v2_4_0.features.add(feat2_4_0_17);
     v2_4_0.features.add(feat2_4_0_18);
+    v2_4_0.features.add(feat2_4_0_19);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
