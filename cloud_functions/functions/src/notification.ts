@@ -434,7 +434,7 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
       if (!allTornKeys.includes(key)) {
         changes = true;
         for(let i = 0; i < knownMessages.length; i++){ 
-          if ( knownMessages[i] === key) { 
+          if (knownMessages[i] === key) { 
             knownMessages.splice(i, 1); 
             break;
           }
@@ -503,8 +503,10 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     let newGeneralEvents = 0;
     const newEventsDescriptions: any[] = [];
     const knownEvents = subscriber.knownEvents || [];
+    const allTornKeys: any[] = [];
     
     Object.keys(userStats.events).forEach(function (key){
+      allTornKeys.push(key);
       if (userStats.events[key].seen === 0 &&
         !knownEvents.includes(key)) {
           changes = true;
@@ -523,6 +525,20 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           }
       }
     });
+
+    // Ensure that deleted messages are deleted from the database, as they
+    // won't be caught by the conditions above if they get deleted immediately
+    for (const key of knownEvents) {
+      if (!allTornKeys.includes(key)) {
+        changes = true;
+        for(let i = 0; i < knownEvents.length; i++){ 
+          if (knownEvents[i] === key) { 
+            knownEvents.splice(i, 1); 
+            break;
+          }
+        }
+      }
+    }
 
     if (changes) {
       promises.push(
