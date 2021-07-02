@@ -55,12 +55,13 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_4_0_11 = "Chaining: you can now tap anywhere in a target's card to trigger the attack browser";
     String feat2_4_0_12 = "Browser: added MAX buttons when buying from the bazaar";
     String feat2_4_0_13 = "Browser: you can now disable the native link preview windows when long-pressing";
-    String feat2_4_0_14 = "Fixed issue with screen turning off when chain watcher is in use";
-    String feat2_4_0_15 = "Fixed connectivity with some bluetooth devices";
-    String feat2_4_0_16 = "Fixed foreign stock items identification and uploads";
-    String feat2_4_0_17 = "Fixed issues caused by targets with life over max";
-    String feat2_4_0_18 = "Fixed recent attacks cards errors in certain conditions";
-    String feat2_4_0_19 = "Fixed other UI related issues reported by users";
+    String feat2_4_0_14 = "Browser: TornCAT Player Filter script updated to include API comment";
+    String feat2_4_0_15 = "Fixed issue with screen turning off when chain watcher is in use";
+    String feat2_4_0_16 = "Fixed connectivity with some bluetooth devices";
+    String feat2_4_0_17 = "Fixed foreign stock items identification and uploads";
+    String feat2_4_0_18 = "Fixed issues caused by targets with life over max";
+    String feat2_4_0_19 = "Fixed recent attacks cards errors in certain conditions";
+    String feat2_4_0_20 = "Fixed other UI related issues reported by users";
     v2_4_0.features.add(feat2_4_0_1);
     v2_4_0.features.add(feat2_4_0_2);
     v2_4_0.features.add(feat2_4_0_3);
@@ -80,6 +81,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_4_0.features.add(feat2_4_0_17);
     v2_4_0.features.add(feat2_4_0_18);
     v2_4_0.features.add(feat2_4_0_19);
+    v2_4_0.features.add(feat2_4_0_20);
 
     // VERSION 2.3.5
     var v2_3_5 = ChangeLogItem();
