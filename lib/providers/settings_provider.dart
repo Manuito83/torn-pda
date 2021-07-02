@@ -316,6 +316,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _warnAboutExcessEnergy = true;
+  bool get warnAboutExcessEnergy => _warnAboutExcessEnergy;
+  set changeWarnAboutExcessEnergy(bool choice) {
+    _warnAboutExcessEnergy = choice;
+    Prefs().setWarnAboutExcessEnergy(_warnAboutExcessEnergy);
+    notifyListeners();
+  }
+
+  var _warnAboutChains = true;
+  bool get warnAboutChains => _warnAboutChains;
+  set changeWarnAboutChains(bool choice) {
+    _warnAboutChains = choice;
+    Prefs().setWarnAboutChains(_warnAboutChains);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -415,6 +431,9 @@ class SettingsProvider extends ChangeNotifier {
     _lifeBarOption = await Prefs().getLifeBarOption();
 
     _iosAllowLinkPreview = await Prefs().getIosAllowLinkPreview();
+
+    _warnAboutExcessEnergy = await Prefs().getWarnAboutExcessEnergy();
+    _warnAboutChains = await Prefs().getWarnAboutChains();
 
     notifyListeners();
   }

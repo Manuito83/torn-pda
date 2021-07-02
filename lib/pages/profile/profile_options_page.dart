@@ -38,7 +38,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _nukeReviveEnabled = true;
   bool _uhcReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
-  bool _warnAboutExcessEnergyEnabled = true;
   bool _shortcutsEnabled = true;
   bool _dedicatedTravelCard = true;
   bool _disableTravelSection = false;
@@ -183,84 +182,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           : null,
                                     ),
                                   ],
-                                ),
-                              ),
-                              SizedBox(height: 15),
-                              Divider(),
-                              SizedBox(height: 5),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'ENERGY WARNINGS',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
-                                ],
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Warn about chains"),
-                                    Switch(
-                                      value: _warnAboutChainsEnabled,
-                                      onChanged: (value) {
-                                        Prefs().setWarnAboutChains(value);
-                                        setState(() {
-                                          _warnAboutChainsEnabled = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If active, you\'ll get a message and a chain icon to the side of '
-                                  'the energy bar, so that you avoid spending energy in the gym '
-                                  'if you are unaware that your faction is chaining',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Warn about stacking"),
-                                    Switch(
-                                      value: _warnAboutExcessEnergyEnabled,
-                                      onChanged: (value) {
-                                        Prefs().setWarnAboutExcessEnergy(value);
-                                        setState(() {
-                                          _warnAboutExcessEnergyEnabled = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If active, you\'ll get a message if your open a browser to the gym '
-                                  'and your energy is above the natural maximum, in case you forgot that '
-                                  'you are stacking',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
                                 ),
                               ),
                               SizedBox(height: 15),
@@ -929,7 +850,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var useNuke = await Prefs().getUseNukeRevive();
     var useUhc = await Prefs().getUseUhcRevive();
     var warnChains = await Prefs().getWarnAboutChains();
-    var warnExcessEnergy = await Prefs().getWarnAboutExcessEnergy();
     var shortcuts = await Prefs().getEnableShortcuts();
     var dedTravel = await Prefs().getDedicatedTravelCard();
     var disableTravel = await Prefs().getDisableTravelSection();
@@ -945,7 +865,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _nukeReviveEnabled = useNuke;
       _uhcReviveEnabled = useUhc;
       _warnAboutChainsEnabled = warnChains;
-      _warnAboutExcessEnergyEnabled = warnExcessEnergy;
       _shortcutsEnabled = shortcuts;
       _dedicatedTravelCard = dedTravel;
       _disableTravelSection = disableTravel;
@@ -1062,7 +981,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..nukeReviveEnabled = _nukeReviveEnabled
         ..uhcReviveEnabled = _uhcReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
-        ..warnAboutExcessEnergyEnabled = _warnAboutExcessEnergyEnabled
         ..shortcutsEnabled = _shortcutsEnabled
         ..dedicatedTravelCard = _dedicatedTravelCard
         ..disableTravelSection = _disableTravelSection

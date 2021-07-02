@@ -218,7 +218,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _nukeReviveActive = false;
   bool _uhcReviveActive = false;
   bool _warnAboutChains = false;
-  bool _warnAboutExcessEnergy = false;
   bool _shortcutsEnabled = false;
   bool _dedicatedTravelCard = false;
 
@@ -582,7 +581,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _nukeReviveActive = newOptions.nukeReviveEnabled;
               _uhcReviveActive = newOptions.uhcReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
-              _warnAboutExcessEnergy = newOptions.warnAboutExcessEnergyEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
               _dedicatedTravelCard = newOptions.dedicatedTravelCard;
               _eventsExpController.expanded = newOptions.expandEvents;
@@ -1592,27 +1590,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           GestureDetector(
                             key: _showOne,
                             onLongPress: () {
-                              if (_warnAboutChains &&
-                                  _chainModel.chain.current > 10 &&
-                                  _chainModel.chain.cooldown == 0) {
-                                _showFactionChainingToast();
-                              } else if (_warnAboutExcessEnergy &&
-                                  _user.energy.current > _user.energy.maximum) {
-                                _showExcessEnergyToast();
-                              }
-
                               _launchBrowserFull('https://www.torn.com/gym.php');
                             },
                             onTap: () async {
-                              if (_warnAboutChains &&
-                                  _chainModel.chain.current > 10 &&
-                                  _chainModel.chain.cooldown == 0) {
-                                _showFactionChainingToast();
-                              } else if (_warnAboutExcessEnergy &&
-                                  _user.energy.current > _user.energy.maximum) {
-                                _showExcessEnergyToast();
-                              }
-
                               _launchBrowserOption('https://www.torn.com/gym.php');
                             },
                             child: LinearPercentIndicator(
@@ -4481,25 +4461,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () {
-            if (_warnAboutChains &&
-                _chainModel.chain.current > 10 &&
-                _chainModel.chain.cooldown == 0) {
-              _showFactionChainingToast();
-            } else if (_warnAboutExcessEnergy && _user.energy.current > _user.energy.maximum) {
-              _showExcessEnergyToast();
-            }
-
             _launchBrowserOption('https://www.torn.com/gym.php');
           },
           onLongPress: () {
-            if (_warnAboutChains &&
-                _chainModel.chain.current > 10 &&
-                _chainModel.chain.cooldown == 0) {
-              _showFactionChainingToast();
-            } else if (_warnAboutExcessEnergy && _user.energy.current > _user.energy.maximum) {
-              _showExcessEnergyToast();
-            }
-
             _launchBrowserFull('https://www.torn.com/gym.php');
           },
           child: Container(
@@ -4544,34 +4508,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.grey[400],
         ),
       ],
-    );
-  }
-
-  void _showFactionChainingToast() {
-    BotToast.showText(
-      text: 'Caution: your faction is chaining!',
-      align: Alignment(0, 0),
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.blue,
-      duration: Duration(seconds: 2),
-      contentPadding: EdgeInsets.all(10),
-    );
-  }
-
-  void _showExcessEnergyToast() {
-    BotToast.showText(
-      text: 'Caution: high energy detected, you might be stacking!',
-      align: Alignment(0, 0),
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.blue,
-      duration: Duration(seconds: 2),
-      contentPadding: EdgeInsets.all(10),
     );
   }
 
@@ -5276,7 +5212,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _nukeReviveActive = await Prefs().getUseNukeRevive();
     _uhcReviveActive = await Prefs().getUseUhcRevive();
     _warnAboutChains = await Prefs().getWarnAboutChains();
-    _warnAboutExcessEnergy = await Prefs().getWarnAboutExcessEnergy();
     _shortcutsEnabled = await Prefs().getEnableShortcuts();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 

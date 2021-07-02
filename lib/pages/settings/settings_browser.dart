@@ -93,6 +93,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           SizedBox(height: 15),
                           Divider(),
                           SizedBox(height: 10),
+                          _gym(),
+                          SizedBox(height: 15),
+                          Divider(),
+                          SizedBox(height: 10),
                           _profile(),
                           if (Platform.isIOS)
                             Column(
@@ -499,6 +503,86 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _gym() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'GYM',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Warn about chains"),
+              Switch(
+                value: _settingsProvider.warnAboutChains,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeWarnAboutChains = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            'If active, you\'ll get a message and a chain icon to the side of '
+                'the energy bar, so that you avoid spending energy in the gym '
+                'if you are unaware that your faction is chaining',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Warn about stacking"),
+              Switch(
+                value: _settingsProvider.warnAboutExcessEnergy,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeWarnAboutExcessEnergy = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            'If active, you\'ll get a message if your open a browser to the gym '
+                'and your energy is above the natural maximum, in case you forgot that '
+                'you are stacking',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
       ],

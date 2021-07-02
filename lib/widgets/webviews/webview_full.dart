@@ -19,6 +19,7 @@ import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
+import 'package:torn_pda/models/chaining/bars_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
@@ -702,6 +703,7 @@ class _WebViewFullState extends State<WebViewFull> {
               // Force to show title
               await (_getPageTitle(document, showTitle: true));
               _assessGeneral(document);
+              _assessGym(document);
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
@@ -1613,7 +1615,6 @@ class _WebViewFullState extends State<WebViewFull> {
           break;
         }
       }
-
     } catch (e) {
       return;
     }
@@ -2315,6 +2316,38 @@ class _WebViewFullState extends State<WebViewFull> {
       setState(() {
         _findFirstSubmitted = false;
       });
+    }
+  }
+
+  // ASSESS GYM
+  Future _assessGym(dom.Document document) async {
+    if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
+
+    var easyUrl = _currentUrl.replaceAll('#', '');
+    if (easyUrl.contains('www.torn.com/gym.php')) {
+      var stats = await TornApiCaller.bars(_userProvider.basic.userApiKey).getBars;
+      if (stats is BarsModel) {
+        var message = "";
+        if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
+          message = 'Caution: your faction is chaining!';
+        } else if (stats.life.current > stats.energy.maximum) {
+          message = 'Caution: high energy detected, you might be stacking!';
+        }
+
+        if (message.isNotEmpty) {
+          BotToast.showText(
+            text: message,
+            align: Alignment(0, 0),
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 2),
+            contentPadding: EdgeInsets.all(10),
+          );
+        }
+      }
     }
   }
 
