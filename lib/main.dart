@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -157,8 +158,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ChainStatusProvider _chainStatusProvider;
-
   @override
   void initState() {
     super.initState();
@@ -167,29 +166,31 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
     ));
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          width: _chainStatusProvider.watcherActive ? 3 : 0,
-          color: _chainStatusProvider.borderColor,
+    return MediaQuery(
+      data: new MediaQueryData.fromWindow(ui.window),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Stack(
+          children: [
+            MaterialApp(
+              builder: BotToastInit(),
+              navigatorObservers: [BotToastNavigatorObserver()],
+              title: 'Torn PDA',
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                primarySwatch: Colors.blueGrey,
+                visualDensity: VisualDensity.adaptivePlatformDensity,
+                brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+              ),
+              home: DrawerPage(),
+            ),
+            AppBorder(),
+          ],
         ),
-      ),
-      child: MaterialApp(
-        builder: BotToastInit(),
-        navigatorObservers: [BotToastNavigatorObserver()],
-        title: 'Torn PDA',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.blueGrey,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-          brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
-        ),
-        home: DrawerPage(),
       ),
     );
   }
@@ -201,5 +202,35 @@ class MyHttpOverrides extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext context) {
     return super.createHttpClient(context)
       ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
+class AppBorder extends StatefulWidget {
+  const AppBorder({Key key}) : super(key: key);
+
+  @override
+  _AppBorderState createState() => _AppBorderState();
+}
+
+class _AppBorderState extends State<AppBorder> {
+  @override
+  Widget build(BuildContext context) {
+    var _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    return IgnorePointer(
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  width: _chainStatusProvider.watcherActive ? 3 : 0,
+                  color: _chainStatusProvider.borderColor,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
