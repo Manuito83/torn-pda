@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         TornCAT Faction Player Filters
 // @namespace    torncat
-// @version      1.2.2
+// @version      1.2.3
 // @description  This script adds player filters on various pages (see matches below).
 // @author       Wingmanjd[2127679]
 // @match        https://www.torn.com/factions.php*
@@ -594,7 +594,7 @@ function callTornAPI(type, id = '', selections=''){
     return new Promise((resolve, reject ) => {
         setTimeout(async () => {
             let baseURL = 'https://api.torn.com/';
-            let streamURL = baseURL + type + '/' + id + '?selections=' + selections + '&key=' + data.apiKey;
+            let streamURL = baseURL + type + '/' + id + '?selections=' + selections + '&key=' + data.apiKey + '&comment=TornCat';
              if( !tornPdaMode && develCheck ) console.debug('Making an API call to ' + streamURL);
 
             // Reject if key isn't set.
