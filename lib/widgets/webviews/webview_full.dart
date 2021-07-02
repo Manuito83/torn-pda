@@ -669,6 +669,7 @@ class _WebViewFullState extends State<WebViewFull> {
               var html = await webView.getHtml();
               var document = parse(html);
               _assessGeneral(document);
+              _assessGym(document);
             },
             onProgressChanged: (c, progress) async {
               if (_settingsProvider.removeAirplane) {
@@ -703,7 +704,6 @@ class _WebViewFullState extends State<WebViewFull> {
               // Force to show title
               await (_getPageTitle(document, showTitle: true));
               _assessGeneral(document);
-              _assessGym(document);
 
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
