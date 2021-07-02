@@ -25,11 +25,12 @@ It was conceived to enhance the experience of playing Torn from a mobile platfor
 
 * Quick Items: browse to the items section in Torn with the full browser and add your prefer items for a quick access later on.
 
-* Trade calculator with total price calculation for cash, items and shares, plus the ability to copy total figures for a quick trading. If you are a professional trader, you can also synchronize with Torn Trader.
+* Trade calculator with total price calculation for cash, items and shares, plus the ability to copy total figures for a quick trading. If you are a professional trader, you can also synchronize with Torn Trader and the Arson Warehouse.
+
 
 * Automatic city items finder in the map.
 
-* Automatic alerts for travel, energy, nerve, hospitalization, drugs, racing and messages.
+* Automatic alerts for travel, energy, nerve, hospitalization, drugs, racing, messages and stocks.
 
 * Torn chat: options to highlight your name or hide the chat completely if you wish.
 
