@@ -196,7 +196,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
       // For timer debugging
       //
-
+      /*
       chainModel.chain
         ..timeout = 90
         ..current = 1816
@@ -204,7 +204,7 @@ class ChainStatusProvider extends ChangeNotifier {
         ..start = 1230000
         ..modifier = 1.23
         ..cooldown = 0;
-
+      */
 
       // OPTION 1, NOT CHAINING
       if ((chainModel.chain.current == 0 || chainModel.chain.timeout == 0) && chainModel.chain.cooldown == 0) {
