@@ -2330,7 +2330,7 @@ class _WebViewFullState extends State<WebViewFull> {
         var message = "";
         if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
           message = 'Caution: your faction is chaining!';
-        } else if (stats.life.current > stats.energy.maximum) {
+        } else if (stats.energy.current > stats.energy.maximum) {
           message = 'Caution: high energy detected, you might be stacking!';
         }
 
