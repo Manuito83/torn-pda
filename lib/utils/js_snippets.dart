@@ -491,7 +491,7 @@ String removeChatOnLoadStartJS() {
     try {
       var style = document.createElement('style');
       style.type = 'text/css';
-      style.innerHTML = '.chat-box-wrap_2pTum { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
+      style.innerHTML = '[class*="chat-box-wrap_"] { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
       document.getElementsByTagName('head')[0].appendChild(style);
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
@@ -506,7 +506,7 @@ String removeChatJS() {
   return '''
     try {
       var doc = document;
-      var chatBox = document.getElementsByClassName("chat-box-wrap_2pTum");
+      var chatBox = document.querySelectorAll("[class*='chat-box-wrap_']");
       chatBox[0].style.display = 'none';
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
@@ -520,7 +520,7 @@ String removeChatJS() {
 String restoreChatJS() {
   return '''
     var doc = document;
-    var chatBox = document.getElementsByClassName("chat-box-wrap_2pTum");
+    var chatBox = document.querySelectorAll("[class*='chat-box-wrap_']");
     chatBox[0].style.display = 'block';
     
     // Return to avoid iOS WKErrorDomain
@@ -663,13 +663,13 @@ String chatHighlightJS({@required String highlightMap}) {
         return str;
       };
     
-      if (document.querySelector(".chat-box-wrap_2pTum")) {
+      if (document.querySelector("[class*='chat-box-wrap_']")) {
         manipulateChat();
       }
     
       function manipulateChat() {
-        for (let chat of document.querySelectorAll(".chat-box-content_3wOdX")) {
-          for (let message of chat.querySelectorAll(".message_3aSi-")) {
+        for (let chat of document.querySelectorAll("[class*='chat-box-content_']")) {
+          for (let message of chat.querySelectorAll("[class*='message_']")) {
             applyChatHighlights(message);
           }
         }
@@ -703,11 +703,11 @@ String chatHighlightJS({@required String highlightMap}) {
       new MutationObserver((mutationsList) => {
         for (let mutation of mutationsList) {
           for (let addedNode of mutation.addedNodes) {
-            if (addedNode.classList && addedNode.classList.contains("chat-box-content_3wOdX")) {
+            if (addedNode.classList && addedNode.classList.toString().includes("chat-box-content_")) {
               manipulateChat();
             }
           
-            if (addedNode.classList && addedNode.classList.contains("message_3aSi-")) {
+            if (addedNode.classList && addedNode.classList.toString().includes("message_")) {
               applyChatHighlights(addedNode);
             }
           }
@@ -718,7 +718,7 @@ String chatHighlightJS({@required String highlightMap}) {
     function chatsLoaded() {
       return new Promise((resolve) => {
         let checker = setInterval(() => {
-          if (document.querySelector(".chat-box-wrap_2pTum")) {
+          if (document.querySelector("[class*='chat-box-wrap_']")) {
             setInterval(() => {
               resolve(true);
             }, 300);
