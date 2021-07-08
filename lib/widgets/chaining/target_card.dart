@@ -174,10 +174,13 @@ class _TargetCardState extends State<TargetCard> {
                             Text(
                               'Lvl ${_target.level}',
                             ),
-                            SizedBox(
-                              height: 22,
-                              width: 30,
-                              child: _refreshIcon(),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 3),
+                              child: SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: _refreshIcon(),
+                              ),
                             ),
                           ],
                         ),
@@ -323,7 +326,7 @@ class _TargetCardState extends State<TargetCard> {
   Widget _refreshIcon() {
     if (_target.isUpdating) {
       return Padding(
-        padding: const EdgeInsets.all(2.0),
+        padding: const EdgeInsets.all(4.0),
         child: CircularProgressIndicator(),
       );
     } else {
