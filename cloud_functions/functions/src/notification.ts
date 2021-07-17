@@ -213,7 +213,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           sendNotificationToUser(
             subscriber.token,
             `Hospital time ending`,
-            `You are about to be released from hospital, grab your things!`,
+            `You are about to be released from the hospital, grab your things!`,
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
