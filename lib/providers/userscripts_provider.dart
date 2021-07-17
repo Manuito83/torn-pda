@@ -160,15 +160,13 @@ class UserScriptsProvider extends ChangeNotifier {
     }
 
     // Then add the examples ones
-    var exampleScripts =
-        List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+    var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
     // But before, ensure that we don't add an example script with an already taken name
     // in a user-inserted script (with exampleCode == 0)
     for (var s = 0; s < exampleScripts.length; s++) {
       for (var existingScript in _userScriptList) {
-        if (existingScript.name.toLowerCase() ==
-                exampleScripts[s].name.toLowerCase() &&
+        if (existingScript.name.toLowerCase() == exampleScripts[s].name.toLowerCase() &&
             existingScript.exampleCode == 0) {
           exampleScripts[s].name += " (example)";
           break;
@@ -188,8 +186,7 @@ class UserScriptsProvider extends ChangeNotifier {
         if (newExample) {
           newList.add(exampleScripts[i]);
         } else {
-          newList.add(_userScriptList
-              .singleWhere((element) => element.exampleCode == i + 1));
+          newList.add(_userScriptList.singleWhere((element) => element.exampleCode == i + 1));
         }
       }
     } else {
@@ -232,8 +229,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   _sort() {
-    _userScriptList
-        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   void changeScriptsFirstTime(bool value) {
@@ -248,14 +244,17 @@ class UserScriptsProvider extends ChangeNotifier {
 
     // NULL returned if we installed the app, so we add example scripts
     if (savedScripts == null) {
-      _userScriptList =
-          List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+      var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+      for (var example in exampleScripts) {
+        addUserScript(example.name, example.source);
+      }
       _saveUserScriptsSharedPrefs();
     } else {
       if (savedScripts.isNotEmpty) {
         var decoded = json.decode(savedScripts);
         for (var dec in decoded) {
-          _userScriptList.add(UserScriptModel.fromJson(dec));
+          var decodedModel = UserScriptModel.fromJson(dec);
+          addUserScript(decodedModel.name, decodedModel.source);
         }
       }
     }

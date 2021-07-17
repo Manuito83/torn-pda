@@ -38,7 +38,14 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // VERSION 2.4.0
+    // VERSION 2.4.2
+    var v2_4_2 = ChangeLogItem();
+    v2_4_2.main.version = 'Torn PDA v2.4.2';
+    v2_4_2.main.date = '25 JUL 2021';
+    String feat2_4_2_1 = "Fixed an issue preventing some userscript from working if using wildcards in the URL";
+    v2_4_2.features.add(feat2_4_2_1);
+
+    // VERSION 2.4.1
     var v2_4_1 = ChangeLogItem();
     v2_4_1.main.version = 'Torn PDA v2.4.1';
     v2_4_1.main.date = '10 JUL 2021';
@@ -745,6 +752,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_4_2);
     itemList.add(v2_4_1);
     itemList.add(v2_4_0);
     itemList.add(v2_3_5);
