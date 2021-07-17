@@ -26,6 +26,7 @@ import 'package:share/share.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -943,6 +944,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ? bazaarNumber = "1 item"
           : bazaarNumber = "${_bazaarModel.bazaar.length} items";
 
+      var bazaarPendingString = "";
+      var bazaarPending = 414;
+      _bazaarModel.bazaar.forEach((element) {
+        bazaarPending += element.price * element.quantity;
+      });
+      bazaarPendingString = "\$${formatProfit(inputInt: bazaarPending)}";
+
       openTapCallback() {
         _launchBrowserOption('https://www.torn.com/bazaar.php');
       }
@@ -960,6 +968,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: Text("Bazaar:"),
             ),
             Text(bazaarNumber),
+            Text(" ($bazaarPendingString)"),
             SizedBox(width: 8),
             GestureDetector(
               child: Icon(

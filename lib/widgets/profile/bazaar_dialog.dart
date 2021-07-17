@@ -7,6 +7,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 // Project imports:
 import 'package:torn_pda/models/profile/bazaar_model.dart';
+import 'package:torn_pda/utils/travel/profit_formatter.dart';
 
 class BazaarDialog extends StatefulWidget {
   final BazaarModel bazaarModel;
@@ -29,6 +30,7 @@ class _BazaarDialogState extends State<BazaarDialog> {
   double frame = 10;
 
   int _totalItems = 0;
+  int _totalPending = 0;
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _BazaarDialogState extends State<BazaarDialog> {
     // Calculate total items once
     widget.bazaarModel.bazaar.forEach((element) {
       _totalItems += element.quantity;
+      _totalPending += element.quantity * element.price;
     });
   }
 
@@ -80,6 +83,13 @@ class _BazaarDialogState extends State<BazaarDialog> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("$_totalItems ${_totalItems > 1 ? 'items' : 'item'}",
+                    style: TextStyle(fontSize: 13)),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Total value \$${formatProfit(inputInt: _totalPending)}",
                     style: TextStyle(fontSize: 13)),
               ],
             ),
