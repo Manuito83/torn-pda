@@ -858,9 +858,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
       */
 
-      _changelogIsActive = true;
-      _showChangeLogDialog(context);
-
       // Will trigger an extra upload to Firebase when version changes
       _forceFireUserReload = true;
 
@@ -868,6 +865,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Deletes current channels and create new ones
       var vibration = await Prefs().getVibrationPattern();
       await reconfigureNotificationChannels(mod: vibration);
+
+      _changelogIsActive = true;
+      _showChangeLogDialog(context);
+
     }
   }
 

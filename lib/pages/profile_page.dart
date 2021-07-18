@@ -4548,9 +4548,19 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     var modifier = await getNotificationChannelsModifiers();
+
+    // Add s for custom sounds
+    if (channelTitle.contains("travel")) {
+      channelTitle = "$channelTitle ${modifier.channelIdModifier} s";
+      channelSubtitle = "$channelSubtitle ${modifier.channelIdModifier} s";
+    } else {
+      channelTitle = "$channelTitle ${modifier.channelIdModifier}";
+      channelSubtitle = "$channelSubtitle ${modifier.channelIdModifier}";
+    }
+
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      "$channelTitle ${modifier.channelIdModifier}",
-      "$channelSubtitle ${modifier.channelIdModifier}",
+      channelTitle,
+      channelSubtitle,
       channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,

@@ -146,12 +146,23 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelDescription = 'Automatic alerts for stocks';
   }
 
+
   if (Platform.isAndroid) {
     var modifier = await getNotificationChannelsModifiers();
+
+    // Add s for custom sounds
+    if (channelId.contains("travel")) {
+      channelId = "$channelId ${modifier.channelIdModifier} s";
+      channelName = "$channelName ${modifier.channelIdModifier} s";
+    } else {
+      channelId = "$channelId ${modifier.channelIdModifier}";
+      channelName = "$channelName ${modifier.channelIdModifier}";
+    }
+
     var platformChannelSpecifics = NotificationDetails(
       android: AndroidNotificationDetails(
-        "$channelId ${modifier.channelIdModifier}",
-        "$channelName ${modifier.channelIdModifier}",
+        channelId,
+        channelName,
         channelDescription,
         styleInformation: BigTextStyleInformation(''),
         priority: Priority.high,

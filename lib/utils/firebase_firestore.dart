@@ -5,6 +5,7 @@ import 'dart:io';
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
@@ -47,6 +48,7 @@ class _FirestoreHelper {
         "drugsInfluence": false,
         "racingSent": true,
         "platform": platform,
+        "version": appVersion,
 
         /// This is a unique identifier to identify this user and target notification
         "token": token,
