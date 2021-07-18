@@ -332,6 +332,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _terminalEnabled = false;
+  bool get terminalEnabled => _terminalEnabled;
+  set changeTerminalEnabled(bool choice) {
+    _terminalEnabled = choice;
+    Prefs().setTerminalEnabled(_terminalEnabled);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;

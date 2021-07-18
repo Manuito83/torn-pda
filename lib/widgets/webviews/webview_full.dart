@@ -31,6 +31,7 @@ import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -145,6 +146,7 @@ class _WebViewFullState extends State<WebViewFull> {
 
   var _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
+  TerminalProvider _terminalProvider;
 
   final _popupOptionsChoices = <VaultsOptions>[
     VaultsOptions(description: "Personal vault"),
@@ -237,6 +239,8 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   Widget build(BuildContext context) {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _terminalProvider = Provider.of<TerminalProvider>(context);
+
     return WillPopScope(
       onWillPop: _willPopCallback,
       // If we are launching from a dialog, it's important not to add the show case, in
@@ -642,6 +646,7 @@ class _WebViewFullState extends State<WebViewFull> {
             // EVENTS
             onWebViewCreated: (c) {
               webView = c;
+              _terminalProvider.setTerminal("Terminal");
             },
             onCreateWindow: (c, request) {
               // Allows IOS to open links with target=_blank
@@ -752,7 +757,13 @@ class _WebViewFullState extends State<WebViewFull> {
               return;
             },
             onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "") print("TORN PDA JS CONSOLE: " + consoleMessage.message);
+              if (consoleMessage.message != "") {
+                if (!consoleMessage.message.contains("Refused to connect to 'https://stats.g.doubleclick") &&
+                    !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
+                  _terminalProvider.addInstruction(consoleMessage.message);
+                }
+                print("TORN PDA CONSOLE: " + consoleMessage.message);
+              }
             },
             /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -832,6 +843,35 @@ class _WebViewFullState extends State<WebViewFull> {
                     : SizedBox.shrink(),
               )
             : SizedBox.shrink(),
+        // Terminal
+        Consumer<SettingsProvider>(
+          builder: (_, value, __) {
+            if (value.terminalEnabled) {
+              return Container(
+                decoration: new BoxDecoration(
+                  border: Border.all(width: 2, style: BorderStyle.solid, color: Colors.green[900]),
+                ),
+                height: 100,
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            _terminalProvider.getTerminal(),
+                            style: TextStyle(color: Colors.green, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            return SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
@@ -2285,6 +2325,7 @@ class _WebViewFullState extends State<WebViewFull> {
           url: url.toString(),
           inAppWebview: webView,
           callFindInPage: _activateFindInPage,
+          callToggleTerminal: _toggleTerminal,
         );
       },
     );
@@ -2317,6 +2358,12 @@ class _WebViewFullState extends State<WebViewFull> {
         _findFirstSubmitted = false;
       });
     }
+  }
+
+  _toggleTerminal(bool active) {
+    //setState(() {
+      //_settingsProvider.changeTerminalEnabled = active;
+    //});
   }
 
   // ASSESS GYM
@@ -2356,4 +2403,5 @@ class _WebViewFullState extends State<WebViewFull> {
     await _tryGoBack();
     return false;
   }
+
 }

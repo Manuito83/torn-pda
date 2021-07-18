@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
@@ -23,6 +24,7 @@ class WebviewUrlDialog extends StatefulWidget {
   final String url;
   final InAppWebViewController inAppWebview;
   final WebViewController stockWebView;
+  final Function callToggleTerminal;
 
   WebviewUrlDialog({
     this.callFindInPage,
@@ -30,6 +32,7 @@ class WebviewUrlDialog extends StatefulWidget {
     @required this.url,
     this.inAppWebview,
     this.stockWebView,
+    this.callToggleTerminal,
   });
 
   @override
@@ -39,6 +42,7 @@ class WebviewUrlDialog extends StatefulWidget {
 class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
   ThemeProvider _themeProvider;
   ShortcutsProvider _shortcutsProvider;
+  SettingsProvider _settingsProvider;
 
   final _customURLController = new TextEditingController();
   var _customURLKey = GlobalKey<FormState>();
@@ -60,6 +64,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
   }
 
   @override
@@ -114,7 +119,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               children: <Widget>[
                                 TextFormField(
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     color: _themeProvider.mainText,
                                   ),
                                   controller: _customURLController,
@@ -129,6 +134,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     isDense: true,
                                     border: OutlineInputBorder(),
                                     labelText: 'Browse URL',
+                                    labelStyle: TextStyle(fontSize: 12),
                                   ),
                                   validator: (value) {
                                     if (value.replaceAll(' ', '').isEmpty) {
@@ -139,8 +145,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       _customURLController.text.replaceAll('http://', 'https://');
                                     }
                                     if (!value.toLowerCase().contains('https://')) {
-                                      _customURLController.text =
-                                          'https://' + _customURLController.text;
+                                      _customURLController.text = 'https://' + _customURLController.text;
                                     }
                                     return null;
                                   },
@@ -157,15 +162,15 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 5),
                     ElevatedButton(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         //mainAxisAlignment: MainAxisAlign,
                         children: [
-                          Icon(Icons.copy),
+                          Icon(Icons.copy, size: 20),
                           SizedBox(width: 5),
-                          Text('Copy URL'),
+                          Text('Copy URL', style: TextStyle(fontSize: 12)),
                         ],
                       ),
                       onPressed: () {
@@ -194,7 +199,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         Navigator.of(context).pop();
                       },
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 5),
                     ElevatedButton(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -202,13 +207,11 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           children: [
                             Image.asset(
                               'images/icons/heart.png',
-                              width: 22,
-                              color: _shortcutsProvider.activeShortcuts.length > 0
-                                  ? Colors.white
-                                  : Colors.grey,
+                              width: 20,
+                              color: _shortcutsProvider.activeShortcuts.length > 0 ? Colors.white : Colors.grey,
                             ),
                             SizedBox(width: 5),
-                            Text('Browse shortcuts'),
+                            Text('Browse shortcuts', style: TextStyle(fontSize: 12)),
                           ],
                         ),
                         onPressed: _shortcutsProvider.activeShortcuts.length > 0
@@ -218,7 +221,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 _customURLController.text = "";
                               }
                             : null),
-                    SizedBox(height: 10),
+                    SizedBox(height: 5),
                     ElevatedButton(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -226,11 +229,11 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         children: [
                           Image.asset(
                             'images/icons/heart_add.png',
-                            width: 22,
+                            width: 20,
                             color: Colors.white,
                           ),
                           SizedBox(width: 8),
-                          Text('Save as shortcut'),
+                          Text('Save as shortcut', style: TextStyle(fontSize: 12)),
                         ],
                       ),
                       onPressed: () {
@@ -241,21 +244,63 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     ),
                     if (widget.inAppWebview != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.only(top: 5),
                         child: ElevatedButton(
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             //mainAxisAlignment: MainAxisAlign,
                             children: [
-                              Icon(Icons.search),
+                              Icon(Icons.search, size: 20),
                               SizedBox(width: 8),
-                              Text('Find in page'),
+                              Text('Find in page', style: TextStyle(fontSize: 12)),
                             ],
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
                             widget.callFindInPage();
                           },
+                        ),
+                      ),
+                    if (widget.inAppWebview != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Column(
+                          children: [
+                            Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'DEV',
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Show terminal", style: TextStyle(fontSize: 12)),
+                                      Switch(
+                                        value: _settingsProvider.terminalEnabled,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.changeTerminalEnabled = value;
+                                          });
+                                          widget.callToggleTerminal(value);
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     SizedBox(height: 8),

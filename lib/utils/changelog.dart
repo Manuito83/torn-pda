@@ -43,11 +43,13 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_4_2.main.version = 'Torn PDA v2.4.2';
     v2_4_2.main.date = '25 JUL 2021';
     String feat2_4_2_1 = "Profile: added total bazaar value information";
-    String feat2_4_2_2 = "Fixed an issue preventing some userscript from working if using wildcards in the URL";
-    String feat2_4_2_3 = "Fixed other reported UI issues";
+    String feat2_4_2_2 = "Browser: added terminal window for developers";
+    String feat2_4_2_3 = "Fixed an issue preventing some userscript from working if using wildcards in the URL";
+    String feat2_4_2_4 = "Fixed other reported UI issues";
     v2_4_2.features.add(feat2_4_2_1);
     v2_4_2.features.add(feat2_4_2_2);
     v2_4_2.features.add(feat2_4_2_3);
+    v2_4_2.features.add(feat2_4_2_4);
 
     // VERSION 2.4.1
     var v2_4_1 = ChangeLogItem();

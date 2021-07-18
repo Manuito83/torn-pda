@@ -33,6 +33,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
+import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -145,6 +146,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<TacProvider>(
           create: (context) => TacProvider(),
+        ),
+        ChangeNotifierProvider<TerminalProvider>(
+          create: (context) => TerminalProvider(""),
         ),
       ],
       child: MyApp(),
