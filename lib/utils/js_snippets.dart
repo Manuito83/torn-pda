@@ -108,11 +108,23 @@ String buyMaxAbroadJS() {
             
             max = max > limit ? limit:max;
             max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
-            
-            dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max);
-          });
-        }
-        
+
+            if (max_span.innerHTML == '<a class="max-buy">FILL</a>') {
+              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max);
+              max_span.innerHTML = '<a class="max-buy">+3</a>';
+            } else if (max_span.innerHTML == '<a class="max-buy">+3</a>') {
+              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 3);
+              max_span.innerHTML = '<a class="max-buy">+5</a>';
+            } else if (max_span.innerHTML == '<a class="max-buy">+5</a>') {
+              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 5);
+              max_span.innerHTML = '<a class="max-buy">+10</a>';
+            } else if (max_span.innerHTML == '<a class="max-buy">+10</a>') {
+              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 10);
+              max_span.innerHTML = '<a class="max-buy">FILL</a>';
+            }
+        });
+      }
+      
       // If screen is narrow, load a MAX button in the expandable box
       } else {
         for(let buy_btn of market.querySelectorAll(".torn-btn")){
@@ -132,7 +144,19 @@ String buyMaxAbroadJS() {
             max = max > limit ? limit:max;
             max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
             
-            dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max);
+            if (max_span.innerHTML == '<button class="torn-btn">MAX</button>') {
+              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max);
+              max_span.innerHTML = '<button class="torn-btn">+3</button>';
+            } else if (max_span.innerHTML == '<button class="torn-btn">+3</button>') {
+              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 3);
+              max_span.innerHTML = '<button class="torn-btn">+5</button>';
+            } else if (max_span.innerHTML == '<button class="torn-btn">+5</button>') {
+              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 5);
+              max_span.innerHTML = '<button class="torn-btn">+10</button>';
+            } else if (max_span.innerHTML == '<button class="torn-btn">+10</button>') {
+              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 10);
+              max_span.innerHTML = '<button class="torn-btn">MAX</button>';
+            }
           });
         }
       }

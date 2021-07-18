@@ -44,16 +44,18 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_4_2.main.date = '25 JUL 2021';
     String feat2_4_2_1 = "Profile: added total bazaar value information";
     String feat2_4_2_2 = "Travel: you can now filter foreign stocks by inventory quantity";
-    String feat2_4_2_3 = "Browser: added terminal window for developers";
-    String feat2_4_2_4 = "Fixed an issue preventing some userscript from working if using wildcards in the URL";
-    String feat2_4_2_5 = "Fixed other reported UI issues";
-    String feat2_4_2_6 = "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
+    String feat2_4_2_3 = "Travel: MAX buy button can now also be used to buy additional items above the limit";
+    String feat2_4_2_4 = "Browser: added terminal window for developers";
+    String feat2_4_2_5 = "Fixed an issue preventing some userscript from working if using wildcards in the URL";
+    String feat2_4_2_6 = "Fixed other reported UI issues";
+    String feat2_4_2_7 = "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
     v2_4_2.features.add(feat2_4_2_1);
     v2_4_2.features.add(feat2_4_2_2);
     v2_4_2.features.add(feat2_4_2_3);
     v2_4_2.features.add(feat2_4_2_4);
     v2_4_2.features.add(feat2_4_2_5);
     v2_4_2.features.add(feat2_4_2_6);
+    v2_4_2.features.add(feat2_4_2_7);
 
     // VERSION 2.4.1
     var v2_4_1 = ChangeLogItem();
