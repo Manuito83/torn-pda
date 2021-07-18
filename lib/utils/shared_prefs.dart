@@ -1329,7 +1329,7 @@ class Prefs {
   /// -------------------
   Future<bool> getTACEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTACEnabled) ?? true;
+    return prefs.getBool(_kTACEnabled) ?? false;
   }
 
   Future<bool> setTACEnabled(bool value) async {

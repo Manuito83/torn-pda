@@ -47,11 +47,13 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_4_2_3 = "Browser: added terminal window for developers";
     String feat2_4_2_4 = "Fixed an issue preventing some userscript from working if using wildcards in the URL";
     String feat2_4_2_5 = "Fixed other reported UI issues";
+    String feat2_4_2_6 = "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
     v2_4_2.features.add(feat2_4_2_1);
     v2_4_2.features.add(feat2_4_2_2);
     v2_4_2.features.add(feat2_4_2_3);
     v2_4_2.features.add(feat2_4_2_4);
     v2_4_2.features.add(feat2_4_2_5);
+    v2_4_2.features.add(feat2_4_2_6);
 
     // VERSION 2.4.1
     var v2_4_1 = ChangeLogItem();
