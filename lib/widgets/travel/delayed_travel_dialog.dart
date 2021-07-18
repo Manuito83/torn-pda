@@ -350,6 +350,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     );
 
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );
 

@@ -867,6 +867,7 @@ class _LootPageState extends State<LootPage> {
     );
 
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      presentSound: true,
       sound: 'slow_spring_board.aiff',
     );
 

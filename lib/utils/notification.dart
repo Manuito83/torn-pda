@@ -179,9 +179,19 @@ Future showNotificationBoth(Map payload, int notId) async {
     var platformChannelSpecifics = NotificationDetails(
       android: null,
       iOS: IOSNotificationDetails(
+        presentSound: true,
         sound: 'slow_spring_board.aiff',
       ),
     );
+    if (channelName.contains("travel")) {
+      platformChannelSpecifics = NotificationDetails(
+        android: null,
+        iOS: IOSNotificationDetails(
+          presentSound: true,
+          sound: 'aircraft_seatbelt.aiff',
+        ),
+      );
+    }
 
     await flutterLocalNotificationsPlugin.show(
       notId,

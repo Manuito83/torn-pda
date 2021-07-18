@@ -912,6 +912,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     );
 
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      presentSound: true,
       sound: 'aircraft_seatbelt.aiff',
     );
 

@@ -4561,9 +4561,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       ledOffMs: 500,
     );
 
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails(sound: 'slow_spring_board.aiff');
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails(presentSound: true, sound: 'slow_spring_board.aiff');
     if (notificationId == 201) {
-      iOSPlatformChannelSpecifics = IOSNotificationDetails(sound: 'aircraft_seatbelt.aiff');
+      iOSPlatformChannelSpecifics = IOSNotificationDetails(presentSound: true, sound: 'aircraft_seatbelt.aiff');
     }
 
     var platformChannelSpecifics = NotificationDetails(

@@ -440,6 +440,7 @@ class ChainStatusProvider extends ChangeNotifier {
     );
 
     var iOSPlatformChannelSpecifics = IOSNotificationDetails(
+      presentSound: true,
       sound: 'slow_spring_board.aiff',
     );
 
