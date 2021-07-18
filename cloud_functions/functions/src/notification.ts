@@ -925,12 +925,22 @@ export async function sendNotificationToUser(
   tornMessageId: string = "",
   tornTradeId: string = "",
   vibration: string,
+  sound: string = "slow_spring_board.aiff",
 ): Promise<any> {
   
   // Give a space to mach channel ids in the app
   let vibrationPattern = vibration;
   if (vibrationPattern !== "") {
     vibrationPattern = ` ${vibrationPattern}`;
+  }
+
+  // Android custom sounds
+  // NOTE: if applied during beta testing, existing production apps will revert to 
+  // the default sound, as the new channel name won't be found on their devices
+  // (TODO: record app version in the future)
+  let customSound = "";
+  if (channelId.includes("travel")) {
+    customSound = ` s`;
   }
 
   const payload: admin.messaging.Message = {
@@ -943,7 +953,7 @@ export async function sendNotificationToUser(
       priority: 'high',
       ttl: 18000000,
       notification: {
-        channelId: `${channelId}${vibrationPattern}`,
+        channelId: `${channelId}${vibrationPattern}${customSound}`,
         color: color,
         icon: icon,
         sound: "default",
@@ -956,7 +966,7 @@ export async function sendNotificationToUser(
       },
       payload: {
         aps: {
-          sound: "slow_spring_board.aiff",
+          sound: sound,
           badge: 1,
         }
       },

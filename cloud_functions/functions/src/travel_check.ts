@@ -57,6 +57,7 @@ export const travelGroup = {
             "",
             "",
             thisUser.vibration,
+            "aircraft_seatbelt.aiff"
           )
         );
   
