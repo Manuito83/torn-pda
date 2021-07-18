@@ -13,10 +13,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
+import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -84,9 +84,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
-
-  Timer _tenSecTimer;
-  DateTime _currentTctTime = DateTime.now().toUtc();
 
   bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
@@ -229,15 +226,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Handle notifications
     _getBackGroundNotifications();
     _removeExistingNotifications();
-
-    _tenSecTimer = new Timer.periodic(Duration(seconds: 10), (Timer t) => _refreshTctClock());
   }
 
   @override
   void dispose() {
     selectNotificationSubject.close();
     WidgetsBinding.instance.removeObserver(this);
-    _tenSecTimer.cancel();
     super.dispose();
   }
 
@@ -594,37 +588,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                         ),
                       ],
                     ),
-                    _tctClock(),
+                    const TctClock(),
                   ],
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _tctClock() {
-    TimeFormatSetting timePrefs = _settingsProvider.currentTimeFormat;
-    DateFormat formatter;
-    switch (timePrefs) {
-      case TimeFormatSetting.h24:
-        formatter = DateFormat('HH:mm');
-        break;
-      case TimeFormatSetting.h12:
-        formatter = DateFormat('hh:mm a');
-        break;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(formatter.format(_currentTctTime)),
-          Text('TCT'),
-        ],
       ),
     );
   }
@@ -908,14 +878,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     setState(() {
       _changelogIsActive = false;
     });
-  }
-
-  void _refreshTctClock() {
-    if (mounted) {
-      setState(() {
-        _currentTctTime = DateTime.now().toUtc();
-      });
-    }
   }
 
   void _callSectionFromOutside(int section) {

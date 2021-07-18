@@ -381,13 +381,12 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             return _popupChoices.map((StockSort choice) {
               return PopupMenuItem<StockSort>(
                 value: choice,
-                child: Container(
-                  child: Text(
-                    choice.description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: choice.description == _currentSort.description ? FontWeight.bold : FontWeight.normal,
-                    ),
+                child: Text(
+                  choice.description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: choice.description == _currentSort.description ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: choice.description == _currentSort.description ? FontStyle.italic : FontStyle.normal,
                   ),
                 ),
               );
