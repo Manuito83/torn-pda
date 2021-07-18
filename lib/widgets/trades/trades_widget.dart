@@ -789,17 +789,30 @@ class _TradesWidgetState extends State<TradesWidget> {
   }
 
   Future _copyToClipboard(String copy, String toast) async {
-    Clipboard.setData(ClipboardData(text: copy));
-    BotToast.showText(
-      text: toast + " copied to the clipboard!",
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.green,
-      duration: Duration(seconds: 5),
-      contentPadding: EdgeInsets.all(10),
-    );
+    if (copy.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: copy));
+      BotToast.showText(
+        text: toast + " copied to the clipboard!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.green,
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+    } else {
+      BotToast.showText(
+        text: toast + "There was an error, no information copied!",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.red[800],
+        duration: Duration(seconds: 5),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
   }
 
   void _copyTornTraderMessages() {
