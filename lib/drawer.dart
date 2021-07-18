@@ -863,6 +863,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       // Will trigger an extra upload to Firebase when version changes
       _forceFireUserReload = true;
+
+      // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
+      // Deletes current channels and create new ones
+      var vibration = await Prefs().getVibrationPattern();
+      await reconfigureNotificationChannels(mod: vibration);
     }
   }
 

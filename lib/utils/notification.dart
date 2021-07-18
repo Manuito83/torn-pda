@@ -191,7 +191,6 @@ Future showNotificationBoth(Map payload, int notId) async {
       // Set payload to be handled by local notifications
       payload: onTapPayload,
     );
-
   }
 }
 
@@ -255,11 +254,11 @@ Future configureNotificationChannels({String mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
-      'Alerts travel ${modifier.channelIdModifier}',
-      'Alerts travel ${modifier.channelIdModifier}',
+      'Alerts travel ${modifier.channelIdModifier} s',
+      'Alerts travel ${modifier.channelIdModifier} s',
       'Automatic alerts for travel',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -281,11 +280,11 @@ Future configureNotificationChannels({String mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
-      'Manual travel ${modifier.channelIdModifier}',
-      'Manual travel ${modifier.channelIdModifier}',
+      'Manual travel ${modifier.channelIdModifier} s',
+      'Manual travel ${modifier.channelIdModifier} s',
       'Manual notifications for travel',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -294,11 +293,11 @@ Future configureNotificationChannels({String mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
-      'Manual flight departure ${modifier.channelIdModifier}',
-      'Manual flight departure ${modifier.channelIdModifier}',
+      'Manual flight departure ${modifier.channelIdModifier} s',
+      'Manual flight departure ${modifier.channelIdModifier} s',
       'Manual notifications for delayed flight departure',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -567,8 +566,7 @@ Future configureNotificationChannels({String mod = ""}) async {
 
   for (var channel in channels) {
     await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 }
