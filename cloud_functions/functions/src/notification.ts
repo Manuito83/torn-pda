@@ -956,7 +956,7 @@ export async function sendNotificationToUser(
       },
       payload: {
         aps: {
-          sound: "default",
+          sound: "slow_spring_board.aiff",
           badge: 1,
         }
       },
