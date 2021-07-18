@@ -60,89 +60,85 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: Container(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: SizedBox(
-                          width: 200,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text("QUICK ITEMS ACTIVE"),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: Text(
-                                  'SWIPE TO REMOVE',
-                                  style: TextStyle(fontSize: 10),
-                                ),
+            body: Container(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: SizedBox(
+                        width: 200,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text("QUICK ITEMS ACTIVE"),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                'SWIPE TO REMOVE',
+                                style: TextStyle(fontSize: 10),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: Text(
-                                  'LONG-PRESS TO SORT',
-                                  style: TextStyle(fontSize: 10),
-                                ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                'LONG-PRESS TO SORT',
+                                style: TextStyle(fontSize: 10),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 10),
-                      if (_itemsProvider.activeQuickItems.length == 0)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
-                          child: Text(
-                            'No quick items active, add some below!',
-                            style: TextStyle(
-                              color: Colors.orange[800],
-                              fontStyle: FontStyle.italic,
-                              fontSize: 13,
-                            ),
-                          ),
-                        )
-                      else
-                        _activeCardsList(),
-                      SizedBox(height: 40),
+                    ),
+                    SizedBox(height: 10),
+                    if (_itemsProvider.activeQuickItems.length == 0)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: Text("ALL AVAILABLE ITEMS"),
-                      ),
-                      SizedBox(height: 10),
-                      _itemsProvider.fullQuickItems.isEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(50),
-                                child: Column(
-                                  children: [
-                                    Text('Loading available items...'),
-                                    SizedBox(height: 40),
-                                    CircularProgressIndicator(),
-                                    SizedBox(height: 40),
-                                    Text(
-                                      'If this takes too long, there might be a connection '
-                                      'problem or Torn API might be down. Close the browser '
-                                      'completely and try again in a while!',
-                                      style: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        fontSize: 13,
-                                      ),
+                        padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                        child: Text(
+                          'No quick items active, add some below!',
+                          style: TextStyle(
+                            color: Colors.orange[800],
+                            fontStyle: FontStyle.italic,
+                            fontSize: 13,
+                          ),
+                        ),
+                      )
+                    else
+                      _activeCardsList(),
+                    SizedBox(height: 40),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Text("ALL AVAILABLE ITEMS"),
+                    ),
+                    SizedBox(height: 10),
+                    _itemsProvider.fullQuickItems.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(50),
+                              child: Column(
+                                children: [
+                                  Text('Loading available items...'),
+                                  SizedBox(height: 40),
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 40),
+                                  Text(
+                                    'If this takes too long, there might be a connection '
+                                    'problem or Torn API might be down. Close the browser '
+                                    'completely and try again in a while!',
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 13,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            )
-                          : _allCardsList(),
-                      SizedBox(height: 40),
-                    ],
-                  ),
+                            ),
+                          )
+                        : _allCardsList(),
+                    SizedBox(height: 40),
+                  ],
                 ),
               ),
             ),
@@ -285,18 +281,9 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
           }
 
           return Container(
-            // TODO: watch out or ReorderableListView for updates to fix:
-            // Issue 1: ReorderableListView should be getting a shrinkWrap and
-            //   physics as in https://github.com/flutter/flutter/issues/66080
-            // Issue 2: Height 100 as the reorderableListView leaves that gap at the
-            //   bottom in '_defaultDropAreaExtent'. We extend the container by that size
-            //   Otherwise, we just assign 40 as a margin with the list below
-            height: _itemsProvider.activeQuickItems.length > 0
-                ? _itemsProvider.activeQuickItems.length * 60 + 100.0
-                : 20.0,
             child: ReorderableListView(
-              //shrinkWrap: true,
-              //physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
               onReorder: (int oldIndex, int newIndex) {
                 if (oldIndex < newIndex) {
                   // removing the item at oldIndex will shorten the list by 1
