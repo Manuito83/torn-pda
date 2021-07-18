@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
+import 'package:flutter/painting.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -131,6 +132,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.name),
     StockSort(type: StockSortType.type),
     StockSort(type: StockSortType.quantity),
+    StockSort(type: StockSortType.inventoryQuantity),
     StockSort(type: StockSortType.price),
     StockSort(type: StockSortType.value),
     StockSort(type: StockSortType.profit),
@@ -239,8 +241,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                               SizedBox(height: 15),
                               Text(
                                 'OPS!',
-                                style: TextStyle(
-                                    color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
@@ -309,8 +310,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                           topRight: Radius.circular(18.0),
                         ),
                         onPanelSlide: (double pos) => setState(() {
-                          _fabHeight =
-                              pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
                         }),
                       );
                     } else {
@@ -381,10 +381,13 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
             return _popupChoices.map((StockSort choice) {
               return PopupMenuItem<StockSort>(
                 value: choice,
-                child: Text(
-                  choice.description,
-                  style: TextStyle(
-                    fontSize: 14,
+                child: Container(
+                  child: Text(
+                    choice.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: choice.description == _currentSort.description ? FontWeight.bold : FontWeight.normal,
+                    ),
                   ),
                 ),
               );
@@ -424,8 +427,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               Container(
                 width: 30,
                 height: 5,
-                decoration: BoxDecoration(
-                    color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                decoration:
+                    BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
               ),
             ],
           ),
@@ -751,7 +754,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       thisStockList.add(
         ForeignStockCard(
           foreignStock: stock,
-          inventoryModel: _inventory,
           capacity: _capacity,
           inventoryEnabled: _inventoryEnabled,
           showArrivalTime: _showArrivalTime,
@@ -894,6 +896,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               ),
             ),
           );
+
+          var invQty = 0;
+          for (var invItem in _inventory.inventory) {
+            if (invItem.id == stock.id) {
+              invQty = invItem.quantity;
+              break;
+            }
+          }
+          stock.inventoryQuantity = invQty;
         }
       });
 
@@ -912,11 +923,9 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     for (var i = 0; i < _filteredFlags.length - 1; i++) {
       if (_filteredFlags[i]) {
         if (_alphabeticalFilter) {
-          _countriesFilteredText +=
-              firstCountry ? _countryCodesAlphabetical[i] : ', ${_countryCodesAlphabetical[i]}';
+          _countriesFilteredText += firstCountry ? _countryCodesAlphabetical[i] : ', ${_countryCodesAlphabetical[i]}';
         } else {
-          _countriesFilteredText +=
-              firstCountry ? _countryCodesTime[i] : ', ${_countryCodesTime[i]}';
+          _countriesFilteredText += firstCountry ? _countryCodesTime[i] : ', ${_countryCodesTime[i]}';
         }
         firstCountry = false;
         totalCountriesShown++;
@@ -1080,8 +1089,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           Prefs().setStockSort('name');
           break;
         case StockSortType.type:
-          _filteredStocksCards
-              .sort((a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
+          _filteredStocksCards.sort((a, b) => a.itemType.toString().compareTo(b.itemType.toString()));
           Prefs().setStockSort('type');
           break;
         case StockSortType.quantity:
@@ -1103,6 +1111,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         case StockSortType.arrivalTime:
           _filteredStocksCards.sort((a, b) => a.arrivalTime.compareTo(b.arrivalTime));
           Prefs().setStockSort('arrivalTime');
+          break;
+        case StockSortType.inventoryQuantity:
+          _filteredStocksCards.sort((a, b) => b.inventoryQuantity.compareTo(a.inventoryQuantity));
+          Prefs().setStockSort('inventoryQuantity');
           break;
       }
     });
@@ -1139,6 +1151,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       sortType = StockSortType.profit;
     } else if (sortString == 'arrivalTime') {
       sortType = StockSortType.arrivalTime;
+    } else if (sortString == 'inventoryQuantity') {
+      sortType = StockSortType.inventoryQuantity;
     }
     _currentSort = StockSort(type: sortType);
 
@@ -1190,8 +1204,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onStocksOptionsChanged(
-      int newCapacity, bool inventoryEnabled, bool showArrivalTime, TravelTicket ticket) {
+  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled, bool showArrivalTime, TravelTicket ticket) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;

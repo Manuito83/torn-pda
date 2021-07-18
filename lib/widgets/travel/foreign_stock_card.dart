@@ -19,7 +19,6 @@ import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
-import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -35,7 +34,6 @@ class ForeignStockCard extends StatefulWidget {
   final ForeignStock foreignStock;
   final bool inventoryEnabled;
   final bool showArrivalTime;
-  final InventoryModel inventoryModel;
   final int capacity;
   final int moneyOnHand;
   final Function flagPressedCallback;
@@ -50,7 +48,6 @@ class ForeignStockCard extends StatefulWidget {
   ForeignStockCard(
       {@required this.foreignStock,
       @required this.inventoryEnabled,
-      @required this.inventoryModel,
       @required this.showArrivalTime,
       @required this.capacity,
       @required this.moneyOnHand,
@@ -1128,14 +1125,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
   _calculateDetails() {
     // INVENTORY
-    if (widget.inventoryEnabled) {
-      for (var invItem in widget.inventoryModel.inventory) {
-        if (invItem.id == widget.foreignStock.id) {
-          _invQuantity = invItem.quantity;
-          break;
-        }
-      }
-    }
+    _invQuantity = widget.foreignStock.inventoryQuantity;
 
     // ARRIVAL TIMES
     _flyingToThisCountry = false;
