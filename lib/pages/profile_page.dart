@@ -3539,8 +3539,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       String racingString;
       Color gaugeColor;
       if (_user.icons.icon17 != null) {
-        racingString =
-            racingString.replaceAll("Racing - ", "").replaceAll("0 days,", "").replaceAll("0 days, 0 hours,", "");
+        racingString = _user.icons.icon17.replaceAll("Racing - ", "");
+        racingString = racingString.replaceAll("0 days, 0 hours,", "");
+        racingString = racingString.replaceAll("0 days,", "");
         gaugeColor = Colors.green[700];
       } else if (_user.icons.icon18 != null) {
         racingString = _user.icons.icon18.replaceAll("Racing - ", '');
