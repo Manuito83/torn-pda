@@ -114,8 +114,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       }
     });
 
-    _ticker =
-        new Timer.periodic(Duration(minutes: 1), (Timer t) => _timerUpdate());
+    _ticker = new Timer.periodic(Duration(minutes: 1), (Timer t) => _timerUpdate());
 
     // Build code name
     _codeName = "${widget.foreignStock.countryCode}-"
@@ -134,9 +133,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     return Card(
       shape: RoundedRectangleBorder(
         side: BorderSide(
-          color: widget.activeRestocks.keys.contains(_codeName)
-              ? Colors.blue
-              : Colors.transparent,
+          color: widget.activeRestocks.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(4.0),
@@ -214,16 +211,14 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     //  - If there are no items: arrive when restock happens
     //  - Does NOT take into account a restock that depletes quickly
 
-    if (_earliestArrival.isAfter(_projectedRestockDateTime) ||
-        widget.foreignStock.quantity > 0) {
+    if (_earliestArrival.isAfter(_projectedRestockDateTime) || widget.foreignStock.quantity > 0) {
       // Checks > 0 in case restock has happened already
 
       delayDeparture = false;
 
       // Avoid dividing by 0 if we have no trend
       if (widget.foreignStock.quantity > 0 && _depletionTrendPerSecond > 0) {
-        var secondsToDeplete =
-            widget.foreignStock.quantity / _depletionTrendPerSecond;
+        var secondsToDeplete = widget.foreignStock.quantity / _depletionTrendPerSecond;
 
         // If depleting very slowly (more than a day)
         if (secondsToDeplete > 86400) {
@@ -232,11 +227,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         }
         // If we won't arrive before depletion
         else {
-          var depletionDateTime =
-              DateTime.now().add(Duration(seconds: secondsToDeplete.round()));
+          var depletionDateTime = DateTime.now().add(Duration(seconds: secondsToDeplete.round()));
           if (_earliestArrival.isAfter(depletionDateTime)) {
-            whenToTravel =
-                "Caution, depletes at ${_timeFormatter(depletionDateTime)}";
+            whenToTravel = "Caution, depletes at ${_timeFormatter(depletionDateTime)}";
             whenToTravelColor = Colors.orangeAccent;
           }
           // If we arrive before depletion
@@ -260,15 +253,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     else {
       delayDeparture = true;
 
-      var additionalWait =
-          _projectedRestockDateTime.difference(_earliestArrival).inSeconds;
+      var additionalWait = _projectedRestockDateTime.difference(_earliestArrival).inSeconds;
 
-      _delayedDepartureTime =
-          DateTime.now().add(Duration(seconds: additionalWait));
+      _delayedDepartureTime = DateTime.now().add(Duration(seconds: additionalWait));
 
       whenToTravel = "Travel at ${_timeFormatter(_delayedDepartureTime)}";
-      var delayedArrival =
-          _delayedDepartureTime.add(Duration(seconds: _travelSeconds));
+      var delayedArrival = _delayedDepartureTime.add(Duration(seconds: _travelSeconds));
       arrivalTime = "You will be there at ${_timeFormatter(delayedArrival)}";
     }
 
@@ -328,8 +318,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                             children: [
                               Text(
                                 whenToTravel,
-                                style: TextStyle(
-                                    fontSize: 12, color: whenToTravelColor),
+                                style: TextStyle(fontSize: 12, color: whenToTravelColor),
                               ),
                               if (depletesTime.isNotEmpty)
                                 Text(
@@ -384,15 +373,22 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                       width: 600,
                       child: LineChart(_mainChartData()),
                     ),
-                    SizedBox(height: 25),
+                    Text(
+                      // Only include more than 0 per hour and
+                      (_depletionTrendPerSecond * 3600).floor() > 0 && _depletionTrendPerSecond < 86400
+                          ? "Depletion rate: ${(_depletionTrendPerSecond * 3600).floor()}/hour"
+                          : "Depletion rate: unknown",
+                      style: TextStyle(
+                        fontSize: 11,
+                      ),
+                    ),
+                    SizedBox(height: 15),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                       child: CheckboxListTile(
                         checkColor: Colors.white,
                         activeColor: Colors.blue,
-                        value: widget.activeRestocks.keys.contains(_codeName)
-                            ? true
-                            : false,
+                        value: widget.activeRestocks.keys.contains(_codeName) ? true : false,
                         title: Text(
                           "Restock alert (auto)",
                           style: TextStyle(
@@ -456,8 +452,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           });
           Prefs().setActiveRestocks(json.encode(tempMap));
 
-          var alertsEnabled =
-              await Prefs().getRestocksNotificationEnabled();
+          var alertsEnabled = await Prefs().getRestocksNotificationEnabled();
           if (!alertsEnabled) {
             BotToast.showText(
               text: "Your restocks notifications are OFF, remember to active "
@@ -525,8 +520,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             'x${stock.quantity}',
             style: TextStyle(
               color: stock.quantity > 0 ? Colors.green : Colors.red,
-              fontWeight:
-                  stock.quantity > 0 ? FontWeight.bold : FontWeight.normal,
+              fontWeight: stock.quantity > 0 ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
@@ -559,8 +553,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     String moneyToBuyExtra = '';
     Color moneyToBuyColor = Colors.grey;
     if (widget.moneyOnHand >= stock.cost * widget.capacity) {
-      moneyToBuy =
-          'You have the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
+      moneyToBuy = 'You have the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
           'buy ${widget.capacity} ${stock.name}';
       moneyToBuyColor = Colors.green[800];
       costWidget = Row(
@@ -696,8 +689,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
 
     // Profit per hour
-    String profitPerHourFormatted =
-        formatProfit(inputInt: (stock.profit * widget.capacity).abs());
+    String profitPerHourFormatted = formatProfit(inputInt: (stock.profit * widget.capacity).abs());
     if (stock.profit <= 0) {
       profitPerHourFormatted = '-\$$profitPerHourFormatted';
     } else {
@@ -810,13 +802,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     String moneyToBuy = '';
     Color moneyToBuyColor = Colors.grey;
     if (moneyOnHand >= stock.cost * widget.capacity) {
-      moneyToBuy =
-          'You HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
+      moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} necessary to '
           'buy ${widget.capacity} ${stock.name}';
       moneyToBuyColor = Colors.green;
     } else {
-      moneyToBuy =
-          'You DO NOT HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} '
+      moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost * widget.capacity)} '
           'necessary to buy ${widget.capacity} ${stock.name}. Add another '
           '\$${costCurrency.format((stock.cost * widget.capacity) - moneyOnHand)}';
       moneyToBuyColor = Colors.red;
@@ -835,8 +825,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
   }
 
   Row _returnLastUpdated() {
-    var inputTime = DateTime.fromMillisecondsSinceEpoch(
-        widget.foreignStock.timestamp * 1000);
+    var inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp * 1000);
     var timeDifference = DateTime.now().difference(inputTime);
     var timeString;
     var color;
@@ -889,12 +878,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       var firestoreData = await firestore.getStockInformation(_codeName);
 
       // Chart date
-      var firestoreMap = firestoreData
-          .data()['periodicMap']
-          .map((k, v) => MapEntry(int.parse(k), v));
+      var firestoreMap = firestoreData.data()['periodicMap'].map((k, v) => MapEntry(int.parse(k), v));
 
-      _periodicMap =
-          SplayTreeMap<int, int>.from(firestoreMap, (a, b) => a.compareTo(b));
+      _periodicMap = SplayTreeMap<int, int>.from(firestoreMap, (a, b) => a.compareTo(b));
 
       // RESTOCK AVERAGE AND RELIABILITY
       List restock = firestoreData.data()['restockElapsed'].toList();
@@ -906,8 +892,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         var twentyPercent = _averageTimeToRestock * 0.2;
         var insideTenPercentAverage = 0;
         for (var res in restock) {
-          if ((_averageTimeToRestock + twentyPercent > res) &&
-              (_averageTimeToRestock - twentyPercent < res)) {
+          if ((_averageTimeToRestock + twentyPercent > res) && (_averageTimeToRestock - twentyPercent < res)) {
             insideTenPercentAverage++;
           }
         }
@@ -921,18 +906,14 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
       // TIMES TO RESTOCK
       var lastEmpty = firestoreData.data()['lastEmpty'];
-      var lastEmptyDateTime =
-          DateTime.fromMillisecondsSinceEpoch(lastEmpty * 1000);
-      _projectedRestockDateTime =
-          lastEmptyDateTime.add(Duration(seconds: _averageTimeToRestock));
+      var lastEmptyDateTime = DateTime.fromMillisecondsSinceEpoch(lastEmpty * 1000);
+      _projectedRestockDateTime = lastEmptyDateTime.add(Duration(seconds: _averageTimeToRestock));
 
       // CURRENT DEPLETION TREND
       if (widget.foreignStock.quantity > 0) {
         var inverseList = [];
-        var inverseMap =
-            SplayTreeMap<int, int>.from(firestoreMap, (a, b) => b.compareTo(a));
-        inverseMap.entries
-            .forEach((e) => inverseList.add("${e.key}, ${e.value}"));
+        var inverseMap = SplayTreeMap<int, int>.from(firestoreMap, (a, b) => b.compareTo(a));
+        inverseMap.entries.forEach((e) => inverseList.add("${e.key}, ${e.value}"));
         var currentTimestamp = int.parse((inverseList[0].split(","))[0]);
         var currentQuantity = int.parse((inverseList[0].split(","))[1]);
         var fullTimestamp = 0;
@@ -1026,9 +1007,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         drawVerticalLine: false,
         getDrawingHorizontalLine: (value) {
           return FlLine(
-            color: _themeProvider.currentTheme == AppTheme.dark
-                ? Colors.blueGrey
-                : const Color(0xff37434d),
+            color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff37434d),
             strokeWidth: 0.4,
           );
         },
@@ -1040,15 +1019,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           showTitles: true,
           interval: _periodicMap.length > 12 ? _periodicMap.length / 12 : null,
           reservedSize: 20,
-          margin: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12
-              ? 45
-              : 30,
+          margin: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 45 : 30,
           getTextStyles: (xValue) {
             if (xValue.toInt() >= _periodicMap.length) {
               xValue = xValue - 1;
             }
-            var date = DateTime.fromMillisecondsSinceEpoch(
-                timestamps[xValue.toInt()] * 1000);
+            var date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
             var difference = DateTime.now().difference(date).inHours;
 
             Color myColor = Colors.transparent;
@@ -1066,8 +1042,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
             if (xValue.toInt() >= _periodicMap.length) {
               xValue = xValue - 1;
             }
-            var date = DateTime.fromMillisecondsSinceEpoch(
-                timestamps[xValue.toInt()] * 1000);
+            var date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
             return _timeFormatter(date);
           },
         ),
@@ -1077,9 +1052,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           reservedSize: 10,
           margin: 12,
           getTextStyles: (value) => TextStyle(
-            color: _themeProvider.currentTheme == AppTheme.dark
-                ? Colors.blueGrey
-                : const Color(0xff67727d),
+            color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
             fontSize: 10,
           ),
           getTitles: (yValue) {
@@ -1090,9 +1063,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           },
         ),
       ),
-      borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: const Color(0xff37434d), width: 1)),
+      borderData: FlBorderData(show: true, border: Border.all(color: const Color(0xff37434d), width: 1)),
       minX: 0,
       maxX: _periodicMap.length.toDouble(),
       minY: 0,
@@ -1109,8 +1080,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           ),
           belowBarData: BarAreaData(
             show: true,
-            colors:
-                gradientColors.map((color) => color.withOpacity(0.3)).toList(),
+            colors: gradientColors.map((color) => color.withOpacity(0.3)).toList(),
           ),
         ),
       ],
@@ -1133,8 +1103,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     _tripExplanatory = "";
 
     var now = DateTime.now();
-    var travelTs =
-        DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp * 1000);
+    var travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp * 1000);
 
     // If we are travelling or stopped in another country abroad
     if (travelTs.isAfter(now) || widget.travellingCountry != CountryName.TORN) {
@@ -1147,9 +1116,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           // We are in Torn (after updating without refresh this might happen)
           _flyingElsewhere = false;
         }
-        var timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
-                ticket: widget.ticket, country: widget.foreignStock.country) *
-            60;
+        var timeToWidgetCountry =
+            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.foreignStock.country) * 60;
         var totalNeeded = timeToWidgetCountry + timeToTorn;
         _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
 
@@ -1168,22 +1136,17 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         _earliestArrival = travelTs;
 
         // If we want to come back (we only show this in the footer)
-        var timeToTornAndBack = TravelTimes.travelTimeMinutesOneWay(
-                ticket: widget.ticket, country: widget.foreignStock.country) *
-            60 *
-            2;
+        var timeToTornAndBack =
+            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.foreignStock.country) * 60 * 2;
         var totalNeeded = timeToTornAndBack + timeToWidgetCountry;
-        var earliestArrivalToSame =
-            DateTime.now().add(Duration(seconds: totalNeeded));
+        var earliestArrivalToSame = DateTime.now().add(Duration(seconds: totalNeeded));
 
         if (timeToWidgetCountry == 0) {
-          _tripExplanatory =
-              "You are visiting ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are visiting ${widget.travellingCountryFullName}\n\n"
               "If you like it here and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave now";
         } else {
-          _tripExplanatory =
-              "You are flying to ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are flying to ${widget.travellingCountryFullName}\n\n"
               "If you like it there and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave quickly";
         }
@@ -1196,24 +1159,19 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         if (timeToFirstCountryFromTorn < 0) {
           timeToFirstCountryFromTorn = 0;
         }
-        var timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
-                ticket: widget.ticket, country: widget.travellingCountry) *
-            60;
-        var timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
-                ticket: widget.ticket, country: widget.foreignStock.country) *
-            60;
-        var totalNeeded =
-            timeToFirstCountryFromTorn + timeBackToTorn + timeToWidgetCountry;
+        var timeBackToTorn =
+            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.travellingCountry) * 60;
+        var timeToWidgetCountry =
+            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.foreignStock.country) * 60;
+        var totalNeeded = timeToFirstCountryFromTorn + timeBackToTorn + timeToWidgetCountry;
         _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
 
         if (timeToFirstCountryFromTorn == 0) {
-          _tripExplanatory =
-              "You are visiting ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are visiting ${widget.travellingCountryFullName}\n\n"
               "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time "
               "to ${widget.foreignStock.countryFullName} after you make your way back to Torn.";
         } else {
-          _tripExplanatory =
-              "You are flying to ${widget.travellingCountryFullName}.\n\n"
+          _tripExplanatory = "You are flying to ${widget.travellingCountryFullName}.\n\n"
               "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time to ${widget.foreignStock.countryFullName} "
               "after you make your way back to Torn.";
         }
@@ -1275,28 +1233,19 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           if (_landedInWidgetCountry)
             Text(
               "LANDED",
-              style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.green,
-                  fontStyle: FontStyle.italic),
+              style: TextStyle(fontSize: 11, color: Colors.green, fontStyle: FontStyle.italic),
             )
           else
             Text(
               "${_timeFormatter(_earliestArrival)}",
-              style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.green,
-                  fontStyle: FontStyle.italic),
+              style: TextStyle(fontSize: 11, color: Colors.green, fontStyle: FontStyle.italic),
             )
         else if (_flyingElsewhere)
           Row(
             children: [
               Text(
                 "${_timeFormatter(_earliestArrival)}",
-                style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.orange[700],
-                    fontStyle: FontStyle.italic),
+                style: TextStyle(fontSize: 11, color: Colors.orange[700], fontStyle: FontStyle.italic),
               ),
               SizedBox(width: 3),
               GestureDetector(
@@ -1386,8 +1335,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                                 ],
                               ),
                               onPressed: () async {
-                                var url =
-                                    "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _launchBrowserFull(url);
@@ -1416,8 +1364,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                                 ],
                               ),
                               onPressed: () async {
-                                var url =
-                                    'https://www.torn.com/factions.php?step=your#/tab=armoury';
+                                var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _launchBrowserFull(url);
@@ -1446,8 +1393,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                                 ],
                               ),
                               onPressed: () async {
-                                var url =
-                                    'https://www.torn.com/companies.php#/option=funds';
+                                var url = 'https://www.torn.com/companies.php#/option=funds';
                                 if (longPress) {
                                   Navigator.of(context).pop();
                                   await _launchBrowserFull(url);
@@ -1531,9 +1477,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         await launch(url, forceSafariVC: false);
       }
     } else {
-      _settingsProvider.useQuickBrowser
-          ? await openBrowserDialog(context, url)
-          : await _launchBrowserFull(url);
+      _settingsProvider.useQuickBrowser ? await openBrowserDialog(context, url) : await _launchBrowserFull(url);
     }
   }
 
