@@ -396,7 +396,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Allow browser to open an iOS native preview windows when '
-                    'long-pressing a link (only iOS 9+)',
+                'long-pressing a link (only iOS 9+)',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -544,8 +544,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
             'If active, you\'ll get a message and a chain icon to the side of '
-                'the energy bar, so that you avoid spending energy in the gym '
-                'if you are unaware that your faction is chaining',
+            'the energy bar, so that you avoid spending energy in the gym '
+            'if you are unaware that your faction is chaining',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -576,8 +576,8 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
             'If active, you\'ll get a message if your open a browser to the gym '
-                'and your energy is above the natural maximum, in case you forgot that '
-                'you are stacking',
+            'and your energy is AT OR ABOVE your selected threshold, in case you forgot that '
+            'you are stacking',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -585,6 +585,46 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        if (_settingsProvider.warnAboutExcessEnergy)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(
+                      "Threshold",
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          _settingsProvider.warnAboutExcessEnergyThreshold.toString(),
+                          style: TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
+                        Slider(
+                          min: 200,
+                          max: 1000,
+                          divisions: 16,
+                          value: _settingsProvider.warnAboutExcessEnergyThreshold.toDouble(),
+                          onChanged: (double value) {
+                            setState(() {
+                              _settingsProvider.changeWarnAboutExcessEnergyThreshold = value.floor();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }

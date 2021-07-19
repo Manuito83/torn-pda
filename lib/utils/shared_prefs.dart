@@ -89,6 +89,7 @@ class Prefs {
   final String _kUseUhcRevive = "pda_useUhcRevive";
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
+  final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
   final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
@@ -1005,6 +1006,16 @@ class Prefs {
   Future<bool> setWarnAboutExcessEnergy(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kWarnAboutExcessEnergy, value);
+  }
+
+  Future<int> getWarnAboutExcessEnergyThreshold() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kWarnAboutExcessEnergyThreshold) ?? 200;
+  }
+
+  Future<bool> setWarnAboutExcessEnergyThreshold(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kWarnAboutExcessEnergyThreshold, value);
   }
 
   Future<bool> getTerminalEnabled() async {

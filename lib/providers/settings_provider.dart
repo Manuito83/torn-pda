@@ -324,6 +324,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _warnAboutExcessEnergyThreshold = 200;
+  int get warnAboutExcessEnergyThreshold => _warnAboutExcessEnergyThreshold;
+  set changeWarnAboutExcessEnergyThreshold(int choice) {
+    _warnAboutExcessEnergyThreshold = choice;
+    Prefs().setWarnAboutExcessEnergyThreshold(_warnAboutExcessEnergyThreshold);
+    notifyListeners();
+  }
+
   var _warnAboutChains = true;
   bool get warnAboutChains => _warnAboutChains;
   set changeWarnAboutChains(bool choice) {
@@ -441,6 +449,7 @@ class SettingsProvider extends ChangeNotifier {
     _iosAllowLinkPreview = await Prefs().getIosAllowLinkPreview();
 
     _warnAboutExcessEnergy = await Prefs().getWarnAboutExcessEnergy();
+    _warnAboutExcessEnergyThreshold = await Prefs().getWarnAboutExcessEnergyThreshold();
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
     notifyListeners();

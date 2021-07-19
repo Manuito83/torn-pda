@@ -47,10 +47,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_4_2_3 = "Travel: MAX buy button can now also be used to buy additional items above the limit";
     String feat2_4_2_4 = "Travel: added custom (seat belt) sound for travel notifications";
     String feat2_4_2_5 = "Travel: added depletion rate information to foreign stocks";
-    String feat2_4_2_6 = "Browser: added terminal window for developers";
-    String feat2_4_2_7 = "Fixed an issue preventing some userscripts from working if using wildcards in the URL";
-    String feat2_4_2_8 = "Fixed other reported UI issues";
-    String feat2_4_2_9 = "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
+    String feat2_4_2_6 = "Browser: you can now set the energy threshold to trigger the stacking warning when visiting the gym";
+    String feat2_4_2_7 = "Browser: added terminal window for developers";
+    String feat2_4_2_8 = "Fixed an issue preventing some userscripts from working if using wildcards in the URL";
+    String feat2_4_2_9 = "Fixed other reported UI issues";
+    String feat2_4_2_10 = "Note: TAC is now deactivated by default and will be removed soon, save any pending target!";
     v2_4_2.features.add(feat2_4_2_1);
     v2_4_2.features.add(feat2_4_2_2);
     v2_4_2.features.add(feat2_4_2_3);
@@ -60,6 +61,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_4_2.features.add(feat2_4_2_7);
     v2_4_2.features.add(feat2_4_2_8);
     v2_4_2.features.add(feat2_4_2_9);
+    v2_4_2.features.add(feat2_4_2_10);
 
     // VERSION 2.4.1
     var v2_4_1 = ChangeLogItem();
