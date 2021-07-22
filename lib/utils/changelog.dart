@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.4.2
     var v2_4_2 = ChangeLogItem();
     v2_4_2.main.version = 'Torn PDA v2.4.2';
-    v2_4_2.main.date = '25 JUL 2021';
+    v2_4_2.main.date = '28 JUL 2021';
     String feat2_4_2_1 = "Profile: added total bazaar value information";
     String feat2_4_2_2 = "Travel: you can now filter foreign stocks by inventory quantity";
     String feat2_4_2_3 = "Travel: MAX buy button can now also be used to buy additional items above the limit";
