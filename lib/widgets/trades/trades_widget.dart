@@ -296,7 +296,8 @@ class _TradesWidgetState extends State<TradesWidget> {
         iconSize: 23,
         onPressed: () {
           String amountCopied;
-          if (_tradesProv.container.ttActive && side == 'right') {
+          // Also takes into account ttServerError, in which case we copy the standard value below
+          if (_tradesProv.container.ttActive && !_tradesProv.container.ttServerError && side == 'right') {
             amountCopied = _tradesProv.container.ttTotalMoney.replaceAll("\$", "").replaceAll(",", "");
             _copyToClipboard(amountCopied, _tradesProv.container.ttTotalMoney);
           } else {
