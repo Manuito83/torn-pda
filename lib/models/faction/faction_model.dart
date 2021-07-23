@@ -19,9 +19,9 @@ class FactionModel {
     this.respect,
     this.age,
     this.bestChain,
-    this.territoryWars,
-    this.raidWars,
-    this.peace,
+    //this.territoryWars,
+    //this.raidWars,
+    //this.peace,
     this.members,
   });
 
@@ -33,9 +33,11 @@ class FactionModel {
   int respect;
   int age;
   int bestChain;
-  TerritoryWars territoryWars;
-  RaidWars raidWars;
-  Peace peace;
+  // If we want to use these in the future, make sure to find good example to build the classes, otherwise
+  // we'll get API errors if they are empty
+  //TerritoryWars territoryWars;
+  //RaidWars raidWars;
+  //Peace peace;
   Map<String, Member> members;
 
   factory FactionModel.fromJson(Map<String, dynamic> json) => FactionModel(
@@ -47,9 +49,9 @@ class FactionModel {
     respect: json["respect"],
     age: json["age"],
     bestChain: json["best_chain"],
-    territoryWars: TerritoryWars.fromJson(json["territory_wars"]),
-    raidWars: RaidWars.fromJson(json["raid_wars"]),
-    peace: Peace.fromJson(json["peace"]),
+    //territoryWars: TerritoryWars.fromJson(json["territory_wars"]),
+    //raidWars: RaidWars.fromJson(json["raid_wars"]),
+    //peace: Peace.fromJson(json["peace"]),
     members: Map.from(json["members"]).map((k, v) => MapEntry<String, Member>(k, Member.fromJson(v))),
   );
 
@@ -62,9 +64,9 @@ class FactionModel {
     "respect": respect,
     "age": age,
     "best_chain": bestChain,
-    "territory_wars": territoryWars.toJson(),
-    "raid_wars": raidWars.toJson(),
-    "peace": peace.toJson(),
+    //"territory_wars": territoryWars.toJson(),
+    //"raid_wars": raidWars.toJson(),
+    //"peace": peace.toJson(),
     "members": Map.from(members).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
   };
 }
@@ -157,6 +159,7 @@ class Status {
   };
 }
 
+/*
 class TerritoryWars {
   TerritoryWars();
 
@@ -186,3 +189,4 @@ class Peace {
   Map<String, dynamic> toJson() => {
   };
 }
+*/
