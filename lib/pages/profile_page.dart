@@ -652,6 +652,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: Image.asset(
               thisShortcut.iconUrl,
               width: 16,
+              color: _themeProvider.mainText,
             ),
           ),
         );
