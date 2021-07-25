@@ -4373,7 +4373,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           onTap: () async {
             await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(),
+                builder: (BuildContext context) => WebViewStackView(initUrl: 'https://www.torn.com'),
               ),
             );
             // TODO: _launchBrowserOption('https://www.torn.com');
