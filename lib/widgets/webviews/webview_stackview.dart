@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -26,10 +27,16 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   Widget build(BuildContext context) {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+
+    var allWebViews = <Widget>[];
+    for (var tab in _webViewProvider.tabList) {
+      allWebViews.add(tab.webView);
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: _webViewProvider.currentTab,
-        children: _webViewProvider.webViewList,
+        children: allWebViews,
       ),
       bottomNavigationBar: _bottomNavBar(),
     );
@@ -42,33 +49,30 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   }
 
   Widget _bottomNavBar() {
-    var firstButton = Container(
+
+    var mainTab = Container(
       key: UniqueKey(),
       color: _webViewProvider.currentTab == 0 ? _themeProvider.navSelected : Colors.transparent,
       child: GestureDetector(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Icon(
-            Icons.web,
-            color: _themeProvider.mainText,
-          ),
+          child: _getIcon(0),
         ),
         onTap: () {
           _webViewProvider.activateTab(0);
         },
         onDoubleTap: () {
-          if (_webViewProvider.webViewList.length > 0) {
+          if (_webViewProvider.tabList.length > 0) {
             _webViewProvider.removeWebView(0);
           }
         },
       ),
     );
 
-    var staticButtons = <Widget>[];
-    for (var i = 0; i < _webViewProvider.webViewList.length; i++) {
-
+    var secondaryTabs = <Widget>[];
+    for (var i = 0; i < _webViewProvider.tabList.length; i++) {
       if (i == 0) {
-        staticButtons.add(
+        secondaryTabs.add(
           Container(
             key: UniqueKey(),
             child: SizedBox.shrink(),
@@ -77,28 +81,25 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         continue;
       }
 
-      Widget button = Container(
+      Widget secondaryTab = Container(
         key: UniqueKey(),
         color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
         child: GestureDetector(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Icon(
-              Icons.web,
-              color: _themeProvider.mainText,
-            ),
+            child: _getIcon(i),
           ),
           onTap: () {
             _webViewProvider.activateTab(i);
           },
           onDoubleTap: () {
-            if (_webViewProvider.webViewList.length > 0) {
+            if (_webViewProvider.tabList.length > 0) {
               _webViewProvider.removeWebView(i);
             }
           },
         ),
       );
-      staticButtons.add(button);
+      secondaryTabs.add(secondaryTab);
     }
 
     return Container(
@@ -117,7 +118,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
           Flexible(
             child: Row(
               children: [
-                firstButton,
+                mainTab,
                 VerticalDivider(
                   width: 2,
                   thickness: 2,
@@ -126,18 +127,18 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                 Expanded(
                   child: ReorderableListView(
                     scrollDirection: Axis.horizontal,
-                    children: staticButtons,
+                    children: secondaryTabs,
                     onReorder: (start, end) {
                       if (start == 0 || end == 0) return;
                       // Save where the current active tab is
-                      var activeKey = _webViewProvider.webViewList[_webViewProvider.currentTab].key;
+                      var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
                       // Removing the item at oldIndex will shorten the list by 1
                       if (start < end) end -= 1;
                       // Do the move
-                      _webViewProvider.reorderTabs(_webViewProvider.webViewList[start], start, end);
+                      _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
                       // Make sure we continue in our previous active tab
-                      for (var i = 0; i < _webViewProvider.webViewList.length; i++) {
-                        if (_webViewProvider.webViewList[i].key == activeKey) {
+                      for (var i = 0; i < _webViewProvider.tabList.length; i++) {
+                        if (_webViewProvider.tabList[i].webView.key == activeKey) {
                           _webViewProvider.activateTab(i);
                           break;
                         }
@@ -158,7 +159,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                 ),
                 onPressed: () {
                   _webViewProvider.addWebView();
-                  _webViewProvider.activateTab(_webViewProvider.webViewList.length - 1);
+                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                 },
               ),
             ),
@@ -166,5 +167,14 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         ],
       ),
     );
+  }
+
+  Widget _getIcon(int i) {
+    // TODO: ADD ICONS
+    if (_webViewProvider.tabList[i].tabUrlType == TabUrlType.profile) {
+      return Icon(Icons.person, color: _themeProvider.mainText);
+    } else {
+      return ImageIcon(AssetImage('images/icons/pda_icon.png'));
+    }
   }
 }
