@@ -8,24 +8,32 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
+enum TabUrlType {
+  general,
+  profile,
+}
+
+class TabDetails {
+  Widget webView;
+  TabUrlType tabUrlType = TabUrlType.general;
+}
+
 class WebViewProvider extends ChangeNotifier {
-  List<Widget> _webViewList = <Widget>[];
-  List<Widget> get webViewList => _webViewList;
+  List<TabDetails> _tabList = <TabDetails>[];
+  List<TabDetails> get tabList => _tabList;
 
   int _currentTab = 0;
   int get currentTab => _currentTab;
 
   WebViewProvider() {
-    if (_webViewList.isEmpty) {
+    if (_tabList.isEmpty) {
       addWebView();
     }
   }
 
   void addWebView() {
-    _webViewList.add(
-      WebViewFull(
-        key: GlobalKey<WebViewFullState>(),
-      ),
+    _tabList.add(
+      TabDetails()..webView = WebViewFull(key: GlobalKey<WebViewFullState>()),
     );
     notifyListeners();
   }
@@ -35,7 +43,7 @@ class WebViewProvider extends ChangeNotifier {
       if (position == currentTab) {
         _currentTab = position - 1;
       }
-      _webViewList.removeAt(position);
+      _tabList.removeAt(position);
     }
     notifyListeners();
   }
@@ -45,14 +53,23 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reorderTabs(Widget movedItem, int oldIndex, int newIndex) {
-    _webViewList.removeAt(oldIndex);
-    _webViewList.insert(newIndex, movedItem);
+  void reorderTabs(TabDetails movedItem, int oldIndex, int newIndex) {
+    _tabList.removeAt(oldIndex);
+    _tabList.insert(newIndex, movedItem);
     notifyListeners();
   }
 
-  void reportUrlOpen(Key widgetKey, String url) {
-      print("$widgetKey $url");
+  void reportUrlOpen(Key reporterKey, String url) {
+    for (var tab in _tabList) {
+      if (tab.webView.key == reporterKey) {
+        if (url.contains("profiles.php?XID")) {
+          tab.tabUrlType = TabUrlType.profile;
+        } else {
+          tab.tabUrlType = TabUrlType.general;
+        }
+      }
+    }
+    notifyListeners();
   }
 
 }
