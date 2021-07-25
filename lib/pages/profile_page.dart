@@ -29,6 +29,7 @@ import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -4369,8 +4370,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           labelBackgroundColor: Colors.green[400],
         ),
         SpeedDialChild(
-          onTap: () {
-            _launchBrowserOption('https://www.torn.com');
+          onTap: () async {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewStackView(),
+              ),
+            );
+            // TODO: _launchBrowserOption('https://www.torn.com');
           },
           onLongPress: () {
             _launchBrowserFull('https://www.torn.com');

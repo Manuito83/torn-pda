@@ -38,6 +38,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
@@ -151,6 +152,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<TerminalProvider>(
           create: (context) => TerminalProvider(""),
+        ),
+        ChangeNotifierProvider<WebViewProvider>(
+          create: (context) => WebViewProvider(),
         ),
       ],
       child: MyApp(),

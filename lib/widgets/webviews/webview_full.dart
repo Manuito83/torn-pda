@@ -36,6 +36,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -68,19 +69,23 @@ class WebViewFull extends StatefulWidget {
   final String customUrl;
   final Function customCallBack;
   final bool dialog;
+  final tabNumber;
+  final GlobalKey<WebViewFullState> key;
 
   WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
     this.customCallBack,
     this.dialog = false,
-  });
+    this.tabNumber,
+    this.key,
+  }) : super(key: key);
 
   @override
-  _WebViewFullState createState() => _WebViewFullState();
+  WebViewFullState createState() => WebViewFullState();
 }
 
-class _WebViewFullState extends State<WebViewFull> {
+class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   InAppWebViewController webView;
   var _initialWebViewOptions = InAppWebViewGroupOptions();
 
@@ -148,6 +153,8 @@ class _WebViewFullState extends State<WebViewFull> {
   UserDetailsProvider _userProvider;
   TerminalProvider _terminalProvider;
 
+  WebViewProvider _webViewProvider;
+
   final _popupOptionsChoices = <VaultsOptions>[
     VaultsOptions(description: "Personal vault"),
     VaultsOptions(description: "Faction vault"),
@@ -177,6 +184,8 @@ class _WebViewFullState extends State<WebViewFull> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _loadChatPreferences();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
@@ -201,6 +210,7 @@ class _WebViewFullState extends State<WebViewFull> {
       ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
+        //supportMultipleWindows: true,
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
@@ -233,12 +243,23 @@ class _WebViewFullState extends State<WebViewFull> {
   void dispose() {
     webView = null;
     _findController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      webView.pauseTimers();
+    } else {
+      webView.resumeTimers();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
 
     return WillPopScope(
@@ -700,6 +721,7 @@ class _WebViewFullState extends State<WebViewFull> {
             },
             onLoadStop: (c, uri) async {
               _currentUrl = uri.toString();
+              _webViewProvider.reportUrlOpen(widget.key, _currentUrl);
 
               _hideChat();
               _highlightChat();
