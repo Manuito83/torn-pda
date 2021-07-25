@@ -6,9 +6,11 @@ import 'package:torn_pda/providers/webview_provider.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
+  final bool dialog;
 
   const WebViewStackView({
-    @required this.initUrl,
+    this.initUrl = "https://www.torn.com",
+    this.dialog = false,
     Key key,
   }) : super(key: key);
 
@@ -25,7 +27,10 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   @override
   void initState() {
     super.initState();
-    providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialise(initUrl: widget.initUrl);
+    providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialise(
+      initUrl: widget.initUrl,
+      dialog: widget.dialog,
+    );
   }
 
   @override
@@ -206,4 +211,5 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return ImageIcon(AssetImage('images/icons/pda_icon.png'));
     }
   }
+
 }

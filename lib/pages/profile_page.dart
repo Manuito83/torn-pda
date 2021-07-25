@@ -4371,12 +4371,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         SpeedDialChild(
           onTap: () async {
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: 'https://www.torn.com'),
-              ),
-            );
-            // TODO: _launchBrowserOption('https://www.torn.com');
+            _launchBrowserOption('https://www.torn.com');
           },
           onLongPress: () {
             _launchBrowserFull('https://www.torn.com');
@@ -4408,7 +4403,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await launch(url, forceSafariVC: false);
       }
     } else {
-      _settingsProvider.useQuickBrowser ? await openBrowserDialog(context, url) : await _launchBrowserFull(url);
+      _settingsProvider.useQuickBrowser
+          ? await openBrowserDialog(
+              context,
+              url,
+              useTabs: _settingsProvider.useTabsBrowserDialog,
+            )
+          : await _launchBrowserFull(url);
       _updateCallback();
     }
   }
@@ -4419,15 +4420,21 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await launch(page, forceSafariVC: false);
       }
     } else {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (BuildContext context) => WebViewFull(
-            customUrl: page,
-            customTitle: 'Torn',
-            customCallBack: null,
-          ),
-        ),
-      );
+      _settingsProvider.useTabsFullBrowser
+          ? await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewStackView(initUrl: page),
+              ),
+            )
+          : await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewFull(
+                  customUrl: page,
+                  customTitle: 'Torn',
+                  customCallBack: null,
+                ),
+              ),
+            );
       _updateCallback();
     }
   }

@@ -168,6 +168,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _useTabsFullBrowser = true;
+  bool get useTabsFullBrowser => _useTabsFullBrowser;
+  set changeUseTabsFullBrowser(bool value) {
+    _useTabsFullBrowser = value;
+    Prefs().setUseTabsFullBrowser(_useTabsFullBrowser);
+    notifyListeners();
+  }
+
+  var _useTabsBrowserDialog = true;
+  bool get useTabsBrowserDialog => _useTabsBrowserDialog;
+  set changeUseTabsBrowserDialog(bool value) {
+    _useTabsBrowserDialog = value;
+    Prefs().setUseTabsBrowserDialog(_useTabsBrowserDialog);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -374,6 +390,9 @@ class SettingsProvider extends ChangeNotifier {
     _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
+
+    _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
+    _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
