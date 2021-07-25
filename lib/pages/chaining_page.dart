@@ -120,9 +120,7 @@ class _ChainingPageState extends State<ChainingPage> {
                         color: _themeProvider.mainText,
                       ),
                       onPressed: () {
-                        setState(() {
-                          _onSelectedPage(page: 1);
-                        });
+                        _onSelectedPage(page: 1);
                       },
                     ),
                   ),
@@ -137,9 +135,7 @@ class _ChainingPageState extends State<ChainingPage> {
                               color: _themeProvider.mainText,
                             )),
                         onPressed: () {
-                          setState(() {
-                            _onSelectedPage(page: 2);
-                          });
+                          _onSelectedPage(page: 2);
                         },
                       ),
                     ),
