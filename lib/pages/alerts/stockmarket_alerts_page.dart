@@ -213,7 +213,10 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
     // Convert user stocks to list
     var userStocks = userStocksReply as StockMarketUserModel;
-    var ownedStocks = userStocks.stocks.entries.map((e) => e.value).toList();
+    var ownedStocks = [];
+    if (userStocks.stocks != null) {
+      ownedStocks = userStocks.stocks.entries.map((e) => e.value).toList();
+    }
 
     // Get owned stocks
     for (var stockOwned in ownedStocks) {
