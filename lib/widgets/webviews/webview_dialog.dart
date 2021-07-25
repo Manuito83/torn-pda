@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
+import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 Future<void> openBrowserDialog(BuildContext _, String initUrl,
     {Function callBack}) {
@@ -26,12 +27,8 @@ Future<void> openBrowserDialog(BuildContext _, String initUrl,
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
-          child: WebViewFull(
-            customUrl: initUrl,
-            dialog: true,
-            customCallBack: callBack,
+          child: WebViewStackView(initUrl: 'https://www.torn.com'),
           ),
-        ),
       );
     },
   );

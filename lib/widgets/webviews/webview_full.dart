@@ -69,15 +69,13 @@ class WebViewFull extends StatefulWidget {
   final String customUrl;
   final Function customCallBack;
   final bool dialog;
-  final tabNumber;
   final GlobalKey<WebViewFullState> key;
 
   WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
-    this.customCallBack,
+    this.customCallBack, // TODO: replace with callback from tabviewer
     this.dialog = false,
-    this.tabNumber,
     this.key,
   }) : super(key: key);
 
@@ -181,6 +179,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
 
+  bool _omitTabHistory = false;
+
   @override
   void initState() {
     super.initState();
@@ -210,7 +210,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
-        //supportMultipleWindows: true,
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
@@ -675,6 +674,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               return;
             },
             onLoadStart: (c, uri) async {
+              if (!_omitTabHistory) {
+                _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+              } else {
+                _omitTabHistory = false;
+              }
+
+
               // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
@@ -721,7 +727,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             },
             onLoadStop: (c, uri) async {
               _currentUrl = uri.toString();
-              _webViewProvider.reportUrlOpen(widget.key, _currentUrl);
 
               _hideChat();
               _highlightChat();
@@ -1111,9 +1116,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoBack() async {
-    var canBack = await webView.canGoBack();
-    if (canBack) {
-      await webView.goBack();
+    if (_webViewProvider.tryGoBack()) {
       BotToast.showText(
         text: "Back",
         textStyle: TextStyle(
@@ -1139,8 +1142,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoForward() async {
-    var canForward = await webView.canGoForward();
-    if (canForward) {
+    if (_webViewProvider.tryGoForward()) {
       await webView.goForward();
       BotToast.showText(
         text: "Forward",
@@ -2384,7 +2386,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   _toggleTerminal(bool active) {
     //setState(() {
-      //_settingsProvider.changeTerminalEnabled = active;
+    //_settingsProvider.changeTerminalEnabled = active;
     //});
   }
 
@@ -2420,10 +2422,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  // UTILS
-  Future<bool> _willPopCallback() async {
-    await _tryGoBack();
-    return false;
+  void loadWithoutHistory (String url) {
+    _omitTabHistory = true;
+    webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
   }
 
+  Future<bool> _willPopCallback() async {
+    _tryGoBack();
+    return false;
+  }
 }

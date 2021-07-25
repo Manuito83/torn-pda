@@ -127,6 +127,8 @@ class Prefs {
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
+  // WebView Tabs
+  final String _kWebViewTabs = "pda_webViewTabs";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1471,5 +1473,17 @@ class Prefs {
     return prefs.setBool(_kStockExchangeInMenu, value);
   }
 
+  /// -----------------------------
+  /// METHODS FOR WEB VIEW TABS
+  /// -----------------------------
+  Future<String> getWebViewTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewTabs) ?? "";
+  }
+
+  Future<bool> setWebViewTabs(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewTabs, value);
+  }
 
 }

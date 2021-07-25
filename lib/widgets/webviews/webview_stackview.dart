@@ -5,22 +5,27 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
 class WebViewStackView extends StatefulWidget {
-  const WebViewStackView({Key key}) : super(key: key);
+  final String initUrl;
+
+  const WebViewStackView({
+    @required this.initUrl,
+    Key key,
+  }) : super(key: key);
 
   @override
   _WebViewStackViewState createState() => _WebViewStackViewState();
 }
 
 class _WebViewStackViewState extends State<WebViewStackView> {
-  PageController _bottomNavPageController;
-
   ThemeProvider _themeProvider;
   WebViewProvider _webViewProvider;
+
+  Future providerInitialised;
 
   @override
   void initState() {
     super.initState();
-    _bottomNavPageController = PageController(initialPage: 0);
+    providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialise(initUrl: widget.initUrl);
   }
 
   @override
@@ -34,22 +39,39 @@ class _WebViewStackViewState extends State<WebViewStackView> {
     }
 
     return Scaffold(
-      body: IndexedStack(
-        index: _webViewProvider.currentTab,
-        children: allWebViews,
+      body: FutureBuilder(
+        future: providerInitialised,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return IndexedStack(
+              index: _webViewProvider.currentTab,
+              children: allWebViews,
+            );
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       ),
-      bottomNavigationBar: _bottomNavBar(),
+      bottomNavigationBar: FutureBuilder(
+        future: providerInitialised,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return _bottomNavBar();
+          } else {
+            return SizedBox.shrink();
+          }
+        },
+      ),
     );
   }
 
   @override
   Future dispose() async {
-    _bottomNavPageController.dispose();
+    _webViewProvider.clearOnDispose();
     super.dispose();
   }
 
   Widget _bottomNavBar() {
-
     var mainTab = Container(
       key: UniqueKey(),
       color: _webViewProvider.currentTab == 0 ? _themeProvider.navSelected : Colors.transparent,
@@ -63,7 +85,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         },
         onDoubleTap: () {
           if (_webViewProvider.tabList.length > 0) {
-            _webViewProvider.removeWebView(0);
+            _webViewProvider.removeTab(0);
           }
         },
       ),
@@ -94,7 +116,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
           },
           onDoubleTap: () {
             if (_webViewProvider.tabList.length > 0) {
-              _webViewProvider.removeWebView(i);
+              _webViewProvider.removeTab(i);
             }
           },
         ),
@@ -115,7 +137,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Flexible(
+          Expanded(
             child: Row(
               children: [
                 mainTab,
@@ -149,20 +171,27 @@ class _WebViewStackViewState extends State<WebViewStackView> {
               ],
             ),
           ),
-          Flexible(
-            child: Container(
-              color: _themeProvider.navSelected,
-              child: IconButton(
-                icon: Icon(
-                  Icons.add,
-                  color: _themeProvider.mainText,
-                ),
-                onPressed: () {
-                  _webViewProvider.addWebView();
-                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                },
+          Row(
+            children: [
+              VerticalDivider(
+                width: 2,
+                thickness: 2,
+                color: _themeProvider.mainText,
               ),
-            ),
+              Container(
+                color: _themeProvider.navSelected,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.add,
+                    color: _themeProvider.mainText,
+                  ),
+                  onPressed: () {
+                    _webViewProvider.addTab();
+                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
