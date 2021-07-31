@@ -250,75 +250,77 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   Future<void> loadPreferences() async {
-    _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
+    try {
+      _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
+      var savedScripts = await Prefs().getUserScriptsList();
+      var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
 
-    var savedScripts = await Prefs().getUserScriptsList();
-    var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
-
-    // NULL returned if we installed the app, so we add example scripts
-    if (savedScripts == null) {
-      for (var example in exampleScripts) {
-        addUserScript(
-          example.name,
-          example.source,
-          enabled: example.enabled,
-          exampleCode: example.exampleCode,
-        );
-      }
-      _saveUserScriptsSharedPrefs();
-    } else {
-      if (savedScripts.isNotEmpty) {
-        var decoded = json.decode(savedScripts);
-        for (var dec in decoded) {
-          var decodedModel = UserScriptModel.fromJson(dec);
+      // NULL returned if we installed the app, so we add example scripts
+      if (savedScripts == null) {
+        for (var example in exampleScripts) {
           addUserScript(
-            decodedModel.name,
-            decodedModel.source,
-            enabled: decodedModel.enabled,
-            exampleCode: decodedModel.exampleCode,
-            version: decodedModel.version,
-            edited: decodedModel.edited,
+            example.name,
+            example.source,
+            enabled: example.enabled,
+            exampleCode: example.exampleCode,
           );
         }
-      }
+        _saveUserScriptsSharedPrefs();
+      } else {
+        if (savedScripts.isNotEmpty) {
+          var decoded = json.decode(savedScripts);
+          for (var dec in decoded) {
+            var decodedModel = UserScriptModel.fromJson(dec);
+            addUserScript(
+              decodedModel.name,
+              decodedModel.source,
+              enabled: decodedModel.enabled,
+              exampleCode: decodedModel.exampleCode,
+              version: decodedModel.version,
+              edited: decodedModel.edited,
+            );
+          }
+        }
 
-      // Update example scripts to latest versions
-      bool updates = false;
-      for (var script in _userScriptList) {
-        // Look for saved scripts than come from examples
-        if (script.exampleCode > 0) {
-          if (script.edited != null) {
-            if (!script.edited) {
-              // If the script has not been edited, find the example script and see if we need to update the source
-              for (var example in exampleScripts) {
-                if (script.exampleCode == example.exampleCode && script.version != null && script.version < example.version) {
-                  script.source = example.source;
-                  script.version = example.version;
-                  updates = true;
+        // Update example scripts to latest versions
+        bool updates = false;
+        for (var script in _userScriptList) {
+          // Look for saved scripts than come from examples
+          if (script.exampleCode > 0) {
+            if (script.edited != null) {
+              if (!script.edited) {
+                // If the script has not been edited, find the example script and see if we need to update the source
+                for (var example in exampleScripts) {
+                  if (script.exampleCode == example.exampleCode && script.version != null && script.version < example.version) {
+                    script.source = example.source;
+                    script.version = example.version;
+                    updates = true;
+                  }
                 }
               }
-            }
-          } else {
-            // Added for existing scripts than come from previous version than v2.4.2
-            // We just flag each script for future use, but don't update anything
-            updates = true;
-            for (var example in exampleScripts) {
-              if (script.exampleCode == example.exampleCode) {
-                if (script.source == example.source) {
-                  script.edited = false;
-                  script.version = example.version;
-                } else {
-                  script.edited = true;
-                  script.version = example.version;
+            } else {
+              // Added for existing scripts than come from previous version than v2.4.2
+              // We just flag each script for future use, but don't update anything
+              updates = true;
+              for (var example in exampleScripts) {
+                if (script.exampleCode == example.exampleCode) {
+                  if (script.source == example.source) {
+                    script.edited = false;
+                    script.version = example.version;
+                  } else {
+                    script.edited = true;
+                    script.version = example.version;
+                  }
                 }
               }
             }
           }
         }
+        if (updates) _saveUserScriptsSharedPrefs();
       }
-      if (updates) _saveUserScriptsSharedPrefs();
+      notifyListeners();
+    } catch (e) {
+      // Pass (scripts will be empty)
     }
-
-    notifyListeners();
   }
 }
