@@ -333,6 +333,13 @@ class _TipsPageState extends State<TipsPage> {
             "and it will be cloned into the bar.",
       ),
     );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Toggle between icons and page titles in tabs",
+        expandedValue: "By long-pressing the add tab button (+), you can switch between icons and page "
+            "title in your tabs.",
+      ),
+    );
     return tips;
   }
 

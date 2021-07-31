@@ -733,6 +733,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             onLoadStop: (c, uri) async {
               _currentUrl = uri.toString();
 
+
               _hideChat();
               _highlightChat();
 
@@ -740,6 +741,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               var document = parse(html);
               // Force to show title
               await (_getPageTitle(document, showTitle: true));
+
+              if (widget.useTabs) {
+                _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+              }
+
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -2333,7 +2339,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               duration: Duration(seconds: 1),
               contentPadding: EdgeInsets.all(10),
             );
-
           },
         ),
       );
@@ -2370,7 +2375,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               duration: Duration(seconds: 1),
               contentPadding: EdgeInsets.all(10),
             );
-
           },
         ),
       );
@@ -2479,7 +2483,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // Called from parent though GlobalKey state
-  void loadWithoutHistory (String url) {
+  void loadWithoutHistory(String url) {
     _omitTabHistory = true;
     webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
   }

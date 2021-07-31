@@ -2,6 +2,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 
@@ -82,9 +83,29 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       key: UniqueKey(),
       color: _webViewProvider.currentTab == 0 ? _themeProvider.navSelected : Colors.transparent,
       child: GestureDetector(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _getIcon(0),
+        child: Row(
+          children: [
+            Padding(
+              padding: _webViewProvider.useTabIcons
+                  ? const EdgeInsets.all(8.0)
+                  : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              child: _webViewProvider.useTabIcons
+                  ? _getIcon(0)
+                  : Container(
+                      constraints: BoxConstraints(maxWidth: 100),
+                      child: Text(
+                        _webViewProvider.tabList[0].pageTitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+            ),
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: Colors.grey[400],
+            ),
+          ],
         ),
         onTap: () {
           _webViewProvider.activateTab(0);
@@ -128,9 +149,29 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         key: UniqueKey(),
         color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
         child: GestureDetector(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: _getIcon(i),
+          child: Row(
+            children: [
+              Padding(
+                padding: _webViewProvider.useTabIcons
+                    ? const EdgeInsets.all(8.0)
+                    : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                child: _webViewProvider.useTabIcons
+                    ? _getIcon(i)
+                    : Container(
+                        constraints: BoxConstraints(maxWidth: 100),
+                        child: Text(
+                          _webViewProvider.tabList[i].pageTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+              ),
+              VerticalDivider(
+                width: 1,
+                thickness: 1,
+                color: Colors.grey[400],
+              ),
+            ],
           ),
           onTap: () {
             _webViewProvider.activateTab(i);
@@ -201,14 +242,22 @@ class _WebViewStackViewState extends State<WebViewStackView> {
               ),
               Container(
                 color: _themeProvider.navSelected,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.add,
-                    color: _themeProvider.mainText,
+                child: GestureDetector(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.add_circle_outline,
+                      color: _themeProvider.mainText,
+                    ),
                   ),
-                  onPressed: () {
+                  onTap: () {
                     _webViewProvider.addTab();
                     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                  },
+                  onLongPress: () {
+                    _webViewProvider.useTabIcons
+                        ? _webViewProvider.changeUseTabIcons(false)
+                        : _webViewProvider.changeUseTabIcons(true);
                   },
                 ),
               ),
@@ -219,12 +268,37 @@ class _WebViewStackViewState extends State<WebViewStackView> {
     );
   }
 
+  /// Uses the already generated shortcuts list
   Widget _getIcon(int i) {
-    // TODO: ADD ICONS
-    if (_webViewProvider.tabList[i].tabUrlType == TabUrlType.profile) {
+    var url = _webViewProvider.tabList[i].currentUrl;
+
+    // Find some icons manually first, as they might trigger errors with shortcuts
+    if (url.contains("index.php")) {
+      return ImageIcon(AssetImage('images/icons/home/home.png'));
+    } else if (url.contains("sid=attack&user2ID=2225097")) {
+      return Icon(MdiIcons.pistol, color: Colors.pink);
+    } else if (url.contains("sid=attack&user2ID=")) {
+      return Icon(Icons.person);
+    } else if (url.contains("profiles.php?XID=2225097")) {
+      return Icon(Icons.person, color: Colors.pink);
+    } else if (url.contains("profiles.php")) {
       return Icon(Icons.person, color: _themeProvider.mainText);
-    } else {
-      return ImageIcon(AssetImage('images/icons/pda_icon.png'));
+    } else if (url.contains("companies.php")) {
+      return ImageIcon(AssetImage('images/icons/home/job.png'));
+    } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
+      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+    } else if (url.contains("companies.php")) {
+      return ImageIcon(AssetImage('images/icons/home/job.png'));
     }
+
+    // Try to find by using shortcuts list
+    var shortProvider = context.read<ShortcutsProvider>();
+    for (var short in shortProvider.allShortcuts) {
+      if (short.url.contains(url)) {
+        return ImageIcon(AssetImage(short.iconUrl));
+      }
+    }
+
+    return ImageIcon(AssetImage('images/icons/pda_icon.png'));
   }
 }

@@ -112,8 +112,6 @@ class Prefs {
   final String _kAwardsSort = "pda_awardsSort";
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
-  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
-  final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
@@ -128,9 +126,12 @@ class Prefs {
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
   // WebView Tabs
+  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
+  final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kWebViewTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
+  final String _kUseTabsIcons = "pda_useTabsIcons";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1506,6 +1507,16 @@ class Prefs {
   Future<bool> setUseTabsBrowserDialog(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseTabsInBrowserDialog, value);
+  }
+
+  Future<bool> getUseTabsIcons() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsIcons) ?? true;
+  }
+
+  Future<bool> setUseTabsIcons(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsIcons, value);
   }
 
 

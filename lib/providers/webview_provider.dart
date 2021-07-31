@@ -11,21 +11,15 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 // Project imports:
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
-enum TabUrlType {
-  general,
-  profile,
-}
-
 class TabDetails {
   bool initialised = false;
   Widget webView;
   GlobalKey<WebViewFullState> webViewKey;
-  TabUrlType tabUrlType = TabUrlType.general;
   String currentUrl = "https://www.torn.com";
+  String pageTitle = "";
   bool chatRemovalActiveTab = false;
   List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
-  // TODO: long-press add icon to change from icons to text
   // TODO: write tips (ongoing)
   // TODO: remove tabs/no tabs browser full/dialog before opening notification
 }
@@ -39,6 +33,9 @@ class WebViewProvider extends ChangeNotifier {
 
   bool useDialog = false;
 
+  bool _useTabIcons = true;
+  bool get useTabIcons => _useTabIcons;
+
   bool _gymMessageActive = false;
 
   int _currentTab = 0;
@@ -50,6 +47,8 @@ class WebViewProvider extends ChangeNotifier {
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
 
+    _useTabIcons = await Prefs().getUseTabsIcons();
+
     // Add the main opener
     addTab(init: true, url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
 
@@ -60,6 +59,7 @@ class WebViewProvider extends ChangeNotifier {
       addTab(
         init: true,
         url: wv.url,
+        pageTitle: wv.pageTitle,
         chatRemovalActive: wv.chatRemovalActive,
         historyBack: wv.historyBack,
         historyForward: wv.historyForward,
@@ -72,6 +72,7 @@ class WebViewProvider extends ChangeNotifier {
   void addTab({
     bool init = false,
     String url = "https://www.torn.com",
+    String pageTitle = "Torn",
     bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
@@ -88,6 +89,7 @@ class WebViewProvider extends ChangeNotifier {
           useTabs: true,
           chatRemovalActive: chatRemovalActive,
         )
+        ..pageTitle = pageTitle
         ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[],
@@ -132,18 +134,18 @@ class WebViewProvider extends ChangeNotifier {
     }
     tab.currentUrl = url;
 
-    // Manage icons
-    if (url.contains("profiles.php?XID")) {
-      tab.tabUrlType = TabUrlType.profile;
-    } else {
-      tab.tabUrlType = TabUrlType.general;
-    }
-
     notifyListeners();
     _savePreferences();
   }
 
-  void reportChatRemovalChange (bool active, bool global) {
+  void reportTabPageTitle(Key reporterKey, String pageTitle) {
+    var tab = getTabFromKey(reporterKey);
+    tab.pageTitle = pageTitle;
+    notifyListeners();
+    _savePreferences();
+  }
+
+  void reportChatRemovalChange(bool active, bool global) {
     var tab = _tabList[_currentTab];
     tab.chatRemovalActiveTab = active;
     if (global) {
@@ -184,7 +186,6 @@ class WebViewProvider extends ChangeNotifier {
     } else {
       return false;
     }
-
   }
 
   void _savePreferences() {
@@ -193,6 +194,7 @@ class WebViewProvider extends ChangeNotifier {
       saveModel.tabsSave.add(
         TabsSave()
           ..url = _tabList[i].currentUrl
+          ..pageTitle = _tabList[i].pageTitle
           ..chatRemovalActive = _tabList[i].chatRemovalActiveTab
           ..historyBack = _tabList[i].historyBack
           ..historyForward = _tabList[i].historyForward,
@@ -224,7 +226,7 @@ class WebViewProvider extends ChangeNotifier {
 
   // This can be called from the WebView and ensures that several BotToasts are not shown at the start if
   // several tabs are open to the gym
-  void showGymMessage (String message) {
+  void showGymMessage(String message) {
     if (!_gymMessageActive) {
       _gymMessageActive = true;
       BotToast.showText(
@@ -243,5 +245,10 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  void changeUseTabIcons(bool useIcons) {
+    _useTabIcons = useIcons;
+    Prefs().setUseTabsIcons(useIcons);
+    notifyListeners();
+  }
 
 }
