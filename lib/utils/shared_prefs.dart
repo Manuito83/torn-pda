@@ -129,6 +129,8 @@ class Prefs {
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
   // WebView Tabs
   final String _kWebViewTabs = "pda_webViewTabs";
+  final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
+  final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1485,5 +1487,26 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kWebViewTabs, value);
   }
+
+  Future<bool> getUseTabsFullBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsInFullBrowser) ?? true;
+  }
+
+  Future<bool> setUseTabsFullBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsInFullBrowser, value);
+  }
+
+  Future<bool> getUseTabsBrowserDialog() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsInBrowserDialog) ?? false;
+  }
+
+  Future<bool> setUseTabsBrowserDialog(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsInBrowserDialog, value);
+  }
+
 
 }

@@ -1,6 +1,7 @@
 // Dart imports:
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -26,17 +27,24 @@ class TabDetails {
   // TODO: chat in the model
   // TODO: long-press first icon to add tab with that page
   // TODO: long-press add icon to change from icons to text
-  // TODO: dialog
+  // TODO: settings to use tabs in full browser or dialog
+  // TODO: write tips
+  // TODO: remove tabs/no tabs browser full/dialog before opening notification
 }
 
 class WebViewProvider extends ChangeNotifier {
   List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  bool useDialog = false;
+
+  bool _gymMessageActive = false;
+
   int _currentTab = 0;
   int get currentTab => _currentTab;
 
-  Future initialise({@required String initUrl}) async {
+  Future initialise({@required String initUrl, bool dialog = false}) async {
+    useDialog = dialog;
     // Add the main opener
     addTab(init: true, url: initUrl);
     // Then add the save ones
@@ -67,6 +75,8 @@ class WebViewProvider extends ChangeNotifier {
         ..webView = WebViewFull(
           customUrl: url,
           key: key,
+          dialog: useDialog,
+          useTabs: true,
         )
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[],
@@ -86,10 +96,12 @@ class WebViewProvider extends ChangeNotifier {
     _savePreferences();
   }
 
-  void activateTab(int tab) {
-    _currentTab = tab;
+  void activateTab(int newActiveTab) {
+    _currentTab = newActiveTab;
+    _callAssessMethods();
     notifyListeners();
   }
+
 
   void reorderTabs(TabDetails movedItem, int oldIndex, int newIndex) {
     _tabList.removeAt(oldIndex);
@@ -180,4 +192,33 @@ class WebViewProvider extends ChangeNotifier {
     }
     return null;
   }
+
+  void _callAssessMethods() {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl.contains("gym.php")) {
+      tab.webViewKey.currentState.assessGym();
+    }
+  }
+
+  // This can be called from the WebView and ensures that several BotToasts are not shown at the start if
+  // several tabs are open to the gym
+  void showGymMessage (String message) {
+    if (!_gymMessageActive) {
+      _gymMessageActive = true;
+      BotToast.showText(
+        crossPage: false,
+        text: message,
+        align: Alignment(0, 0),
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.blue,
+        duration: Duration(seconds: 2),
+        contentPadding: EdgeInsets.all(10),
+      );
+      Future.delayed(Duration(seconds: 3)).then((value) => _gymMessageActive = false);
+    }
+  }
+
 }

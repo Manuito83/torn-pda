@@ -80,6 +80,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           _general(),
                           SizedBox(height: 15),
                           Divider(),
+                          SizedBox(height: 15),
+                          _tabs(),
+                          SizedBox(height: 15),
+                          Divider(),
                           SizedBox(height: 10),
                           _userScripts(),
                           SizedBox(height: 15),
@@ -809,6 +813,73 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _tabs() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'TABS',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          child: Text(
+            'Tabs increase memory and processor usage. If you notice performance issues, consider disabling them '
+            'at least in the browser dialog for better results. Also, be sure that you get familiar with how tabs work '
+            'by visiting the Tips section!',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Tabs in full browser"),
+              Switch(
+                value: _settingsProvider.useTabsFullBrowser,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeUseTabsFullBrowser = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Text("Tabs in browser dialog"),
+              Switch(
+                value: _settingsProvider.useTabsBrowserDialog,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.changeUseTabsBrowserDialog = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
           ),
         ),
       ],

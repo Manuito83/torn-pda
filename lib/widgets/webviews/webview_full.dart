@@ -69,6 +69,7 @@ class WebViewFull extends StatefulWidget {
   final String customUrl;
   final Function customCallBack;
   final bool dialog;
+  final bool useTabs;
   final GlobalKey<WebViewFullState> key;
 
   WebViewFull({
@@ -76,6 +77,7 @@ class WebViewFull extends StatefulWidget {
     this.customTitle = '',
     this.customCallBack, // TODO: replace with callback from tabviewer
     this.dialog = false,
+    this.useTabs = false,
     this.key,
   }) : super(key: key);
 
@@ -674,12 +676,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               return;
             },
             onLoadStart: (c, uri) async {
-              if (!_omitTabHistory) {
-                _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-              } else {
-                _omitTabHistory = false;
+              if (widget.useTabs) {
+                if (!_omitTabHistory) {
+                  _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                } else {
+                  _omitTabHistory = false;
+                }
               }
-
 
               // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
@@ -701,7 +704,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               var html = await webView.getHtml();
               var document = parse(html);
               _assessGeneral(document);
-              _assessGym(document);
+              assessGym();
             },
             onProgressChanged: (c, progress) async {
               if (_settingsProvider.removeAirplane) {
@@ -1116,7 +1119,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoBack() async {
-    if (_webViewProvider.tryGoBack()) {
+    bool success = false;
+    if (widget.useTabs) {
+      success = _webViewProvider.tryGoBack();
+    } else {
+      success = await webView.canGoBack();
+    }
+
+    if (success) {
       BotToast.showText(
         text: "Back",
         textStyle: TextStyle(
@@ -1142,7 +1152,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _tryGoForward() async {
-    if (_webViewProvider.tryGoForward()) {
+    bool success = false;
+    if (widget.useTabs) {
+      success = _webViewProvider.tryGoForward();
+    } else {
+      success = await webView.canGoForward();
+    }
+
+    if (success) {
       await webView.goForward();
       BotToast.showText(
         text: "Forward",
@@ -2391,7 +2408,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS GYM
-  Future _assessGym(dom.Document document) async {
+  Future assessGym() async {
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     var easyUrl = _currentUrl.replaceAll('#', '');
@@ -2406,22 +2423,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
 
         if (message.isNotEmpty) {
-          BotToast.showText(
-            text: message,
-            align: Alignment(0, 0),
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.blue,
-            duration: Duration(seconds: 2),
-            contentPadding: EdgeInsets.all(10),
-          );
+          if (widget.useTabs) {
+            // This avoid repeated BotToast messages if several tabs are open to the gym
+            _webViewProvider.showGymMessage(message);
+          } else {
+            BotToast.showText(
+              crossPage: false,
+              text: message,
+              align: Alignment(0, 0),
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 2),
+              contentPadding: EdgeInsets.all(10),
+            );
+          }
         }
       }
     }
   }
 
+  // Called from parent though GlobalKey state
   void loadWithoutHistory (String url) {
     _omitTabHistory = true;
     webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
