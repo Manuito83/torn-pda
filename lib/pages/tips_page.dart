@@ -326,6 +326,13 @@ class _TipsPageState extends State<TipsPage> {
             "chat icon in any tab and you'll get a confirmation message of the change.",
       ),
     );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Duplicate first tab",
+        expandedValue: "If you want to quickly save your first tab, long-press it for a couple of seconds "
+            "and it will be cloned into the bar.",
+      ),
+    );
     return tips;
   }
 

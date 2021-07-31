@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -88,10 +89,25 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         onTap: () {
           _webViewProvider.activateTab(0);
         },
-        onDoubleTap: () {
-          if (_webViewProvider.tabList.length > 0) {
-            _webViewProvider.removeTab(0);
-          }
+        onLongPress: () {
+          _webViewProvider.addTab(
+            url: _webViewProvider.tabList[0].currentUrl,
+            chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
+            historyBack: _webViewProvider.tabList[0].historyBack,
+            historyForward: _webViewProvider.tabList[0].historyForward,
+          );
+
+          BotToast.showText(
+            crossPage: false,
+            text: "Added duplicated tab!",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 1),
+            contentPadding: EdgeInsets.all(10),
+          );
         },
       ),
     );
@@ -211,5 +227,4 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return ImageIcon(AssetImage('images/icons/pda_icon.png'));
     }
   }
-
 }

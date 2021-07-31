@@ -25,11 +25,8 @@ class TabDetails {
   bool chatRemovalActiveTab = false;
   List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
-  // TODO: chat in the model
-  // TODO: long-press first icon to add tab with that page
   // TODO: long-press add icon to change from icons to text
-  // TODO: settings to use tabs in full browser or dialog
-  // TODO: write tips
+  // TODO: write tips (ongoing)
   // TODO: remove tabs/no tabs browser full/dialog before opening notification
 }
 
