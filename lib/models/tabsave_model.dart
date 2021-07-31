@@ -27,26 +27,26 @@ class TabSaveModel {
 class TabsSave {
   TabsSave({
     this.url,
-    this.chat,
+    this.chatRemovalActive,
     this.historyBack,
     this.historyForward,
   });
 
   String url;
-  bool chat;
+  bool chatRemovalActive;
   List<String> historyBack;
   List<String> historyForward;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
     url: json["url"] == null ? null : json["url"],
-    chat: json["chat"] == null ? null : json["chat"],
+    chatRemovalActive: json["chat"] == null ? null : json["chat"],
     historyBack: json["historyBack"] == null ? null : List<String>.from(json["historyBack"].map((x) => x)),
     historyForward: json["historyForward"] == null ? null : List<String>.from(json["historyForward"].map((x) => x)),
   );
 
   Map<String, dynamic> toJson() => {
     "url": url == null ? null : url,
-    "chat": chat == null ? null : chat,
+    "chat": chatRemovalActive == null ? null : chatRemovalActive,
     "historyBack": historyBack == null ? null : List<dynamic>.from(historyBack.map((x) => x)),
     "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward.map((x) => x)),
   };

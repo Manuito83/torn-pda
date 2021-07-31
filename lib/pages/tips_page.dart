@@ -13,7 +13,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 enum TipClass {
   general,
-  browser,
+  browserGeneral,
+  browserTabs,
   travel,
   profile,
   chaining,
@@ -41,7 +42,8 @@ class _TipsPageState extends State<TipsPage> {
   SettingsProvider _settingsProvider;
 
   var _generalTipList = <ExpandableTip>[];
-  var _browserTipList = <ExpandableTip>[];
+  var _browserGeneralTipList = <ExpandableTip>[];
+  var _browserTabsTipList = <ExpandableTip>[];
   var _travelTipsList = <ExpandableTip>[];
   var _profileTipsList = <ExpandableTip>[];
   var _chainingTipsList = <ExpandableTip>[];
@@ -51,14 +53,14 @@ class _TipsPageState extends State<TipsPage> {
   void initState() {
     super.initState();
     _generalTipList = buildGeneralTips();
-    _browserTipList = buildBrowserTips();
+    _browserGeneralTipList = buildBrowserGeneralTips();
+    _browserTabsTipList = buildBrowserTabsTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
     _chainingTipsList = buildChainingTips();
     _tradingTipsList = buildTradingTips();
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'tips'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'tips'});
   }
 
   @override
@@ -91,9 +93,13 @@ class _TipsPageState extends State<TipsPage> {
               SizedBox(height: 10),
               tipsPanels(TipClass.general),
               SizedBox(height: 25),
-              Text("BROWSERS"),
+              Text("BROWSER - GENERAL"),
               SizedBox(height: 10),
-              tipsPanels(TipClass.browser),
+              tipsPanels(TipClass.browserGeneral),
+              SizedBox(height: 25),
+              Text("BROWSER - TABS"),
+              SizedBox(height: 10),
+              tipsPanels(TipClass.browserTabs),
               SizedBox(height: 25),
               Text("TRAVEL SECTION"),
               SizedBox(height: 10),
@@ -125,8 +131,7 @@ class _TipsPageState extends State<TipsPage> {
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -140,8 +145,11 @@ class _TipsPageState extends State<TipsPage> {
       case TipClass.general:
         listToShow = _generalTipList;
         break;
-      case TipClass.browser:
-        listToShow = _browserTipList;
+      case TipClass.browserGeneral:
+        listToShow = _browserGeneralTipList;
+        break;
+      case TipClass.browserTabs:
+        listToShow = _browserTabsTipList;
         break;
       case TipClass.travel:
         listToShow = _travelTipsList;
@@ -199,16 +207,14 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "App bar position",
-        expandedValue:
-            "You can optionally position the main app bar at the top (default) or bottom (as requested "
+        expandedValue: "You can optionally position the main app bar at the top (default) or bottom (as requested "
             "by some users, as it is easier to reach in bigger screens). This can be changed in the Settings section.",
       ),
     );
     tips.add(
       ExpandableTip(
         headerValue: "Torn user/pass autocomplete",
-        expandedValue:
-            "Android: long-press the username field and then the three vertical dots. You should be able "
+        expandedValue: "Android: long-press the username field and then the three vertical dots. You should be able "
             "to activate autocomplete from then on.\n\n"
             "iOS: you should be able to autocomplete the user/pass from iCloud's or any other keychain (e.g. Chrome).\n\n"
             "NOTE: this functionality is from the OS (Android/iOS), Torn PDA will never store your Torn username or password.",
@@ -229,13 +235,12 @@ class _TipsPageState extends State<TipsPage> {
     return tips;
   }
 
-  List<ExpandableTip> buildBrowserTips() {
+  List<ExpandableTip> buildBrowserGeneralTips() {
     var tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
         headerValue: "What browser should I use?",
-        expandedValue:
-            "You can choose between 'external' and 'in-app' browser. "
+        expandedValue: "You can choose between 'external' and 'in-app' browser. "
             "This is accomplished in the Settings section.\n\n"
             "The earlier will open your mobile phone's default browser application, but you will lose most "
             "functionalities in Torn PDA (such as quick crimes, trades calculator, city finder...)",
@@ -253,8 +258,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Quick browser and full browser",
-        expandedValue:
-            "There are two ways of using the 'in-app' browser in Torn PDA: 'quick' and 'full' browser.\n\n"
+        expandedValue: "There are two ways of using the 'in-app' browser in Torn PDA: 'quick' and 'full' browser.\n\n"
             "By default, a short tap in buttons, bars or icons will open the 'quick browser', which loads faster "
             "and allows to accomplish actions quicker. However, the options bar and its icons are only visible in the "
             "'full browser' version, which can be opened with a long-press in the same places.\n\n"
@@ -274,26 +278,52 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "How do I browse to a custom URL?",
-        expandedValue:
-            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
       ),
     );
     tips.add(
       ExpandableTip(
         headerValue: "How do I copy the current URL?",
-        expandedValue:
-            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
       ),
     );
     tips.add(
       ExpandableTip(
-        headerValue:
-            "Save the current URL as a shortcut or navigate to an existing one",
-        expandedValue:
-            "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
+        headerValue: "Save the current URL as a shortcut or navigate to an existing one",
+        expandedValue: "Full browser: short tap the title bar to open a small dialog with several options.\n\n"
             "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Use terminal (developers only)",
+        expandedValue: "There is a Terminal window (read only) available for development use (so that you can see "
+            "scripts or section outputs). To activate it:"
+            "\n\nFull browser: short tap the title bar to open a small dialog with several options.\n\n"
+            "Quick browser: long-press the bottom bar (where the 'close' button is) to open the same dialog.",
+      ),
+    );
+    return tips;
+  }
+
+  List<ExpandableTip> buildBrowserTabsTips() {
+    var tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "Change tabs order",
+        expandedValue: "To move a tab in the bar, maintain the tab pressed for a couple of seconds and then drag it "
+            "to the desired position.\n\nNote: the position of the first tab can't be changed.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Use the chat in different tabs",
+        expandedValue: "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
+            "(enabled in Settings by default)."
+            "\n\nIf you wish to change the standard behaviour of the chat when a new tab is opened, long-press the "
+            "chat icon in any tab and you'll get a confirmation message of the change.",
       ),
     );
     return tips;
@@ -304,8 +334,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Tap on flag icons",
-        expandedValue:
-            "When checking the foreign stocks, tapping on the flag of a particular item will "
+        expandedValue: "When checking the foreign stocks, tapping on the flag of a particular item will "
             "transport you to the Travel Agency and check whether you have enough money available (this is "
             "based on your 'items capacity', which you can set at the options bar).",
       ),
@@ -313,8 +342,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Quick return",
-        expandedValue:
-            "When abroad, if using the full browser, you will be able to see a house icon that "
+        expandedValue: "When abroad, if using the full browser, you will be able to see a house icon that "
             "will start your flight back immediately.",
       ),
     );
@@ -326,16 +354,14 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Tap on bars",
-        expandedValue:
-            "Try tapping or long-pressing main bars (energy, nerve, happy, life) to "
+        expandedValue: "Try tapping or long-pressing main bars (energy, nerve, happy, life) to "
             "access their main sections in Torn.",
       ),
     );
     tips.add(
       ExpandableTip(
         headerValue: "Using shortcuts",
-        expandedValue:
-            "You can add as many custom shortcuts as you like. There is also a long list "
+        expandedValue: "You can add as many custom shortcuts as you like. There is also a long list "
             "available with preconfigured shortcuts. Tapping or long-pressing shortcut tiles "
             "will open a quick or full browser.",
       ),
@@ -343,8 +369,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Basic Info icons",
-        expandedValue:
-            "Try tapping or long-pressing the cash and points icons!",
+        expandedValue: "Try tapping or long-pressing the cash and points icons!",
       ),
     );
     tips.add(
@@ -373,8 +398,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Sync targets with YATA",
-        expandedValue:
-            "You can export and import your targets to and from YATA. Look for the 'Y' icon in the "
+        expandedValue: "You can export and import your targets to and from YATA. Look for the 'Y' icon in the "
             "main app bar when in the Targets section.",
       ),
     );
@@ -395,16 +419,14 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Trading calculator",
-        expandedValue:
-            "If you visit a trade in game, a Trade Calculator widget will open. Tap on "
+        expandedValue: "If you visit a trade in game, a Trade Calculator widget will open. Tap on "
             "it to expand it for more details!",
       ),
     );
     tips.add(
       ExpandableTip(
         headerValue: "Sync with Torn Trader",
-        expandedValue:
-            "If you are a user of Torn Trader, tap on the options icon while in the Trades section in game. "
+        expandedValue: "If you are a user of Torn Trader, tap on the options icon while in the Trades section in game. "
             "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
       ),
     );

@@ -22,7 +22,8 @@ class TabDetails {
   GlobalKey<WebViewFullState> webViewKey;
   TabUrlType tabUrlType = TabUrlType.general;
   String currentUrl = "https://www.torn.com";
-  List<String> historyBack = <String>[]; // TODO: put in the model
+  bool chatRemovalActiveTab = false;
+  List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
   // TODO: chat in the model
   // TODO: long-press first icon to add tab with that page
@@ -36,6 +37,9 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  bool chatRemovalEnabledGlobal = false;
+  bool chatRemovalActiveGlobal = false;
+
   bool useDialog = false;
 
   bool _gymMessageActive = false;
@@ -45,8 +49,13 @@ class WebViewProvider extends ChangeNotifier {
 
   Future initialise({@required String initUrl, bool dialog = false}) async {
     useDialog = dialog;
+
+    chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
+    chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
+
     // Add the main opener
-    addTab(init: true, url: initUrl);
+    addTab(init: true, url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
+
     // Then add the save ones
     var savedJson = await Prefs().getWebViewTabs();
     var savedWebViews = tabSaveModelFromJson(savedJson);
@@ -54,6 +63,7 @@ class WebViewProvider extends ChangeNotifier {
       addTab(
         init: true,
         url: wv.url,
+        chatRemovalActive: wv.chatRemovalActive,
         historyBack: wv.historyBack,
         historyForward: wv.historyForward,
       );
@@ -65,9 +75,11 @@ class WebViewProvider extends ChangeNotifier {
   void addTab({
     bool init = false,
     String url = "https://www.torn.com",
+    bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
   }) {
+    chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     var key = GlobalKey<WebViewFullState>();
     _tabList.add(
       TabDetails()
@@ -77,7 +89,9 @@ class WebViewProvider extends ChangeNotifier {
           key: key,
           dialog: useDialog,
           useTabs: true,
+          chatRemovalActive: chatRemovalActive,
         )
+        ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[],
     );
@@ -101,7 +115,6 @@ class WebViewProvider extends ChangeNotifier {
     _callAssessMethods();
     notifyListeners();
   }
-
 
   void reorderTabs(TabDetails movedItem, int oldIndex, int newIndex) {
     _tabList.removeAt(oldIndex);
@@ -131,6 +144,17 @@ class WebViewProvider extends ChangeNotifier {
 
     notifyListeners();
     _savePreferences();
+  }
+
+  void reportChatRemovalChange (bool active, bool global) {
+    var tab = _tabList[_currentTab];
+    tab.chatRemovalActiveTab = active;
+    if (global) {
+      chatRemovalActiveGlobal = active;
+      Prefs().setChatRemovalActive(active);
+    }
+    _savePreferences();
+    notifyListeners();
   }
 
   bool tryGoBack() {
@@ -172,6 +196,7 @@ class WebViewProvider extends ChangeNotifier {
       saveModel.tabsSave.add(
         TabsSave()
           ..url = _tabList[i].currentUrl
+          ..chatRemovalActive = _tabList[i].chatRemovalActiveTab
           ..historyBack = _tabList[i].historyBack
           ..historyForward = _tabList[i].historyForward,
       );
@@ -220,5 +245,6 @@ class WebViewProvider extends ChangeNotifier {
       Future.delayed(Duration(seconds: 3)).then((value) => _gymMessageActive = false);
     }
   }
+
 
 }

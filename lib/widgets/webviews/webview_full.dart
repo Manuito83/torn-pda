@@ -70,6 +70,7 @@ class WebViewFull extends StatefulWidget {
   final Function customCallBack;
   final bool dialog;
   final bool useTabs;
+  final bool chatRemovalActive;
   final GlobalKey<WebViewFullState> key;
 
   WebViewFull({
@@ -78,6 +79,7 @@ class WebViewFull extends StatefulWidget {
     this.customCallBack, // TODO: replace with callback from tabviewer
     this.dialog = false,
     this.useTabs = false,
+    this.chatRemovalActive = false,
     this.key,
   }) : super(key: key);
 
@@ -130,8 +132,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _bazaarActiveOwn = false;
   var _bazaarFillActive = false;
 
-  var _chatRemovalEnabled = false;
-  var _chatRemovalActive = false;
+  var _localChatRemovalActive = false;
 
   var _quickItemsActive = false;
   var _quickItemsController = ExpandableController();
@@ -188,7 +189,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _loadChatPreferences();
+    _localChatRemovalActive = widget.chatRemovalActive;
+
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
 
@@ -557,7 +559,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _travelHomeIcon(),
-                  _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+                  _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -922,7 +924,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _hideChat() {
-    if (_chatRemovalEnabled && _chatRemovalActive) {
+    if (_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) {
       webView.evaluateJavascript(source: removeChatOnLoadStartJS());
     }
   }
@@ -1074,7 +1076,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           _vaultOptionsIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
-          _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+          _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
@@ -2301,17 +2303,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // HIDE CHAT
   Widget _hideChatIcon() {
-    if (!_chatRemovalActive) {
+    if (!_localChatRemovalActive) {
       return Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
           child: Icon(MdiIcons.chatOutline),
           onTap: () async {
             webView.evaluateJavascript(source: removeChatJS());
-            Prefs().setChatRemovalActive(true);
+            _webViewProvider.reportChatRemovalChange(true, false);
             setState(() {
-              _chatRemovalActive = true;
+              _localChatRemovalActive = true;
             });
+          },
+          onLongPress: () async {
+            webView.evaluateJavascript(source: removeChatJS());
+            _webViewProvider.reportChatRemovalChange(true, true);
+            setState(() {
+              _localChatRemovalActive = true;
+            });
+
+            BotToast.showText(
+              crossPage: false,
+              text: "Default chat hide enabled",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 1),
+              contentPadding: EdgeInsets.all(10),
+            );
+
           },
         ),
       );
@@ -2325,10 +2347,30 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
           onTap: () async {
             webView.evaluateJavascript(source: restoreChatJS());
-            Prefs().setChatRemovalActive(false);
+            _webViewProvider.reportChatRemovalChange(false, false);
             setState(() {
-              _chatRemovalActive = false;
+              _localChatRemovalActive = false;
             });
+          },
+          onLongPress: () async {
+            webView.evaluateJavascript(source: restoreChatJS());
+            _webViewProvider.reportChatRemovalChange(false, true);
+            setState(() {
+              _localChatRemovalActive = false;
+            });
+
+            BotToast.showText(
+              crossPage: false,
+              text: "Default chat hide disabled",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[700],
+              duration: Duration(seconds: 1),
+              contentPadding: EdgeInsets.all(10),
+            );
+
           },
         ),
       );
@@ -2344,15 +2386,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } else if (Platform.isIOS) {
       webView.loadUrl(urlRequest: URLRequest(url: await webView.getUrl()));
     }
-  }
-
-  Future _loadChatPreferences() async {
-    var removalEnabled = await Prefs().getChatRemovalEnabled();
-    var removalActive = await Prefs().getChatRemovalActive();
-    setState(() {
-      _chatRemovalEnabled = removalEnabled;
-      _chatRemovalActive = removalActive;
-    });
   }
 
   Future<void> _openUrlDialog() async {
