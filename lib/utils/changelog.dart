@@ -38,6 +38,22 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.4.3
+    var v2_4_3 = ChangeLogItem();
+    v2_4_3.main.version = 'Torn PDA v2.4.3';
+    v2_4_3.main.date = '05 AUG 2021';
+    String feat2_4_3_1 = "Added display cabinet items to the inventory count shown in the foreign stocks page";
+    String feat2_4_3_2 = "Unedited example user scripts will now update automatically as necessary with each app update";
+    String feat2_4_3_3 = "Fixed disabled user scripts reactivating when app is launched";
+    String feat2_4_3_4 = "Fixed total bazaar value shown in the Profile section";
+    String feat2_4_3_5 = "Fixed other reported UI issues";
+    v2_4_3.features.add(feat2_4_3_1);
+    v2_4_3.features.add(feat2_4_3_2);
+    v2_4_3.features.add(feat2_4_3_3);
+    v2_4_3.features.add(feat2_4_3_4);
+    v2_4_3.features.add(feat2_4_3_5);
+
+
     // VERSION 2.4.2
     var v2_4_2 = ChangeLogItem();
     v2_4_2.main.version = 'Torn PDA v2.4.2';
@@ -770,6 +786,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_4_3);
     itemList.add(v2_4_2);
     itemList.add(v2_4_1);
     itemList.add(v2_4_0);

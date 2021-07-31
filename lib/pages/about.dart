@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -309,7 +311,7 @@ class _AboutPageState extends State<AboutPage> {
                         Flexible(
                           flex: 2,
                           child: Text(
-                            "Your version: v$appVersion",
+                            "Your version: v$appVersion (${Platform.isAndroid ? androidVersion : iosVersion})",
                           ),
                         ),
                       ],
