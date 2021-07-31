@@ -348,6 +348,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _stockExchangeInMenu = false;
+  bool get stockExchangeInMenu => _stockExchangeInMenu;
+  set changeStockExchangeInMenu(bool choice) {
+    _stockExchangeInMenu = choice;
+    Prefs().setStockExchangeInMenu(_stockExchangeInMenu);
+    notifyListeners();
+  }
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -451,6 +459,10 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutExcessEnergy = await Prefs().getWarnAboutExcessEnergy();
     _warnAboutExcessEnergyThreshold = await Prefs().getWarnAboutExcessEnergyThreshold();
     _warnAboutChains = await Prefs().getWarnAboutChains();
+
+    _terminalEnabled = await Prefs().getTerminalEnabled();
+
+    _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
     notifyListeners();
   }

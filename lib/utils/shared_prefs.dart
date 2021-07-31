@@ -126,6 +126,7 @@ class Prefs {
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
+  final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1458,6 +1459,16 @@ class Prefs {
   Future<bool> setDataStockMarket(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDataStockMarket, value);
+  }
+
+  Future<bool> getStockExchangeInMenu() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStockExchangeInMenu) ?? false;
+  }
+
+  Future<bool> setStockExchangeInMenu(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStockExchangeInMenu, value);
   }
 
 

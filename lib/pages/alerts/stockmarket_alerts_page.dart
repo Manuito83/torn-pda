@@ -14,17 +14,22 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
+import 'package:torn_pda/widgets/alerts/share_price_options.dart';
 
 class StockMarketAlertsPage extends StatefulWidget {
   final FirebaseUserModel fbUser;
+  final bool calledFromMenu;
+  final Function stockMarketInMenuCallback;
 
-  StockMarketAlertsPage({@required this.fbUser});
+  StockMarketAlertsPage({this.fbUser, @required this.calledFromMenu, @required this.stockMarketInMenuCallback});
 
   @override
   _StockMarketAlertsPageState createState() => _StockMarketAlertsPageState();
 }
 
 class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
+  FirebaseUserModel _fbUser;
+
   var _stockList = <StockMarketStock>[];
 
   UserDetailsProvider _userP;
@@ -39,6 +44,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     super.initState();
     _settingsP = Provider.of<SettingsProvider>(context, listen: false);
     _userP = Provider.of<UserDetailsProvider>(context, listen: false);
+    if (!widget.calledFromMenu) _fbUser = widget.fbUser;
     _stocksInitialised = _initialiseStocks();
   }
 
@@ -94,8 +100,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                               children: <Widget>[
                                 Text(
                                   'OOPS!',
-                                  style: TextStyle(
-                                      color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                                  style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
@@ -135,11 +140,32 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       brightness: Brightness.dark,
       title: Text("Stock market alerts"),
       leading: new IconButton(
-        icon: new Icon(Icons.arrow_back),
+        icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
         onPressed: () {
-          Navigator.of(context).pop();
+          if (widget.calledFromMenu) {
+            final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
+            scaffoldState.openDrawer();
+          } else {
+            Navigator.of(context).pop();
+          }
         },
       ),
+      actions: [
+        IconButton(
+          icon: Icon(
+            Icons.settings,
+          ),
+          onPressed: () async {
+            return showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (BuildContext context) {
+                return SharePriceOptions(_themeP, _settingsP, widget.stockMarketInMenuCallback);
+              },
+            );
+          },
+        )
+      ],
     );
   }
 
@@ -149,7 +175,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       child: CheckboxListTile(
         checkColor: Colors.white,
         activeColor: Colors.blueGrey,
-        value: widget.fbUser.stockMarketNotification ?? false,
+        value: _fbUser.stockMarketNotification ?? false,
         title: Text(
           "Stock Market notification",
           style: TextStyle(fontSize: 14),
@@ -160,7 +186,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
         ),
         onChanged: (value) {
           setState(() {
-            widget.fbUser?.stockMarketNotification = value;
+            _fbUser?.stockMarketNotification = value;
           });
           firestore.subscribeToStockMarketNotification(value);
         },
@@ -199,6 +225,12 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   }
 
   Future _initialiseStocks() async {
+    // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
+    // the alerts pages, like in other cases
+    if (widget.calledFromMenu) {
+      _fbUser = await firestore.getUserProfile(force: false);
+    }
+
     var allStocksReply = await TornApiCaller.stockmarket(_userP.basic.userApiKey).getAllStocks;
     var userStocksReply = await TornApiCaller.stockmarket(_userP.basic.userApiKey).getUserStocks;
 
@@ -245,7 +277,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
 
     // Complete details based on what's saved in Firebase
-    for (var fbAlert in widget.fbUser.stockMarketShares) {
+    for (var fbAlert in _fbUser.stockMarketShares) {
       var acronym = fbAlert.toString().substring(0, 3);
       var regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
       var match = regex.firstMatch(fbAlert.toString());

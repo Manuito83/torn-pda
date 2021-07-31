@@ -42,16 +42,18 @@ class _ChangeLogState extends State<ChangeLog> {
     var v2_4_3 = ChangeLogItem();
     v2_4_3.main.version = 'Torn PDA v2.4.3';
     v2_4_3.main.date = '05 AUG 2021';
-    String feat2_4_3_1 = "Added display cabinet items to the inventory count shown in the foreign stocks page";
-    String feat2_4_3_2 = "Unedited example user scripts will now update automatically as necessary with each app update";
-    String feat2_4_3_3 = "Fixed disabled user scripts reactivating when app is launched";
-    String feat2_4_3_4 = "Fixed total bazaar value shown in the Profile section";
-    String feat2_4_3_5 = "Fixed other reported UI issues";
+    String feat2_4_3_1 = "You can now optionally access the Stock Market section from the main menu (disabled by default)";
+    String feat2_4_3_2 = "Added display cabinet items to the inventory count shown in the foreign stocks page";
+    String feat2_4_3_3 = "Unedited example user scripts will now update automatically as necessary with each app update";
+    String feat2_4_3_4 = "Fixed disabled user scripts reactivating when app is launched";
+    String feat2_4_3_5 = "Fixed total bazaar value shown in the Profile section";
+    String feat2_4_3_6 = "Fixed other reported UI issues";
     v2_4_3.features.add(feat2_4_3_1);
     v2_4_3.features.add(feat2_4_3_2);
     v2_4_3.features.add(feat2_4_3_3);
     v2_4_3.features.add(feat2_4_3_4);
     v2_4_3.features.add(feat2_4_3_5);
+    v2_4_3.features.add(feat2_4_3_6);
 
 
     // VERSION 2.4.2

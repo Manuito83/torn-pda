@@ -26,6 +26,10 @@ import '../main.dart';
 import 'alerts/stockmarket_alerts_page.dart';
 
 class AlertsSettings extends StatefulWidget {
+  final Function stockMarketInMenuCallback;
+
+  AlertsSettings(this.stockMarketInMenuCallback);
+
   @override
   _AlertsSettingsState createState() => _AlertsSettingsState();
 }
@@ -376,6 +380,8 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                       builder: (context) {
                                         return StockMarketAlertsPage(
                                           fbUser: _firebaseUserModel,
+                                          calledFromMenu: false,
+                                          stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
                                         );
                                       },
                                     ),

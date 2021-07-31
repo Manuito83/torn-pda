@@ -16,6 +16,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
+import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -53,8 +54,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  int _settingsPosition = 7;
-  int _aboutPosition = 8;
+  int _settingsPosition = 8;
+  int _aboutPosition = 9;
   var _allowSectionsWithoutKey = [];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -66,6 +67,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Loot",
     "Friends",
     "Awards",
+    "Stock Market",
     "Alerts",
     "Settings",
     "About",
@@ -629,7 +631,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       // Otherwise, if the key is valid, we loop all the sections
       for (var i = 0; i < _drawerItemsList.length; i++) {
+
+        // For this two, it is necessary to call Settings Provider from the Drawer and pass the callbacks all the
+        // way to the relevant children. Otherwise, the drawer won't update in realtime (it's not listening)
         if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
+          continue;
+        }
+        if (!_settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
           continue;
         }
 
@@ -686,15 +694,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AwardsPage();
         break;
       case 6:
-        return AlertsSettings();
+        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
         break;
       case 7:
-        return SettingsPage();
+        return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 8:
-        return AboutPage();
+        return SettingsPage();
         break;
       case 9:
+        return AboutPage();
+        break;
+      case 10:
         return TipsPage();
         break;
 
@@ -724,15 +735,18 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return Icon(MdiIcons.trophy);
         break;
       case 6:
-        return Icon(Icons.notifications_active);
+        return Icon(MdiIcons.bankTransfer);
         break;
       case 7:
-        return Icon(Icons.settings);
+        return Icon(Icons.notifications_active);
         break;
       case 8:
-        return Icon(Icons.info_outline);
+        return Icon(Icons.settings);
         break;
       case 9:
+        return Icon(Icons.info_outline);
+        break;
+      case 10:
         return Icon(Icons.question_answer_outlined);
         break;
       default:
@@ -868,7 +882,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       _changelogIsActive = true;
       _showChangeLogDialog(context);
-
     }
   }
 
@@ -949,6 +962,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   _onChangeDisableTravelSection(bool disable) {
     setState(() {
       _settingsProvider.changeDisableTravelSection = disable;
+    });
+  }
+
+  _onChangeStockMarketInMenu(bool inMenu) {
+    setState(() {
+      _settingsProvider.changeStockExchangeInMenu = inMenu;
     });
   }
 
