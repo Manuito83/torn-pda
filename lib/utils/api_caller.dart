@@ -491,7 +491,7 @@ class TornApiCaller {
         url += '?selections=items';
         break;
       case ApiSelection.inventory:
-        url += '?selections=inventory';
+        url += '?selections=inventory,display';
         break;
       case ApiSelection.education:
         url += '?selections=education';

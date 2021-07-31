@@ -903,6 +903,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               break;
             }
           }
+          for (var displayItem in _inventory.display) {
+            if (displayItem.id == stock.id) {
+              invQty += displayItem.quantity;
+            }
+          }
           stock.inventoryQuantity = invQty;
         }
       });
