@@ -922,7 +922,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _bazaarModel.bazaar.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "${_bazaarModel.bazaar.length} items";
 
       var bazaarPendingString = "";
-      var bazaarPending = 414;
+      var bazaarPending = 0;
       _bazaarModel.bazaar.forEach((element) {
         bazaarPending += element.price * element.quantity;
       });
