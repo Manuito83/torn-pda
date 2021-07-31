@@ -13,8 +13,7 @@ import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsRevertDialog extends StatefulWidget {
   @override
-  _UserScriptsRevertDialogState createState() =>
-      _UserScriptsRevertDialogState();
+  _UserScriptsRevertDialogState createState() => _UserScriptsRevertDialogState();
 }
 
 class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
@@ -27,8 +26,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   @override
   void initState() {
     super.initState();
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
   }
 
   @override
@@ -36,8 +34,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
     // Get number missing example scripts
-    var exampleScripts =
-        List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+    var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
     _missingScripts = exampleScripts.length;
     int overwrite = 0;
     for (var existing in _userScriptsProvider.userScriptList) {
@@ -86,8 +83,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                     Flexible(
                       child: Text(
                         "This will restore the example scripts than come with Torn PDA by default!",
-                        style: TextStyle(
-                            fontSize: 12, color: _themeProvider.mainText),
+                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                       ),
                     ),
                     SizedBox(height: 10),
@@ -107,9 +103,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                                         "(found $overwrite)",
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: _onlyRestoreNew
-                                      ? Colors.green[600]
-                                      : Colors.orange[600],
+                                  color: _onlyRestoreNew ? Colors.green[600] : Colors.orange[600],
                                 ),
                               ),
                             ),
@@ -133,8 +127,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                         TextButton(
                           child: Text("Do it!"),
                           onPressed: () {
-                            _userScriptsProvider
-                                .restoreExamples(_onlyRestoreNew);
+                            _userScriptsProvider.restoreExamples(_onlyRestoreNew);
                             Navigator.of(context).pop();
                           },
                         ),

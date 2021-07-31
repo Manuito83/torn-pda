@@ -31,17 +31,21 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
 
   UserScriptsProvider _userScriptsProvider;
 
+  String _originalSource = "";
+  String _originalName = "";
+
   @override
   void initState() {
     super.initState();
-    _userScriptsProvider =
-        Provider.of<UserScriptsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     if (widget.editExisting) {
       for (var script in _userScriptsProvider.userScriptList) {
         if (script.name == widget.editScript.name) {
           _addNameController.text = script.name;
           _addSourceController.text = script.source;
+          _originalSource = script.source;
+          _originalName = script.name;
         }
       }
     }
@@ -74,9 +78,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
                 children: [
                   Icon(Icons.code),
                   SizedBox(width: 6),
-                  Text(widget.editExisting
-                      ? "Edit existing script"
-                      : "Add new script"),
+                  Text(widget.editExisting ? "Edit existing script" : "Add new script"),
                 ],
               ),
             ),
@@ -177,8 +179,7 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
   }
 
   Future<void> _addPressed(BuildContext context) async {
-    if (_nameFormKey.currentState.validate() &&
-        _sourceFormKey.currentState.validate()) {
+    if (_nameFormKey.currentState.validate() && _sourceFormKey.currentState.validate()) {
       // Get rid of dialog first, so that it can't
       // be pressed twice
       Navigator.of(context).pop();
@@ -193,8 +194,11 @@ class _UserScriptsAddDialogState extends State<UserScriptsAddDialog> {
       if (!widget.editExisting) {
         _userScriptsProvider.addUserScript(inputName, inputSource);
       } else {
-        _userScriptsProvider.updateUserScript(
-            widget.editScript, inputName, inputSource);
+        var sourcedChanged = false;
+        if (inputSource != _originalSource || inputName != _originalName) {
+          sourcedChanged = true;
+        }
+        _userScriptsProvider.updateUserScript(widget.editScript, inputName, inputSource, sourcedChanged);
       }
     }
   }

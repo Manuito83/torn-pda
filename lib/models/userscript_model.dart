@@ -15,6 +15,8 @@ class UserScriptModel {
     this.urls,
     this.name,
     this.exampleCode = 0,
+    this.version = 0,
+    this.edited,
     this.source,
   });
 
@@ -22,6 +24,8 @@ class UserScriptModel {
   List<dynamic> urls;
   String name;
   int exampleCode;
+  int version;
+  bool edited;
   String source;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) => UserScriptModel(
@@ -29,6 +33,8 @@ class UserScriptModel {
     urls: json["urls"] == null ? null : json["urls"],
     name: json["name"] == null ? null : json["name"],
     exampleCode: json["exampleCode"] == null ? null : json["exampleCode"],
+    version: json["version"] == null ? null : json["version"],
+    edited: json["edited"] == null ? null : json["edited"],
     source: json["source"] == null ? null : json["source"],
   );
 
@@ -37,6 +43,8 @@ class UserScriptModel {
     "urls": urls == null ? null : urls,
     "name": name == null ? null : name,
     "exampleCode": exampleCode == null ? null : exampleCode,
+    "version": version == null ? null : version,
+    "edited": edited == null ? null : edited,
     "source": source == null ? null : source,
   };
 }

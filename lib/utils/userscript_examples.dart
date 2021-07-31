@@ -149,10 +149,14 @@ try {
 }""";
 
     return UserScriptModel(
+      // IMPORTANT: increment version by 1
+      version: 1,
+
       enabled: true,
       urls: getUrls(source),
       name: "Bazaar Auto Price",
       exampleCode: 1,
+      edited: false,
       source: source,
     );
   }
@@ -1020,10 +1024,14 @@ var styles= `
 GM_addStyle(styles);""";
 
     return UserScriptModel(
+      // IMPORTANT: increment version by 1
+      version: 1,
+
       enabled: true,
       urls: getUrls(source),
       name: "TornCAT Faction Player Filters",
       exampleCode: 2,
+      edited: false,
       source: source,
     );
   }
@@ -1136,10 +1144,14 @@ function drawPresetBar() {
 }""";
 
     return UserScriptModel(
+      // IMPORTANT: increment version by 1
+      version: 1,
+
       enabled: true,
       urls: getUrls(source),
       name: "Custom Race Presets",
       exampleCode: 3,
+      edited: false,
       source: source,
     );
 
@@ -1478,10 +1490,14 @@ function gymLoaded() {
 } """;
 
     return UserScriptModel(
+      // IMPORTANT: increment version by 1
+      version: 1,
+
       enabled: true,
       urls: getUrls(source),
       name: "Custom Gym Ratios",
       exampleCode: 4,
+      edited: false,
       source: source,
     );
 
@@ -1602,10 +1618,14 @@ if (document.querySelector(".stock-list-wrap")) {
 }""";
 
     return UserScriptModel(
+      // IMPORTANT: increment version by 1
+      version: 1,
+
       enabled: false,
       urls: getUrls(source),
       name: "Company Stocks Order",
       exampleCode: 5,
+      edited: false,
       source: source,
     );
 

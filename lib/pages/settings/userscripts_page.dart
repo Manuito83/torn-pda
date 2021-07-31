@@ -88,8 +88,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.all<Color>(_themeProvider.background),
+                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -112,8 +111,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.all<Color>(_themeProvider.background),
+                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -168,6 +166,16 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   ListView scriptsCards() {
     var scriptList = <Widget>[];
     for (var script in _userScriptsProvider.userScriptList) {
+      var exampleUpdatable = false;
+      var custom = false;
+      if (script.exampleCode > 0) {
+        if (script.edited != null && !script.edited) {
+          exampleUpdatable = true;
+        }
+      } else {
+        custom = true;
+      }
+
       scriptList.add(
         Card(
           key: UniqueKey(),
@@ -193,14 +201,78 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         ),
                       ),
                       SizedBox(width: 10),
-                      Flexible(child: Text(script.name)),
+                      Flexible(child: Text(script.name, style: TextStyle(fontSize: 13))),
                     ],
                   ),
                 ),
                 Row(
                   children: [
+                    custom
+                        ? GestureDetector(
+                            child: Icon(
+                              MdiIcons.alphaC,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                            onTap: () async {
+                              BotToast.showText(
+                                text: 'This is a custom script',
+                                textStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.grey[800],
+                                duration: Duration(seconds: 2),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                            },
+                          )
+                        : exampleUpdatable
+                            ? GestureDetector(
+                                child: Icon(
+                                  Icons.update,
+                                  color: Colors.green,
+                                  size: 20,
+                                ),
+                                onTap: () async {
+                                  BotToast.showText(
+                                    text: 'This is an example script that has not been edited and will be updated '
+                                        'automatically with each release of Torn PDA!',
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.green[800],
+                                    duration: Duration(seconds: 4),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                },
+                              )
+                            : GestureDetector(
+                                child: Icon(
+                                  Icons.update,
+                                  color: Colors.grey,
+                                  size: 20,
+                                ),
+                                onTap: () async {
+                                  BotToast.showText(
+                                    text: 'This is an example script that has been edited in the past and will not be '
+                                        'automatically updated.'
+                                        '\n\nIf you wish to activate auto updates, remove it and then '
+                                        'load the missing example scripts again!',
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.grey[800],
+                                    duration: Duration(seconds: 7),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                },
+                              ),
+                    SizedBox(width: 12),
                     GestureDetector(
-                      child: Icon(Icons.edit),
+                      child: Icon(Icons.edit, size: 20),
                       onTap: () {
                         return showDialog<void>(
                           context: context,
@@ -214,11 +286,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                         );
                       },
                     ),
-                    SizedBox(width: 15),
+                    SizedBox(width: 12),
                     GestureDetector(
                       child: Icon(
                         Icons.delete_outlined,
                         color: Colors.red[300],
+                        size: 20,
                       ),
                       onTap: () async {
                         _openDeleteSingleDialog(script);
