@@ -87,7 +87,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
           children: [
             Padding(
               padding: _webViewProvider.useTabIcons
-                  ? const EdgeInsets.all(8.0)
+                  ? const EdgeInsets.all(10.0)
                   : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               child: _webViewProvider.useTabIcons
                   ? _getIcon(0)
@@ -153,7 +153,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
             children: [
               Padding(
                 padding: _webViewProvider.useTabIcons
-                    ? const EdgeInsets.all(8.0)
+                    ? const EdgeInsets.all(10.0)
                     : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 child: _webViewProvider.useTabIcons
                     ? _getIcon(i)
