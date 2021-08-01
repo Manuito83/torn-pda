@@ -732,12 +732,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             onLoadStop: (c, uri) async {
               _currentUrl = uri.toString();
 
-
               _hideChat();
               _highlightChat();
 
               var html = await webView.getHtml();
               var document = parse(html);
+
               // Force to show title
               await (_getPageTitle(document, showTitle: true));
 
@@ -2402,7 +2402,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           url: url.toString(),
           inAppWebview: webView,
           callFindInPage: _activateFindInPage,
-          callToggleTerminal: _toggleTerminal,
         );
       },
     );
@@ -2435,12 +2434,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _findFirstSubmitted = false;
       });
     }
-  }
-
-  _toggleTerminal(bool active) {
-    //setState(() {
-    //_settingsProvider.changeTerminalEnabled = active;
-    //});
   }
 
   // ASSESS GYM
@@ -2485,6 +2478,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void loadFromExterior({@required String url, @required bool omitHistory}) {
     _omitTabHistory = omitHistory;
     webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
+  }
+
+  void pauseTimers () async {
+    await Future.delayed(Duration(seconds: 1));
+    if (Platform.isAndroid) {
+      webView.android.pause();
+    }
+    webView.pauseTimers();
+  }
+
+  void resumeTimers () {
+    if (Platform.isAndroid) {
+      webView.android.resume();
+    }
+    webView.resumeTimers();
   }
 
   Future<bool> _willPopCallback() async {

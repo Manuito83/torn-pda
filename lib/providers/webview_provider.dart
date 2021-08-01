@@ -137,12 +137,22 @@ class WebViewProvider extends ChangeNotifier {
       }
       _tabList.removeAt(position);
     }
+
+    var tab = _tabList[_currentTab];
+    tab.webViewKey.currentState.resumeTimers();
+
     notifyListeners();
     _savePreferences();
   }
 
   void activateTab(int newActiveTab) {
+    var deactivated = _tabList[_currentTab];
+    deactivated.webViewKey.currentState.pauseTimers();
+
     _currentTab = newActiveTab;
+    var activated = _tabList[_currentTab];
+    activated.webViewKey.currentState.resumeTimers();
+
     _callAssessMethods();
     notifyListeners();
   }
@@ -173,6 +183,12 @@ class WebViewProvider extends ChangeNotifier {
   void reportTabPageTitle(Key reporterKey, String pageTitle) {
     var tab = getTabFromKey(reporterKey);
     tab.pageTitle = pageTitle;
+
+    // Pause timers for tabs that load which are not active (e.g. at the initialisation, we pause all except the main)
+    if (_tabList[_currentTab] != tab) {
+      tab.webViewKey.currentState.pauseTimers();
+    }
+
     notifyListeners();
     _savePreferences();
   }
