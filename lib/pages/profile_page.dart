@@ -724,7 +724,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Container(height: h, width: w, child: shortcutTile(thisShortcut)),
           );
         }
-        return Wrap(children: wrapItems);
+        return Wrap(alignment: WrapAlignment.center ,children: wrapItems);
       }
     }
 
