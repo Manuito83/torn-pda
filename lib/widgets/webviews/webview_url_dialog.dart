@@ -24,7 +24,6 @@ class WebviewUrlDialog extends StatefulWidget {
   final String url;
   final InAppWebViewController inAppWebview;
   final WebViewController stockWebView;
-  final Function callToggleTerminal;
 
   WebviewUrlDialog({
     this.callFindInPage,
@@ -32,7 +31,6 @@ class WebviewUrlDialog extends StatefulWidget {
     @required this.url,
     this.inAppWebview,
     this.stockWebView,
-    this.callToggleTerminal,
   });
 
   @override
@@ -290,7 +288,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                           setState(() {
                                             _settingsProvider.changeTerminalEnabled = value;
                                           });
-                                          widget.callToggleTerminal(value);
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
                                         activeColor: Colors.green,
