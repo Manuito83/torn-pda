@@ -147,11 +147,11 @@ class WebViewProvider extends ChangeNotifier {
 
   void activateTab(int newActiveTab) {
     var deactivated = _tabList[_currentTab];
-    deactivated.webViewKey.currentState.pauseTimers();
+    deactivated.webViewKey.currentState?.pauseTimers();
 
     _currentTab = newActiveTab;
     var activated = _tabList[_currentTab];
-    activated.webViewKey.currentState.resumeTimers();
+    activated.webViewKey.currentState?.resumeTimers();
 
     _callAssessMethods();
     notifyListeners();
@@ -186,7 +186,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Pause timers for tabs that load which are not active (e.g. at the initialisation, we pause all except the main)
     if (_tabList[_currentTab] != tab) {
-      tab.webViewKey.currentState.pauseTimers();
+      tab.webViewKey.currentState?.pauseTimers();
     }
 
     notifyListeners();
@@ -211,7 +211,7 @@ class WebViewProvider extends ChangeNotifier {
       tab.historyForward.add(tab.currentUrl);
       tab.historyBack.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey.currentState.loadFromExterior(url: previous, omitHistory: true);
+      tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
       _savePreferences();
       return true;
@@ -227,7 +227,7 @@ class WebViewProvider extends ChangeNotifier {
       tab.historyBack.add(tab.currentUrl);
       tab.historyForward.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
-      tab.webViewKey.currentState.loadFromExterior(url: previous, omitHistory: true);
+      tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
       _savePreferences();
       return true;
@@ -239,7 +239,7 @@ class WebViewProvider extends ChangeNotifier {
   void loadMainTabUrl(String url) {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
-    tab.webViewKey.currentState.loadFromExterior(url: url, omitHistory: false);
+    tab.webViewKey.currentState?.loadFromExterior(url: url, omitHistory: false);
     _savePreferences();
   }
 
@@ -275,7 +275,7 @@ class WebViewProvider extends ChangeNotifier {
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl.contains("gym.php")) {
-      tab.webViewKey.currentState.assessGym();
+      tab.webViewKey.currentState?.assessGym();
     }
   }
 

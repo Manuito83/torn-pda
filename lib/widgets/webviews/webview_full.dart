@@ -2481,18 +2481,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void pauseTimers () async {
-    await Future.delayed(Duration(seconds: 1));
     if (Platform.isAndroid) {
-      webView.android.pause();
+      webView?.android?.pause();
     }
-    webView.pauseTimers();
   }
 
   void resumeTimers () {
     if (Platform.isAndroid) {
-      webView.android.resume();
+      webView?.android?.resume();
     }
-    webView.resumeTimers();
   }
 
   Future<bool> _willPopCallback() async {
