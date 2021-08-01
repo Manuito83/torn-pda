@@ -23,9 +23,6 @@ class TabDetails {
   bool chatRemovalActiveTab = false;
   List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
-  // TODO: write tips (ongoing)
-  // TODO: complete implementation of webview calls
-  // TODO: ^^ check for callbacks
 }
 
 class WebViewProvider extends ChangeNotifier {

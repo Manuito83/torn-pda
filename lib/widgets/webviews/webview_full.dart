@@ -76,7 +76,7 @@ class WebViewFull extends StatefulWidget {
   WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
-    this.customCallBack, // TODO: replace with callback from tabviewer
+    this.customCallBack,
     this.dialog = false,
     this.useTabs = false,
     this.chatRemovalActive = false,

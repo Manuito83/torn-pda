@@ -19,7 +19,6 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
@@ -45,7 +44,6 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'main.dart';
 
 class DrawerPage extends StatefulWidget {
@@ -117,25 +115,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       quickActions.initialize((String shortcutType) async {
         if (shortcutType == 'open_torn') {
-          var browserType = _settingsProvider.currentBrowser;
-          switch (browserType) {
-            case BrowserSetting.app:
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => WebViewFull(
-                    customUrl: 'https://www.torn.com',
-                    customTitle: 'Torn',
-                  ),
-                ),
-              );
-              break;
-            case BrowserSetting.external:
-              var url = 'https://www.torn.com';
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-              break;
-          }
+          context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: "http://www.torn.com",
+            useDialog: _settingsProvider.useQuickBrowser,
+          );
         }
       });
     });
