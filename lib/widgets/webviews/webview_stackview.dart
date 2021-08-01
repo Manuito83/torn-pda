@@ -102,10 +102,33 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   }
 
   Widget _bottomNavBar() {
-    var mainTab = Container(
+    var mainTab = GestureDetector(
       key: UniqueKey(),
-      color: _webViewProvider.currentTab == 0 ? _themeProvider.navSelected : Colors.transparent,
-      child: GestureDetector(
+      onTap: () {
+        _webViewProvider.activateTab(0);
+      },
+      onLongPress: () {
+        _webViewProvider.addTab(
+          url: _webViewProvider.tabList[0].currentUrl,
+          chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
+          historyBack: _webViewProvider.tabList[0].historyBack,
+          historyForward: _webViewProvider.tabList[0].historyForward,
+        );
+
+        BotToast.showText(
+          crossPage: false,
+          text: "Added duplicated tab!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.blue,
+          duration: Duration(seconds: 1),
+          contentPadding: EdgeInsets.all(10),
+        );
+      },
+      child: Container(
+        color: _webViewProvider.currentTab == 0 ? _themeProvider.navSelected : Colors.transparent,
         child: Row(
           children: [
             Padding(
@@ -138,29 +161,6 @@ class _WebViewStackViewState extends State<WebViewStackView> {
             ),
           ],
         ),
-        onTap: () {
-          _webViewProvider.activateTab(0);
-        },
-        onLongPress: () {
-          _webViewProvider.addTab(
-            url: _webViewProvider.tabList[0].currentUrl,
-            chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
-            historyBack: _webViewProvider.tabList[0].historyBack,
-            historyForward: _webViewProvider.tabList[0].historyForward,
-          );
-
-          BotToast.showText(
-            crossPage: false,
-            text: "Added duplicated tab!",
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.blue,
-            duration: Duration(seconds: 1),
-            contentPadding: EdgeInsets.all(10),
-          );
-        },
       ),
     );
 
@@ -176,10 +176,18 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         continue;
       }
 
-      Widget secondaryTab = Container(
+      Widget secondaryTab = GestureDetector(
         key: UniqueKey(),
-        color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
-        child: GestureDetector(
+        onTap: () {
+          _webViewProvider.activateTab(i);
+        },
+        onDoubleTap: () {
+          if (_webViewProvider.tabList.length > 0) {
+            _webViewProvider.removeTab(i);
+          }
+        },
+        child: Container(
+          color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
           child: Row(
             children: [
               Padding(
@@ -212,14 +220,6 @@ class _WebViewStackViewState extends State<WebViewStackView> {
               ),
             ],
           ),
-          onTap: () {
-            _webViewProvider.activateTab(i);
-          },
-          onDoubleTap: () {
-            if (_webViewProvider.tabList.length > 0) {
-              _webViewProvider.removeTab(i);
-            }
-          },
         ),
       );
       secondaryTabs.add(secondaryTab);
@@ -279,9 +279,9 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                 thickness: 2,
                 color: _themeProvider.mainText,
               ),
-              Container(
-                color: _themeProvider.navSelected,
-                child: GestureDetector(
+              GestureDetector(
+                child: Container(
+                  color: _themeProvider.navSelected,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Icon(
@@ -289,16 +289,16 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                       color: _themeProvider.mainText,
                     ),
                   ),
-                  onTap: () {
-                    _webViewProvider.addTab();
-                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                  },
-                  onLongPress: () {
-                    _webViewProvider.useTabIcons
-                        ? _webViewProvider.changeUseTabIcons(false)
-                        : _webViewProvider.changeUseTabIcons(true);
-                  },
                 ),
+                onTap: () {
+                  _webViewProvider.addTab();
+                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                },
+                onLongPress: () {
+                  _webViewProvider.useTabIcons
+                      ? _webViewProvider.changeUseTabIcons(false)
+                      : _webViewProvider.changeUseTabIcons(true);
+                },
               ),
             ],
           ),
