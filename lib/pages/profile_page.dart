@@ -1301,16 +1301,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       alertsButton = Row(
         children: [
           RawMaterialButton(
-            onPressed: () {},
+            onPressed: null,
             elevation: 2.0,
-            constraints: BoxConstraints.expand(width: 30, height: 30),
+            constraints: BoxConstraints.expand(width: 32, height: 32),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             child: _notificationIcon(
               ProfileNotification.travel,
-              size: 18,
+              size: 20,
               forcedTravelIcon: NotificationType.notification,
             ),
-            padding: EdgeInsets.all(5.0),
+            padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: _travelNotificationsPending ? Colors.green : Colors.blueGrey,
@@ -1322,16 +1322,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           SizedBox(width: 10),
           RawMaterialButton(
-            onPressed: () {},
+            onPressed: null,
             elevation: 2.0,
-            constraints: BoxConstraints.expand(width: 30, height: 30),
+            constraints: BoxConstraints.expand(width: 32, height: 32),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             child: _notificationIcon(
               ProfileNotification.travel,
-              size: 18,
+              size: 20,
               forcedTravelIcon: NotificationType.alarm,
             ),
-            padding: EdgeInsets.all(5.0),
+            padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: Colors.blueGrey,
@@ -1343,16 +1343,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           SizedBox(width: 10),
           RawMaterialButton(
-            onPressed: () {},
+            onPressed: null,
             elevation: 2.0,
-            constraints: BoxConstraints.expand(width: 30, height: 30),
+            constraints: BoxConstraints.expand(width: 32, height: 32),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             child: _notificationIcon(
               ProfileNotification.travel,
-              size: 18,
+              size: 20,
               forcedTravelIcon: NotificationType.timer,
             ),
-            padding: EdgeInsets.all(5.0),
+            padding: EdgeInsets.all(0),
             shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: Colors.blueGrey,
@@ -1366,16 +1366,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else if (Platform.isIOS) {
       alertsButton = RawMaterialButton(
-        onPressed: () {},
+        onPressed: null,
         elevation: 2.0,
-        constraints: BoxConstraints.expand(width: 30, height: 30),
+        constraints: BoxConstraints.expand(width: 32, height: 32),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         fillColor: _themeProvider.navSelected,
         child: _notificationIcon(
           ProfileNotification.travel,
-          size: 18,
+          size: 20,
         ),
-        padding: EdgeInsets.all(5.0),
+        padding: EdgeInsets.all(0),
         shape: CircleBorder(),
       );
     }
