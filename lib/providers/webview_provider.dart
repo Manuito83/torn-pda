@@ -101,6 +101,7 @@ class WebViewProvider extends ChangeNotifier {
           chatRemovalActive: chatRemovalActive,
         )
         ..pageTitle = pageTitle
+        ..currentUrl = url
         ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[],

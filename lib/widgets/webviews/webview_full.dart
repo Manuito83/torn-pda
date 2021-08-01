@@ -677,14 +677,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               return;
             },
             onLoadStart: (c, uri) async {
-              if (widget.useTabs) {
-                if (!_omitTabHistory) {
-                  _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-                } else {
-                  _omitTabHistory = false;
-                }
-              }
-
               // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
@@ -743,6 +735,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
               if (widget.useTabs) {
                 _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+                if (!_omitTabHistory) {
+                  // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
+                  _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                } else {
+                  _omitTabHistory = false;
+                }
               }
 
               _assessGeneral(document);

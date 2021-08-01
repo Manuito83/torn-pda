@@ -326,6 +326,8 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return ImageIcon(AssetImage('images/icons/home/job.png'));
     } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
       return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+    } else if (url.contains("https://www.torn.com/forums.php")) {
+      return ImageIcon(AssetImage('images/icons/home/forums.png'));
     } else if (url.contains("companies.php")) {
       return ImageIcon(AssetImage('images/icons/home/job.png'));
     } else if (url.contains("yata.yt")) {
