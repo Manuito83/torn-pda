@@ -11,7 +11,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
@@ -21,8 +21,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import '../notes_dialog.dart';
 
 class FriendCard extends StatefulWidget {
@@ -308,24 +306,18 @@ class _FriendCardState extends State<FriendCard> {
           size: 20,
         ),
         onTap: () async {
-          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(tradeUrl)) {
-              await launch(tradeUrl, forceSafariVC: false);
-            }
-          } else {
-            _settingsProvider.useQuickBrowser
-                ? openBrowserDialog(context, tradeUrl)
-                : _openTornBrowser(tradeUrl);
-          }
+          await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: tradeUrl,
+            useDialog: _settingsProvider.useQuickBrowser,
+          );
         },
         onLongPress: () async {
-          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(tradeUrl)) {
-              await launch(tradeUrl, forceSafariVC: false);
-            }
-          } else {
-            _openTornBrowser(tradeUrl);
-          }
+          await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: tradeUrl,
+            useDialog: false,
+          );
         },
       ),
     );
@@ -343,24 +335,18 @@ class _FriendCardState extends State<FriendCard> {
           size: 20,
         ),
         onTap: () async {
-          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(messageUrl)) {
-              await launch(messageUrl, forceSafariVC: false);
-            }
-          } else {
-            _settingsProvider.useQuickBrowser
-                ? openBrowserDialog(context, messageUrl)
-                : _openTornBrowser(messageUrl);
-          }
+          await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: messageUrl,
+            useDialog: _settingsProvider.useQuickBrowser,
+          );
         },
         onLongPress: () async {
-          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(messageUrl)) {
-              await launch(messageUrl, forceSafariVC: false);
-            }
-          } else {
-            _openTornBrowser(messageUrl);
-          }
+          await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: messageUrl,
+            useDialog: false,
+          );
         },
       ),
     );
@@ -378,24 +364,18 @@ class _FriendCardState extends State<FriendCard> {
           size: 20,
         ),
         onTap: () async {
-          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(profileUrl)) {
-              await launch(profileUrl, forceSafariVC: false);
-            }
-          } else {
-            _settingsProvider.useQuickBrowser
-                ? openBrowserDialog(context, profileUrl)
-                : _openTornBrowser(profileUrl);
-          }
+          await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: profileUrl,
+            useDialog: _settingsProvider.useQuickBrowser,
+          );
         },
         onLongPress: () async {
-          if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-            if (await canLaunch(profileUrl)) {
-              await launch(profileUrl, forceSafariVC: false);
-            }
-          } else {
-            _openTornBrowser(profileUrl);
-          }
+          await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: profileUrl,
+            useDialog: false,
+          );
         },
       ),
     );
@@ -670,29 +650,6 @@ class _FriendCardState extends State<FriendCard> {
     setState(() {
       _returnLastUpdated();
     });
-  }
-
-  Future _openTornBrowser(String page) async {
-    var browserType = _settingsProvider.currentBrowser;
-
-    switch (browserType) {
-      case BrowserSetting.app:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => WebViewFull(
-              customUrl: page,
-              customTitle: 'Torn',
-            ),
-          ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = page;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
-    }
   }
 
 }

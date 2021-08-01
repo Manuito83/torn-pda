@@ -8,6 +8,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -17,7 +18,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/widgets/settings/userscripts_add_dialog.dart';
 import 'package:torn_pda/widgets/settings/userscripts_revert_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 class UserScriptsPage extends StatefulWidget {
   @override
@@ -622,11 +622,12 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () async {
-                          await openBrowserDialog(
-                            context,
-                            'https://github.com/Manuito83/torn-pda/tree/master/userscripts',
-                            callBack: null,
-                          );
+                          var url = 'https://github.com/Manuito83/torn-pda/tree/master/userscripts';
+                          await context.read<WebViewProvider>().openBrowserPreference(
+                                context: context,
+                                url: url,
+                                useDialog: _settingsProvider.useQuickBrowser,
+                              );
                         },
                     ),
                   ],

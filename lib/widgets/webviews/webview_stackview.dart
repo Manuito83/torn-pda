@@ -119,7 +119,15 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                       child: Text(
                         _webViewProvider.tabList[0].pageTitle,
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _webViewProvider.tabList[0].currentUrl.contains("sid=attack&user2ID=2225097") ||
+                                  _webViewProvider.tabList[0].currentUrl.contains("profiles.php?XID=2225097") ||
+                                  _webViewProvider.tabList[0].currentUrl.contains("https://www.torn.com/forums.php#/"
+                                      "p=threads&f=67&t=16163503&b=0&a=0")
+                              ? Colors.pink
+                              : _themeProvider.mainText,
+                        ),
                       ),
                     ),
             ),
@@ -185,7 +193,15 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                         child: Text(
                           _webViewProvider.tabList[i].pageTitle,
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _webViewProvider.tabList[i].currentUrl.contains("sid=attack&user2ID=2225097") ||
+                                    _webViewProvider.tabList[i].currentUrl.contains("profiles.php?XID=2225097") ||
+                                    _webViewProvider.tabList[i].currentUrl.contains("https://www.torn.com/forums.php#/"
+                                        "p=threads&f=67&t=16163503&b=0&a=0")
+                                ? Colors.pink
+                                : _themeProvider.mainText,
+                          ),
                         ),
                       ),
               ),
@@ -312,6 +328,8 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
     } else if (url.contains("companies.php")) {
       return ImageIcon(AssetImage('images/icons/home/job.png'));
+    } else if (url.contains("yata.yt")) {
+      return Image.asset('images/icons/yata_logo.png');
     }
 
     // Try to find by using shortcuts list

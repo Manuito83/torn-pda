@@ -13,7 +13,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -28,8 +28,6 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import '../main.dart';
 import 'loot/loot_notification_android.dart';
 
@@ -508,16 +506,19 @@ class _LootPageState extends State<LootPage> {
           ),
           onTap: () async {
             var url = 'https://www.torn.com/profiles.php?XID=$npcId';
-            if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-              if (await canLaunch(url)) {
-                await launch(url, forceSafariVC: false);
-              }
-            } else {
-              _settingsProvider.useQuickBrowser ? openBrowserDialog(context, url) : _openTornBrowser(url);
-            }
+            await context.read<WebViewProvider>().openBrowserPreference(
+              context: context,
+              url: url,
+              useDialog: _settingsProvider.useQuickBrowser,
+            );
           },
-          onLongPress: () {
-            _openTornBrowser('https://www.torn.com/profiles.php?XID=$npcId');
+          onLongPress: () async {
+            var url = 'https://www.torn.com/profiles.php?XID=$npcId';
+            await context.read<WebViewProvider>().openBrowserPreference(
+              context: context,
+              url: url,
+              useDialog: false,
+            );
           },
         );
 
@@ -531,16 +532,19 @@ class _LootPageState extends State<LootPage> {
             ),
             onTap: () async {
               var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
-              if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                if (await canLaunch(url)) {
-                  await launch(url, forceSafariVC: false);
-                }
-              } else {
-                _settingsProvider.useQuickBrowser ? openBrowserDialog(context, url) : _openTornBrowser(url);
-              }
+              await context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: url,
+                useDialog: _settingsProvider.useQuickBrowser,
+              );
             },
-            onLongPress: () {
-              _openTornBrowser('https://www.torn.com/loader.php?sid=attack&user2ID=$npcId');
+            onLongPress: () async {
+              var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
+              await context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: url,
+                useDialog: false,
+              );
             },
           ),
         );
@@ -972,26 +976,4 @@ class _LootPageState extends State<LootPage> {
     await _loadPreferences();
   }
 
-  Future _openTornBrowser(String page) async {
-    var browserType = _settingsProvider.currentBrowser;
-
-    switch (browserType) {
-      case BrowserSetting.app:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => WebViewFull(
-              customUrl: page,
-              customTitle: 'Torn',
-            ),
-          ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = page;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
-    }
-  }
 }

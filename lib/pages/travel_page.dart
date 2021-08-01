@@ -16,7 +16,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
@@ -31,8 +31,6 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class TravelPage extends StatefulWidget {
   TravelPage({Key key}) : super(key: key);
@@ -148,25 +146,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                 onClosed: (ReturnFlagPressed returnFlag) async {
                   if (returnFlag.flagPressed) {
                     var url = 'https://www.torn.com/travelagency.php';
-                    if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                      if (await canLaunch(url)) {
-                        await launch(url, forceSafariVC: false);
-                      }
-                    } else {
-                      if (returnFlag.shortTap) {
-                        _settingsProvider.useQuickBrowser
-                            ? await openBrowserDialog(
-                                context,
-                                url,
-                                callBack: null,
-                              )
-                            : await _openTornBrowser(url);
-                        _updateInformation();
-                      } else {
-                        await _openTornBrowser('https://www.torn.com/travelagency.php');
-                        _updateInformation();
-                      }
-                    }
+                    if (!_settingsProvider.useQuickBrowser) returnFlag.shortTap = false;
+                    await context.read<WebViewProvider>().openBrowserPreference(
+                          context: context,
+                          url: url,
+                          useDialog: returnFlag.shortTap,
+                        );
+                    _updateInformation();
                   }
                 },
                 closedColor: Colors.orange,
@@ -280,13 +266,15 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       labelBackgroundColor: Colors.orange,
       backgroundColor: Colors.orange,
       onTap: () async {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => ForeignStockPage(
-              apiKey: _myCurrentKey,
-            ),
-          ),
-        ).then((value) => _onStocksPageClosed(value));
+        Navigator.of(context)
+            .push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => ForeignStockPage(
+                  apiKey: _myCurrentKey,
+                ),
+              ),
+            )
+            .then((value) => _onStocksPageClosed(value));
       },
       child: SizedBox(
         height: 56,
@@ -431,9 +419,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     }
 
     return SpeedDial(
-      direction: MediaQuery.of(context).orientation == Orientation.portrait
-          ? SpeedDialDirection.Up
-          : SpeedDialDirection.Left,
+      direction:
+          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.Up : SpeedDialDirection.Left,
       elevation: 2,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
@@ -461,25 +448,13 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     if (returnFlag.flagPressed) {
       var url = 'https://www.torn.com/travelagency.php';
-      if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-      } else {
-        if (returnFlag.shortTap) {
-          _settingsProvider.useQuickBrowser
-              ? await openBrowserDialog(
-                  context,
-                  url,
-                  callBack: null,
-                )
-              : await _openTornBrowser(url);
-          _updateInformation();
-        } else {
-          await _openTornBrowser('https://www.torn.com/travelagency.php');
-          _updateInformation();
-        }
-      }
+      if (!_settingsProvider.useQuickBrowser) returnFlag.shortTap = false;
+      await context.read<WebViewProvider>().openBrowserPreference(
+            context: context,
+            url: url,
+            useDialog: returnFlag.shortTap,
+          );
+      _updateInformation();
     }
   }
 
@@ -554,25 +529,20 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ElevatedButton(
             child: Text("Go visit!"),
             onLongPress: () async {
-              await _openTornBrowser('https://www.torn.com/');
+              await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com",
+                    useDialog: false,
+                  );
               _updateInformation();
             },
             onPressed: () async {
-              var url = 'https://www.torn.com/';
-              if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                if (await canLaunch(url)) {
-                  await launch(url, forceSafariVC: false);
-                }
-              } else {
-                _settingsProvider.useQuickBrowser
-                    ? await openBrowserDialog(
-                        context,
-                        url,
-                        callBack: null,
-                      )
-                    : await _openTornBrowser(url);
-                _updateInformation();
-              }
+              await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com",
+                    useDialog: _settingsProvider.useQuickBrowser,
+                  );
+              _updateInformation();
             },
           ),
         ];
@@ -600,26 +570,22 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           ElevatedButton(
             child: Icon(Icons.local_airport),
             onLongPress: () async {
-              await _openTornBrowser('https://www.torn.com/');
+              await context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com",
+                useDialog: false,
+              );
               _updateInformation();
             },
             onPressed: () async {
-              var url = 'https://www.torn.com/';
-              if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                if (await canLaunch(url)) {
-                  await launch(url, forceSafariVC: false);
-                }
-              } else {
-                _settingsProvider.useQuickBrowser
-                    ? await openBrowserDialog(
-                        context,
-                        url,
-                        callBack: null,
-                      )
-                    : await _openTornBrowser(url);
-                _updateInformation();
-              }
+              await context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com",
+                useDialog: _settingsProvider.useQuickBrowser,
+              );
+              _updateInformation();
             },
+
           ),
         ];
       } else {
@@ -672,25 +638,20 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             children: <Widget>[
               GestureDetector(
                 onLongPress: () async {
-                  await _openTornBrowser('https://www.torn.com/');
+                  await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com",
+                    useDialog: false,
+                  );
                   _updateInformation();
                 },
                 onTap: () async {
-                  var url = 'https://www.torn.com/';
-                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                  } else {
-                    _settingsProvider.useQuickBrowser
-                        ? await openBrowserDialog(
-                            context,
-                            url,
-                            callBack: null,
-                          )
-                        : await _openTornBrowser(url);
-                    _updateInformation();
-                  }
+                  await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com",
+                    useDialog: _settingsProvider.useQuickBrowser,
+                  );
+                  _updateInformation();
                 },
                 child: LinearPercentIndicator(
                   isRTL: _travelModel.destination == "Torn" ? true : false,
@@ -703,10 +664,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   ),
                   widgetIndicator: Opacity(
                     // Make icon transparent when about to pass over text
-                    opacity: _getTravelPercentage(totalSeconds) < 0.2 ||
-                            _getTravelPercentage(totalSeconds) > 0.7
-                        ? 1
-                        : 0.3,
+                    opacity:
+                        _getTravelPercentage(totalSeconds) < 0.2 || _getTravelPercentage(totalSeconds) > 0.7 ? 1 : 0.3,
                     child: Padding(
                       padding: _travelModel.destination == "Torn"
                           ? const EdgeInsets.only(top: 6, right: 6)
@@ -784,25 +743,20 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     return ElevatedButton(
       child: Text("Travel Agency"),
       onLongPress: () async {
-        await _openTornBrowser('https://www.torn.com/travelagency.php');
+        await context.read<WebViewProvider>().openBrowserPreference(
+          context: context,
+          url: "https://www.torn.com/travelagency.php",
+          useDialog: false,
+        );
         _updateInformation();
       },
       onPressed: () async {
-        var url = 'https://www.torn.com/travelagency.php';
-        if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-          if (await canLaunch(url)) {
-            await launch(url, forceSafariVC: false);
-          }
-        } else {
-          _settingsProvider.useQuickBrowser
-              ? await openBrowserDialog(
-                  context,
-                  url,
-                  callBack: null,
-                )
-              : await _openTornBrowser(url);
-          _updateInformation();
-        }
+        await context.read<WebViewProvider>().openBrowserPreference(
+          context: context,
+          url: "https://www.torn.com/travelagency.php",
+          useDialog: _settingsProvider.useQuickBrowser,
+        );
+        _updateInformation();
       },
     );
   }
@@ -894,8 +848,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<DateTime> _scheduleNotification() async {
-    var scheduledNotificationDateTime =
-        _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
+    var scheduledNotificationDateTime = _travelModel.timeArrival.subtract(Duration(seconds: _travelNotificationAhead));
 
     var modifier = await getNotificationChannelsModifiers();
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
@@ -950,8 +903,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
-    var pendingNotificationRequests =
-        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
+    var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     var pending = false;
     if (pendingNotificationRequests.length > 0) {
@@ -1074,30 +1026,6 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   _callBackFromTravelOptions() async {
     await _restorePreferences();
-  }
-
-  Future _openTornBrowser(String page) async {
-    var browserType = _settingsProvider.currentBrowser;
-
-    switch (browserType) {
-      case BrowserSetting.app:
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => WebViewFull(
-              customUrl: page,
-              customTitle: 'Torn',
-              customCallBack: null,
-            ),
-          ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = page;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
-    }
   }
 }
 
