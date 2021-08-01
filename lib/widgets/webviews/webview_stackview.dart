@@ -332,9 +332,13 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return ImageIcon(AssetImage('images/icons/home/job.png'));
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
+    } else if (url.contains("events.php")) {
+      return Image.asset('images/icons/home/events.png');
     }
 
     // Try to find by using shortcuts list
+    // Note: some are not found because the value that comes from OnLoadStop in the WebView differs from
+    // the standard URL in shortcuts. That's why there are some more in the list above.
     var shortProvider = context.read<ShortcutsProvider>();
     for (var short in shortProvider.allShortcuts) {
       if (short.url.contains(url)) {
