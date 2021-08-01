@@ -53,8 +53,8 @@ class ForeignStockButton extends StatelessWidget {
       closedColor: Colors.orange,
       closedBuilder: (BuildContext context, VoidCallback openContainer) {
         return SizedBox(
-          height: 30,
-          width: 30,
+          height: 32,
+          width: 32,
           child: Center(
             child: Image.asset(
               'images/icons/box.png',

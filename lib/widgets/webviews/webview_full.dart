@@ -206,7 +206,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       crossPlatform: InAppWebViewOptions(
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
-
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
         /// and deactivate it dynamically, where onLoadResource stops triggering!
