@@ -8,7 +8,7 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
 
   try {
     if (
-      energy.maximum === energy.current && 
+      energy.maximum > energy.current && 
       (subscriber.energyLastCheckFull === false)
     ) {
       promises.push(

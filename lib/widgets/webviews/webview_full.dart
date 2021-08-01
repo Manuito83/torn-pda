@@ -2483,8 +2483,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // Called from parent though GlobalKey state
-  void loadWithoutHistory(String url) {
-    _omitTabHistory = true;
+  void loadFromExterior({@required String url, @required bool omitHistory}) {
+    _omitTabHistory = omitHistory;
     webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
   }
 

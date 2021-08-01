@@ -11,8 +11,7 @@ class ArrivalButton extends StatefulWidget {
   final ThemeProvider themeProvider;
   final UserDetailsProvider userProv;
   final SettingsProvider settingsProv;
-  final Function launchBrowserFull;
-  final Function launchBrowserOption;
+  final Function launchBrowser;
   final Function updateCallback;
 
   const ArrivalButton({
@@ -20,8 +19,7 @@ class ArrivalButton extends StatefulWidget {
     @required this.themeProvider,
     @required this.userProv,
     @required this.settingsProv,
-    @required this.launchBrowserFull,
-    @required this.launchBrowserOption,
+    @required this.launchBrowser({String url, bool dialogRequested}),
     @required this.updateCallback,
     Key key,
   }) : super(key: key);
@@ -112,10 +110,10 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                   ],
                 ),
                 onLongPress: () {
-                  widget.launchBrowserFull('https://www.torn.com');
+                  widget.launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
                 },
                 onPressed: () async {
-                  widget.launchBrowserOption('https://www.torn.com');
+                  widget.launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
                 },
               );
             }),
@@ -123,8 +121,7 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
         ForeignStockButton(
           userProv: widget.userProv,
           settingsProv: widget.settingsProv,
-          launchBrowserFull: widget.launchBrowserFull,
-          launchBrowserOption: widget.launchBrowserOption,
+          launchBrowser: widget.launchBrowser,
           updateCallback: widget.updateCallback,
         ),
       ],

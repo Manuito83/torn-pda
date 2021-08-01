@@ -17,6 +17,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -44,7 +45,6 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'main.dart';
 
@@ -78,6 +78,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   UserDetailsProvider _userProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
+  WebViewProvider _webViewProvider;
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics();
@@ -145,6 +146,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _settingsPosition,
       _aboutPosition,
     ];
+
+    _webViewProvider = context.read<WebViewProvider>();
 
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
@@ -400,7 +403,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // iOS seems to open a blank WebView unless we allow some time onResume
       await Future.delayed(Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
-      await _openBrowserPreference(browserUrl);
+      if (launchBrowser) {
+        await _webViewProvider.openBrowserPreference(
+          context: context,
+          url: browserUrl,
+          useDialog: _settingsProvider.useQuickBrowser,
+        );
+      }
     }
   }
 
@@ -473,7 +482,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        await _openBrowserPreference(browserUrl);
+        await _webViewProvider.openBrowserPreference(
+          context: context,
+          url: browserUrl,
+          useDialog: _settingsProvider.useQuickBrowser,
+        );
       }
     });
   }
@@ -631,7 +644,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else {
       // Otherwise, if the key is valid, we loop all the sections
       for (var i = 0; i < _drawerItemsList.length; i++) {
-
         // For this two, it is necessary to call Settings Provider from the Drawer and pass the callbacks all the
         // way to the relevant children. Otherwise, the drawer won't update in realtime (it's not listening)
         if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
@@ -907,29 +919,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _getPages();
   }
 
-  Future _openBrowserFull(String page) async {
-    var browserType = _settingsProvider.currentBrowser;
-
-    switch (browserType) {
-      case BrowserSetting.app:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => WebViewFull(
-              customUrl: page,
-              customTitle: 'Torn',
-            ),
-          ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = page;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
-    }
-  }
-
   Future<bool> _willPopCallback() async {
     var appExit = _settingsProvider.onAppExit;
     if (appExit == 'exit') {
@@ -976,28 +965,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       FlutterAppBadger.removeBadge();
     } catch (e) {
       // Not supported?
-    }
-  }
-
-  Future<void> _openBrowserPreference(String browserUrl) async {
-    var browserType = await Prefs().getDefaultBrowser();
-    switch (browserType) {
-      case 'app':
-        if (_settingsProvider.useQuickBrowser) {
-          openBrowserDialog(
-            context,
-            browserUrl,
-          );
-        } else {
-          _openBrowserFull(browserUrl);
-        }
-        break;
-      case 'external':
-        var url = browserUrl;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
     }
   }
 
@@ -1068,7 +1035,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                 "Stock Exchange",
                               ),
                               onPressed: () async {
-                                _openBrowserPreference("https://www.torn.com/page.php?sid=stocks");
+                                await _webViewProvider.openBrowserPreference(
+                                  context: context,
+                                  url: "https://www.torn.com/page.php?sid=stocks",
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                                 Navigator.of(context).pop();
                               },
                             ),

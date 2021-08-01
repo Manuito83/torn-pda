@@ -2,6 +2,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -23,14 +24,27 @@ class WebViewStackView extends StatefulWidget {
 class _WebViewStackViewState extends State<WebViewStackView> {
   ThemeProvider _themeProvider;
   WebViewProvider _webViewProvider;
+  SettingsProvider _settingsProvider;
+
+  bool _useTabs = false;
 
   Future providerInitialised;
 
   @override
   void initState() {
     super.initState();
+
+    // Assess if we need to use tabs based on the combination
+    _settingsProvider = context.read<SettingsProvider>();
+    if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
+        (!widget.dialog && _settingsProvider.useTabsFullBrowser)) {
+      _useTabs = true;
+    }
+
+    // Initialise WebViewProvider
     providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialise(
       initUrl: widget.initUrl,
+      useTabs: _useTabs,
       dialog: widget.dialog,
     );
   }
@@ -50,10 +64,19 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         future: providerInitialised,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return IndexedStack(
-              index: _webViewProvider.currentTab,
-              children: allWebViews,
-            );
+            if (_useTabs) {
+              return IndexedStack(
+                index: _webViewProvider.currentTab,
+                children: allWebViews,
+              );
+            } else {
+              return IndexedStack(
+                index: 0,
+                children: [
+                  allWebViews[0],
+                ],
+              );
+            }
           } else {
             return Center(child: CircularProgressIndicator());
           }
@@ -62,7 +85,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       bottomNavigationBar: FutureBuilder(
         future: providerInitialised,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.connectionState == ConnectionState.done && _useTabs) {
             return _bottomNavBar();
           } else {
             return SizedBox.shrink();
