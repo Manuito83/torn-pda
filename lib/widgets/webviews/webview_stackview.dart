@@ -59,38 +59,49 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       allWebViews.add(tab.webView);
     }
 
-    return Scaffold(
-      body: FutureBuilder(
-        future: providerInitialised,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_useTabs) {
-              return IndexedStack(
-                index: _webViewProvider.currentTab,
-                children: allWebViews,
-              );
-            } else {
-              return IndexedStack(
-                index: 0,
-                children: [
-                  allWebViews[0],
-                ],
-              );
-            }
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
-      bottomNavigationBar: FutureBuilder(
-        future: providerInitialised,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done && _useTabs) {
-            return _bottomNavBar();
-          } else {
-            return SizedBox.shrink();
-          }
-        },
+    return Container(
+      color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
+              ? Colors.blueGrey
+              : Colors.grey[900]
+          : Colors.grey[900],
+      child: SafeArea(
+        top: _settingsProvider.appBarTop ? false : true,
+        bottom: true,
+        child: Scaffold(
+          body: FutureBuilder(
+            future: providerInitialised,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_useTabs) {
+                  return IndexedStack(
+                    index: _webViewProvider.currentTab,
+                    children: allWebViews,
+                  );
+                } else {
+                  return IndexedStack(
+                    index: 0,
+                    children: [
+                      allWebViews[0],
+                    ],
+                  );
+                }
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
+          bottomNavigationBar: FutureBuilder(
+            future: providerInitialised,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done && _useTabs) {
+                return _bottomNavBar();
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
+        ),
       ),
     );
   }
