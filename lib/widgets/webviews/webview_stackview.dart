@@ -346,6 +346,8 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("events.php")) {
       return Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
+    } else if (url.contains("properties.php")) {
+      return Image.asset('images/icons/map/property.png', color: _themeProvider.mainText);
     }
 
     // Try to find by using shortcuts list
