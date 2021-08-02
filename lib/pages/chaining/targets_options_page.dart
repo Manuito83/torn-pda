@@ -12,7 +12,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class TargetsOptionsReturn {
   bool yataEnabled;
-  bool tacEnabled;
+  //bool tacEnabled;
 }
 
 class TargetsOptionsPage extends StatefulWidget {
@@ -37,7 +37,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   bool _yataTargetsEnabled = true;
 
   // TAC
-  bool _tacEnabled = true;
+  //bool _tacEnabled = true;
 
   Future _preferencesLoaded;
 
@@ -319,6 +319,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
+                              /*
                               SizedBox(height: 15),
                               Divider(),
                               SizedBox(height: 5),
@@ -363,6 +364,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
+                              */
                               SizedBox(height: 50),
                             ],
                           ),
@@ -404,7 +406,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     var soundEnabled = await Prefs().getChainWatcherSound();
     var vibrationEnabled = await Prefs().getChainWatcherVibration();
     var yataEnabled = await Prefs().getYataTargetsEnabled();
-    var tacEnabled = await Prefs().getTACEnabled();
+    //var tacEnabled = await Prefs().getTACEnabled();
     var notifications = await Prefs().getChainWatcherNotificationsEnabled();
 
     setState(() {
@@ -414,7 +416,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
       _soundAlertsEnabled = soundEnabled;
       _vibrationAlertsEnabled = vibrationEnabled;
       _yataTargetsEnabled = yataEnabled;
-      _tacEnabled = tacEnabled;
+      //_tacEnabled = tacEnabled;
       _watcherNotificationsEnabled = notifications;
     });
   }
@@ -422,8 +424,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   Future<bool> _willPopCallback() async {
     Navigator.of(context).pop(
       TargetsOptionsReturn()
-        ..yataEnabled = _yataTargetsEnabled
-        ..tacEnabled = _tacEnabled,
+        ..yataEnabled = _yataTargetsEnabled,
+        //..tacEnabled = _tacEnabled,
     );
     return true;
   }

@@ -6,12 +6,12 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
-import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
+//import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
+//import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
   @override
@@ -28,7 +28,7 @@ class _ChainingPageState extends State<ChainingPage> {
   int _currentPage = 0;
   PageController _bottomNavPageController;
 
-  bool _tacEnabled = true;
+  //bool _tacEnabled = true;
 
   @override
   void initState() {
@@ -59,9 +59,11 @@ class _ChainingPageState extends State<ChainingPage> {
                 AttacksPage(
                   userKey: _myCurrentKey,
                 ),
+                /*
                 TacPage(
                   userKey: _myCurrentKey,
                 ),
+                */
               ],
             );
           } else {
@@ -125,6 +127,7 @@ class _ChainingPageState extends State<ChainingPage> {
                     ),
                   ),
                 ),
+                /*
                 if (_tacEnabled)
                   Expanded(
                     child: Container(
@@ -142,6 +145,7 @@ class _ChainingPageState extends State<ChainingPage> {
                   )
                 else
                   SizedBox.shrink(),
+                */
               ],
             ),
           );
@@ -164,15 +168,17 @@ class _ChainingPageState extends State<ChainingPage> {
   }
 
   void _tabCallback(bool tacEnabled) {
+    /*
     setState(() {
       _tacEnabled = tacEnabled;
     });
+    */
   }
 
   Future _restorePreferences() async {
     var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _myCurrentKey = userDetails.basic.userApiKey;
-    _tacEnabled = await Prefs().getTACEnabled();
+    //_tacEnabled = await Prefs().getTACEnabled();
 
     if (!_chainStatusProvider.initialised) {
       await _chainStatusProvider.loadPreferences(apiKey: _myCurrentKey);

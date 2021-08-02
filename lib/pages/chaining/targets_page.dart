@@ -635,7 +635,7 @@ class _TargetsPageState extends State<TargetsPage> {
         setState(() {
           _yataButtonEnabled = newOptions.yataEnabled;
         });
-        widget.tabCallback(newOptions.tacEnabled);
+        //widget.tabCallback(newOptions.tacEnabled);
         break;
       case "Filter":
         showDialog(
