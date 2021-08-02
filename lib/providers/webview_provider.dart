@@ -132,15 +132,25 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void removeTab(int position) {
-    if (position > 0) {
-      if (position == currentTab) {
-        _currentTab = position - 1;
-      }
-      _tabList.removeAt(position);
+    if (position == 0) return;
+
+    // If we remove the current tab, we need to decrease the current tab by 1
+    if (position == _currentTab) {
+      _currentTab = position - 1;
+    }
+    // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
+    else if (_currentTab == _tabList.length - 1) {
+      _currentTab = _tabList.length - 2;
     }
 
-    var tab = _tabList[_currentTab];
-    tab.webViewKey.currentState.resumeTimers();
+    // Remove the tab
+    _tabList.removeAt(position);
+
+    // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
+    if (_currentTab == _tabList.length - 1) {
+      var tab = _tabList[_currentTab];
+      tab.webViewKey.currentState.resumeTimers();
+    }
 
     notifyListeners();
     _savePreferences();
