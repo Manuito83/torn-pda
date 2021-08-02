@@ -147,9 +147,9 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                   ? const EdgeInsets.all(10.0)
                   : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               child: _webViewProvider.useTabIcons
-                  ? _getIcon(0)
+                  ? SizedBox(width: 24, child: _getIcon(0))
                   : Container(
-                      constraints: BoxConstraints(maxWidth: 100),
+                      constraints: BoxConstraints(maxWidth: 100, minWidth: 24),
                       child: Text(
                         _webViewProvider.tabList[0].pageTitle,
                         textAlign: TextAlign.center,
@@ -206,9 +206,9 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                     ? const EdgeInsets.all(10.0)
                     : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 child: _webViewProvider.useTabIcons
-                    ? _getIcon(i)
+                    ? SizedBox(width: 24, child: _getIcon(i))
                     : Container(
-                        constraints: BoxConstraints(maxWidth: 100),
+                        constraints: BoxConstraints(maxWidth: 100, minWidth: 34),
                         child: Text(
                           _webViewProvider.tabList[i].pageTitle,
                           textAlign: TextAlign.center,
@@ -295,9 +295,12 @@ class _WebViewStackViewState extends State<WebViewStackView> {
                   color: _themeProvider.navSelected,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.add_circle_outline,
-                      color: _themeProvider.mainText,
+                    child: SizedBox(
+                      width: 24,
+                      child: Icon(
+                        Icons.add_circle_outline,
+                        color: _themeProvider.mainText,
+                      ),
                     ),
                   ),
                 ),
@@ -333,18 +336,16 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
       return Icon(Icons.person, color: _themeProvider.mainText);
-    } else if (url.contains("companies.php")) {
+    } else if (url.contains("companies.php") || url.contains("joblist.php")) {
       return ImageIcon(AssetImage('images/icons/home/job.png'));
     } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
       return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
     } else if (url.contains("https://www.torn.com/forums.php")) {
       return ImageIcon(AssetImage('images/icons/home/forums.png'));
-    } else if (url.contains("companies.php")) {
-      return ImageIcon(AssetImage('images/icons/home/job.png'));
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("events.php")) {
-      return Image.asset('images/icons/home/events.png');
+      return Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
     }
 
     // Try to find by using shortcuts list

@@ -213,6 +213,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
+        supportMultipleWindows: true,
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
@@ -672,8 +673,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _terminalProvider.setTerminal("Terminal");
             },
             onCreateWindow: (c, request) {
-              // Allows IOS to open links with target=_blank
-              webView.loadUrl(urlRequest: request.request);
+              _webViewProvider.addTab(url: request.request.url.toString());
+              _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
             },
             onLoadStart: (c, uri) async {

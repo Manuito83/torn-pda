@@ -83,7 +83,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void addTab({
     String url = "https://www.torn.com",
-    String pageTitle = "Torn",
+    String pageTitle = "",
     bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
