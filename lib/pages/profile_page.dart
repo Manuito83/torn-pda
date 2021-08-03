@@ -496,7 +496,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         ),
                       ),
                       SizedBox(height: 50),
-                      _shortcutsCarrousel(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: _shortcutsCarrousel(),
+                      ),
                       SizedBox(height: 50),
                     ],
                   ),
