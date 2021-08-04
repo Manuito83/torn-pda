@@ -32,7 +32,7 @@ class WebViewProvider extends ChangeNotifier {
   bool chatRemovalEnabledGlobal = false;
   bool chatRemovalActiveGlobal = false;
 
-  bool useDialog = false;
+  bool _useDialog = false;
 
   bool _useTabIcons = true;
   bool get useTabIcons => _useTabIcons;
@@ -42,8 +42,8 @@ class WebViewProvider extends ChangeNotifier {
   int _currentTab = 0;
   int get currentTab => _currentTab;
 
-  Future initialise({@required String initUrl, @required bool useTabs, bool dialog = false}) async {
-    useDialog = dialog;
+  Future initialiseMain({@required String initUrl, bool dialog = false}) async {
+    _useDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
@@ -52,8 +52,10 @@ class WebViewProvider extends ChangeNotifier {
 
     // Add the main opener
     addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
+    _currentTab = 0;
+  }
 
-    // Then add the save ones
+  Future initialiseSecondary({@required bool useTabs}) async {
     var savedJson = await Prefs().getWebViewTabs();
     var savedWebViews = tabSaveModelFromJson(savedJson);
 
@@ -77,8 +79,9 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
 
-    // Make sure we start at the first tab
-    activateTab(0);
+    // Make sure we start at the first tab. We don't need to call activateTab because we have
+    // still not initialised completely and the StackView is not live
+    _currentTab = 0;
   }
 
   void addTab({
@@ -96,7 +99,7 @@ class WebViewProvider extends ChangeNotifier {
         ..webView = WebViewFull(
           customUrl: url,
           key: key,
-          dialog: useDialog,
+          dialog: _useDialog,
           useTabs: true,
           chatRemovalActive: chatRemovalActive,
         )

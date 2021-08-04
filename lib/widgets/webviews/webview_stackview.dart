@@ -29,6 +29,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   bool _useTabs = false;
 
   Future providerInitialised;
+  bool secondaryInitialised = false;
 
   @override
   void initState() {
@@ -42,9 +43,8 @@ class _WebViewStackViewState extends State<WebViewStackView> {
     }
 
     // Initialise WebViewProvider
-    providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialise(
+    providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialiseMain(
       initUrl: widget.initUrl,
-      useTabs: _useTabs,
       dialog: widget.dialog,
     );
   }
@@ -73,6 +73,10 @@ class _WebViewStackViewState extends State<WebViewStackView> {
             future: providerInitialised,
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
+                if (!secondaryInitialised) {
+                  secondaryInitialised = true;
+                  _initialiseSecondary(context);
+                }
                 if (_useTabs) {
                   return IndexedStack(
                     index: _webViewProvider.currentTab,
@@ -104,6 +108,11 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         ),
       ),
     );
+  }
+
+  void _initialiseSecondary(BuildContext context) async {
+    await Future.delayed(Duration(milliseconds: 500));
+    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(useTabs: _useTabs);
   }
 
   @override
@@ -348,6 +357,10 @@ class _WebViewStackViewState extends State<WebViewStackView> {
       return Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
     } else if (url.contains("properties.php")) {
       return Image.asset('images/icons/map/property.png', color: _themeProvider.mainText);
+    } else if (url.contains("tornstats.com/")) {
+      return Image.asset('images/icons/tornstats_logo.png');
+    } else if (url.contains("arsonwarehouse.com/")) {
+      return Image.asset('images/icons/awh_logo2.png');
     }
 
     // Try to find by using shortcuts list
