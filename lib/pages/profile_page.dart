@@ -472,6 +472,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       SizedBox(height: 50),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: _shortcutsCarrousel(),
+                      ),
+                      SizedBox(height: 50),
                       Text(
                         'OOPS!',
                         style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
@@ -495,11 +500,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ],
                         ),
                       ),
-                      SizedBox(height: 50),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: _shortcutsCarrousel(),
-                      ),
+
                       SizedBox(height: 50),
                     ],
                   ),
