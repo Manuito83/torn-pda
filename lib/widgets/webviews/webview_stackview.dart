@@ -111,7 +111,7 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   }
 
   void _initialiseSecondary(BuildContext context) async {
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(Duration(milliseconds: 1000));
     Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(useTabs: _useTabs);
   }
 
