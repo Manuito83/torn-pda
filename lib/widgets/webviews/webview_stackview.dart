@@ -21,7 +21,7 @@ class WebViewStackView extends StatefulWidget {
   _WebViewStackViewState createState() => _WebViewStackViewState();
 }
 
-class _WebViewStackViewState extends State<WebViewStackView> {
+class _WebViewStackViewState extends State<WebViewStackView> with TickerProviderStateMixin {
   ThemeProvider _themeProvider;
   WebViewProvider _webViewProvider;
   SettingsProvider _settingsProvider;
@@ -31,9 +31,22 @@ class _WebViewStackViewState extends State<WebViewStackView> {
   Future providerInitialised;
   bool secondaryInitialised = false;
 
+  AnimationController _animationController;
+  Animation<double> _secondaryTabsOpacity;
+
   @override
   void initState() {
     super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _secondaryTabsOpacity = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
 
     // Assess if we need to use tabs based on the combination
     _settingsProvider = context.read<SettingsProvider>();
@@ -196,52 +209,58 @@ class _WebViewStackViewState extends State<WebViewStackView> {
         continue;
       }
 
-      Widget secondaryTab = GestureDetector(
+      _animationController.forward();
+      Widget secondaryTab = FadeTransition(
         key: UniqueKey(),
-        onTap: () {
-          _webViewProvider.activateTab(i);
-        },
-        onDoubleTap: () {
-          if (_webViewProvider.tabList.length > 0) {
-            _webViewProvider.removeTab(i);
-          }
-        },
-        child: Container(
-          color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
-          child: Row(
-            children: [
-              Padding(
-                padding: _webViewProvider.useTabIcons
-                    ? const EdgeInsets.all(10.0)
-                    : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                child: _webViewProvider.useTabIcons
-                    ? SizedBox(width: 24, child: _getIcon(i))
-                    : Container(
-                        constraints: BoxConstraints(maxWidth: 100, minWidth: 34),
-                        child: Text(
-                          _webViewProvider.tabList[i].pageTitle,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _webViewProvider.tabList[i].currentUrl.contains("sid=attack&user2ID=2225097") ||
-                                    _webViewProvider.tabList[i].currentUrl.contains("profiles.php?XID=2225097") ||
-                                    _webViewProvider.tabList[i].currentUrl.contains("https://www.torn.com/forums.php#/"
-                                        "p=threads&f=67&t=16163503&b=0&a=0")
-                                ? Colors.pink
-                                : _themeProvider.mainText,
+        opacity: _secondaryTabsOpacity,
+        child: GestureDetector(
+          onTap: () {
+            _webViewProvider.activateTab(i);
+          },
+          onDoubleTap: () {
+            if (_webViewProvider.tabList.length > 0) {
+              _webViewProvider.removeTab(i);
+            }
+          },
+          child: Container(
+            color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
+            child: Row(
+              children: [
+                Padding(
+                  padding: _webViewProvider.useTabIcons
+                      ? const EdgeInsets.all(10.0)
+                      : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  child: _webViewProvider.useTabIcons
+                      ? SizedBox(width: 24, child: _getIcon(i))
+                      : Container(
+                          constraints: BoxConstraints(maxWidth: 100, minWidth: 34),
+                          child: Text(
+                            _webViewProvider.tabList[i].pageTitle,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _webViewProvider.tabList[i].currentUrl.contains("sid=attack&user2ID=2225097") ||
+                                      _webViewProvider.tabList[i].currentUrl.contains("profiles.php?XID=2225097") ||
+                                      _webViewProvider.tabList[i].currentUrl
+                                          .contains("https://www.torn.com/forums.php#/"
+                                              "p=threads&f=67&t=16163503&b=0&a=0")
+                                  ? Colors.pink
+                                  : _themeProvider.mainText,
+                            ),
                           ),
                         ),
-                      ),
-              ),
-              VerticalDivider(
-                width: 1,
-                thickness: 1,
-                color: Colors.grey[400],
-              ),
-            ],
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: Colors.grey[400],
+                ),
+              ],
+            ),
           ),
         ),
       );
+
       secondaryTabs.add(secondaryTab);
     }
 
