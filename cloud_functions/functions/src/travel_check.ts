@@ -52,7 +52,7 @@ export const travelGroup = {
             `Approaching ${thisUser.travelDestination}!`,
             landingBody,
             "notification_travel",
-            "#0000FF",
+            "#2196F3",
             "Alerts travel",
             "",
             "",
