@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 // Package imports:
@@ -530,7 +531,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Text('Profile'),
       leading: new IconButton(
         icon: new Icon(Icons.menu),
@@ -3738,10 +3739,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
         expiryString = '${timeDifference.inHours} hours';
       } else if (timeDifference.inDays == 1) {
-        expiryString = '1 day';
+        expiryString = '1 day and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
         expiryColor = _themeProvider.mainText;
       } else {
-        expiryString = '${timeDifference.inDays} days';
+        expiryString = '${timeDifference.inDays} days and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
         expiryColor = _themeProvider.mainText;
       }
 
