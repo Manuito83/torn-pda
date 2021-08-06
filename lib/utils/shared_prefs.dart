@@ -32,7 +32,7 @@ class Prefs {
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
-  final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
+  final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod";  // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
@@ -421,12 +421,12 @@ class Prefs {
 
   Future<String> getBrowserRefreshMethod() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBrowserRefreshMethod) ?? "both";
+    return prefs.getString(_kBrowserRefreshMethod2) ?? "icon";
   }
 
   Future<bool> setBrowserRefreshMethod(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBrowserRefreshMethod, value);
+    return prefs.setString(_kBrowserRefreshMethod2, value);
   }
 
   Future<bool> getUseQuickBrowser() async {

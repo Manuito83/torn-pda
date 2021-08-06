@@ -757,7 +757,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ],
           ),
         ),
-        /*
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -781,7 +780,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
-        */
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -923,7 +921,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
       title: Text('Browser settings'),
       leading: new IconButton(

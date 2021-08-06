@@ -242,24 +242,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _clearBadge();
     }
     // Get rid of notifications in Android
-    if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
-      // Gets the active (already shown) notifications
-      final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.getActiveNotifications();
+    try {
+      if (Platform.isAndroid && _settingsProvider.removeNotificationsOnLaunch) {
+        // Gets the active (already shown) notifications
+        final List<ActiveNotification> activeNotifications = await flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            ?.getActiveNotifications();
 
-      for (var not in activeNotifications) {
-        // Platform channel to cancel direct Firebase notifications (we can call
-        // "cancelAll()" there without affecting scheduled notifications, which is
-        // a problem with the local plugin)
-        if (not.id == 0) {
-          await platform.invokeMethod('cancelNotifications');
-        }
-        // This cancels the Firebase alerts that have been triggered locally
-        else {
-          flutterLocalNotificationsPlugin.cancel(not.id);
+        for (var not in activeNotifications) {
+          // Platform channel to cancel direct Firebase notifications (we can call
+          // "cancelAll()" there without affecting scheduled notifications, which is
+          // a problem with the local plugin)
+          if (not.id == 0) {
+            await platform.invokeMethod('cancelNotifications');
+          }
+          // This cancels the Firebase alerts that have been triggered locally
+          else {
+            flutterLocalNotificationsPlugin.cancel(not.id);
+          }
         }
       }
+    } catch (e) {
+      // Not supported?
     }
   }
 

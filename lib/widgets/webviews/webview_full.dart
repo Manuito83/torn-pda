@@ -172,7 +172,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   UserScriptsProvider _userScriptsProvider;
   ThemeProvider _themeProvider;
 
-  //PullToRefreshController _pullToRefreshController;
+  PullToRefreshController _pullToRefreshController;
 
   bool _clearCacheFirstOpportunity = false;
 
@@ -220,7 +220,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ),
     );
 
-    /*
     _pullToRefreshController = PullToRefreshController(
       options: PullToRefreshOptions(
         color: Colors.orange[800],
@@ -237,7 +236,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         await reload();
       },
     );
-    */
 
     //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
@@ -665,7 +663,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               apiKey: _userProvider.basic.userApiKey,
             ),
             // Temporarily deactivated as it is affecting chats
-            //pullToRefreshController: _pullToRefreshController,
+            pullToRefreshController: _pullToRefreshController,
             initialOptions: _initialWebViewOptions,
             // EVENTS
             onWebViewCreated: (c) {
@@ -713,7 +711,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 });
               }
 
-              //if (progress > 75) _pullToRefreshController.endRefreshing();
+              if (progress > 75) _pullToRefreshController.endRefreshing();
 
               // onProgressChanged gets called before onLoadStart, so it works
               // both to add or remove widgets. It is much faster.
@@ -938,7 +936,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return CustomAppBar(
         genericAppBar: AppBar(
           elevation: _settingsProvider.appBarTop ? 2 : 0,
-          brightness: Brightness.dark,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
           leading: IconButton(
             icon: Icon(Icons.close),
             onPressed: () async {
@@ -1023,7 +1021,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       },
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
-        brightness: Brightness.dark,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: IconButton(
             icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
             onPressed: () async {
