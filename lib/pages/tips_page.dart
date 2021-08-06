@@ -3,6 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -127,7 +128,7 @@ class _TipsPageState extends State<TipsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
@@ -416,6 +417,7 @@ class _TipsPageState extends State<TipsPage> {
             "main app bar when in the Targets section.",
       ),
     );
+    /*
     tips.add(
       ExpandableTip(
         headerValue: "Use Torn Attack Central",
@@ -425,6 +427,7 @@ class _TipsPageState extends State<TipsPage> {
             "enter the options menu in the main Targets screen to activate it.",
       ),
     );
+    */
     return tips;
   }
 
