@@ -13,11 +13,15 @@ class BazaarDialog extends StatefulWidget {
   final BazaarModel bazaarModel;
   final Function openTapCallback;
   final Function openLongPressCallback;
+  final int items;
+  final int money;
 
   BazaarDialog({
     @required this.bazaarModel,
     @required this.openTapCallback,
     @required this.openLongPressCallback,
+    @required this.items,
+    @required this.money,
   });
 
   @override
@@ -28,19 +32,6 @@ class _BazaarDialogState extends State<BazaarDialog> {
   double hPad = 15;
   double vPad = 20;
   double frame = 10;
-
-  int _totalItems = 0;
-  int _totalPending = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    // Calculate total items once
-    widget.bazaarModel.bazaar.forEach((element) {
-      _totalItems += element.quantity;
-      _totalPending += element.quantity * element.price;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,15 +73,20 @@ class _BazaarDialogState extends State<BazaarDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("$_totalItems ${_totalItems > 1 ? 'items' : 'item'}",
-                    style: TextStyle(fontSize: 13)),
+                Text(
+                  "${widget.items} ${widget.items > 1 ? 'items' : 'item'}",
+                  style: TextStyle(fontSize: 13),
+                ),
+                Text(
+                  widget.bazaarModel.bazaar.length == 1 ? "" : " (${widget.bazaarModel.bazaar.length} stacks)",
+                  style: TextStyle(fontSize: 13),
+                ),
               ],
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Total value \$${formatProfit(inputInt: _totalPending)}",
-                    style: TextStyle(fontSize: 13)),
+                Text("Total value \$${formatProfit(inputInt: widget.money)}", style: TextStyle(fontSize: 13)),
               ],
             ),
             SizedBox(height: 20),
@@ -148,8 +144,7 @@ class _BazaarDialogState extends State<BazaarDialog> {
                   children: [
                     Image.asset(
                       'images/torn_items/small/${element.id}_small.png',
-                      errorBuilder: (BuildContext context, Object exception,
-                          StackTrace stackTrace) {
+                      errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
                         return SizedBox.shrink();
                       },
                     ),

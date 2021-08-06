@@ -27,8 +27,8 @@ import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
+import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -57,7 +57,6 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
-import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
 import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
@@ -501,7 +500,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ],
                         ),
                       ),
-
                       SizedBox(height: 50),
                     ],
                   ),
@@ -731,7 +729,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Container(height: h, width: w, child: shortcutTile(thisShortcut)),
           );
         }
-        return Wrap(alignment: WrapAlignment.center ,children: wrapItems);
+        return Wrap(alignment: WrapAlignment.center, children: wrapItems);
       }
     }
 
@@ -925,63 +923,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
-    Widget bazaarStatus() {
-      // Check null as it loads after a while, then empty to see if bazaar is open
-      if (_bazaarModel == null || _bazaarModel.bazaar.isEmpty) return SizedBox.shrink();
-
-      var bazaarNumber = "";
-      _bazaarModel.bazaar.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "${_bazaarModel.bazaar.length} items";
-
-      var bazaarPendingString = "";
-      var bazaarPending = 0;
-      _bazaarModel.bazaar.forEach((element) {
-        bazaarPending += element.price * element.quantity;
-      });
-      bazaarPendingString = "\$${formatProfit(inputInt: bazaarPending)}";
-
-      openTapCallback() {
-        _launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: true);
-      }
-
-      openLongPressCallback() {
-        _launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: true);
-      }
-
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 60,
-              child: Text("Bazaar:"),
-            ),
-            Text(bazaarNumber),
-            Text(" ($bazaarPendingString)"),
-            SizedBox(width: 8),
-            GestureDetector(
-              child: Icon(
-                MdiIcons.storefrontOutline,
-                size: 20,
-              ),
-              onTap: () {
-                return showDialog<void>(
-                  context: context,
-                  barrierDismissible: false, // user must tap button!
-                  builder: (BuildContext context) {
-                    return BazaarDialog(
-                      bazaarModel: _bazaarModel,
-                      openTapCallback: openTapCallback,
-                      openLongPressCallback: openLongPressCallback,
-                    );
-                  },
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -1018,7 +959,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       if (_user.status.color == 'red') _notificationIcon(ProfileNotification.hospital)
                     ],
                   ),
-                  bazaarStatus(),
+                  BazaarStatusCard(
+                    bazaarModel: _bazaarModel,
+                    launchBrowser: _launchBrowser,
+                  ),
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
                   nukeRevive(),
@@ -3742,7 +3686,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         expiryString = '1 day and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
         expiryColor = _themeProvider.mainText;
       } else {
-        expiryString = '${timeDifference.inDays} days and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
+        expiryString =
+            '${timeDifference.inDays} days and ${(_miscModel.cityBank.timeLeft / 60 / 60 % 24).floor()} hours';
         expiryColor = _themeProvider.mainText;
       }
 
@@ -6288,10 +6233,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           InkWell(
             borderRadius: BorderRadius.circular(100),
             onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: false);
+              _launchBrowser(
+                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: false);
             },
             onTap: () {
-              _launchBrowser(url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: true);
+              _launchBrowser(
+                  url: 'https://www.torn.com/properties.php#/p=options&ID=$key&tab=customize', dialogRequested: true);
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),
