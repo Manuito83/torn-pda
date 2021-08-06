@@ -5,43 +5,36 @@ import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
 
 class BazaarStatusCard extends StatelessWidget {
-  final BazaarModel _bazaarModel;
-  final Function _launchBrowser;
+  final BazaarModel bazaarModel;
+  final Function launchBrowser;
 
-
-
-  const BazaarStatusCard({@required bazaarModel, @required launchBrowser, Key key})
-      : _bazaarModel = bazaarModel,
-        _launchBrowser = launchBrowser,
-        super(key: key);
-
-
+  const BazaarStatusCard({@required this.bazaarModel, @required this.launchBrowser, Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     // Check null as it loads after a while, then empty to see if bazaar is open
-    if (_bazaarModel == null || _bazaarModel.bazaar.isEmpty) return SizedBox.shrink();
+    if (bazaarModel == null || bazaarModel.bazaar.isEmpty) return SizedBox.shrink();
 
     int totalItems = 0;
     int totalMoney = 0;
 
-    _bazaarModel.bazaar.forEach((element) {
+    bazaarModel.bazaar.forEach((element) {
       totalItems += element.quantity;
       totalMoney += element.quantity * element.price;
     });
 
     var bazaarNumber = "";
-    _bazaarModel.bazaar.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "$totalItems items";
+    bazaarModel.bazaar.length == 1 ? bazaarNumber = "1 item" : bazaarNumber = "$totalItems items";
 
     var bazaarPendingString = "";
     bazaarPendingString = "\$${formatProfit(inputInt: totalMoney)}";
 
     openTapCallback() {
-      _launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: true);
+      launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: true);
     }
 
     openLongPressCallback() {
-      _launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: false);
+      launchBrowser(url: 'https://www.torn.com/bazaar.php', dialogRequested: false);
     }
 
     return Padding(
@@ -66,7 +59,7 @@ class BazaarStatusCard extends StatelessWidget {
                 barrierDismissible: false, // user must tap button!
                 builder: (BuildContext context) {
                   return BazaarDialog(
-                    bazaarModel: _bazaarModel,
+                    bazaarModel: bazaarModel,
                     openTapCallback: openTapCallback,
                     openLongPressCallback: openLongPressCallback,
                     items: totalItems,

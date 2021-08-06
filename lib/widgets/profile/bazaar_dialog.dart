@@ -9,12 +9,16 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 
-class BazaarDialog extends StatefulWidget {
+class BazaarDialog extends StatelessWidget {
   final BazaarModel bazaarModel;
   final Function openTapCallback;
   final Function openLongPressCallback;
   final int items;
   final int money;
+
+  final double hPad = 15;
+  final double vPad = 20;
+  final double frame = 10;
 
   BazaarDialog({
     @required this.bazaarModel,
@@ -23,15 +27,6 @@ class BazaarDialog extends StatefulWidget {
     @required this.items,
     @required this.money,
   });
-
-  @override
-  _BazaarDialogState createState() => _BazaarDialogState();
-}
-
-class _BazaarDialogState extends State<BazaarDialog> {
-  double hPad = 15;
-  double vPad = 20;
-  double frame = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +55,11 @@ class _BazaarDialogState extends State<BazaarDialog> {
                     child: Icon(MdiIcons.openInApp, size: 18),
                     onTap: () {
                       Navigator.of(context).pop();
-                      widget.openTapCallback();
+                      openTapCallback();
                     },
                     onLongPress: () {
                       Navigator.of(context).pop();
-                      widget.openLongPressCallback();
+                      openLongPressCallback();
                     },
                   ),
                 ],
@@ -74,11 +69,11 @@ class _BazaarDialogState extends State<BazaarDialog> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "${widget.items} ${widget.items > 1 ? 'items' : 'item'}",
+                  "$items ${items > 1 ? 'items' : 'item'}",
                   style: TextStyle(fontSize: 13),
                 ),
                 Text(
-                  widget.bazaarModel.bazaar.length == 1 ? "" : " (${widget.bazaarModel.bazaar.length} stacks)",
+                  bazaarModel.bazaar.length == 1 ? "" : " (${bazaarModel.bazaar.length} stacks)",
                   style: TextStyle(fontSize: 13),
                 ),
               ],
@@ -86,7 +81,7 @@ class _BazaarDialogState extends State<BazaarDialog> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Total value \$${formatProfit(inputInt: widget.money)}", style: TextStyle(fontSize: 13)),
+                Text("Total value \$${formatProfit(inputInt: money)}", style: TextStyle(fontSize: 13)),
               ],
             ),
             SizedBox(height: 20),
@@ -122,7 +117,7 @@ class _BazaarDialogState extends State<BazaarDialog> {
     // Currency configuration
     final costCurrency = new NumberFormat("#,##0", "en_US");
 
-    widget.bazaarModel.bazaar.forEach((element) {
+    bazaarModel.bazaar.forEach((element) {
       var marketDiff = element.marketPrice - element.price;
       Color marketColor = Colors.green;
       var marketString = "";
