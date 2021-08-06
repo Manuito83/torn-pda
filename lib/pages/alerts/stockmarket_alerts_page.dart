@@ -1,8 +1,10 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
@@ -46,6 +48,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     _userP = Provider.of<UserDetailsProvider>(context, listen: false);
     if (!widget.calledFromMenu) _fbUser = widget.fbUser;
     _stocksInitialised = _initialiseStocks();
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'stockMarket'});
   }
 
   @override
@@ -137,7 +140,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsP.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Text("Stock market alerts"),
       leading: new IconButton(
         icon: widget.calledFromMenu ? const Icon(Icons.dehaze) : const Icon(Icons.arrow_back),
