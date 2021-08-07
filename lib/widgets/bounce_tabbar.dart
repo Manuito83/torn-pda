@@ -99,8 +99,8 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
         animation: _controller,
         builder: (context, _) {
           currentWidth = width - movement * _animTabBarIn.value + movement * _animTabBarOut.value;
-          currentElevation = -movement * _animElevationIn.value +
-              (movement - kBottomNavigationBarHeight / 4) * _animElevationOut.value;
+          currentElevation = -movement * _animElevationIn.value / 2 +
+              (movement - kBottomNavigationBarHeight / 2) * _animElevationOut.value / 2;
           return Center(
             child: Container(
               width: currentWidth,
@@ -114,7 +114,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: List.generate(
                   widget.items.length,
-                      (index) {
+                  (index) {
                     final child = widget.items[index];
                     final innerWidget = CircleAvatar(
                       radius: 30.0,
