@@ -6,7 +6,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/animated_indexedstack.dart';
+import 'package:torn_pda/widgets/animated_indexedstack.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
@@ -95,6 +95,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                   return AnimatedIndexedStack(
                     index: _webViewProvider.currentTab,
                     children: allWebViews,
+                    duration: 100,
                   );
                 } else {
                   return IndexedStack(

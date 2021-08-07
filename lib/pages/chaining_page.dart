@@ -11,6 +11,8 @@ import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/widgets/animated_indexedstack.dart';
+import 'package:torn_pda/widgets/bounce_tabbar.dart';
 //import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
@@ -26,7 +28,6 @@ class _ChainingPageState extends State<ChainingPage> {
   Future _preferencesLoaded;
 
   int _currentPage = 0;
-  PageController _bottomNavPageController;
 
   //bool _tacEnabled = true;
 
@@ -35,26 +36,26 @@ class _ChainingPageState extends State<ChainingPage> {
     super.initState();
     _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
-    _bottomNavPageController = PageController(
-      initialPage: 0,
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    bool isThemeLight = _themeProvider.currentTheme == AppTheme.light ? true : false;
     return Scaffold(
+      extendBody: true,
       body: FutureBuilder(
         future: _preferencesLoaded,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return PageView(
-              physics: NeverScrollableScrollPhysics(),
-              controller: _bottomNavPageController,
+            return AnimatedIndexedStack(
+              index: _currentPage,
+              duration: 200,
               children: <Widget>[
                 TargetsPage(
                   userKey: _myCurrentKey,
-                  tabCallback: _tabCallback,
+                  // Used to add or remove TAC tab
+                  //tabCallback: _tabCallback,
                 ),
                 AttacksPage(
                   userKey: _myCurrentKey,
@@ -71,109 +72,37 @@ class _ChainingPageState extends State<ChainingPage> {
           }
         },
       ),
-      bottomNavigationBar: _bottomNavBar(),
+      bottomNavigationBar: BounceTabBar(
+        initialIndex: 0,
+        onTabChanged: (index) {
+          setState(() {
+            _currentPage = index;
+          });
+        },
+        backgroundColor: isThemeLight ? Colors.blueGrey : _themeProvider.background,
+        items: [
+          Image.asset(
+            'images/icons/ic_target_account_black_48dp.png',
+            color: isThemeLight ? Colors.white : _themeProvider.mainText,
+            width: 28,
+          ),
+          Icon(
+            Icons.person,
+            color: isThemeLight ? Colors.white : _themeProvider.mainText,
+          ),
+          // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
+        ],
+      ),
     );
   }
 
-  @override
-  Future dispose() async {
-    _bottomNavPageController.dispose();
-    super.dispose();
-  }
-
-  Widget _bottomNavBar() {
-    return FutureBuilder(
-      future: _preferencesLoaded,
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return Container(
-            height: 40,
-            decoration: new BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: Colors.grey,
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Expanded(
-                  child: Container(
-                    color: _currentPage == 0 ? _themeProvider.navSelected : Colors.transparent,
-                    child: IconButton(
-                      icon: Image.asset(
-                        'images/icons/ic_target_account_black_48dp.png',
-                        color: _themeProvider.mainText,
-                      ),
-                      onPressed: () {
-                        _onSelectedPage(page: 0);
-                      },
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    color: _currentPage == 1 ? _themeProvider.navSelected : Colors.transparent,
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.person,
-                        color: _themeProvider.mainText,
-                      ),
-                      onPressed: () {
-                        _onSelectedPage(page: 1);
-                      },
-                    ),
-                  ),
-                ),
-                /*
-                if (_tacEnabled)
-                  Expanded(
-                    child: Container(
-                      color: _currentPage == 2 ? _themeProvider.navSelected : Colors.transparent,
-                      child: TextButton(
-                        child: Text('TAC',
-                            style: TextStyle(
-                              color: _themeProvider.mainText,
-                            )),
-                        onPressed: () {
-                          _onSelectedPage(page: 2);
-                        },
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox.shrink(),
-                */
-              ],
-            ),
-          );
-        } else {
-          return SizedBox.shrink();
-        }
-      },
-    );
-  }
-
-  void _onSelectedPage({int page}) {
-    _bottomNavPageController.animateToPage(
-      page,
-      duration: Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
-    setState(() {
-      _currentPage = page;
-    });
-  }
-
+  /*
   void _tabCallback(bool tacEnabled) {
-    /*
     setState(() {
       _tacEnabled = tacEnabled;
     });
-    */
   }
+  */
 
   Future _restorePreferences() async {
     var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);

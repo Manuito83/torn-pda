@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class AnimatedIndexedStack extends StatefulWidget {
   final int index;
   final List<Widget> children;
+  final int duration;
 
   const AnimatedIndexedStack({
     Key key,
-    this.index,
-    this.children,
+    @required this.index,
+    @required this.children,
+    @required this.duration,
   }) : super(key: key);
 
   @override
@@ -24,7 +26,7 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack>
   void initState() {
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 100),
+      duration: Duration(milliseconds: widget.duration),
     );
     _animation = CurvedAnimation(
       parent: _controller,

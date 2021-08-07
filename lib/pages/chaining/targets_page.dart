@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/services.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -51,9 +52,13 @@ class TargetsOptions {
 
 class TargetsPage extends StatefulWidget {
   final String userKey;
-  final Function tabCallback;
+  //final Function tabCallback;
 
-  const TargetsPage({Key key, @required this.userKey, @required this.tabCallback}) : super(key: key);
+  const TargetsPage({
+    Key key,
+    @required this.userKey,
+    //@required this.tabCallback,
+  }) : super(key: key);
 
   @override
   _TargetsPageState createState() => _TargetsPageState();
@@ -249,7 +254,7 @@ class _TargetsPageState extends State<TargetsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
+      systemOverlayStyle: SystemUiOverlayStyle.light,
       title: _appBarText,
       leading: new IconButton(
         icon: new Icon(Icons.menu),
@@ -361,7 +366,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   );
                 } else {
                   return Theme(
-                    data: Theme.of(context).copyWith(accentColor: Colors.white),
+                    data: ThemeData(),
                     child: SizedBox(
                       width: 45,
                       child: Center(
