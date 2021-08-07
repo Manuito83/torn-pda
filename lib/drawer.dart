@@ -877,12 +877,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
       // Deletes current channels and create new ones
-      var vibration = await Prefs().getVibrationPattern();
-      await reconfigureNotificationChannels(mod: vibration);
+      if (Platform.isAndroid) {
+        var vibration = await Prefs().getVibrationPattern();
+        await reconfigureNotificationChannels(mod: vibration);
+      }
 
       _changelogIsActive = true;
       _showChangeLogDialog(context);
     }
+
+
   }
 
   void _showChangeLogDialog(BuildContext context) async {

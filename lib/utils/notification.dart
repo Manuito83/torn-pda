@@ -593,7 +593,9 @@ Future configureNotificationChannels({String mod = ""}) async {
 }
 
 Future reconfigureNotificationChannels({String mod}) async {
-  const platform = const MethodChannel('tornpda.channel');
-  platform.invokeMethod('deleteNotificationChannels');
-  configureNotificationChannels(mod: mod);
+  if (Platform.isAndroid) {
+    const platform = const MethodChannel('tornpda.channel');
+    platform.invokeMethod('deleteNotificationChannels');
+    configureNotificationChannels(mod: mod);
+  }
 }

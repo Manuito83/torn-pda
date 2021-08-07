@@ -193,7 +193,6 @@ class _MyAppState extends State<MyApp> {
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
                 primarySwatch: Colors.blueGrey,
-                visualDensity: VisualDensity.adaptivePlatformDensity,
                 brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
               ),
               home: DrawerPage(),
