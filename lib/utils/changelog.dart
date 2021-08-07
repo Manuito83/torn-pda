@@ -46,10 +46,14 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_5_0_2 = "Added pull to refresh to main browser (disabled by default)";
     String feat2_5_0_3 = "Added Company Activity userscript example";
     String feat2_5_0_4 = "Removed Torn Attack Central (service discontinued)";
+    String feat2_5_0_5 = "Fixed some userscripts with wildcards not correctly activating";
+    String feat2_5_0_6 = "Fixed UI issues reported";
     v2_5_0.features.add(feat2_5_0_1);
     v2_5_0.features.add(feat2_5_0_2);
     v2_5_0.features.add(feat2_5_0_3);
     v2_5_0.features.add(feat2_5_0_4);
+    v2_5_0.features.add(feat2_5_0_5);
+    v2_5_0.features.add(feat2_5_0_6);
 
     // VERSION 2.4.3
     var v2_4_3 = ChangeLogItem();

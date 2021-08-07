@@ -6,6 +6,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/animated_indexedstack.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
@@ -91,7 +92,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                   _initialiseSecondary(context);
                 }
                 if (_useTabs) {
-                  return IndexedStack(
+                  return AnimatedIndexedStack(
                     index: _webViewProvider.currentTab,
                     children: allWebViews,
                   );
@@ -112,7 +113,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             future: providerInitialised,
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done && _useTabs) {
-                return _bottomNavBar();
+                if (_webViewProvider.hideTabs) {
+                  return Divider(color: Colors.pink[800], thickness: 4,height: 4);
+                } else {
+                  return _bottomNavBar();
+                }
               } else {
                 return SizedBox.shrink();
               }
@@ -131,6 +136,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   @override
   Future dispose() async {
     _webViewProvider.clearOnDispose();
+    _animationController.dispose();
     super.dispose();
   }
 

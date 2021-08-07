@@ -341,6 +341,14 @@ class _TipsPageState extends State<TipsPage> {
             "title in your tabs.",
       ),
     );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Hide tabs temporarily",
+        expandedValue: "You can temporarily hide tabs so that the don't take space."
+            "\n\nFull browser: tap and hold the title bar, then slide up or down.\n\n"
+            "Quick browser: tap and hold the bottom bar (where the 'close' button is), then slide up or down.",
+      ),
+    );
     return tips;
   }
 

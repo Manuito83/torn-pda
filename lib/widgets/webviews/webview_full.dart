@@ -539,15 +539,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: TextButton(
+                child: GestureDetector(
                   child: Text(
                     "Close",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: _themeProvider.mainText,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  onPressed: () {
+                  onTap: () {
                     Navigator.of(context).pop();
+                  },
+                  onPanEnd: (DragEndDetails details) async {
+                    _webViewProvider.toggleHideTabs();
                   },
                 ),
               ),
@@ -1018,6 +1023,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
+      },
+      onPanEnd: (DragEndDetails details) async {
+        _webViewProvider.toggleHideTabs();
       },
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,

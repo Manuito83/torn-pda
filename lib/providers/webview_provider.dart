@@ -37,6 +37,9 @@ class WebViewProvider extends ChangeNotifier {
   bool _useTabIcons = true;
   bool get useTabIcons => _useTabIcons;
 
+  bool _hideTabs = false;
+  bool get hideTabs => _hideTabs;
+
   bool _gymMessageActive = false;
 
   int _currentTab = 0;
@@ -49,6 +52,7 @@ class WebViewProvider extends ChangeNotifier {
     chatRemovalActiveGlobal = await Prefs().getChatRemovalActive();
 
     _useTabIcons = await Prefs().getUseTabsIcons();
+    _hideTabs = await Prefs().getHideTabs();
 
     // Add the main opener
     addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
@@ -131,7 +135,7 @@ class WebViewProvider extends ChangeNotifier {
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[],
     );
-    _savePreferences();
+    _saveTabs();
   }
 
   void removeTab(int position) {
@@ -156,7 +160,7 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _savePreferences();
+    _saveTabs();
   }
 
   void activateTab(int newActiveTab) {
@@ -175,7 +179,7 @@ class WebViewProvider extends ChangeNotifier {
     _tabList.removeAt(oldIndex);
     _tabList.insert(newIndex, movedItem);
     notifyListeners();
-    _savePreferences();
+    _saveTabs();
   }
 
   void reportTabLoadUrl(Key reporterKey, String url) {
@@ -191,7 +195,7 @@ class WebViewProvider extends ChangeNotifier {
     tab.currentUrl = url;
 
     notifyListeners();
-    _savePreferences();
+    _saveTabs();
   }
 
   void reportTabPageTitle(Key reporterKey, String pageTitle) {
@@ -204,7 +208,7 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _savePreferences();
+    _saveTabs();
   }
 
   void reportChatRemovalChange(bool active, bool global) {
@@ -214,7 +218,7 @@ class WebViewProvider extends ChangeNotifier {
       chatRemovalActiveGlobal = active;
       Prefs().setChatRemovalActive(active);
     }
-    _savePreferences();
+    _saveTabs();
     notifyListeners();
   }
 
@@ -227,7 +231,7 @@ class WebViewProvider extends ChangeNotifier {
       // Call child method directly, otherwise the 'back' button will only work with the first webView
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
-      _savePreferences();
+      _saveTabs();
       return true;
     } else {
       return false;
@@ -243,7 +247,7 @@ class WebViewProvider extends ChangeNotifier {
       // Call child method directly, otherwise the 'back' button will only work with the first webView
       tab.webViewKey.currentState?.loadFromExterior(url: previous, omitHistory: true);
       tab.currentUrl = previous;
-      _savePreferences();
+      _saveTabs();
       return true;
     } else {
       return false;
@@ -254,10 +258,10 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
     tab.webViewKey.currentState?.loadFromExterior(url: url, omitHistory: false);
-    _savePreferences();
+    _saveTabs();
   }
 
-  void _savePreferences() {
+  void _saveTabs() {
     var saveModel = TabSaveModel()..tabsSave = <TabsSave>[];
     for (var i = 1; i < _tabList.length; i++) {
       saveModel.tabsSave.add(
@@ -317,6 +321,12 @@ class WebViewProvider extends ChangeNotifier {
   void changeUseTabIcons(bool useIcons) {
     _useTabIcons = useIcons;
     Prefs().setUseTabsIcons(useIcons);
+    notifyListeners();
+  }
+
+  void toggleHideTabs() {
+    _hideTabs = !_hideTabs;
+    Prefs().setHideTabs(_hideTabs);
     notifyListeners();
   }
 

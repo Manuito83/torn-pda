@@ -132,6 +132,7 @@ class Prefs {
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
   final String _kUseTabsIcons = "pda_useTabsIcons";
+  final String _kHideTabs = "pda_hideTabs";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1517,6 +1518,16 @@ class Prefs {
   Future<bool> setUseTabsIcons(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseTabsIcons, value);
+  }
+
+  Future<bool> getHideTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kHideTabs) ?? false;
+  }
+
+  Future<bool> setHideTabs(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kHideTabs, value);
   }
 
 
