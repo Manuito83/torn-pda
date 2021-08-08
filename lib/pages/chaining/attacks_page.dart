@@ -126,7 +126,6 @@ class _AttacksPageState extends State<AttacksPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text('Attacks'),
       leading: new IconButton(
         icon: new Icon(Icons.menu),

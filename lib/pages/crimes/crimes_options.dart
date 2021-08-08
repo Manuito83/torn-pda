@@ -119,7 +119,6 @@ class _CrimesOptionsState extends State<CrimesOptions> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Quick Crimes"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

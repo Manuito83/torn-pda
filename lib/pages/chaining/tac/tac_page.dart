@@ -612,7 +612,6 @@ class _TacPageState extends State<TacPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Torn Attack Central"),
       leading: new IconButton(
         icon: new Icon(Icons.menu),

@@ -101,7 +101,6 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Travel notification"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

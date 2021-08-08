@@ -122,7 +122,6 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Notification options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

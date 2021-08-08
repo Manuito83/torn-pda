@@ -117,7 +117,6 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Vault options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

@@ -189,7 +189,6 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
     return CustomAppBar(
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
-        brightness: Brightness.dark,
         leading: IconButton(
             icon: Icon(Icons.close),
             onPressed: () async {

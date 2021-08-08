@@ -74,7 +74,6 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Vault configuration"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

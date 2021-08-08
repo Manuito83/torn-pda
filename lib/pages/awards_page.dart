@@ -417,7 +417,6 @@ class _AwardsPageState extends State<AwardsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Row(
         children: [
           Text('Awards'),

@@ -105,7 +105,6 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Row(
         children: [
           Text('Awards graph'),

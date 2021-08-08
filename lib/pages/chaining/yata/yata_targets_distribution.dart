@@ -133,7 +133,6 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text('YATA targets'),
       leading: IconButton(
         icon: Icon(Icons.arrow_back),

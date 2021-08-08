@@ -1,7 +1,6 @@
 // Flutter imports:
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -314,7 +313,6 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       toolbarHeight: 50,
       title: Text('User scripts'),
       leading: new IconButton(

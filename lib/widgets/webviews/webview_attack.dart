@@ -5,7 +5,6 @@ import 'dart:io';
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:animations/animations.dart';
@@ -273,7 +272,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         await _goBackOrForward(details);
       },
       genericAppBar: AppBar(
-        brightness: Brightness.dark,
         leading: IconButton(
             icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
             onPressed: () async {
