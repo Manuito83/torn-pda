@@ -50,7 +50,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (message.data["channelId"].contains("Alerts stocks") != null) {
+  if (message.data["channelId"].contains("Alerts stocks") == true) {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     final oldData = await Prefs().getDataStockMarket();
@@ -68,8 +68,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
   const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-  const initializationSettingsIOS = IOSInitializationSettings(
-  );
+  const initializationSettingsIOS = IOSInitializationSettings();
 
   const initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
@@ -167,9 +166,6 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-    ));
 
     return MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
@@ -183,7 +179,14 @@ class _MyAppState extends State<MyApp> {
               title: 'Torn PDA',
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
+                appBarTheme: AppBarTheme(
+                  systemOverlayStyle: SystemUiOverlayStyle(
+                    statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.red : Colors.grey[900],
+                  ),
+                  color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                ),
                 primarySwatch: Colors.blueGrey,
+                visualDensity: VisualDensity.adaptivePlatformDensity,
                 brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
               ),
               home: DrawerPage(),
