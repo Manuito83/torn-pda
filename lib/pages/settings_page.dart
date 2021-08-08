@@ -5,7 +5,6 @@ import 'dart:io';
 // Flutter imports:
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:android_intent/android_intent.dart';
@@ -71,6 +70,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   int _androidSdk = 0;
 
+  double _extraMargin = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +103,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
+                    SizedBox(height: _extraMargin),
                     _apiKeyWidget(),
                     SizedBox(height: 15),
                     Row(
@@ -538,7 +540,6 @@ class _SettingsPageState extends State<SettingsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       toolbarHeight: 50,
       title: Text('Settings'),
       leading: new IconButton(
@@ -1258,6 +1259,9 @@ class _SettingsPageState extends State<SettingsPage> {
         }
         setState(() {
           _appBarPosition = value;
+          if (value == "bottom") {
+            _extraMargin = 50;
+          }
         });
       },
     );
