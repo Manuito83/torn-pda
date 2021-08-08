@@ -1,30 +1,25 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
-
-// Flutter imports:
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+// Flutter imports:
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
-import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/widgets/tct_clock.dart';
-
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
+import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
@@ -37,6 +32,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
@@ -44,6 +40,8 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
+import 'package:torn_pda/widgets/tct_clock.dart';
+
 import 'main.dart';
 
 class DrawerPage extends StatefulWidget {
@@ -52,9 +50,9 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  int _settingsPosition = 8;
-  int _aboutPosition = 9;
-  var _allowSectionsWithoutKey = [];
+  final int _settingsPosition = 8;
+  final int _aboutPosition = 9;
+  var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
   // via callback, as it might need to be changed as well
@@ -96,10 +94,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   String _lastBody;
   int concurrent = 0;
   // Assigns different ids to alerts when the app is on the foreground
-  var notId = 900;
+  int notId = 900;
 
   // Platform channel with MainActivity.java
-  static const platform = const MethodChannel('tornpda.channel');
+  static const platform = MethodChannel('tornpda.channel');
 
   @override
   void initState() {
@@ -116,10 +114,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       quickActions.initialize((String shortcutType) async {
         if (shortcutType == 'open_torn') {
           context.read<WebViewProvider>().openBrowserPreference(
-            context: context,
-            url: "http://www.torn.com",
-            useDialog: _settingsProvider.useQuickBrowser,
-          );
+                context: context,
+                url: "http://www.torn.com",
+                useDialog: _settingsProvider.useQuickBrowser,
+              );
         }
       });
     });
@@ -200,13 +198,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
       if (!skip) {
         _lastMessageReceived = DateTime.now();
-        _lastBody = message.data["body"];
+        _lastBody = message.data["body"] as String;
         // Assigns a different id two alerts that come together (otherwise one
         // deletes the previous one)
         notId++;
         if (notId > 990) notId = 900;
         // This will eventually fire a local notification
-        return showNotification(message.data, notId);
+        showNotification(message.data, notId);
       } else {
         return null;
       }
@@ -225,7 +223,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
@@ -249,7 +247,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
             ?.getActiveNotifications();
 
-        for (var not in activeNotifications) {
+        for (final not in activeNotifications) {
           // Platform channel to cancel direct Firebase notifications (we can call
           // "cancelAll()" there without affecting scheduled notifications, which is
           // a problem with the local plugin)
@@ -267,14 +265,14 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
   }
 
-  void _getBackGroundNotifications() async {
+  Future<void> _getBackGroundNotifications() async {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
     // Get the save alerts
     Prefs().getDataStockMarket().then((stocks) {
       if (stocks.isNotEmpty) {
         Prefs().setDataStockMarket("");
-        Future.delayed(Duration(seconds: 1)).then((value) => _openBackgroundStockDialog(stocks));
+        Future.delayed(const Duration(seconds: 1)).then((value) => _openBackgroundStockDialog(stocks));
       }
     });
   }
@@ -285,7 +283,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   //  - Give the option to choose different places? Like in nerve,
   //    crimes vs jail. Energy: gym vs dump vs do not open.
 
-  Future<void> _fireLaunchResumeNotifications(Map message) async {
+  Future<void> _fireLaunchResumeNotifications(Map<String, dynamic> message) async {
     bool launchBrowser = false;
     var browserUrl = '';
 
@@ -307,13 +305,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     var tradeId = '';
 
     if (Platform.isIOS) {
-      channel = message["channelId"];
-      messageId = message["tornMessageId"];
-      tradeId = message["tornTradeId"];
+      channel = message["channelId"] as String;
+      messageId = message["tornMessageId"] as String;
+      tradeId = message["tornTradeId"] as String;
     } else if (Platform.isAndroid) {
-      channel = message["channelId"];
-      messageId = message["tornMessageId"];
-      tradeId = message["tornTradeId"];
+      channel = message["channelId"] as String;
+      messageId = message["tornMessageId"] as String;
+      tradeId = message["tornTradeId"] as String;
     }
 
     if (channel.contains("Alerts travel")) {
@@ -389,7 +387,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 500));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       if (launchBrowser) {
         await _webViewProvider.openBrowserPreference(
@@ -439,11 +437,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';
       } else if (payload.contains('400-')) {
         launchBrowser = true;
-        var npcId = payload.split('-')[1];
+        final npcId = payload.split('-')[1];
         browserUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
       } else if (payload.contains('tornMessageId:')) {
         launchBrowser = true;
-        var messageId = payload.split(':');
+        final messageId = payload.split(':');
         browserUrl = "https://www.torn.com/messages.php";
         if (messageId[1] != "0") {
           browserUrl = "https://www.torn.com/messages.php#/p=read&ID="
@@ -454,7 +452,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         browserUrl = "https://www.torn.com/events.php#/step=all";
       } else if (payload.contains('tornTradeId:')) {
         launchBrowser = true;
-        var tradeId = payload.split(':');
+        final tradeId = payload.split(':');
         browserUrl = "https://www.torn.com/trade.php";
         if (tradeId[1] != "0") {
           browserUrl = "https://www.torn.com/trade.php#step=view&ID=${tradeId[1]}";
@@ -496,8 +494,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       : Colors.grey[900]
                   : Colors.grey[900],
               child: SafeArea(
-                top: _settingsProvider.appBarTop ? false : true,
-                bottom: true,
+                top: _settingsProvider.appBarTop || true,
                 child: Scaffold(
                   key: _scaffoldKey,
                   body: _getPages(),
@@ -523,9 +520,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             return Container(
               color: Colors.black,
               child: SafeArea(
-                top: _settingsProvider.appBarTop ? false : true,
-                bottom: true,
-                child: Center(
+                top: _settingsProvider.appBarTop || true,
+                child: const Center(
                   child: CircularProgressIndicator(),
                 ),
               ),
@@ -537,77 +533,75 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Widget _getDrawerHeader() {
-    return Container(
-      height: MediaQuery.of(context).orientation == Orientation.portrait ? 300 : 250,
+    return SizedBox(
+      height: MediaQuery.of(context).orientation == Orientation.portrait ? 280 : 250,
       child: DrawerHeader(
-        child: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Flexible(
-                child: Image(
-                  image: AssetImage('images/icons/torn_pda.png'),
-                  fit: BoxFit.fill,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            const Flexible(
+              child: Image(
+                image: AssetImage('images/icons/torn_pda.png'),
+                fit: BoxFit.fill,
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Text(
+                'TORN PDA',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  'TORN PDA',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 10),
+                      ),
+                      Switch(
+                        value: _themeProvider.currentTheme == AppTheme.dark || false,
+                        onChanged: (bool value) {
+                          if (value) {
+                            _themeProvider.changeTheme = AppTheme.dark;
+                          } else {
+                            _themeProvider.changeTheme = AppTheme.light;
+                          }
+                          setState(() {
+                            SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+                              statusBarColor:
+                                  _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                            ));
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                ),
+                  const TctClock(),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(left: 10),
-                        ),
-                        Switch(
-                          value: _themeProvider.currentTheme == AppTheme.dark ? true : false,
-                          onChanged: (bool value) {
-                            if (value) {
-                              _themeProvider.changeTheme = AppTheme.dark;
-                            } else {
-                              _themeProvider.changeTheme = AppTheme.light;
-                            }
-                            setState(() {
-                              SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-                                statusBarColor:
-                                    _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-                              ));
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const TctClock(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _getDrawerItems() {
-    var drawerOptions = <Widget>[];
+    final drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings + About pages
     // (just don't add the other sections to the list)
     if (!_userProvider.basic.userApiKeyValid) {
-      for (var position in _allowSectionsWithoutKey) {
+      for (final position in _allowSectionsWithoutKey) {
         drawerOptions.add(
           ListTileTheme(
             selectedColor: Colors.red,
@@ -643,7 +637,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
         // Adding divider just before SETTINGS
         if (i == _settingsPosition) {
-          drawerOptions.add(Divider());
+          drawerOptions.add(const Divider());
         }
         drawerOptions.add(
           ListTileTheme(
@@ -700,7 +694,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 8:
-        return SettingsPage();
+        return const SettingsPage();
         break;
       case 9:
         return AboutPage();
@@ -710,51 +704,51 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         break;
 
       default:
-        return new Text("Error");
+        return const Text("Error");
     }
   }
 
   Widget _returnDrawerIcons({int drawerPosition}) {
     switch (drawerPosition) {
       case 0:
-        return Icon(Icons.person);
+        return const Icon(Icons.person);
         break;
       case 1:
-        return Icon(Icons.local_airport);
+        return const Icon(Icons.local_airport);
         break;
       case 2:
-        return Icon(MdiIcons.linkVariant);
+        return const Icon(MdiIcons.linkVariant);
         break;
       case 3:
-        return Icon(MdiIcons.knifeMilitary);
+        return const Icon(MdiIcons.knifeMilitary);
         break;
       case 4:
-        return Icon(Icons.people);
+        return const Icon(Icons.people);
         break;
       case 5:
-        return Icon(MdiIcons.trophy);
+        return const Icon(MdiIcons.trophy);
         break;
       case 6:
-        return Icon(MdiIcons.bankTransfer);
+        return const Icon(MdiIcons.bankTransfer);
         break;
       case 7:
-        return Icon(Icons.notifications_active);
+        return const Icon(Icons.notifications_active);
         break;
       case 8:
-        return Icon(Icons.settings);
+        return const Icon(Icons.settings);
         break;
       case 9:
-        return Icon(Icons.info_outline);
+        return const Icon(Icons.info_outline);
         break;
       case 10:
-        return Icon(Icons.question_answer_outlined);
+        return const Icon(Icons.question_answer_outlined);
         break;
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
-  _onSelectItem(int index) async {
+  Future<void> _onSelectItem(int index) async {
 /*    await analytics.logEvent(
         name: 'section_changed',
         parameters: {'section': _drawerItemsList[index]});*/
@@ -773,7 +767,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     await _settingsProvider.loadPreferences();
 
     // Change device preferences
-    var allowRotation = _settingsProvider.allowScreenRotation;
+    final allowRotation = _settingsProvider.allowScreenRotation;
     if (allowRotation) {
       SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
@@ -800,17 +794,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
-      var defaultSection = await Prefs().getDefaultSection();
+      final defaultSection = await Prefs().getDefaultSection();
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
       // Firestore get auth and init
-      var user = await firebaseAuth.currentUser();
+      final user = await firebaseAuth.currentUser();
       if (user == null) {
         _updateFirebaseDetails();
       } else {
-        var uid = await firebaseAuth.getUID();
-        firestore.setUID(uid);
+        final uid = await firebaseAuth.getUID();
+        firestore.setUID(uid as String);
       }
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
@@ -819,11 +813,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
   }
 
-  void _updateLastActiveTime() async {
+  Future<void> _updateLastActiveTime() async {
     // Calculate difference between last recorded use and current time
-    var now = DateTime.now().millisecondsSinceEpoch;
-    var dTimeStamp = now - _settingsProvider.lastAppUse;
-    var duration = Duration(milliseconds: dTimeStamp);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final dTimeStamp = now - _settingsProvider.lastAppUse;
+    final duration = Duration(milliseconds: dTimeStamp);
 
     // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
     // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
@@ -838,8 +832,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   Future<void> _updateFirebaseDetails() async {
     // We save the key because the API call will reset it
     // Then get user's profile and update
-    var savedKey = _userProvider.basic.userApiKey;
-    dynamic prof = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+    final savedKey = _userProvider.basic.userApiKey;
+    final dynamic prof = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof
@@ -847,21 +841,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         ..userApiKeyValid = true;
 
       // Upload information to Firebase (this includes the token)
-      User mFirebaseUser = await firebaseAuth.signInAnon();
+      final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
       firestore.setUID(mFirebaseUser.uid);
       await firestore.uploadUsersProfileDetail(prof, userTriggered: true);
     }
 
     // Uploads last active time to Firebase
-    var now = DateTime.now().millisecondsSinceEpoch;
-    var success = await firestore.uploadLastActiveTime(now);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final success = await firestore.uploadLastActiveTime(now);
     if (success) {
       _settingsProvider.updateLastUsed(now);
     }
   }
 
-  void _handleChangelog() async {
-    String savedVersion = await Prefs().getAppVersion();
+  Future<void> _handleChangelog() async {
+    final String savedVersion = await Prefs().getAppVersion();
     if (savedVersion != appVersion) {
       Prefs().setAppVersion(appVersion);
 
@@ -878,18 +872,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
       // Deletes current channels and create new ones
       if (Platform.isAndroid) {
-        var vibration = await Prefs().getVibrationPattern();
+        final vibration = await Prefs().getVibrationPattern();
         await reconfigureNotificationChannels(mod: vibration);
       }
 
       _changelogIsActive = true;
       _showChangeLogDialog(context);
     }
-
-
   }
 
-  void _showChangeLogDialog(BuildContext context) async {
+  Future<void> _showChangeLogDialog(BuildContext context) async {
     await showDialog(
       context: context,
       barrierDismissible: false,
@@ -912,7 +904,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<bool> _willPopCallback() async {
-    var appExit = _settingsProvider.onAppExit;
+    final appExit = _settingsProvider.onAppExit;
     if (appExit == 'exit') {
       return true;
     } else if (appExit == 'stay') {
@@ -920,17 +912,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _scaffoldKey.currentState.openDrawer();
       return false;
     } else {
-      var action;
+      String action;
       await showDialog(
         context: context,
         builder: (BuildContext context) {
           return OnAppExitDialog();
         },
       ).then((choice) {
-        action = choice;
+        action = choice as String;
       });
       if (action == 'exit') {
-        await Future.delayed(Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 300));
         return true;
       } else {
         // Open drawer instead
@@ -940,13 +932,13 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     }
   }
 
-  _onChangeDisableTravelSection(bool disable) {
+  void _onChangeDisableTravelSection(bool disable) {
     setState(() {
       _settingsProvider.changeDisableTravelSection = disable;
     });
   }
 
-  _onChangeStockMarketInMenu(bool inMenu) {
+  void _onChangeStockMarketInMenu(bool inMenu) {
     setState(() {
       _settingsProvider.changeStockExchangeInMenu = inMenu;
     });
@@ -976,22 +968,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
@@ -1018,12 +1009,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                             style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 15),
+                        const SizedBox(height: 15),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text(
+                              child: const Text(
                                 "Stock Exchange",
                               ),
                               onPressed: () async {
@@ -1035,9 +1026,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                 Navigator.of(context).pop();
                               },
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             TextButton(
-                              child: Text("Close"),
+                              child: const Text("Close"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -1057,7 +1048,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.background,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(MdiIcons.chartLine, color: Colors.green),

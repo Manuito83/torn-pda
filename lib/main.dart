@@ -2,24 +2,21 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
-
+// Package imports:
+import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// Package imports:
-import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
-
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -42,9 +39,9 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-final String appVersion = '2.5.0';
-final String androidVersion = '119';
-final String iosVersion = '130';
+const String appVersion = '2.5.0';
+const String androidVersion = '120';
+const String iosVersion = '130';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -53,15 +50,15 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 final BehaviorSubject<String> selectNotificationSubject = BehaviorSubject<String>();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (message.data["channelId"].contains("Alerts stocks")) {
+  if (message.data["channelId"].contains("Alerts stocks") != null) {
     // Reload isolate (as we are reading from background)
     await Prefs().reload();
-    var oldData = await Prefs().getDataStockMarket();
+    final oldData = await Prefs().getDataStockMarket();
     var newData = "";
     if (oldData.isNotEmpty) {
-      newData = oldData + "\n${message.notification.body}";
+      newData = "$oldData\n${message.notification.body}";
     } else {
-      newData = oldData + "${message.notification.body}";
+      newData = "$oldData${message.notification.body}";
     }
     Prefs().setDataStockMarket(newData);
   }
@@ -69,18 +66,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   tz.initializeTimeZones();
-
-  var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-
-  var initializationSettingsIOS = IOSInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
+  const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  const initializationSettingsIOS = IOSInitializationSettings(
   );
 
-  var initializationSettings = InitializationSettings(
+  const initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
     iOS: initializationSettingsIOS,
   );
@@ -102,7 +93,7 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
-  HttpOverrides.global = new MyHttpOverrides();
+  HttpOverrides.global = MyHttpOverrides();
 
   runApp(
     MultiProvider(
@@ -175,13 +166,13 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    var _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    final _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
       statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
     ));
 
     return MediaQuery(
-      data: new MediaQueryData.fromWindow(ui.window),
+      data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
         textDirection: TextDirection.ltr,
         child: Stack(
@@ -197,7 +188,7 @@ class _MyAppState extends State<MyApp> {
               ),
               home: DrawerPage(),
             ),
-            AppBorder(),
+            const AppBorder(),
           ],
         ),
       ),
@@ -224,7 +215,7 @@ class AppBorder extends StatefulWidget {
 class _AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
-    var _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+    final _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
     return IgnorePointer(
       child: Column(
         children: [
