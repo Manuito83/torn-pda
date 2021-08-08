@@ -494,7 +494,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       : Colors.grey[900]
                   : Colors.grey[900],
               child: SafeArea(
-                top: _settingsProvider.appBarTop || true,
+                top: !_settingsProvider.appBarTop || false,
                 child: Scaffold(
                   key: _scaffoldKey,
                   body: _getPages(),
