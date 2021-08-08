@@ -131,8 +131,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   DateTime _serverTime;
 
-  double _alertBorderWidth = 1;
-
   Timer _tickerCallApi;
 
   SettingsProvider _settingsProvider;
@@ -281,9 +279,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _getBazaarInfo();
         _miscTick = 0;
       }
-
-      // Add border style alert when approaching a country
-      _alertBorderWidth == 1 ? _alertBorderWidth = 2 : _alertBorderWidth = 1;
     });
 
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
@@ -338,129 +333,138 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (_apiGoodData) {
-                return BubbleShowcase(
-                  // KEEP THIS UNIQUE
-                  bubbleShowcaseId: 'profile_showcase',
-                  // WILL SHOW IF VERSION CHANGED
-                  bubbleShowcaseVersion: 3,
-                  showCloseButton: false,
-                  doNotReopenOnClose: true,
-                  bubbleSlides: [
-                    AbsoluteBubbleSlide(
-                      positionCalculator: (size) => Position(
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        left: 0,
-                      ),
-                      child: AbsoluteBubbleSlideChild(
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _fetchApi();
+                    _getMiscCardInfo();
+                    _getBazaarInfo();
+                    _miscTick = 0;
+                    await Future.delayed(Duration(seconds: 1));
+                  },
+                  child: BubbleShowcase(
+                    // KEEP THIS UNIQUE
+                    bubbleShowcaseId: 'profile_showcase',
+                    // WILL SHOW IF VERSION CHANGED
+                    bubbleShowcaseVersion: 3,
+                    showCloseButton: false,
+                    doNotReopenOnClose: true,
+                    bubbleSlides: [
+                      AbsoluteBubbleSlide(
                         positionCalculator: (size) => Position(
-                          bottom: MediaQuery.of(context).size.height / 2 - 100,
-                          left: (size.width) / 2 - 200,
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          left: 0,
                         ),
-                        widget: SpeechBubble(
-                          width: 200,
-                          nipLocation: NipLocation.BOTTOM,
-                          nipHeight: 0,
-                          color: Colors.green[800],
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(
-                              'Did you know?\n\n'
-                              'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
-                              'a full browser with a LONG PRESS. You decide.\n\n'
-                              'You can deactivate this feature in the Settings section.',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        child: AbsoluteBubbleSlideChild(
+                          positionCalculator: (size) => Position(
+                            bottom: MediaQuery.of(context).size.height / 2 - 100,
+                            left: (size.width) / 2 - 200,
                           ),
-                        ),
-                      ),
-                    ),
-                    RelativeBubbleSlide(
-                      shape: Rectangle(spreadRadius: 10),
-                      widgetKey: _showOne,
-                      child: RelativeBubbleSlideChild(
-                        direction: AxisDirection.up,
-                        widget: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SpeechBubble(
+                          widget: SpeechBubble(
+                            width: 200,
                             nipLocation: NipLocation.BOTTOM,
-                            color: Colors.blue,
+                            nipHeight: 0,
+                            color: Colors.green[800],
                             child: Padding(
-                              padding: EdgeInsets.all(6),
+                              padding: EdgeInsets.all(10),
                               child: Text(
                                 'Did you know?\n\n'
-                                'Tap any of the bars to launch a browser '
-                                'straight to the gym, crimes or items sections!',
+                                'Most links in Torn PDA will open a quick browser with a SHORT TAP and '
+                                'a full browser with a LONG PRESS. You decide.\n\n'
+                                'You can deactivate this feature in the Settings section.',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    AbsoluteBubbleSlide(
-                      positionCalculator: (size) => Position(
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        left: 0,
-                      ),
-                      child: AbsoluteBubbleSlideChild(
-                        positionCalculator: (size) => Position(
-                          bottom: MediaQuery.of(context).size.height / 2 - 100,
-                          left: (size.width) / 2 - 200,
-                        ),
-                        widget: SpeechBubble(
-                          width: 200,
-                          nipLocation: NipLocation.BOTTOM,
-                          nipHeight: 0,
-                          color: Colors.blue,
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Text(
-                              'There are many other places where you can tap to '
-                              'navigate to Torn (e.g. the points or cash icons below)\n\n'
-                              'Don\'t forget to visit the TIPS section (see main menu) for other tips '
-                              'and tricks!',
-                              style: TextStyle(color: Colors.white),
+                      RelativeBubbleSlide(
+                        shape: Rectangle(spreadRadius: 10),
+                        widgetKey: _showOne,
+                        child: RelativeBubbleSlideChild(
+                          direction: AxisDirection.up,
+                          widget: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SpeechBubble(
+                              nipLocation: NipLocation.BOTTOM,
+                              color: Colors.blue,
+                              child: Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  'Did you know?\n\n'
+                                  'Tap any of the bars to launch a browser '
+                                  'straight to the gym, crimes or items sections!',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-                          child: Column(
-                            children: <Widget>[
-                              Text(
-                                '${_user.name} [${_user.playerId}]',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+                      AbsoluteBubbleSlide(
+                        positionCalculator: (size) => Position(
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          left: 0,
+                        ),
+                        child: AbsoluteBubbleSlideChild(
+                          positionCalculator: (size) => Position(
+                            bottom: MediaQuery.of(context).size.height / 2 - 100,
+                            left: (size.width) / 2 - 200,
+                          ),
+                          widget: SpeechBubble(
+                            width: 200,
+                            nipLocation: NipLocation.BOTTOM,
+                            nipHeight: 0,
+                            color: Colors.blue,
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Text(
+                                'There are many other places where you can tap to '
+                                'navigate to Torn (e.g. the points or cash icons below)\n\n'
+                                'Don\'t forget to visit the TIPS section (see main menu) for other tips '
+                                'and tricks!',
+                                style: TextStyle(color: Colors.white),
                               ),
-                              SizedBox(height: 5),
-                              Text(
-                                'Level ${_user.level}',
-                              ),
-                              Text(
-                                _user.lastAction.relative[0] == '0'
-                                    ? 'Online now'
-                                    : 'Online ${_user.lastAction.relative}',
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                        Column(
-                          children: _returnSections(),
-                        ),
-                        SizedBox(height: 70),
-                      ],
+                      ),
+                    ],
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: <Widget>[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+                            child: Column(
+                              children: <Widget>[
+                                Text(
+                                  '${_user.name} [${_user.playerId}]',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                SizedBox(height: 5),
+                                Text(
+                                  'Level ${_user.level}',
+                                ),
+                                Text(
+                                  _user.lastAction.relative[0] == '0'
+                                      ? 'Online now'
+                                      : 'Online ${_user.lastAction.relative}',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            children: _returnSections(),
+                          ),
+                          SizedBox(height: 70),
+                        ],
+                      ),
                     ),
                   ),
                 );
