@@ -576,14 +576,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                           } else {
                             _themeProvider.changeTheme = AppTheme.light;
                           }
-                          /*
                           setState(() {
-                            SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-                              statusBarColor:
-                                  _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-                            ));
+                            SystemChrome.setSystemUIOverlayStyle(
+                              SystemUiOverlayStyle(
+                                statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                                statusBarBrightness: Brightness.dark,
+                                statusBarIconBrightness: Brightness.light,
+                              ),
+                            );
                           });
-                          */
                         },
                       ),
                     ],

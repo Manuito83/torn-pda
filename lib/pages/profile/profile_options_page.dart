@@ -651,7 +651,6 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Profile Options"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
