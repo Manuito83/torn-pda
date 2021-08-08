@@ -676,11 +676,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _terminalProvider.setTerminal("Terminal");
             },
             onCreateWindow: (c, request) {
+              if (!mounted) return;
+
               _webViewProvider.addTab(url: request.request.url.toString());
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
             },
             onLoadStart: (c, uri) async {
+              if (!mounted) return;
+
               // Userscripts
               UserScriptChanges changes = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
@@ -704,6 +708,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               assessGym();
             },
             onProgressChanged: (c, progress) async {
+              if (!mounted) return;
+
               if (_settingsProvider.removeAirplane) {
                 webView.evaluateJavascript(source: travelRemovePlaneJS());
               }
@@ -726,6 +732,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _resetSectionsWithWidgets();
             },
             onLoadStop: (c, uri) async {
+              if (!mounted) return;
+
               _currentUrl = uri.toString();
 
               _hideChat();
