@@ -487,6 +487,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         future: _finishedWithPreferences,
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
+            // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
+            // safe area will be black
             return Container(
               color: _themeProvider.currentTheme == AppTheme.light
                   ? MediaQuery.of(context).orientation == Orientation.portrait

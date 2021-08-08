@@ -6,6 +6,7 @@ class BounceTabBar extends StatefulWidget {
   final ValueChanged<int> onTabChanged;
   final int initialIndex;
   final double movement;
+  final bool locationTop;
 
   const BounceTabBar({
     Key key,
@@ -14,6 +15,7 @@ class BounceTabBar extends StatefulWidget {
     @required this.onTabChanged,
     this.initialIndex = 0,
     this.movement = 150,
+    @required this.locationTop,
   }) : super(key: key);
 
   @override
@@ -94,20 +96,23 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
     double currentElevation = 0.0;
     final movement = widget.movement;
     return SizedBox(
-      height: kBottomNavigationBarHeight,
+      height: 45,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
           currentWidth = width - movement * _animTabBarIn.value + movement * _animTabBarOut.value;
+
           currentElevation = -movement * _animElevationIn.value / 2 +
               (movement - kBottomNavigationBarHeight / 2) * _animElevationOut.value / 2;
+
           return Center(
             child: Container(
               width: currentWidth,
               decoration: BoxDecoration(
                 color: widget.backgroundColor,
                 borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(20),
+                  top: widget.locationTop ? Radius.zero : Radius.circular(20),
+                  bottom: widget.locationTop ? Radius.circular(20) : Radius.zero,
                 ),
               ),
               child: Row(
@@ -117,7 +122,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
                   (index) {
                     final child = widget.items[index];
                     final innerWidget = CircleAvatar(
-                      radius: 30.0,
+                      radius: 25.0,
                       backgroundColor: widget.backgroundColor,
                       child: child,
                     );
@@ -126,7 +131,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
                         child: CustomPaint(
                           foregroundPainter: _CircleItemPainter(_animCircleItem.value),
                           child: Transform.translate(
-                            offset: Offset(0.0, currentElevation),
+                            offset: widget.locationTop ? Offset(0.0, -currentElevation) : Offset(0.0, currentElevation),
                             child: innerWidget,
                           ),
                         ),
