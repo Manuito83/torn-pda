@@ -167,10 +167,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     final _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.red : Colors.grey[900],
-    ));
-
     return MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
@@ -185,9 +181,9 @@ class _MyAppState extends State<MyApp> {
               theme: ThemeData(
                 appBarTheme: AppBarTheme(
                   systemOverlayStyle: SystemUiOverlayStyle(
-                    statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.red : Colors.grey[900],
+                    statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
                   ),
-                  color: _themeProvider.currentTheme == AppTheme.light ? Colors.red : Colors.grey[900],
+                  color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
                 ),
                 primarySwatch: Colors.blueGrey,
                 visualDensity: VisualDensity.adaptivePlatformDensity,
