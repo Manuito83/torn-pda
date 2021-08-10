@@ -1504,7 +1504,7 @@ class Prefs {
   /// -----------------------------
   Future<String> getWebViewTabs() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebViewTabs) ?? "";
+    return prefs.getString(_kWebViewTabs) ?? '{"tabsSave": []}';
   }
 
   Future<bool> setWebViewTabs(String value) async {
