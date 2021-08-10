@@ -104,6 +104,7 @@ flutter:
     - images/icons/map/
     - images/icons/inventory/
     - images/icons/home/
+    - images/icons/status/
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/

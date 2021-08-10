@@ -6,7 +6,6 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 // Package imports:
@@ -29,6 +28,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -192,7 +192,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _alarmSound;
   bool _alarmVibration;
 
-  bool _miscApiFetched = false;
+  bool _miscApiFetchedOnce = false;
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
@@ -216,6 +216,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _uhcReviveActive = false;
   bool _warnAboutChains = false;
   bool _shortcutsEnabled = false;
+  bool _showHeaderWallet = false;
+  bool _showHeaderIcons = false;
   bool _dedicatedTravelCard = false;
 
   ChainModel _chainModel;
@@ -309,6 +311,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
+        _getBazaarInfo();
       }
     }
   }
@@ -436,29 +439,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: SingleChildScrollView(
                       child: Column(
                         children: <Widget>[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-                            child: Column(
-                              children: <Widget>[
-                                Text(
-                                  '${_user.name} [${_user.playerId}]',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  'Level ${_user.level}',
-                                ),
-                                Text(
-                                  _user.lastAction.relative[0] == '0'
-                                      ? 'Online now'
-                                      : 'Online ${_user.lastAction.relative}',
-                                ),
-                              ],
-                            ),
-                          ),
+                          _headerIcons(),
                           Column(
                             children: _returnSections(),
                           ),
@@ -470,41 +451,49 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 );
               } else {
                 var error = _apiError.isEmpty ? "" : ": $_apiError";
-                return SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      SizedBox(height: 50),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: _shortcutsCarrousel(),
-                      ),
-                      SizedBox(height: 50),
-                      Text(
-                        'OOPS!',
-                        style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                        child: Column(
-                          children: [
-                            Text(
-                              'There was an error$error\n\n'
-                              'Torn PDA is retrying automatically. '
-                              'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 20),
-                            Text(
-                              'You can still try to access Torn through shortcuts or the main '
-                              'menu icon below.',
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    _fetchApi();
+                    await Future.delayed(Duration(seconds: 1));
+                  },
+                  child: SingleChildScrollView(
+                    // Physics so that page can be refreshed even with no scroll                    
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        SizedBox(height: 50),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: _shortcutsCarrousel(),
                         ),
-                      ),
-                      SizedBox(height: 50),
-                    ],
+                        SizedBox(height: 50),
+                        Text(
+                          'OOPS!',
+                          style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                          child: Column(
+                            children: [
+                              Text(
+                                'There was an error$error\n\n'
+                                'Torn PDA is retrying automatically. '
+                                'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 20),
+                              Text(
+                                'You can still try to access Torn through shortcuts or the main '
+                                'menu icon below.',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 50),
+                      ],
+                    ),
                   ),
                 );
               }
@@ -532,7 +521,28 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text('Profile'),
+      title: FittedBox(
+        fit: BoxFit.fitWidth,
+        child: Column(
+          children: [
+            if (_user?.name != null && _user.name.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_user.name),
+                  Text(
+                    "[${_user.playerId}] - Level ${_user.level}",
+                    style: TextStyle(
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text("Profile"),
+          ],
+        ),
+      ),
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
@@ -593,6 +603,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _uhcReviveActive = newOptions.uhcReviveEnabled;
               _warnAboutChains = newOptions.warnAboutChainsEnabled;
               _shortcutsEnabled = newOptions.shortcutsEnabled;
+              _showHeaderWallet = newOptions.showHeaderWallet;
+              _showHeaderIcons = newOptions.showHeaderIcons;
               _dedicatedTravelCard = newOptions.dedicatedTravelCard;
               _eventsExpController.expanded = newOptions.expandEvents;
               _messagesShowNumber = newOptions.messagesShowNumber;
@@ -610,6 +622,58 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           },
         )
       ],
+    );
+  }
+
+  Padding _headerIcons() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_user.lastAction.status == "Offline")
+                Image.asset('images/icons/status/offline.png', width: 14)
+              else if (_user.lastAction.status == "Idle")
+                Image.asset('images/icons/status/idle.png', width: 14)
+              else
+                Image.asset('images/icons/status/online.png', width: 14),
+              SizedBox(width: 5),
+              Text(
+                _user.lastAction.status == 'Offline'
+                    ? 'Offline (${_user.lastAction.relative.replaceAll("ago", "")})'
+                    : _user.lastAction.status == 'Online'
+                        ? 'Online now'
+                        : 'Online ${_user.lastAction.relative}',
+                style: TextStyle(
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          if (_showHeaderWallet)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _cashWallet(dense: true),
+                ],
+              ),
+            ),
+          if (_showHeaderIcons)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: StatusIconsWrap(
+                user: _user,
+                openBrowser: _launchBrowser,
+                settingsProvider: _settingsProvider,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -3083,7 +3147,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cashWallet(),
+              _cashWallet(dense: false),
               SizedBox(height: 4),
               Row(
                 children: [
@@ -3156,7 +3220,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
-                child: _cashWallet(),
+                child: _cashWallet(dense: false),
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 8.0),
@@ -3416,27 +3480,38 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _cashWallet() {
+  Widget _cashWallet({bool dense}) {
     if (_user.networth["wallet"] != null) {
       final moneyFormat = new NumberFormat("#,##0", "en_US");
-      return Row(children: [
-        GestureDetector(
-          onLongPress: () async {
-            _openWalletDialog(context, longPress: true);
-          },
-          onTap: () async {
-            _settingsProvider.useQuickBrowser
-                ? _openWalletDialog(context, longPress: false)
-                : _openWalletDialog(context, longPress: true);
-          },
-          child: Icon(
-            MdiIcons.cashUsdOutline,
-            color: Colors.green,
+      return Row(
+        children: [
+          GestureDetector(
+            onLongPress: () async {
+              _openWalletDialog(context, longPress: true);
+            },
+            onTap: () async {
+              _settingsProvider.useQuickBrowser
+                  ? _openWalletDialog(context, longPress: false)
+                  : _openWalletDialog(context, longPress: true);
+            },
+            child: dense
+                ? Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
+                : Icon(
+                    MdiIcons.cashUsdOutline,
+                    color: Colors.green,
+                  ),
           ),
-        ),
-        SizedBox(width: 5),
-        SelectableText('\$${moneyFormat.format(_user.networth["wallet"])}')
-      ]);
+          SizedBox(width: 5),
+          SelectableText(
+            '\$${moneyFormat.format(_user.networth["wallet"])}',
+            style: TextStyle(
+              fontSize: dense ? 13 : 14,
+              fontWeight: dense ? FontWeight.bold : FontWeight.normal,
+              color: dense ? Colors.green : _themeProvider.mainText,
+            ),
+          )
+        ],
+      );
     } else {
       return SizedBox.shrink();
     }
@@ -4039,7 +4114,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //  - (async) OC Crimes (both types) with AA call or from events
     // Separately
     //  - (async) Bazaar
-    if (_apiGoodData && !_miscApiFetched) {
+    if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
       _getBazaarInfo();
     }
@@ -4072,7 +4147,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         setState(() {
           _miscModel = miscApiResponse;
-          _miscApiFetched = true;
+          _miscApiFetchedOnce = true;
           _tornEducationModel = educationResponse;
         });
       }
@@ -5037,6 +5112,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _uhcReviveActive = await Prefs().getUseUhcRevive();
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _shortcutsEnabled = await Prefs().getEnableShortcuts();
+    _showHeaderWallet = await Prefs().getShowHeaderWallet();
+    _showHeaderIcons = await Prefs().getShowHeaderIcons();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 
     var expandEvents = await Prefs().getExpandEvents();
@@ -6148,7 +6225,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: _messagesTimeline(),
           ),
         );
-      } else if (section == "Basic Info" && _miscApiFetched) {
+      } else if (section == "Basic Info" && _miscApiFetchedOnce) {
         sectionSort.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),

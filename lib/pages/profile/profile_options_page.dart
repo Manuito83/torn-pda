@@ -17,6 +17,8 @@ class ProfileOptionsReturn {
   bool warnAboutChainsEnabled;
   bool warnAboutExcessEnergyEnabled;
   bool shortcutsEnabled;
+  bool showHeaderWallet;
+  bool showHeaderIcons;
   bool dedicatedTravelCard;
   bool disableTravelSection;
   bool expandEvents;
@@ -39,6 +41,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
   bool _uhcReviveEnabled = true;
   bool _warnAboutChainsEnabled = true;
   bool _shortcutsEnabled = true;
+  bool _showHeaderWallet = true;
+  bool _showHeaderIcons = true;
   bool _dedicatedTravelCard = true;
   bool _disableTravelSection = false;
   bool _expandEvents = false;
@@ -118,12 +122,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         // active shortcuts, open dialog and offer
                                         // a second opportunity. Also might be good
                                         // to reset the lists if there are issues.
-                                        if (!value &&
-                                            context
-                                                    .read<ShortcutsProvider>()
-                                                    .activeShortcuts
-                                                    .length >
-                                                0) {
+                                        if (!value && context.read<ShortcutsProvider>().activeShortcuts.length > 0) {
                                           _shortcutsDisableConfirmationDialog();
                                         } else {
                                           Prefs().setEnableShortcuts(value);
@@ -161,21 +160,17 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     Text(
                                       "Configure shortcuts",
                                       style: TextStyle(
-                                        color: _shortcutsEnabled
-                                            ? _themeProvider.mainText
-                                            : Colors.grey,
+                                        color: _shortcutsEnabled ? _themeProvider.mainText : Colors.grey,
                                       ),
                                     ),
                                     IconButton(
                                       icon: Icon(Icons.keyboard_arrow_right_outlined),
-                                      color:
-                                          _shortcutsEnabled ? _themeProvider.mainText : Colors.grey,
+                                      color: _shortcutsEnabled ? _themeProvider.mainText : Colors.grey,
                                       onPressed: _shortcutsEnabled
                                           ? () {
                                               Navigator.of(context).push(
                                                 MaterialPageRoute(
-                                                  builder: (BuildContext context) =>
-                                                      ShortcutsPage(),
+                                                  builder: (BuildContext context) => ShortcutsPage(),
                                                 ),
                                               );
                                             }
@@ -183,6 +178,85 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     ),
                                   ],
                                 ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
+                              SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'HEADER',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text("Show wallet"),
+                                    Switch(
+                                      value: _showHeaderWallet,
+                                      onChanged: (value) {
+                                        Prefs().setShowHeaderWallet(value);
+                                        setState(() {
+                                          _showHeaderWallet = value;
+                                        });
+                                      },
+                                      activeTrackColor: Colors.lightGreenAccent,
+                                      activeColor: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(
+                                  'Show your current wallet cash at the top',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        Text("Show main icons"),
+                                        Switch(
+                                          value: _showHeaderIcons,
+                                          onChanged: (value) {
+                                            Prefs().setShowHeaderIcons(value);
+                                            setState(() {
+                                              _showHeaderIcons = value;
+                                            });
+                                          },
+                                          activeTrackColor: Colors.lightGreenAccent,
+                                          activeColor: Colors.green,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Text(
+                                      'Show main game icons at the top. Bear in mind not all of them are represented '
+                                      'and some information will already be shown in other tabs in the Profile section',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               SizedBox(height: 15),
                               Divider(),
@@ -285,8 +359,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 ],
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                                padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: <Widget>[
@@ -850,6 +923,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
     var useUhc = await Prefs().getUseUhcRevive();
     var warnChains = await Prefs().getWarnAboutChains();
     var shortcuts = await Prefs().getEnableShortcuts();
+    var headerWallet = await Prefs().getShowHeaderWallet();
+    var headerIcons = await Prefs().getShowHeaderIcons();
     var dedTravel = await Prefs().getDedicatedTravelCard();
     var disableTravel = await Prefs().getDisableTravelSection();
     var expandEvents = await Prefs().getExpandEvents();
@@ -865,6 +940,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
       _uhcReviveEnabled = useUhc;
       _warnAboutChainsEnabled = warnChains;
       _shortcutsEnabled = shortcuts;
+      _showHeaderWallet = headerWallet;
+      _showHeaderIcons = headerIcons;
       _dedicatedTravelCard = dedTravel;
       _disableTravelSection = disableTravel;
       _expandEvents = expandEvents;
@@ -981,6 +1058,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
         ..uhcReviveEnabled = _uhcReviveEnabled
         ..warnAboutChainsEnabled = _warnAboutChainsEnabled
         ..shortcutsEnabled = _shortcutsEnabled
+        ..showHeaderWallet = _showHeaderWallet
+        ..showHeaderIcons = _showHeaderIcons
         ..dedicatedTravelCard = _dedicatedTravelCard
         ..disableTravelSection = _disableTravelSection
         ..expandEvents = _expandEvents
