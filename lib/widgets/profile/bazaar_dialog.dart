@@ -158,7 +158,8 @@ class BazaarDialog extends StatelessWidget {
                     children: [
                       SizedBox(height: 5),
                       Text(
-                        "@ \$${costCurrency.format(element.price)}",
+                        "@ \$${costCurrency.format(element.price)}"
+                        "${element.quantity > 1 ? " ea. (\$${costCurrency.format(element.price * element.quantity)})" : ""}",
                         style: TextStyle(
                           fontSize: 13,
                         ),
