@@ -299,6 +299,14 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
+        headerValue: "Pull to refresh",
+        expandedValue: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
+            "There are certain (short) pages in Torn, with no scroll, that won't activate this feature; if that's "
+            "the case, try pulling down from Torn's appbar at the very top!",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "Use terminal (developers only)",
         expandedValue: "There is a Terminal window (read only) available for development use (so that you can see "
             "scripts or section outputs). To activate it:"

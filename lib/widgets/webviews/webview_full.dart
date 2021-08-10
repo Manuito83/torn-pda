@@ -206,6 +206,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       crossPlatform: InAppWebViewOptions(
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
+
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
         /// and deactivate it dynamically, where onLoadResource stops triggering!
@@ -225,10 +226,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         color: Colors.orange[800],
         size: AndroidPullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.background,
-        enabled:
-            _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon
-                ? true
-                : false,
+        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon ? true : false,
         slingshotDistance: 150,
         distanceToTriggerSync: 150,
       ),
@@ -662,192 +660,210 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _cityExpandable,
         // Actual WebView
         Expanded(
-          child: InAppWebView(
-            initialUrlRequest: _initialUrl,
-            initialUserScripts: _userScriptsProvider.getContinuousSources(
-              apiKey: _userProvider.basic.userApiKey,
-            ),
-            // Temporarily deactivated as it is affecting chats
-            pullToRefreshController: _pullToRefreshController,
-            initialOptions: _initialWebViewOptions,
-            // EVENTS
-            onWebViewCreated: (c) {
-              webView = c;
-              _terminalProvider.setTerminal("Terminal");
-            },
-            onCreateWindow: (c, request) {
-              if (!mounted) return;
+          child: Stack(
+            children: [
+              InAppWebView(
+                initialUrlRequest: _initialUrl,
+                initialUserScripts: _userScriptsProvider.getContinuousSources(
+                  apiKey: _userProvider.basic.userApiKey,
+                ),
+                // Temporarily deactivated as it is affecting chats
+                pullToRefreshController: _pullToRefreshController,
+                initialOptions: _initialWebViewOptions,
+                // EVENTS
+                onWebViewCreated: (c) {
+                  webView = c;
+                  _terminalProvider.setTerminal("Terminal");
+                },
+                onCreateWindow: (c, request) {
+                  if (!mounted) return;
 
-              _webViewProvider.addTab(url: request.request.url.toString());
-              _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-              return;
-            },
-            onLoadStart: (c, uri) async {
-              if (!mounted) return;
+                  _webViewProvider.addTab(url: request.request.url.toString());
+                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                  return;
+                },
+                onLoadStart: (c, uri) async {
+                  if (!mounted) return;
 
-              // Userscripts
-              UserScriptChanges changes = _userScriptsProvider.getCondSources(
-                url: uri.toString(),
-                apiKey: _userProvider.basic.userApiKey,
-              );
-              if (Platform.isAndroid) {
-                // Not supported on iOS
-                for (var group in changes.scriptsToRemove) {
-                  c.removeUserScriptsByGroupName(groupName: group);
-                }
-              }
-              await c.addUserScripts(userScripts: changes.scriptsToAdd);
+                  // Userscripts
+                  UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                    url: uri.toString(),
+                    apiKey: _userProvider.basic.userApiKey,
+                  );
+                  if (Platform.isAndroid) {
+                    // Not supported on iOS
+                    for (var group in changes.scriptsToRemove) {
+                      c.removeUserScriptsByGroupName(groupName: group);
+                    }
+                  }
+                  await c.addUserScripts(userScripts: changes.scriptsToAdd);
 
-              _hideChat();
+                  _hideChat();
 
-              _currentUrl = uri.toString();
+                  _currentUrl = uri.toString();
 
-              var html = await webView.getHtml();
-              var document = parse(html);
-              _assessGeneral(document);
-              assessGym();
-            },
-            onProgressChanged: (c, progress) async {
-              if (!mounted) return;
-
-              if (_settingsProvider.removeAirplane) {
-                webView.evaluateJavascript(source: travelRemovePlaneJS());
-              }
-
-              _hideChat();
-
-              if (mounted) {
-                setState(() {
-                  this.progress = progress / 100;
-                });
-              }
-
-              if (progress > 75) _pullToRefreshController.endRefreshing();
-
-              // onProgressChanged gets called before onLoadStart, so it works
-              // both to add or remove widgets. It is much faster.
-              _assessSectionsWithWidgets();
-              // We reset here the triggers for the sections that are called every
-              // time so that they can be called again
-              _resetSectionsWithWidgets();
-            },
-            onLoadStop: (c, uri) async {
-              if (!mounted) return;
-
-              _currentUrl = uri.toString();
-
-              _hideChat();
-              _highlightChat();
-
-              var html = await webView.getHtml();
-              var document = parse(html);
-
-              // Force to show title
-              await (_getPageTitle(document, showTitle: true));
-
-              if (widget.useTabs) {
-                _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
-                if (!_omitTabHistory) {
-                  // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
-                  _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-                } else {
-                  _omitTabHistory = false;
-                }
-              }
-
-              _assessGeneral(document);
-
-              // This is used in case the user presses reload. We need to wait for the page
-              // load to be finished in order to scroll
-              if (_scrollAfterLoad) {
-                webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
-                _scrollAfterLoad = false;
-              }
-            },
-            onLoadResource: (c, resource) async {
-              /// TRADES
-              /// We are calling trades from here because onLoadStop does not
-              /// work inside of Trades for iOS. Also, both in Android and iOS
-              /// we need to catch deletions.
-
-              // Two possible scenarios.
-              // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
-              //    we check for url once, limiting it to TradesTriggered
-              // 2. For the rest of the cases (updates, additions), we use the resource
-              if (resource.url.toString().contains("trade.php") ||
-                  (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
-                _tradesTriggered = true;
-                var html = await webView.getHtml();
-                var document = parse(html);
-                var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                _assessTrades(document, pageTitle);
-              }
-
-              // Properties (vault) for initialisation and live transactions
-              if (resource.url.toString().contains("properties.php") ||
-                  (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
-                if (!_vaultTriggered) {
                   var html = await webView.getHtml();
                   var document = parse(html);
-                  var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                  _assessVault(doc: document, pageTitle: pageTitle);
-                } else {
-                  // If it's triggered, it's because we are inside and we performed an operation
-                  // (deposit or withdrawal). In this case, we need to give a couple of seconds
-                  // so that the new html elements appear and we can analyse them
-                  Future.delayed(Duration(seconds: 2)).then((value) async {
-                    // Reset _vaultTriggered so that we can call _assessVault() again
-                    _reassessVault();
-                  });
-                }
-              }
-              return;
-            },
-            onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "") {
-                if (!consoleMessage.message.contains("Refused to connect to 'https://stats.g.doubleclick") &&
-                    !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
-                  _terminalProvider.addInstruction(consoleMessage.message);
-                }
-                print("TORN PDA CONSOLE: " + consoleMessage.message);
-              }
-            },
-            /*
-            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-              // VAULT EVENTS
-              if (_vaultTriggered) {
-                if (x.data.toString().contains("step=vaultProperty&withdraw") ||
-                    x.data.toString().contains("step=vaultProperty&deposit")) {
-                  // Wait a couple of seconds to let the html load
-                  Future.delayed(Duration(seconds: 2)).then((value) async {
-                    // Reset _vaultTriggered so that we can call _assessVault() again
-                    _reassessVault();
-                  });
-                }
-              }
+                  _assessGeneral(document);
+                  assessGym();
+                },
+                onProgressChanged: (c, progress) async {
+                  if (!mounted) return;
 
-              /*
-              // This will intercept ajax calls performed when the bazaar reached 100 items
-              // and needs to be reloaded, so that we can remove and add again the fill buttons
-              if (x == null) return x;
-              if (x.data == null) return x;
-              if (x.url == null) return x;
+                  if (_settingsProvider.removeAirplane) {
+                    webView.evaluateJavascript(source: travelRemovePlaneJS());
+                  }
 
-              if (x.data.contains("step=getList&type=All&start=") &&
-                  x.url.contains('inventory.php') &&
-                  _bazaarActive &&
-                  _bazaarFillActive) {
-                webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                Future.delayed(const Duration(seconds: 2)).then((value) {
-                  webView.evaluateJavascript(source: addBazaarFillButtonsJS());
-                });
-              }
-              */
+                  _hideChat();
 
-              // MAIN AJAX REQUEST RETURN
-              return x;
-            },
-            */
+                  if (mounted) {
+                    setState(() {
+                      this.progress = progress / 100;
+                    });
+                  }
+
+                  if (progress > 75) _pullToRefreshController.endRefreshing();
+
+                  // onProgressChanged gets called before onLoadStart, so it works
+                  // both to add or remove widgets. It is much faster.
+                  _assessSectionsWithWidgets();
+                  // We reset here the triggers for the sections that are called every
+                  // time so that they can be called again
+                  _resetSectionsWithWidgets();
+                },
+                onLoadStop: (c, uri) async {
+                  if (!mounted) return;
+
+                  _currentUrl = uri.toString();
+
+                  _hideChat();
+                  _highlightChat();
+
+                  var html = await webView.getHtml();
+                  var document = parse(html);
+
+                  // Force to show title
+                  await (_getPageTitle(document, showTitle: true));
+
+                  if (widget.useTabs) {
+                    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+                    if (!_omitTabHistory) {
+                      // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
+                      _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                    } else {
+                      _omitTabHistory = false;
+                    }
+                  }
+
+                  _assessGeneral(document);
+
+                  // This is used in case the user presses reload. We need to wait for the page
+                  // load to be finished in order to scroll
+                  if (_scrollAfterLoad) {
+                    webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                    _scrollAfterLoad = false;
+                  }
+                },
+                onLoadResource: (c, resource) async {
+                  /// TRADES
+                  /// We are calling trades from here because onLoadStop does not
+                  /// work inside of Trades for iOS. Also, both in Android and iOS
+                  /// we need to catch deletions.
+
+                  // Two possible scenarios.
+                  // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
+                  //    we check for url once, limiting it to TradesTriggered
+                  // 2. For the rest of the cases (updates, additions), we use the resource
+                  if (resource.url.toString().contains("trade.php") ||
+                      (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
+                    _tradesTriggered = true;
+                    var html = await webView.getHtml();
+                    var document = parse(html);
+                    var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                    _assessTrades(document, pageTitle);
+                  }
+
+                  // Properties (vault) for initialisation and live transactions
+                  if (resource.url.toString().contains("properties.php") ||
+                      (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
+                    if (!_vaultTriggered) {
+                      var html = await webView.getHtml();
+                      var document = parse(html);
+                      var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                      _assessVault(doc: document, pageTitle: pageTitle);
+                    } else {
+                      // If it's triggered, it's because we are inside and we performed an operation
+                      // (deposit or withdrawal). In this case, we need to give a couple of seconds
+                      // so that the new html elements appear and we can analyse them
+                      Future.delayed(Duration(seconds: 2)).then((value) async {
+                        // Reset _vaultTriggered so that we can call _assessVault() again
+                        _reassessVault();
+                      });
+                    }
+                  }
+                  return;
+                },
+                onConsoleMessage: (controller, consoleMessage) async {
+                  if (consoleMessage.message != "") {
+                    if (!consoleMessage.message.contains("Refused to connect to 'https://stats.g.doubleclick") &&
+                        !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
+                      _terminalProvider.addInstruction(consoleMessage.message);
+                    }
+                    print("TORN PDA CONSOLE: " + consoleMessage.message);
+                  }
+                },
+                /*
+                shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+                  // VAULT EVENTS
+                  if (_vaultTriggered) {
+                    if (x.data.toString().contains("step=vaultProperty&withdraw") ||
+                        x.data.toString().contains("step=vaultProperty&deposit")) {
+                      // Wait a couple of seconds to let the html load
+                      Future.delayed(Duration(seconds: 2)).then((value) async {
+                        // Reset _vaultTriggered so that we can call _assessVault() again
+                        _reassessVault();
+                      });
+                    }
+                  }
+            
+                  /*
+                  // This will intercept ajax calls performed when the bazaar reached 100 items
+                  // and needs to be reloaded, so that we can remove and add again the fill buttons
+                  if (x == null) return x;
+                  if (x.data == null) return x;
+                  if (x.url == null) return x;
+            
+                  if (x.data.contains("step=getList&type=All&start=") &&
+                      x.url.contains('inventory.php') &&
+                      _bazaarActive &&
+                      _bazaarFillActive) {
+                    webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                    Future.delayed(const Duration(seconds: 2)).then((value) {
+                      webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+                    });
+                  }
+                  */
+            
+                  // MAIN AJAX REQUEST RETURN
+                  return x;
+                },
+                */
+              ),
+              // Some pages (e.g. travel or by double clicking a cooldown icon) don't have any scroll and the
+              // pull to refresh does not trigger. In this case, we setup an area at the top, over Torn's top bar
+              // which should not be pulled with normal use. By dragging there, we can pull in these situations.
+              if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon)
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragEnd: (_) async {
+                    await reload();
+                    _pullToRefreshController.beginRefreshing();
+                  },
+                  child: Container(
+                    height: 32,
+                  ),
+                ),
+            ],
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
@@ -2493,13 +2509,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
   }
 
-  void pauseTimers () async {
+  void pauseTimers() async {
     if (Platform.isAndroid) {
       webView?.android?.pause();
     }
   }
 
-  void resumeTimers () {
+  void resumeTimers() {
     if (Platform.isAndroid) {
       webView?.android?.resume();
     }
