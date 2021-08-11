@@ -780,6 +780,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     var html = await webView.getHtml();
                     var document = parse(html);
                     var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                    if (Platform.isIOS) {
+                      // iOS needs this check because the full trade URL won't trigger in onLoadStop
+                      _currentUrl = (await webView.getUrl()).toString();
+                    }
                     _assessTrades(document, pageTitle);
                   }
 
@@ -1643,9 +1647,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // TRADES
   Future _assessTrades(dom.Document document, String pageTitle) async {
-    // Check that we are in Trades, but also inside an existing trade
-    // (step=view) or just created one (step=initiateTrade)
-    //var pageTitle = (await _getPageTitle(document)).toLowerCase();
     var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
