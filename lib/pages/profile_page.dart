@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 // Package imports:
@@ -136,7 +137,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
   UserDetailsProvider _userProv;
-  ShortcutsProvider _shortcuts;
+  ShortcutsProvider _shortcutsProv;
   WebViewProvider _webViewProvider;
 
   int _travelNotificationAhead;
@@ -264,7 +265,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -320,7 +320,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _shortcuts = Provider.of<ShortcutsProvider>(context, listen: true);
+    _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
     return Scaffold(
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -458,7 +458,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     await Future.delayed(Duration(seconds: 1));
                   },
                   child: SingleChildScrollView(
-                    // Physics so that page can be refreshed even with no scroll                    
+                    // Physics so that page can be refreshed even with no scroll
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -527,17 +527,32 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Column(
           children: [
             if (_user?.name != null && _user.name.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_user.name),
-                  Text(
-                    "[${_user.playerId}] - Level ${_user.level}",
-                    style: TextStyle(
-                      fontSize: 10,
+              GestureDetector(
+                onLongPress: () {
+                  Clipboard.setData(ClipboardData(text: _user.playerId.toString()));
+                  BotToast.showText(
+                    text: "ID copied to the clipboard!",
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
                     ),
-                  ),
-                ],
+                    contentColor: Colors.blue,
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_user.name),
+                    Text(
+                      "[${_user.playerId}] - Level ${_user.level}",
+                      style: TextStyle(
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
               )
             else
               Text("Profile"),
@@ -682,7 +697,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Returns Main individual tile
     Widget shortcutTile(Shortcut thisShortcut) {
       Widget tile;
-      if (_shortcuts.shortcutTile == "both") {
+      if (_shortcutsProv.shortcutTile == "both") {
         tile = Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
           child: Column(
@@ -716,7 +731,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ],
           ),
         );
-      } else if (_shortcuts.shortcutTile == "icon") {
+      } else if (_shortcutsProv.shortcutTile == "icon") {
         tile = SizedBox(
           height: 18,
           child: Padding(
@@ -768,26 +783,26 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // Main menu, returns either slidable list or wrap (grid)
     Widget shortcutMenu() {
-      if (_shortcuts.shortcutMenu == "carousel") {
+      if (_shortcutsProv.shortcutMenu == "carousel") {
         return ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: _shortcuts.activeShortcuts.length,
+          itemCount: _shortcutsProv.activeShortcuts.length,
           itemBuilder: (context, index) {
-            var thisShortcut = _shortcuts.activeShortcuts[index];
+            var thisShortcut = _shortcutsProv.activeShortcuts[index];
             return shortcutTile(thisShortcut);
           },
         );
       } else {
         var wrapItems = <Widget>[];
-        for (var thisShortcut in _shortcuts.activeShortcuts) {
+        for (var thisShortcut in _shortcutsProv.activeShortcuts) {
           double h = 60;
           double w = 70;
-          if (_shortcuts.shortcutMenu == "grid") {
-            if (_shortcuts.shortcutTile == "icon") {
+          if (_shortcutsProv.shortcutMenu == "grid") {
+            if (_shortcutsProv.shortcutTile == "icon") {
               h = 40;
               w = 40;
             }
-            if (_shortcuts.shortcutTile == "text") {
+            if (_shortcutsProv.shortcutTile == "text") {
               h = 40;
               w = 70;
             }
@@ -802,12 +817,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return SizedBox(
       // We only need a SizedBox height for the listView, the wrap will expand
-      height: _shortcuts.shortcutMenu == "grid"
+      height: _shortcutsProv.shortcutMenu == "grid"
           ? null
-          : _shortcuts.shortcutTile == 'both'
+          : _shortcutsProv.shortcutTile == 'both'
               ? 60
               : 40,
-      child: _shortcuts.activeShortcuts.length == 0
+      child: _shortcutsProv.activeShortcuts.length == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
