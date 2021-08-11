@@ -1544,9 +1544,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               lineHeight: 20,
                               progressColor: Colors.green,
                               backgroundColor: Colors.grey,
-                              center: Text(
-                                '${_user.energy.current}',
-                                style: TextStyle(color: Colors.black),
+                              center: FittedBox(
+                                fit: BoxFit.fitWidth,
+                                child: Text(
+                                  '${_user.energy.current}/${_user.energy.maximum}',
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
                               percent: _user.energy.current / _user.energy.maximum > 1.0
                                   ? 1.0
@@ -1606,9 +1609,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               lineHeight: 20,
                               progressColor: Colors.redAccent,
                               backgroundColor: Colors.grey,
-                              center: Text(
-                                '${_user.nerve.current}',
-                                style: TextStyle(color: Colors.black),
+                              center: FittedBox(
+                                fit: BoxFit.fitWidth,
+                                child: Text(
+                                  '${_user.nerve.current}/${_user.nerve.maximum}',
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
                               percent: _user.nerve.current / _user.nerve.maximum > 1.0
                                   ? 1.0
@@ -1648,9 +1654,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           lineHeight: 20,
                           progressColor: Colors.amber,
                           backgroundColor: Colors.grey,
-                          center: Text(
-                            '${_user.happy.current}',
-                            style: TextStyle(color: Colors.black),
+                          center: FittedBox(
+                            fit: BoxFit.fitWidth,
+                            child: Text(
+                              '${_user.happy.current}/${_user.happy.maximum}',
+                              style: TextStyle(color: Colors.black),
+                            ),
                           ),
                           percent: _user.happy.current / _user.happy.maximum > 1.0
                               ? 1.0
@@ -1715,9 +1724,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               lineHeight: 20,
                               progressColor: Colors.blue,
                               backgroundColor: Colors.grey,
-                              center: Text(
-                                '${_user.life.current}',
-                                style: TextStyle(color: Colors.black),
+                              center: FittedBox(
+                                fit: BoxFit.fitWidth,
+                                child: Text(
+                                  '${_user.life.current}/${_user.life.maximum}',
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
                               percent: _user.life.current / _user.life.maximum > 1.0
                                   ? 1.0
