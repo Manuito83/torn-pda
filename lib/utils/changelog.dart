@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.5.0
     var v2_5_0 = ChangeLogItem();
     v2_5_0.main.version = 'Torn PDA v2.5.0';
-    v2_5_0.main.date = 'XX AUG 2021';
+    v2_5_0.main.date = '20 AUG 2021';
     String feat2_5_0_1 = "Browser: added tabs (visit the Tips section for more information)";
     String feat2_5_0_2 = "Browser: added pull to refresh to the main browser (disabled by default)";
     String feat2_5_0_3 = "Profile: added section header with main icons and wallet information";
