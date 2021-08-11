@@ -39,6 +39,7 @@ class Prefs {
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
+  final String _kShowDateInClock = "pda_showDateInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
@@ -479,7 +480,7 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for default time format
+  /// Methods for clock
   /// ----------------------------
   Future<String> getDefaultTimeFormat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -491,9 +492,6 @@ class Prefs {
     return prefs.setString(_kDefaultTimeFormat, value);
   }
 
-  /// ----------------------------
-  /// Methods for default time zone
-  /// ----------------------------
   Future<String> getDefaultTimeZone() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kDefaultTimeZone) ?? 'local';
@@ -502,6 +500,16 @@ class Prefs {
   Future<bool> setDefaultTimeZone(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultTimeZone, value);
+  }
+
+  Future<bool> getShowDateInClock() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowDateInClock) ?? true;
+  }
+
+  Future<bool> setShowDateInClock(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowDateInClock, value);
   }
 
   /// ----------------------------

@@ -222,6 +222,44 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              "Show date in clock",
+                            ),
+                          ),
+                          Switch(
+                            value: _settingsProvider.showDateInClock,
+                            onChanged: (value) {
+                              setState(() {
+                                _settingsProvider.changeShowDateInClock = value;
+                              });
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Add an extra row for the date wherever the TCT clock is shown',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 15),
                     // TODO: this is conditional now because it only affects Android.
                     // In the future it might be needed to show always the Divider and

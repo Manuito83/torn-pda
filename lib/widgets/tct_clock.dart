@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -50,7 +49,11 @@ class _TctClockState extends State<TctClock> {
       children: <Widget>[
         Text(formatter.format(_currentTctTime)),
         Text('TCT'),
-        Text(DateFormat('dd MMM').format(_currentTctTime).toUpperCase(), style: TextStyle(fontSize: 10),),
+        if (settingsProvider.showDateInClock)
+          Text(
+            DateFormat('dd MMM').format(_currentTctTime).toUpperCase(),
+            style: TextStyle(fontSize: 10),
+          ),
       ],
     );
   }

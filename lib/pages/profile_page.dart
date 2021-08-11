@@ -522,42 +522,74 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: FittedBox(
-        fit: BoxFit.fitWidth,
-        child: Column(
-          children: [
-            if (_user?.name != null && _user.name.isNotEmpty)
-              GestureDetector(
-                onLongPress: () {
-                  Clipboard.setData(ClipboardData(text: _user.playerId.toString()));
-                  BotToast.showText(
-                    text: "ID copied to the clipboard!",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
+      title: Column(
+        children: [
+          if (_user?.name != null && _user.name.isNotEmpty)
+            GestureDetector(
+              onLongPress: () {
+                Clipboard.setData(ClipboardData(text: _user.playerId.toString()));
+                BotToast.showText(
+                  text: "ID copied to the clipboard!",
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  duration: Duration(seconds: 2),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.fitWidth,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: Text(_user.name),
+                        ),
+                        GestureDetector(
+                          child: _user.lastAction.status == "Offline"
+                              ? Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                              : _user.lastAction.status == "Idle"
+                                  ? Icon(Icons.adjust, size: 14, color: Colors.orange)
+                                  : Icon(Icons.circle, size: 14, color: Colors.green[400]),
+                          onTap: () {
+                            String status = _user.lastAction.status == 'Offline'
+                                ? 'Offline (${_user.lastAction.relative.replaceAll("ago", "")})'
+                                : _user.lastAction.status == 'Online'
+                                    ? 'Online now'
+                                    : 'Online ${_user.lastAction.relative}';
+
+                            BotToast.showText(
+                              text: status,
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.blue,
+                              duration: Duration(seconds: 3),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    contentColor: Colors.blue,
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                },
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_user.name),
-                    Text(
-                      "[${_user.playerId}] - Level ${_user.level}",
-                      style: TextStyle(
-                        fontSize: 10,
-                      ),
+                  ),
+                  Text(
+                    "[${_user.playerId}] - Level ${_user.level}",
+                    style: TextStyle(
+                      fontSize: 10,
                     ),
-                  ],
-                ),
-              )
-            else
-              Text("Profile"),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Text("Profile"),
+        ],
       ),
       leading: new IconButton(
         icon: new Icon(Icons.menu),
@@ -647,31 +679,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_user.lastAction.status == "Offline")
-                Image.asset('images/icons/status/offline.png', width: 14)
-              else if (_user.lastAction.status == "Idle")
-                Image.asset('images/icons/status/idle.png', width: 14)
-              else
-                Image.asset('images/icons/status/online.png', width: 14),
-              SizedBox(width: 5),
-              Text(
-                _user.lastAction.status == 'Offline'
-                    ? 'Offline (${_user.lastAction.relative.replaceAll("ago", "")})'
-                    : _user.lastAction.status == 'Online'
-                        ? 'Online now'
-                        : 'Online ${_user.lastAction.relative}',
-                style: TextStyle(
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
           if (_showHeaderWallet)
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

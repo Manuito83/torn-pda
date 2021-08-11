@@ -116,7 +116,6 @@ class SettingsProvider extends ChangeNotifier {
   TimeZoneSetting get currentTimeZone => _currentTimeZone;
   set changeTimeZone(TimeZoneSetting timeZoneSetting) {
     _currentTimeZone = timeZoneSetting;
-
     // SHARED PREFS
     String timeZoneSave;
     switch (_currentTimeZone) {
@@ -128,7 +127,14 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
     Prefs().setDefaultTimeZone(timeZoneSave);
+    notifyListeners();
+  }
 
+  var _showDateInClock = true;
+  bool get showDateInClock => _showDateInClock;
+  set changeShowDateInClock(bool value) {
+    _showDateInClock = value;
+    Prefs().setShowDateInClock(value);
     notifyListeners();
   }
 
@@ -136,9 +142,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get appBarTop => _appBarTop;
   set changeAppBarTop(bool value) {
     _appBarTop = value;
-
     _appBarTop ? Prefs().setAppBarPosition('top') : Prefs().setAppBarPosition('bottom');
-
     notifyListeners();
   }
 
@@ -461,6 +465,8 @@ class SettingsProvider extends ChangeNotifier {
         _currentTimeZone = TimeZoneSetting.tornTime;
         break;
     }
+
+    _showDateInClock = await Prefs().getShowDateInClock();
 
     String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
