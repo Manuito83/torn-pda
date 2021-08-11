@@ -264,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    _shortcuts = context.read<ShortcutsProvider>();
+    
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -320,6 +320,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _shortcuts = Provider.of<ShortcutsProvider>(context, listen: true);
     return Scaffold(
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
