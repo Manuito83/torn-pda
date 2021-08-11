@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,7 @@ import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 
@@ -659,36 +661,58 @@ class _SettingsPageState extends State<SettingsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              ElevatedButton(
-                                child: Text("Reload"),
-                                onPressed: () {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
-                                  if (_formKey.currentState.validate()) {
-                                    _myCurrentKey = _apiKeyInputController.text;
-                                    _getApiDetails(userTriggered: true);
-                                  }
-                                },
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: ElevatedButton(
+                                  child: Icon(Icons.copy),
+                                  onPressed: () {
+                                    Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
+                                    BotToast.showText(
+                                      text: "API key copied to the clipboard, be careful!",
+                                      textStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: Colors.blue,
+                                      duration: Duration(seconds: 4),
+                                      contentPadding: EdgeInsets.all(10),
+                                    );
+                                  },
+                                ),
                               ),
                               Padding(
-                                padding: EdgeInsetsDirectional.only(start: 10),
+                                padding: const EdgeInsets.only(left: 10),
+                                child: ElevatedButton(
+                                  child: Text("Reload"),
+                                  onPressed: () {
+                                    FocusScope.of(context).requestFocus(new FocusNode());
+                                    if (_formKey.currentState.validate()) {
+                                      _myCurrentKey = _apiKeyInputController.text;
+                                      _getApiDetails(userTriggered: true);
+                                    }
+                                  },
+                                ),
                               ),
-                              ElevatedButton(
-                                child: Text("Remove"),
-                                onPressed: () async {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
-                                  // Removes the form error
-                                  _formKey.currentState.reset();
-                                  _apiKeyInputController.clear();
-                                  _myCurrentKey = '';
-                                  _userProvider.removeUser();
-                                  setState(() {
-                                    _userToLoad = false;
-                                    _apiError = false;
-                                  });
-                                  await FirebaseMessaging.instance.deleteToken();
-                                  await firestore.deleteUserProfile();
-                                  await firebaseAuth.signOut();
-                                },
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: ElevatedButton(
+                                  child: Text("Remove"),
+                                  onPressed: () async {
+                                    FocusScope.of(context).requestFocus(new FocusNode());
+                                    // Removes the form error
+                                    _formKey.currentState.reset();
+                                    _apiKeyInputController.clear();
+                                    _myCurrentKey = '';
+                                    _userProvider.removeUser();
+                                    setState(() {
+                                      _userToLoad = false;
+                                      _apiError = false;
+                                    });
+                                    await FirebaseMessaging.instance.deleteToken();
+                                    await firestore.deleteUserProfile();
+                                    await firebaseAuth.signOut();
+                                  },
+                                ),
                               ),
                             ],
                           ),
