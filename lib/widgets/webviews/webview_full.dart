@@ -734,35 +734,41 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onLoadStop: (c, uri) async {
                   if (!mounted) return;
 
-                  _currentUrl = uri.toString();
+                  try {
+                    _currentUrl = uri.toString();
 
-                  _hideChat();
-                  _highlightChat();
+                    _hideChat();
+                    _highlightChat();
 
-                  var html = await webView.getHtml();
-                  var document = parse(html);
+                    var html = await webView.getHtml();
+                    var document = parse(html);
 
-                  // Force to show title
-                  await (_getPageTitle(document, showTitle: true));
+                    // Force to show title
+                    await (_getPageTitle(document, showTitle: true));
 
-                  if (widget.useTabs) {
-                    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
-                    if (!_omitTabHistory) {
-                      // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
-                      _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-                    } else {
-                      _omitTabHistory = false;
+                    if (widget.useTabs) {
+                      _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+                      if (!_omitTabHistory) {
+                        // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
+                        _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                      } else {
+                        _omitTabHistory = false;
+                      }
                     }
+
+                    _assessGeneral(document);
+
+                    // This is used in case the user presses reload. We need to wait for the page
+                    // load to be finished in order to scroll
+                    if (_scrollAfterLoad) {
+                      webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                      _scrollAfterLoad = false;
+                    }
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
                   }
 
-                  _assessGeneral(document);
-
-                  // This is used in case the user presses reload. We need to wait for the page
-                  // load to be finished in order to scroll
-                  if (_scrollAfterLoad) {
-                    webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
-                    _scrollAfterLoad = false;
-                  }
                 },
                 onLoadResource: (c, resource) async {
                   /// TRADES
