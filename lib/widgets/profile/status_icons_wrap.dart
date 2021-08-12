@@ -40,13 +40,13 @@ final allowedIcons = <String, Map<String, String>>{
   "icon65": {"url": "", "name" : "Radiation (35-50%)"},
   "icon66": {"url": "", "name" : "Radiation (51-67%)"},
   "icon67": {"url": "", "name" : "Radiation (68%+)"},
-  "icon75": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "Wall (defensive)"},
-  "icon76": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "Wall (offensive)"},
+  "icon75": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (defending)"},
+  "icon76": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (assaulting)"},
   "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (4-6%)"},
   "icon79": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (6-8%)"},
   "icon80": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (8%+)"},
   "icon84": {"url": "https://www.torn.com/page.php?sid=stocks", "name" : "Dividend ready"},
-  "icon85": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name" : "OC in progress"},
+  "icon85": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name" : "OC being planned"},
   "icon86": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name" : "OC ready"},
 };
 

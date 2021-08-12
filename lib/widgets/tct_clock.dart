@@ -55,8 +55,14 @@ class _TctClockState extends State<TctClock> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text(formatter.format(_currentTctTime)),
-          Text('TCT'),
+          Text(
+            formatter.format(_currentTctTime),
+            style: TextStyle(fontSize: 14),
+          ),
+          Text(
+            'TCT',
+            style: TextStyle(fontSize: settingsProvider.showDateInClock ? 10 : 14),
+          ),
           if (settingsProvider.showDateInClock)
             Text(
               DateFormat('dd MMM').format(_currentTctTime).toUpperCase(),
@@ -76,9 +82,9 @@ class _TctClockState extends State<TctClock> {
   void _launchBrowser({@required String url, @required bool dialogRequested}) async {
     if (!context.read<SettingsProvider>().useQuickBrowser) dialogRequested = false;
     await context.read<WebViewProvider>().openBrowserPreference(
-      context: context,
-      url: url,
-      useDialog: dialogRequested,
-    );
+          context: context,
+          url: url,
+          useDialog: dialogRequested,
+        );
   }
 }

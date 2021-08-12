@@ -1,9 +1,14 @@
 // Flutter imports:
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/icons_filter_page.dart';
+import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
+import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
@@ -33,6 +38,12 @@ class ProfileOptionsReturn {
 }
 
 class ProfileOptionsPage extends StatefulWidget {
+  ProfileOptionsPage({@required this.apiValid, @required this.user, @required this.callBackTimings});
+
+  final bool apiValid;
+  final OwnProfileExtended user;
+  final Function callBackTimings;
+
   @override
   _ProfileOptionsPageState createState() => _ProfileOptionsPageState();
 }
@@ -100,6 +111,60 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
+                              SizedBox(height: 15),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'MANUAL NOTIFICATIONS',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Text(
+                                      "Timings and triggers",
+                                      style: TextStyle(
+                                        color: widget.apiValid ? _themeProvider.mainText : Colors.grey,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                      onPressed: widget.apiValid
+                                          ? () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) {
+                                                    if (Platform.isAndroid) {
+                                                      return ProfileNotificationsAndroid(
+                                                        energyMax: widget.user.energy.maximum,
+                                                        nerveMax: widget.user.nerve.maximum,
+                                                        callback: widget.callBackTimings,
+                                                      );
+                                                    } else {
+                                                      return ProfileNotificationsIOS(
+                                                        energyMax: widget.user.energy.maximum,
+                                                        nerveMax: widget.user.nerve.maximum,
+                                                        callback: widget.callBackTimings,
+                                                      );
+                                                    }
+                                                  },
+                                                ),
+                                              );
+                                            }
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Divider(),
                               SizedBox(height: 15),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,

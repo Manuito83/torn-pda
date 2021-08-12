@@ -661,24 +661,21 @@ class _SettingsPageState extends State<SettingsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: ElevatedButton(
-                                  child: Icon(Icons.copy),
-                                  onPressed: () {
-                                    Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
-                                    BotToast.showText(
-                                      text: "API key copied to the clipboard, be careful!",
-                                      textStyle: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.blue,
-                                      duration: Duration(seconds: 4),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  },
-                                ),
+                              ElevatedButton(
+                                child: Text("Copy"),
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
+                                  BotToast.showText(
+                                    text: "API key copied to the clipboard, be careful!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.blue,
+                                    duration: Duration(seconds: 4),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                },
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(left: 10),

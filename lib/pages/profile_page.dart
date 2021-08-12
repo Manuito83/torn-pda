@@ -42,8 +42,6 @@ import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/models/property_model.dart';
-import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
-import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -605,36 +603,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: const TctClock(),
               )
             : SizedBox.shrink(),
-        _apiGoodData
-            ? IconButton(
-                icon: Icon(
-                  Icons.alarm_on,
-                  color: _themeProvider.buttonText,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        if (Platform.isAndroid) {
-                          return ProfileNotificationsAndroid(
-                            energyMax: _user.energy.maximum,
-                            nerveMax: _user.nerve.maximum,
-                            callback: _callBackFromNotificationOptions,
-                          );
-                        } else {
-                          return ProfileNotificationsIOS(
-                            energyMax: _user.energy.maximum,
-                            nerveMax: _user.nerve.maximum,
-                            callback: _callBackFromNotificationOptions,
-                          );
-                        }
-                      },
-                    ),
-                  );
-                },
-              )
-            : SizedBox.shrink(),
         IconButton(
           icon: Icon(
             Icons.settings,
@@ -643,7 +611,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           onPressed: () async {
             ProfileOptionsReturn newOptions = await Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ProfileOptionsPage()),
+              MaterialPageRoute(
+                builder: (context) => ProfileOptionsPage(
+                  callBackTimings: _callBackFromNotificationOptions,
+                  user: _user,
+                  apiValid: _apiGoodData,
+                ),
+              ),
             );
             widget.disableTravelSection(newOptions.disableTravelSection);
             setState(() {

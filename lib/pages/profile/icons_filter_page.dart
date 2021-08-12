@@ -115,7 +115,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                   icon: Icon(Icons.link),
                   onPressed: () {
                     BotToast.showText(
-                      text: "This icon has a link to the appropriate section in game",
+                      text: "This icon will open a browser (on double or long tap) to the appropriate section in game",
                       textStyle: TextStyle(
                         fontSize: 14,
                         color: Colors.white,
