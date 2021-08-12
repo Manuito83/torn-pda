@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/profile/icons_filter_page.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
@@ -256,6 +257,28 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       ),
                                     ),
                                   ),
+                                  if (_showHeaderIcons)
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(15, 5, 15, 0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Text("Filter icons"),
+                                          IconButton(
+                                              icon: Icon(Icons.keyboard_arrow_right_outlined),
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return IconsFilterPage(
+                                                      settingsProvider: _settingsProvider,
+                                                    );
+                                                  },
+                                                );
+                                              }),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
                               SizedBox(height: 15),

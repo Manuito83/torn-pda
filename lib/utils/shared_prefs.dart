@@ -32,7 +32,7 @@ class Prefs {
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
-  final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod";  // second try to make it icon default
+  final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
@@ -83,6 +83,7 @@ class Prefs {
   final String _kEnableShortcuts = "pda_enableShortcuts";
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
   final String _kShowHeaderIcons = "pda_showHeaderIcons";
+  final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
   final String _kDisableTravelSection = "pda_disableTravelSection";
   final String _kShortcutTile = "pda_shortcutTile";
@@ -143,12 +144,11 @@ class Prefs {
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
 
-
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
   /// To avoid this, simply force a refresh
-  Future reload () async {
+  Future reload() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.reload();
   }
@@ -568,8 +568,7 @@ class Prefs {
 
   Future<String> getTravelNotificationBody() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationBody) ??
-        'Arriving at your destination!';
+    return prefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
   }
 
   Future<bool> setTravelNotificationBody(String value) async {
@@ -682,8 +681,7 @@ class Prefs {
   /// ----------------------------
   Future<List<String>> getStockCountryFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockCountryFilter) ??
-        List<String>.filled(12, '1', growable: false);
+    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1', growable: false);
   }
 
   Future<bool> setStockCountryFilter(List<String> value) async {
@@ -693,8 +691,7 @@ class Prefs {
 
   Future<List<String>> getStockTypeFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockTypeFilter) ??
-        List<String>.filled(4, '1', growable: false);
+    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1', growable: false);
   }
 
   Future<bool> setStockTypeFilter(List<String> value) async {
@@ -965,7 +962,7 @@ class Prefs {
     return prefs.setBool(_kEnableShortcuts, value);
   }
 
-    Future<bool> getShowHeaderWallet() async {
+  Future<bool> getShowHeaderWallet() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kShowHeaderWallet) ?? true;
   }
@@ -975,7 +972,7 @@ class Prefs {
     return prefs.setBool(_kShowHeaderWallet, value);
   }
 
-    Future<bool> getShowHeaderIcons() async {
+  Future<bool> getShowHeaderIcons() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kShowHeaderIcons) ?? true;
   }
@@ -983,6 +980,16 @@ class Prefs {
   Future<bool> setShowHeaderIcons(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowHeaderIcons, value);
+  }
+
+  Future<List<String>> getIconsFiltered() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kIconsFiltered) ?? <String>[];
+  }
+
+  Future<bool> setIconsFiltered(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kIconsFiltered, value);
   }
 
   Future<bool> getDedicatedTravelCard() async {
@@ -1559,6 +1566,4 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kHideTabs, value);
   }
-
-
 }

@@ -376,6 +376,16 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _iconsFiltered = [];
+  List<String> get iconsFiltered => _iconsFiltered;
+  set changeIconsFiltered(List<String> icons) {
+    _iconsFiltered = icons;
+    Prefs().setIconsFiltered(_iconsFiltered);
+    notifyListeners();
+  }
+
+  // END OF PARAMETERS
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -488,6 +498,8 @@ class SettingsProvider extends ChangeNotifier {
     _terminalEnabled = await Prefs().getTerminalEnabled();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
+
+    _iconsFiltered = await Prefs().getIconsFiltered();
 
     notifyListeners();
   }
