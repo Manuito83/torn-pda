@@ -383,6 +383,7 @@ class _LootPageState extends State<LootPage> {
                         "Approaching level $levelNumber!",
                       );
                       BotToast.showText(
+                        clickClose: true,
                         text: 'Loot level $levelNumber'
                             ' $typeString set for ${npcDetails.name}!',
                         textStyle: TextStyle(
@@ -390,7 +391,7 @@ class _LootPageState extends State<LootPage> {
                           color: Colors.white,
                         ),
                         contentColor: Colors.green[700],
-                        duration: Duration(seconds: 5),
+                        duration: Duration(milliseconds: 1500),
                         contentPadding: EdgeInsets.all(10),
                       );
                     }
@@ -401,6 +402,7 @@ class _LootPageState extends State<LootPage> {
                       "${npcDetails.name} level $levelNumber",
                     );
                     BotToast.showText(
+                      clickClose: true,
                       text: 'Loot level $levelNumber'
                           ' $typeString set for ${npcDetails.name}!',
                       textStyle: TextStyle(
@@ -408,7 +410,7 @@ class _LootPageState extends State<LootPage> {
                         color: Colors.white,
                       ),
                       contentColor: Colors.green[700],
-                      duration: Duration(seconds: 5),
+                      duration: Duration(milliseconds: 1500),
                       contentPadding: EdgeInsets.all(10),
                     );
                     break;
@@ -418,6 +420,7 @@ class _LootPageState extends State<LootPage> {
                       "${npcDetails.name} level $levelNumber",
                     );
                     BotToast.showText(
+                      clickClose: true,
                       text: 'Loot level $levelNumber'
                           ' $typeString set for ${npcDetails.name}!',
                       textStyle: TextStyle(
@@ -425,7 +428,7 @@ class _LootPageState extends State<LootPage> {
                         color: Colors.white,
                       ),
                       contentColor: Colors.green[700],
-                      duration: Duration(seconds: 5),
+                      duration: Duration(milliseconds: 1500),
                       contentPadding: EdgeInsets.all(10),
                     );
                     break;
