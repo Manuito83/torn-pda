@@ -641,13 +641,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               height: 40,
                               color: Colors.white,
                             ),
-                            onLongPress: () async {
-                              _openWalletDialog(context, longPress: true);
-                            },
-                            onTap: () async {
-                              _settingsProvider.useQuickBrowser
-                                  ? _openWalletDialog(context, longPress: false)
-                                  : _openWalletDialog(context, longPress: true);
+                            onTap: () {
+                              _openWalletDialog();
                             },
                           ),
                         ],
@@ -1279,9 +1274,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
+  Future<void> _openWalletDialog() {
     return showDialog<void>(
-      context: _,
+      context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
@@ -1335,12 +1330,22 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                if (!_settingsProvider.useQuickBrowser) longPress = true;
+                                var dialog = _settingsProvider.useQuickBrowser || false;
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: !longPress,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                    );
+                                Navigator.of(context).pop();
+                                _refreshMoney();
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                    );
                                 Navigator.of(context).pop();
                                 _refreshMoney();
                               },
@@ -1364,12 +1369,22 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                if (!_settingsProvider.useQuickBrowser) longPress = true;
+                                var dialog = _settingsProvider.useQuickBrowser || false;
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: !longPress,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                    );
+                                Navigator.of(context).pop();
+                                _refreshMoney();
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                    );
                                 Navigator.of(context).pop();
                                 _refreshMoney();
                               },
@@ -1393,12 +1408,22 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
-                                if (!_settingsProvider.useQuickBrowser) longPress = true;
+                                var dialog = _settingsProvider.useQuickBrowser || false;
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: !longPress,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                    );
+                                Navigator.of(context).pop();
+                                _refreshMoney();
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/companies.php#/option=funds";
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                    );
                                 Navigator.of(context).pop();
                                 _refreshMoney();
                               },
@@ -1469,5 +1494,4 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       widget.requestMoneyRefresh();
     }
   }
-
 }

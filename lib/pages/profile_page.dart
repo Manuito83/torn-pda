@@ -3498,13 +3498,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return Row(
         children: [
           GestureDetector(
-            onLongPress: () async {
-              _openWalletDialog(context, longPress: true);
-            },
             onTap: () async {
-              _settingsProvider.useQuickBrowser
-                  ? _openWalletDialog(context, longPress: false)
-                  : _openWalletDialog(context, longPress: true);
+              _openWalletDialog();
             },
             child: dense
                 ? Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
@@ -5755,9 +5750,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
+  Future<void> _openWalletDialog() {
     return showDialog<void>(
-      context: _,
+      context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -5811,13 +5806,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ),
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
-                                }
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, dialogRequested: true);
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, dialogRequested: false);
                               },
                             ),
                           ),
@@ -5839,13 +5834,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
-                                }
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, dialogRequested: true);
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, dialogRequested: false);
                               },
                             ),
                           ),
@@ -5867,13 +5862,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: false);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  _launchBrowser(url: url, dialogRequested: true);
-                                }
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, dialogRequested: true);
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/companies.php#/option=funds";
+                                Navigator.of(context).pop();
+                                _launchBrowser(url: url, dialogRequested: false);
                               },
                             ),
                           ),

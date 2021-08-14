@@ -710,26 +710,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onProgressChanged: (c, progress) async {
                   if (!mounted) return;
 
-                  if (_settingsProvider.removeAirplane) {
-                    webView.evaluateJavascript(source: travelRemovePlaneJS());
+                  try {
+                    if (_settingsProvider.removeAirplane) {
+                      webView.evaluateJavascript(source: travelRemovePlaneJS());
+                    }
+
+                    _hideChat();
+
+                    if (mounted) {
+                      setState(() {
+                        this.progress = progress / 100;
+                      });
+                    }
+
+                    if (progress > 75) _pullToRefreshController.endRefreshing();
+
+                    // onProgressChanged gets called before onLoadStart, so it works
+                    // both to add or remove widgets. It is much faster.
+                    _assessSectionsWithWidgets();
+                    // We reset here the triggers for the sections that are called every
+                    // time so that they can be called again
+                    _resetSectionsWithWidgets();
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
                   }
-
-                  _hideChat();
-
-                  if (mounted) {
-                    setState(() {
-                      this.progress = progress / 100;
-                    });
-                  }
-
-                  if (progress > 75) _pullToRefreshController.endRefreshing();
-
-                  // onProgressChanged gets called before onLoadStart, so it works
-                  // both to add or remove widgets. It is much faster.
-                  _assessSectionsWithWidgets();
-                  // We reset here the triggers for the sections that are called every
-                  // time so that they can be called again
-                  _resetSectionsWithWidgets();
                 },
                 onLoadStop: (c, uri) async {
                   if (!mounted) return;
@@ -768,7 +773,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
                   }
-
                 },
                 onLoadResource: (c, resource) async {
                   /// TRADES
@@ -835,14 +839,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       });
                     }
                   }
-            
+
                   /*
                   // This will intercept ajax calls performed when the bazaar reached 100 items
                   // and needs to be reloaded, so that we can remove and add again the fill buttons
                   if (x == null) return x;
                   if (x.data == null) return x;
                   if (x.url == null) return x;
-            
+
                   if (x.data.contains("step=getList&type=All&start=") &&
                       x.url.contains('inventory.php') &&
                       _bazaarActive &&
@@ -853,7 +857,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     });
                   }
                   */
-            
+
                   // MAIN AJAX REQUEST RETURN
                   return x;
                 },
