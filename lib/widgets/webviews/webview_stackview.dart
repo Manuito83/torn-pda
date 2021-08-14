@@ -1,4 +1,5 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -92,18 +93,30 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                   _initialiseSecondary(context);
                 }
                 if (_useTabs) {
-                  return AnimatedIndexedStack(
-                    index: _webViewProvider.currentTab,
-                    children: allWebViews,
-                    duration: 100,
-                  );
+                  try {
+                    return AnimatedIndexedStack(
+                      index: _webViewProvider.currentTab,
+                      children: allWebViews,
+                      duration: 100,
+                    );
+                  } catch (e) {
+                    FirebaseCrashlytics.instance.log("PDA Crash at AnimatedIndexedStack (webview with tabs): $e");
+                    FirebaseCrashlytics.instance.recordError(e, null);
+                    return _closeWithError();
+                  }
                 } else {
-                  return IndexedStack(
-                    index: 0,
-                    children: [
-                      allWebViews[0],
-                    ],
-                  );
+                  try {
+                    return IndexedStack(
+                      index: 0,
+                      children: [
+                        allWebViews[0],
+                      ],
+                    );
+                  } catch (e) {
+                    FirebaseCrashlytics.instance.log("PDA Crash at IndexedStack (webview with no tabs): $e");
+                    FirebaseCrashlytics.instance.recordError(e, null);
+                    return _closeWithError();
+                  }
                 }
               } else {
                 return Center(child: CircularProgressIndicator());
@@ -115,7 +128,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done && _useTabs) {
                 if (_webViewProvider.hideTabs) {
-                  return Divider(color: Colors.pink[800], thickness: 4,height: 4);
+                  return Divider(color: Colors.deepOrange[900], thickness: 4,height: 4);
                 } else {
                   return _bottomNavBar();
                 }
@@ -127,6 +140,23 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         ),
       ),
     );
+  }
+
+  Center _closeWithError() {
+    BotToast.showText(
+      clickClose: true,
+      crossPage: true,
+      text: "Something went wrong, please try again :(",
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.deepOrangeAccent,
+      duration: Duration(seconds: 2),
+      contentPadding: EdgeInsets.all(10),
+    );
+    Navigator.of(context).pop();
+    return Center(child: CircularProgressIndicator());
   }
 
   void _initialiseSecondary(BuildContext context) async {
