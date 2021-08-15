@@ -108,6 +108,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
+  DateTime _tradesOnResourceTriggerTime = DateTime.now();
 
   DateTime _lastTradeCall = DateTime.now();
   // Sometimes the first call to trades will not detect that we are in, hence
@@ -121,6 +122,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _vaultDetected = false;
   Widget _vaultExpandable = SizedBox.shrink();
   DateTime _vaultTriggeredTime = DateTime.now();
+  DateTime _vaultOnResourceTriggerTime = DateTime.now();
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -789,6 +791,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // 2. For the rest of the cases (updates, additions), we use the resource
                     if (resource.url.toString().contains("trade.php") ||
                         (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
+
+                      // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                      // the webView to freeze for a bit
+                      if (DateTime.now().difference(_tradesOnResourceTriggerTime).inSeconds < 2) return;
+                      _tradesOnResourceTriggerTime = DateTime.now();
+
                       _tradesTriggered = true;
                       var html = await webView.getHtml();
                       var document = parse(html);
@@ -803,6 +811,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // Properties (vault) for initialisation and live transactions
                     if (resource.url.toString().contains("properties.php") ||
                         (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
+
+                      // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                      // the webView to freeze for a bit
+                      if (DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
+                      _vaultOnResourceTriggerTime = DateTime.now();
+
                       if (!_vaultTriggered) {
                         var html = await webView.getHtml();
                         var document = parse(html);
@@ -2502,7 +2516,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (message.isNotEmpty) {
           if (widget.useTabs) {
             // This avoid repeated BotToast messages if several tabs are open to the gym
-            _webViewProvider.showGymMessage(message);
+            _webViewProvider.showGymMessage(message, widget.key);
           } else {
             BotToast.showText(
               crossPage: false,
