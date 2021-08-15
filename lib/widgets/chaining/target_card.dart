@@ -612,7 +612,7 @@ class _TargetCardState extends State<TargetCard> {
       } else if (destination.contains('Switzerland')) {
         flag = 'images/flags/stock/switzerland.png';
       } else if (destination.contains('Mexico')) {
-        flag = 'images/flags/stock/Mexico.png';
+        flag = 'images/flags/stock/mexico.png';
       } else if (destination.contains('UAE')) {
         flag = 'images/flags/stock/uae.png';
       } else if (destination.contains('Canada')) {

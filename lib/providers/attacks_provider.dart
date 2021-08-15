@@ -85,6 +85,8 @@ class AttacksProvider extends ChangeNotifier {
     } else {
       bool sameTargetFound = false;
       for (var i = 0; i < _attacks.length; i++) {
+        // Skip loop if attacker was anonymous (so that we don't join anonymous attackers together)
+        if (_attacks[i].attackerName.isEmpty) continue;
         if (_attacks[i].targetId == thisAttack.targetId) {
           // If we have attacked the same person more than one
           // add won/lost to the series list, but then do nothing more
