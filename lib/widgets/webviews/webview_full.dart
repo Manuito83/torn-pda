@@ -775,46 +775,54 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   }
                 },
                 onLoadResource: (c, resource) async {
-                  /// TRADES
-                  /// We are calling trades from here because onLoadStop does not
-                  /// work inside of Trades for iOS. Also, both in Android and iOS
-                  /// we need to catch deletions.
+                  if (!mounted) return;
 
-                  // Two possible scenarios.
-                  // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
-                  //    we check for url once, limiting it to TradesTriggered
-                  // 2. For the rest of the cases (updates, additions), we use the resource
-                  if (resource.url.toString().contains("trade.php") ||
-                      (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
-                    _tradesTriggered = true;
-                    var html = await webView.getHtml();
-                    var document = parse(html);
-                    var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                    if (Platform.isIOS) {
-                      // iOS needs this check because the full trade URL won't trigger in onLoadStop
-                      _currentUrl = (await webView.getUrl()).toString();
-                    }
-                    _assessTrades(document, pageTitle);
-                  }
+                  try {
+                    /// TRADES
+                    /// We are calling trades from here because onLoadStop does not
+                    /// work inside of Trades for iOS. Also, both in Android and iOS
+                    /// we need to catch deletions.
 
-                  // Properties (vault) for initialisation and live transactions
-                  if (resource.url.toString().contains("properties.php") ||
-                      (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
-                    if (!_vaultTriggered) {
+                    // Two possible scenarios.
+                    // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
+                    //    we check for url once, limiting it to TradesTriggered
+                    // 2. For the rest of the cases (updates, additions), we use the resource
+                    if (resource.url.toString().contains("trade.php") ||
+                        (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
+                      _tradesTriggered = true;
                       var html = await webView.getHtml();
                       var document = parse(html);
                       var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                      _assessVault(doc: document, pageTitle: pageTitle);
-                    } else {
-                      // If it's triggered, it's because we are inside and we performed an operation
-                      // (deposit or withdrawal). In this case, we need to give a couple of seconds
-                      // so that the new html elements appear and we can analyse them
-                      Future.delayed(Duration(seconds: 2)).then((value) async {
-                        // Reset _vaultTriggered so that we can call _assessVault() again
-                        _reassessVault();
-                      });
+                      if (Platform.isIOS) {
+                        // iOS needs this check because the full trade URL won't trigger in onLoadStop
+                        _currentUrl = (await webView.getUrl()).toString();
+                      }
+                      _assessTrades(document, pageTitle);
                     }
+
+                    // Properties (vault) for initialisation and live transactions
+                    if (resource.url.toString().contains("properties.php") ||
+                        (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
+                      if (!_vaultTriggered) {
+                        var html = await webView.getHtml();
+                        var document = parse(html);
+                        var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                        _assessVault(doc: document, pageTitle: pageTitle);
+                      } else {
+                        // If it's triggered, it's because we are inside and we performed an operation
+                        // (deposit or withdrawal). In this case, we need to give a couple of seconds
+                        // so that the new html elements appear and we can analyse them
+                        Future.delayed(Duration(seconds: 2)).then((value) async {
+                          // Reset _vaultTriggered so that we can call _assessVault() again
+                          _reassessVault();
+                        });
+                      }
+                    }
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
                   }
+
                   return;
                 },
                 onConsoleMessage: (controller, consoleMessage) async {
