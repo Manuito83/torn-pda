@@ -138,8 +138,10 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void removeTab(int position) {
+  void removeTab(int position) async {
     if (position == 0) return;
+
+    bool wasLast = _currentTab == _tabList.length - 1 || false;
 
     // If we remove the current tab, we need to decrease the current tab by 1
     if (position == _currentTab) {
@@ -150,15 +152,20 @@ class WebViewProvider extends ChangeNotifier {
       _currentTab = _tabList.length - 2;
     }
 
-    // Remove the tab
-    _tabList.removeAt(position);
-
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
-    if (_currentTab == _tabList.length - 1) {
+    if (wasLast) {
       var tab = _tabList[_currentTab];
       tab.webViewKey.currentState.resumeTimers();
+      // Notify listeners first so that the tab changes
+      notifyListeners();
+      // Then wait 200 milliseconds so that the animated stack view changes its child
+      await Future.delayed(Duration(milliseconds: 200));
+      // As we have changed the tab, call assess methods
+      _callAssessMethods();
+      // Only then remove the tab and notify again below
     }
 
+    _tabList.removeAt(position);
     notifyListeners();
     _saveTabs();
   }
