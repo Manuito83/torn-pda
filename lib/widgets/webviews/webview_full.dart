@@ -707,7 +707,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   var html = await webView.getHtml();
                   var document = parse(html);
                   _assessGeneral(document);
-                  assessGym();
                 },
                 onProgressChanged: (c, progress) async {
                   if (!mounted) return;
