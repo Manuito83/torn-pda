@@ -114,6 +114,7 @@ class WebViewProvider extends ChangeNotifier {
         ..historyForward = historyForward ?? <String>[],
     );
     notifyListeners();
+    _callAssessMethods();
   }
 
   /// If we are not using tabs, we still need to add 'hidden tabs' (that is, with the main info that needs to be
@@ -146,16 +147,15 @@ class WebViewProvider extends ChangeNotifier {
     // If we remove the current tab, we need to decrease the current tab by 1
     if (position == _currentTab) {
       _currentTab = position - 1;
-    }
-    // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
-    else if (_currentTab == _tabList.length - 1) {
+      _tabList[_currentTab].webViewKey.currentState.resumeTimers();
+    } else if (_currentTab == _tabList.length - 1) {
+      // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
       _currentTab = _tabList.length - 2;
     }
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
     if (wasLast) {
-      var tab = _tabList[_currentTab];
-      tab.webViewKey.currentState.resumeTimers();
+      _tabList[_currentTab].webViewKey.currentState.resumeTimers();
       // Notify listeners first so that the tab changes
       notifyListeners();
       // Then wait 200 milliseconds so that the animated stack view changes its child
@@ -202,6 +202,7 @@ class WebViewProvider extends ChangeNotifier {
     tab.currentUrl = url;
 
     notifyListeners();
+    _callAssessMethods();
     _saveTabs();
   }
 
@@ -286,6 +287,8 @@ class WebViewProvider extends ChangeNotifier {
 
   void clearOnDispose() {
     _tabList.clear();
+    // It is necessary to bring this to 0 so that on opening no checks are performed in tabs that don't exist yet
+    _currentTab = 0;
   }
 
   TabDetails getTabFromKey(Key reporterKey) {
@@ -306,22 +309,26 @@ class WebViewProvider extends ChangeNotifier {
 
   // This can be called from the WebView and ensures that several BotToasts are not shown at the start if
   // several tabs are open to the gym
-  void showGymMessage(String message) {
-    if (!_gymMessageActive) {
-      _gymMessageActive = true;
-      BotToast.showText(
-        crossPage: false,
-        text: message,
-        align: Alignment(0, 0),
-        textStyle: TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.blue,
-        duration: Duration(seconds: 2),
-        contentPadding: EdgeInsets.all(10),
-      );
-      Future.delayed(Duration(seconds: 3)).then((value) => _gymMessageActive = false);
+  void showGymMessage(String message, Key reporterKey) {
+    for (var tab in _tabList) {
+      if (tab.webView.key == reporterKey) {
+        if (!_gymMessageActive) {
+          _gymMessageActive = true;
+          BotToast.showText(
+            crossPage: false,
+            text: message,
+            align: Alignment(0, 0),
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 2),
+            contentPadding: EdgeInsets.all(10),
+          );
+          Future.delayed(Duration(seconds: 3)).then((value) => _gymMessageActive = false);
+        }
+      }
     }
   }
 
