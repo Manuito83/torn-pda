@@ -235,10 +235,10 @@ class AttacksProvider extends ChangeNotifier {
       case 'respectAsc':
         _currentSort = AttackSortType.respectAsc;
         break;
-      case 'nameDes':
+      case 'dateDes':
         _currentSort = AttackSortType.dateDes;
         break;
-      case 'nameAsc':
+      case 'dateAsc':
         _currentSort = AttackSortType.dateAsc;
         break;
     }
