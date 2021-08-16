@@ -203,13 +203,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   // We will first try to get the full crimes if we have AA access, in which case
   // we consider it as Complex. Otherwise, with events, it will be Simple.
-  DateTime _ocTime;
+  DateTime _ocTime = DateTime.now();
+  // Simple OC
   bool _ocSimpleExists = false;
-  String _ocSimpleTimeString = "";
-  String _ocComplexName = "";
+  String _ocSimpleStringFinal = "";
+  bool _ocSimpleReady = false;
+  // Complex OC
+  String _ocFinalStringLong = "";
+  String _ocFinalStringShort = "";
   int _ocComplexPeopleNotReady = 0;
   bool _ocComplexReady = false;
-  String _ocComplexTimeString = "";
 
   bool _nukeReviveActive = false;
   bool _uhcReviveActive = false;
@@ -556,7 +559,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   : Icon(Icons.circle, size: 14, color: Colors.green[400]),
                           onTap: () {
                             String status = _user.lastAction.status == 'Offline'
-                                ? 'Offline (${_user.lastAction.relative.replaceAll("ago", "")})'
+                                ? 'Offline (${_user.lastAction.relative.replaceAll(" ago", "")})'
                                 : _user.lastAction.status == 'Online'
                                     ? 'Online now'
                                     : 'Online ${_user.lastAction.relative}';
@@ -1201,12 +1204,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else {
       Widget ocStatus = SizedBox.shrink();
-      if ((_ocComplexTimeString.isNotEmpty || _ocSimpleExists) && _ocTime.difference(DateTime.now()).inHours < 10) {
+      if ((_ocFinalStringShort.isNotEmpty || _ocSimpleExists) && _ocTime.difference(DateTime.now()).inHours < 10) {
         if (!_ocSimpleExists) {
           ocStatus = Padding(
             padding: const EdgeInsets.only(top: 5),
             child: Text(
-              "$_ocComplexTimeString",
+              _ocFinalStringShort,
               style: TextStyle(
                 color: Colors.orange[700],
                 fontSize: 12,
@@ -1220,7 +1223,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 5),
                   child: Text(
-                    "$_ocSimpleTimeString",
+                    _ocSimpleStringFinal,
                     style: TextStyle(
                       color: Colors.orange[700],
                       fontSize: 12,
@@ -3632,35 +3635,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // FACTION CRIMES
     var factionCrimesActive = false;
     Widget factionCrimes = SizedBox.shrink();
-    if (_ocComplexName.isNotEmpty) {
+    if (_ocFinalStringLong.isNotEmpty) {
       factionCrimesActive = true;
-      _ocComplexReady = false;
-      _ocComplexTimeString = "";
-      if (_ocTime.isAfter(DateTime.now())) {
-        var formattedTime = TimeFormatter(
-          inputTime: _ocTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).formatHour;
-        _ocComplexTimeString = "OC will be ready @ $formattedTime${_timeFormatted(_ocTime)}";
-      } else {
-        _ocComplexReady = true;
-        if (_ocComplexPeopleNotReady == 0) {
-          _ocComplexTimeString = "OC and all participants are ready!";
-        } else if (_ocComplexPeopleNotReady == 1) {
-          _ocComplexTimeString = "OC is ready, but 1 participant is not!";
-        } else {
-          _ocComplexTimeString = "OC is ready, but $_ocComplexPeopleNotReady participants are not!";
-        }
-      }
-
       factionCrimes = Row(
         children: [
           Icon(MdiIcons.fingerprint),
           SizedBox(width: 10),
           Flexible(
             child: Text(
-              "$_ocComplexName $_ocComplexTimeString",
+              _ocFinalStringLong,
               style: TextStyle(
                 color: _ocComplexReady
                     ? _ocComplexPeopleNotReady == 0
@@ -3688,33 +3671,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     } else if (_ocSimpleExists) {
       factionCrimesActive = true;
-      var crimeColor = _themeProvider.mainText;
-      var simpleReady = false;
-      if (_ocTime.isBefore(DateTime.now())) {
-        simpleReady = true;
-        _ocSimpleTimeString = "A faction organised crime might be ready!";
-        crimeColor = Colors.orange[700];
-      } else {
-        var formattedTime = TimeFormatter(
-          inputTime: _ocTime,
-          timeFormatSetting: _settingsProvider.currentTimeFormat,
-          timeZoneSetting: _settingsProvider.currentTimeZone,
-        ).formatHour;
-        _ocSimpleTimeString = "A faction organized crime will be ready @ "
-            "$formattedTime${_timeFormatted(_ocTime)}";
-      }
-
       factionCrimes = Row(
         children: [
           Icon(MdiIcons.fingerprint),
           SizedBox(width: 10),
           Flexible(
             child: Text(
-              _ocSimpleTimeString,
-              style: TextStyle(color: crimeColor),
+              _ocSimpleStringFinal,
+              style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider.mainText),
             ),
           ),
-          if (simpleReady)
+          if (_ocComplexReady)
             InkWell(
               borderRadius: BorderRadius.circular(100),
               onLongPress: () {
@@ -3732,7 +3699,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             child: Icon(
               MdiIcons.closeCircleOutline,
               size: 16,
-              color: crimeColor,
+              color: _ocSimpleReady ? Colors.orange[700] : _themeProvider.mainText,
             ),
             onTap: () {
               return showDialog(
@@ -4164,99 +4131,165 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _getFactionCrimes() async {
-    var factionCrimes = await TornApiCaller.factionCrimes(_userProv.basic.userApiKey).getFactionCrimes;
+    try {
+      var factionCrimes = await TornApiCaller.factionCrimes(_userProv.basic.userApiKey).getFactionCrimes;
 
-    var found = false;
-    if (factionCrimes is FactionCrimesModel) {
-      factionCrimes.crimes.forEach((key, crime) {
-        if (crime.initiated == 0 && !found) {
-          var participantsNotReady = 0;
-          crime.participants.forEach((participant) {
-            // There is only one participant, but in another map
-            participant.forEach((key, values) {
-              if (values.description != "Okay") {
-                participantsNotReady++;
+      // OPTION 1 - Check if we have faction access
+      if (factionCrimes is FactionCrimesModel) {
+        String complexString = "";
+        DateTime complexTime = DateTime.now();
+
+        // Get main crime and time
+        factionCrimes.crimes.forEach((key, crime) {
+          if (crime.initiated == 0 && complexString.isEmpty) {
+            var participantsNotReady = 0;
+            crime.participants.forEach((participant) {
+              // There is only one participant, but in another map
+              participant.forEach((key, values) {
+                if (values.description != "Okay") {
+                  participantsNotReady++;
+                }
+              });
+
+              if (participant.containsKey(_userProv.basic.playerId.toString())) {
+                complexString = crime.crimeName;
+                complexTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
               }
             });
 
-            if (participant.containsKey(_userProv.basic.playerId.toString())) {
-              _ocComplexName = crime.crimeName;
-              _ocTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady * 1000);
+            // If found our crime, assign final number of participants not ready
+            if (complexString.isNotEmpty) _ocComplexPeopleNotReady = participantsNotReady;
+          }
+        });
 
-              // Breaks loop
-              found = true;
+        // Calculate time and final string for widgets
+        if (complexString.isNotEmpty) {
+          bool complexReady = false;
+          String complexTimeString = "";
+          if (complexTime.isAfter(DateTime.now())) {
+            var formattedTime = TimeFormatter(
+              inputTime: complexTime,
+              timeFormatSetting: _settingsProvider.currentTimeFormat,
+              timeZoneSetting: _settingsProvider.currentTimeZone,
+            ).formatHour;
+            complexTimeString = "OC will be ready @ $formattedTime${_timeFormatted(complexTime)}";
+          } else {
+            complexReady = true;
+            if (_ocComplexPeopleNotReady == 0) {
+              complexTimeString = "OC and all participants are ready!";
+            } else if (_ocComplexPeopleNotReady == 1) {
+              complexTimeString = "OC is ready, but 1 participant is not!";
+            } else {
+              complexTimeString = "OC is ready, but $_ocComplexPeopleNotReady participants are not!";
             }
+          }
+
+          setState(() {
+            _ocFinalStringLong = "$complexString $complexTimeString";
+            _ocFinalStringShort = "$complexTimeString";
+            _ocComplexReady = complexReady;
+            _ocTime = complexTime;
           });
 
-          // If found our crime, assign final number of participants not ready
-          if (found) _ocComplexPeopleNotReady = participantsNotReady;
+          return;
         }
-      });
-    }
-
-    // Could indicate that we have no AA access, so we are looking for events!
-    if (factionCrimes is ApiError || !found) {
-      _ocComplexName = "";
-
-      // Try to find quick crimes in events
-      var events = Map<String, Event>();
-      if (_user.events.length > 0) {
-        events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
       }
 
-      bool foundExpired = false;
-      bool foundProgress = false;
-      bool error = false;
 
-      // Try to find our crime by reviewing the last 100 events. The first one we
-      // can find is the one that counts
-      events.forEach((key, value) {
-        if (!foundExpired && !foundProgress && !error) {
-          if (value.event.contains("You and your team") ||
-              (value.event.contains("canceled the") && value.event.contains("that you were selected for"))) {
-            foundExpired = true;
-          } else if (value.event.contains("You have been selected")) {
-            RegExp strRaw = RegExp(r"([0-9]+) hours");
-            var matches = strRaw.allMatches(value.event);
-            if (matches.length > 0) {
-              for (var match in matches) {
-                var hoursString = match.group(1);
-                try {
-                  var hours = int.parse(hoursString);
-                  _ocTime = DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000).add(Duration(hours: hours));
-                  foundProgress = true;
-                  _ocSimpleExists = true;
-                  _settingsProvider.changeOCrimeLastKnown = _ocTime.millisecondsSinceEpoch;
-                } catch (e) {
-                  foundExpired = false;
-                  foundProgress = false;
-                  error = true;
+      // OPTION 2 - Could indicate that we have no AA access, so we are looking for events!
+      if (factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
+
+        bool simpleExists = false;
+        DateTime simpleTime = DateTime.now();
+        String simpleString = "";
+        bool simpleReady = false;
+
+        void calculateSimpleReadiness () {
+          if (simpleTime.isBefore(DateTime.now())) {
+            simpleReady = true;
+            simpleString = "A faction organised crime might be ready!";
+          } else {
+            var formattedTime = TimeFormatter(
+              inputTime: simpleTime,
+              timeFormatSetting: _settingsProvider.currentTimeFormat,
+              timeZoneSetting: _settingsProvider.currentTimeZone,
+            ).formatHour;
+            simpleString = "A faction organized crime will be ready @ "
+                "$formattedTime${_timeFormatted(simpleTime)}";
+          }
+        }
+
+        // Try to find quick crimes in events
+        var events = Map<String, Event>();
+        if (_user.events.length > 0) {
+          events = Map.from(_user.events).map((k, v) => MapEntry<String, Event>(k, Event.fromJson(v)));
+        }
+
+        bool foundExpired = false;
+        bool foundProgress = false;
+        bool error = false;
+
+        // Try to find our crime by reviewing the last 100 events. The first one we
+        // can find is the one that counts
+        events.forEach((key, value) {
+          if (!foundExpired && !foundProgress && !error) {
+            if (value.event.contains("You and your team") ||
+                (value.event.contains("canceled the") && value.event.contains("that you were selected for"))) {
+              foundExpired = true;
+            } else if (value.event.contains("You have been selected")) {
+              RegExp strRaw = RegExp(r"([0-9]+) hours");
+              var matches = strRaw.allMatches(value.event);
+              if (matches.length > 0) {
+                for (var match in matches) {
+                  var hoursString = match.group(1);
+                  try {
+                    var hours = int.parse(hoursString);
+                    simpleTime = DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000).add(Duration(hours: hours));
+                    foundProgress = true;
+                    simpleExists = true;
+                    _settingsProvider.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
+                    calculateSimpleReadiness();
+                  } catch (e) {
+                    foundExpired = false;
+                    foundProgress = false;
+                    error = true;
+                  }
                 }
               }
             }
           }
-        }
-      });
+        });
 
-      // If we haven't found anything in 100 events (including no cancellations), but we are still
-      // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
-      // take place after 8 days). If that's the case, show that one anyway.
-      if (!foundProgress && !foundExpired && !error) {
-        var lastKnown = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.oCrimeLastKnown);
-        if (DateTime.now().isBefore(lastKnown)) {
-          _ocSimpleExists = true;
-          _ocTime = lastKnown;
-          foundProgress = true;
+        // If we haven't found anything in 100 events (including no cancellations), but we are still
+        // ahead of the last known planned OC crime time, perhaps we run out of events (some OC
+        // take place after 8 days). If that's the case, show that one anyway.
+        if (!foundProgress && !foundExpired && !error) {
+          var lastKnown = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.oCrimeLastKnown);
+          if (DateTime.now().isBefore(lastKnown)) {
+            simpleExists = true;
+            simpleTime = lastKnown;
+            foundProgress = true;
+            calculateSimpleReadiness();
+          }
         }
-      }
 
-      // Check if we where disregarding this crime before (in which case we don't show it)
-      if (foundProgress) {
-        if (_settingsProvider.oCrimeDisregarded == _ocTime.millisecondsSinceEpoch) {
-          _ocSimpleExists = false;
-          _ocComplexName = "";
+        // Check if we were disregarding this crime before (in which case we don't show it)
+        if (foundProgress) {
+          if (_settingsProvider.oCrimeDisregarded == simpleTime.millisecondsSinceEpoch) {
+            simpleExists = false;
+            _ocSimpleStringFinal = "";
+          }
         }
+
+        setState(() {
+          _ocSimpleExists = simpleExists;
+          _ocSimpleReady = simpleReady;
+          _ocSimpleStringFinal = simpleString;
+          _ocTime = simpleTime;
+        });
       }
+    } catch (e) {
+      // Don't fill anything
     }
   }
 
@@ -6276,7 +6309,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;
         var daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
-        if (timeLeft <= 7) {
+        // Was 7, now shows always
+        if (timeLeft > 0) {
           thisRented.addAll({
             element: {
               "time": timeLeft.toString(),
@@ -6355,7 +6389,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // We first remove the crime from the current screen
     setState(() {
       _ocSimpleExists = false;
-      _ocComplexName = "";
+      _ocSimpleStringFinal = "";
     });
     // Afterwards, ensure that it does not show again if it's the same one
     _settingsProvider.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
