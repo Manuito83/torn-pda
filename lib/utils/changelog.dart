@@ -50,7 +50,8 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_5_0_6 = "Scripts: added Company Activity userscript example";
     String feat2_5_0_7 = "Chaining: removed Torn Attack Central (service discontinued)";
     String feat2_5_0_8 = "Fixed some userscripts with wildcards not correctly activating";
-    String feat2_5_0_9 = "Fixed UI issues reported";
+    String feat2_5_0_9 = "Fixed vault widget's loading time";
+    String feat2_5_0_10 = "Fixed UI issues reported";
     v2_5_0.features.add(feat2_5_0_1);
     v2_5_0.features.add(feat2_5_0_2);
     v2_5_0.features.add(feat2_5_0_3);
@@ -60,6 +61,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_5_0.features.add(feat2_5_0_7);
     v2_5_0.features.add(feat2_5_0_8);
     v2_5_0.features.add(feat2_5_0_9);
+    v2_5_0.features.add(feat2_5_0_10);
 
     // VERSION 2.4.3
     var v2_4_3 = ChangeLogItem();

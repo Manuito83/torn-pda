@@ -108,7 +108,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
-  DateTime _tradesOnResourceTriggerTime = DateTime.now();
+  DateTime _tradesOnResourceTriggerTime;  // Null check afterwards (avoid false positives)
 
   DateTime _lastTradeCall = DateTime.now();
   // Sometimes the first call to trades will not detect that we are in, hence
@@ -122,7 +122,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _vaultDetected = false;
   Widget _vaultExpandable = SizedBox.shrink();
   DateTime _vaultTriggeredTime = DateTime.now();
-  DateTime _vaultOnResourceTriggerTime = DateTime.now();
+  DateTime _vaultOnResourceTriggerTime;  // Null check afterwards (avoid false positives)
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -793,7 +793,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                       // the webView to freeze for a bit
-                      if (DateTime.now().difference(_tradesOnResourceTriggerTime).inSeconds < 2) return;
+                      if (_tradesOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_tradesOnResourceTriggerTime).inSeconds < 2) return;
                       _tradesOnResourceTriggerTime = DateTime.now();
 
                       _tradesTriggered = true;
@@ -813,7 +814,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                       // the webView to freeze for a bit
-                      if (DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
+                      if (_vaultOnResourceTriggerTime != null
+                          && DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
                       _vaultOnResourceTriggerTime = DateTime.now();
 
                       if (!_vaultTriggered) {
@@ -1934,11 +1936,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // PROPERTIES
   Future _assessVault({dom.Document doc, String pageTitle = "", bool fromReassess = false}) async {
+    print(pageTitle);
     if (!pageTitle.toLowerCase().contains('properties')) {
       setState(() {
         _vaultIconActive = false;
         _vaultExpandable = SizedBox.shrink();
       });
+      print("return");
       return;
     }
 
