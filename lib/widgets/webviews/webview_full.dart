@@ -110,7 +110,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _tradeCalculatorEnabled = false;
   DateTime _tradesOnResourceTriggerTime;  // Null check afterwards (avoid false positives)
 
-  DateTime _lastTradeCall = DateTime.now();
+  DateTime _lastTradeCall = DateTime.now().subtract(Duration(minutes: 1));
   // Sometimes the first call to trades will not detect that we are in, hence
   // travel icon won't show and [_decideIfCallTrades] won't trigger again. This
   // way we allow it to trigger again.
@@ -121,7 +121,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _vaultIconActive = false;
   bool _vaultDetected = false;
   Widget _vaultExpandable = SizedBox.shrink();
-  DateTime _vaultTriggeredTime = DateTime.now();
+  DateTime _vaultTriggeredTime = DateTime.now().subtract(Duration(minutes: 1));
   DateTime _vaultOnResourceTriggerTime;  // Null check afterwards (avoid false positives)
 
   var _cityEnabled = false;
@@ -1936,13 +1936,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // PROPERTIES
   Future _assessVault({dom.Document doc, String pageTitle = "", bool fromReassess = false}) async {
-    print(pageTitle);
     if (!pageTitle.toLowerCase().contains('properties')) {
       setState(() {
         _vaultIconActive = false;
         _vaultExpandable = SizedBox.shrink();
       });
-      print("return");
       return;
     }
 
