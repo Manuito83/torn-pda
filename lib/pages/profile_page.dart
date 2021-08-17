@@ -1971,9 +1971,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (!percentageError) {
             _customNerveMaxOverride = false;
             Prefs().setNervePercentageOverride(false);
-            notificationSetString = 'Nerve notification set for $formattedTime (E$_customNerveTrigger)';
-            alarmSetString = 'Nerve alarm set for $formattedTime (E$_customNerveTrigger)';
-            timerSetString = 'Nerve timer set for $formattedTime (E$_customNerveTrigger)';
+            notificationSetString = 'Nerve notification set for $formattedTime (N$_customNerveTrigger)';
+            alarmSetString = 'Nerve alarm set for $formattedTime (N$_customNerveTrigger)';
+            timerSetString = 'Nerve timer set for $formattedTime (N$_customNerveTrigger)';
           } else {
             _customNerveMaxOverride = true;
             Prefs().setNervePercentageOverride(true);
