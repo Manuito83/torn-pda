@@ -492,7 +492,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),
-        onPanEnd: _settingsProvider.useTabsHideFeature
+        onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsBrowserDialog
             ? (DragEndDetails details) async {
                 _webViewProvider.toggleHideTabs();
               }
@@ -1085,7 +1085,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
       },
-      onPanEnd: _settingsProvider.useTabsHideFeature
+      onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsFullBrowser
           ? (DragEndDetails details) async {
               _webViewProvider.toggleHideTabs();
             }
