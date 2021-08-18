@@ -47,7 +47,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_5_0_3 = "Profile: added section header with main icons and wallet information";
     String feat2_5_0_4 = "Profile: added pull to refresh in the Profile section";
     String feat2_5_0_5 = "Profile: added more detail to bazaar information";
-    String feat2_5_0_6 = "Scripts: added Company Activity userscript example";
+    String feat2_5_0_6 = "Scripts: added Company Activity and fixed Racing Presets";
     String feat2_5_0_7 = "Chaining: removed Torn Attack Central (service discontinued)";
     String feat2_5_0_8 = "Fixed some userscripts with wildcards not correctly activating";
     String feat2_5_0_9 = "Fixed vault widget's loading time";

@@ -1041,7 +1041,7 @@ GM_addStyle(styles);""";
     var source = r"""// ==UserScript==
 // @name         Torn Custom Race Presets
 // @namespace    https://greasyfork.org/en/scripts/393632-torn-custom-race-presets
-// @version      0.2.1
+// @version      0.2.1 - Torn PDA adaptation v2 [Manuito]
 // @description  Make it easier and faster to make custom races - Extended from Xiphias's
 // @author       Cryosis7 [926640]
 // @match        www.torn.com/loader.php?sid=racing
@@ -1064,6 +1064,7 @@ GM_addStyle(styles);""";
 	},
  * 
  */
+
 var presets = [{
 		name: "Quick Industrial",
 		maxDrivers: 2,
@@ -1131,6 +1132,11 @@ function scrubPresets() {
 }
 
 function drawPresetBar() {
+	// Get rid of box before re-adding, which is an issue for iOS
+	for (let box of document.querySelectorAll('.filter-container.m-top10')) {
+		box.remove();
+	}
+	
 	let filterBar = $(`
   <div class="filter-container m-top10">
 	<div class="title-gray top-round">Race Presets</div>
@@ -1146,7 +1152,7 @@ function drawPresetBar() {
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 1,
+      version: 2,
 
       enabled: true,
       urls: getUrls(source),
