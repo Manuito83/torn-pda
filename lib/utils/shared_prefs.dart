@@ -135,6 +135,7 @@ class Prefs {
   final String _kWebViewTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
+  final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kHideTabs = "pda_hideTabs";
 
@@ -1545,6 +1546,16 @@ class Prefs {
   Future<bool> setUseTabsBrowserDialog(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseTabsInBrowserDialog, value);
+  }
+
+  Future<bool> getUseTabsHideFeature() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsHideFeature) ?? true;
+  }
+
+  Future<bool> setUseTabsHideFeature(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsHideFeature, value);
   }
 
   Future<bool> getUseTabsIcons() async {

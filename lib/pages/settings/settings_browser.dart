@@ -16,6 +16,7 @@ import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({Key key}) : super(key: key);
@@ -854,6 +855,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   setState(() {
                     _settingsProvider.changeUseTabsFullBrowser = value;
                   });
+                  // Reset tabs to shown if we deactivate tabs in both browsers (so that upon reactivation they show)
+                  if (!value && !_settingsProvider.useTabsBrowserDialog) {
+                    Prefs().setHideTabs(false);
+                  }
                 },
                 activeTrackColor: Colors.lightGreenAccent,
                 activeColor: Colors.green,
@@ -873,6 +878,10 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   setState(() {
                     _settingsProvider.changeUseTabsBrowserDialog = value;
                   });
+                  // Reset tabs to shown if we deactivate tabs in both browsers (so that upon reactivation they show)
+                  if (!value || !_settingsProvider.useTabsFullBrowser) {
+                    Prefs().setHideTabs(false);
+                  }
                 },
                 activeTrackColor: Colors.lightGreenAccent,
                 activeColor: Colors.green,
@@ -880,6 +889,46 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ],
           ),
         ),
+        if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text("Allow hiding tabs"),
+                    Switch(
+                      value: _settingsProvider.useTabsHideFeature,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.changeUseTabsHideFeature = value;
+                        });
+                        // Show tabs if this feature is disabled
+                        if (!value) {
+                          Prefs().setHideTabs(false);
+                        }
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Text(
+                  'Allow to temporarily hide tabs by swiping in the title bar (full browser) or in the lower bar '
+                  '(quick browser)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }

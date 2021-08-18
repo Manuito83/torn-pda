@@ -188,6 +188,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _useTabsHideFeature = true;
+  bool get useTabsHideFeature => _useTabsHideFeature;
+  set changeUseTabsHideFeature(bool value) {
+    _useTabsHideFeature = value;
+    Prefs().setUseTabsHideFeature(_useTabsHideFeature);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -415,6 +423,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
     _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
+    _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {

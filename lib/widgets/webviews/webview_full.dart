@@ -108,7 +108,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
-  DateTime _tradesOnResourceTriggerTime;  // Null check afterwards (avoid false positives)
+  DateTime _tradesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   DateTime _lastTradeCall = DateTime.now().subtract(Duration(minutes: 1));
   // Sometimes the first call to trades will not detect that we are in, hence
@@ -122,7 +122,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _vaultDetected = false;
   Widget _vaultExpandable = SizedBox.shrink();
   DateTime _vaultTriggeredTime = DateTime.now().subtract(Duration(minutes: 1));
-  DateTime _vaultOnResourceTriggerTime;  // Null check afterwards (avoid false positives)
+  DateTime _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -492,6 +492,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),
+        onPanEnd: _settingsProvider.useTabsHideFeature
+            ? (DragEndDetails details) async {
+                _webViewProvider.toggleHideTabs();
+              }
+            : null,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -550,9 +555,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   ),
                   onTap: () {
                     Navigator.of(context).pop();
-                  },
-                  onPanEnd: (DragEndDetails details) async {
-                    _webViewProvider.toggleHideTabs();
                   },
                 ),
               ),
@@ -790,7 +792,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // 2. For the rest of the cases (updates, additions), we use the resource
                     if (resource.url.toString().contains("trade.php") ||
                         (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
-
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                       // the webView to freeze for a bit
                       if (_tradesOnResourceTriggerTime != null &&
@@ -811,11 +812,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // Properties (vault) for initialisation and live transactions
                     if (resource.url.toString().contains("properties.php") ||
                         (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
-
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                       // the webView to freeze for a bit
-                      if (_vaultOnResourceTriggerTime != null
-                          && DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
+                      if (_vaultOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
                       _vaultOnResourceTriggerTime = DateTime.now();
 
                       if (!_vaultTriggered) {
@@ -1085,9 +1085,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
       },
-      onPanEnd: (DragEndDetails details) async {
-        _webViewProvider.toggleHideTabs();
-      },
+      onPanEnd: _settingsProvider.useTabsHideFeature
+          ? (DragEndDetails details) async {
+              _webViewProvider.toggleHideTabs();
+            }
+          : null,
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
