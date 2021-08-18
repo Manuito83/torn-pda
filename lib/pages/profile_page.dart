@@ -527,6 +527,23 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         children: [
           if (_user?.name != null && _user.name.isNotEmpty)
             GestureDetector(
+              onTap: () {
+                String status = _user.lastAction.status == 'Offline'
+                    ? 'Offline (${_user.lastAction.relative.replaceAll(" ago", "")})'
+                    : _user.lastAction.status == 'Online'
+                    ? 'Online now'
+                    : 'Online ${_user.lastAction.relative}';
+                BotToast.showText(
+                  text: status,
+                  textStyle: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.blue,
+                  duration: Duration(seconds: 3),
+                  contentPadding: EdgeInsets.all(10),
+                );
+              },
               onLongPress: () {
                 Clipboard.setData(ClipboardData(text: _user.playerId.toString()));
                 BotToast.showText(
@@ -551,31 +568,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           padding: const EdgeInsets.only(right: 5),
                           child: Text(_user.name),
                         ),
-                        GestureDetector(
-                          child: _user.lastAction.status == "Offline"
-                              ? Icon(Icons.remove_circle, size: 14, color: Colors.grey)
-                              : _user.lastAction.status == "Idle"
-                                  ? Icon(Icons.adjust, size: 14, color: Colors.orange)
-                                  : Icon(Icons.circle, size: 14, color: Colors.green[400]),
-                          onTap: () {
-                            String status = _user.lastAction.status == 'Offline'
-                                ? 'Offline (${_user.lastAction.relative.replaceAll(" ago", "")})'
-                                : _user.lastAction.status == 'Online'
-                                    ? 'Online now'
-                                    : 'Online ${_user.lastAction.relative}';
-
-                            BotToast.showText(
-                              text: status,
-                              textStyle: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              contentColor: Colors.blue,
-                              duration: Duration(seconds: 3),
-                              contentPadding: EdgeInsets.all(10),
-                            );
-                          },
-                        ),
+                        _user.lastAction.status == "Offline"
+                            ? Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                            : _user.lastAction.status == "Idle"
+                                ? Icon(Icons.adjust, size: 14, color: Colors.orange)
+                                : Icon(Icons.circle, size: 14, color: Colors.green[400]),
                       ],
                     ),
                   ),
