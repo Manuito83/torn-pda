@@ -147,10 +147,10 @@ class _AboutPageState extends State<AboutPage> {
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: _settingsProvider.useQuickBrowser,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
                               },
                           ),
                           TextSpan(
@@ -192,10 +192,10 @@ class _AboutPageState extends State<AboutPage> {
                               ..onTap = () async {
                                 var url = 'https://github.com/Manuito83/torn-pda';
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: _settingsProvider.useQuickBrowser,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
                               },
                           ),
                           TextSpan(
@@ -235,10 +235,10 @@ class _AboutPageState extends State<AboutPage> {
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: _settingsProvider.useQuickBrowser,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
                               },
                           ),
                           TextSpan(text: ' it would be certainly appreciated!'),
@@ -318,10 +318,10 @@ class _AboutPageState extends State<AboutPage> {
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2225097';
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: _settingsProvider.useQuickBrowser,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
                               },
                           ),
                         ],
@@ -349,10 +349,10 @@ class _AboutPageState extends State<AboutPage> {
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2184575';
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: _settingsProvider.useQuickBrowser,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
                               },
                           ),
                         ],
@@ -380,10 +380,10 @@ class _AboutPageState extends State<AboutPage> {
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2000607';
                                 await context.read<WebViewProvider>().openBrowserPreference(
-                                  context: context,
-                                  url: url,
-                                  useDialog: _settingsProvider.useQuickBrowser,
-                                );
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
                               },
                           ),
                           TextSpan(
@@ -402,16 +402,16 @@ class _AboutPageState extends State<AboutPage> {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
                 child: Text('Thank you to our partners, who chose Torn PDA as their mobile '
-                    'interface: YATA, Torn Trader, Nuke (Central Hospital), Universal Health Care and Torn Attack Central.'),
+                    'interface: YATA, Torn Trader, Nuke (Central Hospital), and Universal Health Care.'),
               ),
             ),
             Align(
               alignment: Alignment.bottomLeft,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
-                child: Text('Some scripts, concepts and features have been '
+                child: Text('Some scripts, concepts, and features have been '
                     'adapted from preexisting ones in tools like YATA, '
-                    'Torn Tools or DocTorn.'),
+                    'Torn Tools, or DocTorn.'),
               ),
             ),
             SizedBox(height: 60),
@@ -443,5 +443,4 @@ class _AboutPageState extends State<AboutPage> {
           return ChangeLog();
         });
   }
-
 }
