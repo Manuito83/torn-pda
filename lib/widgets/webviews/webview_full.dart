@@ -36,6 +36,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -68,19 +69,25 @@ class WebViewFull extends StatefulWidget {
   final String customUrl;
   final Function customCallBack;
   final bool dialog;
+  final bool useTabs;
+  final bool chatRemovalActive;
+  final GlobalKey<WebViewFullState> key;
 
   WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
     this.customCallBack,
     this.dialog = false,
-  });
+    this.useTabs = false,
+    this.chatRemovalActive = false,
+    this.key,
+  }) : super(key: key);
 
   @override
-  _WebViewFullState createState() => _WebViewFullState();
+  WebViewFullState createState() => WebViewFullState();
 }
 
-class _WebViewFullState extends State<WebViewFull> {
+class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   InAppWebViewController webView;
   var _initialWebViewOptions = InAppWebViewGroupOptions();
 
@@ -101,8 +108,9 @@ class _WebViewFullState extends State<WebViewFull> {
   Widget _tradesExpandable = SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
+  DateTime _tradesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
-  DateTime _lastTradeCall = DateTime.now();
+  DateTime _lastTradeCall = DateTime.now().subtract(Duration(minutes: 1));
   // Sometimes the first call to trades will not detect that we are in, hence
   // travel icon won't show and [_decideIfCallTrades] won't trigger again. This
   // way we allow it to trigger again.
@@ -113,7 +121,8 @@ class _WebViewFullState extends State<WebViewFull> {
   bool _vaultIconActive = false;
   bool _vaultDetected = false;
   Widget _vaultExpandable = SizedBox.shrink();
-  DateTime _vaultTriggeredTime = DateTime.now();
+  DateTime _vaultTriggeredTime = DateTime.now().subtract(Duration(minutes: 1));
+  DateTime _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -125,8 +134,7 @@ class _WebViewFullState extends State<WebViewFull> {
   var _bazaarActiveOwn = false;
   var _bazaarFillActive = false;
 
-  var _chatRemovalEnabled = false;
-  var _chatRemovalActive = false;
+  var _localChatRemovalActive = false;
 
   var _quickItemsActive = false;
   var _quickItemsController = ExpandableController();
@@ -148,6 +156,8 @@ class _WebViewFullState extends State<WebViewFull> {
   UserDetailsProvider _userProvider;
   TerminalProvider _terminalProvider;
 
+  WebViewProvider _webViewProvider;
+
   final _popupOptionsChoices = <VaultsOptions>[
     VaultsOptions(description: "Personal vault"),
     VaultsOptions(description: "Faction vault"),
@@ -164,7 +174,7 @@ class _WebViewFullState extends State<WebViewFull> {
   UserScriptsProvider _userScriptsProvider;
   ThemeProvider _themeProvider;
 
-  //PullToRefreshController _pullToRefreshController;
+  PullToRefreshController _pullToRefreshController;
 
   bool _clearCacheFirstOpportunity = false;
 
@@ -174,10 +184,15 @@ class _WebViewFullState extends State<WebViewFull> {
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
 
+  bool _omitTabHistory = false;
+
   @override
   void initState() {
     super.initState();
-    _loadChatPreferences();
+    WidgetsBinding.instance.addObserver(this);
+
+    _localChatRemovalActive = widget.chatRemovalActive;
+
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
 
@@ -193,6 +208,7 @@ class _WebViewFullState extends State<WebViewFull> {
       crossPlatform: InAppWebViewOptions(
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
+
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
         /// and deactivate it dynamically, where onLoadResource stops triggering!
@@ -200,22 +216,19 @@ class _WebViewFullState extends State<WebViewFull> {
       ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
+        supportMultipleWindows: true,
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
       ),
     );
 
-    /*
     _pullToRefreshController = PullToRefreshController(
       options: PullToRefreshOptions(
         color: Colors.orange[800],
         size: AndroidPullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.background,
-        enabled:
-            _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon
-                ? true
-                : false,
+        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon ? true : false,
         slingshotDistance: 150,
         distanceToTriggerSync: 150,
       ),
@@ -223,7 +236,6 @@ class _WebViewFullState extends State<WebViewFull> {
         await reload();
       },
     );
-    */
 
     //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
@@ -232,12 +244,23 @@ class _WebViewFullState extends State<WebViewFull> {
   void dispose() {
     webView = null;
     _findController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      webView.pauseTimers();
+    } else {
+      webView.resumeTimers();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
 
     return WillPopScope(
@@ -469,6 +492,11 @@ class _WebViewFullState extends State<WebViewFull> {
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),
+        onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsBrowserDialog
+            ? (DragEndDetails details) async {
+                _webViewProvider.toggleHideTabs();
+              }
+            : null,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -516,14 +544,16 @@ class _WebViewFullState extends State<WebViewFull> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: TextButton(
+                child: GestureDetector(
                   child: Text(
                     "Close",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: _themeProvider.mainText,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  onPressed: () {
+                  onTap: () {
                     Navigator.of(context).pop();
                   },
                 ),
@@ -534,7 +564,7 @@ class _WebViewFullState extends State<WebViewFull> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _travelHomeIcon(),
-                  _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+                  _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -634,172 +664,243 @@ class _WebViewFullState extends State<WebViewFull> {
         _cityExpandable,
         // Actual WebView
         Expanded(
-          child: InAppWebView(
-            initialUrlRequest: _initialUrl,
-            initialUserScripts: _userScriptsProvider.getContinuousSources(
-              apiKey: _userProvider.basic.userApiKey,
-            ),
-            // Temporarily deactivated as it is affecting chats
-            //pullToRefreshController: _pullToRefreshController,
-            initialOptions: _initialWebViewOptions,
-            // EVENTS
-            onWebViewCreated: (c) {
-              webView = c;
-              _terminalProvider.setTerminal("Terminal");
-            },
-            onCreateWindow: (c, request) {
-              // Allows IOS to open links with target=_blank
-              webView.loadUrl(urlRequest: request.request);
-              return;
-            },
-            onLoadStart: (c, uri) async {
-              // Userscripts
-              UserScriptChanges changes = _userScriptsProvider.getCondSources(
-                url: uri.toString(),
-                apiKey: _userProvider.basic.userApiKey,
-              );
-              if (Platform.isAndroid) {
-                // Not supported on iOS
-                for (var group in changes.scriptsToRemove) {
-                  c.removeUserScriptsByGroupName(groupName: group);
-                }
-              }
-              await c.addUserScripts(userScripts: changes.scriptsToAdd);
+          child: Stack(
+            children: [
+              InAppWebView(
+                initialUrlRequest: _initialUrl,
+                initialUserScripts: _userScriptsProvider.getContinuousSources(
+                  apiKey: _userProvider.basic.userApiKey,
+                ),
+                // Temporarily deactivated as it is affecting chats
+                pullToRefreshController: _pullToRefreshController,
+                initialOptions: _initialWebViewOptions,
+                // EVENTS
+                onWebViewCreated: (c) {
+                  webView = c;
+                  _terminalProvider.setTerminal("Terminal");
+                },
+                onCreateWindow: (c, request) {
+                  if (!mounted) return;
 
-              _hideChat();
+                  _webViewProvider.addTab(url: request.request.url.toString());
+                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                  return;
+                },
+                onLoadStart: (c, uri) async {
+                  if (!mounted) return;
 
-              _currentUrl = uri.toString();
+                  // Userscripts
+                  UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                    url: uri.toString(),
+                    apiKey: _userProvider.basic.userApiKey,
+                  );
+                  if (Platform.isAndroid) {
+                    // Not supported on iOS
+                    for (var group in changes.scriptsToRemove) {
+                      c.removeUserScriptsByGroupName(groupName: group);
+                    }
+                  }
+                  await c.addUserScripts(userScripts: changes.scriptsToAdd);
 
-              var html = await webView.getHtml();
-              var document = parse(html);
-              _assessGeneral(document);
-              _assessGym(document);
-            },
-            onProgressChanged: (c, progress) async {
-              if (_settingsProvider.removeAirplane) {
-                webView.evaluateJavascript(source: travelRemovePlaneJS());
-              }
+                  _hideChat();
 
-              _hideChat();
+                  _currentUrl = uri.toString();
 
-              if (mounted) {
-                setState(() {
-                  this.progress = progress / 100;
-                });
-              }
-
-              //if (progress > 75) _pullToRefreshController.endRefreshing();
-
-              // onProgressChanged gets called before onLoadStart, so it works
-              // both to add or remove widgets. It is much faster.
-              _assessSectionsWithWidgets();
-              // We reset here the triggers for the sections that are called every
-              // time so that they can be called again
-              _resetSectionsWithWidgets();
-            },
-            onLoadStop: (c, uri) async {
-              _currentUrl = uri.toString();
-
-              _hideChat();
-              _highlightChat();
-
-              var html = await webView.getHtml();
-              var document = parse(html);
-              // Force to show title
-              await (_getPageTitle(document, showTitle: true));
-              _assessGeneral(document);
-
-              // This is used in case the user presses reload. We need to wait for the page
-              // load to be finished in order to scroll
-              if (_scrollAfterLoad) {
-                webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
-                _scrollAfterLoad = false;
-              }
-            },
-            onLoadResource: (c, resource) async {
-              /// TRADES
-              /// We are calling trades from here because onLoadStop does not
-              /// work inside of Trades for iOS. Also, both in Android and iOS
-              /// we need to catch deletions.
-
-              // Two possible scenarios.
-              // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
-              //    we check for url once, limiting it to TradesTriggered
-              // 2. For the rest of the cases (updates, additions), we use the resource
-              if (resource.url.toString().contains("trade.php") ||
-                  (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
-                _tradesTriggered = true;
-                var html = await webView.getHtml();
-                var document = parse(html);
-                var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                _assessTrades(document, pageTitle);
-              }
-
-              // Properties (vault) for initialisation and live transactions
-              if (resource.url.toString().contains("properties.php") ||
-                  (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
-                if (!_vaultTriggered) {
                   var html = await webView.getHtml();
                   var document = parse(html);
-                  var pageTitle = (await _getPageTitle(document)).toLowerCase();
-                  _assessVault(doc: document, pageTitle: pageTitle);
-                } else {
-                  // If it's triggered, it's because we are inside and we performed an operation
-                  // (deposit or withdrawal). In this case, we need to give a couple of seconds
-                  // so that the new html elements appear and we can analyse them
-                  Future.delayed(Duration(seconds: 2)).then((value) async {
-                    // Reset _vaultTriggered so that we can call _assessVault() again
-                    _reassessVault();
-                  });
-                }
-              }
-              return;
-            },
-            onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "") {
-                if (!consoleMessage.message.contains("Refused to connect to 'https://stats.g.doubleclick") &&
-                    !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
-                  _terminalProvider.addInstruction(consoleMessage.message);
-                }
-                print("TORN PDA CONSOLE: " + consoleMessage.message);
-              }
-            },
-            /*
-            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-              // VAULT EVENTS
-              if (_vaultTriggered) {
-                if (x.data.toString().contains("step=vaultProperty&withdraw") ||
-                    x.data.toString().contains("step=vaultProperty&deposit")) {
-                  // Wait a couple of seconds to let the html load
-                  Future.delayed(Duration(seconds: 2)).then((value) async {
-                    // Reset _vaultTriggered so that we can call _assessVault() again
-                    _reassessVault();
-                  });
-                }
-              }
+                  _assessGeneral(document);
+                },
+                onProgressChanged: (c, progress) async {
+                  if (!mounted) return;
 
-              /*
-              // This will intercept ajax calls performed when the bazaar reached 100 items
-              // and needs to be reloaded, so that we can remove and add again the fill buttons
-              if (x == null) return x;
-              if (x.data == null) return x;
-              if (x.url == null) return x;
+                  try {
+                    if (_settingsProvider.removeAirplane) {
+                      webView.evaluateJavascript(source: travelRemovePlaneJS());
+                    }
 
-              if (x.data.contains("step=getList&type=All&start=") &&
-                  x.url.contains('inventory.php') &&
-                  _bazaarActive &&
-                  _bazaarFillActive) {
-                webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
-                Future.delayed(const Duration(seconds: 2)).then((value) {
-                  webView.evaluateJavascript(source: addBazaarFillButtonsJS());
-                });
-              }
-              */
+                    _hideChat();
 
-              // MAIN AJAX REQUEST RETURN
-              return x;
-            },
-            */
+                    if (mounted) {
+                      setState(() {
+                        this.progress = progress / 100;
+                      });
+                    }
+
+                    if (progress > 75) _pullToRefreshController.endRefreshing();
+
+                    // onProgressChanged gets called before onLoadStart, so it works
+                    // both to add or remove widgets. It is much faster.
+                    _assessSectionsWithWidgets();
+                    // We reset here the triggers for the sections that are called every
+                    // time so that they can be called again
+                    _resetSectionsWithWidgets();
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
+                  }
+                },
+                onLoadStop: (c, uri) async {
+                  if (!mounted) return;
+
+                  try {
+                    _currentUrl = uri.toString();
+
+                    _hideChat();
+                    _highlightChat();
+
+                    var html = await webView.getHtml();
+                    var document = parse(html);
+
+                    // Force to show title
+                    await (_getPageTitle(document, showTitle: true));
+
+                    if (widget.useTabs) {
+                      _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+                      if (!_omitTabHistory) {
+                        // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
+                        _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                      } else {
+                        _omitTabHistory = false;
+                      }
+                    }
+
+                    _assessGeneral(document);
+
+                    // This is used in case the user presses reload. We need to wait for the page
+                    // load to be finished in order to scroll
+                    if (_scrollAfterLoad) {
+                      webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
+                      _scrollAfterLoad = false;
+                    }
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
+                  }
+                },
+                onLoadResource: (c, resource) async {
+                  if (!mounted) return;
+
+                  try {
+                    /// TRADES
+                    /// We are calling trades from here because onLoadStop does not
+                    /// work inside of Trades for iOS. Also, both in Android and iOS
+                    /// we need to catch deletions.
+
+                    // Two possible scenarios.
+                    // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
+                    //    we check for url once, limiting it to TradesTriggered
+                    // 2. For the rest of the cases (updates, additions), we use the resource
+                    if (resource.url.toString().contains("trade.php") ||
+                        (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
+                      // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                      // the webView to freeze for a bit
+                      if (_tradesOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_tradesOnResourceTriggerTime).inSeconds < 2) return;
+                      _tradesOnResourceTriggerTime = DateTime.now();
+
+                      _tradesTriggered = true;
+                      var html = await webView.getHtml();
+                      var document = parse(html);
+                      var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                      if (Platform.isIOS) {
+                        // iOS needs this check because the full trade URL won't trigger in onLoadStop
+                        _currentUrl = (await webView.getUrl()).toString();
+                      }
+                      _assessTrades(document, pageTitle);
+                    }
+
+                    // Properties (vault) for initialisation and live transactions
+                    if (resource.url.toString().contains("properties.php") ||
+                        (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
+                      // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                      // the webView to freeze for a bit
+                      if (_vaultOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_vaultOnResourceTriggerTime).inSeconds < 2) return;
+                      _vaultOnResourceTriggerTime = DateTime.now();
+
+                      if (!_vaultTriggered) {
+                        var html = await webView.getHtml();
+                        var document = parse(html);
+                        var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                        _assessVault(doc: document, pageTitle: pageTitle);
+                      } else {
+                        // If it's triggered, it's because we are inside and we performed an operation
+                        // (deposit or withdrawal). In this case, we need to give a couple of seconds
+                        // so that the new html elements appear and we can analyse them
+                        Future.delayed(Duration(seconds: 2)).then((value) async {
+                          // Reset _vaultTriggered so that we can call _assessVault() again
+                          _reassessVault();
+                        });
+                      }
+                    }
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
+                  }
+
+                  return;
+                },
+                onConsoleMessage: (controller, consoleMessage) async {
+                  if (consoleMessage.message != "") {
+                    if (!consoleMessage.message.contains("Refused to connect to 'https://stats.g.doubleclick") &&
+                        !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
+                      _terminalProvider.addInstruction(consoleMessage.message);
+                    }
+                    print("TORN PDA CONSOLE: " + consoleMessage.message);
+                  }
+                },
+                /*
+                shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
+                  // VAULT EVENTS
+                  if (_vaultTriggered) {
+                    if (x.data.toString().contains("step=vaultProperty&withdraw") ||
+                        x.data.toString().contains("step=vaultProperty&deposit")) {
+                      // Wait a couple of seconds to let the html load
+                      Future.delayed(Duration(seconds: 2)).then((value) async {
+                        // Reset _vaultTriggered so that we can call _assessVault() again
+                        _reassessVault();
+                      });
+                    }
+                  }
+
+                  /*
+                  // This will intercept ajax calls performed when the bazaar reached 100 items
+                  // and needs to be reloaded, so that we can remove and add again the fill buttons
+                  if (x == null) return x;
+                  if (x.data == null) return x;
+                  if (x.url == null) return x;
+
+                  if (x.data.contains("step=getList&type=All&start=") &&
+                      x.url.contains('inventory.php') &&
+                      _bazaarActive &&
+                      _bazaarFillActive) {
+                    webView.evaluateJavascript(source: removeBazaarFillButtonsJS());
+                    Future.delayed(const Duration(seconds: 2)).then((value) {
+                      webView.evaluateJavascript(source: addBazaarFillButtonsJS());
+                    });
+                  }
+                  */
+
+                  // MAIN AJAX REQUEST RETURN
+                  return x;
+                },
+                */
+              ),
+              // Some pages (e.g. travel or by double clicking a cooldown icon) don't have any scroll and the
+              // pull to refresh does not trigger. In this case, we setup an area at the top, over Torn's top bar
+              // which should not be pulled with normal use. By dragging there, we can pull in these situations.
+              if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon)
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onVerticalDragEnd: (_) async {
+                    await reload();
+                    _pullToRefreshController.beginRefreshing();
+                  },
+                  child: Container(
+                    height: 32,
+                  ),
+                ),
+            ],
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
@@ -891,7 +992,7 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   void _hideChat() {
-    if (_chatRemovalEnabled && _chatRemovalActive) {
+    if (_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) {
       webView.evaluateJavascript(source: removeChatOnLoadStartJS());
     }
   }
@@ -901,7 +1002,7 @@ class _WebViewFullState extends State<WebViewFull> {
       return CustomAppBar(
         genericAppBar: AppBar(
           elevation: _settingsProvider.appBarTop ? 2 : 0,
-          brightness: Brightness.dark,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
           leading: IconButton(
             icon: Icon(Icons.close),
             onPressed: () async {
@@ -984,9 +1085,14 @@ class _WebViewFullState extends State<WebViewFull> {
       onHorizontalDragEnd: (DragEndDetails details) async {
         await _goBackOrForward(details);
       },
+      onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsFullBrowser
+          ? (DragEndDetails details) async {
+              _webViewProvider.toggleHideTabs();
+            }
+          : null,
       genericAppBar: AppBar(
         elevation: _settingsProvider.appBarTop ? 2 : 0,
-        brightness: Brightness.dark,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: IconButton(
             icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
             onPressed: () async {
@@ -1043,7 +1149,7 @@ class _WebViewFullState extends State<WebViewFull> {
           _vaultOptionsIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
-          _chatRemovalEnabled ? _hideChatIcon() : SizedBox.shrink(),
+          _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
@@ -1088,9 +1194,14 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _tryGoBack() async {
-    var canBack = await webView.canGoBack();
-    if (canBack) {
-      await webView.goBack();
+    bool success = false;
+    if (widget.useTabs) {
+      success = _webViewProvider.tryGoBack();
+    } else {
+      success = await webView.canGoBack();
+    }
+
+    if (success) {
       BotToast.showText(
         text: "Back",
         textStyle: TextStyle(
@@ -1116,8 +1227,14 @@ class _WebViewFullState extends State<WebViewFull> {
   }
 
   Future _tryGoForward() async {
-    var canForward = await webView.canGoForward();
-    if (canForward) {
+    bool success = false;
+    if (widget.useTabs) {
+      success = _webViewProvider.tryGoForward();
+    } else {
+      success = await webView.canGoForward();
+    }
+
+    if (success) {
       await webView.goForward();
       BotToast.showText(
         text: "Forward",
@@ -1565,9 +1682,6 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // TRADES
   Future _assessTrades(dom.Document document, String pageTitle) async {
-    // Check that we are in Trades, but also inside an existing trade
-    // (step=view) or just created one (step=initiateTrade)
-    //var pageTitle = (await _getPageTitle(document)).toLowerCase();
     var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
@@ -2259,17 +2373,36 @@ class _WebViewFullState extends State<WebViewFull> {
 
   // HIDE CHAT
   Widget _hideChatIcon() {
-    if (!_chatRemovalActive) {
+    if (!_localChatRemovalActive) {
       return Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
           child: Icon(MdiIcons.chatOutline),
           onTap: () async {
             webView.evaluateJavascript(source: removeChatJS());
-            Prefs().setChatRemovalActive(true);
+            _webViewProvider.reportChatRemovalChange(true, false);
             setState(() {
-              _chatRemovalActive = true;
+              _localChatRemovalActive = true;
             });
+          },
+          onLongPress: () async {
+            webView.evaluateJavascript(source: removeChatJS());
+            _webViewProvider.reportChatRemovalChange(true, true);
+            setState(() {
+              _localChatRemovalActive = true;
+            });
+
+            BotToast.showText(
+              crossPage: false,
+              text: "Default chat hide enabled",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 1),
+              contentPadding: EdgeInsets.all(10),
+            );
           },
         ),
       );
@@ -2283,10 +2416,29 @@ class _WebViewFullState extends State<WebViewFull> {
           ),
           onTap: () async {
             webView.evaluateJavascript(source: restoreChatJS());
-            Prefs().setChatRemovalActive(false);
+            _webViewProvider.reportChatRemovalChange(false, false);
             setState(() {
-              _chatRemovalActive = false;
+              _localChatRemovalActive = false;
             });
+          },
+          onLongPress: () async {
+            webView.evaluateJavascript(source: restoreChatJS());
+            _webViewProvider.reportChatRemovalChange(false, true);
+            setState(() {
+              _localChatRemovalActive = false;
+            });
+
+            BotToast.showText(
+              crossPage: false,
+              text: "Default chat hide disabled",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.grey[700],
+              duration: Duration(seconds: 1),
+              contentPadding: EdgeInsets.all(10),
+            );
           },
         ),
       );
@@ -2304,15 +2456,6 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  Future _loadChatPreferences() async {
-    var removalEnabled = await Prefs().getChatRemovalEnabled();
-    var removalActive = await Prefs().getChatRemovalActive();
-    setState(() {
-      _chatRemovalEnabled = removalEnabled;
-      _chatRemovalActive = removalActive;
-    });
-  }
-
   Future<void> _openUrlDialog() async {
     var url = await webView.getUrl();
     return showDialog<void>(
@@ -2324,7 +2467,6 @@ class _WebViewFullState extends State<WebViewFull> {
           url: url.toString(),
           inAppWebview: webView,
           callFindInPage: _activateFindInPage,
-          callToggleTerminal: _toggleTerminal,
         );
       },
     );
@@ -2359,14 +2501,8 @@ class _WebViewFullState extends State<WebViewFull> {
     }
   }
 
-  _toggleTerminal(bool active) {
-    //setState(() {
-      //_settingsProvider.changeTerminalEnabled = active;
-    //});
-  }
-
   // ASSESS GYM
-  Future _assessGym(dom.Document document) async {
+  Future assessGym() async {
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     var easyUrl = _currentUrl.replaceAll('#', '');
@@ -2381,26 +2517,48 @@ class _WebViewFullState extends State<WebViewFull> {
         }
 
         if (message.isNotEmpty) {
-          BotToast.showText(
-            text: message,
-            align: Alignment(0, 0),
-            textStyle: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.blue,
-            duration: Duration(seconds: 2),
-            contentPadding: EdgeInsets.all(10),
-          );
+          if (widget.useTabs) {
+            // This avoid repeated BotToast messages if several tabs are open to the gym
+            _webViewProvider.showGymMessage(message, widget.key);
+          } else {
+            BotToast.showText(
+              crossPage: false,
+              text: message,
+              align: Alignment(0, 0),
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 2),
+              contentPadding: EdgeInsets.all(10),
+            );
+          }
         }
       }
     }
   }
 
-  // UTILS
-  Future<bool> _willPopCallback() async {
-    await _tryGoBack();
-    return false;
+  // Called from parent though GlobalKey state
+  void loadFromExterior({@required String url, @required bool omitHistory}) {
+    _omitTabHistory = omitHistory;
+    webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
   }
 
+  void pauseTimers() async {
+    if (Platform.isAndroid) {
+      webView?.android?.pause();
+    }
+  }
+
+  void resumeTimers() {
+    if (Platform.isAndroid) {
+      webView?.android?.resume();
+    }
+  }
+
+  Future<bool> _willPopCallback() async {
+    _tryGoBack();
+    return false;
+  }
 }

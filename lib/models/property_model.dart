@@ -85,8 +85,8 @@ class Rented {
   factory Rented.fromJson(Map<String, dynamic> json) => Rented(
     userId: json["user_id"] == null ? null : json["user_id"],
     daysLeft: json["days_left"] == null ? null : json["days_left"],
-    totalCost: json["total_cost"] == null ? null : json["total_cost"],
-    costPerDay: json["cost_per_day"] == null ? null : json["cost_per_day"],
+    totalCost: json["total_cost"] == null ? null : json["total_cost"].toString(),
+    costPerDay: json["cost_per_day"] == null ? null : json["cost_per_day"].toString(),
   );
 
   Map<String, dynamic> toJson() => {

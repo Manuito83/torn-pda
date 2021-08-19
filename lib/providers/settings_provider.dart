@@ -116,7 +116,6 @@ class SettingsProvider extends ChangeNotifier {
   TimeZoneSetting get currentTimeZone => _currentTimeZone;
   set changeTimeZone(TimeZoneSetting timeZoneSetting) {
     _currentTimeZone = timeZoneSetting;
-
     // SHARED PREFS
     String timeZoneSave;
     switch (_currentTimeZone) {
@@ -128,7 +127,14 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
     Prefs().setDefaultTimeZone(timeZoneSave);
+    notifyListeners();
+  }
 
+  var _showDateInClock = true;
+  bool get showDateInClock => _showDateInClock;
+  set changeShowDateInClock(bool value) {
+    _showDateInClock = value;
+    Prefs().setShowDateInClock(value);
     notifyListeners();
   }
 
@@ -136,9 +142,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get appBarTop => _appBarTop;
   set changeAppBarTop(bool value) {
     _appBarTop = value;
-
     _appBarTop ? Prefs().setAppBarPosition('top') : Prefs().setAppBarPosition('bottom');
-
     notifyListeners();
   }
 
@@ -165,6 +169,30 @@ class SettingsProvider extends ChangeNotifier {
         Prefs().setBrowserRefreshMethod("both");
         break;
     }
+    notifyListeners();
+  }
+
+  var _useTabsFullBrowser = true;
+  bool get useTabsFullBrowser => _useTabsFullBrowser;
+  set changeUseTabsFullBrowser(bool value) {
+    _useTabsFullBrowser = value;
+    Prefs().setUseTabsFullBrowser(_useTabsFullBrowser);
+    notifyListeners();
+  }
+
+  var _useTabsBrowserDialog = true;
+  bool get useTabsBrowserDialog => _useTabsBrowserDialog;
+  set changeUseTabsBrowserDialog(bool value) {
+    _useTabsBrowserDialog = value;
+    Prefs().setUseTabsBrowserDialog(_useTabsBrowserDialog);
+    notifyListeners();
+  }
+
+  var _useTabsHideFeature = true;
+  bool get useTabsHideFeature => _useTabsHideFeature;
+  set changeUseTabsHideFeature(bool value) {
+    _useTabsHideFeature = value;
+    Prefs().setUseTabsHideFeature(_useTabsHideFeature);
     notifyListeners();
   }
 
@@ -356,6 +384,16 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _iconsFiltered = [];
+  List<String> get iconsFiltered => _iconsFiltered;
+  set changeIconsFiltered(List<String> icons) {
+    _iconsFiltered = icons;
+    Prefs().setIconsFiltered(_iconsFiltered);
+    notifyListeners();
+  }
+
+  // END OF PARAMETERS
+
   void updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
     lastAppUse = timeStamp;
@@ -382,6 +420,10 @@ class SettingsProvider extends ChangeNotifier {
     _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
+
+    _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
+    _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
+    _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
@@ -443,6 +485,8 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
+    _showDateInClock = await Prefs().getShowDateInClock();
+
     String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
 
@@ -463,6 +507,8 @@ class SettingsProvider extends ChangeNotifier {
     _terminalEnabled = await Prefs().getTerminalEnabled();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
+
+    _iconsFiltered = await Prefs().getIconsFiltered();
 
     notifyListeners();
   }

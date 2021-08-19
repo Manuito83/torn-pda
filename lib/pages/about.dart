@@ -6,14 +6,13 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/changelog.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import '../main.dart';
 
 class AboutPage extends StatefulWidget {
@@ -147,15 +146,11 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0';
-                                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                } else {
-                                  _settingsProvider.useQuickBrowser
-                                      ? openBrowserDialog(context, url)
-                                      : _openTornBrowser(url);
-                                }
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                               },
                           ),
                           TextSpan(
@@ -196,15 +191,11 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://github.com/Manuito83/torn-pda';
-                                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                } else {
-                                  _settingsProvider.useQuickBrowser
-                                      ? openBrowserDialog(context, url)
-                                      : _openTornBrowser(url);
-                                }
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                               },
                           ),
                           TextSpan(
@@ -243,15 +234,11 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/trade.php#step=start&userID=2225097';
-                                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                } else {
-                                  _settingsProvider.useQuickBrowser
-                                      ? openBrowserDialog(context, url)
-                                      : _openTornBrowser(url);
-                                }
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                               },
                           ),
                           TextSpan(text: ' it would be certainly appreciated!'),
@@ -330,15 +317,11 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2225097';
-                                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                } else {
-                                  _settingsProvider.useQuickBrowser
-                                      ? openBrowserDialog(context, url)
-                                      : _openTornBrowser(url);
-                                }
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                               },
                           ),
                         ],
@@ -365,15 +348,11 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2184575';
-                                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                } else {
-                                  _settingsProvider.useQuickBrowser
-                                      ? openBrowserDialog(context, url)
-                                      : _openTornBrowser(url);
-                                }
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                               },
                           ),
                         ],
@@ -400,15 +379,11 @@ class _AboutPageState extends State<AboutPage> {
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2000607';
-                                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                  if (await canLaunch(url)) {
-                                    await launch(url, forceSafariVC: false);
-                                  }
-                                } else {
-                                  _settingsProvider.useQuickBrowser
-                                      ? openBrowserDialog(context, url)
-                                      : _openTornBrowser(url);
-                                }
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  useDialog: _settingsProvider.useQuickBrowser,
+                                );
                               },
                           ),
                           TextSpan(
@@ -449,7 +424,6 @@ class _AboutPageState extends State<AboutPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       leading: IconButton(
         icon: Icon(Icons.dehaze),
         onPressed: () {
@@ -470,14 +444,4 @@ class _AboutPageState extends State<AboutPage> {
         });
   }
 
-  Future _openTornBrowser(String page) async {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (BuildContext context) => WebViewFull(
-          customUrl: page,
-          customTitle: 'Torn',
-        ),
-      ),
-    );
-  }
 }

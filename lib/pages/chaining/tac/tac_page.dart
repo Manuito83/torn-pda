@@ -14,8 +14,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/chaining/tac/tac_list.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
@@ -31,8 +31,6 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/tac/tac_card.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class TacPage extends StatefulWidget {
   final String userKey;
@@ -614,7 +612,6 @@ class _TacPageState extends State<TacPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Torn Attack Central"),
       leading: new IconButton(
         icon: new Icon(Icons.menu),
@@ -796,15 +793,11 @@ class _TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://tornattackcentral.eu/premium.php';
-                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
-                  }
-                } else {
-                  _settingsProvider.useQuickBrowser
-                      ? openBrowserDialog(context, url)
-                      : _openTornBrowser(url);
-                }
+                await context.read<WebViewProvider>().openBrowserPreference(
+                  context: context,
+                  url: url,
+                  useDialog: _settingsProvider.useQuickBrowser,
+                );
               },
             style: TextStyle(
               decoration: TextDecoration.underline,
@@ -817,15 +810,11 @@ class _TacPageState extends State<TacPage> {
               ..onTap = () async {
                 Navigator.of(context).pop();
                 var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                  if (await canLaunch(url)) {
-                    await launch(url, forceSafariVC: false);
-                  }
-                } else {
-                  _settingsProvider.useQuickBrowser
-                      ? openBrowserDialog(context, url)
-                      : _openTornBrowser(url);
-                }
+                await context.read<WebViewProvider>().openBrowserPreference(
+                  context: context,
+                  url: url,
+                  useDialog: _settingsProvider.useQuickBrowser,
+                );
               },
             style: TextStyle(
               decoration: TextDecoration.underline,
@@ -875,15 +864,11 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://tornattackcentral.eu';
-                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                  } else {
-                    _settingsProvider.useQuickBrowser
-                        ? openBrowserDialog(context, url)
-                        : _openTornBrowser(url);
-                  }
+                  await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: url,
+                    useDialog: _settingsProvider.useQuickBrowser,
+                  );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
@@ -893,15 +878,11 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/profiles.php?XID=2518990';
-                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                  } else {
-                    _settingsProvider.useQuickBrowser
-                        ? openBrowserDialog(context, url)
-                        : _openTornBrowser(url);
-                  }
+                  await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: url,
+                    useDialog: _settingsProvider.useQuickBrowser,
+                  );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
@@ -911,15 +892,11 @@ class _TacPageState extends State<TacPage> {
                 ..onTap = () async {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
-                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                    if (await canLaunch(url)) {
-                      await launch(url, forceSafariVC: false);
-                    }
-                  } else {
-                    _settingsProvider.useQuickBrowser
-                        ? openBrowserDialog(context, url)
-                        : _openTornBrowser(url);
-                  }
+                  await context.read<WebViewProvider>().openBrowserPreference(
+                    context: context,
+                    url: url,
+                    useDialog: _settingsProvider.useQuickBrowser,
+                  );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
@@ -937,17 +914,6 @@ class _TacPageState extends State<TacPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Future _openTornBrowser(String page) async {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (BuildContext context) => WebViewFull(
-          customUrl: page,
-          customTitle: 'Torn',
-        ),
-      ),
     );
   }
 

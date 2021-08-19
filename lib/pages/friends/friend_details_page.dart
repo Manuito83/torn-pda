@@ -138,7 +138,6 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text('${widget.friend.name}'),
       leading: IconButton(
         icon: Icon(Icons.arrow_back),

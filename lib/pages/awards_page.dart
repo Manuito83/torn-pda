@@ -9,7 +9,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
@@ -25,8 +25,6 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/awards/award_card.dart';
 import 'package:torn_pda/widgets/awards/award_card_pin.dart';
 import 'package:torn_pda/widgets/other/flipping_yata.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class AwardsHeaderInfo {
   var headerInfo = Map<String, String>();
@@ -419,7 +417,6 @@ class _AwardsPageState extends State<AwardsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Row(
         children: [
           Text('Awards'),
@@ -520,7 +517,7 @@ class _AwardsPageState extends State<AwardsPage> {
             ),
             SizedBox(height: 20),
             Text(
-              'Please make sure you have a valid account with YATA  in order to '
+              'Please make sure you have a valid account with YATA in order to '
               'use this section. ',
             ),
             SizedBox(height: 20),
@@ -529,23 +526,11 @@ class _AwardsPageState extends State<AwardsPage> {
                 GestureDetector(
                   onTap: () async {
                     var url = 'https://yata.yt';
-                    if (_settingsProvider.currentBrowser ==
-                        BrowserSetting.external) {
-                      if (await canLaunch(url)) {
-                        await launch(url, forceSafariVC: false);
-                      }
-                    } else {
-                      _settingsProvider.useQuickBrowser
-                          ? openBrowserDialog(context, url)
-                          : Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (BuildContext context) => WebViewFull(
-                                  customUrl: url,
-                                  customTitle: 'Torn',
-                                ),
-                              ),
-                            );
-                    }
+                    await context.read<WebViewProvider>().openBrowserPreference(
+                      context: context,
+                      url: url,
+                      useDialog: _settingsProvider.useQuickBrowser,
+                    );
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),

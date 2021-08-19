@@ -116,7 +116,6 @@ class _CityOptionsState extends State<CityOptions> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("City Finder"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

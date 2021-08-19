@@ -103,7 +103,6 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Hospital notification"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

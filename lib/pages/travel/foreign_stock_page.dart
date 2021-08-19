@@ -359,7 +359,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Foreign Stock"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

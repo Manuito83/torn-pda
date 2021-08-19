@@ -49,7 +49,7 @@ dependencies:
   flutter_speed_dial: ^4.0.0-dev.1
   html: ^0.15.0
   http: ^0.13.2
-  rxdart: ^0.26.0
+  lint: ^1.5.3
   ## flutter pub run import_sorter:main
   import_sorter: ^4.5.0
   intl: ^0.17.0
@@ -58,6 +58,7 @@ dependencies:
   provider: ^5.0.0
   pull_to_refresh: ^2.0.0
   quick_actions: ^0.6.0
+  rxdart: ^0.26.0
   share: ^2.0.1
   shared_preferences: ^2.0.5
   sliding_up_panel: ^2.0.0+1
@@ -70,9 +71,9 @@ dependencies:
   webview_flutter: ^2.0.10
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.9.0
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.9.0
 
 flutter_icons:
   android: true
@@ -103,6 +104,7 @@ flutter:
     - images/icons/map/
     - images/icons/inventory/
     - images/icons/home/
+    - images/icons/status/
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/

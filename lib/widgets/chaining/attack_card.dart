@@ -7,7 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/painting.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
@@ -16,8 +16,6 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class AttackCard extends StatefulWidget {
   final Attack attackModel;
@@ -71,28 +69,20 @@ class _AttackCardState extends State<AttackCard> {
                                   size: 20,
                                 ),
                                 onTap: () async {
-                                  var url = 'https://www.torn.com/profiles.php?'
-                                      'XID=${_attack.targetId}';
-                                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  } else {
-                                    _settingsProvider.useQuickBrowser
-                                        ? openBrowserDialog(context, url)
-                                        : _openTornBrowser(url);
-                                  }
+                                  var url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
+                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    useDialog: _settingsProvider.useQuickBrowser,
+                                  );
                                 },
                                 onLongPress: () async {
-                                  var url = 'https://www.torn.com/profiles.php?'
-                                      'XID=${_attack.targetId}';
-                                  if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  } else {
-                                    _openTornBrowser(url);
-                                  }
+                                  var url = 'https://www.torn.com/profiles.php?XID=${_attack.targetId}';
+                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    useDialog: false,
+                                  );
                                 },
                               )
                             : SizedBox.shrink(),
@@ -525,26 +515,4 @@ class _AttackCardState extends State<AttackCard> {
     return factionIcon;
   }
 
-  Future _openTornBrowser(String page) async {
-    var browserType = _settingsProvider.currentBrowser;
-
-    switch (browserType) {
-      case BrowserSetting.app:
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => WebViewFull(
-              customUrl: page,
-              customTitle: 'Torn',
-            ),
-          ),
-        );
-        break;
-      case BrowserSetting.external:
-        var url = page;
-        if (await canLaunch(url)) {
-          await launch(url, forceSafariVC: false);
-        }
-        break;
-    }
-  }
 }

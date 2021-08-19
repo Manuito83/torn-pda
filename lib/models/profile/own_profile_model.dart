@@ -621,42 +621,181 @@ class Travel {
 
 class TornIcons {
   TornIcons({
-    // Racing
+    this.icon12,
+    this.icon13,
+    this.icon15,
+    this.icon16,
     this.icon17,
     this.icon18,
-    // Addiction
+    this.icon20,
+    this.icon30,
+    this.icon37,
+    this.icon39,
+    this.icon40,
+    this.icon41,
+    this.icon42,
+    this.icon43,
+    this.icon44,
+    this.icon45,
+    this.icon46,
+    this.icon47,
+    this.icon48,
+    this.icon49,
+    this.icon50,
+    this.icon51,
+    this.icon52,
+    this.icon53,
     this.icon57,
     this.icon58,
     this.icon59,
     this.icon60,
     this.icon61,
+    this.icon63,
+    this.icon64,
+    this.icon65,
+    this.icon66,
+    this.icon67,
+    this.icon75,
+    this.icon76,
+    this.icon78,
+    this.icon79,
+    this.icon80,
+    this.icon84,
+    this.icon85,
+    this.icon86,
   });
 
+  String icon12;
+  String icon13;
+  String icon15;
+  String icon16;
   String icon17;
   String icon18;
+  String icon20;
+  String icon30;
+  String icon37;
+  String icon39;
+  String icon40;
+  String icon41;
+  String icon42;
+  String icon43;
+  String icon44;
+  String icon45;
+  String icon46;
+  String icon47;
+  String icon48;
+  String icon49;
+  String icon50;
+  String icon51;
+  String icon52;
+  String icon53;
   String icon57;
   String icon58;
   String icon59;
   String icon60;
   String icon61;
+  String icon63;
+  String icon64;
+  String icon65;
+  String icon66;
+  String icon67;
+  String icon75;
+  String icon76;
+  String icon78;
+  String icon79;
+  String icon80;
+  String icon84;
+  String icon85;
+  String icon86;
 
   factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
-        icon17: json["icon17"] == null ? null : json["icon17"],
-        icon18: json["icon18"] == null ? null : json["icon18"],
-        icon57: json["icon57"] == null ? null : json["icon57"],
-        icon58: json["icon58"] == null ? null : json["icon58"],
-        icon59: json["icon59"] == null ? null : json["icon59"],
-        icon60: json["icon60"] == null ? null : json["icon60"],
-        icon61: json["icon61"] == null ? null : json["icon61"],
-      );
+    icon12: json["icon12"] == null ? null : json["icon12"],
+    icon13: json["icon13"] == null ? null : json["icon13"],
+    icon15: json["icon15"] == null ? null : json["icon15"],
+    icon16: json["icon16"] == null ? null : json["icon16"],
+    icon17: json["icon17"] == null ? null : json["icon17"],
+    icon18: json["icon18"] == null ? null : json["icon18"],
+    icon20: json["icon20"] == null ? null : json["icon20"],
+    icon30: json["icon30"] == null ? null : json["icon30"],
+    icon37: json["icon37"] == null ? null : json["icon37"],
+    icon39: json["icon39"] == null ? null : json["icon39"],
+    icon40: json["icon40"] == null ? null : json["icon40"],
+    icon41: json["icon41"] == null ? null : json["icon41"],
+    icon42: json["icon42"] == null ? null : json["icon42"],
+    icon43: json["icon43"] == null ? null : json["icon43"],
+    icon44: json["icon44"] == null ? null : json["icon44"],
+    icon45: json["icon45"] == null ? null : json["icon45"],
+    icon46: json["icon46"] == null ? null : json["icon46"],
+    icon47: json["icon47"] == null ? null : json["icon47"],
+    icon48: json["icon48"] == null ? null : json["icon48"],
+    icon49: json["icon49"] == null ? null : json["icon49"],
+    icon50: json["icon50"] == null ? null : json["icon50"],
+    icon51: json["icon51"] == null ? null : json["icon51"],
+    icon52: json["icon52"] == null ? null : json["icon52"],
+    icon53: json["icon53"] == null ? null : json["icon53"],
+    icon57: json["icon57"] == null ? null : json["icon57"],
+    icon58: json["icon58"] == null ? null : json["icon58"],
+    icon59: json["icon59"] == null ? null : json["icon59"],
+    icon60: json["icon60"] == null ? null : json["icon60"],
+    icon61: json["icon61"] == null ? null : json["icon61"],
+    icon63: json["icon63"] == null ? null : json["icon63"],
+    icon64: json["icon64"] == null ? null : json["icon64"],
+    icon65: json["icon65"] == null ? null : json["icon65"],
+    icon66: json["icon66"] == null ? null : json["icon66"],
+    icon67: json["icon67"] == null ? null : json["icon67"],
+    icon75: json["icon75"] == null ? null : json["icon75"],
+    icon76: json["icon76"] == null ? null : json["icon76"],
+    icon78: json["icon78"] == null ? null : json["icon78"],
+    icon79: json["icon79"] == null ? null : json["icon79"],
+    icon80: json["icon80"] == null ? null : json["icon80"],
+    icon84: json["icon84"] == null ? null : json["icon84"],
+    icon85: json["icon85"] == null ? null : json["icon85"],
+    icon86: json["icon86"] == null ? null : json["icon86"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "icon17": icon17 == null ? null : icon17,
-        "icon18": icon18 == null ? null : icon18,
-        "icon57": icon57 == null ? null : icon57,
-        "icon58": icon58 == null ? null : icon58,
-        "icon59": icon59 == null ? null : icon59,
-        "icon60": icon60 == null ? null : icon60,
-        "icon61": icon61 == null ? null : icon61,
-      };
+    "icon12": icon12 == null ? null : icon12,
+    "icon13": icon13 == null ? null : icon13,
+    "icon15": icon15 == null ? null : icon15,
+    "icon16": icon16 == null ? null : icon16,
+    "icon17": icon17 == null ? null : icon17,
+    "icon18": icon18 == null ? null : icon18,
+    "icon20": icon20 == null ? null : icon20,
+    "icon30": icon30 == null ? null : icon30,
+    "icon37": icon37 == null ? null : icon37,
+    "icon39": icon39 == null ? null : icon39,
+    "icon40": icon40 == null ? null : icon40,
+    "icon41": icon41 == null ? null : icon41,
+    "icon42": icon42 == null ? null : icon42,
+    "icon43": icon43 == null ? null : icon43,
+    "icon44": icon44 == null ? null : icon44,
+    "icon45": icon45 == null ? null : icon45,
+    "icon46": icon46 == null ? null : icon46,
+    "icon47": icon47 == null ? null : icon47,
+    "icon48": icon48 == null ? null : icon48,
+    "icon49": icon49 == null ? null : icon49,
+    "icon50": icon50 == null ? null : icon50,
+    "icon51": icon51 == null ? null : icon51,
+    "icon52": icon52 == null ? null : icon52,
+    "icon53": icon53 == null ? null : icon53,
+    "icon57": icon57 == null ? null : icon57,
+    "icon58": icon58 == null ? null : icon58,
+    "icon59": icon59 == null ? null : icon59,
+    "icon60": icon60 == null ? null : icon60,
+    "icon61": icon61 == null ? null : icon61,
+    "icon63": icon63 == null ? null : icon63,
+    "icon64": icon64 == null ? null : icon64,
+    "icon65": icon65 == null ? null : icon65,
+    "icon66": icon66 == null ? null : icon66,
+    "icon67": icon67 == null ? null : icon67,
+    "icon75": icon75 == null ? null : icon75,
+    "icon76": icon76 == null ? null : icon76,
+    "icon78": icon78 == null ? null : icon78,
+    "icon79": icon79 == null ? null : icon79,
+    "icon80": icon80 == null ? null : icon80,
+    "icon84": icon85 == null ? null : icon84,
+    "icon85": icon85 == null ? null : icon85,
+    "icon86": icon86 == null ? null : icon86,
+  };
+
 }

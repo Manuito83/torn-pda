@@ -99,7 +99,7 @@ class _UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                                         "(you are missing $_missingScripts example "
                                         "${_missingScripts == 1 ? "script" : "scripts"})"
                                     : "This will add all missing example scripts and overwrite any "
-                                        "changes in they are already in your list "
+                                        "changes if they are already in your list "
                                         "(found $overwrite)",
                                 style: TextStyle(
                                   fontSize: 11,

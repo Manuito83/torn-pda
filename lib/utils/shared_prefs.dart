@@ -32,13 +32,14 @@ class Prefs {
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
-  final String _kBrowserRefreshMethod = "pda_browserRefreshMethod";  // former "pda_refreshIconBrowser" (was a bool)
+  final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
+  final String _kShowDateInClock = "pda_showDateInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
@@ -80,6 +81,9 @@ class Prefs {
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
+  final String _kShowHeaderWallet = "pda_showHeaderWallet";
+  final String _kShowHeaderIcons = "pda_showHeaderIcons";
+  final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
   final String _kDisableTravelSection = "pda_disableTravelSection";
   final String _kShortcutTile = "pda_shortcutTile";
@@ -112,8 +116,6 @@ class Prefs {
   final String _kAwardsSort = "pda_awardsSort";
   final String _kShowAchievedAwards = "pda_showAchievedAwards";
   final String _kHiddenAwardCategories = "pda_hiddenAwardCategories";
-  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
-  final String _kChatRemovalActive = "pda_chatRemovalActive";
   final String _kHighlightChat = "pda_highlightChat";
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
@@ -127,6 +129,15 @@ class Prefs {
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
+  // WebView Tabs
+  final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
+  final String _kChatRemovalActive = "pda_chatRemovalActive";
+  final String _kWebViewTabs = "pda_webViewTabs";
+  final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
+  final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
+  final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
+  final String _kUseTabsIcons = "pda_useTabsIcons";
+  final String _kHideTabs = "pda_hideTabs";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -134,12 +145,11 @@ class Prefs {
   final String _kTACFilters = "pda_tacFilters";
   final String _kTACTargets = "pda_tacTargets";
 
-
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
   /// To avoid this, simply force a refresh
-  Future reload () async {
+  Future reload() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.reload();
   }
@@ -416,12 +426,12 @@ class Prefs {
 
   Future<String> getBrowserRefreshMethod() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBrowserRefreshMethod) ?? "both";
+    return prefs.getString(_kBrowserRefreshMethod2) ?? "icon";
   }
 
   Future<bool> setBrowserRefreshMethod(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBrowserRefreshMethod, value);
+    return prefs.setString(_kBrowserRefreshMethod2, value);
   }
 
   Future<bool> getUseQuickBrowser() async {
@@ -471,7 +481,7 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for default time format
+  /// Methods for clock
   /// ----------------------------
   Future<String> getDefaultTimeFormat() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -483,9 +493,6 @@ class Prefs {
     return prefs.setString(_kDefaultTimeFormat, value);
   }
 
-  /// ----------------------------
-  /// Methods for default time zone
-  /// ----------------------------
   Future<String> getDefaultTimeZone() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kDefaultTimeZone) ?? 'local';
@@ -494,6 +501,16 @@ class Prefs {
   Future<bool> setDefaultTimeZone(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDefaultTimeZone, value);
+  }
+
+  Future<bool> getShowDateInClock() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowDateInClock) ?? true;
+  }
+
+  Future<bool> setShowDateInClock(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowDateInClock, value);
   }
 
   /// ----------------------------
@@ -552,8 +569,7 @@ class Prefs {
 
   Future<String> getTravelNotificationBody() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationBody) ??
-        'Arriving at your destination!';
+    return prefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
   }
 
   Future<bool> setTravelNotificationBody(String value) async {
@@ -666,8 +682,7 @@ class Prefs {
   /// ----------------------------
   Future<List<String>> getStockCountryFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockCountryFilter) ??
-        List<String>.filled(12, '1', growable: false);
+    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1', growable: false);
   }
 
   Future<bool> setStockCountryFilter(List<String> value) async {
@@ -677,8 +692,7 @@ class Prefs {
 
   Future<List<String>> getStockTypeFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockTypeFilter) ??
-        List<String>.filled(4, '1', growable: false);
+    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1', growable: false);
   }
 
   Future<bool> setStockTypeFilter(List<String> value) async {
@@ -947,6 +961,36 @@ class Prefs {
   Future<bool> setEnableShortcuts(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kEnableShortcuts, value);
+  }
+
+  Future<bool> getShowHeaderWallet() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowHeaderWallet) ?? true;
+  }
+
+  Future<bool> setShowHeaderWallet(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowHeaderWallet, value);
+  }
+
+  Future<bool> getShowHeaderIcons() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowHeaderIcons) ?? true;
+  }
+
+  Future<bool> setShowHeaderIcons(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowHeaderIcons, value);
+  }
+
+  Future<List<String>> getIconsFiltered() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kIconsFiltered) ?? <String>[];
+  }
+
+  Future<bool> setIconsFiltered(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kIconsFiltered, value);
   }
 
   Future<bool> getDedicatedTravelCard() async {
@@ -1471,5 +1515,66 @@ class Prefs {
     return prefs.setBool(_kStockExchangeInMenu, value);
   }
 
+  /// -----------------------------
+  /// METHODS FOR WEB VIEW TABS
+  /// -----------------------------
+  Future<String> getWebViewTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewTabs) ?? '{"tabsSave": []}';
+  }
 
+  Future<bool> setWebViewTabs(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewTabs, value);
+  }
+
+  Future<bool> getUseTabsFullBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsInFullBrowser) ?? true;
+  }
+
+  Future<bool> setUseTabsFullBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsInFullBrowser, value);
+  }
+
+  Future<bool> getUseTabsBrowserDialog() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsInBrowserDialog) ?? false;
+  }
+
+  Future<bool> setUseTabsBrowserDialog(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsInBrowserDialog, value);
+  }
+
+  Future<bool> getUseTabsHideFeature() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsHideFeature) ?? true;
+  }
+
+  Future<bool> setUseTabsHideFeature(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsHideFeature, value);
+  }
+
+  Future<bool> getUseTabsIcons() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsIcons) ?? true;
+  }
+
+  Future<bool> setUseTabsIcons(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kUseTabsIcons, value);
+  }
+
+  Future<bool> getHideTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kHideTabs) ?? false;
+  }
+
+  Future<bool> setHideTabs(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kHideTabs, value);
+  }
 }

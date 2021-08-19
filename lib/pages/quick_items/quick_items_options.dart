@@ -151,7 +151,6 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       title: Text("Quick items"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),

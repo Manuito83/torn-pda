@@ -826,7 +826,7 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
     const userAlerts = subscriber.stockMarketShares || [];
     for (const alert of userAlerts) {
       
-      const regexp = /[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)/;
+      const regexp = /[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2})?)|n)-L-((?:\d+(?:\.)?(?:\d{1,2})?)|n)/;
       const match = alert.match(regexp);
       
       if (match === null) {

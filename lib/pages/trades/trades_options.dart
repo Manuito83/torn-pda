@@ -203,7 +203,6 @@ class _TradesOptionsState extends State<TradesOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark,
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Trade Calculator"),
       leading: new IconButton(

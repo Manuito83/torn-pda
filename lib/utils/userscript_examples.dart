@@ -9,6 +9,7 @@ class ScriptsExamples {
     exampleList.add(_racingPresetsExample());
     exampleList.add(_specialGymRatios());
     exampleList.add(_companyStocksOrderExample());
+    exampleList.add(_companyActivity());
     return exampleList;
   }
 
@@ -1040,7 +1041,7 @@ GM_addStyle(styles);""";
     var source = r"""// ==UserScript==
 // @name         Torn Custom Race Presets
 // @namespace    https://greasyfork.org/en/scripts/393632-torn-custom-race-presets
-// @version      0.2.1
+// @version      0.2.1 - Torn PDA adaptation v2 [Manuito]
 // @description  Make it easier and faster to make custom races - Extended from Xiphias's
 // @author       Cryosis7 [926640]
 // @match        www.torn.com/loader.php?sid=racing
@@ -1063,6 +1064,7 @@ GM_addStyle(styles);""";
 	},
  * 
  */
+
 var presets = [{
 		name: "Quick Industrial",
 		maxDrivers: 2,
@@ -1130,6 +1132,11 @@ function scrubPresets() {
 }
 
 function drawPresetBar() {
+	// Get rid of box before re-adding, which is an issue for iOS
+	for (let box of document.querySelectorAll('.filter-container.m-top10')) {
+		box.remove();
+	}
+	
 	let filterBar = $(`
   <div class="filter-container m-top10">
 	<div class="title-gray top-round">Race Presets</div>
@@ -1145,7 +1152,7 @@ function drawPresetBar() {
 
     return UserScriptModel(
       // IMPORTANT: increment version by 1
-      version: 1,
+      version: 2,
 
       enabled: true,
       urls: getUrls(source),
@@ -1625,6 +1632,60 @@ if (document.querySelector(".stock-list-wrap")) {
       urls: getUrls(source),
       name: "Company Stocks Order",
       exampleCode: 5,
+      edited: false,
+      source: source,
+    );
+
+  }
+
+  static UserScriptModel _companyActivity() {
+    var source = r"""// ==UserScript==
+// @name         Company Activity for Torn PDA
+// @namespace    TornExtensions
+// @version      1.0
+// @description  Shows the activity of employees.
+// @author       Twenu [XID 2659526]
+// @match        https://www.torn.com/companies.php*
+// @grant        none
+// ==/UserScript==
+  
+(function() {
+    //'use strict';
+    let APIKey = '###PDA-APIKEY###';
+    let targetNode = document.getElementById('employees');
+    let config = { childList: true };
+    let callback = function(mutationsList, observer) {
+        $("a.user.name").each(function() {
+            if($(this).closest("li").attr("data-user").length > 0 && $(this).next("img")) {
+                let uID = $(this).closest("li").attr("data-user");
+                let API = `https://api.torn.com/user/${uID}?selections=profile&key=${APIKey}`;
+                fetch(API)
+                  .then((res) => res.json())
+                  .then((res) => {
+                    $($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first" aria-label="Active: "' + res.last_action.relative + '"><span class="bold t-show">Active:</span> ' + res.last_action.relative + '</span><span class="t-hide">/</span>');
+                    $($($(this).parent().parent().parent()).find(".acc-body")).find(".stats").append('<span tabindex="0" class="span-cont t-first" aria-label=" "><span class="bold t-show"></span></span> <span class="t-hide">/</span>');
+                    let days = res.last_action.relative.split(" ");
+                    if(days[1].includes("day"))
+                        if(parseInt(days[0]) == 1)
+                            $(this).parent().css("background-color", "orange");
+                        else if(parseInt(days[0]) >= 2)
+                            $(this).parent().css("background-color", "red");
+                  });
+            }
+        });
+    };
+    let observer = new MutationObserver(callback);
+    observer.observe(targetNode, config);
+})();""";
+
+    return UserScriptModel(
+      // IMPORTANT: increment version by 1
+      version: 1,
+
+      enabled: false,
+      urls: getUrls(source),
+      name: "Company Activity",
+      exampleCode: 6,
       edited: false,
       source: source,
     );

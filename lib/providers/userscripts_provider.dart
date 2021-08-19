@@ -67,8 +67,8 @@ class UserScriptsProvider extends ChangeNotifier {
         if (script.enabled) {
           if (script.urls.isNotEmpty) {
             var found = false;
-            for (var u in script.urls) {
-              if (url.contains(u)) {
+            for (String u in script.urls) {
+              if (url.contains(u.replaceAll("*", ""))) {
                 found = true;
                 scriptListToAdd.add(
                   UserScript(

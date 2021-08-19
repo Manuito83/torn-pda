@@ -15,8 +15,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
@@ -27,8 +27,6 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/travel/delayed_travel_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
-import 'package:torn_pda/widgets/webviews/webview_full.dart';
 
 class ForeignStockCard extends StatefulWidget {
   final ForeignStock foreignStock;
@@ -643,13 +641,8 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               height: 40,
                               color: Colors.white,
                             ),
-                            onLongPress: () async {
-                              _openWalletDialog(context, longPress: true);
-                            },
-                            onTap: () async {
-                              _settingsProvider.useQuickBrowser
-                                  ? _openWalletDialog(context, longPress: false)
-                                  : _openWalletDialog(context, longPress: true);
+                            onTap: () {
+                              _openWalletDialog();
                             },
                           ),
                         ],
@@ -813,6 +806,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     }
 
     BotToast.showText(
+      clickClose: true,
       text: moneyToBuy,
       textStyle: TextStyle(
         fontSize: 14,
@@ -1280,9 +1274,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Future<void> _openWalletDialog(BuildContext _, {bool longPress = false}) {
+  Future<void> _openWalletDialog() {
     return showDialog<void>(
-      context: _,
+      context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
@@ -1336,13 +1330,23 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  await _launchBrowserFull(url);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  await _launchBrowserOption(url);
-                                }
+                                var dialog = _settingsProvider.useQuickBrowser || false;
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                    );
+                                Navigator.of(context).pop();
+                                _refreshMoney();
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                    );
+                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                             ),
@@ -1365,13 +1369,23 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  await _launchBrowserFull(url);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  await openBrowserDialog(context, url);
-                                }
+                                var dialog = _settingsProvider.useQuickBrowser || false;
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                    );
+                                Navigator.of(context).pop();
+                                _refreshMoney();
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                    );
+                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                             ),
@@ -1394,13 +1408,23 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               ),
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
-                                if (longPress) {
-                                  Navigator.of(context).pop();
-                                  await _launchBrowserFull(url);
-                                } else {
-                                  Navigator.of(context).pop();
-                                  await openBrowserDialog(context, url);
-                                }
+                                var dialog = _settingsProvider.useQuickBrowser || false;
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                    );
+                                Navigator.of(context).pop();
+                                _refreshMoney();
+                              },
+                              onLongPress: () async {
+                                var url = "https://www.torn.com/companies.php#/option=funds";
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                    );
+                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                             ),
@@ -1468,34 +1492,6 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     await Future.delayed(Duration(seconds: 20));
     if (mounted) {
       widget.requestMoneyRefresh();
-    }
-  }
-
-  Future _launchBrowserOption(String url) async {
-    if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-      if (await canLaunch(url)) {
-        await launch(url, forceSafariVC: false);
-      }
-    } else {
-      _settingsProvider.useQuickBrowser ? await openBrowserDialog(context, url) : await _launchBrowserFull(url);
-    }
-  }
-
-  Future _launchBrowserFull(String page) async {
-    if (_settingsProvider.currentBrowser == BrowserSetting.external) {
-      if (await canLaunch(page)) {
-        await launch(page, forceSafariVC: false);
-      }
-    } else {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (BuildContext context) => WebViewFull(
-            customUrl: page,
-            customTitle: 'Torn',
-            customCallBack: null,
-          ),
-        ),
-      );
     }
   }
 }

@@ -3,9 +3,9 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:android_intent/android_intent.dart';
@@ -14,6 +14,7 @@ import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 
@@ -71,6 +72,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   int _androidSdk = 0;
 
+  double _extraMargin = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +105,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
+                    SizedBox(height: _extraMargin),
                     _apiKeyWidget(),
                     SizedBox(height: 15),
                     Row(
@@ -216,6 +220,44 @@ class _SettingsPageState extends State<SettingsPage> {
                           Flexible(
                             flex: 2,
                             child: _timeZoneDropdown(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              "Show date in clock",
+                            ),
+                          ),
+                          Switch(
+                            value: _settingsProvider.showDateInClock,
+                            onChanged: (value) {
+                              setState(() {
+                                _settingsProvider.changeShowDateInClock = value;
+                              });
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Add an extra row for the date wherever the TCT clock is shown',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ],
                       ),
@@ -538,7 +580,6 @@ class _SettingsPageState extends State<SettingsPage> {
   AppBar buildAppBar() {
     return AppBar(
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      brightness: Brightness.dark,
       toolbarHeight: 50,
       title: Text('Settings'),
       leading: new IconButton(
@@ -621,35 +662,54 @@ class _SettingsPageState extends State<SettingsPage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               ElevatedButton(
-                                child: Text("Reload"),
+                                child: Text("Copy"),
                                 onPressed: () {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
-                                  if (_formKey.currentState.validate()) {
-                                    _myCurrentKey = _apiKeyInputController.text;
-                                    _getApiDetails(userTriggered: true);
-                                  }
+                                  Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
+                                  BotToast.showText(
+                                    text: "API key copied to the clipboard, be careful!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.blue,
+                                    duration: Duration(seconds: 4),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
                                 },
                               ),
                               Padding(
-                                padding: EdgeInsetsDirectional.only(start: 10),
+                                padding: const EdgeInsets.only(left: 10),
+                                child: ElevatedButton(
+                                  child: Text("Reload"),
+                                  onPressed: () {
+                                    FocusScope.of(context).requestFocus(new FocusNode());
+                                    if (_formKey.currentState.validate()) {
+                                      _myCurrentKey = _apiKeyInputController.text;
+                                      _getApiDetails(userTriggered: true);
+                                    }
+                                  },
+                                ),
                               ),
-                              ElevatedButton(
-                                child: Text("Remove"),
-                                onPressed: () async {
-                                  FocusScope.of(context).requestFocus(new FocusNode());
-                                  // Removes the form error
-                                  _formKey.currentState.reset();
-                                  _apiKeyInputController.clear();
-                                  _myCurrentKey = '';
-                                  _userProvider.removeUser();
-                                  setState(() {
-                                    _userToLoad = false;
-                                    _apiError = false;
-                                  });
-                                  await FirebaseMessaging.instance.deleteToken();
-                                  await firestore.deleteUserProfile();
-                                  await firebaseAuth.signOut();
-                                },
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: ElevatedButton(
+                                  child: Text("Remove"),
+                                  onPressed: () async {
+                                    FocusScope.of(context).requestFocus(new FocusNode());
+                                    // Removes the form error
+                                    _formKey.currentState.reset();
+                                    _apiKeyInputController.clear();
+                                    _myCurrentKey = '';
+                                    _userProvider.removeUser();
+                                    setState(() {
+                                      _userToLoad = false;
+                                      _apiError = false;
+                                    });
+                                    await FirebaseMessaging.instance.deleteToken();
+                                    await firestore.deleteUserProfile();
+                                    await firebaseAuth.signOut();
+                                  },
+                                ),
                               ),
                             ],
                           ),
@@ -1258,6 +1318,9 @@ class _SettingsPageState extends State<SettingsPage> {
         }
         setState(() {
           _appBarPosition = value;
+          if (value == "bottom") {
+            _extraMargin = 50;
+          }
         });
       },
     );
