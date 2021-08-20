@@ -89,7 +89,7 @@ class StatusIconsWrap extends StatelessWidget {
               child: icon,
               onTap: () {
                 BotToast.showText(
-                  text: details,
+                  text: details.replaceAll("0 days, 0 hours, ", "").replaceAll("0 days, ", ""),
                   textStyle: TextStyle(
                     fontSize: 14,
                     color: Colors.white,
