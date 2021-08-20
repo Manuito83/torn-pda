@@ -147,11 +147,9 @@ class EventIcons extends StatelessWidget {
         message.contains('canceled the')) {
       insideIcon = Container(
         child: Center(
-          child: Image.asset(
-            'images/icons/ic_pistol_black_48dp.png',
-            width: 20,
-            height: 20,
-            color: Colors.blue,
+          child: Icon(
+            MdiIcons.fingerprint,
+            color: themeProvider.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
           ),
         ),
       );
