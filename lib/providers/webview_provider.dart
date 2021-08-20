@@ -189,17 +189,22 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  void reportTabLoadUrl(Key reporterKey, String url) {
+  void reportTabLoadUrl(Key reporterKey, String newUrl) {
     var tab = getTabFromKey(reporterKey);
     // Tab initialised prevents the first URL (generic to Torn) to be inserted in the history and also forward history
     // from getting removed (first thing the webView does is to visit the generic URL)
     if (tab.initialised) {
       tab.historyForward.clear();
-      tab.historyBack.add(tab.currentUrl);
+      // Sometimes onLoadStop triggers several times. This prevents adding an entry in the history in this cases
+      // by detecting if the URL we are leaving is the same one we are going to. If it is, don't add it as it is
+      // still the current page being shown
+      if (tab.currentUrl != newUrl) {
+        tab.historyBack.add(tab.currentUrl);
+      }
     } else {
       tab.initialised = true;
     }
-    tab.currentUrl = url;
+    tab.currentUrl = newUrl;
 
     notifyListeners();
     _callAssessMethods();
