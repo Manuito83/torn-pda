@@ -681,9 +681,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 },
                 onCreateWindow: (c, request) {
                   if (!mounted) return;
-
-                  _webViewProvider.addTab(url: request.request.url.toString());
-                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                  // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
+                  // to open a window, a new tab is created but we can't see it and looks like a glitch)
+                  if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
+                      (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
+                    webView.loadUrl(urlRequest: URLRequest(url: request.request.url));
+                  } else {
+                    // If we are using tabs, add a tab
+                    _webViewProvider.addTab(url: request.request.url.toString());
+                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                  }
                   return;
                 },
                 onLoadStart: (c, uri) async {
