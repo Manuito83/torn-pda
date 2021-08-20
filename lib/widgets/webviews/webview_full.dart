@@ -751,6 +751,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     var html = await webView.getHtml();
                     var document = parse(html);
 
+                    // ! TODO: place in correct method
+                    _assessJail(document);
+
                     // Force to show title
                     await (_getPageTitle(document, showTitle: true));
 
@@ -2537,6 +2540,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
       }
     }
+  }
+
+  // JAIL
+  void _assessJail(dom.Document doc) {
+    webView.evaluateJavascript(source: jailJS());
   }
 
   // Called from parent though GlobalKey state

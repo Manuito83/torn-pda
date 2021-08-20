@@ -756,3 +756,20 @@ String chatHighlightJS({@required String highlightMap}) {
     123;
   ''';
 }
+
+String jailJS() {
+  return '''
+    var doc = window.document;
+    for (var player of doc.querySelectorAll(".users-list > li")) {
+      const actionWrap = player.querySelector(".bust");
+      actionWrap.style.backgroundColor = "#288a0059";
+    
+      const actionIcon = player.querySelector(".bust-icon");
+      actionIcon.style.filter = "brightness(0.5)";
+      
+      let bustLink = actionWrap.getAttribute("href");
+      if (bustLink[bustLink.length - 1] !== "1") bustLink += "1";
+      actionWrap.setAttribute("href", bustLink);
+    }
+  ''';
+}
