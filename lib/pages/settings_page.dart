@@ -1064,9 +1064,9 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
-            width: 55,
+            width: 65,
             child: Text(
-              "App",
+              "In-App",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -1077,7 +1077,7 @@ class _SettingsPageState extends State<SettingsPage> {
         DropdownMenuItem(
           value: "1",
           child: SizedBox(
-            width: 55,
+            width: 65,
             child: Text(
               "External",
               textAlign: TextAlign.right,
