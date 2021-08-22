@@ -871,7 +871,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Text("Tabs in browser dialog"),
+              Text("Tabs in quick browser"),
               Switch(
                 value: _settingsProvider.useTabsBrowserDialog,
                 onChanged: (value) {
