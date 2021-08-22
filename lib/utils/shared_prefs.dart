@@ -1540,7 +1540,7 @@ class Prefs {
 
   Future<bool> getUseTabsBrowserDialog() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseTabsInBrowserDialog) ?? false;
+    return prefs.getBool(_kUseTabsInBrowserDialog) ?? true;
   }
 
   Future<bool> setUseTabsBrowserDialog(bool value) async {
