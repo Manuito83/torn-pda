@@ -685,7 +685,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
                       (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
-                    webView.loadUrl(urlRequest: URLRequest(url: request.request.url));
+                    _loadUrl(request.request.url.toString());
                   } else {
                     // If we are using tabs, add a tab
                     _webViewProvider.addTab(url: request.request.url.toString());
@@ -696,26 +696,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onLoadStart: (c, uri) async {
                   if (!mounted) return;
 
-                  // Userscripts
-                  UserScriptChanges changes = _userScriptsProvider.getCondSources(
-                    url: uri.toString(),
-                    apiKey: _userProvider.basic.userApiKey,
-                  );
-                  if (Platform.isAndroid) {
-                    // Not supported on iOS
-                    for (var group in changes.scriptsToRemove) {
-                      c.removeUserScriptsByGroupName(groupName: group);
+                  try {
+                    _currentUrl = uri.toString();
+
+                    // Userscripts
+                    UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                      url: uri.toString(),
+                      apiKey: _userProvider.basic.userApiKey,
+                    );
+                    if (Platform.isAndroid) {
+                      // Not supported on iOS
+                      for (var group in changes.scriptsToRemove) {
+                        c.removeUserScriptsByGroupName(groupName: group);
+                      }
                     }
+                    await c.addUserScripts(userScripts: changes.scriptsToAdd);
+
+                    _hideChat();
+
+                    var html = await webView.getHtml();
+                    var document = parse(html);
+                    _assessGeneral(document);
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
                   }
-                  await c.addUserScripts(userScripts: changes.scriptsToAdd);
-
-                  _hideChat();
-
-                  _currentUrl = uri.toString();
-
-                  var html = await webView.getHtml();
-                  var document = parse(html);
-                  _assessGeneral(document);
                 },
                 onProgressChanged: (c, progress) async {
                   if (!mounted) return;
@@ -1858,25 +1863,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void _openVaultsOptions(VaultsOptions choice) async {
     switch (choice.description) {
       case "Personal vault":
-        webView.loadUrl(
-          urlRequest: URLRequest(
-            url: Uri.parse("https://www.torn.com/properties.php#/p=options&tab=vault"),
-          ),
-        );
+        _loadUrl("https://www.torn.com/properties.php#/p=options&tab=vault");
         break;
       case "Faction vault":
-        webView.loadUrl(
-          urlRequest: URLRequest(
-            url: Uri.parse("https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate"),
-          ),
-        );
+        _loadUrl("https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=donate");
         break;
       case "Company vault":
-        webView.loadUrl(
-          urlRequest: URLRequest(
-            url: Uri.parse("https://www.torn.com/companies.php#/option=funds"),
-          ),
-        );
+        _loadUrl("https://www.torn.com/companies.php#/option=funds");
         break;
     }
   }
@@ -2459,7 +2452,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (Platform.isAndroid) {
       webView.reload();
     } else if (Platform.isIOS) {
-      webView.loadUrl(urlRequest: URLRequest(url: await webView.getUrl()));
+      var currentURI = await webView.getUrl();
+      _loadUrl(currentURI.toString());
     }
   }
 
@@ -2549,7 +2543,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // Called from parent though GlobalKey state
   void loadFromExterior({@required String url, @required bool omitHistory}) {
     _omitTabHistory = omitHistory;
-    webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
+    _loadUrl(url);
   }
 
   void pauseTimers() async {
@@ -2562,6 +2556,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (Platform.isAndroid) {
       webView?.android?.resume();
     }
+  }
+
+  void _loadUrl(String inputUrl) {
+    // If the input URL is invalid, we will see if there was one saved as _currentUrl
+    // http and https are valid because we'll change them later
+    if (inputUrl == null || inputUrl.isEmpty) {
+      if (_currentUrl.isNotEmpty && _currentUrl.contains("http")) {
+        inputUrl = _currentUrl;
+      } else {
+        return;
+      }
+    }
+
+    inputUrl.replaceAll("http://", "https://");
+
+    var uri = Uri.parse(inputUrl);
+    webView.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
   Future<bool> _willPopCallback() async {
