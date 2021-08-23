@@ -8,7 +8,7 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
 
   try {
     if (
-      energy.maximum === energy.current && 
+      energy.maximum === energy.current &&
       (subscriber.energyLastCheckFull === false)
     ) {
       promises.push(
@@ -63,7 +63,7 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
 
   try {
     if (
-      nerve.maximum === nerve.current && 
+      nerve.maximum === nerve.current &&
       (subscriber.nerveLastCheckFull === false)
     ) {
       promises.push(
@@ -118,7 +118,7 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
 export async function logTravelArrival(userStats: any, subscriber: any) {
   const travel = userStats.travel;
   const promises: Promise<any>[] = [];
-  
+
   const travelTimeArrival = subscriber.travelTimeArrival || 0;
 
   try {
@@ -148,9 +148,9 @@ export async function logTravelArrival(userStats: any, subscriber: any) {
 
 export async function sendHospitalNotification(userStats: any, subscriber: any) {
   const promises: Promise<any>[] = [];
-  
+
   const currentDateInMillis = Math.floor(Date.now() / 1000);
-  
+
   let hospitalTimeToRelease = userStats.states.hospital_timestamp - currentDateInMillis;
   if (hospitalTimeToRelease < 0)
     hospitalTimeToRelease = 0;
@@ -196,7 +196,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
       hospitalTimeToRelease > 0 && hospitalTimeToRelease <= 240 &&
       hospitalLastStatus === 'in'
     ) {
-    
+
       // Change last status so that we don't notify more than once
       promises.push(
         admin
@@ -223,14 +223,14 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           )
         );
       }
-    } 
+    }
 
     // If we are out and did not anticipate this, we have been revived  
     else if (
       hospitalTimeToRelease === 0 &&
       hospitalLastStatus === 'in'
     ) {
-    
+
       promises.push(
         admin
           .firestore()
@@ -257,7 +257,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
         );
       }
     }
-  
+
     // If we are out and already sent the notification, just update the status
     else if (
       hospitalTimeToRelease === 0 &&
@@ -287,7 +287,7 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
 
   try {
     if (
-      cooldowns.drug === 0 && 
+      cooldowns.drug === 0 &&
       (subscriber.drugsInfluence === true)
     ) {
       promises.push(
@@ -342,7 +342,7 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
 
   try {
     if (
-      icons.icon18 && 
+      icons.icon18 &&
       subscriber.racingSent === false
     ) {
       promises.push(
@@ -370,7 +370,7 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
     }
 
     if (
-      !icons.icon18 && 
+      !icons.icon18 &&
       (subscriber.racingSent === true)
     ) {
       promises.push(
@@ -402,40 +402,44 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
     const knownMessages = subscriber.knownMessages || [];
     const allTornKeys: any[] = [];
 
-    Object.keys(userStats.messages).forEach(function (key){
+    Object.keys(userStats.messages).forEach(function (key) {
       allTornKeys.push(key);
-      if (userStats.messages[key].seen === 0 && 
+      if (userStats.messages[key].seen === 0 &&
         userStats.messages[key].read === 0 &&
         !knownMessages.includes(key)) {
-          changes = true;
-          newMessages++;
-          knownMessages.push(key);
-          newMessagesSubjects.push(userStats.messages[key].title);
-          if (!newMessagesSenders.includes(userStats.messages[key].name)) {
-            newMessagesSenders.push(userStats.messages[key].name);
-          }
-      } 
-      else if ((userStats.messages[key].seen === 1 || 
+        changes = true;
+        newMessages++;
+        knownMessages.push(key);
+        newMessagesSubjects.push(userStats.messages[key].title);
+        if (!newMessagesSenders.includes(userStats.messages[key].name)) {
+          newMessagesSenders.push(userStats.messages[key].name);
+        }
+      }
+      // From v2.5.1, using 'new', this should in theory not be applicable
+      else if ((userStats.messages[key].seen === 1 ||
         userStats.messages[key].read === 1) &&
         knownMessages.includes(key)) {
-          changes = true;
-          for(let i = 0; i < knownMessages.length; i++){ 
-            if ( knownMessages[i] === key) { 
-              knownMessages.splice(i, 1); 
-              break;
-            }
+        changes = true;
+        for (let i = 0; i < knownMessages.length; i++) {
+          if (knownMessages[i] === key) {
+            knownMessages.splice(i, 1);
+            break;
           }
+        }
       }
     });
 
     // Ensure that deleted messages are deleted from the database, as they
     // won't be caught by the conditions above if they get deleted immediately
+
+    // Note: for messages & events we've changed to 'new' in v2.5.1, so this
+    // will theoretically be the only way of removing them from the db
     for (const key of knownMessages) {
       if (!allTornKeys.includes(key)) {
         changes = true;
-        for(let i = 0; i < knownMessages.length; i++){ 
-          if (knownMessages[i] === key) { 
-            knownMessages.splice(i, 1); 
+        for (let i = 0; i < knownMessages.length; i++) {
+          if (knownMessages[i] === key) {
+            knownMessages.splice(i, 1);
             break;
           }
         }
@@ -487,7 +491,7 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
         )
       );
     }
-    
+
   } catch (error) {
     functions.logger.warn(`ERROR MESSAGES \n${subscriber.uid} \n${error}`);
   }
@@ -504,36 +508,40 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     const newEventsDescriptions: any[] = [];
     const knownEvents = subscriber.knownEvents || [];
     const allTornKeys: any[] = [];
-    
-    Object.keys(userStats.events).forEach(function (key){
+
+    Object.keys(userStats.events).forEach(function (key) {
       allTornKeys.push(key);
       if (userStats.events[key].seen === 0 &&
         !knownEvents.includes(key)) {
-          changes = true;
-          newGeneralEvents++;
-          knownEvents.push(key);
-          newEventsDescriptions.push(userStats.events[key].event);
-      } 
+        changes = true;
+        newGeneralEvents++;
+        knownEvents.push(key);
+        newEventsDescriptions.push(userStats.events[key].event);
+      }
+      // From v2.5.1, using 'new', this should in theory not be applicable
       else if (userStats.events[key].seen === 1 &&
         knownEvents.includes(key)) {
-          changes = true;
-          for(let i = 0; i < knownEvents.length; i++){ 
-            if ( knownEvents[i] === key) { 
-              knownEvents.splice(i, 1); 
-              break;
-            }
+        changes = true;
+        for (let i = 0; i < knownEvents.length; i++) {
+          if (knownEvents[i] === key) {
+            knownEvents.splice(i, 1);
+            break;
           }
+        }
       }
     });
 
     // Ensure that deleted messages are deleted from the database, as they
     // won't be caught by the conditions above if they get deleted immediately
+
+    // Note: for messages & events we've changed to 'new' in v2.5.1, so this
+    // will theoretically be the only way of removing them from the db
     for (const key of knownEvents) {
       if (!allTornKeys.includes(key)) {
         changes = true;
-        for(let i = 0; i < knownEvents.length; i++){ 
-          if (knownEvents[i] === key) { 
-            knownEvents.splice(i, 1); 
+        for (let i = 0; i < knownEvents.length; i++) {
+          if (knownEvents[i] === key) {
+            knownEvents.splice(i, 1);
             break;
           }
         }
@@ -560,7 +568,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     if (newGeneralEvents > 0) {
       let notificationTitle = "";
       let notificationSubtitle = "";
-      
+
       // If the user has pre-defined filters, we will remove the events
       // matching those filters, so that the notification is not sent
       const filters = subscriber.eventsFilter || [];
@@ -568,10 +576,10 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
         // Change trades notification from one list to another
         const tradeCheck = stripHtml(newEventsDescriptions[i]).result;
-        if (tradeCheck.includes('has initiated a trade titled') || 
-        tradeCheck.includes('has accepted the trade') ||
-        tradeCheck.includes('has canceled the trade') ||
-        tradeCheck.includes('commented on your pending trade')
+        if (tradeCheck.includes('has initiated a trade titled') ||
+          tradeCheck.includes('has accepted the trade') ||
+          tradeCheck.includes('has canceled the trade') ||
+          tradeCheck.includes('commented on your pending trade')
         ) {
           newTradesEvents++;
           newTradesDescriptions.push(newEventsDescriptions[i]);
@@ -580,7 +588,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           continue;
         }
 
-        if (filters.length > 0) { 
+        if (filters.length > 0) {
 
           // Avoid personal messages with giveaways triggering other filter
           if (newEventsDescriptions[i].includes('with the message:')) {
@@ -589,8 +597,8 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
           if (filters.includes('crimes')) {
             if (newEventsDescriptions[i].includes('You have been selected by') ||
-            newEventsDescriptions[i].includes('You and your team') ||
-            newEventsDescriptions[i].includes('canceled the ')) {
+              newEventsDescriptions[i].includes('You and your team') ||
+              newEventsDescriptions[i].includes('canceled the ')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
               continue;
@@ -607,9 +615,9 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
           if (filters.includes('racing')) {
             if (newEventsDescriptions[i].includes('You came') ||
-            newEventsDescriptions[i].includes('race.') ||
-            newEventsDescriptions[i].includes('Your best lap was') ||
-            newEventsDescriptions[i].includes('race and have received ')) {
+              newEventsDescriptions[i].includes('race.') ||
+              newEventsDescriptions[i].includes('Your best lap was') ||
+              newEventsDescriptions[i].includes('race and have received ')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
               continue;
@@ -626,8 +634,8 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
           if (filters.includes('attacks')) {
             if (newEventsDescriptions[i].includes('attacked you') ||
-            newEventsDescriptions[i].includes('mugged you and stole') ||
-            newEventsDescriptions[i].includes('attacked and hospitalized')) {
+              newEventsDescriptions[i].includes('mugged you and stole') ||
+              newEventsDescriptions[i].includes('attacked and hospitalized')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
               continue;
@@ -678,7 +686,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             "",
             subscriber.vibration,
           )
-        );   
+        );
       }
 
       if (newTradesEvents > 0) {
@@ -690,10 +698,10 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           notificationTitle = `${newTradesEvents} trade updates!`;
           notificationSubtitle = `- ${newTradesDescriptions.join('\n- ')}`.trim();
         }
-        
+
         // We'll use this later in case of trade
         const originalSubtitle = notificationSubtitle;
-        
+
         let tradeId = '';
 
         // Fix notification text
@@ -723,7 +731,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           const matches = regex.exec(originalSubtitle);
           if (matches !== null) tradeId = matches[1];
 
-        // If more than one trade update, don't change title but add tradeIid only if new trade is detected
+          // If more than one trade update, don't change title but add tradeIid only if new trade is detected
         } else if (newTradesEvents > 1) {
           const regex = new RegExp(`(?:trade.php#step=view&ID=)([0-9]+)`);
           const matches = regex.exec(originalSubtitle);
@@ -742,11 +750,11 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             tradeId,
             subscriber.vibration,
           )
-        );  
+        );
       }
 
     }
-    
+
   } catch (error) {
     functions.logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
   }
@@ -764,7 +772,7 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
 
     const userStocks = subscriber.restockActiveAlerts;
     for (const [userCodeName, userTime] of Object.entries(userStocks)) {
-      
+
       if (userCodeName in dbStocks) {
         const dbTime = dbStocks[userCodeName].restock;
 
@@ -774,7 +782,7 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
           stocksUpdated.push(`${dbStocks[userCodeName].name} (${dbStocks[userCodeName].country})`)
           userStocks[userCodeName] = dbTime * 1000;
         }
-      } 
+      }
     }
 
     if (updates > 0) {
@@ -788,7 +796,7 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
           .doc(subscriber.uid)
           .update({
             restockActiveAlerts: userStocks,
-        })
+          })
       );
 
       promises.push(
@@ -803,9 +811,9 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
           "",
           subscriber.vibration,
         )
-      );  
+      );
     }
-    
+
   } catch (error) {
     functions.logger.warn(`ERROR RESTOCKS \n${subscriber.uid} \n${error}`);
   }
@@ -825,38 +833,38 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
     // Loop user selected alerts
     const userAlerts = subscriber.stockMarketShares || [];
     for (const alert of userAlerts) {
-      
+
       const regexp = /[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2})?)|n)-L-((?:\d+(?:\.)?(?:\d{1,2})?)|n)/;
       const match = alert.match(regexp);
-      
+
       if (match === null) {
         functions.logger.warn(`Stock Market regex error \n${subscriber.uid}`);
         continue;
       }
 
-      const acronym = alert.substring(0,3);
+      const acronym = alert.substring(0, 3);
       let alertHigh = match[1];
       let alertLow = match[2];
-      
+
       // Locate the share in Torn's stock market
       for (const value of Object.values(tornStocks.stocks)) {
         if (value["acronym"] === acronym) {
-          
+
           if (alertHigh !== "n") {
             alertHigh = +alertHigh; // Parse to int
             if (value["current_price"] > alertHigh) {
               stocksMarketUpdates.push(`${acronym} above \$${alertHigh}!`);
               alertHigh = "n";
-              updates++; 
+              updates++;
             }
-          } 
-          
+          }
+
           if (alertLow !== "n") {
             alertLow = +alertLow; // Parse to int
             if (value["current_price"] < alertLow) {
               stocksMarketUpdates.push(`${acronym} below \$${alertLow}!`);
               alertLow = "n";
-              updates++; 
+              updates++;
             }
           }
         }
@@ -889,9 +897,9 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
           .doc(subscriber.uid)
           .update({
             stockMarketShares: newUserAlerts,
-        })
+          })
       );
-      
+
       promises.push(
         sendNotificationToUser(
           subscriber.token,
@@ -907,7 +915,7 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
       );
 
     }
-    
+
   } catch (error) {
     functions.logger.warn(`ERROR STOCK MARKET \n${subscriber.uid} \n${error}`);
   }
@@ -927,7 +935,7 @@ export async function sendNotificationToUser(
   vibration: string,
   sound: string = "slow_spring_board.aiff",
 ): Promise<any> {
-  
+
   // Give a space to mach channel ids in the app
   let vibrationPattern = vibration;
   if (vibrationPattern !== "") {
@@ -975,7 +983,7 @@ export async function sendNotificationToUser(
       // This are needed so that the information is contained 
       // in onLaundh/onResume message information
       title: title,
-      body: body, 
+      body: body,
       channelId: channelId,
       tornMessageId: tornMessageId,
       tornTradeId: tornTradeId,
@@ -983,5 +991,5 @@ export async function sendNotificationToUser(
   };
 
   return admin.messaging().send(payload);
-  
+
 }
