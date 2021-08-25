@@ -139,6 +139,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _quickItemsActive = false;
   var _quickItemsController = ExpandableController();
 
+  Widget _jailExpandable = SizedBox.shrink();
+
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
   bool _crimesTriggered = false;
@@ -662,6 +664,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _vaultExpandable,
         // City widget
         _cityExpandable,
+        // Jail widget
+        _jailExpandable,
         // Actual WebView
         Expanded(
           child: Stack(
@@ -2544,7 +2548,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // JAIL
   void _assessJail(dom.Document doc) {
-    webView.evaluateJavascript(source: jailJS());
+    webView.evaluateJavascript(
+        source: jailJS(
+            levelMin: 40,
+            levelMax: 80,
+            timeMin: 3,
+            timeMax: 12,
+            scoreMin: 0,
+            scoreMax: 250000,
+            bailTicked: true,
+            bustTicked: true));
   }
 
   // Called from parent though GlobalKey state

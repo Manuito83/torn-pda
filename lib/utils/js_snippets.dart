@@ -757,19 +757,153 @@ String chatHighlightJS({@required String highlightMap}) {
   ''';
 }
 
-String jailJS() {
+String jailJS({
+  @required int levelMin,
+  @required int levelMax,
+  @required int timeMin,
+  @required int timeMax,
+  @required int scoreMin,
+  @required int scoreMax,
+  @required bool bailTicked,
+  @required bool bustTicked,
+}) {
   return '''
+    var levelMin;
+    var levelMax;
+
+    var bailActive;
+    var bustActive;
+
     var doc = window.document;
-    for (var player of doc.querySelectorAll(".users-list > li")) {
-      const actionWrap = player.querySelector(".bust");
-      actionWrap.style.backgroundColor = "#288a0059";
-    
-      const actionIcon = player.querySelector(".bust-icon");
-      actionIcon.style.filter = "brightness(0.5)";
-      
-      let bustLink = actionWrap.getAttribute("href");
-      if (bustLink[bustLink.length - 1] !== "1") bustLink += "1";
-      actionWrap.setAttribute("href", bustLink);
+
+    function toSeconds(time) {
+      time = time.toLowerCase();
+      let seconds = 0;
+
+      if (time.includes("h")) {
+        seconds += parseInt(time.split("h")[0].trim()) * 3600;
+        time = time.split("h")[1];
+      }
+      if (time.includes("m")) {
+        seconds += parseInt(time.split("m")[0].trim()) * 60;
+        time = time.split("m")[1];
+      }
+      if (time.includes("s")) {
+        seconds += parseInt(time.split("s")[0].trim());
+      }
+      return seconds;
     }
+
+    // Adjust elements depending on current theme
+    var darkModeFound = doc.querySelectorAll('#body.dark-mode');
+    var activeFilter = "brightness(0.5)";
+    var defaultFilter = "drop-shadow(0 1px 0 #fff)";
+    if (darkModeFound.length > 0) {
+      activeFilter = "brightness(1)";
+      defaultFilter = "drop-shadow(0px 1px 0px transparent)";
+    }
+
+    // FILTERS
+    for (var player of doc.querySelectorAll(".users-list > li")) {
+      var shouldHide = false;
+
+      // Level
+      var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
+      if (level > $levelMax || level < $levelMin) {
+        shouldHide = true;
+      }
+
+      // Time
+      var seconds = toSeconds(player.querySelector(".time").innerText.replace("Time", "").replace("TIME", "").replace(":", "").replace("left:", "").trim());
+      var hours = seconds / 3600;
+      if (hours > $timeMax || hours < $timeMin) {
+        shouldHide = true;
+      }
+
+      // Score
+      var score = level * seconds / 60
+      if (score > $scoreMax || score < $scoreMin) {
+        shouldHide = true;
+      }
+
+      if (shouldHide) {
+        player.hidden = true;
+      } else {
+        player.hideen = false;
+      }
+
+    }
+
+    // BAIL
+    if (!bustActive && $bailTicked) {
+      bailActive = true;
+      for (var player of doc.querySelectorAll(".users-list > li")) {
+        // Find bust fields and turn them green
+        const actionWrap = player.querySelector(".buy, .bye");
+        actionWrap.style.backgroundColor = "#288a0059";
+        // Find bust icons and decrease brightness for better contrast
+        const actionIcon = player.querySelector(".bye-icon");
+        filterDefault = actionIcon.style.filter;
+        actionIcon.style.filter = activeFilter;
+        // By adding a "1" to the button link, we perform a quick bust
+        let bailLink = actionWrap.getAttribute("href");
+        if (bailLink[bailLink.length - 1] !== "1") bailLink += "1";
+        actionWrap.setAttribute("href", bailLink);
+      }
+    }
+    else if (bustActive && !$bailTicked) {
+      bailActive = false;
+      for (var player of doc.querySelectorAll(".users-list > li")) {
+        const actionWrap = player.querySelector(".buy, .bye");
+        actionWrap.style.removeProperty("background-color");
+
+        const actionIcon = player.querySelector(".bye-icon");
+        actionIcon.style.filter = defaultFilter;
+
+        let bailLink = actionWrap.getAttribute("href");
+        if (bailLink[bailLink.length - 1] === "1") {
+          bailLink = bailLink.substring(0, bailLink.length - 1);
+        }
+        actionWrap.setAttribute("href", bailLink);
+      }
+    }
+
+    // BUST
+    if (!bustActive && $bustTicked) {
+      bustActive = true;
+      for (var player of doc.querySelectorAll(".users-list > li")) {
+        // Find bust fields and turn them green
+        const actionWrap = player.querySelector(".bust");
+        actionWrap.style.backgroundColor = "#288a0059";
+        // Find bust icons and decrease brightness for better contrast
+        const actionIcon = player.querySelector(".bust-icon");
+        filterDefault = actionIcon.style.filter;
+        actionIcon.style.filter = activeFilter;
+        // By adding a "1" to the button link, we perform a quick bust
+        let bustLink = actionWrap.getAttribute("href");
+        if (bustLink[bustLink.length - 1] !== "1") bustLink += "1";
+        actionWrap.setAttribute("href", bustLink);
+      }
+
+    }
+    else if (bustActive && !$bustTicked) {
+      bustActive = false;
+      for (var player of doc.querySelectorAll(".users-list > li")) {
+        const actionWrap = player.querySelector(".bust");
+        actionWrap.style.removeProperty("background-color");
+
+        const actionIcon = player.querySelector(".bust-icon");
+        actionIcon.style.filter = defaultFilter;
+
+        let bustLink = actionWrap.getAttribute("href");
+        if (bustLink[bustLink.length - 1] === "1") {
+          bustLink = bustLink.substring(0, bustLink.length - 1);
+        }
+        actionWrap.setAttribute("href", bustLink);
+      }
+    }
+
+    // Return to avoid iOS WKErrorDomain
+    123;
   ''';
 }

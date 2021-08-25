@@ -171,6 +171,8 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void activateTab(int newActiveTab) {
+    if (_tabList.isEmpty || _tabList.length - 1 < newActiveTab) return;
+
     var deactivated = _tabList[_currentTab];
     deactivated.webViewKey.currentState?.pauseTimers();
 
