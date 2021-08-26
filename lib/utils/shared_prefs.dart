@@ -126,6 +126,8 @@ class Prefs {
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
+  // Jail
+  final String _kJailModel = "pda_jailOptions";
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
@@ -1490,6 +1492,19 @@ class Prefs {
   Future<bool> setVaultShareCurrent(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kVaultShareCurrent, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR JAIL
+  /// -----------------------------
+  Future<String> getJailModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kJailModel) ?? "";
+  }
+
+  Future<bool> setJailModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kJailModel, value);
   }
 
   /// -----------------------------

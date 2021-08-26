@@ -762,7 +762,6 @@ String jailJS({
   @required int levelMax,
   @required int timeMin,
   @required int timeMax,
-  @required int scoreMin,
   @required int scoreMax,
   @required bool bailTicked,
   @required bool bustTicked,
@@ -822,14 +821,14 @@ String jailJS({
 
       // Score
       var score = level * seconds / 60
-      if (score > $scoreMax || score < $scoreMin) {
+      if (score > $scoreMax) {
         shouldHide = true;
       }
 
       if (shouldHide) {
         player.hidden = true;
       } else {
-        player.hideen = false;
+        player.hidden = false;
       }
 
     }

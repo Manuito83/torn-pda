@@ -2,16 +2,15 @@
 import 'dart:async';
 import 'dart:io';
 
-// Flutter imports:
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 // Package imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
+// Flutter imports:
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
@@ -20,9 +19,9 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
-
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
@@ -42,6 +41,7 @@ import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
+import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
@@ -73,7 +73,7 @@ class WebViewFull extends StatefulWidget {
   final bool chatRemovalActive;
   final GlobalKey<WebViewFullState> key;
 
-  WebViewFull({
+  const WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
     this.customCallBack,
@@ -101,16 +101,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _travelHomeIconTriggered = false;
 
   var _crimesActive = false;
-  var _crimesController = ExpandableController();
+  final _crimesController = ExpandableController();
 
   var _tradesFullActive = false;
   var _tradesIconActive = false;
-  Widget _tradesExpandable = SizedBox.shrink();
+  Widget _tradesExpandable = const SizedBox.shrink();
   bool _tradesPreferencesLoaded = false;
   bool _tradeCalculatorEnabled = false;
   DateTime _tradesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
-  DateTime _lastTradeCall = DateTime.now().subtract(Duration(minutes: 1));
+  DateTime _lastTradeCall = DateTime.now().subtract(const Duration(minutes: 1));
   // Sometimes the first call to trades will not detect that we are in, hence
   // travel icon won't show and [_decideIfCallTrades] won't trigger again. This
   // way we allow it to trigger again.
@@ -120,8 +120,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _vaultPreferencesLoaded = false;
   bool _vaultIconActive = false;
   bool _vaultDetected = false;
-  Widget _vaultExpandable = SizedBox.shrink();
-  DateTime _vaultTriggeredTime = DateTime.now().subtract(Duration(minutes: 1));
+  Widget _vaultExpandable = const SizedBox.shrink();
+  DateTime _vaultTriggeredTime = DateTime.now().subtract(const Duration(minutes: 1));
   DateTime _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   var _cityEnabled = false;
@@ -129,7 +129,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _cityPreferencesLoaded = false;
   var _errorCityApi = false;
   var _cityItemsFound = <Item>[];
-  Widget _cityExpandable = SizedBox.shrink();
+  Widget _cityExpandable = const SizedBox.shrink();
 
   var _bazaarActiveOwn = false;
   var _bazaarFillActive = false;
@@ -137,9 +137,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _localChatRemovalActive = false;
 
   var _quickItemsActive = false;
-  var _quickItemsController = ExpandableController();
+  final _quickItemsController = ExpandableController();
 
-  Widget _jailExpandable = SizedBox.shrink();
+  Widget _jailExpandable = const SizedBox.shrink();
+  DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  JailModel _jailModel;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -148,13 +150,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
   bool _vaultTriggered = false;
+  bool _jailTriggered = false;
 
-  Widget _profileAttackWidget = SizedBox.shrink();
+  Widget _profileAttackWidget = const SizedBox.shrink();
   var _lastProfileVisited = "";
   var _profileTriggered = false;
   var _attackTriggered = false;
 
-  var _showOne = GlobalKey();
+  final _showOne = GlobalKey();
   UserDetailsProvider _userProvider;
   TerminalProvider _terminalProvider;
 
@@ -181,8 +184,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _clearCacheFirstOpportunity = false;
 
   bool _findInPageActive = false;
-  final _findController = new TextEditingController();
-  var _findFocus = new FocusNode();
+  final _findController = TextEditingController();
+  final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
 
@@ -230,7 +233,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         color: Colors.orange[800],
         size: AndroidPullToRefreshSize.DEFAULT,
         backgroundColor: _themeProvider.background,
-        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon ? true : false,
+        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
         slingshotDistance: 150,
         distanceToTriggerSync: 150,
       ),
@@ -281,12 +284,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               counterText: "",
               bubbleSlides: [
                 AbsoluteBubbleSlide(
-                  positionCalculator: (size) => Position(
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    left: 0,
-                  ),
+                  positionCalculator: (size) => const Position(),
                   child: AbsoluteBubbleSlideChild(
                     positionCalculator: (size) => Position(
                       top: size.height / 2,
@@ -294,10 +292,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     ),
                     widget: SpeechBubble(
                       width: 200,
-                      nipLocation: NipLocation.BOTTOM,
                       nipHeight: 0,
                       color: Colors.green[800],
-                      child: Padding(
+                      child: const Padding(
                         padding: EdgeInsets.all(10),
                         child: Text(
                           'NEW!\n\n'
@@ -324,7 +321,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               counterText: "",
               bubbleSlides: [
                 RelativeBubbleSlide(
-                  shape: Rectangle(spreadRadius: 10),
+                  shape: const Rectangle(spreadRadius: 10),
                   widgetKey: _showOne,
                   child: RelativeBubbleSlideChild(
                     direction: _settingsProvider.appBarTop ? AxisDirection.down : AxisDirection.up,
@@ -333,7 +330,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       child: SpeechBubble(
                         nipLocation: _settingsProvider.appBarTop ? NipLocation.TOP : NipLocation.BOTTOM,
                         color: Colors.green[800],
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.all(6),
                           child: Text(
                             'NEW!\n\n'
@@ -362,7 +359,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               : Colors.grey[900]
           : Colors.grey[900],
       child: SafeArea(
-        top: _settingsProvider.appBarTop ? false : true,
+        top: _settingsProvider.appBarTop || true,
         bottom: true,
         child: Scaffold(
           appBar: widget.dialog
@@ -404,7 +401,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: Row(
           children: [
             IconButton(
-              icon: Icon(Icons.close),
+              icon: const Icon(Icons.close),
               onPressed: () async {
                 setState(() {
                   _findInPageActive = false;
@@ -420,7 +417,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
                       child: Row(
                         children: <Widget>[
                           Flexible(
@@ -432,7 +429,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               },
                               controller: _findController,
                               focusNode: _findFocus,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 hintText: "What are you looking for?",
                                 hintStyle: TextStyle(
@@ -456,7 +453,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
                   onPressed: () {
                     _findPreviousText = _findController.text;
                     _findAll();
@@ -467,14 +464,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.keyboard_arrow_up),
+                        icon: const Icon(Icons.keyboard_arrow_up),
                         onPressed: () {
                           _findNext(forward: false);
                           _findFocus.unfocus();
                         },
                       ),
                       IconButton(
-                        icon: Icon(Icons.keyboard_arrow_down),
+                        icon: const Icon(Icons.keyboard_arrow_down),
                         onPressed: () {
                           _findNext(forward: true);
                           _findFocus.unfocus();
@@ -509,9 +506,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      customBorder: new CircleBorder(),
+                      customBorder: const CircleBorder(),
                       splashColor: Colors.blueGrey,
-                      child: SizedBox(
+                      child: const SizedBox(
                         width: 40,
                         child: Icon(
                           Icons.arrow_back_ios_outlined,
@@ -526,9 +523,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      customBorder: new CircleBorder(),
+                      customBorder: const CircleBorder(),
                       splashColor: Colors.blueGrey,
-                      child: SizedBox(
+                      child: const SizedBox(
                         width: 40,
                         child: Icon(
                           Icons.arrow_forward_ios_outlined,
@@ -566,7 +563,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _travelHomeIcon(),
-                  _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink(),
+                  if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -575,9 +572,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ? Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              customBorder: new CircleBorder(),
+                              customBorder: const CircleBorder(),
                               splashColor: Colors.blueGrey,
-                              child: Icon(Icons.refresh),
+                              child: const Icon(Icons.refresh),
                               onTap: () async {
                                 _scrollX = await webView.getScrollX();
                                 _scrollY = await webView.getScrollY();
@@ -586,7 +583,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               },
                             ),
                           )
-                        : SizedBox.shrink(),
+                        : const SizedBox.shrink(),
                   ),
                 ],
               ),
@@ -600,64 +597,67 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Column mainWebViewColumn() {
     return Column(
       children: [
-        _settingsProvider.loadBarBrowser
-            ? Container(
-                height: 2,
-                child: progress < 1.0
-                    ? LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.blueGrey[100],
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
-                      )
-                    : Container(height: 2),
-              )
-            : SizedBox.shrink(),
+        if (_settingsProvider.loadBarBrowser)
+          SizedBox(
+            height: 2,
+            child: progress < 1.0
+                ? LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.blueGrey[100],
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
+                  )
+                : Container(height: 2),
+          )
+        else
+          const SizedBox.shrink(),
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
         _profileAttackWidget,
-        _settingsProvider.appBarTop
-            ? ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
-                collapsed: SizedBox.shrink(),
-                controller: _crimesController,
-                header: SizedBox.shrink(),
-                expanded: _crimesActive
-                    ? CrimesWidget(
-                        controller: webView,
-                        appBarTop: _settingsProvider.appBarTop,
-                        browserDialog: widget.dialog,
-                      )
-                    : SizedBox.shrink(),
-              )
-            : SizedBox.shrink(),
+        if (_settingsProvider.appBarTop)
+          ExpandablePanel(
+            theme: const ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: const SizedBox.shrink(),
+            controller: _crimesController,
+            header: const SizedBox.shrink(),
+            expanded: _crimesActive
+                ? CrimesWidget(
+                    controller: webView,
+                    appBarTop: _settingsProvider.appBarTop,
+                    browserDialog: widget.dialog,
+                  )
+                : const SizedBox.shrink(),
+          )
+        else
+          const SizedBox.shrink(),
         // Quick items widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
-        _settingsProvider.appBarTop
-            ? ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
-                collapsed: SizedBox.shrink(),
-                controller: _quickItemsController,
-                header: SizedBox.shrink(),
-                expanded: _quickItemsActive
-                    ? QuickItemsWidget(
-                        inAppWebViewController: webView,
-                        appBarTop: _settingsProvider.appBarTop,
-                        browserDialog: widget.dialog,
-                        webviewType: 'inapp',
-                      )
-                    : SizedBox.shrink(),
-              )
-            : SizedBox.shrink(),
+        if (_settingsProvider.appBarTop)
+          ExpandablePanel(
+            theme: const ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: const SizedBox.shrink(),
+            controller: _quickItemsController,
+            header: const SizedBox.shrink(),
+            expanded: _quickItemsActive
+                ? QuickItemsWidget(
+                    inAppWebViewController: webView,
+                    appBarTop: _settingsProvider.appBarTop,
+                    browserDialog: widget.dialog,
+                    webviewType: 'inapp',
+                  )
+                : const SizedBox.shrink(),
+          )
+        else
+          const SizedBox.shrink(),
         // Trades widget
         _tradesExpandable,
         // Vault widget
@@ -681,7 +681,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // EVENTS
                 onWebViewCreated: (c) {
                   webView = c;
-                  _terminalProvider.setTerminal("Terminal");
+                  _terminalProvider.terminal = "Terminal";
                 },
                 onCreateWindow: (c, request) {
                   if (!mounted) return;
@@ -694,13 +694,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (!mounted) return;
 
                   // Userscripts
-                  UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                  final UserScriptChanges changes = _userScriptsProvider.getCondSources(
                     url: uri.toString(),
                     apiKey: _userProvider.basic.userApiKey,
                   );
                   if (Platform.isAndroid) {
                     // Not supported on iOS
-                    for (var group in changes.scriptsToRemove) {
+                    for (final group in changes.scriptsToRemove) {
                       c.removeUserScriptsByGroupName(groupName: group);
                     }
                   }
@@ -710,8 +710,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                   _currentUrl = uri.toString();
 
-                  var html = await webView.getHtml();
-                  var document = parse(html);
+                  final html = await webView.getHtml();
+                  final document = parse(html);
                   _assessGeneral(document);
                 },
                 onProgressChanged: (c, progress) async {
@@ -752,14 +752,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     _hideChat();
                     _highlightChat();
 
-                    var html = await webView.getHtml();
-                    var document = parse(html);
-
-                    // ! TODO: place in correct method
-                    _assessJail(document);
+                    final html = await webView.getHtml();
+                    final document = parse(html);
 
                     // Force to show title
-                    await (_getPageTitle(document, showTitle: true));
+                    await _getPageTitle(document, showTitle: true);
 
                     if (widget.useTabs) {
                       _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
@@ -806,9 +803,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       _tradesOnResourceTriggerTime = DateTime.now();
 
                       _tradesTriggered = true;
-                      var html = await webView.getHtml();
-                      var document = parse(html);
-                      var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                      final html = await webView.getHtml();
+                      final document = parse(html);
+                      final pageTitle = (await _getPageTitle(document)).toLowerCase();
                       if (Platform.isIOS) {
                         // iOS needs this check because the full trade URL won't trigger in onLoadStop
                         _currentUrl = (await webView.getUrl()).toString();
@@ -826,18 +823,50 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       _vaultOnResourceTriggerTime = DateTime.now();
 
                       if (!_vaultTriggered) {
-                        var html = await webView.getHtml();
-                        var document = parse(html);
-                        var pageTitle = (await _getPageTitle(document)).toLowerCase();
+                        final html = await webView.getHtml();
+                        final document = parse(html);
+                        final pageTitle = (await _getPageTitle(document)).toLowerCase();
                         _assessVault(doc: document, pageTitle: pageTitle);
                       } else {
                         // If it's triggered, it's because we are inside and we performed an operation
                         // (deposit or withdrawal). In this case, we need to give a couple of seconds
                         // so that the new html elements appear and we can analyse them
-                        Future.delayed(Duration(seconds: 2)).then((value) async {
+                        Future.delayed(const Duration(seconds: 2)).then((value) async {
                           // Reset _vaultTriggered so that we can call _assessVault() again
                           _reassessVault();
                         });
+                      }
+                    }
+
+                    // Jail for initialisation and live transactions
+                    if (resource.url.toString().contains("jailview.php")) {
+                      // Trigger once
+                      if (_jailOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_jailOnResourceTriggerTime).inMilliseconds < 500) {
+                        return;
+                      }
+                      _jailOnResourceTriggerTime = DateTime.now();
+
+                      final html = await webView.getHtml();
+                      dom.Document document = parse(html);
+
+                      List<dom.Element> query;
+                      for (var i = 0; i < 60; i++) {
+                        if (!mounted) break;
+                        query = document.querySelectorAll(".users-list > li");
+                        if (query.isNotEmpty) {
+                          break;
+                        } else {
+                          await Future.delayed(const Duration(seconds: 1));
+                          if (!mounted) break;
+                          final updatedHtml = await webView.getHtml();
+                          document = parse(updatedHtml);
+                        }
+                      }
+
+                      if (query.isNotEmpty) {
+                        _assessJail(document);
+                        _jailTriggered = true;
                       }
                     }
                   } catch (e) {
@@ -853,7 +882,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         !consoleMessage.message.contains("Refused to connect to 'https://bat.bing.com")) {
                       _terminalProvider.addInstruction(consoleMessage.message);
                     }
-                    print("TORN PDA CONSOLE: " + consoleMessage.message);
+                    // ignore: avoid_print
+                    print("TORN PDA CONSOLE: ${consoleMessage.message}");
                   }
                 },
                 /*
@@ -911,52 +941,54 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom
-        !_settingsProvider.appBarTop
-            ? ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
-                collapsed: SizedBox.shrink(),
-                controller: _crimesController,
-                header: SizedBox.shrink(),
-                expanded: _crimesActive
-                    ? CrimesWidget(
-                        controller: webView,
-                        appBarTop: _settingsProvider.appBarTop,
-                        browserDialog: widget.dialog,
-                      )
-                    : SizedBox.shrink(),
-              )
-            : SizedBox.shrink(),
-        !_settingsProvider.appBarTop
-            ? ExpandablePanel(
-                theme: ExpandableThemeData(
-                  hasIcon: false,
-                  tapBodyToCollapse: false,
-                  tapHeaderToExpand: false,
-                ),
-                collapsed: SizedBox.shrink(),
-                controller: _quickItemsController,
-                header: SizedBox.shrink(),
-                expanded: _quickItemsActive
-                    ? QuickItemsWidget(
-                        inAppWebViewController: webView,
-                        appBarTop: _settingsProvider.appBarTop,
-                        browserDialog: widget.dialog,
-                        webviewType: 'inapp',
-                      )
-                    : SizedBox.shrink(),
-              )
-            : SizedBox.shrink(),
+        if (!_settingsProvider.appBarTop)
+          ExpandablePanel(
+            theme: const ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: const SizedBox.shrink(),
+            controller: _crimesController,
+            header: const SizedBox.shrink(),
+            expanded: _crimesActive
+                ? CrimesWidget(
+                    controller: webView,
+                    appBarTop: _settingsProvider.appBarTop,
+                    browserDialog: widget.dialog,
+                  )
+                : const SizedBox.shrink(),
+          )
+        else
+          const SizedBox.shrink(),
+        if (!_settingsProvider.appBarTop)
+          ExpandablePanel(
+            theme: const ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: const SizedBox.shrink(),
+            controller: _quickItemsController,
+            header: const SizedBox.shrink(),
+            expanded: _quickItemsActive
+                ? QuickItemsWidget(
+                    inAppWebViewController: webView,
+                    appBarTop: _settingsProvider.appBarTop,
+                    browserDialog: widget.dialog,
+                    webviewType: 'inapp',
+                  )
+                : const SizedBox.shrink(),
+          )
+        else
+          const SizedBox.shrink(),
         // Terminal
         Consumer<SettingsProvider>(
           builder: (_, value, __) {
             if (value.terminalEnabled) {
               return Container(
-                decoration: new BoxDecoration(
-                  border: Border.all(width: 2, style: BorderStyle.solid, color: Colors.green[900]),
+                decoration: BoxDecoration(
+                  border: Border.all(width: 2, color: Colors.green[900]),
                 ),
                 height: 100,
                 child: SingleChildScrollView(
@@ -966,8 +998,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       children: [
                         Flexible(
                           child: Text(
-                            _terminalProvider.getTerminal(),
-                            style: TextStyle(color: Colors.green, fontSize: 13),
+                            _terminalProvider.terminal,
+                            style: const TextStyle(color: Colors.green, fontSize: 13),
                           ),
                         ),
                       ],
@@ -976,7 +1008,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 ),
               );
             }
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           },
         ),
       ],
@@ -986,14 +1018,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void _highlightChat() {
     if (!_currentUrl.contains('torn.com')) return;
 
-    var intColor = Color(_settingsProvider.highlightColor);
-    var background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    var senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    String hlMap = '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
+    final intColor = Color(_settingsProvider.highlightColor);
+    final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
+    final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    final String hlMap =
+        '[ { name: "${_userProvider.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       webView.evaluateJavascript(
-        source: (chatHighlightJS(highlightMap: hlMap)),
+        source: chatHighlightJS(highlightMap: hlMap),
       );
     }
   }
@@ -1011,7 +1044,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           elevation: _settingsProvider.appBarTop ? 2 : 0,
           systemOverlayStyle: SystemUiOverlayStyle.light,
           leading: IconButton(
-            icon: Icon(Icons.close),
+            icon: const Icon(Icons.close),
             onPressed: () async {
               setState(() {
                 _findInPageActive = false;
@@ -1026,7 +1059,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                  padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
                   child: Row(
                     children: <Widget>[
                       Flexible(
@@ -1043,7 +1076,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             hintText: "What are you looking for?",
                             hintStyle: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
                           ),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                           ),
@@ -1057,7 +1090,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.search),
+              icon: const Icon(Icons.search),
               onPressed: () {
                 _findPreviousText = _findController.text;
                 _findAll();
@@ -1068,14 +1101,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.keyboard_arrow_up),
+                    icon: const Icon(Icons.keyboard_arrow_up),
                     onPressed: () {
                       _findNext(forward: false);
                       _findFocus.unfocus();
                     },
                   ),
                   IconButton(
-                    icon: Icon(Icons.keyboard_arrow_down),
+                    icon: const Icon(Icons.keyboard_arrow_down),
                     onPressed: () {
                       _findNext(forward: true);
                       _findFocus.unfocus();
@@ -1101,7 +1134,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: IconButton(
-            icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
+            icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
             onPressed: () async {
               // Normal behaviour is just to pop and go to previous page
               if (_backButtonPopsContext) {
@@ -1113,7 +1146,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // But we can change and go back to previous page in certain
                 // situations (e.g. when going for the vault while trading),
                 // in which case we need to return to previous target
-                var backPossible = await webView.canGoBack();
+                final backPossible = await webView.canGoBack();
                 if (backPossible) {
                   webView.goBack();
                 } else {
@@ -1127,12 +1160,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _openUrlDialog();
           },
           child: DottedBorder(
-            borderType: BorderType.Rect,
-            padding: EdgeInsets.all(6),
-            dashPattern: [1, 4],
+            padding: const EdgeInsets.all(6),
+            dashPattern: const [1, 4],
             color: Colors.white70,
             child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderRadius: BorderRadius.all(const Radius.circular(12)),
               child: Row(
                 key: _showOne,
                 children: [
@@ -1156,16 +1188,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           _vaultOptionsIcon(),
           _cityMenuIcon(),
           _bazaarFillIcon(),
-          _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink(),
+          if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
                 ? Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      customBorder: new CircleBorder(),
+                      customBorder: const CircleBorder(),
                       splashColor: Colors.orange,
-                      child: Icon(Icons.refresh),
+                      child: const Icon(Icons.refresh),
                       onTap: () async {
                         _scrollX = await webView.getScrollX();
                         _scrollY = await webView.getScrollY();
@@ -1174,18 +1206,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                         BotToast.showText(
                           text: "Reloading...",
-                          textStyle: TextStyle(
+                          textStyle: const TextStyle(
                             fontSize: 14,
                             color: Colors.white,
                           ),
                           contentColor: Colors.grey[600],
-                          duration: Duration(seconds: 1),
-                          contentPadding: EdgeInsets.all(10),
+                          duration: const Duration(seconds: 1),
+                          contentPadding: const EdgeInsets.all(10),
                         );
                       },
                     ),
                   )
-                : SizedBox.shrink(),
+                : const SizedBox.shrink(),
           )
         ],
       ),
@@ -1211,24 +1243,24 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (success) {
       BotToast.showText(
         text: "Back",
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600],
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     } else {
       BotToast.showText(
-        text: "Can\'t go back!",
-        textStyle: TextStyle(
+        text: "Can't go back!",
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600],
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
@@ -1245,24 +1277,24 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       await webView.goForward();
       BotToast.showText(
         text: "Forward",
-        textStyle: TextStyle(
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600],
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     } else {
       BotToast.showText(
-        text: "Can\'t go forward!",
-        textStyle: TextStyle(
+        text: "Can't go forward!",
+        textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
         ),
         contentColor: Colors.grey[600],
-        duration: Duration(seconds: 1),
-        contentPadding: EdgeInsets.all(10),
+        duration: const Duration(seconds: 1),
+        contentPadding: const EdgeInsets.all(10),
       );
     }
   }
@@ -1316,8 +1348,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       getVault = true;
     }
 
+    if (!_currentUrl.contains("jailview.php") && (_jailExpandable is JailWidget)) {
+      // This is different to the others, here we call only so that properties is deactivated
+      _jailExpandable = const SizedBox.shrink();
+    }
+
     if (_settingsProvider.extraPlayerInformation) {
-      var profileUrl = 'torn.com/profiles.php?XID=';
+      const profileUrl = 'torn.com/profiles.php?XID=';
       if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
           (_currentUrl.contains(profileUrl) && !_profileTriggered) ||
           (_currentUrl.contains(profileUrl) && _currentUrl != _lastProfileVisited)) {
@@ -1325,7 +1362,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         getProfile = true;
       }
 
-      var attackUrl = 'loader.php?sid=attack&user2ID=';
+      const attackUrl = 'loader.php?sid=attack&user2ID=';
       if ((!_currentUrl.contains(attackUrl) && _attackTriggered) ||
           (_currentUrl.contains(attackUrl) && !_attackTriggered) ||
           (_currentUrl.contains(attackUrl) && _currentUrl != _lastProfileVisited)) {
@@ -1337,7 +1374,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (anySectionTriggered) {
       dom.Document doc;
       var pageTitle = "";
-      var html = await webView.getHtml();
+      final html = await webView.getHtml();
       doc = parse(html);
       pageTitle = (await _getPageTitle(doc)).toLowerCase();
 
@@ -1412,7 +1449,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _assessBackButtonBehaviour() async {
+  Future _assessBackButtonBehaviour() async {
     // If we are NOT moving to a place with a vault, we show an X and close upon button press
     if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
         !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
@@ -1422,7 +1459,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // However, if we are in a place with a vault AND we come from Trades, we'll change
     // the back button behaviour to ensure we are returning to Trades
     else {
-      var history = await webView.getCopyBackForwardList();
+      final history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
       if (history.currentIndex > 0) {
         if (history.list[history.currentIndex - 1].url.toString().contains('trade.php')) {
@@ -1441,7 +1478,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool showTitle = false,
   }) async {
     String title = '';
-    var h4 = document.querySelector(".content-title > h4");
+    final h4 = document.querySelector(".content-title > h4");
     if (h4 != null) {
       title = h4.innerHtml.substring(0).trim();
     }
@@ -1480,8 +1517,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // TRAVEL
   Future _assessTravel(dom.Document document) async {
-    var abroad = document.querySelectorAll(".travel-home");
-    if (abroad.length > 0) {
+    final abroad = document.querySelectorAll(".travel-home");
+    if (abroad.isNotEmpty) {
       _insertTravelFillMaxButtons();
       _sendStockInformation(document);
       if (mounted) {
@@ -1502,26 +1539,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     await webView.evaluateJavascript(source: buyMaxAbroadJS());
   }
 
-  void _sendStockInformation(dom.Document document) async {
-    var elements = document.querySelectorAll('.users-list > li');
+  Future _sendStockInformation(dom.Document document) async {
+    final elements = document.querySelectorAll('.users-list > li');
 
-    if (elements.length > 0) {
+    if (elements.isNotEmpty) {
       try {
         // Parse stocks
-        var stockModel = ForeignStockOutModel();
+        final stockModel = ForeignStockOutModel();
         stockModel.authorName = "Manuito";
         stockModel.authorId = 2225097;
 
         stockModel.country =
             document.querySelector(".content-title > h4").innerHtml.substring(0, 4).toLowerCase().trim();
 
-        for (var el in elements) {
-          var stockItem = ForeignStockOutItem();
+        for (final el in elements) {
+          final stockItem = ForeignStockOutItem();
 
           stockItem.id = int.tryParse(el.querySelector(".details").attributes["itemid"]);
           stockItem.quantity =
-              int.tryParse(el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
-          stockItem.cost = int.tryParse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp(r"[^0-9]"), ""));
+              int.tryParse(el.querySelector(".stck-amount").innerHtml.replaceAll(RegExp("[^0-9]"), ""));
+          stockItem.cost = int.tryParse(el.querySelector(".c-price").innerHtml.replaceAll(RegExp("[^0-9]"), ""));
 
           if (stockItem.id != null && stockItem.quantity != null && stockItem.cost != null) {
             stockModel.items.add(stockItem);
@@ -1549,9 +1586,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-              customBorder: new CircleBorder(),
+              customBorder: const CircleBorder(),
               splashColor: Colors.blueGrey,
-              child: Icon(
+              child: const Icon(
                 Icons.home,
               ),
               onTap: () async {
@@ -1560,13 +1597,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 });
                 BotToast.showText(
                   text: 'Tap again to travel back!',
-                  textStyle: TextStyle(
+                  textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
                   contentColor: Colors.orange[800],
-                  duration: Duration(seconds: 3),
-                  contentPadding: EdgeInsets.all(10),
+                  duration: const Duration(seconds: 3),
+                  contentPadding: const EdgeInsets.all(10),
                 );
                 Future.delayed(Duration(seconds: 3)).then((value) {
                   if (mounted) {
@@ -1581,15 +1618,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            customBorder: new CircleBorder(),
+            customBorder: const CircleBorder(),
             splashColor: Colors.blueGrey,
-            child: Icon(
+            child: const Icon(
               Icons.home,
               color: Colors.orange,
             ),
             onTap: () async {
               await webView.evaluateJavascript(source: travelReturnHomeJS());
-              Future.delayed(Duration(seconds: 3)).then((value) {
+              Future.delayed(const Duration(seconds: 3)).then((value) {
                 if (mounted) {
                   setState(() {
                     _travelHomeIconTriggered = false;
@@ -1601,7 +1638,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         );
       }
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -1635,31 +1672,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _crimesInfoIcon() {
     if (_crimesActive) {
       return IconButton(
-        icon: Icon(Icons.info_outline),
+        icon: const Icon(Icons.info_outline),
         onPressed: () {
           BotToast.showText(
             text: 'If you need more information about a crime, maintain the '
                 'quick crime button pressed for a few seconds and a tooltip '
                 'will be shown!',
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,
             ),
             contentColor: Colors.grey[700],
-            duration: Duration(seconds: 8),
-            contentPadding: EdgeInsets.all(10),
+            duration: const Duration(seconds: 8),
+            contentPadding: const EdgeInsets.all(10),
           );
         },
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   Widget _crimesMenuIcon() {
     if (_crimesActive) {
       return OpenContainer(
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return CrimesOptions();
@@ -1672,8 +1709,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 5),
+          return const Padding(
+            padding: EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -1683,13 +1720,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         },
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
   // TRADES
   Future _assessTrades(dom.Document document, String pageTitle) async {
-    var easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
+    final easyUrl = _currentUrl.replaceAll('#', '').replaceAll('/', '').split('&');
     if (pageTitle.contains('trade') && _currentUrl.contains('trade.php')) {
       // Activate trades icon even before starting a trade, so that it can be deactivated
       if (mounted) {
@@ -1745,13 +1782,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Because only the frame reloads, if we can't find anything
     // we'll wait 1 second, get the html again and query again
-    var totalFinds = document.querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
+    final totalFinds = document.querySelectorAll(".color1 .left , .color2 .left , .color1 .right , .color2 .right");
 
     try {
-      if (totalFinds.length == 0) {
+      if (totalFinds.isEmpty) {
         await Future.delayed(const Duration(seconds: 2));
-        var updatedHtml = await webView.getHtml();
-        var updatedDoc = parse(updatedHtml);
+        final updatedHtml = await webView.getHtml();
+        final updatedDoc = parse(updatedHtml);
         document = updatedDoc;
       }
 
@@ -1765,11 +1802,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       rightSharesElements = document.querySelectorAll("#trade-container .right .color4 .name");
       sellerName = document.querySelector(".right .title-black").innerHtml ?? "";
 
-      var sellerIdString = document.querySelectorAll("#trade-container .log li .desc a");
-      for (var html in sellerIdString) {
-        RegExp regId = new RegExp(r"XID=([0-9]+)");
-        var matches = regId.allMatches(html.attributes["href"]);
-        var id = int.parse(matches.elementAt(0).group(1));
+      final sellerIdString = document.querySelectorAll("#trade-container .log li .desc a");
+      for (final html in sellerIdString) {
+        final RegExp regId = RegExp("XID=([0-9]+)");
+        final matches = regId.allMatches(html.attributes["href"]);
+        final id = int.parse(matches.elementAt(0).group(1));
         if (id != _userProvider.basic.playerId) {
           sellerId = id;
           break;
@@ -1781,8 +1818,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Trade Id
     try {
-      RegExp regId = new RegExp(r"&ID=([0-9]+)");
-      var matches = regId.allMatches(_currentUrl);
+      final RegExp regId = RegExp("&ID=([0-9]+)");
+      final matches = regId.allMatches(_currentUrl);
       tradeId = int.parse(matches.elementAt(0).group(1));
     } catch (e) {
       tradeId = 0;
@@ -1792,7 +1829,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _toggleTradesWidget(active: true);
 
     // Initialize trades provider, which in turn feeds the trades widget
-    var tradesProvider = Provider.of<TradesProvider>(context, listen: false);
+    final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
       userApiKey: _userProvider.basic.userApiKey,
       playerId: _userProvider.basic.playerId,
@@ -1810,7 +1847,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  _toggleTradesWidget({@required bool active}) {
+  void _toggleTradesWidget({@required bool active}) {
     if (active) {
       if (mounted) {
         setState(() {
@@ -1826,7 +1863,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (mounted) {
         setState(() {
           _tradesFullActive = false;
-          _tradesExpandable = SizedBox.shrink();
+          _tradesExpandable = const SizedBox.shrink();
         });
       }
     }
@@ -1835,7 +1872,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _vaultsPopUpIcon() {
     if (_tradesIconActive) {
       return PopupMenuButton<VaultsOptions>(
-        icon: Icon(MdiIcons.cashUsdOutline),
+        icon: const Icon(MdiIcons.cashUsdOutline),
         onSelected: _openVaultsOptions,
         itemBuilder: (BuildContext context) {
           return _popupOptionsChoices.map((VaultsOptions choice) {
@@ -1851,11 +1888,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         },
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
-  void _openVaultsOptions(VaultsOptions choice) async {
+  Future _openVaultsOptions(VaultsOptions choice) async {
     switch (choice.description) {
       case "Personal vault":
         webView.loadUrl(
@@ -1884,7 +1921,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _tradesMenuIcon() {
     if (_tradesIconActive) {
       return OpenContainer(
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return TradesOptions(
@@ -1900,8 +1937,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 5),
+          return const Padding(
+            padding: EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -1911,7 +1948,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         },
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -1922,8 +1959,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Avoid continuous calls to trades from different activators
   Future _decideIfCallTrades({dom.Document doc, String pageTitle = ""}) async {
-    var now = DateTime.now();
-    var diff = now.difference(_lastTradeCall);
+    final now = DateTime.now();
+    final diff = now.difference(_lastTradeCall);
     if (diff.inSeconds > 1 || !_lastTradeCallWasIn) {
       _lastTradeCall = now;
 
@@ -1934,9 +1971,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           _assessTrades(doc, pageTitle);
         } else {
           _currentUrl = (await webView.getUrl()).toString();
-          var html = await webView.getHtml();
-          var d = parse(html);
-          var t = (await _getPageTitle(d)).toLowerCase();
+          final html = await webView.getHtml();
+          final d = parse(html);
+          final t = (await _getPageTitle(d)).toLowerCase();
           _assessTrades(d, t);
         }
       }
@@ -1948,7 +1985,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (!pageTitle.toLowerCase().contains('properties')) {
       setState(() {
         _vaultIconActive = false;
-        _vaultExpandable = SizedBox.shrink();
+        _vaultExpandable = const SizedBox.shrink();
       });
       return;
     }
@@ -1966,7 +2003,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     if (!_vaultEnabled) {
       setState(() {
-        _vaultExpandable = SizedBox.shrink();
+        _vaultExpandable = const SizedBox.shrink();
       });
       return;
     }
@@ -1986,17 +2023,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     for (var i = 0; i < 10; i++) {
       if (!mounted) break;
       allTransactions = doc.querySelectorAll("ul.vault-trans-list > li:not(.title)");
-      if (allTransactions.length > 0) {
+      if (allTransactions.isNotEmpty) {
         break;
       } else {
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) break;
-        var updatedHtml = await webView.getHtml();
+        final updatedHtml = await webView.getHtml();
         doc = parse(updatedHtml);
       }
     }
 
-    if (allTransactions.length == 0) {
+    if (allTransactions.isEmpty) {
       _vaultDetected = false;
       return;
     } else {
@@ -2018,7 +2055,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _vaultOptionsIcon() {
     if (_vaultIconActive) {
       return OpenContainer(
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return VaultOptionsPage(
@@ -2034,8 +2071,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 5),
+          return const Padding(
+            padding: EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -2045,7 +2082,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         },
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -2053,9 +2090,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _vaultEnabled = await Prefs().getVaultEnabled();
     // Reset _vaultTriggered so that we can call _assessVault() again
     _vaultTriggered = false;
-    var html = await webView.getHtml();
-    var document = parse(html);
-    var pageTitle = (await _getPageTitle(document)).toLowerCase();
+    final html = await webView.getHtml();
+    final document = parse(html);
+    final pageTitle = (await _getPageTitle(document)).toLowerCase();
     _assessVault(doc: document, pageTitle: pageTitle, fromReassess: true);
   }
 
@@ -2065,7 +2102,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (!pageTitle.contains('city')) {
       setState(() {
         _cityIconActive = false;
-        _cityExpandable = SizedBox.shrink();
+        _cityExpandable = const SizedBox.shrink();
       });
       return;
     }
@@ -2089,7 +2126,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     if (!_cityEnabled) {
       setState(() {
-        _cityExpandable = SizedBox.shrink();
+        _cityExpandable = const SizedBox.shrink();
       });
       return;
     }
@@ -2101,12 +2138,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     for (var i = 0; i < 60; i++) {
       if (!mounted) break;
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
-      if (query.length > 0) {
+      if (query.isNotEmpty) {
         break;
       } else {
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) break;
-        var updatedHtml = await webView.getHtml();
+        final updatedHtml = await webView.getHtml();
         document = parse(updatedHtml);
       }
     }
@@ -2117,8 +2154,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return;
     }
 
-    var mapItemsList = <String>[];
-    for (var mapFind in query) {
+    final mapItemsList = <String>[];
+    for (final mapFind in query) {
       mapFind.attributes.forEach((key, value) {
         if (key == "src" && value.contains("https://www.torn.com/images/items/")) {
           mapItemsList.add(value.split("items/")[1].split("/")[0]);
@@ -2128,12 +2165,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      dynamic apiResponse = await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
+      final dynamic apiResponse = await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
-        var tornItems = apiResponse.items.values.toList();
-        var itemsFound = <Item>[];
-        for (var mapItem in mapItemsList) {
-          Item itemMatch = tornItems[int.parse(mapItem) - 1];
+        final tornItems = apiResponse.items.values.toList();
+        final itemsFound = <Item>[];
+        for (final mapItem in mapItemsList) {
+          final Item itemMatch = tornItems[int.parse(mapItem) - 1];
           itemsFound.add(itemMatch);
         }
         if (mounted) {
@@ -2141,7 +2178,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // before it had time to load (which could collude with other widgets)
           if (!_cityTriggered) {
             setState(() {
-              _cityExpandable = SizedBox.shrink();
+              _cityExpandable = const SizedBox.shrink();
             });
           } else {
             setState(() {
@@ -2171,7 +2208,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _cityMenuIcon() {
     if (_cityIconActive) {
       return OpenContainer(
-        transitionDuration: Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
           return CityOptions(
@@ -2186,8 +2223,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 5),
+          return const Padding(
+            padding: EdgeInsets.only(right: 5),
             child: SizedBox(
               height: 20,
               width: 20,
@@ -2197,7 +2234,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         },
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -2214,7 +2251,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // BAZAAR (OWN)
   Future _assessBazaarOwn(dom.Document document) async {
-    var easyUrl = _currentUrl.replaceAll('#', '');
+    final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php/add')) {
       _bazaarActiveOwn = true;
     } else {
@@ -2224,7 +2261,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // BAZAAR (OTHERS)
   Future _assessBazaarOthers(dom.Document document) async {
-    var easyUrl = _currentUrl.replaceAll('#', '');
+    final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php?userId=')) {
       await webView.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
     }
@@ -2252,7 +2289,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -2276,8 +2313,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
       _quickItemsTriggered = true;
 
-      var quickItemsProvider = context.read<QuickItemsProvider>();
-      var key = _userProvider.basic.userApiKey;
+      final quickItemsProvider = context.read<QuickItemsProvider>();
+      final key = _userProvider.basic.userApiKey;
       quickItemsProvider.loadItems(apiKey: key);
 
       setState(() {
@@ -2292,7 +2329,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return Padding(
         padding: const EdgeInsets.only(right: 5),
         child: OpenContainer(
-          transitionDuration: Duration(milliseconds: 500),
+          transitionDuration: const Duration(milliseconds: 500),
           transitionType: ContainerTransitionType.fadeThrough,
           openBuilder: (BuildContext context, VoidCallback _) {
             return QuickItemsOptions();
@@ -2314,7 +2351,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
   }
 
@@ -2324,7 +2361,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
           !_currentUrl.contains('torn.com/profiles.php?XID=')) {
         _profileTriggered = false;
-        _profileAttackWidget = SizedBox.shrink();
+        _profileAttackWidget = const SizedBox.shrink();
         return;
       }
 
@@ -2338,8 +2375,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _lastProfileVisited = _currentUrl;
 
         try {
-          RegExp regId = new RegExp(r"php\?XID=([0-9]+)");
-          var matches = regId.allMatches(_currentUrl);
+          final RegExp regId = RegExp(r"php\?XID=([0-9]+)");
+          final matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
             _profileAttackWidget = ProfileAttackCheckWidget(
@@ -2360,8 +2397,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _lastProfileVisited = _currentUrl;
 
         try {
-          RegExp regId = new RegExp(r"&user2ID=([0-9]+)");
-          var matches = regId.allMatches(_currentUrl);
+          final RegExp regId = RegExp("&user2ID=([0-9]+)");
+          final matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1));
           setState(() {
             _profileAttackWidget = ProfileAttackCheckWidget(
@@ -2384,7 +2421,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.chatOutline),
+          child: const Icon(MdiIcons.chatOutline),
           onTap: () async {
             webView.evaluateJavascript(source: removeChatJS());
             _webViewProvider.reportChatRemovalChange(true, false);
@@ -2402,13 +2439,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             BotToast.showText(
               crossPage: false,
               text: "Default chat hide enabled",
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.blue,
-              duration: Duration(seconds: 1),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 1),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
@@ -2438,13 +2475,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             BotToast.showText(
               crossPage: false,
               text: "Default chat hide disabled",
-              textStyle: TextStyle(
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.grey[700],
-              duration: Duration(seconds: 1),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 1),
+              contentPadding: const EdgeInsets.all(10),
             );
           },
         ),
@@ -2464,7 +2501,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future<void> _openUrlDialog() async {
-    var url = await webView.getUrl();
+    final url = await webView.getUrl();
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -2479,7 +2516,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  _activateFindInPage() {
+  void _activateFindInPage() {
     setState(() {
       _findInPageActive = true;
     });
@@ -2495,7 +2532,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void _findNext({@required bool forward}) async {
+  void _findNext({@required bool forward}) {
     webView.findNext(forward: forward);
     if (_findFocus.hasFocus) _findFocus.unfocus();
   }
@@ -2512,9 +2549,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future assessGym() async {
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
-    var easyUrl = _currentUrl.replaceAll('#', '');
+    final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php')) {
-      var stats = await TornApiCaller.bars(_userProvider.basic.userApiKey).getBars;
+      final stats = await TornApiCaller.bars(_userProvider.basic.userApiKey).getBars;
       if (stats is BarsModel) {
         var message = "";
         if (stats.chain.current > 10 && stats.chain.cooldown == 0) {
@@ -2531,14 +2568,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             BotToast.showText(
               crossPage: false,
               text: message,
-              align: Alignment(0, 0),
-              textStyle: TextStyle(
+              align: Alignment.center,
+              textStyle: const TextStyle(
                 fontSize: 14,
                 color: Colors.white,
               ),
               contentColor: Colors.blue,
-              duration: Duration(seconds: 2),
-              contentPadding: EdgeInsets.all(10),
+              duration: const Duration(seconds: 2),
+              contentPadding: const EdgeInsets.all(10),
             );
           }
         }
@@ -2548,16 +2585,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // JAIL
   void _assessJail(dom.Document doc) {
+    // If it's the first time we enter (we have no jailModel) or if we are reentering (expandable is empty), we call
+    // the widget and get values from shared preferences.
+    if (_jailModel == null || _jailExpandable is! JailModel) {
+      _jailExpandable = JailWidget(
+        webview: webView,
+        fireScriptCallback: _fireJailScriptCallback,
+      );
+    }
+    // Otherwise, we are changing pages or reloading. We just need to fire the script. Any changes in the script
+    // while the widget is shown will be handled by the callback (which also triggers the script)
+    else {
+      _fireJailScriptCallback(_jailModel);
+    }
+  }
+
+  void _fireJailScriptCallback(JailModel jailModel) {
+    if (jailModel == null) return;
+
+    _jailModel = jailModel;
     webView.evaluateJavascript(
-        source: jailJS(
-            levelMin: 40,
-            levelMax: 80,
-            timeMin: 3,
-            timeMax: 12,
-            scoreMin: 0,
-            scoreMax: 250000,
-            bailTicked: true,
-            bustTicked: true));
+      // ! TODO
+      source: jailJS(
+        levelMin: _jailModel.levelMin,
+        levelMax: _jailModel.levelMax,
+        timeMin: 1,
+        timeMax: 100,
+        scoreMax: 250000,
+        bailTicked: false,
+        bustTicked: _jailModel.bustTicked,
+      ),
+    );
   }
 
   // Called from parent though GlobalKey state
@@ -2566,7 +2624,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     webView.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
   }
 
-  void pauseTimers() async {
+  void pauseTimers() {
     if (Platform.isAndroid) {
       webView?.android?.pause();
     }
