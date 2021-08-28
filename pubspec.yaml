@@ -54,6 +54,7 @@ dependencies:
   import_sorter: ^4.5.0
   intl: ^0.17.0
   material_design_icons_flutter: ^5.0.5955-rc.1
+  non_linear_slider: ^0.0.1
   percent_indicator: ^3.3.0-nullsafety.1
   provider: ^5.0.0
   pull_to_refresh: ^2.0.0

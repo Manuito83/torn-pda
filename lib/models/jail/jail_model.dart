@@ -15,7 +15,7 @@ class JailModel {
     this.timeMin,
     this.timeMax,
     this.scoreMax,
-    this.bailTicker,
+    this.bailTicked,
     this.bustTicked,
   });
   
@@ -24,7 +24,7 @@ class JailModel {
   int timeMin;
   int timeMax;
   int scoreMax;
-  bool bailTicker;
+  bool bailTicked;
   bool bustTicked;
 
   factory JailModel.fromJson(Map<String, dynamic> json) => JailModel(
@@ -33,7 +33,7 @@ class JailModel {
         timeMin: json["timeMin"] ?? 0,
         timeMax: json["timeMax"] ?? 100,
         scoreMax: json["scoreMax"] ?? 250000,
-        bailTicker: json["bailTicker"] ?? false,
+        bailTicked: json["bailTicked"] ?? false,
         bustTicked: json["bustTicked"] ?? false,
       );
 
@@ -43,7 +43,7 @@ class JailModel {
         "timeMin": timeMin == null ? null : timeMin,
         "timeMax": timeMax == null ? null : timeMax,
         "scoreMax": scoreMax == null ? null : scoreMax,
-        "bailTicker": bailTicker == null ? null : bailTicker,
+        "bailTicked": bailTicked == null ? null : bailTicked,
         "bustTicked": bustTicked == null ? null : bustTicked,
       };
 }

@@ -150,7 +150,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
   bool _vaultTriggered = false;
-  bool _jailTriggered = false;
 
   Widget _profileAttackWidget = const SizedBox.shrink();
   var _lastProfileVisited = "";
@@ -217,7 +216,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
         /// and deactivate it dynamically, where onLoadResource stops triggering!
-        useShouldInterceptAjaxRequest: false,
+        //useShouldInterceptAjaxRequest: false,
       ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
@@ -360,7 +359,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop || true,
-        bottom: true,
         child: Scaffold(
           appBar: widget.dialog
               // Show appBar only if we are not showing the webView in a dialog
@@ -866,7 +864,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                       if (query.isNotEmpty) {
                         _assessJail(document);
-                        _jailTriggered = true;
                       }
                     }
                   } catch (e) {
@@ -1134,27 +1131,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         leading: IconButton(
-            icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
-            onPressed: () async {
-              // Normal behaviour is just to pop and go to previous page
-              if (_backButtonPopsContext) {
-                if (widget.customCallBack != null) {
-                  widget.customCallBack();
-                }
-                Navigator.pop(context);
-              } else {
-                // But we can change and go back to previous page in certain
-                // situations (e.g. when going for the vault while trading),
-                // in which case we need to return to previous target
-                final backPossible = await webView.canGoBack();
-                if (backPossible) {
-                  webView.goBack();
-                } else {
-                  Navigator.pop(context);
-                }
-                _backButtonPopsContext = true;
+          icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
+          onPressed: () async {
+            // Normal behaviour is just to pop and go to previous page
+            if (_backButtonPopsContext) {
+              if (widget.customCallBack != null) {
+                widget.customCallBack();
               }
-            }),
+              Navigator.pop(context);
+            } else {
+              // But we can change and go back to previous page in certain
+              // situations (e.g. when going for the vault while trading),
+              // in which case we need to return to previous target
+              final backPossible = await webView.canGoBack();
+              if (backPossible) {
+                webView.goBack();
+              } else {
+                if (!mounted) return;
+                Navigator.pop(context);
+              }
+              _backButtonPopsContext = true;
+            }
+          },
+        ),
         title: GestureDetector(
           onTap: () {
             _openUrlDialog();
@@ -1164,15 +1163,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             dashPattern: const [1, 4],
             color: Colors.white70,
             child: ClipRRect(
-              borderRadius: BorderRadius.all(const Radius.circular(12)),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               child: Row(
                 key: _showOne,
                 children: [
                   Flexible(
-                      child: Text(
-                    _pageTitle,
-                    overflow: TextOverflow.fade,
-                  )),
+                    child: Text(
+                      _pageTitle,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1586,33 +1586,34 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-              customBorder: const CircleBorder(),
-              splashColor: Colors.blueGrey,
-              child: const Icon(
-                Icons.home,
-              ),
-              onTap: () async {
-                setState(() {
-                  _travelHomeIconTriggered = true;
-                });
-                BotToast.showText(
-                  text: 'Tap again to travel back!',
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.orange[800],
-                  duration: const Duration(seconds: 3),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-                Future.delayed(Duration(seconds: 3)).then((value) {
-                  if (mounted) {
-                    setState(() {
-                      _travelHomeIconTriggered = false;
-                    });
-                  }
-                });
-              }),
+            customBorder: const CircleBorder(),
+            splashColor: Colors.blueGrey,
+            child: const Icon(
+              Icons.home,
+            ),
+            onTap: () async {
+              setState(() {
+                _travelHomeIconTriggered = true;
+              });
+              BotToast.showText(
+                text: 'Tap again to travel back!',
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange[800],
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+              );
+              Future.delayed(const Duration(seconds: 3)).then((value) {
+                if (mounted) {
+                  setState(() {
+                    _travelHomeIconTriggered = false;
+                  });
+                }
+              });
+            },
+          ),
         );
       } else {
         return Material(
@@ -1829,6 +1830,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _toggleTradesWidget(active: true);
 
     // Initialize trades provider, which in turn feeds the trades widget
+    if (!mounted) return;
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
       userApiKey: _userProvider.basic.userApiKey,
@@ -2148,7 +2150,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
     }
 
-    if (query.length == 0) {
+    if (query.isEmpty) {
       // Set false so that the page can be reloaded if city widget didn't load
       _cityTriggered = false;
       return;
@@ -2587,7 +2589,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void _assessJail(dom.Document doc) {
     // If it's the first time we enter (we have no jailModel) or if we are reentering (expandable is empty), we call
     // the widget and get values from shared preferences.
-    if (_jailModel == null || _jailExpandable is! JailModel) {
+    if (_jailModel == null || _jailExpandable is! JailWidget) {
       _jailExpandable = JailWidget(
         webview: webView,
         fireScriptCallback: _fireJailScriptCallback,
@@ -2605,14 +2607,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _jailModel = jailModel;
     webView.evaluateJavascript(
-      // ! TODO
       source: jailJS(
         levelMin: _jailModel.levelMin,
         levelMax: _jailModel.levelMax,
-        timeMin: 1,
-        timeMax: 100,
-        scoreMax: 250000,
-        bailTicked: false,
+        timeMin: _jailModel.timeMin,
+        timeMax: _jailModel.timeMax,
+        scoreMax: _jailModel.scoreMax,
+        bailTicked: _jailModel.bailTicked,
         bustTicked: _jailModel.bustTicked,
       ),
     );

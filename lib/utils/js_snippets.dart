@@ -767,8 +767,7 @@ String jailJS({
   @required bool bustTicked,
 }) {
   return '''
-    var levelMin;
-    var levelMax;
+    // Credit to TornTools for implementation logic
 
     var bailActive;
     var bustActive;
@@ -793,113 +792,152 @@ String jailJS({
       return seconds;
     }
 
-    // Adjust elements depending on current theme
-    var darkModeFound = doc.querySelectorAll('#body.dark-mode');
-    var activeFilter = "brightness(0.5)";
-    var defaultFilter = "drop-shadow(0 1px 0 #fff)";
-    if (darkModeFound.length > 0) {
-      activeFilter = "brightness(1)";
-      defaultFilter = "drop-shadow(0px 1px 0px transparent)";
+    // Finds parents (credit: Torn Tools)
+    function hasParent(element, attributes = {}) {
+      if (!element.parentElement) return false;
+      if (attributes.class && element.parentElement.classList.contains(attributes.class)) return true;
+      if (attributes.id && element.parentElement.id === attributes.id) return true;
+      return hasParent(element.parentElement, attributes);
     }
 
-    // FILTERS
-    for (var player of doc.querySelectorAll(".users-list > li")) {
-      var shouldHide = false;
-
-      // Level
-      var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
-      if (level > $levelMax || level < $levelMin) {
-        shouldHide = true;
+    function modifyJail() {
+      // Adjust elements depending on current theme
+      var darkModeFound = doc.querySelectorAll('#body.dark-mode');
+      var activeFilter = "brightness(0.5)";
+      var defaultFilter = "drop-shadow(0 1px 0 #fff)";
+      if (darkModeFound.length > 0) {
+        activeFilter = "brightness(1)";
+        defaultFilter = "drop-shadow(0px 1px 0px transparent)";
       }
 
-      // Time
-      var seconds = toSeconds(player.querySelector(".time").innerText.replace("Time", "").replace("TIME", "").replace(":", "").replace("left:", "").trim());
-      var hours = seconds / 3600;
-      if (hours > $timeMax || hours < $timeMin) {
-        shouldHide = true;
-      }
-
-      // Score
-      var score = level * seconds / 60
-      if (score > $scoreMax) {
-        shouldHide = true;
-      }
-
-      if (shouldHide) {
-        player.hidden = true;
-      } else {
-        player.hidden = false;
-      }
-
-    }
-
-    // BAIL
-    if (!bustActive && $bailTicked) {
-      bailActive = true;
+      // FILTERS
       for (var player of doc.querySelectorAll(".users-list > li")) {
-        // Find bust fields and turn them green
-        const actionWrap = player.querySelector(".buy, .bye");
-        actionWrap.style.backgroundColor = "#288a0059";
-        // Find bust icons and decrease brightness for better contrast
-        const actionIcon = player.querySelector(".bye-icon");
-        filterDefault = actionIcon.style.filter;
-        actionIcon.style.filter = activeFilter;
-        // By adding a "1" to the button link, we perform a quick bust
-        let bailLink = actionWrap.getAttribute("href");
-        if (bailLink[bailLink.length - 1] !== "1") bailLink += "1";
-        actionWrap.setAttribute("href", bailLink);
-      }
-    }
-    else if (bustActive && !$bailTicked) {
-      bailActive = false;
-      for (var player of doc.querySelectorAll(".users-list > li")) {
-        const actionWrap = player.querySelector(".buy, .bye");
-        actionWrap.style.removeProperty("background-color");
+        var shouldHide = false;
 
-        const actionIcon = player.querySelector(".bye-icon");
-        actionIcon.style.filter = defaultFilter;
-
-        let bailLink = actionWrap.getAttribute("href");
-        if (bailLink[bailLink.length - 1] === "1") {
-          bailLink = bailLink.substring(0, bailLink.length - 1);
+        // Level
+        var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
+        if (level > $levelMax || level < $levelMin) {
+          shouldHide = true;
         }
-        actionWrap.setAttribute("href", bailLink);
-      }
-    }
 
-    // BUST
-    if (!bustActive && $bustTicked) {
-      bustActive = true;
-      for (var player of doc.querySelectorAll(".users-list > li")) {
-        // Find bust fields and turn them green
-        const actionWrap = player.querySelector(".bust");
-        actionWrap.style.backgroundColor = "#288a0059";
-        // Find bust icons and decrease brightness for better contrast
-        const actionIcon = player.querySelector(".bust-icon");
-        filterDefault = actionIcon.style.filter;
-        actionIcon.style.filter = activeFilter;
-        // By adding a "1" to the button link, we perform a quick bust
-        let bustLink = actionWrap.getAttribute("href");
-        if (bustLink[bustLink.length - 1] !== "1") bustLink += "1";
-        actionWrap.setAttribute("href", bustLink);
-      }
-
-    }
-    else if (bustActive && !$bustTicked) {
-      bustActive = false;
-      for (var player of doc.querySelectorAll(".users-list > li")) {
-        const actionWrap = player.querySelector(".bust");
-        actionWrap.style.removeProperty("background-color");
-
-        const actionIcon = player.querySelector(".bust-icon");
-        actionIcon.style.filter = defaultFilter;
-
-        let bustLink = actionWrap.getAttribute("href");
-        if (bustLink[bustLink.length - 1] === "1") {
-          bustLink = bustLink.substring(0, bustLink.length - 1);
+        // Time
+        var seconds = toSeconds(player.querySelector(".time").innerText.replace("Time", "").replace("TIME", "").replace(":", "").replace("left:", "").trim());
+        var hours = seconds / 3600;
+        if (hours > $timeMax || hours < $timeMin) {
+          shouldHide = true;
         }
-        actionWrap.setAttribute("href", bustLink);
+
+        // Score
+        var score = level * seconds / 60
+        if (score > $scoreMax) {
+          shouldHide = true;
+        }
+
+        if (shouldHide) {
+          player.hidden = true;
+        } else {
+          player.hidden = false;
+        }
+
       }
+
+      // BAIL
+      if (!bustActive && $bailTicked) {
+        bailActive = true;
+        for (var player of doc.querySelectorAll(".users-list > li")) {
+          // Find bust fields and turn them green
+          const actionWrap = player.querySelector(".buy, .bye");
+          actionWrap.style.backgroundColor = "#288a0059";
+          // Find bust icons and decrease brightness for better contrast
+          const actionIcon = player.querySelector(".bye-icon");
+          filterDefault = actionIcon.style.filter;
+          actionIcon.style.filter = activeFilter;
+          // By adding a "1" to the button link, we perform a quick bust
+          let bailLink = actionWrap.getAttribute("href");
+          if (bailLink[bailLink.length - 1] !== "1") bailLink += "1";
+          actionWrap.setAttribute("href", bailLink);
+        }
+      }
+      else if (bustActive && !$bailTicked) {
+        bailActive = false;
+        for (var player of doc.querySelectorAll(".users-list > li")) {
+          const actionWrap = player.querySelector(".buy, .bye");
+          actionWrap.style.removeProperty("background-color");
+
+          const actionIcon = player.querySelector(".bye-icon");
+          actionIcon.style.filter = defaultFilter;
+
+          let bailLink = actionWrap.getAttribute("href");
+          if (bailLink[bailLink.length - 1] === "1") {
+            bailLink = bailLink.substring(0, bailLink.length - 1);
+          }
+          actionWrap.setAttribute("href", bailLink);
+        }
+      }
+
+      // BUST
+      if (!bustActive && $bustTicked) {
+        bustActive = true;
+        for (var player of doc.querySelectorAll(".users-list > li")) {
+          // Find bust fields and turn them green
+          const actionWrap = player.querySelector(".bust");
+          actionWrap.style.backgroundColor = "#288a0059";
+          // Find bust icons and decrease brightness for better contrast
+          const actionIcon = player.querySelector(".bust-icon");
+          filterDefault = actionIcon.style.filter;
+          actionIcon.style.filter = activeFilter;
+          // By adding a "1" to the button link, we perform a quick bust
+          let bustLink = actionWrap.getAttribute("href");
+          if (bustLink[bustLink.length - 1] !== "1") bustLink += "1";
+          actionWrap.setAttribute("href", bustLink);
+        }
+
+      }
+      else if (bustActive && !$bustTicked) {
+        bustActive = false;
+        for (var player of doc.querySelectorAll(".users-list > li")) {
+          const actionWrap = player.querySelector(".bust");
+          actionWrap.style.removeProperty("background-color");
+
+          const actionIcon = player.querySelector(".bust-icon");
+          actionIcon.style.filter = defaultFilter;
+
+          let bustLink = actionWrap.getAttribute("href");
+          if (bustLink[bustLink.length - 1] === "1") {
+            bustLink = bustLink.substring(0, bustLink.length - 1);
+          }
+          actionWrap.setAttribute("href", bustLink);
+        }
+      }
+    }
+
+    modifyJail();
+
+    // Listener for page change
+    var intervalRepetitions = 0;
+    var listener = function (event) {
+      if (event.target.classList && !event.target.classList.contains("gallery-wrapper")
+          && hasParent(event.target, { class: "gallery-wrapper" })) {
+        return new Promise((resolve) => {
+          let checker = setInterval(() => {
+            if (doc.querySelector(".users-list > li")) {
+              modifyJail();
+            }
+            if (++intervalRepetitions === 20) {
+              return clearInterval(checker);
+            }
+          }, 300);
+        });
+      }
+    }
+
+    // Save variable in a persistent object so that we only add the listener once
+    // event if we fire the script several times (removing the listener won't work)
+    var savedFound = doc.querySelector(".pdaListener") !== null;
+    if (!savedFound) {
+      var save = doc.querySelector(".content-wrapper");
+      save.classList.add("pdaListener");
+      doc.addEventListener("click", listener, true);
     }
 
     // Return to avoid iOS WKErrorDomain
