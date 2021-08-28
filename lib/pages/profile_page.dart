@@ -531,8 +531,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 String status = _user.lastAction.status == 'Offline'
                     ? 'Offline (${_user.lastAction.relative.replaceAll(" ago", "")})'
                     : _user.lastAction.status == 'Online'
-                    ? 'Online now'
-                    : 'Online ${_user.lastAction.relative}';
+                        ? 'Online now'
+                        : 'Online ${_user.lastAction.relative}';
                 BotToast.showText(
                   text: status,
                   textStyle: TextStyle(
@@ -4036,7 +4036,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchApi() async {
-    var apiResponse = await TornApiCaller.ownExtended(_userProv.basic.userApiKey).getProfileExtended;
+    // Try to get only as many messages as strictly necessary, as per Torn recommendations
+    var limit = 3;
+    if (_messagesShowNumber > limit) limit = _messagesShowNumber;
+    if (_eventsShowNumber > limit) limit = _eventsShowNumber;
+
+    var apiResponse = await TornApiCaller.ownExtended(_userProv.basic.userApiKey, limit).getProfileExtended;
     var apiChain = await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
 
     if (mounted) {
@@ -4192,16 +4197,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
 
-
       // OPTION 2 - Could indicate that we have no AA access, so we are looking for events!
       if (factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
-
         bool simpleExists = false;
         DateTime simpleTime = DateTime.now();
         String simpleString = "";
         bool simpleReady = false;
 
-        void calculateSimpleReadiness () {
+        void calculateSimpleReadiness() {
           if (simpleTime.isBefore(DateTime.now())) {
             simpleReady = true;
             simpleString = "A faction organised crime might be ready!";
@@ -4241,7 +4244,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   var hoursString = match.group(1);
                   try {
                     var hours = int.parse(hoursString);
-                    simpleTime = DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000).add(Duration(hours: hours));
+                    simpleTime =
+                        DateTime.fromMillisecondsSinceEpoch(value.timestamp * 1000).add(Duration(hours: hours));
                     foundProgress = true;
                     simpleExists = true;
                     _settingsProvider.changeOCrimeLastKnown = simpleTime.millisecondsSinceEpoch;
