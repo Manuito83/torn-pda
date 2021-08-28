@@ -618,7 +618,7 @@ String quickItemsJS({@required String item}) {
     ajaxWrapper({
       url: url,
       type: 'POST',
-      data: 'step=actionForm&id=${item}&action=use',
+      data: 'step=actionForm&id=$item&action=use',
       oncomplete: function(resp) {
       var response = resp.responseText;
       var topBox = document.querySelector('.content-title');
@@ -626,7 +626,7 @@ String quickItemsJS({@required String item}) {
       resultBox = document.querySelector('.resultBox');
       resultBox.style.display = "block";
       resultBox.innerHTML = response;
-      resultBox.querySelector(`a[data-item='${item}`).click();
+      resultBox.querySelector(`a[data-item='$item`).click();
       },
       onerror: function(e) {
       console.error(e)
