@@ -842,7 +842,7 @@ String jailJS({
       }
 
       // BAIL
-      if (!bustActive && $bailTicked) {
+      if (!bailActive && $bailTicked) {
         bailActive = true;
         for (var player of doc.querySelectorAll(".users-list > li")) {
           // Find bust fields and turn them green
@@ -858,7 +858,7 @@ String jailJS({
           actionWrap.setAttribute("href", bailLink);
         }
       }
-      else if (bustActive && !$bailTicked) {
+      else if (bailActive && !$bailTicked) {
         bailActive = false;
         for (var player of doc.querySelectorAll(".users-list > li")) {
           const actionWrap = player.querySelector(".buy, .bye");
