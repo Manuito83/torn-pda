@@ -66,6 +66,7 @@ dependencies:
   speech_bubble: 0.0.9
   timeline_tile: ^2.0.0
   timezone: ^0.7.0
+  uni_links: ^0.5.1
   url_launcher: ^6.0.3
   vibration: ^1.7.4-nullsafety.0
   wakelock: ^0.5.2

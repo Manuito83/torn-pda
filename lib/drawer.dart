@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:io';
 // Package imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -41,6 +42,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
+import 'package:uni_links/uni_links.dart';
 
 import 'main.dart';
 
@@ -78,6 +80,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseAnalytics analytics = FirebaseAnalytics();
+
+  StreamSubscription _deepLinkSub;
+  DateTime _deepLinkSubTriggeredTime;
+  bool _deepLinkInitOnce = false;
 
   Future _finishedWithPreferences;
 
@@ -133,6 +139,12 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     _handleChangelog();
     _finishedWithPreferences = _loadInitPreferences();
+
+    // Deep Linking
+    if (Platform.isAndroid) {
+      _deepLinksInit();
+      _deepLinksStreamSub();
+    }
 
     // This starts a stream that listens for tap on local notifications (i.e.:
     // when the app is open)
@@ -219,6 +231,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   void dispose() {
     selectNotificationSubject.close();
     WidgetsBinding.instance.removeObserver(this);
+    _deepLinkSub.cancel();
     super.dispose();
   }
 
@@ -233,6 +246,76 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _removeExistingNotifications();
     }
   }
+
+  // Deep links
+  Future _deepLinksInit() async {
+    if (_deepLinkInitOnce) return;
+    _deepLinkInitOnce = true;
+
+    try {
+      final initialUrl = await getInitialLink();
+      if (initialUrl != null && initialUrl.isNotEmpty) {
+        _deepLinkHandle(initialUrl);
+      }
+    } on FormatException {
+      _deepLinkHandle("", error: true);
+    }
+  }
+
+  Future _deepLinksStreamSub() async {
+    print(_settingsProvider.allowScreenRotation);
+
+    try {
+      _deepLinkSub = linkStream.listen((String link) {
+        _deepLinkHandle(link);
+      });
+    } catch (e) {
+      _deepLinkHandle("", error: true);
+    }
+  }
+
+  void _deepLinkHandle(String link, {bool error = false}) async {
+    try {
+      bool showError = false;
+      String url = link;
+      if (error) {
+        showError = true;
+      } else {
+        url = url.replaceAll("http://", "https://");
+        if (!url.contains("https://")) {
+          showError = true;
+        }
+      }
+
+      if (showError) {
+        BotToast.showText(
+          text: "Incorrect link!",
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.orange[700],
+          duration: const Duration(seconds: 1),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      } else {
+        // Prevents double activation
+        if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime).inSeconds < 5) {
+          return;
+        }
+        _deepLinkSubTriggeredTime = DateTime.now();
+        await Future.delayed(const Duration(milliseconds: 500));
+        await _webViewProvider.openBrowserPreference(
+          context: context,
+          url: url,
+          useDialog: _settingsProvider.useQuickBrowser,
+        );
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+  // END Deep links
 
   Future<void> _removeExistingNotifications() async {
     // Get rid of iOS badge (notifications will be removed by the system)
@@ -581,7 +664,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                           setState(() {
                             SystemChrome.setSystemUIOverlayStyle(
                               SystemUiOverlayStyle(
-                                statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                                statusBarColor:
+                                    _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
                                 statusBarBrightness: Brightness.dark,
                                 statusBarIconBrightness: Brightness.light,
                               ),
