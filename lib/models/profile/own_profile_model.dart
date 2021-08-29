@@ -655,6 +655,7 @@ class TornIcons {
     this.icon65,
     this.icon66,
     this.icon67,
+    this.icon68,
     this.icon75,
     this.icon76,
     this.icon78,
@@ -699,6 +700,7 @@ class TornIcons {
   String icon65;
   String icon66;
   String icon67;
+  String icon68;
   String icon75;
   String icon76;
   String icon78;
@@ -743,6 +745,7 @@ class TornIcons {
     icon65: json["icon65"] == null ? null : json["icon65"],
     icon66: json["icon66"] == null ? null : json["icon66"],
     icon67: json["icon67"] == null ? null : json["icon67"],
+    icon68: json["icon68"] == null ? null : json["icon68"],
     icon75: json["icon75"] == null ? null : json["icon75"],
     icon76: json["icon76"] == null ? null : json["icon76"],
     icon78: json["icon78"] == null ? null : json["icon78"],
@@ -788,6 +791,7 @@ class TornIcons {
     "icon65": icon65 == null ? null : icon65,
     "icon66": icon66 == null ? null : icon66,
     "icon67": icon67 == null ? null : icon67,
+    "icon68": icon68 == null ? null : icon68,
     "icon75": icon75 == null ? null : icon75,
     "icon76": icon76 == null ? null : icon76,
     "icon78": icon78 == null ? null : icon78,

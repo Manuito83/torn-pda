@@ -263,8 +263,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future _deepLinksStreamSub() async {
-    print(_settingsProvider.allowScreenRotation);
-
     try {
       _deepLinkSub = linkStream.listen((String link) {
         _deepLinkHandle(link);

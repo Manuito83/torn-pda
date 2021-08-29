@@ -40,6 +40,7 @@ final allowedIcons = <String, Map<String, String>>{
   "icon65": {"url": "", "name" : "Radiation (35-50%)"},
   "icon66": {"url": "", "name" : "Radiation (51-67%)"},
   "icon67": {"url": "", "name" : "Radiation (68%+)"},
+  "icon68": {"url": "", "name": "Reading book"},
   "icon75": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (defending)"},
   "icon76": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (assaulting)"},
   "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (4-6%)"},
