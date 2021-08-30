@@ -2490,7 +2490,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       message = message.replaceAll(' Please click here.', '');
       message = message.replaceAll(' Please click here to collect your funds.', '');
 
-      Widget insideIcon = EventIcons(message: message);
+      Widget insideIcon = EventIcons(
+        message: message,
+        themeProvider: _themeProvider,
+      );
 
       IndicatorStyle iconBubble;
       iconBubble = IndicatorStyle(

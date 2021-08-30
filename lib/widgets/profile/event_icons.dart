@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class EventIcons extends StatelessWidget {
   const EventIcons({
     Key key,
     @required this.message,
+    @required this.themeProvider,
   }) : super(key: key);
 
   final String message;
+  final ThemeProvider themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +32,7 @@ class EventIcons extends StatelessWidget {
         color: Colors.brown[300],
         size: 20,
       );
-    } else if (message
-        .contains('After becoming very ill, you decide to head')) {
+    } else if (message.contains('After becoming very ill, you decide to head')) {
       insideIcon = Icon(
         MdiIcons.radioactive,
         color: Colors.amber[800],
@@ -41,19 +43,20 @@ class EventIcons extends StatelessWidget {
         message.contains('successfully assaulted')) {
       insideIcon = Icon(
         MdiIcons.fencing,
-        color: Colors.black,
+        color: themeProvider.mainText,
         size: 20,
       );
     } else if (message.contains('You are now known in the city as')) {
       insideIcon = Icon(
         MdiIcons.thoughtBubble,
-        color: Colors.black,
+        color: themeProvider.mainText,
         size: 20,
       );
     } else if (message.contains('jail') || message.contains('arrested you')) {
       insideIcon = Center(
         child: Image.asset(
           'images/icons/jail.png',
+          color: themeProvider.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
           width: 20,
           height: 20,
         ),
@@ -61,6 +64,12 @@ class EventIcons extends StatelessWidget {
     } else if (message.contains('trade')) {
       insideIcon = Icon(
         Icons.monetization_on,
+        color: Colors.green,
+        size: 20,
+      );
+    } else if (message.contains('A stock dividend from')) {
+      insideIcon = Icon(
+        MdiIcons.bankTransfer,
         color: Colors.green,
         size: 20,
       );
@@ -73,8 +82,7 @@ class EventIcons extends StatelessWidget {
         color: Colors.green,
         size: 20,
       );
-    } else if (message.contains('Get out of my education') ||
-        message.contains('You must have overdosed')) {
+    } else if (message.contains('Get out of my education') || message.contains('You must have overdosed')) {
       insideIcon = Icon(
         Icons.warning,
         color: Colors.red,
@@ -83,7 +91,7 @@ class EventIcons extends StatelessWidget {
     } else if (message.contains('purchased membership')) {
       insideIcon = Icon(
         Icons.fitness_center,
-        color: Colors.black54,
+        color: themeProvider.mainText,
         size: 20,
       );
     } else if (message.contains('You upgraded your level')) {
@@ -139,11 +147,9 @@ class EventIcons extends StatelessWidget {
         message.contains('canceled the')) {
       insideIcon = Container(
         child: Center(
-          child: Image.asset(
-            'images/icons/ic_pistol_black_48dp.png',
-            width: 20,
-            height: 20,
-            color: Colors.blue,
+          child: Icon(
+            MdiIcons.fingerprint,
+            color: themeProvider.currentTheme == AppTheme.light ? Colors.grey[800] : Colors.grey[400],
           ),
         ),
       );
@@ -156,7 +162,7 @@ class EventIcons extends StatelessWidget {
             'images/icons/faction.png',
             width: 15,
             height: 15,
-            color: Colors.black,
+            color: themeProvider.mainText,
           ),
         ),
       );
@@ -189,6 +195,7 @@ class EventIcons extends StatelessWidget {
       );
     } else if (message.contains('Your period of renting the') ||
         message.contains('has sent an offer for you to rent') ||
+        message.contains('day extension on the rental of') ||
         message.contains('Your rental agreement with')) {
       insideIcon = Icon(
         Icons.house_outlined,

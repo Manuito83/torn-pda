@@ -321,6 +321,12 @@ class _TipsPageState extends State<TipsPage> {
     var tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
+        headerValue: "Close tab",
+        expandedValue: "To close a tap, double tap on it.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "Change tabs order",
         expandedValue: "To move a tab in the bar, maintain the tab pressed for a couple of seconds and then drag it "
             "to the desired position.\n\nNote: the position of the first tab can't be changed.",
@@ -344,7 +350,7 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
-        headerValue: "Toggle between icons and page titles in tabs",
+        headerValue: "Toggle between icons and page titles in the tabs bar",
         expandedValue: "By long-pressing the add tab button (+), you can switch between icons and page "
             "title in your tabs.",
       ),

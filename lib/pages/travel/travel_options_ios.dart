@@ -234,7 +234,9 @@ class _TravelOptionsIOSState extends State<TravelOptionsIOS> {
   }
 
   Future<bool> _willPopCallback() async {
-    widget.callback();
+    if (widget.callback != null) {
+      widget.callback();
+    }
     return true;
   }
 

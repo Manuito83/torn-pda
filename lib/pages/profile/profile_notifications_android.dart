@@ -523,7 +523,9 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   }
 
   Future<bool> _willPopCallback() async {
-    widget.callback();
+    if (widget.callback != null) {
+      widget.callback();
+    }
     return true;
   }
 }
