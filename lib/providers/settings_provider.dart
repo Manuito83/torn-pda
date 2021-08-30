@@ -130,9 +130,9 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _showDateInClock = true;
-  bool get showDateInClock => _showDateInClock;
-  set changeShowDateInClock(bool value) {
+  var _showDateInClock = "dayfirst";
+  String get showDateInClock => _showDateInClock;
+  set changeShowDateInClock(String value) {
     _showDateInClock = value;
     Prefs().setShowDateInClock(value);
     notifyListeners();
