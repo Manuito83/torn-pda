@@ -138,13 +138,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     if (value.replaceAll(' ', '').isEmpty) {
                                       return "Cannot be empty!";
                                     }
-                                    // Try to force https
-                                    if (value.toLowerCase().contains('http://')) {
-                                      _customURLController.text.replaceAll('http://', 'https://');
-                                    }
-                                    if (!value.toLowerCase().contains('https://')) {
-                                      _customURLController.text = 'https://' + _customURLController.text;
-                                    }
                                     return null;
                                   },
                                 ),
@@ -342,10 +335,18 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
+      
+      String url = _customURLController.text.toLowerCase().replaceAll(" ", "");
+      if (!url.contains("https://") || !url.contains("http://")) {
+        url = 'https://' + url;
+      } else if (url.contains("http://")) {
+        url = url.replaceAll("http://", "https://");
+      }
+
       if (widget.inAppWebview != null) {
         widget.inAppWebview.loadUrl(
           urlRequest: URLRequest(
-            url: Uri.parse(_customURLController.text),
+            url: Uri.parse(url),
           ),
         );
       } else {
