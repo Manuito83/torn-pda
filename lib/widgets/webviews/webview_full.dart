@@ -792,9 +792,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (!mounted) return;
 
                   try {
-                    /// iOS FORUMS DETECTION
+                    /// iOS HISTORY NAVIGATION - URL DETECTION
                     /// onLoadStop does not trigger in Forums for iOS
-                    if (Platform.isIOS) {
+                    if (widget.useTabs && Platform.isIOS) {
                       if (resource.initiatorType == "xmlhttprequest" &&
                           resource.url.toString().contains("forums.php")) {
                         // Trigger once
@@ -812,7 +812,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     /// We are calling trades from here because onLoadStop does not
                     /// work inside of Trades for iOS. Also, both in Android and iOS
                     /// we need to catch deletions.
-
                     // Two possible scenarios.
                     // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
                     //    we check for url once, limiting it to TradesTriggered
@@ -1276,6 +1275,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Future _tryGoBack() async {
     bool success = false;
+
+    // It's much more precise to use the native implementation (when not using tabs),
+    // since onLoadStop and onLoadResource won't trigger always and need exceptions
     if (widget.useTabs) {
       success = _webViewProvider.tryGoBack();
     } else {
