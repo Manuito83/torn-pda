@@ -143,6 +143,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
   JailModel _jailModel;
 
+  DateTime _forumsTriggerTime;
+  DateTime _urlTriggerTime;
+
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
   bool _crimesTriggered = false;
@@ -757,13 +760,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     await _getPageTitle(document, showTitle: true);
 
                     if (widget.useTabs) {
-                      _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
-                      if (!_omitTabHistory) {
-                        // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
-                        _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-                      } else {
-                        _omitTabHistory = false;
-                      }
+                      _reportUrlVisit(uri);
                     }
 
                     _assessGeneral(document);
@@ -783,6 +780,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (!mounted) return;
 
                   try {
+                    /// iOS FORUMS DETECTION
+                    /// onLoadStop does not trigger in Forums for iOS
+                    if (Platform.isIOS) {
+                      if (resource.initiatorType == "xmlhttprequest" &&
+                          resource.url.toString().contains("forums.php")) {
+                        // Trigger once
+                        if (_tradesOnResourceTriggerTime != null &&
+                            (DateTime.now().difference(_forumsTriggerTime).inSeconds) < 1) {
+                          return;
+                        }
+                        _forumsTriggerTime = DateTime.now();
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
+                    }
+
                     /// TRADES
                     /// We are calling trades from here because onLoadStop does not
                     /// work inside of Trades for iOS. Also, both in Android and iOS
@@ -1010,6 +1023,24 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  void _reportUrlVisit(Uri uri) {
+    // For certain URLs (e.g. forums in iOS) we report might be reporting this twice. Once from onLoadStop and again
+    // from onResourceLoad (for forums detection).
+    if (_urlTriggerTime != null &&
+        (DateTime.now().difference(_urlTriggerTime).inSeconds) < 1) {
+      return;
+    }
+    _urlTriggerTime = DateTime.now();
+
+    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
+    if (!_omitTabHistory) {
+      // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
+      _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+    } else {
+      _omitTabHistory = false;
+    }
   }
 
   void _highlightChat() {
