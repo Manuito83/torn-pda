@@ -43,13 +43,13 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_5_2.main.version = 'Torn PDA v2.5.2';
     v2_5_2.main.date = 'XX SEP 2021'; // ! TODO
     String feat2_5_2_1 = "Added jail widget with quick bail/bust and filters";
-    String feat2_5_2_2 = "Added app deep links";
+    String feat2_5_2_2 = "Added app deep links (see Tips section)";
     String feat2_5_2_3 = "Added Reading Book icon";
     String feat2_5_2_4 = "Fixed forum history navigation";
     String feat2_5_2_5 = "Fixed reported issues with tabs";
     String feat2_5_2_6 = "Fixed reported UI issues";
     v2_5_2.features.add(feat2_5_2_1);
-    if (Platform.isAndroid) v2_5_2.features.add(feat2_5_2_2);
+    v2_5_2.features.add(feat2_5_2_2);
     v2_5_2.features.add(feat2_5_2_3);
     if (Platform.isIOS) v2_5_2.features.add(feat2_5_2_4);
     v2_5_2.features.add(feat2_5_2_5);

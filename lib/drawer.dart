@@ -280,6 +280,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         showError = true;
       } else {
         url = url.replaceAll("http://", "https://");
+        url = url.replaceAll("tornpda://", "https://");
         if (!url.contains("https://")) {
           showError = true;
         }
