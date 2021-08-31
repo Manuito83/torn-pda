@@ -141,10 +141,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _finishedWithPreferences = _loadInitPreferences();
 
     // Deep Linking
-    if (Platform.isAndroid) {
-      _deepLinksInit();
-      _deepLinksStreamSub();
-    }
+    _deepLinksInit();
+    _deepLinksStreamSub();
 
     // This starts a stream that listens for tap on local notifications (i.e.:
     // when the app is open)

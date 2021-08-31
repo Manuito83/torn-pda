@@ -64,5 +64,18 @@
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+      <array>
+        <dict>
+          <key>CFBundleTypeRole</key>
+          <string>Editor</string>
+          <key>CFBundleURLName</key>
+          <string>tornpda.com</string>
+          <key>CFBundleURLSchemes</key>
+          <array>
+            <string>tornpda</string>
+          </array>
+        </dict>
+      </array>
 </dict>
 </plist>
