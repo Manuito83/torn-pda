@@ -128,7 +128,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
               if (snapshot.connectionState == ConnectionState.done && _useTabs) {
                 if (_webViewProvider.hideTabs) {
-                  return Divider(color: Colors.deepOrange[900], thickness: 4,height: 4);
+                  return Divider(color: Colors.deepOrange[900], thickness: 4, height: 4);
                 } else {
                   return _bottomNavBar();
                 }
@@ -161,6 +161,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
   void _initialiseSecondary(BuildContext context) async {
     await Future.delayed(Duration(milliseconds: 1000));
+    if (!mounted) return;
     Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(useTabs: _useTabs);
   }
 

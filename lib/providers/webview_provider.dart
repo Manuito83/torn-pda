@@ -45,6 +45,8 @@ class WebViewProvider extends ChangeNotifier {
   int _currentTab = 0;
   int get currentTab => _currentTab;
 
+  bool _secondaryInitialised = false;
+
   Future initialiseMain({@required String initUrl, bool dialog = false}) async {
     _useDialog = dialog;
 
@@ -62,6 +64,8 @@ class WebViewProvider extends ChangeNotifier {
   Future initialiseSecondary({@required bool useTabs}) async {
     var savedJson = await Prefs().getWebViewTabs();
     var savedWebViews = tabSaveModelFromJson(savedJson);
+
+    _secondaryInitialised = true;
 
     for (var wv in savedWebViews.tabsSave) {
       if (useTabs) {
@@ -277,6 +281,11 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void _saveTabs() {
+    // Make sure we don't save just the first tab before the secondaries are saved, otherwise (as secondary take one
+    // second to initialise after the main), we'll just save the main and lose the rest if the phone is too quick in
+    // loading the main and reporting back URL or page title (which triggers a save)!
+    if (!_secondaryInitialised) return;
+    
     var saveModel = TabSaveModel()..tabsSave = <TabsSave>[];
     for (var i = 1; i < _tabList.length; i++) {
       saveModel.tabsSave.add(
@@ -294,6 +303,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void clearOnDispose() {
     _tabList.clear();
+    _secondaryInitialised = false;
     // It is necessary to bring this to 0 so that on opening no checks are performed in tabs that don't exist yet
     _currentTab = 0;
   }
