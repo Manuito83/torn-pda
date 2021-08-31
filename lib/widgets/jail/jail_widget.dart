@@ -1,15 +1,16 @@
 // Flutter imports:
 // Package imports:
 import 'dart:math';
-
 import 'package:expandable/expandable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:non_linear_slider/models/interval.dart';
 import 'package:non_linear_slider/non_linear_slider.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/jail/jail_record_dialog.dart';
 
 class JailWidget extends StatefulWidget {
   final InAppWebViewController webview;
@@ -159,7 +160,7 @@ class _JailWidgetState extends State<JailWidget> {
               ),
               collapsed: null,
               expanded: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(5),
                 child: _vaultExpanded(),
               ),
             ),
@@ -245,13 +246,16 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          "Time (h)",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
+        Flexible(
+          child: const Text(
+            "Time (h)",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
           ),
         ),
+        SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -293,13 +297,16 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          "Level",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
+        Flexible(
+          child: const Text(
+            "Level",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
           ),
         ),
+        SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -342,13 +349,16 @@ class _JailWidgetState extends State<JailWidget> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          "Score",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
+        Flexible(
+          child: Text(
+            "Score",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
           ),
         ),
+        SizedBox(width: 5),
         Row(
           children: [
             Text(
@@ -374,10 +384,33 @@ class _JailWidgetState extends State<JailWidget> {
                 _saveModel();
               },
             ),
+            GestureDetector(
+              child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+              onTap: () {
+                showDialog<void>(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (BuildContext context) {
+                    return JailRecordDialog(
+                      currentRecord: _jailModel.scoreMax,
+                      recordCallback: recordFormCallback,
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ],
     );
+  }
+
+  void recordFormCallback(int newRecord) {
+    setState(() {
+      _jailModel.scoreMax = newRecord;
+    });
+    widget.fireScriptCallback(_jailModel);
+    _saveModel();
   }
 
   double logSlider(double position) {
