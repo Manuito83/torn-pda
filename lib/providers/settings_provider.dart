@@ -392,6 +392,20 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showCases = [];
+  List<String> get showCases => _showCases;
+  set addShowCase(String showCase) {
+    _showCases.add(showCase);
+    Prefs().setShowCases(_showCases);
+    notifyListeners();
+  }
+
+  set removeShowCase(String showCase) {
+    _showCases.remove(showCase);
+    Prefs().setShowCases(_showCases);
+    notifyListeners();
+  }
+
   // END OF PARAMETERS
 
   void updateLastUsed(int timeStamp) {
@@ -509,6 +523,8 @@ class SettingsProvider extends ChangeNotifier {
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
     _iconsFiltered = await Prefs().getIconsFiltered();
+
+    _showCases = await Prefs().getShowCases();
 
     notifyListeners();
   }

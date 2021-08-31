@@ -3,6 +3,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
+
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -24,6 +26,8 @@ class WebViewStackView extends StatefulWidget {
 }
 
 class _WebViewStackViewState extends State<WebViewStackView> with TickerProviderStateMixin {
+  GlobalKey _showcaseTabsGeneral = GlobalKey();
+
   ThemeProvider _themeProvider;
   WebViewProvider _webViewProvider;
   SettingsProvider _settingsProvider;
@@ -83,59 +87,63 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
-        child: Scaffold(
-          body: FutureBuilder(
-            future: providerInitialised,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (!secondaryInitialised) {
-                  secondaryInitialised = true;
-                  _initialiseSecondary(context);
-                }
-                if (_useTabs) {
-                  try {
-                    return AnimatedIndexedStack(
-                      index: _webViewProvider.currentTab,
-                      children: allWebViews,
-                      duration: 100,
-                    );
-                  } catch (e) {
-                    FirebaseCrashlytics.instance.log("PDA Crash at AnimatedIndexedStack (webview with tabs): $e");
-                    FirebaseCrashlytics.instance.recordError(e, null);
-                    return _closeWithError();
+        child: ShowCaseWidget(
+          builder: Builder(
+            builder: (_) => Scaffold(
+              body: FutureBuilder(
+                future: providerInitialised,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (!secondaryInitialised) {
+                      secondaryInitialised = true;
+                      _initialiseSecondary();
+                    }
+                    if (_useTabs) {
+                      try {
+                        return AnimatedIndexedStack(
+                          index: _webViewProvider.currentTab,
+                          children: allWebViews,
+                          duration: 100,
+                        );
+                      } catch (e) {
+                        FirebaseCrashlytics.instance.log("PDA Crash at AnimatedIndexedStack (webview with tabs): $e");
+                        FirebaseCrashlytics.instance.recordError(e, null);
+                        return _closeWithError();
+                      }
+                    } else {
+                      try {
+                        return IndexedStack(
+                          index: 0,
+                          children: [
+                            allWebViews[0],
+                          ],
+                        );
+                      } catch (e) {
+                        FirebaseCrashlytics.instance.log("PDA Crash at IndexedStack (webview with no tabs): $e");
+                        FirebaseCrashlytics.instance.recordError(e, null);
+                        return _closeWithError();
+                      }
+                    }
+                  } else {
+                    return Center(child: CircularProgressIndicator());
                   }
-                } else {
-                  try {
-                    return IndexedStack(
-                      index: 0,
-                      children: [
-                        allWebViews[0],
-                      ],
-                    );
-                  } catch (e) {
-                    FirebaseCrashlytics.instance.log("PDA Crash at IndexedStack (webview with no tabs): $e");
-                    FirebaseCrashlytics.instance.recordError(e, null);
-                    return _closeWithError();
+                },
+              ),
+              bottomNavigationBar: FutureBuilder(
+                future: providerInitialised,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done && _useTabs) {
+                    if (_webViewProvider.hideTabs) {
+                      return Divider(color: Colors.deepOrange[900], thickness: 4, height: 4);
+                    } else {
+                      return _bottomNavBar(_);
+                    }
+                  } else {
+                    return SizedBox.shrink();
                   }
-                }
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-          bottomNavigationBar: FutureBuilder(
-            future: providerInitialised,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done && _useTabs) {
-                if (_webViewProvider.hideTabs) {
-                  return Divider(color: Colors.deepOrange[900], thickness: 4, height: 4);
-                } else {
-                  return _bottomNavBar();
-                }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
+                },
+              ),
+            ),
           ),
         ),
       ),
@@ -159,7 +167,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     return Center(child: CircularProgressIndicator());
   }
 
-  void _initialiseSecondary(BuildContext context) async {
+  void _initialiseSecondary() async {
     await Future.delayed(Duration(milliseconds: 1000));
     if (!mounted) return;
     Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(useTabs: _useTabs);
@@ -172,7 +180,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     super.dispose();
   }
 
-  Widget _bottomNavBar() {
+  Widget _bottomNavBar(BuildContext _) {
     var mainTab = GestureDetector(
       key: UniqueKey(),
       onTap: () {
@@ -237,6 +245,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
 
     var secondaryTabs = <Widget>[];
     for (var i = 0; i < _webViewProvider.tabList.length; i++) {
+      // Don't add main again
       if (i == 0) {
         secondaryTabs.add(
           Container(
@@ -302,87 +311,100 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       secondaryTabs.add(secondaryTab);
     }
 
-    return Container(
-      height: 40,
-      decoration: new BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey,
-            width: 1,
+    return Showcase(
+      key: _showcaseTabsGeneral,
+      title: 'Tab bar',
+      description: "\nYou've opened your first tab; remember you can close tabs (except for the first one) by double "
+          "taping them. You can also rearrange tabs, duplicate the first one, etc."
+          "\n\nVisit the Tips section for more information!\n",
+      descTextStyle: TextStyle(fontSize: 13),
+      contentPadding: EdgeInsets.all(20),
+      child: Container(
+        height: 40,
+        decoration: new BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey,
+              width: 1,
+            ),
           ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Expanded(
-            child: Row(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(
+              child: Row(
+                children: [
+                  mainTab,
+                  VerticalDivider(
+                    width: 2,
+                    thickness: 2,
+                    color: _themeProvider.mainText,
+                  ),
+                  Expanded(
+                    child: ReorderableListView(
+                      scrollDirection: Axis.horizontal,
+                      children: secondaryTabs,
+                      onReorder: (start, end) {
+                        if (start == 0 || end == 0) return;
+                        // Save where the current active tab is
+                        var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
+                        // Removing the item at oldIndex will shorten the list by 1
+                        if (start < end) end -= 1;
+                        // Do the move
+                        _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
+                        // Make sure we continue in our previous active tab
+                        for (var i = 0; i < _webViewProvider.tabList.length; i++) {
+                          if (_webViewProvider.tabList[i].webView.key == activeKey) {
+                            _webViewProvider.activateTab(i);
+                            break;
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
               children: [
-                mainTab,
                 VerticalDivider(
                   width: 2,
                   thickness: 2,
                   color: _themeProvider.mainText,
                 ),
-                Expanded(
-                  child: ReorderableListView(
-                    scrollDirection: Axis.horizontal,
-                    children: secondaryTabs,
-                    onReorder: (start, end) {
-                      if (start == 0 || end == 0) return;
-                      // Save where the current active tab is
-                      var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
-                      // Removing the item at oldIndex will shorten the list by 1
-                      if (start < end) end -= 1;
-                      // Do the move
-                      _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
-                      // Make sure we continue in our previous active tab
-                      for (var i = 0; i < _webViewProvider.tabList.length; i++) {
-                        if (_webViewProvider.tabList[i].webView.key == activeKey) {
-                          _webViewProvider.activateTab(i);
-                          break;
-                        }
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              VerticalDivider(
-                width: 2,
-                thickness: 2,
-                color: _themeProvider.mainText,
-              ),
-              GestureDetector(
-                child: Container(
-                  color: _themeProvider.navSelected,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: 24,
-                      child: Icon(
-                        Icons.add_circle_outline,
-                        color: _themeProvider.mainText,
+                GestureDetector(
+                  child: Container(
+                    color: _themeProvider.navSelected,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 24,
+                        child: Icon(
+                          Icons.add_circle_outline,
+                          color: _themeProvider.mainText,
+                        ),
                       ),
                     ),
                   ),
+                  onTap: () async {
+                    _webViewProvider.addTab();
+                    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                    if (!_settingsProvider.showCases.contains("tabs_general")) {
+                      ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
+                      _settingsProvider.addShowCase = "tabs_general";
+                    }
+                  },
+                  onLongPress: () {
+                    _webViewProvider.useTabIcons
+                        ? _webViewProvider.changeUseTabIcons(false)
+                        : _webViewProvider.changeUseTabIcons(true);
+                  },
                 ),
-                onTap: () {
-                  _webViewProvider.addTab();
-                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                },
-                onLongPress: () {
-                  _webViewProvider.useTabIcons
-                      ? _webViewProvider.changeUseTabIcons(false)
-                      : _webViewProvider.changeUseTabIcons(true);
-                },
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

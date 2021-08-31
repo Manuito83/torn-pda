@@ -140,6 +140,8 @@ class Prefs {
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kHideTabs = "pda_hideTabs";
+  // ShowCases (with flutter_showcaseview)
+  final String _kShowCases = "pda_showCases";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -1592,4 +1594,19 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kHideTabs, value);
   }
+
+  /// ----------------------------
+  /// Methods for show cases
+  /// ----------------------------
+  /// tabs_general -> for tab use information in webview_stackview
+  Future<List<String>> getShowCases() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kShowCases) ?? <String>[];
+  }
+
+  Future<bool> setShowCases(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kShowCases, value);
+  }
+
 }
