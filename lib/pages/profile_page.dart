@@ -26,11 +26,13 @@ import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
+import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -319,7 +321,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
     return Scaffold(
@@ -1058,7 +1060,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user.status.state == 'Traveling') {
       var startTime = _user.travel.departed;
       var endTime = _user.travel.timestamp;
-      var totalSeconds = endTime - startTime;
+      var arrivalSeconds = endTime - startTime;
 
       var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
       var timeDifference = dateTimeArrival.difference(DateTime.now());
@@ -1095,7 +1097,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     widgetIndicator: Opacity(
                       // Make icon transparent when about to pass over text
-                      opacity: _getTravelPercentage(totalSeconds) < 0.2 || _getTravelPercentage(totalSeconds) > 0.7
+                      opacity: _getTravelPercentage(arrivalSeconds) < 0.2 || _getTravelPercentage(arrivalSeconds) > 0.7
                           ? 1
                           : 0.3,
                       child: Padding(
@@ -1117,17 +1119,27 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     lineHeight: 18,
                     progressColor: Colors.blue[200],
                     backgroundColor: Colors.grey,
-                    percent: _getTravelPercentage(totalSeconds),
+                    percent: _getTravelPercentage(arrivalSeconds),
                   ),
                 ),
                 if (!_dedicatedTravelCard) _notificationIcon(ProfileNotification.travel),
               ],
             ),
             SizedBox(height: 10),
-            Row(
-              children: <Widget>[
-                Flexible(
-                  child: Text('Arriving in ${_user.travel.destination} at $formattedTime'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: <Widget>[
+                    Flexible(
+                      child: Text('Arriving in ${_user.travel.destination} at $formattedTime'),
+                    ),
+                  ],
+                ),
+                TravelReturnWidget(
+                  destination: _user.travel.destination,
+                  settingsProvider: _settingsProvider,
+                  dateTimeArrival: dateTimeArrival,
                 ),
               ],
             ),
@@ -1144,58 +1156,68 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user.status.state == "Traveling") {
       header = _travelWidget();
     } else if (_user.status.state == "Abroad") {
-      header = Row(
+      header = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              elevation: 2,
-              primary: _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.background : Colors.white,
-              side: BorderSide(
-                width: 2.0,
-                color: Colors.blueGrey,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  _flagImage(),
-                  SizedBox(width: 6),
-                  Column(
+          Row(
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 2,
+                  primary: _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.background : Colors.white,
+                  side: BorderSide(
+                    width: 2.0,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
                     children: [
-                      Text(
-                        "VISIT",
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: _themeProvider.mainText,
-                        ),
-                      ),
-                      Text(
-                        _user.travel.destination.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 8,
-                          color: _themeProvider.mainText,
-                        ),
+                      _flagImage(),
+                      SizedBox(width: 6),
+                      Column(
+                        children: [
+                          Text(
+                            "VISIT",
+                            style: TextStyle(
+                              fontSize: 8,
+                              color: _themeProvider.mainText,
+                            ),
+                          ),
+                          Text(
+                            _user.travel.destination.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 8,
+                              color: _themeProvider.mainText,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
+                onLongPress: () {
+                  _launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
+                },
+                onPressed: () async {
+                  var url = 'https://www.torn.com';
+                  _launchBrowser(url: url, dialogRequested: true);
+                },
               ),
-            ),
-            onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com', dialogRequested: false);
-            },
-            onPressed: () async {
-              var url = 'https://www.torn.com';
-              _launchBrowser(url: url, dialogRequested: true);
-            },
+              SizedBox(width: 20),
+              ForeignStockButton(
+                userProv: _userProv,
+                settingsProv: _settingsProvider,
+                launchBrowser: _launchBrowser,
+                updateCallback: _updateCallback,
+              ),
+            ],
           ),
-          SizedBox(width: 20),
-          ForeignStockButton(
-            userProv: _userProv,
-            settingsProv: _settingsProvider,
-            launchBrowser: _launchBrowser,
-            updateCallback: _updateCallback,
+          TravelReturnWidget(
+            destination: _user.travel.destination,
+            settingsProvider: _settingsProvider,
+            dateTimeArrival: DateTime.now(),
           ),
         ],
       );
@@ -3292,7 +3314,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SelectableText('Strength: ${decimalFormat.format(_miscModel.strength)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Strength: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.strength)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.strength * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3301,7 +3327,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText('Defense: ${decimalFormat.format(_miscModel.defense)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Defense: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.defense)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.defense * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3310,7 +3340,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText('Speed: ${decimalFormat.format(_miscModel.speed)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Speed: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.speed)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.speed * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3319,7 +3353,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText('Dexterity: ${decimalFormat.format(_miscModel.dexterity)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Dexterity: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.dexterity)}'),
                         Text(
                           " (${decimalFormat.format(_miscModel.dexterity * 100 / _miscModel.total)}%)",
                           style: TextStyle(fontSize: 12),
@@ -3330,7 +3368,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       width: 50,
                       child: Divider(color: _themeProvider.mainText, thickness: 0.5),
                     ),
-                    SelectableText('Total: ${decimalFormat.format(_miscModel.total)}'),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: Text('Total: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.total)}'),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -3363,7 +3409,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   children: [
                     Row(
                       children: [
-                        SelectableText('Strength: ${decimalFormat.format(strengthModifiedTotal)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Strength: '),
+                        ),
+                        SelectableText('${decimalFormat.format(strengthModifiedTotal)}'),
                         strengthModified
                             ? Text(
                                 " $strengthString",
@@ -3374,7 +3424,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText('Defense: ${decimalFormat.format(defenseModifiedTotal)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Defense: '),
+                        ),
+                        SelectableText('${decimalFormat.format(defenseModifiedTotal)}'),
                         defenseModified
                             ? Text(
                                 " $defenseString",
@@ -3385,7 +3439,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText('Speed: ${decimalFormat.format(speedModifiedTotal)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Speed: '),
+                        ),
+                        SelectableText('${decimalFormat.format(speedModifiedTotal)}'),
                         speedModified
                             ? Text(
                                 " $speedString",
@@ -3396,7 +3454,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     Row(
                       children: [
-                        SelectableText('Dexterity: ${decimalFormat.format(dexModifiedTotal)}'),
+                        SizedBox(
+                          width: 80,
+                          child: Text('Dexterity: '),
+                        ),
+                        SelectableText('${decimalFormat.format(dexModifiedTotal)}'),
                         dexModified
                             ? Text(
                                 " $dexString",
@@ -3409,8 +3471,18 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       width: 50,
                       child: Divider(color: _themeProvider.mainText, thickness: 0.5),
                     ),
-                    Text(
-                      'Total: ${decimalFormat.format(totalEffective)}',
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: Text(
+                            'Total: ',
+                          ),
+                        ),
+                        SelectableText(
+                          '${decimalFormat.format(totalEffective)}',
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -3442,9 +3514,33 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SelectableText('Manual labor: ${decimalFormat.format(_miscModel.manualLabor)}'),
-                    SelectableText('Intelligence: ${decimalFormat.format(_miscModel.intelligence)}'),
-                    SelectableText('Endurance: ${decimalFormat.format(_miscModel.endurance)}'),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: Text('Manual labor: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.manualLabor)}'),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: Text('Intelligence: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.intelligence)}'),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 100,
+                          child: Text('Endurance: '),
+                        ),
+                        SelectableText('${decimalFormat.format(_miscModel.endurance)}'),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -3479,9 +3575,36 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (racing.isNotEmpty) SelectableText('Racing: $racing'),
-                          if (reviving.isNotEmpty) SelectableText('Reviving: $reviving'),
-                          if (hunting.isNotEmpty) SelectableText('Hunting: $hunting'),
+                          if (racing.isNotEmpty)
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 80,
+                                  child: Text('Racing: '),
+                                ),
+                                SelectableText('$racing'),
+                              ],
+                            ),
+                          if (reviving.isNotEmpty)
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 80,
+                                  child: Text('Reviving: '),
+                                ),
+                                SelectableText('$reviving'),
+                              ],
+                            ),
+                          if (hunting.isNotEmpty)
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 80,
+                                  child: Text('Hunting: '),
+                                ),
+                                SelectableText('$hunting'),
+                              ],
+                            ),
                         ],
                       ),
                     ),
@@ -4497,7 +4620,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _updateCallback() async {
-    // Even if this implies colling the app twice, it enhances player
+    // Even if this implies calling the app twice, it enhances player
     // experience as the bars are updated quickly after a change
     // In turn, we only call the API every 30 seconds with the timer
     await Future.delayed(Duration(seconds: 5));

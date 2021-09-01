@@ -83,7 +83,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   InventoryModel _inventory;
   TravelModel _travelModel;
   int _capacity;
-  TravelTicket _ticket;
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
   final _filteredFlags = List<bool>.filled(12, true, growable: false);
@@ -758,7 +757,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           moneyOnHand: _travelModel.moneyOnhand,
           flagPressedCallback: _onFlagPressed,
           requestMoneyRefresh: _refreshMoney,
-          ticket: _ticket,
+          ticket: _settingsProvider.travelTicket,
           activeRestocks: _activeRestocks,
           travellingTimeStamp: _travelModel.timeStamp,
           travellingCountry: _returnCountryName(_travelModel.destination),
@@ -876,8 +875,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           // Other fields contained in Yata and in Torn
           stock.profit = (stock.value /
                   (TravelTimes.travelTimeMinutesOneWay(
-                        ticket: _ticket,
-                        country: stock.country,
+                        ticket: _settingsProvider.travelTicket,
+                        countryCode: stock.country,
                       ) *
                       2 /
                       60))
@@ -889,8 +888,8 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           stock.arrivalTime = DateTime.now().add(
             Duration(
               minutes: TravelTimes.travelTimeMinutesOneWay(
-                country: stock.country,
-                ticket: _ticket,
+                countryCode: stock.country,
+                ticket: _settingsProvider.travelTicket,
               ),
             ),
           );
@@ -1163,22 +1162,6 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _inventoryEnabled = await Prefs().getShowForeignInventory();
     _showArrivalTime = await Prefs().getShowArrivalTime();
 
-    var ticket = await Prefs().getTravelTicket();
-    switch (ticket) {
-      case "standard":
-        _ticket = TravelTicket.standard;
-        break;
-      case "private":
-        _ticket = TravelTicket.private;
-        break;
-      case "wlt":
-        _ticket = TravelTicket.wlt;
-        break;
-      case "business":
-        _ticket = TravelTicket.business;
-        break;
-    }
-
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
   }
 
@@ -1199,7 +1182,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               callBack: _onStocksOptionsChanged,
               inventoryEnabled: _inventoryEnabled,
               showArrivalTime: _showArrivalTime,
-              ticket: _ticket,
+              settingsProvider: _settingsProvider,
             ),
           ),
         );
@@ -1207,12 +1190,11 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled, bool showArrivalTime, TravelTicket ticket) {
+  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled, bool showArrivalTime) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;
       _showArrivalTime = showArrivalTime;
-      _ticket = ticket;
     });
   }
 
@@ -1236,10 +1218,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
-  void _onFlagPressed(bool flagPressed, bool shorTap) {
+  void _onFlagPressed(bool flagPressed, bool shortTap) {
     Navigator.pop(
       context,
-      ReturnFlagPressed(flagPressed: true, shortTap: shorTap),
+      ReturnFlagPressed(flagPressed: true, shortTap: shortTap),
     );
   }
 

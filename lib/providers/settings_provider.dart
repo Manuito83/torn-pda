@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/travel/travel_times.dart';
 
 enum BrowserSetting {
   app,
@@ -406,6 +407,29 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _travelTicket = TravelTicket.private;
+  TravelTicket get travelTicket => _travelTicket;
+  set changeTravelTicket(TravelTicket ticket) {
+    _travelTicket = ticket;
+    String ticketString = "private";
+    switch (ticket) {
+      case TravelTicket.standard:
+        ticketString = "standard";
+        break;
+      case TravelTicket.private:
+        ticketString = "private";
+        break;
+      case TravelTicket.wlt:
+        ticketString = "wlt";
+        break;
+      case TravelTicket.business:
+        ticketString = "business";
+        break;
+    }
+    Prefs().setTravelTicket(ticketString);
+    notifyListeners();
+  }
+
   // END OF PARAMETERS
 
   void updateLastUsed(int timeStamp) {
@@ -525,6 +549,22 @@ class SettingsProvider extends ChangeNotifier {
     _iconsFiltered = await Prefs().getIconsFiltered();
 
     _showCases = await Prefs().getShowCases();
+
+    String ticket = await Prefs().getTravelTicket();
+    switch (ticket) {
+      case "standard":
+        _travelTicket = TravelTicket.standard;
+        break;
+      case "private":
+        _travelTicket = TravelTicket.private;
+        break;
+      case "wlt":
+        _travelTicket = TravelTicket.wlt;
+        break;
+      case "business":
+        _travelTicket = TravelTicket.business;
+        break;
+    }
 
     notifyListeners();
   }

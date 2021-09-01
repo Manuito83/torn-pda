@@ -536,7 +536,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     stock.profit = (stock.value /
             (TravelTimes.travelTimeMinutesOneWay(
                   ticket: widget.ticket,
-                  country: widget.foreignStock.country,
+                  countryCode: widget.foreignStock.country,
                 ) *
                 2 /
                 60))
@@ -1110,8 +1110,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
           // We are in Torn (after updating without refresh this might happen)
           _flyingElsewhere = false;
         }
-        var timeToWidgetCountry =
-            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.foreignStock.country) * 60;
+        var timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
+              ticket: widget.ticket,
+              countryCode: widget.foreignStock.country,
+            ) *
+            60;
         var totalNeeded = timeToWidgetCountry + timeToTorn;
         _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
 
@@ -1130,8 +1133,12 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         _earliestArrival = travelTs;
 
         // If we want to come back (we only show this in the footer)
-        var timeToTornAndBack =
-            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.foreignStock.country) * 60 * 2;
+        var timeToTornAndBack = TravelTimes.travelTimeMinutesOneWay(
+              ticket: widget.ticket,
+              countryCode: widget.foreignStock.country,
+            ) *
+            60 *
+            2;
         var totalNeeded = timeToTornAndBack + timeToWidgetCountry;
         var earliestArrivalToSame = DateTime.now().add(Duration(seconds: totalNeeded));
 
@@ -1153,10 +1160,16 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         if (timeToFirstCountryFromTorn < 0) {
           timeToFirstCountryFromTorn = 0;
         }
-        var timeBackToTorn =
-            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.travellingCountry) * 60;
-        var timeToWidgetCountry =
-            TravelTimes.travelTimeMinutesOneWay(ticket: widget.ticket, country: widget.foreignStock.country) * 60;
+        var timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
+              ticket: widget.ticket,
+              countryCode: widget.travellingCountry,
+            ) *
+            60;
+        var timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
+              ticket: widget.ticket,
+              countryCode: widget.foreignStock.country,
+            ) *
+            60;
         var totalNeeded = timeToFirstCountryFromTorn + timeBackToTorn + timeToWidgetCountry;
         _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
 
@@ -1173,7 +1186,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
     } else {
       _travelSeconds = TravelTimes.travelTimeMinutesOneWay(
             ticket: widget.ticket,
-            country: widget.foreignStock.country,
+            countryCode: widget.foreignStock.country,
           ) *
           60;
       _earliestArrival = DateTime.now().add(Duration(seconds: _travelSeconds));
