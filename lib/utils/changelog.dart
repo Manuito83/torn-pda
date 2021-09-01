@@ -41,19 +41,23 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.5.2
     var v2_5_2 = ChangeLogItem();
     v2_5_2.main.version = 'Torn PDA v2.5.2';
-    v2_5_2.main.date = 'XX SEP 2021'; // ! TODO
+    v2_5_2.main.date = '06 SEP 2021';
     String feat2_5_2_1 = "Added jail widget with quick bail/bust and filters";
     String feat2_5_2_2 = "Added app deep links (see Tips section)";
     String feat2_5_2_3 = "Added Reading Book icon";
-    String feat2_5_2_4 = "Fixed forum history navigation";
-    String feat2_5_2_5 = "Fixed reported issues with tabs";
-    String feat2_5_2_6 = "Fixed reported UI issues";
+    String feat2_5_2_4 = "Added return time information when travelling";
+    String feat2_5_2_5 = "Added showcase on first tab use";
+    String feat2_5_2_6 = "Fixed forum history navigation";
+    String feat2_5_2_7 = "Fixed reported issues with tabs";
+    String feat2_5_2_8 = "Fixed reported UI issues";
     v2_5_2.features.add(feat2_5_2_1);
     v2_5_2.features.add(feat2_5_2_2);
     v2_5_2.features.add(feat2_5_2_3);
-    if (Platform.isIOS) v2_5_2.features.add(feat2_5_2_4);
+    v2_5_2.features.add(feat2_5_2_4);
     v2_5_2.features.add(feat2_5_2_5);
-    v2_5_2.features.add(feat2_5_2_6);
+    if (Platform.isIOS) v2_5_2.features.add(feat2_5_2_6);
+    v2_5_2.features.add(feat2_5_2_7);
+    v2_5_2.features.add(feat2_5_2_8);
 
     // VERSION 2.5.1
     var v2_5_1 = ChangeLogItem();
