@@ -371,8 +371,9 @@ class _JailWidgetState extends State<JailWidget> {
             NonLinearSlider(
               value: _jailModel.scoreMax.toDouble(),
               intervals: [
-                NLSInterval(0, 175000, 0.80),
-                NLSInterval(175000, 250000, 0.20),
+                NLSInterval(0, 40000, 0.50),
+                NLSInterval(40000, 175000, 0.40),
+                NLSInterval(175000, 250000, 0.10),
               ],
               onChanged: (value) {
                 setState(() {

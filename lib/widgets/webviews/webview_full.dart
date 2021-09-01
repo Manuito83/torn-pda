@@ -1038,7 +1038,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   void _reportUrlVisit(Uri uri) {
     // For certain URLs (e.g. forums in iOS) we might be reporting this twice. Once from onLoadStop and again
-    // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough 
+    // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough
     // to prevent adding extra pages to history (when it's the first page loading, it's only omitted once).
     if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime).inSeconds) < 1) {
       return;
@@ -2122,6 +2122,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _reassessVault() async {
+    if (!mounted) return;
     _vaultEnabled = await Prefs().getVaultEnabled();
     // Reset _vaultTriggered so that we can call _assessVault() again
     _vaultTriggered = false;
