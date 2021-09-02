@@ -151,7 +151,7 @@ class WebViewProvider extends ChangeNotifier {
     // If we remove the current tab, we need to decrease the current tab by 1
     if (position == _currentTab) {
       _currentTab = position - 1;
-      _tabList[_currentTab].webViewKey.currentState.resumeTimers();
+      _tabList[_currentTab].webViewKey.currentState?.resumeTimers();
     } else if (_currentTab == _tabList.length - 1) {
       // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
       _currentTab = _tabList.length - 2;
@@ -159,7 +159,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
     if (wasLast) {
-      _tabList[_currentTab].webViewKey.currentState.resumeTimers();
+      _tabList[_currentTab].webViewKey.currentState?.resumeTimers();
       // Notify listeners first so that the tab changes
       notifyListeners();
       // Then wait 200 milliseconds so that the animated stack view changes its child
@@ -221,7 +221,7 @@ class WebViewProvider extends ChangeNotifier {
     var tab = getTabFromKey(reporterKey);
     tab.pageTitle = pageTitle;
 
-    // Pause timers for tabs that load which are not active (e.g. at the initialisation, we pause all except the main)
+    // Pause timers for tabs that load which are not active (e.g. at the initialization, we pause all except the main)
     if (_tabList[_currentTab] != tab) {
       tab.webViewKey.currentState?.pauseTimers();
     }
@@ -277,7 +277,9 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
     tab.webViewKey.currentState?.loadFromExterior(url: url, omitHistory: false);
-    _saveTabs();
+    if (_currentTab != 0) {
+      activateTab(0);
+    }
   }
 
   void _saveTabs() {
@@ -285,7 +287,7 @@ class WebViewProvider extends ChangeNotifier {
     // second to initialise after the main), we'll just save the main and lose the rest if the phone is too quick in
     // loading the main and reporting back URL or page title (which triggers a save)!
     if (!_secondaryInitialised) return;
-    
+
     var saveModel = TabSaveModel()..tabsSave = <TabsSave>[];
     for (var i = 1; i < _tabList.length; i++) {
       saveModel.tabsSave.add(
