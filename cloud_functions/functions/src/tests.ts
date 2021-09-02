@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
+//import * as admin from "firebase-admin";
+import { sendNotificationToUser } from "./notification";
 
 export const testGroup = {
   testNotification: functions.region('us-east4').pubsub
@@ -9,18 +10,39 @@ export const testGroup = {
     
     try {
       
-      promises.push(sendTestNotification(
-        '### TOKEN HERE ###', // Then call as "tests.testNotification()" in shell
-        'Full Energy Bar', 
-        'Your energy is full, go spend on something!',
-        "notification_energy",
-        "#00FF00",
-        "Alerts energy",
-        "",
-        "",
-        "medium",
+      // Actual production function
+      // Comment as necessary if using the other function below
+      promises.push(
+        sendNotificationToUser(
+          '### TOKEN HERE ###', // Then call as "tests.testNotification()" in shell
+          'Approaching Torn', 
+          'You will land...',
+          "notification_travel",
+          "#2196F3",
+          "Alerts travel",
+          "",
+          "",
+          "medium",
+          "aircraft_seatbelt.aiff"
         )
       );
+
+      /*
+      // Test function below for testing
+      promises.push(
+        sendTestNotification(
+          '### TOKEN HERE ###', // Then call as "tests.testNotification()" in shell
+          'Approaching Torn',
+          'You will land...',
+          "notification_travel",
+          "#2196F3",
+          "Alerts travel",
+          "",
+          "",
+          "medium",
+        )
+      );
+      */
     
     } catch (e) {
       console.log(`ERROR TEST \n${e}`)
@@ -34,6 +56,7 @@ export const testGroup = {
 // *************************
 // FOR TESTING NOTIFICATION
 // *************************
+/*
 async function sendTestNotification(
   token: string,
   title: string,
@@ -82,7 +105,7 @@ async function sendTestNotification(
     },
     data: {
       // This are needed so that the information is contained 
-      // in onLaundh/onResume message information
+      // in onLaunch/onResume message information
       title: title,
       body: body, 
       channelId: channelId,
@@ -93,3 +116,4 @@ async function sendTestNotification(
 
   return admin.messaging().send(payload);
 }
+*/
