@@ -234,15 +234,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               "Show date in clock",
                             ),
                           ),
-                          Switch(
-                            value: _settingsProvider.showDateInClock,
-                            onChanged: (value) {
-                              setState(() {
-                                _settingsProvider.changeShowDateInClock = value;
-                              });
-                            },
-                            activeTrackColor: Colors.lightGreenAccent,
-                            activeColor: Colors.green,
+                          Flexible(
+                            flex: 2,
+                            child: _dateInClockDropdown(),
                           ),
                         ],
                       ),
@@ -251,12 +245,15 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         children: [
-                          Text(
-                            'Add an extra row for the date wherever the TCT clock is shown',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                          Flexible(
+                            child: Text(
+                              'Add an extra row for the date wherever the TCT clock is shown. You can also specify '
+                              'the desired format (day/month or month/day)',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
                         ],
@@ -420,9 +417,6 @@ class _SettingsPageState extends State<SettingsPage> {
                                         await intent.launch();
                                       },
                                   ),
-                                  TextSpan(
-                                    text: '.',
-                                  ),
                                 ],
                               ),
                             ),
@@ -522,7 +516,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Text(
                         'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
                         'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
-                        'to be manually scrolled and some elements might look too big).',
+                        'to be manually scrolled and some elements might look too big)',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,
@@ -1184,6 +1178,58 @@ class _SettingsPageState extends State<SettingsPage> {
         }
         setState(() {
           _timeZoneValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _dateInClockDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.showDateInClock,
+      items: [
+        DropdownMenuItem(
+          value: "off",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "dayfirst",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "On (d/m)",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "monthfirst",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "On (m/d)",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.changeShowDateInClock = value;
         });
       },
     );

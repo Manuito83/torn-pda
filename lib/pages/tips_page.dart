@@ -20,6 +20,7 @@ enum TipClass {
   profile,
   chaining,
   trading,
+  deepLinks,
 }
 
 class ExpandableTip {
@@ -49,6 +50,7 @@ class _TipsPageState extends State<TipsPage> {
   var _profileTipsList = <ExpandableTip>[];
   var _chainingTipsList = <ExpandableTip>[];
   var _tradingTipsList = <ExpandableTip>[];
+  var _deepLinksTipsList = <ExpandableTip>[];
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _TipsPageState extends State<TipsPage> {
     _profileTipsList = buildProfileSectionTips();
     _chainingTipsList = buildChainingTips();
     _tradingTipsList = buildTradingTips();
+    _deepLinksTipsList = buildDeepLinksTips();
 
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'tips'});
   }
@@ -117,6 +120,10 @@ class _TipsPageState extends State<TipsPage> {
               Text("TRADING"),
               SizedBox(height: 10),
               tipsPanels(TipClass.trading),
+              SizedBox(height: 25),
+              Text("APP LINKS"),
+              SizedBox(height: 10),
+              tipsPanels(TipClass.deepLinks),
               SizedBox(height: 60),
             ],
           ),
@@ -163,6 +170,9 @@ class _TipsPageState extends State<TipsPage> {
         break;
       case TipClass.trading:
         listToShow = _tradingTipsList;
+        break;
+      case TipClass.deepLinks:
+        listToShow = _deepLinksTipsList;
         break;
     }
 
@@ -471,11 +481,32 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
+        headerValue: "Sync with Arson Warehouse",
+        expandedValue: "If you are a user of Arson Warehouse (AWH), tap on the options icon while in the Trades section in game. "
+            "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "Quick vault access",
         expandedValue:
             "While in the Trade section in game, you'll have a button for quick access to your vaults available in the main app bar.\n\n"
             "After tapping on it you will be redirected to your choice and the full browser close icon will change from a cross to an arrow, "
             "indicating that it will redirect you back to the trade instead of closing the browser.",
+      ),
+    );
+    return tips;
+  }
+
+  List<ExpandableTip> buildDeepLinksTips() {
+    var tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "Deep/custom app links",
+        expandedValue: "Torn PDA supports what's called deep linking or custom URLs. You can create a link outside "
+        "of the application with the following scheme 'tornpda://', where the rest of the URL remains unchanged."
+        "\n\nExample: 'tornpda://www.torn.com/gym.php' should be recognized as a valid URL and open Torn PDA with "
+        "a browser pointing to the gym.",
       ),
     );
     return tips;

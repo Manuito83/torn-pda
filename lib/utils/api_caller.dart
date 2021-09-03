@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 // Package imports:
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 // Project imports:
@@ -120,10 +121,11 @@ class ApiError {
 class TornApiCaller {
   String apiKey;
   String queryId;
+  int limit;
 
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.ownBasic(this.apiKey);
-  TornApiCaller.ownExtended(this.apiKey);
+  TornApiCaller.ownExtended(this.apiKey, this.limit);
   TornApiCaller.ownMisc(this.apiKey);
   TornApiCaller.bazaar(this.apiKey);
   TornApiCaller.otherProfile(this.apiKey, this.queryId);
@@ -166,7 +168,7 @@ class TornApiCaller {
 
   Future<dynamic> get getProfileExtended async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended).then((value) {
+    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended, limit: limit).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -202,8 +204,7 @@ class TornApiCaller {
 
   Future<dynamic> get getOtherProfile async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.otherProfile)
-        .then((value) {
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.otherProfile).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -215,8 +216,7 @@ class TornApiCaller {
 
   Future<dynamic> get getTarget async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.target)
-        .then((value) {
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.target).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -368,8 +368,7 @@ class TornApiCaller {
 
   Future<dynamic> get getFriends async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.friends)
-        .then((value) {
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.friends).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -385,8 +384,7 @@ class TornApiCaller {
 
   Future<dynamic> get getProperty async {
     dynamic apiResult;
-    await _apiCall(ApiType.property, prefix: this.queryId, apiSelection: ApiSelection.property)
-        .then((value) {
+    await _apiCall(ApiType.property, prefix: this.queryId, apiSelection: ApiSelection.property).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -402,8 +400,7 @@ class TornApiCaller {
 
   Future<dynamic> get getAllStocks async {
     dynamic apiResult;
-    await _apiCall(ApiType.torn, prefix: this.queryId, apiSelection: ApiSelection.stocks)
-        .then((value) {
+    await _apiCall(ApiType.torn, prefix: this.queryId, apiSelection: ApiSelection.stocks).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -419,8 +416,7 @@ class TornApiCaller {
 
   Future<dynamic> get getUserStocks async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.stocks)
-        .then((value) {
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.stocks).then((value) {
       apiResult = value;
     });
     if (apiResult is http.Response) {
@@ -434,7 +430,8 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> _apiCall(ApiType apiType, {String prefix, ApiSelection apiSelection}) async {
+  Future<dynamic> _apiCall(ApiType apiType,
+      {String prefix, @required ApiSelection apiSelection, int limit = 100}) async {
     String url = 'https://api.torn.com/';
     switch (apiType) {
       case ApiType.user:
@@ -512,7 +509,7 @@ class TornApiCaller {
         url += '$prefix?selections=stocks';
         break;
     }
-    url += '&key=$apiKey&comment=PDA-App';
+    url += '&key=$apiKey&comment=PDA-App&limit=$limit';
 
     //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
     //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2

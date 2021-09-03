@@ -61,11 +61,13 @@ class _TctClockState extends State<TctClock> {
           ),
           Text(
             'TCT',
-            style: TextStyle(fontSize: settingsProvider.showDateInClock ? 10 : 14),
+            style: TextStyle(fontSize: settingsProvider.showDateInClock != "off" ? 10 : 14),
           ),
-          if (settingsProvider.showDateInClock)
+          if (settingsProvider.showDateInClock != "off")
             Text(
-              DateFormat('dd MMM').format(_currentTctTime).toUpperCase(),
+              settingsProvider.showDateInClock == "dayfirst"
+                  ? DateFormat('dd MMM').format(_currentTctTime).toUpperCase()
+                  : DateFormat('MMM dd').format(_currentTctTime).toUpperCase(),
               style: TextStyle(fontSize: 10),
             ),
         ],

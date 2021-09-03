@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -14,14 +15,14 @@ class StocksOptionsDialog extends StatefulWidget {
   final Function callBack;
   final bool inventoryEnabled;
   final bool showArrivalTime;
-  final TravelTicket ticket;
+  final SettingsProvider settingsProvider;
 
   StocksOptionsDialog({
     @required this.capacity,
     @required this.callBack,
     @required this.inventoryEnabled,
     @required this.showArrivalTime,
-    @required this.ticket,
+    @required this.settingsProvider,
   });
 
   @override
@@ -42,7 +43,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     _capacity = widget.capacity;
     _inventoryEnabled = widget.inventoryEnabled;
     _showArrivalTime = widget.showArrivalTime;
-    _ticket = widget.ticket;
+    _ticket = widget.settingsProvider.travelTicket;
   }
 
   @override
@@ -223,7 +224,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
 
   DropdownButton _timeFormatDropdown() {
     return DropdownButton<TravelTicket>(
-      value: _ticket,
+      value: widget.settingsProvider.travelTicket,
       items: [
         DropdownMenuItem(
           value: TravelTicket.standard,
@@ -280,7 +281,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
       ],
       onChanged: (value) {
         setState(() {
-          _ticket = value;
+          widget.settingsProvider.changeTravelTicket = value;
         });
         _callBackValues();
       },
@@ -288,26 +289,9 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   }
 
   void _callBackValues() {
-    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _ticket);
+    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime);
     Prefs().setStockCapacity(_capacity);
     Prefs().setShowForeignInventory(_inventoryEnabled);
     Prefs().setShowArrivalTime(_showArrivalTime);
-
-    var ticketString;
-    switch (_ticket) {
-      case TravelTicket.standard:
-        ticketString = "standard";
-        break;
-      case TravelTicket.private:
-        ticketString = "private";
-        break;
-      case TravelTicket.wlt:
-        ticketString = "wlt";
-        break;
-      case TravelTicket.business:
-        ticketString = "business";
-        break;
-    }
-    Prefs().setTravelTicket(ticketString);
   }
 }

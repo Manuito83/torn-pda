@@ -39,7 +39,7 @@ class Prefs {
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
-  final String _kShowDateInClock = "pda_showDateInClock";
+  final String _kShowDateInClockString = "pda_showDateInClockString"; // changed from bool to string
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
@@ -126,6 +126,8 @@ class Prefs {
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
+  // Jail
+  final String _kJailModel = "pda_jailOptions";
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
@@ -138,6 +140,8 @@ class Prefs {
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kHideTabs = "pda_hideTabs";
+  // ShowCases (with flutter_showcaseview)
+  final String _kShowCases = "pda_showCases";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -503,14 +507,14 @@ class Prefs {
     return prefs.setString(_kDefaultTimeZone, value);
   }
 
-  Future<bool> getShowDateInClock() async {
+  Future<String> getShowDateInClock() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowDateInClock) ?? true;
+    return prefs.getString(_kShowDateInClockString) ?? "dayfirst";
   }
 
-  Future<bool> setShowDateInClock(bool value) async {
+  Future<bool> setShowDateInClock(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowDateInClock, value);
+    return prefs.setString(_kShowDateInClockString, value);
   }
 
   /// ----------------------------
@@ -1493,6 +1497,19 @@ class Prefs {
   }
 
   /// -----------------------------
+  /// METHODS FOR JAIL
+  /// -----------------------------
+  Future<String> getJailModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kJailModel) ?? "";
+  }
+
+  Future<bool> setJailModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kJailModel, value);
+  }
+
+  /// -----------------------------
   /// METHODS FOR DATA STOCK MARKET
   /// -----------------------------
   Future<String> getDataStockMarket() async {
@@ -1577,4 +1594,19 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kHideTabs, value);
   }
+
+  /// ----------------------------
+  /// Methods for show cases
+  /// ----------------------------
+  /// tabs_general -> for tab use information in webview_stackview
+  Future<List<String>> getShowCases() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kShowCases) ?? <String>[];
+  }
+
+  Future<bool> setShowCases(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kShowCases, value);
+  }
+
 }

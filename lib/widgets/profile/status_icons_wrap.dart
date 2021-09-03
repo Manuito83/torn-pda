@@ -20,11 +20,11 @@ final allowedIcons = <String, Map<String, String>>{
   "icon41": {"url": "", "name" : "Booster (12-18hr)"},
   "icon42": {"url": "", "name" : "Booster (18-24hr)"},
   "icon43": {"url": "", "name" : "Booster (24hr+)"},
-  "icon44": {"url": "", "name" : "Medical (0-6hr)"},
-  "icon45": {"url": "", "name" : "Medical (6-12hr)"},
-  "icon46": {"url": "", "name" : "Medical (12-18hr)"},
-  "icon47": {"url": "", "name" : "Medical (18-24hr)"},
-  "icon48": {"url": "", "name" : "Medical (24hr+)"},
+  "icon44": {"url": "", "name" : "Medical (0-90m)"},
+  "icon45": {"url": "", "name" : "Medical (90-180m)"},
+  "icon46": {"url": "", "name" : "Medical (180-270m)"},
+  "icon47": {"url": "", "name" : "Medical (270-360m)"},
+  "icon48": {"url": "", "name" : "Medical (360m+)"},
   "icon49": {"url": "", "name" : "Drug (0-10m)"},
   "icon50": {"url": "", "name" : "Drug (10-60m)"},
   "icon51": {"url": "", "name" : "Drug (1-2hr)"},
@@ -40,6 +40,7 @@ final allowedIcons = <String, Map<String, String>>{
   "icon65": {"url": "", "name" : "Radiation (35-50%)"},
   "icon66": {"url": "", "name" : "Radiation (51-67%)"},
   "icon67": {"url": "", "name" : "Radiation (68%+)"},
+  "icon68": {"url": "", "name": "Reading book"},
   "icon75": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (defending)"},
   "icon76": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (assaulting)"},
   "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (4-6%)"},
@@ -51,7 +52,7 @@ final allowedIcons = <String, Map<String, String>>{
 };
 
 class StatusIconsWrap extends StatelessWidget {
-  StatusIconsWrap({
+  const StatusIconsWrap({
     Key key,
     @required this.user,
     @required this.openBrowser,
@@ -66,7 +67,7 @@ class StatusIconsWrap extends StatelessWidget {
   Widget build(BuildContext context) {
     List<Widget> iconList = <Widget>[];
     if (user.icons is TornIcons) {
-      iconList = _fillIcons(user.icons);
+      iconList = _fillIcons(user.icons as TornIcons);
     }
 
     return Wrap(
@@ -78,12 +79,12 @@ class StatusIconsWrap extends StatelessWidget {
 
   List<Widget> _fillIcons(TornIcons icons) {
     final iconList = <Widget>[];
-    var parsedIcons = icons.toJson();
+    final parsedIcons = icons.toJson();
 
     parsedIcons.forEach((iconNumber, details) {
       if (details != null) {
         if (allowedIcons.containsKey(iconNumber) && !settingsProvider.iconsFiltered.contains(iconNumber)) {
-          var icon = Image.asset('images/icons/status/${iconNumber}.png', width: 18);
+          final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
           iconList.add(
             GestureDetector(
               child: icon,
@@ -95,18 +96,18 @@ class StatusIconsWrap extends StatelessWidget {
                     color: Colors.white,
                   ),
                   contentColor: Colors.blue[700],
-                  duration: Duration(seconds: 5),
-                  contentPadding: EdgeInsets.all(10),
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
                 );
               },
               onDoubleTap: () {
-                String url = _constructUrl(iconNumber);
-                bool dialog = settingsProvider.useQuickBrowser || false;
+                final String url = _constructUrl(iconNumber);
+                final bool dialog = settingsProvider.useQuickBrowser || false;
                 openBrowser(url: url, dialogRequested: dialog);
               },
               onLongPress: () {
-                String url = _constructUrl(iconNumber);
-                bool dialog = false;
+                final String url = _constructUrl(iconNumber);
+                const bool dialog = false;
                 openBrowser(url: url, dialogRequested: dialog);
               },
             ),

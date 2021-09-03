@@ -15,8 +15,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 final firestore = _FirestoreHelper();
 
 class _FirestoreHelper {
-  FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
   FirebaseUserModel _firebaseUserModel;
 
@@ -33,8 +33,8 @@ class _FirestoreHelper {
     if (_alreadyUploaded && !userTriggered) return;
     _alreadyUploaded = true;
     _firebaseUserModel = FirebaseUserModel();
-    var platform = Platform.isAndroid ? "android" : "ios";
-    var token = await _messaging.getToken();
+    final platform = Platform.isAndroid ? "android" : "ios";
+    final token = await _messaging.getToken();
     await _firestore.collection("players").doc(_uid).set(
       {
         "uid": _uid,
@@ -49,6 +49,7 @@ class _FirestoreHelper {
         "racingSent": true,
         "platform": platform,
         "version": appVersion,
+        "faction": profile.faction.factionId,
 
         /// This is a unique identifier to identify this user and target notification
         "token": token,
@@ -91,7 +92,7 @@ class _FirestoreHelper {
   }
 
   Future<DocumentSnapshot> getStockInformation(String codeName) async {
-    return await _firestore.collection("stocks-main").doc(codeName).get();
+    return _firestore.collection("stocks-main").doc(codeName).get();
   }
 
   Future<bool> updateActiveRestockAlerts(Map restockMap) async {

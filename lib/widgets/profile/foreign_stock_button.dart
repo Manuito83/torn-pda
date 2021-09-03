@@ -46,6 +46,7 @@ class ForeignStockButton extends StatelessWidget {
               updateCallback();
             } else {
               launchBrowser(url: 'https://www.torn.com/travelagency.php', dialogRequested: false);
+              updateCallback();
             }
           }
         }

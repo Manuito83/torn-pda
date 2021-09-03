@@ -12,10 +12,59 @@ enum TravelTicket {
 }
 
 class TravelTimes {
+  static CountryName getCountry({@required String plainName}) {
+    switch (plainName) {
+      case "Torn":
+        return CountryName.TORN;
+        break;
+      case "Argentina":
+        return CountryName.ARGENTINA;
+        break;
+      case "Canada":
+        return CountryName.CANADA;
+        break;
+      case "Cayman Islands":
+        return CountryName.CAYMAN_ISLANDS;
+        break;
+      case "China":
+        return CountryName.CHINA;
+        break;
+      case "Hawaii":
+        return CountryName.HAWAII;
+        break;
+      case "Japan":
+        return CountryName.JAPAN;
+        break;
+      case "Mexico":
+        return CountryName.MEXICO;
+        break;
+      case "South Africa":
+        return CountryName.SOUTH_AFRICA;
+        break;
+      case "Switzerland":
+        return CountryName.SWITZERLAND;
+        break;
+      case "UAE":
+        return CountryName.UAE;
+        break;
+      case "United Kingdom":
+        return CountryName.UNITED_KINGDOM;
+        break;
+    }
+    return CountryName.TORN;
+  }
+
+  /// Provide either a capitalized ("Argentina") name for [countryName] or a CountryName for [code]
   static int travelTimeMinutesOneWay({
-    @required CountryName country,
+    String countryName = "",
+    CountryName countryCode = CountryName.TORN,
     @required TravelTicket ticket,
   }) {
+    CountryName code = countryCode;
+
+    if (countryName.isNotEmpty) {
+      code = getCountry(plainName: countryName);
+    }
 
     var travelTicket = ticket;
 
@@ -86,7 +135,7 @@ class TravelTimes {
         break;
     }
 
-    switch (country) {
+    switch (code) {
       case CountryName.ARGENTINA:
         return tripArgentina;
         break;
