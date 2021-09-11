@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 //import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
+import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -44,8 +46,8 @@ class _ChainingPageState extends State<ChainingPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    bool isThemeLight = _themeProvider.currentTheme == AppTheme.light ? true : false;
-    double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
+    final bool isThemeLight = _themeProvider.currentTheme == AppTheme.light || false;
+    final double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
     return Scaffold(
       extendBody: true,
       body: FutureBuilder(
@@ -68,6 +70,9 @@ class _ChainingPageState extends State<ChainingPage> {
                       AttacksPage(
                         userKey: _myCurrentKey,
                       ),
+                      WarPage (
+                        userKey: _myCurrentKey,
+                      ),
                       /*
                       TacPage(
                         userKey: _myCurrentKey,
@@ -78,7 +83,6 @@ class _ChainingPageState extends State<ChainingPage> {
                 ),
                 if (!_isAppBarTop)
                   BounceTabBar(
-                    initialIndex: 0,
                     onTabChanged: (index) {
                       setState(() {
                         _currentPage = index;
@@ -92,7 +96,11 @@ class _ChainingPageState extends State<ChainingPage> {
                         width: 28,
                       ),
                       Icon(
-                        Icons.person,
+                        Icons.people,
+                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                      ),
+                      Icon(
+                        MdiIcons.wall,
                         color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
@@ -102,13 +110,12 @@ class _ChainingPageState extends State<ChainingPage> {
               ],
             );
           } else {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
         },
       ),
       bottomNavigationBar: _isAppBarTop
           ? BounceTabBar(
-              initialIndex: 0,
               onTabChanged: (index) {
                 setState(() {
                   _currentPage = index;
@@ -122,14 +129,18 @@ class _ChainingPageState extends State<ChainingPage> {
                   width: 28,
                 ),
                 Icon(
-                  Icons.person,
+                  Icons.people,
+                  color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                ),
+                Icon(
+                  MdiIcons.wall,
                   color: isThemeLight ? Colors.white : _themeProvider.mainText,
                 ),
                 // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
               ],
               locationTop: false,
             )
-          : SizedBox.shrink(),
+          : const SizedBox.shrink(),
     );
   }
 
@@ -142,7 +153,7 @@ class _ChainingPageState extends State<ChainingPage> {
   */
 
   Future _restorePreferences() async {
-    var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    final userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _myCurrentKey = userDetails.basic.userApiKey;
     //_tacEnabled = await Prefs().getTACEnabled();
 

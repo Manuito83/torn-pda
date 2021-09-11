@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -181,7 +182,7 @@ class _MyAppState extends State<MyApp> {
         textDirection: TextDirection.ltr,
         child: Stack(
           children: [
-            MaterialApp(
+            GetMaterialApp(
               builder: BotToastInit(),
               navigatorObservers: [BotToastNavigatorObserver()],
               title: 'Torn PDA',

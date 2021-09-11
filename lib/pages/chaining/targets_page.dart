@@ -65,10 +65,10 @@ class TargetsPage extends StatefulWidget {
 }
 
 class _TargetsPageState extends State<TargetsPage> {
-  final _searchController = new TextEditingController();
-  final _addIdController = new TextEditingController();
+  final _searchController = TextEditingController();
+  final _addIdController = TextEditingController();
 
-  var _addFormKey = GlobalKey<FormState>();
+  final _addFormKey = GlobalKey<FormState>();
 
   Future _preferencesLoaded;
 
@@ -79,9 +79,9 @@ class _TargetsPageState extends State<TargetsPage> {
   SettingsProvider _settingsProvider;
 
   // For appBar search
-  Icon _searchIcon = Icon(Icons.search);
-  Widget _appBarText = Text("Targets");
-  var _focusSearch = new FocusNode();
+  Icon _searchIcon = const Icon(Icons.search);
+  Widget _appBarText = const Text("Targets");
+  final _focusSearch = FocusNode();
 
   /// Strictly whether we button is enabled in options
   bool _yataButtonInProgress = true;
@@ -127,7 +127,7 @@ class _TargetsPageState extends State<TargetsPage> {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      drawer: Drawer(),
+      drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -137,7 +137,7 @@ class _TargetsPageState extends State<TargetsPage> {
           : null,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
         child: MediaQuery.of(context).orientation == Orientation.portrait
             ? _mainColumn()
             : SingleChildScrollView(
@@ -147,10 +147,10 @@ class _TargetsPageState extends State<TargetsPage> {
     );
   }
 
-  _mainColumn() {
+  Widget _mainColumn() {
     return Column(
       children: <Widget>[
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -162,7 +162,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   primary: _themeProvider.background,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
-                    side: BorderSide(width: 2, color: Colors.blueGrey),
+                    side: const BorderSide(width: 2, color: Colors.blueGrey),
                   ),
                 ),
                 child: Icon(
@@ -175,7 +175,7 @@ class _TargetsPageState extends State<TargetsPage> {
                 },
               ),
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             ButtonTheme(
               minWidth: 1.0,
               child: ElevatedButton(
@@ -184,7 +184,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   primary: _themeProvider.background,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
-                    side: BorderSide(width: 2, color: Colors.blueGrey),
+                    side: const BorderSide(width: 2, color: Colors.blueGrey),
                   ),
                 ),
                 child: Icon(
@@ -193,7 +193,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   size: 20,
                 ),
                 onPressed: () async {
-                  var updateResult = await _targetsProvider.updateAllTargets();
+                  final updateResult = await _targetsProvider.updateAllTargets();
                   if (mounted) {
                     if (updateResult.success) {
                       BotToast.showText(
@@ -201,26 +201,26 @@ class _TargetsPageState extends State<TargetsPage> {
                             ? 'Successfully updated '
                                 '${updateResult.numberSuccessful} targets!'
                             : 'No targets to update!',
-                        textStyle: TextStyle(
+                        textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
                         ),
                         contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
-                        duration: Duration(seconds: 3),
-                        contentPadding: EdgeInsets.all(10),
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
                       );
                     } else {
                       BotToast.showText(
                         text: 'Update with errors: ${updateResult.numberErrors} errors '
                             'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
                             'total targets!',
-                        textStyle: TextStyle(
+                        textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
                         ),
                         contentColor: Colors.red,
-                        duration: Duration(seconds: 3),
-                        contentPadding: EdgeInsets.all(10),
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
                       );
                     }
                   }
@@ -234,7 +234,7 @@ class _TargetsPageState extends State<TargetsPage> {
           userKey: widget.userKey,
           alwaysDarkBackground: false,
         ),
-        if (_targetsProvider.currentColorFilterOut.length > 0)
+        if (_targetsProvider.currentColorFilterOut.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: Text(
@@ -256,8 +256,8 @@ class _TargetsPageState extends State<TargetsPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: _appBarText,
-      leading: new IconButton(
-        icon: new Icon(Icons.menu),
+      leading: IconButton(
+        icon: const Icon(Icons.menu),
         onPressed: () {
           final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
@@ -282,7 +282,7 @@ class _TargetsPageState extends State<TargetsPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
                       Padding(
-                        padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                        padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
                         child: Row(
                           children: <Widget>[
                             Flexible(
@@ -300,7 +300,7 @@ class _TargetsPageState extends State<TargetsPage> {
                                       fontSize: 12,
                                     ),
                                   ),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                   ),
@@ -319,7 +319,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   Icons.search,
                   color: myColor,
                 );
-                _appBarText = Text("Targets");
+                _appBarText = const Text("Targets");
               }
             });
           },
@@ -333,12 +333,12 @@ class _TargetsPageState extends State<TargetsPage> {
               if (_yataButtonEnabled) {
                 if (_yataButtonInProgress) {
                   return IconButton(
-                    icon: Icon(MdiIcons.alphaYCircleOutline),
+                    icon: const Icon(MdiIcons.alphaYCircleOutline),
                     onPressed: () async {
                       setState(() {
                         _yataButtonInProgress = false;
                       });
-                      var yataTargets = await _targetsProvider.getTargetsFromYata();
+                      final yataTargets = await _targetsProvider.getTargetsFromYata();
                       if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
                         _openYataDialog(yataTargets);
                       } else {
@@ -350,13 +350,13 @@ class _TargetsPageState extends State<TargetsPage> {
                         }
                         BotToast.showText(
                           text: error,
-                          textStyle: TextStyle(
+                          textStyle: const TextStyle(
                             fontSize: 13,
                             color: Colors.white,
                           ),
                           contentColor: Colors.red[800],
-                          duration: Duration(seconds: 5),
-                          contentPadding: EdgeInsets.all(10),
+                          duration: const Duration(seconds: 5),
+                          contentPadding: const EdgeInsets.all(10),
                         );
                       }
                       setState(() {
@@ -367,10 +367,10 @@ class _TargetsPageState extends State<TargetsPage> {
                 } else {
                   return Theme(
                     data: ThemeData(),
-                    child: SizedBox(
+                    child: const SizedBox(
                       width: 45,
                       child: Center(
-                        child: Container(
+                        child: SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
@@ -382,15 +382,15 @@ class _TargetsPageState extends State<TargetsPage> {
                   );
                 }
               } else {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               }
             } else {
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             }
           },
         ),
         PopupMenuButton<TargetSort>(
-          icon: Icon(
+          icon: const Icon(
             Icons.sort,
           ),
           onSelected: _selectSortPopup,
@@ -400,7 +400,7 @@ class _TargetsPageState extends State<TargetsPage> {
                 value: choice,
                 child: Text(
                   choice.description,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                   ),
                 ),
@@ -421,157 +421,146 @@ class _TargetsPageState extends State<TargetsPage> {
   }
 
   Future<void> _showAddDialog(BuildContext _) {
-    var targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     return showDialog<void>(
-        context: _,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            content: SingleChildScrollView(
-              child: Stack(
-                children: <Widget>[
-                  SingleChildScrollView(
-                    child: Container(
-                      padding: EdgeInsets.only(
-                        top: 45,
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                      ),
-                      margin: EdgeInsets.only(top: 30),
-                      decoration: new BoxDecoration(
-                        color: _themeProvider.background,
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10.0,
-                            offset: const Offset(0.0, 10.0),
+      context: _,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 30),
+                    decoration: BoxDecoration(
+                      color: _themeProvider.background,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _addFormKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min, // To make the card compact
+                        children: <Widget>[
+                          TextFormField(
+                            style: const TextStyle(fontSize: 14),
+                            controller: _addIdController,
+                            maxLength: 10,
+                            minLines: 1,
+                            maxLines: 2,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              counterText: "",
+                              border: OutlineInputBorder(),
+                              labelText: 'Insert player ID',
+                            ),
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return "Cannot be empty!";
+                              }
+                              final n = num.tryParse(value);
+                              if (n == null) {
+                                return '$value is not a valid ID!';
+                              }
+                              _addIdController.text = value.trim();
+                              return null;
+                            },
                           ),
+                          const SizedBox(height: 16.0),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              TextButton(
+                                child: const Text("Add"),
+                                onPressed: () async {
+                                  if (_addFormKey.currentState.validate()) {
+                                    // Get rid of dialog first, so that it can't
+                                    // be pressed twice
+                                    Navigator.of(context).pop();
+                                    // Copy controller's text ot local variable
+                                    // early and delete the global, so that text
+                                    // does not appear again in case of failure
+                                    final inputId = _addIdController.text;
+                                    _addIdController.text = '';
+                                    
+                                    final AddTargetResult tryAddTarget = await targetsProvider.addTarget(
+                                      targetId: inputId,
+                                      attacks: await _targetsProvider.getAttacks(),
+                                    );
+                                    
+                                    BotToast.showText(
+                                      text: tryAddTarget.success
+                                          ? 'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'
+                                          : 'Error adding $inputId. ${tryAddTarget.errorReason}',
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700],
+                                      duration: const Duration(seconds: 3),
+                                      contentPadding: const EdgeInsets.all(10),
+                                    );
+                                  }
+                                },
+                              ),
+                              TextButton(
+                                child: const Text("Cancel"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  _addIdController.text = '';
+                                },
+                              ),
+                            ],
+                          )
                         ],
                       ),
-                      child: Form(
-                        key: _addFormKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min, // To make the card compact
-                          children: <Widget>[
-                            TextFormField(
-                              style: TextStyle(fontSize: 14),
-                              controller: _addIdController,
-                              maxLength: 10,
-                              minLines: 1,
-                              maxLines: 2,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                counterText: "",
-                                border: OutlineInputBorder(),
-                                labelText: 'Insert player ID',
-                              ),
-                              validator: (value) {
-                                if (value.isEmpty) {
-                                  return "Cannot be empty!";
-                                }
-                                final n = num.tryParse(value);
-                                if (n == null) {
-                                  return '$value is not a valid ID!';
-                                }
-                                _addIdController.text = value.trim();
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: 16.0),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: <Widget>[
-                                TextButton(
-                                  child: Text("Add"),
-                                  onPressed: () async {
-                                    if (_addFormKey.currentState.validate()) {
-                                      // Get rid of dialog first, so that it can't
-                                      // be pressed twice
-                                      Navigator.of(context).pop();
-                                      // Copy controller's text ot local variable
-                                      // early and delete the global, so that text
-                                      // does not appear again in case of failure
-                                      var inputId = _addIdController.text;
-                                      _addIdController.text = '';
-                                      AddTargetResult tryAddTarget = await targetsProvider.addTarget(
-                                        targetId: inputId,
-                                        attacks: await _targetsProvider.getAttacks(),
-                                      );
-                                      if (tryAddTarget.success) {
-                                        BotToast.showText(
-                                          text: 'Added ${tryAddTarget.targetName} '
-                                              '[${tryAddTarget.targetId}]',
-                                          textStyle: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white,
-                                          ),
-                                          contentColor: Colors.green,
-                                          duration: Duration(seconds: 3),
-                                          contentPadding: EdgeInsets.all(10),
-                                        );
-                                      } else if (!tryAddTarget.success) {
-                                        BotToast.showText(
-                                          text: 'Error adding $inputId.'
-                                              ' ${tryAddTarget.errorReason}',
-                                          textStyle: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.white,
-                                          ),
-                                          contentColor: Colors.green,
-                                          duration: Duration(seconds: 3),
-                                          contentPadding: EdgeInsets.all(10),
-                                        );
-                                      }
-                                    }
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text("Cancel"),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    _addIdController.text = '';
-                                  },
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      ),
                     ),
                   ),
-                  Positioned(
-                    left: 16,
-                    right: 16,
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
                     child: CircleAvatar(
-                      radius: 26,
-                      backgroundColor: _themeProvider.background,
-                      child: CircleAvatar(
-                        backgroundColor: _themeProvider.mainText,
-                        radius: 22,
-                        child: SizedBox(
-                          height: 28,
-                          width: 28,
-                          child: Image.asset(
-                            'images/icons/ic_target_account_black_48dp.png',
-                            color: _themeProvider.background,
-                          ),
+                      backgroundColor: _themeProvider.mainText,
+                      radius: 22,
+                      child: SizedBox(
+                        height: 28,
+                        width: 28,
+                        child: Image.asset(
+                          'images/icons/ic_target_account_black_48dp.png',
+                          color: _themeProvider.background,
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 
   void onSearchInputTextChange() {
@@ -609,7 +598,7 @@ class _TargetsPageState extends State<TargetsPage> {
 
   Widget _optionsPopUp() {
     return PopupMenuButton<TargetsOptions>(
-      icon: Icon(Icons.settings),
+      icon: const Icon(Icons.settings),
       onSelected: _openOption,
       itemBuilder: (BuildContext context) {
         return _popupOptionsChoices.map((TargetsOptions choice) {
@@ -618,7 +607,7 @@ class _TargetsPageState extends State<TargetsPage> {
             child: Row(
               children: [
                 Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(choice.description),
               ],
             ),
@@ -628,10 +617,10 @@ class _TargetsPageState extends State<TargetsPage> {
     );
   }
 
-  void _openOption(TargetsOptions choice) async {
+  Future _openOption(TargetsOptions choice) async {
     switch (choice.description) {
       case "Options":
-        TargetsOptionsReturn newOptions = await Navigator.push(
+        final TargetsOptionsReturn newOptions = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TargetsOptionsPage(),
@@ -667,48 +656,54 @@ class _TargetsPageState extends State<TargetsPage> {
   Future<void> _openYataDialog(YataTargetsImportModel importedTargets) {
     // Before opening the dialog, we'll see how many new targets we have, so that we can
     // show a count and some details before importing/exporting
-    List<TargetsOnlyYata> onlyYata = [];
-    List<TargetsOnlyLocal> onlyLocal = [];
-    List<TargetsBothSides> bothSides = [];
+    final List<TargetsOnlyYata> onlyYata = [];
+    final List<TargetsOnlyLocal> onlyLocal = [];
+    final List<TargetsBothSides> bothSides = [];
     // If we have no targets locally, we'll import all incoming (we assume that [bothSides] and
     // [onlyLocal] are zero
     if (_targetsProvider.allTargets.isEmpty) {
       importedTargets.targets.forEach((key, yataTarget) {
-        onlyYata.add(TargetsOnlyYata()
-          ..id = key
-          ..name = yataTarget.name
-          ..noteYata = yataTarget.note
-          ..colorYata = yataTarget.color);
+        onlyYata.add(
+          TargetsOnlyYata()
+            ..id = key
+            ..name = yataTarget.name
+            ..noteYata = yataTarget.note
+            ..colorYata = yataTarget.color,
+        );
       });
     }
     // Otherwise, we'll see how many are new or only local
     else {
       importedTargets.targets.forEach((key, yataTarget) {
         bool foundLocally = false;
-        _targetsProvider.allTargets.forEach((localTarget) {
+        for (final localTarget in _targetsProvider.allTargets) {
           if (!foundLocally) {
             if (key == localTarget.playerId.toString()) {
-              bothSides.add(TargetsBothSides()
-                ..id = key
-                ..name = yataTarget.name
-                ..noteYata = yataTarget.note
-                ..noteLocal = localTarget.personalNote
-                ..colorLocal = _yataColorCode(localTarget.personalNoteColor)
-                ..colorYata = yataTarget.color);
+              bothSides.add(
+                TargetsBothSides()
+                  ..id = key
+                  ..name = yataTarget.name
+                  ..noteYata = yataTarget.note
+                  ..noteLocal = localTarget.personalNote
+                  ..colorLocal = _yataColorCode(localTarget.personalNoteColor)
+                  ..colorYata = yataTarget.color,
+              );
               foundLocally = true;
             }
           }
-        });
+        }
         if (!foundLocally) {
-          onlyYata.add(TargetsOnlyYata()
-            ..id = key
-            ..name = yataTarget.name
-            ..noteYata = yataTarget.note
-            ..colorYata = yataTarget.color);
+          onlyYata.add(
+            TargetsOnlyYata()
+              ..id = key
+              ..name = yataTarget.name
+              ..noteYata = yataTarget.note
+              ..colorYata = yataTarget.color,
+          );
         }
       });
 
-      _targetsProvider.allTargets.forEach((localTarget) {
+      for (final localTarget in _targetsProvider.allTargets) {
         bool foundInYata = false;
         importedTargets.targets.forEach((key, yataTarget) {
           if (!foundInYata) {
@@ -718,13 +713,15 @@ class _TargetsPageState extends State<TargetsPage> {
           }
         });
         if (!foundInYata) {
-          onlyLocal.add(TargetsOnlyLocal()
-            ..id = localTarget.playerId.toString()
-            ..name = localTarget.name
-            ..noteLocal = localTarget.personalNote
-            ..colorLocal = _yataColorCode(localTarget.personalNoteColor));
+          onlyLocal.add(
+            TargetsOnlyLocal()
+              ..id = localTarget.playerId.toString()
+              ..name = localTarget.name
+              ..noteLocal = localTarget.personalNote
+              ..colorLocal = _yataColorCode(localTarget.personalNoteColor),
+          );
         }
-      });
+      }
     }
 
     return showDialog<void>(
@@ -774,35 +771,34 @@ class _TargetsPageState extends State<TargetsPage> {
               children: <Widget>[
                 SingleChildScrollView(
                   child: Container(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 45,
                       bottom: 16,
                       left: 16,
                       right: 16,
                     ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
                       color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
+                          offset: Offset(0.0, 10.0),
                         ),
                       ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min, // To make the card compact
                       children: <Widget>[
-                        Flexible(
+                        const Flexible(
                           child: Text(
                             "CAUTION",
                             style: TextStyle(fontSize: 13, color: Colors.red),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "This will wipe all your targets (consider performing a backup or "
@@ -810,26 +806,26 @@ class _TargetsPageState extends State<TargetsPage> {
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Flexible(
                           child: Text(
                             "Are you sure?",
                             style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
                             TextButton(
-                              child: Text("Wipe!"),
+                              child: const Text("Wipe!"),
                               onPressed: () {
                                 _targetsProvider.wipeAllTargets();
                                 Navigator.of(context).pop();
                               },
                             ),
                             TextButton(
-                              child: Text("Oh no!"),
+                              child: const Text("Oh no!"),
                               onPressed: () {
                                 Navigator.of(context).pop();
                               },
@@ -849,7 +845,7 @@ class _TargetsPageState extends State<TargetsPage> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.background,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(Icons.delete_forever_outlined),
