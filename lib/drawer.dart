@@ -461,7 +461,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1000));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       if (launchBrowser) {
         await _webViewProvider.openBrowserPreference(
