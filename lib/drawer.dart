@@ -121,7 +121,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         if (shortcutType == 'open_torn') {
           context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
-                url: "http://www.torn.com",
+                url: "https://www.torn.com",
                 useDialog: _settingsProvider.useQuickBrowser,
               );
         }
