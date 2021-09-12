@@ -57,7 +57,7 @@ class WebViewProvider extends ChangeNotifier {
     _hideTabs = await Prefs().getHideTabs();
 
     // Add the main opener
-    addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
+    await addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
     _currentTab = 0;
   }
 
@@ -92,13 +92,13 @@ class WebViewProvider extends ChangeNotifier {
     _currentTab = 0;
   }
 
-  void addTab({
+  Future addTab({
     String url = "https://www.torn.com",
     String pageTitle = "",
     bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
-  }) {
+  }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     var key = GlobalKey<WebViewFullState>();
     _tabList.add(
