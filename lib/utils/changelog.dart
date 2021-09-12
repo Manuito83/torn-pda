@@ -47,17 +47,19 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_5_2_3 = "Added Reading Book icon";
     String feat2_5_2_4 = "Added return time information when travelling";
     String feat2_5_2_5 = "Added showcase on first tab use";
-    String feat2_5_2_6 = "Fixed forum history navigation";
-    String feat2_5_2_7 = "Fixed reported issues with tabs";
-    String feat2_5_2_8 = "Fixed reported UI issues";
+    String feat2_5_2_6 = "Fixed some quick crimes (please remove/add the crime again if you were affected)";
+    String feat2_5_2_7 = "Fixed forum history navigation";
+    String feat2_5_2_8 = "Fixed reported issues with tabs";
+    String feat2_5_2_9 = "Fixed reported UI issues";
     v2_5_2.features.add(feat2_5_2_1);
     v2_5_2.features.add(feat2_5_2_2);
     v2_5_2.features.add(feat2_5_2_3);
     v2_5_2.features.add(feat2_5_2_4);
     v2_5_2.features.add(feat2_5_2_5);
-    if (Platform.isIOS) v2_5_2.features.add(feat2_5_2_6);
-    v2_5_2.features.add(feat2_5_2_7);
+    v2_5_2.features.add(feat2_5_2_6);
+    if (Platform.isIOS) v2_5_2.features.add(feat2_5_2_7);
     v2_5_2.features.add(feat2_5_2_8);
+    v2_5_2.features.add(feat2_5_2_9);
 
     // VERSION 2.5.1
     var v2_5_1 = ChangeLogItem();
