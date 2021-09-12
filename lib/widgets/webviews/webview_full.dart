@@ -685,7 +685,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   _terminalProvider.terminal = "Terminal";
                 },
                 onCreateWindow: (c, request) async {
-                  if (!mounted) return false;
+                  if (!mounted) return true;
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
@@ -2584,6 +2584,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // ASSESS GYM
   Future assessGym() async {
+    if (!mounted) return;
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     final easyUrl = _currentUrl.replaceAll('#', '');
