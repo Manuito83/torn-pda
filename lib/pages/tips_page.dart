@@ -134,6 +134,7 @@ class _TipsPageState extends State<TipsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       leading: IconButton(
@@ -482,7 +483,8 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Sync with Arson Warehouse",
-        expandedValue: "If you are a user of Arson Warehouse (AWH), tap on the options icon while in the Trades section in game. "
+        expandedValue:
+            "If you are a user of Arson Warehouse (AWH), tap on the options icon while in the Trades section in game. "
             "You will be able to activate the synchronization with this service and use most of it features from the Torn PDA!",
       ),
     );
@@ -504,9 +506,9 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Deep/custom app links",
         expandedValue: "Torn PDA supports what's called deep linking or custom URLs. You can create a link outside "
-        "of the application with the following scheme 'tornpda://', where the rest of the URL remains unchanged."
-        "\n\nExample: 'tornpda://www.torn.com/gym.php' should be recognized as a valid URL and open Torn PDA with "
-        "a browser pointing to the gym.",
+            "of the application with the following scheme 'tornpda://', where the rest of the URL remains unchanged."
+            "\n\nExample: 'tornpda://www.torn.com/gym.php' should be recognized as a valid URL and open Torn PDA with "
+            "a browser pointing to the gym.",
       ),
     );
     return tips;

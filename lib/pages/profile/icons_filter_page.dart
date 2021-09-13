@@ -53,7 +53,8 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
                   children: <Widget>[
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                      child: Text("Select which icons you would like to include as part of the Profile section's header"),
+                      child:
+                          Text("Select which icons you would like to include as part of the Profile section's header"),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 50),
@@ -79,6 +80,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: widget.settingsProvider.appBarTop ? 2 : 0,
       title: Text("Filter icons"),
       leading: new IconButton(

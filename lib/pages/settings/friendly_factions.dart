@@ -74,8 +74,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.all<Color>(_themeProvider.background),
+                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -98,8 +97,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.all<Color>(_themeProvider.background),
+                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
                             shape: MaterialStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
@@ -214,6 +212,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: Text('Friendly factions'),
@@ -285,9 +284,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                                   minLines: 1,
                                   maxLines: 1,
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: <TextInputFormatter>[
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
+                                  inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                                   decoration: InputDecoration(
                                     counterText: "",
                                     border: OutlineInputBorder(),

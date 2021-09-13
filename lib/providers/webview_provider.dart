@@ -376,9 +376,9 @@ class WebViewProvider extends ChangeNotifier {
       } else {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
-          await openBrowserDialog(context, url);
+          openBrowserDialog(context, url);
         } else {
-          await Navigator.of(context).push(
+          Navigator.of(context).push(
             MaterialPageRoute(
               builder: (BuildContext context) => WebViewStackView(initUrl: url),
             ),

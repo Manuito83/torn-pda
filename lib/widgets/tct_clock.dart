@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 
 class TctClock extends StatefulWidget {
   const TctClock({
@@ -45,33 +44,25 @@ class _TctClockState extends State<TctClock> {
         break;
     }
 
-    return GestureDetector(
-      onTap: () {
-        _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: true);
-      },
-      onLongPress: () {
-        _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: false);
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          formatter.format(_currentTctTime),
+          style: TextStyle(fontSize: 14),
+        ),
+        Text(
+          'TCT',
+          style: TextStyle(fontSize: settingsProvider.showDateInClock != "off" ? 10 : 14),
+        ),
+        if (settingsProvider.showDateInClock != "off")
           Text(
-            formatter.format(_currentTctTime),
-            style: TextStyle(fontSize: 14),
+            settingsProvider.showDateInClock == "dayfirst"
+                ? DateFormat('dd MMM').format(_currentTctTime).toUpperCase()
+                : DateFormat('MMM dd').format(_currentTctTime).toUpperCase(),
+            style: TextStyle(fontSize: 10),
           ),
-          Text(
-            'TCT',
-            style: TextStyle(fontSize: settingsProvider.showDateInClock != "off" ? 10 : 14),
-          ),
-          if (settingsProvider.showDateInClock != "off")
-            Text(
-              settingsProvider.showDateInClock == "dayfirst"
-                  ? DateFormat('dd MMM').format(_currentTctTime).toUpperCase()
-                  : DateFormat('MMM dd').format(_currentTctTime).toUpperCase(),
-              style: TextStyle(fontSize: 10),
-            ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -81,12 +72,4 @@ class _TctClockState extends State<TctClock> {
     });
   }
 
-  void _launchBrowser({@required String url, @required bool dialogRequested}) async {
-    if (!context.read<SettingsProvider>().useQuickBrowser) dialogRequested = false;
-    await context.read<WebViewProvider>().openBrowserPreference(
-          context: context,
-          url: url,
-          useDialog: dialogRequested,
-        );
-  }
 }

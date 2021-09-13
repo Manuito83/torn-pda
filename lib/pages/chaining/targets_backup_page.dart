@@ -43,8 +43,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
       "you exported in the past. You can make changes outside of Torn PDA, "
       "but ensure that the main structure is kept!";
 
-  String _importChoiceString =
-      "you can either add them to your current list, or replace everything "
+  String _importChoiceString = "you can either add them to your current list, or replace everything "
       "(you'll lose your current targets!).\n\nChoose wisely.";
 
   Color _importHintStyle = Colors.black;
@@ -257,6 +256,7 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Import & Export"),
     );

@@ -147,6 +147,7 @@ class _LootPageState extends State<LootPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('Loot'),
       leading: new IconButton(
@@ -509,18 +510,18 @@ class _LootPageState extends State<LootPage> {
           onTap: () async {
             var url = 'https://www.torn.com/profiles.php?XID=$npcId';
             await context.read<WebViewProvider>().openBrowserPreference(
-              context: context,
-              url: url,
-              useDialog: _settingsProvider.useQuickBrowser,
-            );
+                  context: context,
+                  url: url,
+                  useDialog: _settingsProvider.useQuickBrowser,
+                );
           },
           onLongPress: () async {
             var url = 'https://www.torn.com/profiles.php?XID=$npcId';
             await context.read<WebViewProvider>().openBrowserPreference(
-              context: context,
-              url: url,
-              useDialog: false,
-            );
+                  context: context,
+                  url: url,
+                  useDialog: false,
+                );
           },
         );
 
@@ -535,18 +536,18 @@ class _LootPageState extends State<LootPage> {
             onTap: () async {
               var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               await context.read<WebViewProvider>().openBrowserPreference(
-                context: context,
-                url: url,
-                useDialog: _settingsProvider.useQuickBrowser,
-              );
+                    context: context,
+                    url: url,
+                    useDialog: _settingsProvider.useQuickBrowser,
+                  );
             },
             onLongPress: () async {
               var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
               await context.read<WebViewProvider>().openBrowserPreference(
-                context: context,
-                url: url,
-                useDialog: false,
-              );
+                    context: context,
+                    url: url,
+                    useDialog: false,
+                  );
             },
           ),
         );
@@ -977,5 +978,4 @@ class _LootPageState extends State<LootPage> {
   void _callBackFromNotificationOptions() async {
     await _loadPreferences();
   }
-
 }

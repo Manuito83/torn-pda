@@ -125,6 +125,7 @@ class _AttacksPageState extends State<AttacksPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('Attacks'),
       leading: new IconButton(
@@ -153,7 +154,6 @@ class _AttacksPageState extends State<AttacksPage> {
               duration: Duration(seconds: 3),
               contentPadding: EdgeInsets.all(10),
             );
-
           },
         ),
         IconButton(
@@ -175,7 +175,6 @@ class _AttacksPageState extends State<AttacksPage> {
                 duration: Duration(seconds: 3),
                 contentPadding: EdgeInsets.all(10),
               );
-
             } else {
               _attacksProvider.setFilterType(AttackTypeFilter.all);
               _changeFilterColorAndText();
@@ -190,7 +189,6 @@ class _AttacksPageState extends State<AttacksPage> {
                 duration: Duration(seconds: 3),
                 contentPadding: EdgeInsets.all(10),
               );
-
             }
           },
         ),

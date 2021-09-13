@@ -302,7 +302,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         await Future.delayed(const Duration(milliseconds: 500));
-        await _webViewProvider.openBrowserPreference(
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: url,
           useDialog: _settingsProvider.useQuickBrowser,
@@ -464,7 +464,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       await Future.delayed(const Duration(milliseconds: 1000));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       if (launchBrowser) {
-        await _webViewProvider.openBrowserPreference(
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
           useDialog: _settingsProvider.useQuickBrowser,
@@ -542,7 +542,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        await _webViewProvider.openBrowserPreference(
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
           useDialog: _settingsProvider.useQuickBrowser,
@@ -666,7 +666,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-                  const TctClock(),
+                  GestureDetector(
+                    onTap: () {
+                      _webViewProvider.openBrowserPreference(
+                        context: context,
+                        url: "https://www.torn.com/calendar.php",
+                        useDialog: _settingsProvider.useQuickBrowser,
+                      );
+                    },
+                    onLongPress: () {
+                      _webViewProvider.openBrowserPreference(
+                        context: context,
+                        url: "https://www.torn.com/calendar.php",
+                        useDialog: false,
+                      );
+                    },
+                    child: const TctClock(),
+                  ),
                 ],
               ),
             ),
@@ -1098,7 +1114,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                 "Stock Exchange",
                               ),
                               onPressed: () async {
-                                await _webViewProvider.openBrowserPreference(
+                                _webViewProvider.openBrowserPreference(
                                   context: context,
                                   url: "https://www.torn.com/page.php?sid=stocks",
                                   useDialog: _settingsProvider.useQuickBrowser,
