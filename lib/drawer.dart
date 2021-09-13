@@ -910,6 +910,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _updateLastActiveTime() async {
+    // Prevents update on first load
+    var api = _userProvider?.basic?.userApiKey;
+    if (api == null || api.isEmpty) return;
+
     // Calculate difference between last recorded use and current time
     final now = DateTime.now().millisecondsSinceEpoch;
     final dTimeStamp = now - _settingsProvider.lastAppUse;
@@ -946,7 +950,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     final now = DateTime.now().millisecondsSinceEpoch;
     final success = await firestore.uploadLastActiveTime(now);
     if (success) {
-      _settingsProvider.updateLastUsed(now);
+      _settingsProvider.updateLastUsed = now;
     }
   }
 
