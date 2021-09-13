@@ -2583,12 +2583,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS GYM
-  Future assessGym() async {
+  Future assessEnergyWarning() async {
     if (!mounted) return;
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     final easyUrl = _currentUrl.replaceAll('#', '');
-    if (easyUrl.contains('www.torn.com/gym.php')) {
+    if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
       final stats = await TornApiCaller.bars(_userProvider.basic.userApiKey).getBars;
       if (stats is BarsModel) {
         var message = "";

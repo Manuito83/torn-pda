@@ -322,7 +322,7 @@ class WebViewProvider extends ChangeNotifier {
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl.contains("gym.php")) {
-      tab.webViewKey.currentState?.assessGym();
+      tab.webViewKey.currentState?.assessEnergyWarning();
     }
   }
 
