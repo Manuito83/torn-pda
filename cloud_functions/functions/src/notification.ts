@@ -671,8 +671,8 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         notificationSubtitle = notificationSubtitle.replace(/ \[ view \]/g, '.');
         notificationSubtitle = notificationSubtitle.replace(/ \[View\]/g, '.');
         notificationSubtitle = notificationSubtitle.replace(/ \[ View \]/g, '.');
-        notificationSubtitle = notificationSubtitle.replace(/Please click here./g, '');
         notificationSubtitle = notificationSubtitle.replace(/Please click here to collect your funds./g, '');
+        notificationSubtitle = notificationSubtitle.replace(/Please click here./g, '');
 
         promises.push(
           sendNotificationToUser(
