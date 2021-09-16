@@ -81,8 +81,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
                               icon: Icon(Icons.content_copy),
                               iconSize: 20,
                               onPressed: () {
-                                Clipboard.setData(
-                                    ClipboardData(text: widget.friend.playerId.toString()));
+                                Clipboard.setData(ClipboardData(text: widget.friend.playerId.toString()));
                                 BotToast.showText(
                                   text: "Your friend's ID [${widget.friend.playerId}] has been "
                                       "copied to the clipboard!",
@@ -137,6 +136,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('${widget.friend.name}'),
       leading: IconButton(
@@ -188,9 +188,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
           'Last action: ',
         ),
         Text(
-          widget.friend.lastAction.relative == "0 minutes ago"
-              ? 'now'
-              : widget.friend.lastAction.relative,
+          widget.friend.lastAction.relative == "0 minutes ago" ? 'now' : widget.friend.lastAction.relative,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
@@ -236,8 +234,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
       child: Container(
         width: 13,
         height: 13,
-        decoration: BoxDecoration(
-            color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
       ),
     );
 

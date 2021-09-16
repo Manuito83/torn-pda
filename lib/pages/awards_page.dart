@@ -95,8 +95,7 @@ class _AwardsPageState extends State<AwardsPage> {
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics
-        .logEvent(name: 'section_changed', parameters: {'section': 'awards'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'awards'});
   }
 
   @override
@@ -166,9 +165,7 @@ class _AwardsPageState extends State<AwardsPage> {
                       topRight: Radius.circular(18.0),
                     ),
                     onPanelSlide: (double pos) => setState(() {
-                      _fabHeight =
-                          pos * (_panelHeightOpen - _panelHeightClosed) +
-                              _initFabHeight;
+                      _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
                     }),
                   );
                 } else {
@@ -239,8 +236,7 @@ class _AwardsPageState extends State<AwardsPage> {
                 SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    String achievement =
-                        "Achieved ${_headerInfo.achievedAwards}"
+                    String achievement = "Achieved ${_headerInfo.achievedAwards}"
                         "/${_headerInfo.totalAwards} awards\n\n"
                         "Medals ${_headerInfo.achievedMedals}"
                         "/${_headerInfo.totalMedals}\n"
@@ -271,8 +267,7 @@ class _AwardsPageState extends State<AwardsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 20),
-                Text('PINNED AWARDS',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('PINNED AWARDS', style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(height: 4),
                 pinnedSection,
               ],
@@ -297,8 +292,7 @@ class _AwardsPageState extends State<AwardsPage> {
           // We need to decrease _allAwards by 1, because the header moves the
           // list one position compared to the _allAwardsCards list
 
-          if (!_showAchievedAwards &&
-              _allAwards[index - 1].achieve * 100.truncate() == 100) {
+          if (!_showAchievedAwards && _allAwards[index - 1].achieve * 100.truncate() == 100) {
             return SizedBox.shrink();
           }
 
@@ -337,9 +331,8 @@ class _AwardsPageState extends State<AwardsPage> {
               Container(
                 width: 30,
                 height: 5,
-                decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                decoration:
+                    BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
               ),
             ],
           ),
@@ -368,14 +361,9 @@ class _AwardsPageState extends State<AwardsPage> {
                 RawChip(
                   showCheckmark: true,
                   selected: _hiddenCategories.isEmpty ? true : false,
-                  side: BorderSide(
-                      color: _hiddenCategories.isEmpty
-                          ? Colors.green
-                          : Colors.grey[600],
-                      width: 1.5),
+                  side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
                   avatar: CircleAvatar(
-                    backgroundColor:
-                        _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
+                    backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
                   ),
                   label: Text(
                     "ALL",
@@ -416,6 +404,7 @@ class _AwardsPageState extends State<AwardsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Row(
         children: [
@@ -424,8 +413,7 @@ class _AwardsPageState extends State<AwardsPage> {
           GestureDetector(
               onTap: () {
                 BotToast.showText(
-                  text:
-                      "This section is part of YATA's mobile interface, all details "
+                  text: "This section is part of YATA's mobile interface, all details "
                       "information and actions are directly linked to your YATA account.",
                   textStyle: TextStyle(
                     fontSize: 13,
@@ -442,8 +430,7 @@ class _AwardsPageState extends State<AwardsPage> {
       leading: new IconButton(
         icon: new Icon(Icons.menu),
         onPressed: () {
-          final ScaffoldState scaffoldState =
-              context.findRootAncestorStateOfType();
+          final ScaffoldState scaffoldState = context.findRootAncestorStateOfType();
           scaffoldState.openDrawer();
         },
       ),
@@ -527,17 +514,16 @@ class _AwardsPageState extends State<AwardsPage> {
                   onTap: () async {
                     var url = 'https://yata.yt';
                     await context.read<WebViewProvider>().openBrowserPreference(
-                      context: context,
-                      url: url,
-                      useDialog: _settingsProvider.useQuickBrowser,
-                    );
+                          context: context,
+                          url: url,
+                          useDialog: _settingsProvider.useQuickBrowser,
+                        );
                   },
                   child: Image.asset('images/icons/yata_logo.png', height: 35),
                 ),
                 SizedBox(width: 10),
                 Flexible(
-                  child: Text(
-                      'Don\'t have one? Have you changed your API key recently? '
+                  child: Text('Don\'t have one? Have you changed your API key recently? '
                       'Login here with YATA (tap the icon) and then reload this section!'),
                 ),
               ],
@@ -564,8 +550,7 @@ class _AwardsPageState extends State<AwardsPage> {
               ],
             ),
             SizedBox(height: 30),
-            Text(
-                'Otherwise, there might be a problem signing in with YATA, please '
+            Text('Otherwise, there might be a problem signing in with YATA, please '
                 'try again later!'),
           ],
         ),
@@ -696,11 +681,7 @@ class _AwardsPageState extends State<AwardsPage> {
         RawChip(
           showCheckmark: false,
           selected: _hiddenCategories.contains(cat) ? false : true,
-          side: BorderSide(
-              color: _hiddenCategories.contains(cat)
-                  ? Colors.grey[600]
-                  : Colors.green,
-              width: 1.5),
+          side: BorderSide(color: _hiddenCategories.contains(cat) ? Colors.grey[600] : Colors.green, width: 1.5),
           avatar: catIcon,
           label: Text(catStats, style: TextStyle(fontSize: 12)),
           selectedColor: Colors.transparent,
@@ -855,8 +836,7 @@ class _AwardsPageState extends State<AwardsPage> {
           // Populate models list
           _allAwards.add(singleAward);
         } catch (e) {
-          FirebaseCrashlytics.instance
-              .log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
+          FirebaseCrashlytics.instance.log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
           FirebaseCrashlytics.instance.recordError(e, null);
         }
       }); // FINISH FOR EACH SINGLE-AWARD

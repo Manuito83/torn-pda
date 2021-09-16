@@ -86,7 +86,7 @@ class _CityOptionsState extends State<CityOptions> {
                               padding: const EdgeInsets.symmetric(horizontal: 15),
                               child: Text(
                                 'Consider deactivating the city finder if it impacts '
-                                    'performance or you just simply would not prefer to use it',
+                                'performance or you just simply would not prefer to use it',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
@@ -115,13 +115,15 @@ class _CityOptionsState extends State<CityOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("City Finder"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
           widget.callback();
-          Navigator.of(context).pop();},
+          Navigator.of(context).pop();
+        },
       ),
     );
   }
@@ -139,4 +141,3 @@ class _CityOptionsState extends State<CityOptions> {
     return true;
   }
 }
-

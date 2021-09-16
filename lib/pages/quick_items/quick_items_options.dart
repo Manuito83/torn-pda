@@ -150,6 +150,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Quick items"),
       leading: new IconButton(

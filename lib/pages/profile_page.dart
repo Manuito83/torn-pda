@@ -524,6 +524,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Column(
         children: [
@@ -602,7 +603,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _apiGoodData
             ? Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: const TctClock(),
+                child: GestureDetector(
+                  onTap: () {
+                    _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: true);
+                  },
+                  onLongPress: () {
+                    _launchBrowser(url: "https://www.torn.com/calendar.php", dialogRequested: false);
+                  },
+                  child: const TctClock(),
+                ),
               )
             : SizedBox.shrink(),
         IconButton(
@@ -4612,7 +4621,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   void _launchBrowser({@required String url, @required bool dialogRequested}) async {
     if (!_settingsProvider.useQuickBrowser) dialogRequested = false;
-    await _webViewProvider.openBrowserPreference(
+    _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
       useDialog: dialogRequested,

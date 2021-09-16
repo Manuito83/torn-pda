@@ -144,7 +144,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   JailModel _jailModel;
 
   DateTime _forumsTriggerTime;
+  DateTime _hospitalTriggerTime;
   DateTime _urlTriggerTime;
+  DateTime _profileTriggerTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -684,8 +686,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   webView = c;
                   _terminalProvider.terminal = "Terminal";
                 },
-                onCreateWindow: (c, request) {
-                  if (!mounted) return;
+                onCreateWindow: (c, request) async {
+                  if (!mounted) return true;
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
@@ -696,7 +698,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     _webViewProvider.addTab(url: request.request.url.toString());
                     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                   }
-                  return;
+                  return true;
                 },
                 onLoadStart: (c, uri) async {
                   if (!mounted) return;
@@ -769,10 +771,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     final document = parse(html);
 
                     // Force to show title
-                    await _getPageTitle(document, showTitle: true);
+                    _pageTitle = await _getPageTitle(document, showTitle: true);
 
                     if (widget.useTabs) {
-                      _reportUrlVisit(uri);
+                      _reportUrlVisit(uri, reportTitle: true);
+                      // Report title will only be used from onLoadStop, since onResourceLoad might trigger
+                      // it too early (before it has changed)
+                      _reportPageTitle();
                     }
 
                     _assessGeneral(document);
@@ -798,13 +803,50 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       if (resource.initiatorType == "xmlhttprequest" &&
                           resource.url.toString().contains("forums.php")) {
                         // Trigger once
-                        if (_tradesOnResourceTriggerTime != null &&
+                        if (_forumsTriggerTime != null &&
                             (DateTime.now().difference(_forumsTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _forumsTriggerTime = DateTime.now();
                         var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
+                      }
+                    }
+
+                    if (widget.useTabs && Platform.isIOS) {
+                      if (resource.initiatorType == "xmlhttprequest" &&
+                          resource.url.toString().contains("hospitalview.php")) {
+                        // Trigger once
+                        if (_hospitalTriggerTime != null &&
+                            (DateTime.now().difference(_hospitalTriggerTime).inSeconds) < 1) {
+                          return;
+                        }
+                        _hospitalTriggerTime = DateTime.now();
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
+                    }
+
+                    /// PROFILES (iOS)
+                    /// Independent of tabs, iOS needs to get the loader.php (attack view)
+                    /// to trigger the profile widget
+                    if (Platform.isIOS && _settingsProvider.extraPlayerInformation) {
+                      if (resource.initiatorType == "xmlhttprequest"
+                          &&
+                          (resource.url.toString().contains("profiles.php?step=getProfileData")
+                              && !_profileTriggered)
+                          ||
+                          (resource.url.toString().contains("loader.php")
+                              && !_attackTriggered)) {
+                        // Trigger once
+                        if (_profileTriggerTime != null &&
+                            (DateTime.now().difference(_profileTriggerTime).inSeconds) < 1) {
+                          return;
+                        }
+                        _profileTriggerTime = DateTime.now();
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                        _assessProfileAttack();
                       }
                     }
 
@@ -868,6 +910,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         return;
                       }
                       _jailOnResourceTriggerTime = DateTime.now();
+
+                      // iOS needs URL report in jail pages
+                      if (Platform.isIOS) {
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
 
                       final html = await webView.getHtml();
                       dom.Document document = parse(html);
@@ -1036,7 +1084,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
-  void _reportUrlVisit(Uri uri) {
+  void _reportUrlVisit(Uri uri, {bool reportTitle = false}) {
     // For certain URLs (e.g. forums in iOS) we might be reporting this twice. Once from onLoadStop and again
     // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough
     // to prevent adding extra pages to history (when it's the first page loading, it's only omitted once).
@@ -1045,13 +1093,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
     _urlTriggerTime = DateTime.now();
 
-    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
     if (!_omitTabHistory) {
       // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
       _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
     } else {
       _omitTabHistory = false;
     }
+  }
+
+  void _reportPageTitle() {
+    _webViewProvider.reportTabPageTitle(widget.key, _pageTitle);
   }
 
   void _highlightChat() {
@@ -1394,7 +1445,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     if (!_currentUrl.contains("jailview.php") && (_jailExpandable is JailWidget)) {
-      // This is different to the others, here we call only so that properties is deactivated
+      // This is different to the others, here we call only so that jail is deactivated
       _jailExpandable = const SizedBox.shrink();
     }
 
@@ -1691,7 +1742,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // CRIMES
   Future _assessCrimes(String pageTitle) async {
     if (mounted) {
-      //var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('crimes')) {
         setState(() {
           _crimesController.expanded = false;
@@ -2134,7 +2184,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // CITY
   Future _assessCity(dom.Document document, String pageTitle) async {
-    //var pageTitle = (await _getPageTitle(document)).toLowerCase();
     if (!pageTitle.contains('city')) {
       setState(() {
         _cityIconActive = false;
@@ -2332,7 +2381,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // QUICK ITEMS
   Future _assessQuickItems(String pageTitle) async {
     if (mounted) {
-      //var pageTitle = (await _getPageTitle(document)).toLowerCase();
       if (!pageTitle.contains('items')) {
         setState(() {
           _quickItemsController.expanded = false;
@@ -2583,11 +2631,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS GYM
-  Future assessGym() async {
+  Future assessEnergyWarning() async {
+    if (!mounted) return;
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     final easyUrl = _currentUrl.replaceAll('#', '');
-    if (easyUrl.contains('www.torn.com/gym.php')) {
+    if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
       final stats = await TornApiCaller.bars(_userProvider.basic.userApiKey).getBars;
       if (stats is BarsModel) {
         var message = "";

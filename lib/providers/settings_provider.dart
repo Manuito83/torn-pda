@@ -32,7 +32,6 @@ enum BrowserRefreshSetting {
 }
 
 class SettingsProvider extends ChangeNotifier {
-  int lastAppUse;
 
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
@@ -430,16 +429,16 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // END OF PARAMETERS
-
-  void updateLastUsed(int timeStamp) {
+  int _lastAppUse = 0;
+  int get lastAppUse => _lastAppUse;
+  set updateLastUsed(int timeStamp) {
     Prefs().setLastAppUse(timeStamp);
-    lastAppUse = timeStamp;
+    _lastAppUse = timeStamp;
     notifyListeners();
   }
 
   Future<void> loadPreferences() async {
-    lastAppUse = await Prefs().getLastAppUse();
+    _lastAppUse = await Prefs().getLastAppUse();
 
     String restoredBrowser = await Prefs().getDefaultBrowser();
     switch (restoredBrowser) {

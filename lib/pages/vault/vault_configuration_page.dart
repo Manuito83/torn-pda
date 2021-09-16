@@ -73,6 +73,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Vault configuration"),
       leading: new IconButton(
@@ -112,9 +113,8 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
     Widget share = SizedBox.shrink();
     Widget options = SizedBox.shrink();
 
-    var spouseName = widget.userProvider.basic.married?.spouseId == 0
-        ? "Spouse"
-        : widget.userProvider.basic.married.spouseName;
+    var spouseName =
+        widget.userProvider.basic.married?.spouseId == 0 ? "Spouse" : widget.userProvider.basic.married.spouseName;
 
     // If we have never initialise (or we deleted) the share
     if (widget.vaultStatus.player == null) {
@@ -193,8 +193,7 @@ class _VaultConfigurationPageState extends State<VaultConfigurationPage> {
             children: [
               Divider(),
               SizedBox(height: 20),
-              Text(
-                  "Please, calculate your totals from the last known transaction (above) and reset the vault "
+              Text("Please, calculate your totals from the last known transaction (above) and reset the vault "
                   "distribution with the correct values"),
               SizedBox(height: 20),
               Text("In the vault now: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),

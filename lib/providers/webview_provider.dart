@@ -57,7 +57,7 @@ class WebViewProvider extends ChangeNotifier {
     _hideTabs = await Prefs().getHideTabs();
 
     // Add the main opener
-    addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
+    await addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
     _currentTab = 0;
   }
 
@@ -92,13 +92,13 @@ class WebViewProvider extends ChangeNotifier {
     _currentTab = 0;
   }
 
-  void addTab({
+  Future addTab({
     String url = "https://www.torn.com",
     String pageTitle = "",
     bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
-  }) {
+  }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     var key = GlobalKey<WebViewFullState>();
     _tabList.add(
@@ -322,7 +322,7 @@ class WebViewProvider extends ChangeNotifier {
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
     if (tab.currentUrl.contains("gym.php")) {
-      tab.webViewKey.currentState?.assessGym();
+      tab.webViewKey.currentState?.assessEnergyWarning();
     }
   }
 
@@ -376,9 +376,9 @@ class WebViewProvider extends ChangeNotifier {
       } else {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
-          await openBrowserDialog(context, url);
+          openBrowserDialog(context, url);
         } else {
-          await Navigator.of(context).push(
+          Navigator.of(context).push(
             MaterialPageRoute(
               builder: (BuildContext context) => WebViewStackView(initUrl: url),
             ),

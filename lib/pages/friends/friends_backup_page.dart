@@ -35,18 +35,15 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
   final _importFormKey = GlobalKey<FormState>();
   final _importInputController = new TextEditingController();
 
-  String _exportInfo =
-      "In order to export & backup your friends, you can either copy/paste "
+  String _exportInfo = "In order to export & backup your friends, you can either copy/paste "
       "to a text file manually, or share and save it at your desired location. "
       "In any case, please keep the text original structure.";
 
-  String _importInfo =
-      "In order to import friends, please paste here the string that "
+  String _importInfo = "In order to import friends, please paste here the string that "
       "you exported in the past. You can make changes outside of Torn PDA, "
       "but ensure that the main structure is kept!";
 
-  String _importChoiceString =
-      "you can either add them to your current list, or replace everything "
+  String _importChoiceString = "you can either add them to your current list, or replace everything "
       "(you'll lose your current friends!).\n\nChoose wisely.";
 
   Color _importHintStyle = Colors.black;
@@ -65,9 +62,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _importHintStyle = _themeProvider.mainText;
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? Colors.blueGrey
-          : Colors.grey[900],
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
@@ -90,8 +85,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                         padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                         child: Text(
                           "HOW TO EXPORT friends",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Padding(
@@ -175,8 +169,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                         padding: EdgeInsets.fromLTRB(15, 0, 20, 15),
                         child: Text(
                           "HOW TO IMPORT friends",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ),
                       Padding(
@@ -236,8 +229,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                                           contentPadding: EdgeInsets.all(10),
                                         );
                                       } else {
-                                        FocusScope.of(context)
-                                            .requestFocus(new FocusNode());
+                                        FocusScope.of(context).requestFocus(new FocusNode());
                                         _showImportDialog();
                                       }
                                     }
@@ -260,6 +252,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Import & Export"),
     );
@@ -287,8 +280,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
           '$_importSuccessEvents/${_tentativeImportModel.friendBackup.length}',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        percent:
-            _importSuccessEvents / _tentativeImportModel.friendBackup.length,
+        percent: _importSuccessEvents / _tentativeImportModel.friendBackup.length,
       ),
     );
   }
@@ -304,9 +296,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
         if (tar.notesColor.length > 200) {
           tar.notesColor = tar.notesColor.substring(0, 199);
         }
-        if (tar.notesColor != "red" &&
-            tar.notesColor != "green" &&
-            tar.notesColor != "blue") {
+        if (tar.notesColor != "red" && tar.notesColor != "green" && tar.notesColor != "blue") {
           tar.notesColor = "";
         }
       }
@@ -356,8 +346,7 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
                     padding: EdgeInsets.fromLTRB(15, 30, 20, 15),
                     child: Text(
                       "How would you like to import?",
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Padding(

@@ -768,16 +768,11 @@ String jailJS({
 }) {
   return '''
     // Credit to TornTools for implementation logic
-
-    var bailActive;
-    var bustActive;
-
     var doc = window.document;
 
     function toSeconds(time) {
       time = time.toLowerCase();
       let seconds = 0;
-
       if (time.includes("h")) {
         seconds += parseInt(time.split("h")[0].trim()) * 3600;
         time = time.split("h")[1];
@@ -814,7 +809,6 @@ String jailJS({
       for (var player of doc.querySelectorAll(".users-list > li")) {
         var shouldHide = false;
 
-        // Level
         var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
         if (level > $levelMax || level < $levelMin) {
           shouldHide = true;
@@ -832,18 +826,15 @@ String jailJS({
         if (score > $scoreMax) {
           shouldHide = true;
         }
-
         if (shouldHide) {
           player.hidden = true;
         } else {
           player.hidden = false;
         }
-
       }
 
       // BAIL
-      if (!bailActive && $bailTicked) {
-        bailActive = true;
+      if ($bailTicked) {
         for (var player of doc.querySelectorAll(".users-list > li")) {
           // Find bust fields and turn them green
           const actionWrap = player.querySelector(".buy, .bye");
@@ -858,15 +849,13 @@ String jailJS({
           actionWrap.setAttribute("href", bailLink);
         }
       }
-      else if (bailActive && !$bailTicked) {
+      else if (!$bailTicked) {
         bailActive = false;
         for (var player of doc.querySelectorAll(".users-list > li")) {
           const actionWrap = player.querySelector(".buy, .bye");
           actionWrap.style.removeProperty("background-color");
-
           const actionIcon = player.querySelector(".bye-icon");
           actionIcon.style.filter = defaultFilter;
-
           let bailLink = actionWrap.getAttribute("href");
           if (bailLink[bailLink.length - 1] === "1") {
             bailLink = bailLink.substring(0, bailLink.length - 1);
@@ -876,7 +865,7 @@ String jailJS({
       }
 
       // BUST
-      if (!bustActive && $bustTicked) {
+      if ($bustTicked) {
         bustActive = true;
         for (var player of doc.querySelectorAll(".users-list > li")) {
           // Find bust fields and turn them green
@@ -891,17 +880,14 @@ String jailJS({
           if (bustLink[bustLink.length - 1] !== "1") bustLink += "1";
           actionWrap.setAttribute("href", bustLink);
         }
-
       }
-      else if (bustActive && !$bustTicked) {
+      else if (!$bustTicked) {
         bustActive = false;
         for (var player of doc.querySelectorAll(".users-list > li")) {
           const actionWrap = player.querySelector(".bust");
           actionWrap.style.removeProperty("background-color");
-
           const actionIcon = player.querySelector(".bust-icon");
           actionIcon.style.filter = defaultFilter;
-
           let bustLink = actionWrap.getAttribute("href");
           if (bustLink[bustLink.length - 1] === "1") {
             bustLink = bustLink.substring(0, bustLink.length - 1);
@@ -922,6 +908,7 @@ String jailJS({
           let checker = setInterval(() => {
             if (doc.querySelector(".users-list > li")) {
               modifyJail();
+              return clearInterval(checker);
             }
             if (++intervalRepetitions === 20) {
               return clearInterval(checker);

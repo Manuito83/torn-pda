@@ -81,8 +81,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
                               icon: Icon(Icons.content_copy),
                               iconSize: 20,
                               onPressed: () {
-                                Clipboard.setData(
-                                    ClipboardData(text: widget.target.playerId.toString()));
+                                Clipboard.setData(ClipboardData(text: widget.target.playerId.toString()));
                                 BotToast.showText(
                                   text: "Your target's ID [${widget.target.playerId}] has been "
                                       "copied to the clipboard!",
@@ -137,6 +136,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
@@ -187,9 +187,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
           'Last action: ',
         ),
         Text(
-          widget.target.lastAction.relative == "0 minutes ago"
-              ? 'now'
-              : widget.target.lastAction.relative,
+          widget.target.lastAction.relative == "0 minutes ago" ? 'now' : widget.target.lastAction.relative,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 8.0),
@@ -235,8 +233,7 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
       child: Container(
         width: 13,
         height: 13,
-        decoration: BoxDecoration(
-            color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
+        decoration: BoxDecoration(color: stateColor, shape: BoxShape.circle, border: Border.all(color: Colors.black)),
       ),
     );
 

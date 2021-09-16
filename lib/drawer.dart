@@ -121,7 +121,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         if (shortcutType == 'open_torn') {
           context.read<WebViewProvider>().openBrowserPreference(
                 context: context,
-                url: "http://www.torn.com",
+                url: "https://www.torn.com",
                 useDialog: _settingsProvider.useQuickBrowser,
               );
         }
@@ -302,7 +302,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         await Future.delayed(const Duration(milliseconds: 500));
-        await _webViewProvider.openBrowserPreference(
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: url,
           useDialog: _settingsProvider.useQuickBrowser,
@@ -461,10 +461,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
     if (launchBrowser) {
       // iOS seems to open a blank WebView unless we allow some time onResume
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1000));
       // Works best if we get SharedPrefs directly instead of SettingsProvider
       if (launchBrowser) {
-        await _webViewProvider.openBrowserPreference(
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
           useDialog: _settingsProvider.useQuickBrowser,
@@ -542,7 +542,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       }
 
       if (launchBrowser) {
-        await _webViewProvider.openBrowserPreference(
+        _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
           useDialog: _settingsProvider.useQuickBrowser,
@@ -666,7 +666,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-                  const TctClock(),
+                  GestureDetector(
+                    onTap: () {
+                      _webViewProvider.openBrowserPreference(
+                        context: context,
+                        url: "https://www.torn.com/calendar.php",
+                        useDialog: _settingsProvider.useQuickBrowser,
+                      );
+                    },
+                    onLongPress: () {
+                      _webViewProvider.openBrowserPreference(
+                        context: context,
+                        url: "https://www.torn.com/calendar.php",
+                        useDialog: false,
+                      );
+                    },
+                    child: const TctClock(),
+                  ),
                 ],
               ),
             ),
@@ -894,6 +910,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _updateLastActiveTime() async {
+    // Prevents update on first load
+    var api = _userProvider?.basic?.userApiKey;
+    if (api == null || api.isEmpty) return;
+
     // Calculate difference between last recorded use and current time
     final now = DateTime.now().millisecondsSinceEpoch;
     final dTimeStamp = now - _settingsProvider.lastAppUse;
@@ -930,7 +950,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     final now = DateTime.now().millisecondsSinceEpoch;
     final success = await firestore.uploadLastActiveTime(now);
     if (success) {
-      _settingsProvider.updateLastUsed(now);
+      _settingsProvider.updateLastUsed = now;
     }
   }
 
@@ -1098,7 +1118,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                                 "Stock Exchange",
                               ),
                               onPressed: () async {
-                                await _webViewProvider.openBrowserPreference(
+                                _webViewProvider.openBrowserPreference(
                                   context: context,
                                   url: "https://www.torn.com/page.php?sid=stocks",
                                   useDialog: _settingsProvider.useQuickBrowser,

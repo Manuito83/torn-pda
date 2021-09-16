@@ -118,6 +118,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Quick Crimes"),
       leading: new IconButton(
@@ -741,21 +742,21 @@ class _CrimesOptionsState extends State<CrimesOptions> {
         nerve: 11,
         fullName: 'Car lot',
         shortName: 'Car Lot',
-        action: 'car-lot',
+        action: 'Carlot',
         active: false,
       ),
       Crime(
         nerve: 11,
         fullName: 'Office building',
         shortName: 'Office',
-        action: 'office-building',
+        action: 'OfficeBuilding',
         active: false,
       ),
       Crime(
         nerve: 11,
         fullName: 'Apartment building',
         shortName: 'Apartment',
-        action: 'apartment-building',
+        action: 'aptbuilding',
         active: false,
       ),
       Crime(
@@ -776,7 +777,7 @@ class _CrimesOptionsState extends State<CrimesOptions> {
         nerve: 11,
         fullName: 'Government building',
         shortName: 'Government',
-        action: 'government-building',
+        action: 'govbuilding',
         active: false,
       ),
 

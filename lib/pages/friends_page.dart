@@ -167,10 +167,9 @@ class _FriendsPageState extends State<FriendsPage> {
         ),
         SizedBox(height: 15),
         Consumer<FriendsProvider>(
-          builder: (context, targetsModel, child) =>
-              MediaQuery.of(context).orientation == Orientation.portrait
-                  ? Flexible(child: FriendsList(friends: targetsModel.allFriends))
-                  : FriendsList(friends: targetsModel.allFriends),
+          builder: (context, targetsModel, child) => MediaQuery.of(context).orientation == Orientation.portrait
+              ? Flexible(child: FriendsList(friends: targetsModel.allFriends))
+              : FriendsList(friends: targetsModel.allFriends),
         ),
       ],
     );
@@ -178,6 +177,7 @@ class _FriendsPageState extends State<FriendsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: _appBarText,
       leading: IconButton(
@@ -219,10 +219,8 @@ class _FriendsPageState extends State<FriendsPage> {
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
                                     hintText: "search friends",
-                                    hintStyle: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.grey[300],
-                                        fontSize: 12),
+                                    hintStyle:
+                                        TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[300], fontSize: 12),
                                   ),
                                   style: TextStyle(
                                     color: Colors.white,
@@ -365,8 +363,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                     // does not appear again in case of failure
                                     var inputId = _addIdController.text;
                                     _addIdController.text = '';
-                                    AddFriendResult tryAddFriend =
-                                        await friendsProvider.addFriend(inputId);
+                                    AddFriendResult tryAddFriend = await friendsProvider.addFriend(inputId);
                                     if (tryAddFriend.success) {
                                       BotToast.showText(
                                         text: 'Added ${tryAddFriend.friendName} '

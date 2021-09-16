@@ -229,8 +229,7 @@ class _TacPageState extends State<TacPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Battle stats: ${_statsMap[_tacFilters.battleStats]}',
-                      style: TextStyle(fontSize: 12)),
+                  Text('Battle stats: ${_statsMap[_tacFilters.battleStats]}', style: TextStyle(fontSize: 12)),
                   Text('${_ranksMap[_tacFilters.rank]}', style: TextStyle(fontSize: 12)),
                 ],
               ),
@@ -611,6 +610,7 @@ class _TacPageState extends State<TacPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Torn Attack Central"),
       leading: new IconButton(
@@ -794,10 +794,10 @@ class _TacPageState extends State<TacPage> {
                 Navigator.of(context).pop();
                 var url = 'https://tornattackcentral.eu/premium.php';
                 await context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: url,
-                  useDialog: _settingsProvider.useQuickBrowser,
-                );
+                      context: context,
+                      url: url,
+                      useDialog: _settingsProvider.useQuickBrowser,
+                    );
               },
             style: TextStyle(
               decoration: TextDecoration.underline,
@@ -811,10 +811,10 @@ class _TacPageState extends State<TacPage> {
                 Navigator.of(context).pop();
                 var url = 'https://www.torn.com/profiles.php?XID=2518990';
                 await context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: url,
-                  useDialog: _settingsProvider.useQuickBrowser,
-                );
+                      context: context,
+                      url: url,
+                      useDialog: _settingsProvider.useQuickBrowser,
+                    );
               },
             style: TextStyle(
               decoration: TextDecoration.underline,
@@ -865,10 +865,10 @@ class _TacPageState extends State<TacPage> {
                   Navigator.of(context).pop();
                   var url = 'https://tornattackcentral.eu';
                   await context.read<WebViewProvider>().openBrowserPreference(
-                    context: context,
-                    url: url,
-                    useDialog: _settingsProvider.useQuickBrowser,
-                  );
+                        context: context,
+                        url: url,
+                        useDialog: _settingsProvider.useQuickBrowser,
+                      );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
@@ -879,10 +879,10 @@ class _TacPageState extends State<TacPage> {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/profiles.php?XID=2518990';
                   await context.read<WebViewProvider>().openBrowserPreference(
-                    context: context,
-                    url: url,
-                    useDialog: _settingsProvider.useQuickBrowser,
-                  );
+                        context: context,
+                        url: url,
+                        useDialog: _settingsProvider.useQuickBrowser,
+                      );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),
@@ -893,10 +893,10 @@ class _TacPageState extends State<TacPage> {
                   Navigator.of(context).pop();
                   var url = 'https://www.torn.com/forums.php#/p=threads&f=67&t=16172651&b=0&a=0';
                   await context.read<WebViewProvider>().openBrowserPreference(
-                    context: context,
-                    url: url,
-                    useDialog: _settingsProvider.useQuickBrowser,
-                  );
+                        context: context,
+                        url: url,
+                        useDialog: _settingsProvider.useQuickBrowser,
+                      );
                 },
               style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue),
             ),

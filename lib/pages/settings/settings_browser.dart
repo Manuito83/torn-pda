@@ -521,7 +521,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'GYM',
+              'ENERGY',
               style: TextStyle(fontSize: 10),
             ),
           ],
@@ -549,7 +549,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
             'If active, you\'ll get a message and a chain icon to the side of '
-            'the energy bar, so that you avoid spending energy in the gym '
+            'the energy bar, so that you avoid spending energy in the gym or hunting'
             'if you are unaware that your faction is chaining',
             style: TextStyle(
               color: Colors.grey[600],
@@ -580,7 +580,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
-            'If active, you\'ll get a message if your open a browser to the gym '
+            'If active, you\'ll get a message if your open a browser to the gym or go hunting'
             'and your energy is AT OR ABOVE your selected threshold, in case you forgot that '
             'you are stacking',
             style: TextStyle(
@@ -969,6 +969,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,

@@ -23,3 +23,18 @@ import Flutter
   channel.invokeMethod("launch", arguments: shortcutItem.type)
   }
 }
+
+// Flutter 2.2.3 USB keyboard fix
+extension FlutterViewController {
+    open override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        super.pressesBegan(presses, with: event)
+    }
+
+    open override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        super.pressesEnded(presses, with: event)
+    }
+
+    open override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        super.pressesCancelled(presses, with: event)
+    }
+}
