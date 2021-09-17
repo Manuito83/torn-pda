@@ -439,7 +439,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     } else if (url.contains("arsonwarehouse.com/")) {
       return Image.asset('images/icons/awh_logo2.png');
     } else if (url.contains("index.php?page=hunting")) {
-      return Icon(MdiIcons.target);
+      return Icon(MdiIcons.target, size: 20);
     } else if (url.contains("index.php")) {
       return ImageIcon(AssetImage('images/icons/home/home.png'));
     }
