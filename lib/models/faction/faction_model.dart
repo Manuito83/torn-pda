@@ -74,6 +74,7 @@ class FactionModel {
 class Member {
   Member({
     this.name,
+    this.level,
     this.daysInFaction,
     this.lastAction,
     this.status,
@@ -81,6 +82,7 @@ class Member {
   });
 
   String name;
+  int level;
   int daysInFaction;
   LastAction lastAction;
   Status status;
@@ -88,6 +90,7 @@ class Member {
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
     name: json["name"],
+    level: json["level"] == null ? null : json["level"],
     daysInFaction: json["days_in_faction"],
     lastAction: LastAction.fromJson(json["last_action"]),
     status: Status.fromJson(json["status"]),
@@ -96,6 +99,7 @@ class Member {
 
   Map<String, dynamic> toJson() => {
     "name": name,
+    "level": level == null ? null : level,
     "days_in_faction": daysInFaction,
     "last_action": lastAction.toJson(),
     "status": status.toJson(),

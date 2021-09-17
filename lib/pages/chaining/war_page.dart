@@ -5,14 +5,15 @@ import 'dart:async';
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 
@@ -42,7 +43,7 @@ class _WarPageState extends State<WarPage> {
 
   final _chainWidgetKey = GlobalKey();
 
-  TargetsProvider _targetsProvider;
+  final WarController _w = Get.put(WarController());
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
@@ -71,18 +72,12 @@ class _WarPageState extends State<WarPage> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
-    _searchController.addListener(onSearchInputTextChange);
-    // Reset the filter so that we get all the targets
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TargetsProvider>(context, listen: false).setFilterText('');
-    });
 
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
+    analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
   }
 
   @override
   Widget build(BuildContext context) {
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
       drawer: const Drawer(),
@@ -151,6 +146,7 @@ class _WarPageState extends State<WarPage> {
                   size: 20,
                 ),
                 onPressed: () async {
+                  /*
                   final updateResult = await _targetsProvider.updateAllTargets();
                   if (mounted) {
                     if (updateResult.success) {
@@ -182,6 +178,7 @@ class _WarPageState extends State<WarPage> {
                       );
                     }
                   }
+                  */
                 },
               ),
             ),
@@ -192,25 +189,14 @@ class _WarPageState extends State<WarPage> {
           userKey: widget.userKey,
           alwaysDarkBackground: false,
         ),
-        if (_targetsProvider.currentColorFilterOut.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              "NOTE: there is an active color filter!",
-              style: TextStyle(color: Colors.orange[800], fontSize: 12),
-            ),
-          ),
-        Consumer<TargetsProvider>(
-          builder: (context, targetsModel, child) => MediaQuery.of(context).orientation == Orientation.portrait
-              ? Flexible(child: TargetsList(targets: targetsModel.allTargets))
-              : TargetsList(targets: targetsModel.allTargets),
-        ),
+        // TODO: CONSUMER
       ],
     );
   }
 
   AppBar buildAppBar() {
     return AppBar(
+      brightness: Brightness.dark,
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
@@ -235,7 +221,7 @@ class _WarPageState extends State<WarPage> {
   }
 
   Future<void> _showAddDialog(BuildContext _) {
-    final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    // TODO: final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     return showDialog<void>(
       context: _,
       barrierDismissible: false, // user must tap button!
@@ -244,16 +230,13 @@ class _WarPageState extends State<WarPage> {
           themeProvider: _themeProvider,
           addFormKey: _addFormKey,
           addIdController: _addIdController,
-          targetsProvider: targetsProvider,
+          //TODO targetsProvider: targetsProvider,
         );
       },
     );
   }
 
-  void onSearchInputTextChange() {
-    Provider.of<TargetsProvider>(context, listen: false).setFilterText(_searchController.text);
-  }
-
+  /*
   void _selectSortPopup(TargetSort choice) {
     switch (choice.type) {
       case TargetSortType.levelDes:
@@ -282,6 +265,7 @@ class _WarPageState extends State<WarPage> {
         break;
     }
   }
+  */
 
   Future _restorePreferences() async {
     // TODO
@@ -294,16 +278,16 @@ class AddFactionDialog extends StatelessWidget {
     @required this.themeProvider,
     @required this.addFormKey,
     @required this.addIdController,
-    @required this.targetsProvider,
   }) : super(key: key);
 
   final ThemeProvider themeProvider;
   final GlobalKey<FormState> addFormKey;
   final TextEditingController addIdController;
-  final TargetsProvider targetsProvider;
 
   @override
   Widget build(BuildContext context) {
+    final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
+    final WarController w = Get.find();
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -348,7 +332,7 @@ class AddFactionDialog extends StatelessWidget {
                         decoration: const InputDecoration(
                           counterText: "",
                           border: OutlineInputBorder(),
-                          labelText: 'Insert player ID',
+                          labelText: 'Insert faction ID',
                         ),
                         validator: (value) {
                           if (value.isEmpty) {
@@ -375,21 +359,18 @@ class AddFactionDialog extends StatelessWidget {
                                 // does not appear again in case of failure
                                 final inputId = addIdController.text;
                                 addIdController.text = '';
-                                
-                                final AddTargetResult tryAddTarget = await targetsProvider.addTarget(
-                                  targetId: inputId,
-                                  attacks: await targetsProvider.getAttacks(),
-                                );
-                                
+
+                                final addFactionResult = w.addFaction(apiKey, inputId);
+
                                 BotToast.showText(
-                                  text: tryAddTarget.success
-                                      ? 'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'
-                                      : 'Error adding $inputId. ${tryAddTarget.errorReason}',
+                                  text: addFactionResult.isNotEmpty
+                                      ? 'Added $addFactionResult [$inputId]'
+                                      : 'Error adding $inputId.',
                                   textStyle: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                   ),
-                                  contentColor: tryAddTarget.success ? Colors.green : Colors.orange[700],
+                                  contentColor: addFactionResult.isNotEmpty ? Colors.green : Colors.orange[700],
                                   duration: const Duration(seconds: 3),
                                   contentPadding: const EdgeInsets.all(10),
                                 );
