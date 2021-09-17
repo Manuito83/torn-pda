@@ -414,9 +414,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     var url = _webViewProvider.tabList[i].currentUrl;
 
     // Find some icons manually first, as they might trigger errors with shortcuts
-    if (url.contains("index.php")) {
-      return ImageIcon(AssetImage('images/icons/home/home.png'));
-    } else if (url.contains("sid=attack&user2ID=2225097")) {
+    if (url.contains("sid=attack&user2ID=2225097")) {
       return Icon(MdiIcons.pistol, color: Colors.pink);
     } else if (url.contains("sid=attack&user2ID=")) {
       return Icon(Icons.person);
@@ -440,6 +438,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       return Image.asset('images/icons/tornstats_logo.png');
     } else if (url.contains("arsonwarehouse.com/")) {
       return Image.asset('images/icons/awh_logo2.png');
+    } else if (url.contains("index.php?page=hunting")) {
+      return Icon(MdiIcons.target);
+    } else if (url.contains("index.php")) {
+      return ImageIcon(AssetImage('images/icons/home/home.png'));
     }
 
     // Try to find by using shortcuts list

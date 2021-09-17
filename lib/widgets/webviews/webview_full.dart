@@ -2649,7 +2649,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (message.isNotEmpty) {
           if (widget.useTabs) {
             // This avoid repeated BotToast messages if several tabs are open to the gym
-            _webViewProvider.showGymMessage(message, widget.key);
+            _webViewProvider.showEnergyWarningMessage(message, widget.key);
           } else {
             BotToast.showText(
               crossPage: false,

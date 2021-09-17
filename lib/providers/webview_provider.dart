@@ -321,14 +321,14 @@ class WebViewProvider extends ChangeNotifier {
 
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
-    if (tab.currentUrl.contains("gym.php")) {
+    if (tab.currentUrl.contains("gym.php") || tab.currentUrl.contains("index.php?page=hunting")) {
       tab.webViewKey.currentState?.assessEnergyWarning();
     }
   }
 
   // This can be called from the WebView and ensures that several BotToasts are not shown at the start if
   // several tabs are open to the gym
-  void showGymMessage(String message, Key reporterKey) {
+  void showEnergyWarningMessage(String message, Key reporterKey) {
     for (var tab in _tabList) {
       if (tab.webView.key == reporterKey) {
         if (!_gymMessageActive) {
