@@ -215,6 +215,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialWebViewOptions = InAppWebViewGroupOptions(
       crossPlatform: InAppWebViewOptions(
+        transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
 

@@ -8,12 +8,18 @@ class Prefs {
   ///
   /// Instantiation of the SharedPreferences library
   ///
+  // General
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
+  // War targets
+  final String _kWarFactions = "pda_warFactions";
+  final String _kWarTargets = "pda_warTargets";
+  // Other
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
@@ -243,6 +249,17 @@ class Prefs {
   Future<bool> setTargetsColorFilter(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kTargetsColorFilter, value);
+  }
+
+  //**************
+  Future<List<String>> getWarFactions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kWarFactions) ?? <String>[];
+  }
+
+  Future<bool> setWarFactions(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kWarFactions, value);
   }
 
   //**************
@@ -1608,5 +1625,4 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kShowCases, value);
   }
-
 }

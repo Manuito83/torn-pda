@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -19,6 +20,7 @@ import 'package:torn_pda/widgets/chaining/targets_list.dart';
 
 import '../../main.dart';
 
+// TODO convert to stateless???
 class WarPage extends StatefulWidget {
   final String userKey;
   //final Function tabCallback;
@@ -189,7 +191,13 @@ class _WarPageState extends State<WarPage> {
           userKey: widget.userKey,
           alwaysDarkBackground: false,
         ),
-        // TODO: CONSUMER
+        GetBuilder<WarController>(
+          builder: (w) => context.orientation == Orientation.portrait
+              ? Flexible(
+                  child: WarTargetsList(warController: _w),
+                )
+              : WarTargetsList(warController: _w),
+        ),
       ],
     );
   }
@@ -221,16 +229,17 @@ class _WarPageState extends State<WarPage> {
   }
 
   Future<void> _showAddDialog(BuildContext _) {
-    // TODO: final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     return showDialog<void>(
       context: _,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return AddFactionDialog(
-          themeProvider: _themeProvider,
-          addFormKey: _addFormKey,
-          addIdController: _addIdController,
-          //TODO targetsProvider: targetsProvider,
+        return GetBuilder<WarController>(
+          builder: (w) => AddFactionDialog(
+            themeProvider: _themeProvider,
+            addFormKey: _addFormKey,
+            addIdController: _addIdController,
+            warController: w,
+          ),
         );
       },
     );
@@ -278,142 +287,234 @@ class AddFactionDialog extends StatelessWidget {
     @required this.themeProvider,
     @required this.addFormKey,
     @required this.addIdController,
+    @required this.warController,
   }) : super(key: key);
 
   final ThemeProvider themeProvider;
   final GlobalKey<FormState> addFormKey;
   final TextEditingController addIdController;
+  final WarController warController;
 
   @override
   Widget build(BuildContext context) {
     final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
-    final WarController w = Get.find();
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
-      content: SingleChildScrollView(
-        child: Stack(
-          children: <Widget>[
-            SingleChildScrollView(
-              child: Container(
-                padding: const EdgeInsets.only(
-                  top: 45,
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                ),
-                margin: const EdgeInsets.only(top: 30),
-                decoration: BoxDecoration(
-                  color: themeProvider.background,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10.0,
-                      offset: Offset(0.0, 10.0),
+      content: Stack(
+        children: <Widget>[
+          SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.only(
+                top: 45,
+                bottom: 16,
+                left: 16,
+                right: 16,
+              ),
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
+                color: themeProvider.background,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10.0,
+                    offset: Offset(0.0, 10.0),
+                  ),
+                ],
+              ),
+              child: Form(
+                key: addFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // To make the card compact
+                  children: <Widget>[
+                    TextFormField(
+                      style: const TextStyle(fontSize: 14),
+                      controller: addIdController,
+                      maxLength: 10,
+                      minLines: 1,
+                      maxLines: 2,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        counterText: "",
+                        border: OutlineInputBorder(),
+                        labelText: 'Insert faction ID',
+                      ),
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return "Cannot be empty!";
+                        }
+                        final n = num.tryParse(value);
+                        if (n == null) {
+                          return '$value is not a valid ID!';
+                        }
+                        addIdController.text = value.trim();
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
+                    factionCards(),
+                    const SizedBox(height: 16.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        TextButton(
+                          child: const Text("Add"),
+                          onPressed: () async {
+                            if (addFormKey.currentState.validate()) {
+                              // Copy controller's text ot local variable
+                              // early and delete the global, so that text
+                              // does not appear again in case of failure
+                              final inputId = addIdController.text;
+                              addIdController.text = '';
+
+                              final addFactionResult = await warController.addFaction(apiKey, inputId);
+
+                              Color messageColor = Colors.green;
+                              if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
+                                messageColor = Colors.orange[700];
+                              }
+
+                              String message = 'Added $addFactionResult [$inputId]';
+                              if (addFactionResult.isEmpty) {
+                                message = 'Error adding $inputId.';
+                              } else if (addFactionResult == "error_existing") {
+                                message = 'Faction $inputId is already in the list!';
+                              }
+
+                              BotToast.showText(
+                                text: message,
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: messageColor,
+                                duration: const Duration(seconds: 3),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }
+                          },
+                        ),
+                        TextButton(
+                          child: const Text("Close"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            addIdController.text = '';
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                child: Form(
-                  key: addFormKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min, // To make the card compact
-                    children: <Widget>[
-                      TextFormField(
-                        style: const TextStyle(fontSize: 14),
-                        controller: addIdController,
-                        maxLength: 10,
-                        minLines: 1,
-                        maxLines: 2,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          counterText: "",
-                          border: OutlineInputBorder(),
-                          labelText: 'Insert faction ID',
-                        ),
-                        validator: (value) {
-                          if (value.isEmpty) {
-                            return "Cannot be empty!";
-                          }
-                          final n = num.tryParse(value);
-                          if (n == null) {
-                            return '$value is not a valid ID!';
-                          }
-                          addIdController.text = value.trim();
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          TextButton(
-                            child: const Text("Add"),
-                            onPressed: () async {
-                              if (addFormKey.currentState.validate()) {
-                                // Copy controller's text ot local variable
-                                // early and delete the global, so that text
-                                // does not appear again in case of failure
-                                final inputId = addIdController.text;
-                                addIdController.text = '';
-
-                                final addFactionResult = w.addFaction(apiKey, inputId);
-
-                                BotToast.showText(
-                                  text: addFactionResult.isNotEmpty
-                                      ? 'Added $addFactionResult [$inputId]'
-                                      : 'Error adding $inputId.',
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: addFactionResult.isNotEmpty ? Colors.green : Colors.orange[700],
-                                  duration: const Duration(seconds: 3),
-                                  contentPadding: const EdgeInsets.all(10),
-                                );
-                              }
-                            },
-                          ),
-                          TextButton(
-                            child: const Text("Close"),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              addIdController.text = '';
-                            },
-                          ),
-                        ],
-                      )
-                    ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            child: CircleAvatar(
+              radius: 26,
+              backgroundColor: themeProvider.background,
+              child: CircleAvatar(
+                backgroundColor: themeProvider.mainText,
+                radius: 22,
+                child: SizedBox(
+                  height: 28,
+                  width: 28,
+                  child: Image.asset(
+                    'images/icons/ic_target_account_black_48dp.png',
+                    color: themeProvider.background,
                   ),
                 ),
               ),
             ),
-            Positioned(
-              left: 16,
-              right: 16,
-              child: CircleAvatar(
-                radius: 26,
-                backgroundColor: themeProvider.background,
-                child: CircleAvatar(
-                  backgroundColor: themeProvider.mainText,
-                  radius: 22,
-                  child: SizedBox(
-                    height: 28,
-                    width: 28,
-                    child: Image.asset(
-                      'images/icons/ic_target_account_black_48dp.png',
-                      color: themeProvider.background,
-                    ),
-                  ),
-                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget factionCards() {
+    List<Widget> factionCards = <Widget>[];
+    for (FactionModel faction in warController.factions) {
+      factionCards.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: () {
+                // TODO toggle
+              },
+              child: Icon(Icons.remove_red_eye_outlined),
+            ),
+            Card(
+              color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : themeProvider.background,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(faction.name),
               ),
+            ),
+            GestureDetector(
+              onTap: () {
+                warController.removeFaction(faction.id);
+              },
+              child: Icon(Icons.remove),
             ),
           ],
         ),
-      ),
-    );
+      );
+    }
+    return Column(children: factionCards);
+  }
+}
+
+class WarTargetsList extends StatelessWidget {
+  WarTargetsList({@required this.warController});
+
+  final WarController warController;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      return ListView(children: getChildrenTargets(context));
+    } else {
+      return ListView(
+        children: getChildrenTargets(context),
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+      );
+    }
+  }
+
+  List<Widget> getChildrenTargets(BuildContext _) {
+    List<Member> members = <Member>[];
+    warController.factions.forEach((faction) {
+      faction.members.forEach((key, value) {
+        members.add(value);
+      });
+    });
+
+    //String filter = targetsProvider.currentWordFilter;
+    List<Widget> filteredCards = <Widget>[];
+    for (var thisTarget in members) {
+      /*
+      if (thisTarget.name.toUpperCase().contains(filter.toUpperCase())) {
+        if (!targetsProvider.currentColorFilterOut.contains(thisTarget.personalNoteColor)) {
+          filteredCards.add(TargetCard(key: UniqueKey(), targetModel: thisTarget));
+        }
+      }
+      */
+      filteredCards.add(Card(
+        child: Text(thisTarget.name),
+      ));
+    }
+
+    // Avoid collisions with SnackBar
+    filteredCards.add(SizedBox(height: 50));
+    return filteredCards;
   }
 }

@@ -1,18 +1,55 @@
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class WarController extends GetxController {
-  RxList<FactionModel> factions = RxList<FactionModel>().obs();
+  List<FactionModel> factions = <FactionModel>[].obs();
 
-  String addFaction(String apiKey, String factionId) {
-    final apiResult = TornApiCaller.faction(apiKey, factionId).getFaction;
+  @override
+  void onInit() {
+    super.onInit();
+    initialiseFactions();
+  }
+
+  Future<String> addFaction(String apiKey, String factionId) async {
+    // Return custom error code if faction already exists
+    for (FactionModel faction in factions) {
+      if (faction.id == factionId) {
+        return "error_existing";
+      }
+    }
+
+    final apiResult = await TornApiCaller.faction(apiKey, factionId).getFaction;
     if (apiResult == ApiError) {
       return "";
-    } else if (apiResult == FactionModel) {
-      final faction = apiResult as FactionModel;
-      factions.add(faction);
-      return faction.name;
     }
+
+    final faction = apiResult as FactionModel;
+    factions.add(faction);
+    update();
+    savePreferences();
+    return faction.name;
+  }
+
+  void removeFaction(int removeId) {
+    factions.removeWhere((f) => f.id == removeId);
+    update();
+  }
+
+  Future initialiseFactions() async {
+    List<String> saved = await Prefs().getWarFactions();
+    saved.forEach((element) {
+      factions.add(factionModelFromJson(element));
+    });
+  }
+
+  void savePreferences() {
+    List<String> factionList = [];
+    factions.forEach((element) {
+      factionList.add(factionModelToJson(element));
+    });
+    Prefs().setWarFactions(factionList);
   }
 }

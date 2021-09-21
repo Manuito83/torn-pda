@@ -6,7 +6,6 @@
 import 'dart:convert';
 
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
-
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
 
 class FactionModel {
