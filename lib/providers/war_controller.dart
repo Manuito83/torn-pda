@@ -5,7 +5,8 @@ import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class WarController extends GetxController {
-  List<FactionModel> factions = <FactionModel>[].obs();
+  List<FactionModel> factions = <FactionModel>[];
+  List<int> filteredOutFactions = <int>[];
 
   @override
   void onInit() {
@@ -35,6 +36,15 @@ class WarController extends GetxController {
 
   void removeFaction(int removeId) {
     factions.removeWhere((f) => f.id == removeId);
+    update();
+  }
+
+  void filterFaction(int factionId) {
+    if (filteredOutFactions.contains(factionId)) {
+      filteredOutFactions.remove(factionId);
+    } else {
+      filteredOutFactions.add(factionId);
+    }
     update();
   }
 

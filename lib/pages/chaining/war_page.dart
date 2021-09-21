@@ -447,22 +447,27 @@ class AddFactionDialog extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                // TODO toggle
+                warController.filterFaction(faction.id);
               },
-              child: Icon(Icons.remove_red_eye_outlined),
+              child: Icon(
+                Icons.remove_red_eye_outlined,
+                color: warController.filteredOutFactions.contains(faction.id) ? Colors.red : themeProvider.mainText,
+              ),
             ),
+            SizedBox(width: 5),
             Card(
-              color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : themeProvider.background,
+              color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(faction.name),
               ),
             ),
+            SizedBox(width: 5),
             GestureDetector(
               onTap: () {
                 warController.removeFaction(faction.id);
               },
-              child: Icon(Icons.remove),
+              child: Icon(Icons.delete_forever_outlined),
             ),
           ],
         ),
@@ -480,22 +485,24 @@ class WarTargetsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.of(context).orientation == Orientation.portrait) {
-      return ListView(children: getChildrenTargets(context));
+      return ListView(children: getChildrenTargets());
     } else {
       return ListView(
-        children: getChildrenTargets(context),
+        children: getChildrenTargets(),
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
       );
     }
   }
 
-  List<Widget> getChildrenTargets(BuildContext _) {
+  List<Widget> getChildrenTargets() {
     List<Member> members = <Member>[];
     warController.factions.forEach((faction) {
-      faction.members.forEach((key, value) {
-        members.add(value);
-      });
+      if (!warController.filteredOutFactions.contains(faction.id)) {
+        faction.members.forEach((key, value) {
+          members.add(value);
+        });
+      }
     });
 
     //String filter = targetsProvider.currentWordFilter;
