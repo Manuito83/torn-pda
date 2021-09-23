@@ -109,81 +109,7 @@ class _WarPageState extends State<WarPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            ButtonTheme(
-              minWidth: 1.0,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  elevation: 2,
-                  primary: _themeProvider.background,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    side: const BorderSide(width: 2, color: Colors.blueGrey),
-                  ),
-                ),
-                child: Icon(
-                  Icons.add,
-                  color: _themeProvider.mainText,
-                  size: 20,
-                ),
-                onPressed: () {
-                  _showAddDialog(context);
-                },
-              ),
-            ),
-            const SizedBox(width: 15),
-            ButtonTheme(
-              minWidth: 1.0,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  elevation: 2,
-                  primary: _themeProvider.background,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    side: const BorderSide(width: 2, color: Colors.blueGrey),
-                  ),
-                ),
-                child: Icon(
-                  Icons.refresh,
-                  color: _themeProvider.mainText,
-                  size: 20,
-                ),
-                onPressed: () async {
-                  /*
-                  final updateResult = await _targetsProvider.updateAllTargets();
-                  if (mounted) {
-                    if (updateResult.success) {
-                      BotToast.showText(
-                        text: updateResult.numberSuccessful > 0
-                            ? 'Successfully updated '
-                                '${updateResult.numberSuccessful} targets!'
-                            : 'No targets to update!',
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
-                        duration: const Duration(seconds: 3),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    } else {
-                      BotToast.showText(
-                        text: 'Update with errors: ${updateResult.numberErrors} errors '
-                            'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                            'total targets!',
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.red,
-                        duration: const Duration(seconds: 3),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    }
-                  }
-                  */
-                },
-              ),
-            ),
+            // TODO
           ],
         ),
         ChainWidget(
@@ -215,8 +141,56 @@ class _WarPageState extends State<WarPage> {
           scaffoldState.openDrawer();
         },
       ),
-      actions: const <Widget>[
-        // TODO
+      actions: <Widget>[
+        IconButton(
+          icon: Image.asset(
+            'images/icons/faction.png',
+            width: 18,
+            height: 18,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            _showAddDialog(context);
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.refresh),
+          onPressed: () async {
+            /*
+                final updateResult = await _targetsProvider.updateAllTargets();
+                if (mounted) {
+                  if (updateResult.success) {
+                    BotToast.showText(
+                      text: updateResult.numberSuccessful > 0
+                          ? 'Successfully updated '
+                              '${updateResult.numberSuccessful} targets!'
+                          : 'No targets to update!',
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
+                      duration: const Duration(seconds: 3),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  } else {
+                    BotToast.showText(
+                      text: 'Update with errors: ${updateResult.numberErrors} errors '
+                          'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
+                          'total targets!',
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  }
+                }
+                */
+          },
+        ),
       ],
     );
   }
@@ -423,10 +397,10 @@ class AddFactionDialog extends StatelessWidget {
                 backgroundColor: themeProvider.mainText,
                 radius: 22,
                 child: SizedBox(
-                  height: 28,
-                  width: 28,
+                  height: 22,
+                  width: 22,
                   child: Image.asset(
-                    'images/icons/ic_target_account_black_48dp.png',
+                    'images/icons/faction.png',
                     color: themeProvider.background,
                   ),
                 ),

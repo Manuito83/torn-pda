@@ -6,7 +6,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class WarController extends GetxController {
   List<FactionModel> factions = <FactionModel>[];
-  List<int> filteredOutFactions = <int>[];
+  List<int> filteredOutFactions = <int>[]; // TODO: to share prefs
 
   @override
   void onInit() {
