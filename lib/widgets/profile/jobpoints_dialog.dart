@@ -146,9 +146,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
         Column(
           children: [
             Text(
-              widget.job.companyName == 'None'
-                  ? widget.job.position
-                  : HtmlParser.fix(widget.job.companyName),
+              widget.job.companyName == 'None' ? widget.job.position : HtmlParser.fix(widget.job.companyName),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
@@ -167,6 +165,15 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
   }
 
   Widget _jopPoints() {
+    if (widget.jobpoints.jobs == null) {
+      return Text(
+        'No job points found!',
+        style: TextStyle(
+          fontSize: 12,
+        ),
+      );
+    }
+
     return Column(
       children: [
         Text(
