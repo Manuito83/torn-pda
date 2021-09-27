@@ -367,6 +367,7 @@ class WebViewProvider extends ChangeNotifier {
     @required BuildContext context,
     @required String url,
     @required bool useDialog,
+    bool awaitable = false,
   }) async {
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
@@ -376,13 +377,25 @@ class WebViewProvider extends ChangeNotifier {
       } else {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
-          openBrowserDialog(context, url);
+          if (awaitable) {
+            await openBrowserDialog(context, url);
+          } else {
+            openBrowserDialog(context, url);
+          }
         } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => WebViewStackView(initUrl: url),
-            ),
-          );
+          if (awaitable) {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewStackView(initUrl: url),
+              ),
+            );
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewStackView(initUrl: url),
+              ),
+            );
+          }
         }
       }
     } else {
