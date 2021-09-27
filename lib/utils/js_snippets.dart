@@ -50,11 +50,11 @@ String buyMaxAbroadJS() {
 
       const doc = document;
       let market = doc.querySelector(".travel-agency-market");
-    
+
       if(!market){
         return;
       }
-    
+
       // Assess whether buy buttons are visible when page loads, in which
       // case screen is wide and perhaps we are on a tablet. Then, just
       // load the FILL button TornTools style (below the buy button).
@@ -64,13 +64,13 @@ String buyMaxAbroadJS() {
           style.textContent = styleString;
           document.head.append(style);
         }
-    
+
         addStyle(`
           .deal {
             position: relative;
           }
         `);
-    
+
         addStyle(`
           .deal .buy {
             margin-top: -14px !important;
@@ -98,8 +98,7 @@ String buyMaxAbroadJS() {
           buy_btn.parentElement.appendChild(max_span);
           
           max_span.addEventListener("click", function(event){
-            event.stopPropagation();
-    
+          event.stopPropagation();
             let max = parseInt(buy_btn.parentElement.parentElement.querySelector(".stck-amount").innerText.replace(/,/g, ""));
             let price = parseInt(buy_btn.parentElement.parentElement.querySelector(".c-price").innerText.replace(/,/g, "").replace("\$",""));
             let user_money = doc.querySelector(".user-info .msg .bold:nth-of-type(2)").innerText.replace(/,/g, "").replace("\$","");
@@ -109,16 +108,17 @@ String buyMaxAbroadJS() {
             max = max > limit ? limit:max;
             max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
 
-            if (max_span.innerHTML == '<a class="max-buy">FILL</a>') {
+            let current = max_span.innerHTML;
+            if (current.includes('class="max-buy"') && current.includes('FILL')) {
               dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max);
               max_span.innerHTML = '<a class="max-buy">+3</a>';
-            } else if (max_span.innerHTML == '<a class="max-buy">+3</a>') {
+            } else if (current.includes('class="max-buy"') && current.includes('+3')) {
               dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 3);
               max_span.innerHTML = '<a class="max-buy">+5</a>';
-            } else if (max_span.innerHTML == '<a class="max-buy">+5</a>') {
+            } else if (current.includes('class="max-buy"') && current.includes('+5')) {
               dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 5);
               max_span.innerHTML = '<a class="max-buy">+10</a>';
-            } else if (max_span.innerHTML == '<a class="max-buy">+10</a>') {
+            } else if (current.includes('class="max-buy"') && current.includes('+10')) {
               dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max + 10);
               max_span.innerHTML = '<a class="max-buy">FILL</a>';
             }
@@ -134,7 +134,7 @@ String buyMaxAbroadJS() {
         
           max_span.addEventListener("click", function(event){
             event.stopPropagation();
-    
+
             let max = parseInt(buy_btn.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector(".stck-amount").innerText.replace(/,/g, ""));
             let price = parseInt(buy_btn.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector(".c-price").innerText.replace(/,/g, "").replace("\$",""));
             let user_money = doc.querySelector(".user-info .msg .bold:nth-of-type(2)").innerText.replace(/,/g, "").replace("\$","");
@@ -144,16 +144,17 @@ String buyMaxAbroadJS() {
             max = max > limit ? limit:max;
             max = Math.floor(user_money/price) < max ? Math.floor(user_money/price) : max;
             
-            if (max_span.innerHTML == '<button class="torn-btn">MAX</button>') {
+            let current = max_span.innerHTML;
+            if (current.includes('class="torn-btn"') && current.includes('MAX')) {
               dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max);
               max_span.innerHTML = '<button class="torn-btn">+3</button>';
-            } else if (max_span.innerHTML == '<button class="torn-btn">+3</button>') {
+            } else if (current.includes('class="torn-btn"') && current.includes('+3')) {
               dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 3);
               max_span.innerHTML = '<button class="torn-btn">+5</button>';
-            } else if (max_span.innerHTML == '<button class="torn-btn">+5</button>') {
+            } else if (current.includes('class="torn-btn"') && current.includes('+5')) {
               dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 5);
               max_span.innerHTML = '<button class="torn-btn">+10</button>';
-            } else if (max_span.innerHTML == '<button class="torn-btn">+10</button>') {
+            } else if (current.includes('class="torn-btn"') && current.includes('+10')) {
               dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max + 10);
               max_span.innerHTML = '<button class="torn-btn">MAX</button>';
             }
@@ -161,7 +162,7 @@ String buyMaxAbroadJS() {
         }
       }
     }
-    
+
     function dispatchClick(element, newValue) {
       let input = element; 
       let lastValue = input.value;
@@ -177,21 +178,9 @@ String buyMaxAbroadJS() {
       }
       input.dispatchEvent(event);
     }
-    
-    addFillMaxButtons();
-  
-    // Return to avoid iOS WKErrorDomain
-    123;
-  ''';
-}
 
-String travelRemovePlaneJS() {
-  return '''
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    style.innerHTML = '.travel-agency-travelling .stage, .travel-agency-travelling .popup-info { display: none !important; }';
-    document.getElementsByTagName('head')[0].appendChild(style);
-        
+    addFillMaxButtons();
+
     // Return to avoid iOS WKErrorDomain
     123;
   ''';
