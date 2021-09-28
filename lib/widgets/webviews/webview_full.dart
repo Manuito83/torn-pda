@@ -218,7 +218,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
-        transparentBackground: true,  // Prevents white flash on initialization
 
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it

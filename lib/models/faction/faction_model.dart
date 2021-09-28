@@ -40,34 +40,34 @@ class FactionModel {
   Map<String, Member> members;
 
   factory FactionModel.fromJson(Map<String, dynamic> json) => FactionModel(
-    id: json["ID"],
-    name: json["name"],
-    tag: json["tag"],
-    leader: json["leader"],
-    coLeader: json["co-leader"],
-    respect: json["respect"],
-    age: json["age"],
-    bestChain: json["best_chain"],
-    //territoryWars: TerritoryWars.fromJson(json["territory_wars"]),
-    //raidWars: RaidWars.fromJson(json["raid_wars"]),
-    //peace: Peace.fromJson(json["peace"]),
-    members: Map.from(json["members"]).map((k, v) => MapEntry<String, Member>(k, Member.fromJson(v))),
-  );
+        id: json["ID"],
+        name: json["name"],
+        tag: json["tag"],
+        leader: json["leader"],
+        coLeader: json["co-leader"],
+        respect: json["respect"],
+        age: json["age"],
+        bestChain: json["best_chain"],
+        //territoryWars: TerritoryWars.fromJson(json["territory_wars"]),
+        //raidWars: RaidWars.fromJson(json["raid_wars"]),
+        //peace: Peace.fromJson(json["peace"]),
+        members: Map.from(json["members"]).map((k, v) => MapEntry<String, Member>(k, Member.fromJson(v))),
+      );
 
   Map<String, dynamic> toJson() => {
-    "ID": id,
-    "name": name,
-    "tag": tag,
-    "leader": leader,
-    "co-leader": coLeader,
-    "respect": respect,
-    "age": age,
-    "best_chain": bestChain,
-    //"territory_wars": territoryWars.toJson(),
-    //"raid_wars": raidWars.toJson(),
-    //"peace": peace.toJson(),
-    "members": Map.from(members).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
-  };
+        "ID": id,
+        "name": name,
+        "tag": tag,
+        "leader": leader,
+        "co-leader": coLeader,
+        "respect": respect,
+        "age": age,
+        "best_chain": bestChain,
+        //"territory_wars": territoryWars.toJson(),
+        //"raid_wars": raidWars.toJson(),
+        //"peace": peace.toJson(),
+        "members": Map.from(members).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+      };
 }
 
 class Member {
@@ -80,6 +80,13 @@ class Member {
     this.position,
   });
 
+  // State
+  int memberId = 0;
+  bool isUpdating = false;
+  String factionName = "";
+  int factionLeader = 0;
+  int factionColeader = 0;
+
   String name;
   int level;
   int daysInFaction;
@@ -88,22 +95,22 @@ class Member {
   String position;
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
-    name: json["name"],
-    level: json["level"] == null ? null : json["level"],
-    daysInFaction: json["days_in_faction"],
-    lastAction: LastAction.fromJson(json["last_action"]),
-    status: Status.fromJson(json["status"]),
-    position: json["position"],
-  );
+        name: json["name"],
+        level: json["level"] == null ? null : json["level"],
+        daysInFaction: json["days_in_faction"],
+        lastAction: LastAction.fromJson(json["last_action"]),
+        status: Status.fromJson(json["status"]),
+        position: json["position"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "name": name,
-    "level": level == null ? null : level,
-    "days_in_faction": daysInFaction,
-    "last_action": lastAction.toJson(),
-    "status": status.toJson(),
-    "position": position,
-  };
+        "name": name,
+        "level": level == null ? null : level,
+        "days_in_faction": daysInFaction,
+        "last_action": lastAction.toJson(),
+        "status": status.toJson(),
+        "position": position,
+      };
 }
 
 class LastAction {
@@ -118,16 +125,16 @@ class LastAction {
   String relative;
 
   factory LastAction.fromJson(Map<String, dynamic> json) => LastAction(
-    status: json["status"],
-    timestamp: json["timestamp"],
-    relative: json["relative"],
-  );
+        status: json["status"],
+        timestamp: json["timestamp"],
+        relative: json["relative"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "status": status,
-    "timestamp": timestamp,
-    "relative": relative,
-  };
+        "status": status,
+        "timestamp": timestamp,
+        "relative": relative,
+      };
 }
 
 class Status {
@@ -146,20 +153,20 @@ class Status {
   int until;
 
   factory Status.fromJson(Map<String, dynamic> json) => Status(
-    description: json["description"],
-    details: json["details"],
-    state: json["state"],
-    color: json["color"],
-    until: json["until"],
-  );
+        description: json["description"],
+        details: json["details"],
+        state: json["state"],
+        color: json["color"],
+        until: json["until"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "description": description,
-    "details": details,
-    "state": state,
-    "color": color,
-    "until": until,
-  };
+        "description": description,
+        "details": details,
+        "state": state,
+        "color": color,
+        "until": until,
+      };
 }
 
 /*

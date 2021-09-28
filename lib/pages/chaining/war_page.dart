@@ -17,6 +17,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
+import 'package:torn_pda/widgets/chaining/war_card.dart';
 
 import '../../main.dart';
 
@@ -474,6 +475,10 @@ class WarTargetsList extends StatelessWidget {
     warController.factions.forEach((faction) {
       if (!warController.filteredOutFactions.contains(faction.id)) {
         faction.members.forEach((key, value) {
+          value.memberId = int.parse(key);
+          value.factionName = faction.name;
+          value.factionLeader = faction.leader;
+          value.factionColeader = faction.coLeader;
           members.add(value);
         });
       }
@@ -481,7 +486,7 @@ class WarTargetsList extends StatelessWidget {
 
     //String filter = targetsProvider.currentWordFilter;
     List<Widget> filteredCards = <Widget>[];
-    for (var thisTarget in members) {
+    for (var thisMember in members) {
       /*
       if (thisTarget.name.toUpperCase().contains(filter.toUpperCase())) {
         if (!targetsProvider.currentColorFilterOut.contains(thisTarget.personalNoteColor)) {
@@ -489,9 +494,12 @@ class WarTargetsList extends StatelessWidget {
         }
       }
       */
-      filteredCards.add(Card(
-        child: Text(thisTarget.name),
-      ));
+      filteredCards.add(
+        WarCard(
+          key: UniqueKey(),
+          memberModel: thisMember,
+        ),
+      );
     }
 
     // Avoid collisions with SnackBar
