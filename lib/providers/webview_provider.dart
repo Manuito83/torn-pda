@@ -321,14 +321,14 @@ class WebViewProvider extends ChangeNotifier {
 
   void _callAssessMethods() {
     var tab = _tabList[_currentTab];
-    if (tab.currentUrl.contains("gym.php")) {
+    if (tab.currentUrl.contains("gym.php") || tab.currentUrl.contains("index.php?page=hunting")) {
       tab.webViewKey.currentState?.assessEnergyWarning();
     }
   }
 
   // This can be called from the WebView and ensures that several BotToasts are not shown at the start if
   // several tabs are open to the gym
-  void showGymMessage(String message, Key reporterKey) {
+  void showEnergyWarningMessage(String message, Key reporterKey) {
     for (var tab in _tabList) {
       if (tab.webView.key == reporterKey) {
         if (!_gymMessageActive) {
@@ -367,6 +367,7 @@ class WebViewProvider extends ChangeNotifier {
     @required BuildContext context,
     @required String url,
     @required bool useDialog,
+    bool awaitable = false,
   }) async {
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
@@ -376,13 +377,25 @@ class WebViewProvider extends ChangeNotifier {
       } else {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
-          openBrowserDialog(context, url);
+          if (awaitable) {
+            await openBrowserDialog(context, url);
+          } else {
+            openBrowserDialog(context, url);
+          }
         } else {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (BuildContext context) => WebViewStackView(initUrl: url),
-            ),
-          );
+          if (awaitable) {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewStackView(initUrl: url),
+              ),
+            );
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (BuildContext context) => WebViewStackView(initUrl: url),
+              ),
+            );
+          }
         }
       }
     } else {

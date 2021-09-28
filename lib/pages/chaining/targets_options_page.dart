@@ -120,8 +120,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, you will be shown the note you have saved for every '
-                                  'target and its color as you progress with the chain. For TAC targets this '
-                                  'will show the estimated stats.',
+                                  'target and its color as you progress with the chain. Applies only '
+                                  'for standard targets.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -158,7 +158,7 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                       child: Text(
                                         'If enabled, in addition to the target\'s note (if any) you\'ll be shown if the '
                                         'target has been online in the last 7 days. If so, a faction check will also be performed. '
-                                        'This is to avoid attacking active targets, if desired. Applies to standard targets and TAC.',
+                                        'This is to avoid attacking active targets, if desired.',
                                         style: TextStyle(
                                           color: Colors.grey[600],
                                           fontSize: 12,

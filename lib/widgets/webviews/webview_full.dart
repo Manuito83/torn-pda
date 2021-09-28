@@ -218,6 +218,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
+        transparentBackground: true,  // Prevents white flash on initialization
 
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
@@ -2650,7 +2651,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (message.isNotEmpty) {
           if (widget.useTabs) {
             // This avoid repeated BotToast messages if several tabs are open to the gym
-            _webViewProvider.showGymMessage(message, widget.key);
+            _webViewProvider.showEnergyWarningMessage(message, widget.key);
           } else {
             BotToast.showText(
               crossPage: false,

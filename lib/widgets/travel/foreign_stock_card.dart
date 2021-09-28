@@ -1344,22 +1344,24 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               onPressed: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
                                 var dialog = _settingsProvider.useQuickBrowser || false;
+                                Navigator.of(context).pop();
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
                                       useDialog: dialog,
+                                      awaitable: true,
                                     );
-                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/properties.php#/p=options&tab=vault";
+                                Navigator.of(context).pop();
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
                                       useDialog: false,
+                                      awaitable: true,
                                     );
-                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                             ),
@@ -1383,22 +1385,24 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               onPressed: () async {
                                 var url = 'https://www.torn.com/factions.php?step=your#/tab=armoury';
                                 var dialog = _settingsProvider.useQuickBrowser || false;
+                                Navigator.of(context).pop();
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
                                       useDialog: dialog,
+                                      awaitable: true,
                                     );
-                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/factions.php?step=your#/tab=armoury";
+                                Navigator.of(context).pop();
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
                                       useDialog: false,
+                                      awaitable: true,
                                     );
-                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                             ),
@@ -1422,22 +1426,24 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                               onPressed: () async {
                                 var url = 'https://www.torn.com/companies.php#/option=funds';
                                 var dialog = _settingsProvider.useQuickBrowser || false;
+                                Navigator.of(context).pop();
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
                                       useDialog: dialog,
+                                      awaitable: true,
                                     );
-                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                               onLongPress: () async {
                                 var url = "https://www.torn.com/companies.php#/option=funds";
+                                Navigator.of(context).pop();
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
                                       useDialog: false,
+                                      awaitable: true,
                                     );
-                                Navigator.of(context).pop();
                                 _refreshMoney();
                               },
                             ),

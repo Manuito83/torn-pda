@@ -167,7 +167,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
   Widget _jopPoints() {
     if (widget.jobpoints.jobs == null) {
       return Text(
-        'No job points found!',
+        'No starter-job points found!',
         style: TextStyle(
           fontSize: 12,
         ),

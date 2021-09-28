@@ -760,6 +760,8 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                 child: Container(
                                   height: _sectionList.length * 40.0 + 40,
                                   child: ReorderableListView(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
                                     onReorder: (int oldIndex, int newIndex) {
                                       if (oldIndex < newIndex) {
                                         // removing the item at oldIndex will shorten the list by 1
