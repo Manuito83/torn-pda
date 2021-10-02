@@ -19,8 +19,6 @@ import 'package:torn_pda/providers/war_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
-import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/pages/chaining/target_details_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -31,11 +29,13 @@ import '../notes_dialog.dart';
 
 class WarCard extends StatefulWidget {
   final Member memberModel;
+  final int totalCards;
 
   // Key is needed to update at least the hospital counter individually
   WarCard({
     @required this.memberModel,
     @required Key key,
+    @required this.totalCards,
   }) : super(key: key);
 
   @override
@@ -267,8 +267,8 @@ class _WarCardState extends State<WarCard> {
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(
-                          '${_targetsProvider.allTargets.indexOf(_member) + 1}'
-                          '/${_targetsProvider.allTargets.length}',
+                          '${_w.cardsOrderedIds.indexOf(_member.memberId) + 1}'
+                          '/${widget.totalCards}',
                           style: TextStyle(
                             color: Colors.brown[400],
                             fontSize: 11,

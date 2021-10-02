@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -12,6 +13,8 @@ class WarController extends GetxController {
   List<FactionModel> factions = <FactionModel>[];
   List<int> filteredOutFactions = <int>[]; // TODO: to share prefs
   bool showChainWidget = true;
+  WarSortType currentSort;
+  List<int> cardsOrderedIds = <int>[];
 
   @override
   void onInit() {
@@ -60,6 +63,7 @@ class WarController extends GetxController {
 
   void removeFaction(int removeId) {
     factions.removeWhere((f) => f.id == removeId);
+    savePreferences();
     update();
   }
 
@@ -69,6 +73,7 @@ class WarController extends GetxController {
     } else {
       filteredOutFactions.add(factionId);
     }
+    savePreferences();
     update();
   }
 
@@ -247,7 +252,39 @@ class WarController extends GetxController {
     saved.forEach((element) {
       factions.add(factionModelFromJson(element));
     });
+
+    List<String> filteredOutFactionsList = await Prefs().getFilteredOutWarFactions();
+    for (String f in filteredOutFactionsList) {
+      filteredOutFactions.add(int.parse(f));
+    }
+
     showChainWidget = await Prefs().getShowChainWidgetInWars();
+
+    // Get sorting
+    String targetSort = await Prefs().getWarMembersSort();
+    switch (targetSort) {
+      case '':
+        currentSort = WarSortType.levelDes;
+        break;
+      case 'levelDes':
+        currentSort = WarSortType.levelDes;
+        break;
+      case 'levelAsc':
+        currentSort = WarSortType.levelAsc;
+        break;
+      case 'respectDes':
+        currentSort = WarSortType.respectDes;
+        break;
+      case 'respectAsc':
+        currentSort = WarSortType.respectAsc;
+        break;
+      case 'nameDes':
+        currentSort = WarSortType.nameDes;
+        break;
+      case 'nameAsc':
+        currentSort = WarSortType.nameAsc;
+        break;
+    }
   }
 
   void savePreferences() {
@@ -256,6 +293,49 @@ class WarController extends GetxController {
       factionList.add(factionModelToJson(element));
     });
     Prefs().setWarFactions(factionList);
+
+    List<String> filteredOutFactionList = [];
+    filteredOutFactions.forEach((element) {
+      filteredOutFactionList.add(element.toString());
+    });
+    Prefs().setFilteredOutWarFactions(filteredOutFactionList);
+
     Prefs().setShowChainWidgetInWars(showChainWidget);
+
+    // Save sorting
+    String sortToSave;
+    switch (currentSort) {
+      case WarSortType.levelDes:
+        sortToSave = 'levelDes';
+        break;
+      case WarSortType.levelAsc:
+        sortToSave = 'levelAsc';
+        break;
+      case WarSortType.respectDes:
+        sortToSave = 'respectDes';
+        break;
+      case WarSortType.respectAsc:
+        sortToSave = 'respectDes';
+        break;
+      case WarSortType.nameDes:
+        sortToSave = 'nameDes';
+        break;
+      case WarSortType.nameAsc:
+        sortToSave = 'nameDes';
+        break;
+      case WarSortType.colorDes:
+        sortToSave = 'colorDes';
+        break;
+      case WarSortType.colorAsc:
+        sortToSave = 'colorAsc';
+        break;
+    }
+    Prefs().setWarMembersSort(sortToSave);
+  }
+
+  void sortTargets(WarSortType sortType) {
+    currentSort = sortType;
+    savePreferences();
+    update();
   }
 }

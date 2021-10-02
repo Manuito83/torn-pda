@@ -11,6 +11,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
+import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -51,15 +52,15 @@ class _WarPageState extends State<WarPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
-  final _popupSortChoices = <TargetSort>[
-    TargetSort(type: TargetSortType.levelDes),
-    TargetSort(type: TargetSortType.levelAsc),
-    TargetSort(type: TargetSortType.respectDes),
-    TargetSort(type: TargetSortType.respectAsc),
-    TargetSort(type: TargetSortType.nameDes),
-    TargetSort(type: TargetSortType.nameAsc),
-    TargetSort(type: TargetSortType.colorAsc),
-    TargetSort(type: TargetSortType.colorDes),
+  final _popupSortChoices = <WarSort>[
+    WarSort(type: WarSortType.levelDes),
+    WarSort(type: WarSortType.levelAsc),
+    WarSort(type: WarSortType.respectDes),
+    WarSort(type: WarSortType.respectAsc),
+    WarSort(type: WarSortType.nameDes),
+    WarSort(type: WarSortType.nameAsc),
+    WarSort(type: WarSortType.colorAsc),
+    WarSort(type: WarSortType.colorDes),
   ];
 
 /*
@@ -106,7 +107,19 @@ class _WarPageState extends State<WarPage> {
     return GetBuilder<WarController>(
       builder: (w) => Column(
         children: <Widget>[
-          const SizedBox(height: 8),
+          if (_w.filteredOutFactions.length > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                "${_w.filteredOutFactions.length} "
+                "${_w.filteredOutFactions.length == 1 ? 'faction is' : 'factions are'} filtered out!",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.orange[700],
+                ),
+              ),
+            ),
+          const SizedBox(height: 5),
           if (w.showChainWidget)
             ChainWidget(
               key: _chainWidgetKey,
@@ -118,6 +131,7 @@ class _WarPageState extends State<WarPage> {
                   child: WarTargetsList(warController: w),
                 )
               : WarTargetsList(warController: w),
+          SizedBox(height: 50),
         ],
       ),
     );
@@ -212,6 +226,25 @@ class _WarPageState extends State<WarPage> {
             }
           },
         ),
+        PopupMenuButton<WarSort>(
+          icon: const Icon(
+            Icons.sort,
+          ),
+          onSelected: _selectSortPopup,
+          itemBuilder: (BuildContext context) {
+            return _popupSortChoices.map((WarSort choice) {
+              return PopupMenuItem<WarSort>(
+                value: choice,
+                child: Text(
+                  choice.description,
+                  style: const TextStyle(
+                    fontSize: 13,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+        ),
       ],
     );
   }
@@ -240,37 +273,34 @@ class _WarPageState extends State<WarPage> {
     );
   }
 
-  /*
-  void _selectSortPopup(TargetSort choice) {
+  void _selectSortPopup(WarSort choice) {
     switch (choice.type) {
-      case TargetSortType.levelDes:
-        _targetsProvider.sortTargets(TargetSortType.levelDes);
+      case WarSortType.levelDes:
+        _w.sortTargets(WarSortType.levelDes);
         break;
-      case TargetSortType.levelAsc:
-        _targetsProvider.sortTargets(TargetSortType.levelAsc);
+      case WarSortType.levelAsc:
+        _w.sortTargets(WarSortType.levelAsc);
         break;
-      case TargetSortType.respectDes:
-        _targetsProvider.sortTargets(TargetSortType.respectDes);
+      case WarSortType.respectDes:
+        _w.sortTargets(WarSortType.respectDes);
         break;
-      case TargetSortType.respectAsc:
-        _targetsProvider.sortTargets(TargetSortType.respectAsc);
+      case WarSortType.respectAsc:
+        _w.sortTargets(WarSortType.respectAsc);
         break;
-      case TargetSortType.nameDes:
-        _targetsProvider.sortTargets(TargetSortType.nameDes);
+      case WarSortType.nameDes:
+        _w.sortTargets(WarSortType.nameDes);
         break;
-      case TargetSortType.nameAsc:
-        _targetsProvider.sortTargets(TargetSortType.nameAsc);
+      case WarSortType.nameAsc:
+        _w.sortTargets(WarSortType.nameAsc);
         break;
-      case TargetSortType.colorDes:
-        _targetsProvider.sortTargets(TargetSortType.colorDes);
+      case WarSortType.colorDes:
+        _w.sortTargets(WarSortType.colorDes);
         break;
-      case TargetSortType.colorAsc:
-        _targetsProvider.sortTargets(TargetSortType.colorAsc);
+      case WarSortType.colorAsc:
+        _w.sortTargets(WarSortType.colorAsc);
         break;
     }
   }
-  */
-
 }
 
 class AddFactionDialog extends StatelessWidget {
@@ -502,26 +532,52 @@ class WarTargetsList extends StatelessWidget {
       }
     });
 
-    //String filter = targetsProvider.currentWordFilter;
-    List<Widget> filteredCards = <Widget>[];
+    List<WarCard> filteredCards = <WarCard>[];
+
     for (var thisMember in members) {
-      /*
-      if (thisTarget.name.toUpperCase().contains(filter.toUpperCase())) {
-        if (!targetsProvider.currentColorFilterOut.contains(thisTarget.personalNoteColor)) {
-          filteredCards.add(TargetCard(key: UniqueKey(), targetModel: thisTarget));
-        }
-      }
-      */
       filteredCards.add(
         WarCard(
           key: UniqueKey(),
           memberModel: thisMember,
+          totalCards: members.length,
         ),
       );
     }
 
-    // Avoid collisions with SnackBar
-    filteredCards.add(SizedBox(height: 50));
+    switch (warController.currentSort) {
+      case WarSortType.levelDes:
+        filteredCards.sort((a, b) => b.memberModel.level.compareTo(a.memberModel.level));
+        break;
+      case WarSortType.levelAsc:
+        filteredCards.sort((a, b) => a.memberModel.level.compareTo(b.memberModel.level));
+        break;
+      case WarSortType.respectDes:
+        filteredCards.sort((a, b) => b.memberModel.respectGain.compareTo(a.memberModel.respectGain));
+        break;
+      case WarSortType.respectAsc:
+        filteredCards.sort((a, b) => a.memberModel.respectGain.compareTo(b.memberModel.respectGain));
+        break;
+      case WarSortType.nameDes:
+        filteredCards.sort((a, b) => b.memberModel.name.toLowerCase().compareTo(a.memberModel.name.toLowerCase()));
+        break;
+      case WarSortType.nameAsc:
+        filteredCards.sort((a, b) => a.memberModel.name.toLowerCase().compareTo(b.memberModel.name.toLowerCase()));
+        break;
+      case WarSortType.colorDes:
+        filteredCards.sort((a, b) =>
+            b.memberModel.personalNoteColor.toLowerCase().compareTo(a.memberModel.personalNoteColor.toLowerCase()));
+        break;
+      case WarSortType.colorAsc:
+        filteredCards.sort((a, b) =>
+            a.memberModel.personalNoteColor.toLowerCase().compareTo(b.memberModel.personalNoteColor.toLowerCase()));
+        break;
+    }
+
+    warController.cardsOrderedIds.clear();
+    for (WarCard card in filteredCards) {
+      warController.cardsOrderedIds.add(card.memberModel.memberId);
+    }
+
     return filteredCards;
   }
 }
