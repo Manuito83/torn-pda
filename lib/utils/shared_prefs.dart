@@ -19,6 +19,7 @@ class Prefs {
   // War targets
   final String _kWarFactions = "pda_warFactions";
   final String _kWarTargets = "pda_warTargets";
+  final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   // Other
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
@@ -260,6 +261,16 @@ class Prefs {
   Future<bool> setWarFactions(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kWarFactions, value);
+  }
+
+  Future<bool> getShowChainWidgetInWars() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowChainWidgetInWars) ?? true;
+  }
+
+  Future<bool> setShowChainWidgetInWars(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowChainWidgetInWars, value);
   }
 
   //**************

@@ -72,6 +72,22 @@ class FactionModel {
 
 class Member {
   Member({
+    this.memberId,
+    this.isUpdating,
+    this.factionName,
+    this.factionLeader,
+    this.factionColeader,
+    this.lifeCurrent,
+    this.lifeMaximum,
+    this.lastUpdated,
+    this.justUpdatedWithSuccess,
+    this.justUpdatedWithError,
+    this.respectGain,
+    this.fairFight,
+    this.userWonOrDefended,
+    this.personalNote,
+    this.personalNoteColor,
+    //
     this.name,
     this.level,
     this.daysInFaction,
@@ -80,12 +96,22 @@ class Member {
     this.position,
   });
 
-  // State
+  // State for wars
   int memberId = 0;
   bool isUpdating = false;
   String factionName = "";
   int factionLeader = 0;
   int factionColeader = 0;
+  int lifeCurrent = -1;
+  int lifeMaximum = -1;
+  DateTime lastUpdated;
+  bool justUpdatedWithSuccess = false;
+  bool justUpdatedWithError = false;
+  double respectGain = -1;
+  double fairFight = -1;
+  bool userWonOrDefended = false;
+  String personalNote = "";
+  String personalNoteColor = "";
 
   String name;
   int level;
@@ -95,6 +121,23 @@ class Member {
   String position;
 
   factory Member.fromJson(Map<String, dynamic> json) => Member(
+        memberId: json["memberId"] ?? 0,
+        isUpdating: json["isUpdating"] ?? false,
+        factionName: json["factionName"] ?? "",
+        factionLeader: json["factionLeader"] ?? 0,
+        factionColeader: json["factionColeader"] ?? 0,
+        lifeCurrent: json["lifeCurrent"] ?? -1,
+        lifeMaximum: json["lifeMaximum"] ?? -1,
+        lastUpdated:
+            json["lastUpdated"] == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(json["lastUpdated"]),
+        justUpdatedWithSuccess: json["justUpdatedWithSuccess"] == null ? false : json["justUpdatedWithSuccess"],
+        justUpdatedWithError: json["justUpdatedWithSuccess"] == null ? false : json["justUpdatedWithSuccess"],
+        respectGain: json["respectGain"] == null ? -1 : json["respectGain"],
+        fairFight: json["fairFight"] == null ? -1 : json["fairFight"],
+        userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
+        personalNote: json["personalNotes"] ?? "",
+        personalNoteColor: json["personalNoteColor"] ?? "",
+        //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
         daysInFaction: json["days_in_faction"],
@@ -104,6 +147,20 @@ class Member {
       );
 
   Map<String, dynamic> toJson() => {
+        "memberId": memberId,
+        "isUpdating": isUpdating,
+        "factionName": factionName,
+        "factionLeader": factionLeader,
+        "factionColeader": factionColeader,
+        "lifeCurrent": lifeCurrent,
+        "lifeMaximum": lifeMaximum,
+        "lastUpdated": lastUpdated.millisecondsSinceEpoch,
+        "respectGain": respectGain,
+        "fairFight": fairFight,
+        "userWonOrDefended": userWonOrDefended,
+        "personalNotes": personalNote,
+        "personalNoteColor": personalNoteColor,
+        //
         "name": name,
         "level": level == null ? null : level,
         "days_in_faction": daysInFaction,

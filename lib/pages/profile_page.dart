@@ -6515,10 +6515,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     // Pass to global widget
-    setState(() {
-      _rentedProperties = currentItem;
-      _rentedPropertiesWidget = Column(children: propertyLines);
-    });
+    if (mounted) {
+      setState(() {
+        _rentedProperties = currentItem;
+        _rentedPropertiesWidget = Column(children: propertyLines);
+      });
+    }
   }
 
   void _disregardCrimeCallback() {

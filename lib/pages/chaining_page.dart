@@ -70,7 +70,7 @@ class _ChainingPageState extends State<ChainingPage> {
                       AttacksPage(
                         userKey: _myCurrentKey,
                       ),
-                      WarPage (
+                      WarPage(
                         userKey: _myCurrentKey,
                       ),
                       /*
@@ -132,8 +132,9 @@ class _ChainingPageState extends State<ChainingPage> {
                   Icons.people,
                   color: isThemeLight ? Colors.white : _themeProvider.mainText,
                 ),
-                Icon(
-                  MdiIcons.wall,
+                Image.asset(
+                  'images/icons/faction.png',
+                  width: 18,
                   color: isThemeLight ? Colors.white : _themeProvider.mainText,
                 ),
                 // Text('TAC', style: TextStyle(color: _themeProvider.mainText))

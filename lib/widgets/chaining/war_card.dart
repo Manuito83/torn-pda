@@ -10,10 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -53,6 +55,10 @@ class _WarCardState extends State<WarCard> {
   String _currentLifeString = "";
   String _lastUpdatedString;
   int _lastUpdatedMinutes;
+
+  bool _addButtonActive = true;
+
+  final WarController _w = Get.put(WarController());
 
   @override
   void initState() {
@@ -134,15 +140,22 @@ class _WarCardState extends State<WarCard> {
                             _factionIcon(),
                             SizedBox(width: 3),
                             Text(
-                              'Lvl ${_member.level}',
+                              'L${_member.level}',
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 3),
-                              child: SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: _refreshIcon(),
-                              ),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  height: 22,
+                                  width: 30,
+                                  child: _addAsTargetButton(),
+                                ),
+                                SizedBox(width: 5),
+                                SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: _refreshIcon(),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -157,7 +170,8 @@ class _WarCardState extends State<WarCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      // TODO _returnHealth(_member),
+                      _returnRespectFF(_member.respectGain, _member.fairFight),
+                      _returnHealth(_member),
                     ],
                   ),
                 ),
@@ -180,13 +194,11 @@ class _WarCardState extends State<WarCard> {
                           Padding(
                             padding: const EdgeInsets.only(left: 12),
                             child: Text(
-                              'Action: ',
+                              _member.lastAction.relative == "0 minutes ago"
+                                  ? 'now'
+                                  : _member.lastAction.relative.replaceAll(' ago', ''),
+                              style: TextStyle(fontSize: 13),
                             ),
-                          ),
-                          Text(
-                            _member.lastAction.relative == "0 minutes ago"
-                                ? 'now'
-                                : _member.lastAction.relative.replaceAll(' ago', ''),
                           ),
                         ],
                       ),
@@ -194,11 +206,13 @@ class _WarCardState extends State<WarCard> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: <Widget>[
+                            Icon(Icons.refresh, size: 14),
                             Text(
-                              'Updated $_lastUpdatedString',
+                              ' $_lastUpdatedString',
                               style: TextStyle(
                                 color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
                                 fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
+                                fontSize: 13,
                               ),
                             ),
                           ],
@@ -225,23 +239,26 @@ class _WarCardState extends State<WarCard> {
                                 icon: Icon(
                                   MdiIcons.notebookEditOutline,
                                   color: _returnTargetNoteColor(),
+                                  size: 18,
                                 ),
                                 onPressed: () {
                                   _showNotesDialog();
                                 },
                               ),
                             ),
-                            SizedBox(width: 8),
-                            Text('Notes: '),
+                            SizedBox(width: 5),
+                            Text(
+                              'Notes: ',
+                              style: TextStyle(fontSize: 12),
+                            ),
                             Flexible(
-                              child: Text("" // TODO
-                                  /*
+                              child: Text(
                                 '${_member.personalNote}',
                                 style: TextStyle(
                                   color: _returnTargetNoteColor(),
+                                  fontSize: 12,
                                 ),
-                                */
-                                  ),
+                              ),
                             ),
                           ],
                         ),
@@ -294,8 +311,108 @@ class _WarCardState extends State<WarCard> {
         iconSize: 22,
         icon: Icon(Icons.refresh),
         onPressed: () async {
-          _updateThisTarget();
+          _updateThisMember();
         },
+      );
+    }
+  }
+
+  Widget _addAsTargetButton() {
+    bool existingTarget = false;
+
+    var targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    var targetList = targetsProvider.allTargets;
+    for (var tar in targetList) {
+      if (tar.playerId == _member.memberId) {
+        existingTarget = true;
+      }
+    }
+
+    if (existingTarget) {
+      return IconButton(
+        padding: EdgeInsets.all(0.0),
+        iconSize: 20,
+        icon: Icon(
+          Icons.remove_circle_outline,
+          color: Colors.red,
+        ),
+        onPressed: () {
+          targetsProvider.deleteTargetById(_member.memberId.toString());
+          BotToast.showText(
+            text: HtmlParser.fix('Removed ${_member.name}!'),
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.orange[900],
+            duration: Duration(seconds: 5),
+            contentPadding: EdgeInsets.all(10),
+          );
+          // Update the button
+          setState(() {});
+        },
+      );
+    } else {
+      return IconButton(
+        padding: EdgeInsets.all(0.0),
+        iconSize: 20,
+        icon: _addButtonActive
+            ? Icon(
+                Icons.add_circle_outline,
+                color: Colors.green,
+              )
+            : SizedBox(
+                height: 15,
+                width: 15,
+                child: CircularProgressIndicator(),
+              ),
+        onPressed: _addButtonActive
+            ? () async {
+                setState(() {
+                  _addButtonActive = false;
+                });
+
+                // There is no need to pass attackFull because it's very improbable
+                // that this target is in our previous attacks. Respect won't be calculated,
+                // but it will be much faster
+                AddTargetResult tryAddTarget = await targetsProvider.addTarget(
+                  targetId: _member.memberId.toString(),
+                  attacks: await targetsProvider.getAttacks(),
+                );
+
+                if (tryAddTarget.success) {
+                  BotToast.showText(
+                    text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
+                        'main targets list in Torn PDA!'),
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.green[700],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                } else if (!tryAddTarget.success) {
+                  BotToast.showText(
+                    text: HtmlParser.fix('Error adding ${_member.memberId}. ${tryAddTarget.errorReason}'),
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.red[900],
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                }
+
+                // Update the button
+                if (mounted) {
+                  setState(() {
+                    _addButtonActive = true;
+                  });
+                }
+              }
+            : null,
       );
     }
   }
@@ -344,7 +461,6 @@ class _WarCardState extends State<WarCard> {
   }
 
   Color _borderColor() {
-    /*
     if (_member.justUpdatedWithSuccess) {
       return Colors.green;
     } else if (_member.justUpdatedWithError) {
@@ -352,13 +468,9 @@ class _WarCardState extends State<WarCard> {
     } else {
       return Colors.transparent;
     }
-    */
-    // TODO
-    return Colors.transparent;
   }
 
   Widget _returnRespectFF(double respect, double fairFight) {
-    /*
     TextSpan respectResult;
     TextSpan fairFightResult;
 
@@ -367,6 +479,7 @@ class _WarCardState extends State<WarCard> {
         text: 'unk',
         style: TextStyle(
           color: _themeProvider.mainText,
+          fontSize: 12,
         ),
       );
     } else if (respect == 0) {
@@ -375,6 +488,7 @@ class _WarCardState extends State<WarCard> {
           text: '0 (def)',
           style: TextStyle(
             color: _themeProvider.mainText,
+            fontSize: 12,
           ),
         );
       } else {
@@ -383,6 +497,7 @@ class _WarCardState extends State<WarCard> {
           style: TextStyle(
             color: Colors.red,
             fontWeight: FontWeight.bold,
+            fontSize: 12,
           ),
         );
       }
@@ -392,6 +507,7 @@ class _WarCardState extends State<WarCard> {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: _themeProvider.mainText,
+          fontSize: 12,
         ),
       );
     }
@@ -401,6 +517,7 @@ class _WarCardState extends State<WarCard> {
         text: 'unk',
         style: TextStyle(
           color: _themeProvider.mainText,
+          fontSize: 12,
         ),
       );
     } else {
@@ -416,6 +533,7 @@ class _WarCardState extends State<WarCard> {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           color: ffColor,
+          fontSize: 12,
         ),
       );
     }
@@ -431,6 +549,7 @@ class _WarCardState extends State<WarCard> {
                     text: 'R: ',
                     style: TextStyle(
                       color: _themeProvider.mainText,
+                      fontSize: 12,
                     ),
                   ),
                   respectResult,
@@ -448,6 +567,7 @@ class _WarCardState extends State<WarCard> {
                           text: ' / FF: ',
                           style: TextStyle(
                             color: _themeProvider.mainText,
+                            fontSize: 12,
                           ),
                         ),
                         fairFightResult,
@@ -458,21 +578,17 @@ class _WarCardState extends State<WarCard> {
         ],
       ),
     );
-    */
   }
 
-  Widget _returnHealth(TargetModel target) {
-    return SizedBox();
-    /*
+  Widget _returnHealth(Member target) {
     Color lifeBarColor = Colors.green;
     Widget hospitalWarning = SizedBox.shrink();
-    String lifeText = _member.life.current.toString();
+    String lifeText = _member.lifeCurrent == -1 ? "?" : _member.lifeCurrent.toString();
 
-    if (target.status.state == "Hospital") {
+    if (_member.status.state == "Hospital") {
       // Handle if target is still in hospital
       var now = DateTime.now().millisecondsSinceEpoch / 1000.floor();
-
-      if (target.status.until > now) {
+      if (_member.status.until > now) {
         var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
         if (_lifeTicker == null) {
           _lifeTicker = Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
@@ -501,12 +617,14 @@ class _WarCardState extends State<WarCard> {
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
     double lifePercentage;
-    if (_member.life.current / _member.life.maximum > 1) {
-      lifePercentage = 1;
-    } else if (_member.life.current / _member.life.maximum > 1) {
-      lifePercentage = 0;
-    } else {
-      lifePercentage = _member.life.current / _member.life.maximum;
+    if (_member.lifeCurrent != -1) {
+      if (_member.lifeCurrent / _member.lifeMaximum > 1) {
+        lifePercentage = 1;
+      } else if (_member.lifeCurrent / _member.lifeMaximum > 1) {
+        lifePercentage = 0;
+      } else {
+        lifePercentage = _member.lifeCurrent / _member.lifeMaximum;
+      }
     }
 
     return Row(
@@ -514,21 +632,21 @@ class _WarCardState extends State<WarCard> {
       children: <Widget>[
         Text(
           'Life ',
+          style: TextStyle(fontSize: 13),
         ),
         LinearPercentIndicator(
           width: 100,
-          lineHeight: 16,
+          lineHeight: 14,
           progressColor: lifeBarColor,
           center: Text(
             lifeText,
             style: TextStyle(color: Colors.black, fontSize: 12),
           ),
-          percent: lifePercentage,
+          percent: lifePercentage == null ? 0 : lifePercentage,
         ),
         hospitalWarning,
       ],
     );
-    */
   }
 
   Widget _travelIcon() {
@@ -624,9 +742,6 @@ class _WarCardState extends State<WarCard> {
   }
 
   void _returnLastUpdated() {
-    _lastUpdatedMinutes = 0;
-    _lastUpdatedString = "cuac";
-    /*
     var timeDifference = DateTime.now().difference(_member.lastUpdated);
     _lastUpdatedMinutes = timeDifference.inMinutes;
     if (timeDifference.inMinutes < 1) {
@@ -644,13 +759,9 @@ class _WarCardState extends State<WarCard> {
     } else {
       _lastUpdatedString = '${timeDifference.inDays} days ago';
     }
-    */
   }
 
   Color _returnTargetNoteColor() {
-    return Colors.red[600];
-    // TODO
-    /*
     switch (_member.personalNoteColor) {
       case 'red':
         return Colors.red[600];
@@ -665,52 +776,48 @@ class _WarCardState extends State<WarCard> {
         return _themeProvider.mainText;
         break;
     }
-    */
   }
 
   Future<void> _showNotesDialog() {
-    /*
     return showDialog<void>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: PersonalNotesDialog(
+              memberModel: _member,
+              noteType: PersonalNoteType.factionMember,
             ),
-            elevation: 0.0,
-            backgroundColor: Colors.transparent,
-            content: SingleChildScrollView(
-              child: PersonalNotesDialog(
-                targetModel: _member,
-                noteType: PersonalNoteType.target,
-              ),
-            ),
-          );
-        });
-        */
+          ),
+        );
+      },
+    );
   }
 
-  void _updateThisTarget() async {
-    /*
-    bool updateWorked = await _targetsProvider.updateTarget(
-      targetToUpdate: _member,
-      attacks: await _targetsProvider.getAttacks(),
-    );
-    if (updateWorked) {
-    } else {
-      BotToast.showText(
-        text: "Error updating ${_member.name}!",
-        textStyle: TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.red,
-        duration: Duration(seconds: 3),
-        contentPadding: EdgeInsets.all(10),
-      );
+  void _updateThisMember() async {
+    bool success = await _w.updateSingleMember(_member, _userProvider.basic.userApiKey);
+    String message = "Updated ${_member.name}!";
+    Color color = Colors.green;
+    if (!success) {
+      message = "Error updating ${_member.name}!";
+      color = Colors.orange[700];
     }
-    */
+    BotToast.showText(
+      text: message,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: color,
+      duration: Duration(seconds: 3),
+      contentPadding: EdgeInsets.all(10),
+    );
   }
 
   void _updateSeveralTargets(List<String> attackedIds) async {

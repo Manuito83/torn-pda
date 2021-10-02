@@ -7,14 +7,17 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
@@ -41,8 +44,6 @@ class _WarPageState extends State<WarPage> {
   final _addIdController = TextEditingController();
 
   final _addFormKey = GlobalKey<FormState>();
-
-  Future _preferencesLoaded;
 
   final _chainWidgetKey = GlobalKey();
 
@@ -74,8 +75,6 @@ class _WarPageState extends State<WarPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _preferencesLoaded = _restorePreferences();
-
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
   }
 
@@ -104,28 +103,23 @@ class _WarPageState extends State<WarPage> {
   }
 
   Widget _mainColumn() {
-    return Column(
-      children: <Widget>[
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            // TODO
-          ],
-        ),
-        ChainWidget(
-          key: _chainWidgetKey,
-          userKey: widget.userKey,
-          alwaysDarkBackground: false,
-        ),
-        GetBuilder<WarController>(
-          builder: (w) => context.orientation == Orientation.portrait
+    return GetBuilder<WarController>(
+      builder: (w) => Column(
+        children: <Widget>[
+          const SizedBox(height: 8),
+          if (w.showChainWidget)
+            ChainWidget(
+              key: _chainWidgetKey,
+              userKey: widget.userKey,
+              alwaysDarkBackground: false,
+            ),
+          context.orientation == Orientation.portrait
               ? Flexible(
-                  child: WarTargetsList(warController: _w),
+                  child: WarTargetsList(warController: w),
                 )
-              : WarTargetsList(warController: _w),
-        ),
-      ],
+              : WarTargetsList(warController: w),
+        ],
+      ),
     );
   }
 
@@ -143,6 +137,17 @@ class _WarPageState extends State<WarPage> {
         },
       ),
       actions: <Widget>[
+        GetBuilder<WarController>(
+          builder: (w) => IconButton(
+            icon: Icon(
+              MdiIcons.linkVariant,
+              color: w.showChainWidget ? Colors.white : Colors.orange[700],
+            ),
+            onPressed: () {
+              w.toggleChainWidget();
+            },
+          ),
+        ),
         IconButton(
           icon: Image.asset(
             'images/icons/faction.png',
@@ -157,39 +162,54 @@ class _WarPageState extends State<WarPage> {
         IconButton(
           icon: Icon(Icons.refresh),
           onPressed: () async {
-            /*
-                final updateResult = await _targetsProvider.updateAllTargets();
-                if (mounted) {
-                  if (updateResult.success) {
-                    BotToast.showText(
-                      text: updateResult.numberSuccessful > 0
-                          ? 'Successfully updated '
-                              '${updateResult.numberSuccessful} targets!'
-                          : 'No targets to update!',
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: updateResult.numberSuccessful > 0 ? Colors.green : Colors.red,
-                      duration: const Duration(seconds: 3),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  } else {
-                    BotToast.showText(
-                      text: 'Update with errors: ${updateResult.numberErrors} errors '
-                          'out of ${updateResult.numberErrors + updateResult.numberSuccessful} '
-                          'total targets!',
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: Colors.red,
-                      duration: const Duration(seconds: 3),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  }
-                }
-                */
+            String message = "";
+            Color messageColor = Colors.green;
+            // Count all members
+            int allMembers = 0;
+            int updatedMembers = 0;
+            for (FactionModel f in _w.factions) {
+              allMembers += f.members.length;
+            }
+
+            if (allMembers == 0) {
+              message = "No targets to update!";
+              messageColor = Colors.orange[700];
+            } else {
+              if (allMembers > 60) {
+                BotToast.showText(
+                  text: "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
+                      "issues with API request limits!",
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: messageColor,
+                  duration: const Duration(seconds: 3),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              }
+              updatedMembers = await _w.updateAllMembers(widget.userKey);
+            }
+
+            if (updatedMembers == allMembers) {
+              message = 'Successfully updated $updatedMembers war targets!';
+            } else {
+              message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!';
+              messageColor = Colors.orange[700];
+            }
+
+            if (mounted) {
+              BotToast.showText(
+                text: message,
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: messageColor,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            }
           },
         ),
       ],
@@ -251,9 +271,6 @@ class _WarPageState extends State<WarPage> {
   }
   */
 
-  Future _restorePreferences() async {
-    // TODO
-  }
 }
 
 class AddFactionDialog extends StatelessWidget {
@@ -273,6 +290,7 @@ class AddFactionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
+    final targets = context.read<TargetsProvider>().allTargets; // To retrieve existing notes and FF/R
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -347,7 +365,7 @@ class AddFactionDialog extends StatelessWidget {
                               final inputId = addIdController.text;
                               addIdController.text = '';
 
-                              final addFactionResult = await warController.addFaction(apiKey, inputId);
+                              final addFactionResult = await warController.addFaction(apiKey, inputId, targets);
 
                               Color messageColor = Colors.green;
                               if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
@@ -356,7 +374,7 @@ class AddFactionDialog extends StatelessWidget {
 
                               String message = 'Added $addFactionResult [$inputId]';
                               if (addFactionResult.isEmpty) {
-                                message = 'Error adding $inputId.';
+                                message = 'Error adding $inputId';
                               } else if (addFactionResult == "error_existing") {
                                 message = 'Faction $inputId is already in the list!';
                               }
