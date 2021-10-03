@@ -108,6 +108,11 @@ class WarController extends GetxController {
             f.members[memberKey].lifeMaximum = updatedTarget.life.current;
             f.members[memberKey].lifeCurrent = updatedTarget.life.maximum;
             f.members[memberKey].lastAction.relative = updatedTarget.lastAction.relative;
+            f.members[memberKey].lastAction.status = updatedTarget.lastAction.status;
+            f.members[memberKey].status.description = updatedTarget.status.description;
+            f.members[memberKey].status.state = updatedTarget.status.state;
+            f.members[memberKey].status.until = updatedTarget.status.until;
+            f.members[memberKey].status.color = updatedTarget.status.color;
             f.members[memberKey].lastUpdated = DateTime.now();
             if (allAttacksSuccess is AttackModel) {
               _getRespectFF(allAttacksSuccess, member);
@@ -134,33 +139,55 @@ class WarController extends GetxController {
   }
 
   Future<int> updateAllMembers(String apiKey) async {
-    dynamic allAttacksSuccess = await getAllAttacks(apiKey);
+    // TODO STOP IF FACTIONS ARE DELETED!
 
+    dynamic allAttacksSuccess = await getAllAttacks(apiKey);
     int numberUpdated = 0;
 
-    for (FactionModel f in factions) {
-      List<String> keyList = <String>[];
-      f.members.forEach((key, value) async {
-        keyList.add(key);
-      });
-
-      for (String key in keyList) {
-        bool memberSuccess = await updateSingleMember(
-          f.members[key],
-          apiKey,
-          allAttacks: allAttacksSuccess,
-        );
-        if (memberSuccess) {
-          numberUpdated++;
+    for (WarCardDetails card in orderedCardsDetails) {
+      for (FactionModel f in factions) {
+        if (f.members.containsKey(card.memberId.toString())) {
+          bool memberSuccess = await updateSingleMember(
+            f.members[card.memberId.toString()],
+            apiKey,
+            allAttacks: allAttacksSuccess,
+          );
+          if (memberSuccess) {
+            numberUpdated++;
+          }
+          if (orderedCardsDetails.length > 60) {
+            await Future.delayed(Duration(seconds: 1));
+          }
+          break;
         }
-
-        if (keyList.length > 1) {
-          await Future.delayed(Duration(seconds: 1));
-        }
+        continue;
       }
     }
 
     return numberUpdated;
+  }
+
+  Future updateSomeMembersAfterAttack(String apiKey, List<String> attackedMembers) async {
+    await Future.delayed(Duration(seconds: 15));
+    dynamic allAttacksSuccess = await getAllAttacks(apiKey);
+
+    for (String id in attackedMembers) {
+      for (FactionModel f in factions) {
+        if (f.members.containsKey(id)) {
+          await updateSingleMember(
+            f.members[id],
+            apiKey,
+            allAttacks: allAttacksSuccess,
+          );
+
+          if (attackedMembers.length > 60) {
+            await Future.delayed(Duration(seconds: 1));
+          }
+          break;
+        }
+        continue;
+      }
+    }
   }
 
   Future<void> _updateResultAnimation({Member member, bool success}) async {

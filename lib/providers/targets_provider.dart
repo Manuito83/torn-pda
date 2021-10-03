@@ -35,8 +35,7 @@ class UpdateTargetsResult {
   int numberErrors;
   int numberSuccessful;
 
-  UpdateTargetsResult(
-      {@required this.success, @required this.numberErrors, @required this.numberSuccessful});
+  UpdateTargetsResult({@required this.success, @required this.numberErrors, @required this.numberSuccessful});
 }
 
 class TargetsProvider extends ChangeNotifier {
@@ -126,8 +125,7 @@ class TargetsProvider extends ChangeNotifier {
     if (attackModel is AttackModel) {
       attackModel.attacks.forEach((key, value) {
         // We look for the our target in the the attacks list
-        if (myNewTargetModel.playerId == value.defenderId ||
-            myNewTargetModel.playerId == value.attackerId) {
+        if (myNewTargetModel.playerId == value.defenderId || myNewTargetModel.playerId == value.attackerId) {
           // Only update if we have still not found a positive value (because
           // we lost or we have no records)
           if (value.respectGain > 0) {
@@ -190,8 +188,7 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel =
-          await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
+      dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(attacks, myUpdatedTargetModel);
         _getTargetFaction(myUpdatedTargetModel);
@@ -229,8 +226,7 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel =
-            await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
+        dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(attacks, myUpdatedTargetModel);
           _getTargetFaction(myUpdatedTargetModel);
@@ -282,8 +278,7 @@ class TargetsProvider extends ChangeNotifier {
               notifyListeners();
             }
             try {
-              dynamic myUpdatedTargetModel =
-                  await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
+              dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
               if (myUpdatedTargetModel is TargetModel) {
                 _getRespectFF(attacks, myUpdatedTargetModel);
                 _getTargetFaction(myUpdatedTargetModel);
@@ -401,12 +396,10 @@ class TargetsProvider extends ChangeNotifier {
         _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
       case TargetSortType.colorDes:
-        _targets.sort((a, b) =>
-            b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) => b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
         break;
       case TargetSortType.colorAsc:
-        _targets.sort((a, b) =>
-            a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
         break;
     }
     _saveSortSharedPrefs();
@@ -525,6 +518,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case 'nameAsc':
         _currentSort = TargetSortType.nameAsc;
+        break;
+      case 'colorAsc':
+        _currentSort = TargetSortType.colorDes;
+        break;
+      case 'colorDes':
+        _currentSort = TargetSortType.colorAsc;
         break;
     }
 

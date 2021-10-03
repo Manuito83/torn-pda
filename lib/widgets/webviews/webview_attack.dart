@@ -38,6 +38,7 @@ class TornWebViewAttack extends StatefulWidget {
   final List<String> attackNotesColorList;
   final Function(List<String>) attacksCallback;
   final String userKey;
+  final bool war;
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
@@ -48,6 +49,7 @@ class TornWebViewAttack extends StatefulWidget {
     @required this.attackNotesColorList,
     this.attacksCallback,
     @required this.userKey,
+    this.war = false,
   });
 
   @override
@@ -247,11 +249,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     if (!page.contains('torn.com')) return;
 
     var intColor = Color(_settingsProvider.highlightColor);
-    var background =
-        'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
+    var background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
     var senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
-    String hlMap =
-        '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
+    String hlMap = '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
       _webViewController.evaluateJavascript(
@@ -514,9 +514,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                 // We'll skip maximum of 3 targets
                 for (var i = 0; i < 3; i++) {
                   // Get the status of our next target
-                  var nextTarget = await TornApiCaller.target(
-                          _userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
-                      .getTarget;
+                  var nextTarget =
+                      await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
+                          .getTarget;
 
                   if (nextTarget is TargetModel) {
                     // If in hospital or jail (even in a different country), we skip
@@ -528,9 +528,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                     // If flying, we need to see if he is in a different country (if we are in the same
                     // place, we can attack him)
                     else if (nextTarget.status.color == "blue") {
-                      var user = await TornApiCaller.target(
-                              _userProv.basic.userApiKey, _userProv.basic.playerId.toString())
-                          .getTarget;
+                      var user =
+                          await TornApiCaller.target(_userProv.basic.userApiKey, _userProv.basic.playerId.toString())
+                              .getTarget;
                       if (user is TargetModel) {
                         if (user.status.description != nextTarget.status.description) {
                           targetsSkipped++;
@@ -566,8 +566,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
                 if (targetsSkipped > 0 && !reachedEnd) {
                   BotToast.showText(
-                    text:
-                        "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+                    text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
                         "country",
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -581,8 +580,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
                 if (targetsSkipped > 0 && reachedEnd) {
                   BotToast.showText(
-                    text:
-                        "No more targets, all remaining are either in jail, hospital or in a different "
+                    text: "No more targets, all remaining are either in jail, hospital or in a different "
                         "country (${skippedNames.join(", ")})",
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -603,9 +601,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               // from the API
               else {
                 if (_showOnlineFactionWarning) {
-                  var nextTarget = await TornApiCaller.target(
-                          _userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
-                      .getTarget;
+                  var nextTarget =
+                      await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
+                          .getTarget;
 
                   if (nextTarget is TargetModel) {
                     _factionName = nextTarget.faction.factionName;
@@ -693,7 +691,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
 
     String extraInfo = "";
-    if (_lastOnline > 0) {
+    if (_lastOnline > 0 && !widget.war) {
       var now = DateTime.now();
       var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
       if (lastOnlineDiff.inDays < 7) {
@@ -851,8 +849,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   // ASSESS PROFILES
   Future _assessProfileAttack(String page) async {
     if (mounted) {
-      if (!page.contains('loader.php?sid=attack&user2ID=') &&
-          !page.contains('torn.com/profiles.php?XID=')) {
+      if (!page.contains('loader.php?sid=attack&user2ID=') && !page.contains('torn.com/profiles.php?XID=')) {
         _profileAttackWidget = SizedBox.shrink();
         _lastProfileVisited = "";
         return;
@@ -922,9 +919,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     // This will show the note of the first target, if applicable
     if (_showNotes) {
       if (_showOnlineFactionWarning) {
-        var nextTarget =
-            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0])
-                .getTarget;
+        var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0]).getTarget;
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;

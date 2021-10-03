@@ -830,8 +830,7 @@ class _WarCardState extends State<WarCard> {
       contentPadding: EdgeInsets.all(10),
     );
 
-    // TODO:
-    //await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
+    _w.updateSomeMembersAfterAttack(_userProvider.basic.userApiKey, attackedIds);
   }
 
   void _timerUpdateInformation() {
@@ -926,6 +925,7 @@ class _WarCardState extends State<WarCard> {
               attackNotesColorList: attacksNotesColor,
               attacksCallback: _updateSeveralTargets,
               userKey: _userProvider.basic.userApiKey,
+              war: true,
             ),
           ),
         );
