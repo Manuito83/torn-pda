@@ -9,12 +9,20 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
+class WarCardDetails {
+  int cardPosition;
+  int memberId;
+  String name;
+  String personalNote;
+  String personalNoteColor;
+}
+
 class WarController extends GetxController {
   List<FactionModel> factions = <FactionModel>[];
-  List<int> filteredOutFactions = <int>[]; // TODO: to share prefs
+  List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
+  List<int> filteredOutFactions = <int>[];
   bool showChainWidget = true;
   WarSortType currentSort;
-  List<int> cardsOrderedIds = <int>[];
 
   @override
   void onInit() {

@@ -29,13 +29,11 @@ import '../notes_dialog.dart';
 
 class WarCard extends StatefulWidget {
   final Member memberModel;
-  final int totalCards;
 
   // Key is needed to update at least the hospital counter individually
   WarCard({
     @required this.memberModel,
     @required Key key,
-    @required this.totalCards,
   }) : super(key: key);
 
   @override
@@ -267,8 +265,8 @@ class _WarCardState extends State<WarCard> {
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(
-                          '${_w.cardsOrderedIds.indexOf(_member.memberId) + 1}'
-                          '/${widget.totalCards}',
+                          '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId)}'
+                          '/${_w.orderedCardsDetails.length}',
                           style: TextStyle(
                             color: Colors.brown[400],
                             fontSize: 11,
@@ -832,7 +830,8 @@ class _WarCardState extends State<WarCard> {
       contentPadding: EdgeInsets.all(10),
     );
 
-    await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
+    // TODO:
+    //await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
   }
 
   void _timerUpdateInformation() {
@@ -900,26 +899,20 @@ class _WarCardState extends State<WarCard> {
   }
 
   void _startAttack() async {
-    /*
     var browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
-        // For app browser, we are going to pass a list of attacks
-        // so that we can move to the next one
-        var myTargetList = List<TargetModel>.from(_targetsProvider.allTargets);
-        // First, find out where we are in the list
-        for (var i = 0; i < myTargetList.length; i++) {
-          if (_member.playerId == myTargetList[i].playerId) {
-            myTargetList.removeRange(0, i);
-            break;
-          }
-        }
+        List<WarCardDetails> myTargetList = _w.orderedCardsDetails;
+
+        // Adjust the list (remove targets above the one selected)
+        myTargetList.removeRange(0, myTargetList.indexWhere((element) => element.memberId == _member.memberId));
+
         List<String> attacksIds = <String>[];
         List<String> attacksNames = <String>[];
         List<String> attackNotes = <String>[];
         List<String> attacksNotesColor = <String>[];
         for (var tar in myTargetList) {
-          attacksIds.add(tar.playerId.toString());
+          attacksIds.add(tar.memberId.toString());
           attacksNames.add(tar.name);
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
@@ -938,13 +931,11 @@ class _WarCardState extends State<WarCard> {
         );
         break;
       case BrowserSetting.external:
-        var url = 'https://www.torn.com/loader.php?sid='
-            'attack&user2ID=${_member.playerId}';
+        var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member.memberId}';
         if (await canLaunch(url)) {
           await launch(url, forceSafariVC: false);
         }
         break;
     }
-    */
   }
 }

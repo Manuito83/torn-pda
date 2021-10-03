@@ -539,7 +539,6 @@ class WarTargetsList extends StatelessWidget {
         WarCard(
           key: UniqueKey(),
           memberModel: thisMember,
-          totalCards: members.length,
         ),
       );
     }
@@ -573,9 +572,16 @@ class WarTargetsList extends StatelessWidget {
         break;
     }
 
-    warController.cardsOrderedIds.clear();
-    for (WarCard card in filteredCards) {
-      warController.cardsOrderedIds.add(card.memberModel.memberId);
+    warController.orderedCardsDetails.clear();
+    for (int i = 0; i < filteredCards.length; i++) {
+      WarCardDetails details = WarCardDetails()
+        ..cardPosition = i + 1
+        ..memberId = filteredCards[i].memberModel.memberId
+        ..name = filteredCards[i].memberModel.name
+        ..personalNote = filteredCards[i].memberModel.personalNote
+        ..personalNoteColor = filteredCards[i].memberModel.personalNoteColor;
+
+      warController.orderedCardsDetails.add(details);
     }
 
     return filteredCards;
