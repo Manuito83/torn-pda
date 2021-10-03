@@ -1,6 +1,4 @@
 import 'dart:math';
-
-import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -24,6 +22,9 @@ class WarController extends GetxController {
   bool showChainWidget = true;
   WarSortType currentSort;
 
+  bool updating = false;
+  bool _stopUpdate = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -31,6 +32,7 @@ class WarController extends GetxController {
   }
 
   Future<String> addFaction(String apiKey, String factionId, List<TargetModel> targets) async {
+    stopUpdate();
     // Return custom error code if faction already exists
     for (FactionModel faction in factions) {
       if (faction.id == factionId) {
@@ -70,12 +72,16 @@ class WarController extends GetxController {
   }
 
   void removeFaction(int removeId) {
+    stopUpdate();
+    // Remove also if it was filtered
+    filteredOutFactions.removeWhere((f) => f == removeId);
     factions.removeWhere((f) => f.id == removeId);
     savePreferences();
     update();
   }
 
   void filterFaction(int factionId) {
+    stopUpdate();
     if (filteredOutFactions.contains(factionId)) {
       filteredOutFactions.remove(factionId);
     } else {
@@ -139,13 +145,26 @@ class WarController extends GetxController {
   }
 
   Future<int> updateAllMembers(String apiKey) async {
-    // TODO STOP IF FACTIONS ARE DELETED!
-
     dynamic allAttacksSuccess = await getAllAttacks(apiKey);
     int numberUpdated = 0;
 
-    for (WarCardDetails card in orderedCardsDetails) {
-      for (FactionModel f in factions) {
+    updating = true;
+    update();
+
+    // Copy lists so that alterations (hiding) do not cause error
+    // which might happen even if we stop the update
+    List<WarCardDetails> thisCards = List.from(orderedCardsDetails);
+    List<FactionModel> thisFactions = List.from(factions);
+
+    for (WarCardDetails card in thisCards) {
+      for (FactionModel f in thisFactions) {
+        if (_stopUpdate) {
+          _stopUpdate = false;
+          updating = false;
+          update();
+          return numberUpdated;
+        }
+
         if (f.members.containsKey(card.memberId.toString())) {
           bool memberSuccess = await updateSingleMember(
             f.members[card.memberId.toString()],
@@ -164,6 +183,10 @@ class WarController extends GetxController {
       }
     }
 
+    _stopUpdate = false;
+    updating = false;
+    update();
+
     return numberUpdated;
   }
 
@@ -171,8 +194,22 @@ class WarController extends GetxController {
     await Future.delayed(Duration(seconds: 15));
     dynamic allAttacksSuccess = await getAllAttacks(apiKey);
 
+    updating = true;
+    update();
+
+    // Copy list so that alterations (hiding) do not cause error
+    // which might happen even if we stop the update
+    List<FactionModel> thisFactions = List.from(factions);
+
     for (String id in attackedMembers) {
-      for (FactionModel f in factions) {
+      for (FactionModel f in thisFactions) {
+        if (_stopUpdate) {
+          _stopUpdate = false;
+          updating = false;
+          update();
+          return;
+        }
+
         if (f.members.containsKey(id)) {
           await updateSingleMember(
             f.members[id],
@@ -187,6 +224,16 @@ class WarController extends GetxController {
         }
         continue;
       }
+    }
+
+    _stopUpdate = false;
+    updating = false;
+    update();
+  }
+
+  void stopUpdate() {
+    if (updating) {
+      _stopUpdate = true;
     }
   }
 

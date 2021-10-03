@@ -80,6 +80,14 @@ class _WarPageState extends State<WarPage> {
   }
 
   @override
+  Future dispose() async {
+    _addIdController.dispose();
+    _searchController.dispose();
+    _w.stopUpdate();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
@@ -173,57 +181,72 @@ class _WarPageState extends State<WarPage> {
             _showAddDialog(context);
           },
         ),
-        IconButton(
-          icon: Icon(Icons.refresh),
-          onPressed: () async {
-            String message = "";
-            Color messageColor = Colors.green;
-            // Count all members
-            int allMembers = 0;
-            int updatedMembers = 0;
-            for (FactionModel f in _w.factions) {
-              allMembers += f.members.length;
-            }
-
-            if (allMembers == 0) {
-              message = "No targets to update!";
-              messageColor = Colors.orange[700];
-            } else {
-              if (allMembers > 60) {
-                BotToast.showText(
-                  text: "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
-                      "issues with API request limits!",
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: messageColor,
-                  duration: const Duration(seconds: 3),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              }
-              updatedMembers = await _w.updateAllMembers(widget.userKey);
-            }
-
-            if (updatedMembers == allMembers) {
-              message = 'Successfully updated $updatedMembers war targets!';
-            } else {
-              message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!';
-              messageColor = Colors.orange[700];
-            }
-
-            if (mounted) {
-              BotToast.showText(
-                text: message,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
+        GetBuilder<WarController>(
+          builder: (w) {
+            if (w.updating)
+              return IconButton(
+                icon: Icon(
+                  MdiIcons.closeOctagonOutline,
+                  color: Colors.orange[700],
                 ),
-                contentColor: messageColor,
-                duration: const Duration(seconds: 3),
-                contentPadding: const EdgeInsets.all(10),
+                onPressed: () async {
+                  _w.stopUpdate();
+                },
               );
-            }
+            else
+              return IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: () async {
+                  String message = "";
+                  Color messageColor = Colors.green;
+                  // Count all members
+                  int allMembers = 0;
+                  int updatedMembers = 0;
+                  for (FactionModel f in _w.factions) {
+                    allMembers += f.members.length;
+                  }
+
+                  if (allMembers == 0) {
+                    message = "No targets to update!";
+                    messageColor = Colors.orange[700];
+                  } else {
+                    if (allMembers > 60) {
+                      BotToast.showText(
+                        text: "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
+                            "issues with API request limits!",
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: messageColor,
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    }
+                    updatedMembers = await _w.updateAllMembers(widget.userKey);
+                  }
+
+                  if (updatedMembers == allMembers) {
+                    message = 'Successfully updated $updatedMembers war targets!';
+                  } else {
+                    message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!';
+                    messageColor = Colors.orange[700];
+                  }
+
+                  if (mounted) {
+                    BotToast.showText(
+                      text: message,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: messageColor,
+                      duration: const Duration(seconds: 3),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  }
+                },
+              );
           },
         ),
         PopupMenuButton<WarSort>(
@@ -247,13 +270,6 @@ class _WarPageState extends State<WarPage> {
         ),
       ],
     );
-  }
-
-  @override
-  Future dispose() async {
-    _addIdController.dispose();
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _showAddDialog(BuildContext _) {
@@ -466,7 +482,8 @@ class AddFactionDialog extends StatelessWidget {
     for (FactionModel faction in warController.factions) {
       factionCards.add(
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.max,
           children: [
             GestureDetector(
               onTap: () {
@@ -478,11 +495,16 @@ class AddFactionDialog extends StatelessWidget {
               ),
             ),
             SizedBox(width: 5),
-            Card(
-              color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(faction.name),
+            Flexible(
+              child: Card(
+                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    faction.name,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
             SizedBox(width: 5),
@@ -584,6 +606,7 @@ class WarTargetsList extends StatelessWidget {
       warController.orderedCardsDetails.add(details);
     }
 
+    // TODO VISIBLE FACTIONS???
     return filteredCards;
   }
 }
