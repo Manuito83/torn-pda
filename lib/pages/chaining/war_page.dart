@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 // Project imports:
-import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -18,14 +17,11 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
-import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 
 import '../../main.dart';
 
-// TODO convert to stateless???
 class WarPage extends StatefulWidget {
   final String userKey;
   //final Function tabCallback;
@@ -115,12 +111,12 @@ class _WarPageState extends State<WarPage> {
     return GetBuilder<WarController>(
       builder: (w) => Column(
         children: <Widget>[
-          if (_w.filteredOutFactions.length > 0)
+          if (w.factions.where((f) => f.hidden).length > 0)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                "${_w.filteredOutFactions.length} "
-                "${_w.filteredOutFactions.length == 1 ? 'faction is' : 'factions are'} filtered out!",
+                "${w.factions.where((f) => f.hidden).length} "
+                "${w.factions.where((f) => f.hidden).length == 1 ? 'faction is' : 'factions are'} filtered out!",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.orange[700],
@@ -202,7 +198,7 @@ class _WarPageState extends State<WarPage> {
                   // Count all members
                   int allMembers = 0;
                   int updatedMembers = 0;
-                  for (FactionModel f in _w.factions) {
+                  for (FactionModel f in _w.factions.where((f) => !f.hidden)) {
                     allMembers += f.members.length;
                   }
 
@@ -491,7 +487,7 @@ class AddFactionDialog extends StatelessWidget {
               },
               child: Icon(
                 Icons.remove_red_eye_outlined,
-                color: warController.filteredOutFactions.contains(faction.id) ? Colors.red : themeProvider.mainText,
+                color: faction.hidden ? Colors.red : themeProvider.mainText,
               ),
             ),
             SizedBox(width: 5),
@@ -543,7 +539,7 @@ class WarTargetsList extends StatelessWidget {
   List<Widget> getChildrenTargets() {
     List<Member> members = <Member>[];
     warController.factions.forEach((faction) {
-      if (!warController.filteredOutFactions.contains(faction.id)) {
+      if (!faction.hidden) {
         faction.members.forEach((key, value) {
           value.memberId = int.parse(key);
           value.factionName = faction.name;
@@ -606,7 +602,6 @@ class WarTargetsList extends StatelessWidget {
       warController.orderedCardsDetails.add(details);
     }
 
-    // TODO VISIBLE FACTIONS???
     return filteredCards;
   }
 }

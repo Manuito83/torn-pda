@@ -18,7 +18,6 @@ class WarCardDetails {
 class WarController extends GetxController {
   List<FactionModel> factions = <FactionModel>[];
   List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
-  List<int> filteredOutFactions = <int>[];
   bool showChainWidget = true;
   WarSortType currentSort;
 
@@ -74,7 +73,6 @@ class WarController extends GetxController {
   void removeFaction(int removeId) {
     stopUpdate();
     // Remove also if it was filtered
-    filteredOutFactions.removeWhere((f) => f == removeId);
     factions.removeWhere((f) => f.id == removeId);
     savePreferences();
     update();
@@ -82,11 +80,8 @@ class WarController extends GetxController {
 
   void filterFaction(int factionId) {
     stopUpdate();
-    if (filteredOutFactions.contains(factionId)) {
-      filteredOutFactions.remove(factionId);
-    } else {
-      filteredOutFactions.add(factionId);
-    }
+    FactionModel faction = factions.where((f) => f.id == factionId).first;
+    faction.hidden = !faction.hidden;
     savePreferences();
     update();
   }
@@ -335,11 +330,6 @@ class WarController extends GetxController {
       factions.add(factionModelFromJson(element));
     });
 
-    List<String> filteredOutFactionsList = await Prefs().getFilteredOutWarFactions();
-    for (String f in filteredOutFactionsList) {
-      filteredOutFactions.add(int.parse(f));
-    }
-
     showChainWidget = await Prefs().getShowChainWidgetInWars();
 
     // Get sorting
@@ -375,12 +365,6 @@ class WarController extends GetxController {
       factionList.add(factionModelToJson(element));
     });
     Prefs().setWarFactions(factionList);
-
-    List<String> filteredOutFactionList = [];
-    filteredOutFactions.forEach((element) {
-      filteredOutFactionList.add(element.toString());
-    });
-    Prefs().setFilteredOutWarFactions(filteredOutFactionList);
 
     Prefs().setShowChainWidgetInWars(showChainWidget);
 

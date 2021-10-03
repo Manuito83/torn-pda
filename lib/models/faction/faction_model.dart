@@ -10,6 +10,8 @@ String factionModelToJson(FactionModel data) => json.encode(data.toJson());
 
 class FactionModel {
   FactionModel({
+    this.hidden,
+    //
     this.id,
     this.name,
     this.tag,
@@ -23,6 +25,9 @@ class FactionModel {
     //this.peace,
     this.members,
   });
+
+  // War state
+  bool hidden = false;
 
   int id;
   String name;
@@ -40,6 +45,8 @@ class FactionModel {
   Map<String, Member> members;
 
   factory FactionModel.fromJson(Map<String, dynamic> json) => FactionModel(
+        hidden: json["hidden"] ?? false,
+        //
         id: json["ID"],
         name: json["name"],
         tag: json["tag"],
@@ -55,6 +62,8 @@ class FactionModel {
       );
 
   Map<String, dynamic> toJson() => {
+        "hidden": hidden,
+        //
         "ID": id,
         "name": name,
         "tag": tag,
