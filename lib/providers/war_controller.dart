@@ -310,6 +310,44 @@ class WarController extends GetxController {
     }
   }
 
+  void hideMember(Member hiddenMember) {
+    for (var f in factions) {
+      if (f.members.keys.contains(hiddenMember.memberId.toString())) {
+        f.members[hiddenMember.memberId.toString()].hidden = true;
+        savePreferences();
+        update();
+        break;
+      }
+    }
+  }
+
+  void unhideMember(Member hiddenMember) {
+    for (var f in factions) {
+      if (f.members.keys.contains(hiddenMember.memberId.toString())) {
+        f.members[hiddenMember.memberId.toString()].hidden = false;
+        savePreferences();
+        update();
+        break;
+      }
+    }
+  }
+
+  int getHiddenMembersNumber() {
+    int membersHidden = 0;
+    for (FactionModel f in factions) {
+      membersHidden += f.members.values.where((m) => m.hidden).length;
+    }
+    return membersHidden;
+  }
+
+  List<Member> getHiddenMembersDetails() {
+    List<Member> membersHidden = <Member>[];
+    for (FactionModel f in factions) {
+      membersHidden.addAll((f.members.values.where((m) => m.hidden)));
+    }
+    return membersHidden;
+  }
+
   dynamic getAllAttacks(String _userKey) async {
     var result = await TornApiCaller.attacks(_userKey).getAttacks;
     if (result is AttackModel) {

@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
@@ -19,8 +18,26 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
-
 import '../../main.dart';
+
+class WarOptions {
+  String description;
+  IconData iconData;
+
+  WarOptions({this.description}) {
+    switch (description) {
+      case "Toggle chain widget":
+        iconData = MdiIcons.linkVariant;
+        break;
+      case "Hidden targets":
+        iconData = Icons.undo_outlined;
+        break;
+      case "Information":
+        iconData = Icons.info_outline_rounded;
+        break;
+    }
+  }
+}
 
 class WarPage extends StatefulWidget {
   final String userKey;
@@ -59,14 +76,11 @@ class _WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.colorDes),
   ];
 
-/*
-  final _popupOptionsChoices = <TargetsOptions>[
-    TargetsOptions(description: "Options"),
-    TargetsOptions(description: "Filter"),
-    TargetsOptions(description: "Backup"),
-    TargetsOptions(description: "Wipe"),
+  final _popupOptionsChoices = <WarOptions>[
+    WarOptions(description: "Toggle chain widget"),
+    WarOptions(description: "Hidden targets"),
+    WarOptions(description: "Information"),
   ];
-*/
 
   @override
   void initState() {
@@ -108,18 +122,29 @@ class _WarPageState extends State<WarPage> {
   }
 
   Widget _mainColumn() {
-    return GetBuilder<WarController>(
-      builder: (w) => Column(
+    return GetBuilder<WarController>(builder: (w) {
+      int hiddenMembers = w.getHiddenMembersNumber();
+      return Column(
         children: <Widget>[
           if (w.factions.where((f) => f.hidden).length > 0)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 "${w.factions.where((f) => f.hidden).length} "
-                "${w.factions.where((f) => f.hidden).length == 1 ? 'faction is' : 'factions are'} filtered out!",
+                "${w.factions.where((f) => f.hidden).length == 1 ? 'faction is' : 'factions are'} filtered out",
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.orange[700],
+                ),
+              ),
+            ),
+          if (hiddenMembers > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                "${hiddenMembers} ${hiddenMembers == 1 ? 'target is' : 'targets are'} hidden",
+                style: TextStyle(
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -137,8 +162,8 @@ class _WarPageState extends State<WarPage> {
               : WarTargetsList(warController: w),
           SizedBox(height: 50),
         ],
-      ),
-    );
+      );
+    });
   }
 
   AppBar buildAppBar() {
@@ -155,17 +180,6 @@ class _WarPageState extends State<WarPage> {
         },
       ),
       actions: <Widget>[
-        GetBuilder<WarController>(
-          builder: (w) => IconButton(
-            icon: Icon(
-              MdiIcons.linkVariant,
-              color: w.showChainWidget ? Colors.white : Colors.orange[700],
-            ),
-            onPressed: () {
-              w.toggleChainWidget();
-            },
-          ),
-        ),
         IconButton(
           icon: Image.asset(
             'images/icons/faction.png',
@@ -199,7 +213,7 @@ class _WarPageState extends State<WarPage> {
                   int allMembers = 0;
                   int updatedMembers = 0;
                   for (FactionModel f in _w.factions.where((f) => !f.hidden)) {
-                    allMembers += f.members.length;
+                    allMembers += f.members.values.where((m) => !m.hidden).length;
                   }
 
                   if (allMembers == 0) {
@@ -222,9 +236,9 @@ class _WarPageState extends State<WarPage> {
                     updatedMembers = await _w.updateAllMembers(widget.userKey);
                   }
 
-                  if (updatedMembers == allMembers) {
+                  if (updatedMembers > 0 && updatedMembers == allMembers) {
                     message = 'Successfully updated $updatedMembers war targets!';
-                  } else {
+                  } else if (updatedMembers > 0 && updatedMembers < allMembers) {
                     message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!';
                     messageColor = Colors.orange[700];
                   }
@@ -264,6 +278,39 @@ class _WarPageState extends State<WarPage> {
             }).toList();
           },
         ),
+        PopupMenuButton<WarOptions>(
+          icon: const Icon(Icons.settings),
+          onSelected: (selection) {
+            switch (selection.description) {
+              case "Toggle chain widget":
+                _w.toggleChainWidget();
+                break;
+              case "Hidden targets":
+                _showHiddenMembersDialogs(context);
+                break;
+              case "Information":
+                print("3"); // TODO
+                break;
+            }
+          },
+          itemBuilder: (BuildContext context) {
+            return _popupOptionsChoices.map((WarOptions choice) {
+              if (choice.description.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
+                return null;
+              }
+              return PopupMenuItem<WarOptions>(
+                value: choice,
+                child: Row(
+                  children: [
+                    Icon(choice.iconData, size: 20, color: _themeProvider.mainText),
+                    const SizedBox(width: 10),
+                    Text(choice.description),
+                  ],
+                ),
+              );
+            }).toList();
+          },
+        )
       ],
     );
   }
@@ -278,6 +325,21 @@ class _WarPageState extends State<WarPage> {
             themeProvider: _themeProvider,
             addFormKey: _addFormKey,
             addIdController: _addIdController,
+            warController: w,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showHiddenMembersDialogs(BuildContext _) {
+    return showDialog<void>(
+      context: _,
+      barrierDismissible: true, // user must tap button!
+      builder: (BuildContext context) {
+        return GetBuilder<WarController>(
+          builder: (w) => HiddenMembersDialog(
+            themeProvider: _themeProvider,
             warController: w,
           ),
         );
@@ -518,6 +580,121 @@ class AddFactionDialog extends StatelessWidget {
   }
 }
 
+class HiddenMembersDialog extends StatelessWidget {
+  const HiddenMembersDialog({
+    Key key,
+    @required this.themeProvider,
+    @required this.warController,
+  }) : super(key: key);
+
+  final ThemeProvider themeProvider;
+  final WarController warController;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Member> hiddenMembers = warController.getHiddenMembersDetails();
+    List<Widget> hiddenCards = buildCards(hiddenMembers, context);
+    return AlertDialog(
+      backgroundColor: themeProvider.background,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      actions: [
+        TextButton(
+          child: const Text("Close"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+      elevation: 0.0,
+      content: Container(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Reset hidden targets",
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 20),
+            ListView(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              children: hiddenCards,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> buildCards(List<Member> hiddenMembers, BuildContext context) {
+    List<Widget> hiddenCards = <Widget>[];
+    for (Member m in hiddenMembers) {
+      hiddenCards.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            IconButton(
+              icon: Icon(Icons.undo),
+              onPressed: () {
+                warController.unhideMember(m);
+                if (warController.getHiddenMembersNumber() == 0) {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+            Expanded(
+              child: Card(
+                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Text(
+                            m.name,
+                            style: TextStyle(fontSize: 13),
+                          ),
+                          Text(
+                            "Level ${m.level}",
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Image.asset(
+                            'images/icons/faction.png',
+                            width: 11,
+                            height: 11,
+                            color: themeProvider.mainText,
+                          ),
+                          SizedBox(width: 5),
+                          Text(
+                            m.factionName,
+                            style: TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return hiddenCards;
+  }
+}
+
 class WarTargetsList extends StatelessWidget {
   WarTargetsList({@required this.warController});
 
@@ -553,12 +730,13 @@ class WarTargetsList extends StatelessWidget {
     List<WarCard> filteredCards = <WarCard>[];
 
     for (var thisMember in members) {
-      filteredCards.add(
-        WarCard(
-          key: UniqueKey(),
-          memberModel: thisMember,
-        ),
-      );
+      if (!thisMember.hidden)
+        filteredCards.add(
+          WarCard(
+            key: UniqueKey(),
+            memberModel: thisMember,
+          ),
+        );
     }
 
     switch (warController.currentSort) {

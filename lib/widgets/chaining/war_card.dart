@@ -42,7 +42,6 @@ class WarCard extends StatefulWidget {
 
 class _WarCardState extends State<WarCard> {
   Member _member;
-  TargetsProvider _targetsProvider;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
@@ -75,20 +74,27 @@ class _WarCardState extends State<WarCard> {
   Widget build(BuildContext context) {
     _member = widget.memberModel;
     _returnLastUpdated();
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
+      key: UniqueKey(),
       actionPane: SlidableDrawerActionPane(),
       actionExtentRatio: 0.25,
+      dismissal: SlidableDismissal(
+        child: SlidableDrawerDismissal(),
+        resizeDuration: Duration(seconds: 1),
+        onDismissed: (actionType) {
+          _w.hideMember(_member);
+        },
+      ),
       actions: <Widget>[
         IconSlideAction(
-          caption: 'Remove',
-          color: Colors.red,
+          caption: 'Hide',
+          color: Colors.blue,
           icon: Icons.delete,
           onTap: () {
-            // TODO
+            _w.hideMember(_member);
           },
         ),
       ],

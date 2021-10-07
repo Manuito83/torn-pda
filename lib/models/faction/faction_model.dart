@@ -96,6 +96,7 @@ class Member {
     this.userWonOrDefended,
     this.personalNote,
     this.personalNoteColor,
+    this.hidden,
     //
     this.name,
     this.level,
@@ -121,6 +122,7 @@ class Member {
   bool userWonOrDefended = false;
   String personalNote = "";
   String personalNoteColor = "";
+  bool hidden = false;
 
   String name;
   int level;
@@ -146,6 +148,7 @@ class Member {
         userWonOrDefended: json["userWonOrDefended"] == null ? false : json["userWonOrDefended"],
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
+        hidden: json["hidden"] ?? false,
         //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
@@ -176,6 +179,7 @@ class Member {
         "last_action": lastAction.toJson(),
         "status": status.toJson(),
         "position": position,
+        "hidden": hidden,
       };
 }
 
