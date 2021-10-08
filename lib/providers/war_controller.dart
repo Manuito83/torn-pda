@@ -1,11 +1,15 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
+import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:http/http.dart' as http;
 
 class WarCardDetails {
   int cardPosition;
@@ -23,6 +27,9 @@ class WarController extends GetxController {
 
   bool updating = false;
   bool _stopUpdate = false;
+
+  DateTime _lastSpiesDownload;
+  List<YataSpyModel> _spies = <YataSpyModel>[];
 
   @override
   void onInit() {
@@ -47,18 +54,21 @@ class WarController extends GetxController {
     final faction = apiResult as FactionModel;
     factions.add(faction);
 
+    // Add extra member information
     DateTime addedTime = DateTime.now();
-    faction.members.forEach((memberId, details) {
-      details.lastUpdated = addedTime;
+    faction.members.forEach((memberId, member) {
+      // Last updated time
+      member.lastUpdated = addedTime;
       for (var t in targets) {
+        // Try to match information with pre-existing targets
         if (t.playerId.toString() == memberId) {
-          details.personalNoteColor = t.personalNoteColor;
+          member.personalNoteColor = t.personalNoteColor;
           if (t.personalNote.isNotEmpty) {
-            details.personalNote = t.personalNote;
+            member.personalNote = t.personalNote;
           }
           if (t.respectGain != -1) {
-            details.respectGain = t.respectGain;
-            details.fairFight = t.fairFight;
+            member.respectGain = t.respectGain;
+            member.fairFight = t.fairFight;
           }
           break;
         }
@@ -88,11 +98,13 @@ class WarController extends GetxController {
 
   /// [allAttacks] is to be provided when updating several members at the same time, so that it does not have
   /// to call the API twice every time
-  Future<bool> updateSingleMember(Member member, String apiKey, {dynamic allAttacks}) async {
+  Future<bool> updateSingleMember(Member member, String apiKey, {dynamic allAttacks, dynamic spies}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
       allAttacksSuccess = await getAllAttacks(apiKey);
     }
+
+    dynamic allSpiesSuccess = await _getYataSpies(apiKey);
 
     String memberKey = member.memberId.toString();
     bool error = false;
@@ -104,8 +116,8 @@ class WarController extends GetxController {
 
         // Perform update
         try {
-          dynamic updatedTarget = await TornApiCaller.target(apiKey, memberKey).getTarget;
-          if (updatedTarget is TargetModel) {
+          dynamic updatedTarget = await TornApiCaller.target(apiKey, memberKey).getOtherProfile;
+          if (updatedTarget is OtherProfileModel) {
             f.members[memberKey].lifeMaximum = updatedTarget.life.current;
             f.members[memberKey].lifeCurrent = updatedTarget.life.maximum;
             f.members[memberKey].lastAction.relative = updatedTarget.lastAction.relative;
@@ -118,6 +130,26 @@ class WarController extends GetxController {
             if (allAttacksSuccess is AttackModel) {
               _getRespectFF(allAttacksSuccess, member);
             }
+            if (allSpiesSuccess != null) {
+              for (YataSpyModel spy in allSpiesSuccess) {
+                if (spy.targetName == f.members[memberKey].name) {
+                  f.members[memberKey].statsExactTotal = spy.total;
+                  f.members[memberKey].statsExactUpdated = spy.update;
+                  f.members[memberKey].statsStr = spy.strength;
+                  f.members[memberKey].statsSpd = spy.speed;
+                  f.members[memberKey].statsDef = spy.defense;
+                  f.members[memberKey].statsDex = spy.dexterity;
+                  int known = 0;
+                  if (spy.strength != 1) known += spy.strength;
+                  if (spy.speed != 1) known += spy.speed;
+                  if (spy.defense != 1) known += spy.defense;
+                  if (spy.dexterity != 1) known += spy.dexterity;
+                  f.members[memberKey].statsExactTotalKnown = known;
+                  break;
+                }
+              }
+            }
+            f.members[memberKey].statsEstimated = _calculateEstimatedStats(updatedTarget);
           } else {
             error = true;
           }
@@ -441,5 +473,94 @@ class WarController extends GetxController {
     currentSort = sortType;
     savePreferences();
     update();
+  }
+
+  String _calculateEstimatedStats(OtherProfileModel member) {
+    final levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
+    final crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
+    final networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
+
+    final _ranksTriggers = {
+      "Absolute beginner": 1,
+      "Beginner": 2,
+      "Inexperienced": 3,
+      "Rookie": 4,
+      "Novice": 5,
+      "Below average": 6,
+      "Average": 7,
+      "Reasonable": 8,
+      "Above average": 9,
+      "Competent": 10,
+      "Highly competent": 11,
+      "Veteran": 12,
+      "Distinguished": 13,
+      "Highly distinguished": 14,
+      "Professional": 15,
+      "Star": 16,
+      "Master": 17,
+      "Outstanding": 18,
+      "Celebrity": 19,
+      "Supreme": 20,
+      "Idolized": 21,
+      "Champion": 22,
+      "Heroic": 23,
+      "Legendary": 24,
+      "Elite": 25,
+      "Invincible": 26,
+    };
+
+    final _statsResults = [
+      "< 2k",
+      "2k - 25k",
+      "20k - 250k",
+      "200k - 2.5M",
+      "2M - 25M",
+      "20M - 250M",
+      "> 200M",
+    ];
+
+    var levelIndex = levelTriggers.lastIndexWhere((x) => x <= member.level) + 1;
+    var crimeIndex = crimesTriggers.lastIndexWhere((x) => x <= member.criminalrecord.total) + 1;
+    var networthIndex = networthTriggers.lastIndexWhere((x) => x <= member.personalstats.networth) + 1;
+    var rankIndex = 0;
+    _ranksTriggers.forEach((tornRank, index) {
+      if (member.rank.contains(tornRank)) {
+        rankIndex = index;
+      }
+    });
+
+    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
+    if (finalIndex >= 0 && finalIndex <= 6) {
+      return _statsResults[finalIndex];
+    }
+    return "";
+  }
+
+  Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {
+    // If spies where updated less than an hour ago
+    if (_lastSpiesDownload != null && _lastSpiesDownload.difference(DateTime.now()).inHours < 1) {
+      return _spies;
+    }
+
+    List<YataSpyModel> spies = <YataSpyModel>[];
+    try {
+      String yataURL = 'https://yata.yt/api/v1/spies/?key=${apiKey}';
+      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+      if (resp.statusCode == 200) {
+        dynamic spiesJson = json.decode(resp.body);
+        if (spiesJson != null) {
+          Map<String, dynamic> mainMap = spiesJson as Map<String, dynamic>;
+          Map<String, dynamic> spyList = mainMap.entries.first.value;
+          spyList.forEach((key, value) {
+            YataSpyModel spyModel = yataSpyModelFromJson(json.encode(value));
+            spies.add(spyModel);
+          });
+        }
+      }
+    } catch (e) {
+      return _spies = null;
+    }
+    _lastSpiesDownload = DateTime.now();
+    return _spies = spies;
   }
 }

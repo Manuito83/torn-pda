@@ -16,6 +16,9 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/offset_animation.dart';
+import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -187,23 +190,28 @@ class _WarCardState extends State<WarCard> {
                       Row(
                         children: <Widget>[
                           _travelIcon(),
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: _returnStatusColor(_member.lastAction.status),
-                              shape: BoxShape.circle,
-                            ),
+                          GestureDetector(
+                            child: _member.lastAction.status == "Offline"
+                                ? Icon(Icons.remove_circle, size: 16, color: Colors.grey)
+                                : _member.lastAction.status == "Idle"
+                                    ? Icon(Icons.adjust, size: 16, color: Colors.orange)
+                                    : Icon(Icons.circle, size: 16, color: Colors.green[400]),
+                            onTap: () {
+                              BotToast.showText(
+                                text: HtmlParser.fix('Online '
+                                    '${_member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative}'),
+                                textStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.grey[800],
+                                duration: Duration(seconds: 5),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                            },
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 12),
-                            child: Text(
-                              _member.lastAction.relative == "0 minutes ago"
-                                  ? 'now'
-                                  : _member.lastAction.relative.replaceAll(' ago', ''),
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
+                          SizedBox(width: 8),
+                          _statsWidget(),
                         ],
                       ),
                       Expanded(
@@ -681,67 +689,57 @@ class _WarCardState extends State<WarCard> {
         flag = 'images/flags/stock/canada.png';
       }
 
-      return Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(100),
-          onTap: () {
-            BotToast.showText(
-              text: _member.status.description,
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.blue,
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
-          },
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 3),
-                child: RotatedBox(
-                  quarterTurns: _member.status.description.contains('Traveling to ')
-                      ? 1 // If traveling to another country
-                      : _member.status.description.contains('Returning ')
-                          ? 3 // If returning to Torn
-                          : 0, // If staying abroad (blue but not moving)
-                  child: Icon(
-                    _member.status.description.contains('In ')
-                        ? Icons.location_city_outlined
-                        : Icons.airplanemode_active,
-                    color: Colors.blue,
-                    size: 16,
+      return Padding(
+        padding: const EdgeInsets.only(right: 5),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onTap: () {
+              BotToast.showText(
+                text: _member.status.description,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: Duration(seconds: 5),
+                contentPadding: EdgeInsets.all(10),
+              );
+            },
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 3),
+                  child: RotatedBox(
+                    quarterTurns: _member.status.description.contains('Traveling to ')
+                        ? 1 // If traveling to another country
+                        : _member.status.description.contains('Returning ')
+                            ? 3 // If returning to Torn
+                            : 0, // If staying abroad (blue but not moving)
+                    child: Icon(
+                      _member.status.description.contains('In ')
+                          ? Icons.location_city_outlined
+                          : Icons.airplanemode_active,
+                      color: Colors.blue,
+                      size: 16,
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(right: 5),
-                child: Image.asset(
-                  flag,
-                  width: 16,
+                Padding(
+                  padding: const EdgeInsets.only(right: 5),
+                  child: Image.asset(
+                    flag,
+                    width: 16,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
     } else {
       return SizedBox.shrink();
-    }
-  }
-
-  Color _returnStatusColor(String status) {
-    switch (status) {
-      case 'Online':
-        return Colors.green;
-        break;
-      case 'Idle':
-        return Colors.orange;
-        break;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -762,6 +760,336 @@ class _WarCardState extends State<WarCard> {
       _lastUpdatedString = '1 day ago';
     } else {
       _lastUpdatedString = '${timeDifference.inDays} days ago';
+    }
+  }
+
+  Widget _statsWidget() {
+    void _showDetailedStatsDialog() {
+      String lastUpdated = "";
+      if (_member.statsExactUpdated != 0) {
+        lastUpdated = readTimestamp(_member.statsExactUpdated);
+      }
+
+      Widget strWidget;
+      if (_member.statsStr == -1) {
+        strWidget = Text(
+          "Strength: unknown",
+          style: TextStyle(fontSize: 12),
+        );
+      } else {
+        var strDiff = "";
+        Color strColor;
+        var result = _userProvider.basic.strength - _member.statsStr;
+        if (result == 0) {
+          strDiff = "Same as you";
+          strColor = Colors.orange;
+        } else if (result < 0) {
+          strDiff = "${formatBigNumbers(result.abs())} higher than you";
+          strColor = Colors.red;
+        } else {
+          strDiff = "${formatBigNumbers(result.abs())} lower than you";
+          strColor = Colors.green;
+        }
+
+        strWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Strength: ${formatBigNumbers(_member.statsStr)}",
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              strDiff,
+              style: TextStyle(fontSize: 12, color: strColor),
+            ),
+          ],
+        );
+      }
+
+      Widget spdWidget;
+      if (_member.statsSpd == -1) {
+        spdWidget = Text(
+          "Speed: unknown",
+          style: TextStyle(fontSize: 12),
+        );
+      } else {
+        var spdDiff = "";
+        Color spdColor;
+        var result = _userProvider.basic.speed - _member.statsSpd;
+        if (result == 0) {
+          spdDiff = "Same as you";
+          spdColor = Colors.orange;
+        } else if (result < 0) {
+          spdDiff = "${formatBigNumbers(result.abs())} higher than you";
+          spdColor = Colors.red;
+        } else {
+          spdDiff = "${formatBigNumbers(result.abs())} lower than you";
+          spdColor = Colors.green;
+        }
+
+        spdWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Speed: ${formatBigNumbers(_member.statsSpd)}",
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              spdDiff,
+              style: TextStyle(fontSize: 12, color: spdColor),
+            ),
+          ],
+        );
+      }
+
+      Widget defWidget;
+      if (_member.statsDef == -1) {
+        defWidget = Text(
+          "Defense: unknown",
+          style: TextStyle(fontSize: 12),
+        );
+      } else {
+        var defDiff = "";
+        Color defColor;
+        var result = _userProvider.basic.defense - _member.statsDef;
+        if (result == 0) {
+          defDiff = "Same as you";
+          defColor = Colors.orange;
+        } else if (result < 0) {
+          defDiff = "${formatBigNumbers(result.abs())} higher than you";
+          defColor = Colors.red;
+        } else {
+          defDiff = "${formatBigNumbers(result.abs())} lower than you";
+          defColor = Colors.green;
+        }
+
+        defWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Defense: ${formatBigNumbers(_member.statsDef)}",
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              defDiff,
+              style: TextStyle(fontSize: 12, color: defColor),
+            ),
+          ],
+        );
+      }
+
+      Widget dexWidget;
+      if (_member.statsDex == -1) {
+        dexWidget = Text(
+          "Dexterity: unknown",
+          style: TextStyle(fontSize: 12),
+        );
+      } else {
+        var dexDiff = "";
+        Color dexColor;
+        var result = _userProvider.basic.strength - _member.statsDex;
+        if (result == 0) {
+          dexDiff = "Same as you";
+          dexColor = Colors.orange;
+        } else if (result < 0) {
+          dexDiff = "${formatBigNumbers(result.abs())} higher than you";
+          dexColor = Colors.red;
+        } else {
+          dexDiff = "${formatBigNumbers(result.abs())} lower than you";
+          dexColor = Colors.green;
+        }
+
+        dexWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Dexterity: ${formatBigNumbers(_member.statsDex)}",
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              dexDiff,
+              style: TextStyle(fontSize: 12, color: dexColor),
+            ),
+          ],
+        );
+      }
+
+      Widget totalWidget;
+      if (_member.statsExactTotal == -1) {
+        totalWidget = Text(
+          "TOTAL: unknown (>${formatBigNumbers(_member.statsExactTotalKnown)})",
+          style: TextStyle(fontSize: 12),
+        );
+      } else {
+        var totalDiff = "";
+        Color totalColor;
+        var result = _userProvider.basic.total - _member.statsExactTotal;
+        if (result == 0) {
+          totalDiff = "Same as you";
+          totalColor = Colors.orange;
+        } else if (result < 0) {
+          totalDiff = "${formatBigNumbers(result.abs())} higher than you";
+          totalColor = Colors.red;
+        } else {
+          totalDiff = "${formatBigNumbers(result.abs())} lower than you";
+          totalColor = Colors.green;
+        }
+
+        totalWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "TOTAL: ${formatBigNumbers(_member.statsExactTotal)}",
+              style: TextStyle(fontSize: 12),
+            ),
+            Text(
+              totalDiff,
+              style: TextStyle(fontSize: 12, color: totalColor),
+            ),
+          ],
+        );
+      }
+
+      BotToast.showAnimationWidget(
+        clickClose: false,
+        allowClick: false,
+        onlyOne: true,
+        wrapToastAnimation: (controller, cancel, child) => Stack(
+          children: <Widget>[
+            GestureDetector(
+              onTap: () {
+                cancel();
+              },
+              child: AnimatedBuilder(
+                builder: (_, child) => Opacity(
+                  opacity: controller.value,
+                  child: child,
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: Colors.black26),
+                  child: SizedBox.expand(),
+                ),
+                animation: controller,
+              ),
+            ),
+            CustomOffsetAnimation(
+              controller: controller,
+              child: child,
+            )
+          ],
+        ),
+        toastBuilder: (cancelFunc) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: Text(_member.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_member.factionName != "0")
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    "Faction: ${_member.factionName}",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              if (lastUpdated.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    "Updated: $lastUpdated",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4, bottom: 10),
+                child: strWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: spdWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: defWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 10),
+                child: dexWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: totalWidget,
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                cancelFunc();
+              },
+              child: const Text('Thanks'),
+            ),
+          ],
+        ),
+        animationDuration: Duration(milliseconds: 300),
+      );
+    }
+
+    if (_member.statsExactTotalKnown != -1) {
+      Color exactColor = Colors.green;
+      if (_userProvider.basic.total < _member.statsExactTotalKnown - _member.statsExactTotalKnown * 0.1) {
+        exactColor = Colors.red[700];
+      } else if ((_userProvider.basic.total >= _member.statsExactTotalKnown - _member.statsExactTotalKnown * 0.1) &&
+          (_userProvider.basic.total <= _member.statsExactTotalKnown + _member.statsExactTotalKnown * 0.1)) {
+        exactColor = Colors.orange[700];
+      }
+      return Row(
+        children: [
+          Text(
+            "${formatBigNumbers(_member.statsExactTotalKnown)}",
+            style: TextStyle(
+              fontSize: 13,
+              color: exactColor,
+            ),
+          ),
+          if (_member.statsExactTotalKnown != _member.statsExactTotal)
+            Padding(
+              padding: const EdgeInsets.only(left: 2),
+              child: Text(
+                "?",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: exactColor,
+                ),
+              ),
+            ),
+          SizedBox(width: 3),
+          GestureDetector(
+            child: Icon(
+              Icons.info_outline,
+              color: exactColor,
+              size: 16,
+            ),
+            onTap: () {
+              _showDetailedStatsDialog();
+            },
+          ),
+        ],
+      );
+    } else if (_member.statsEstimated.isNotEmpty) {
+      return Text(
+        "${_member.statsEstimated} (est.)",
+        style: TextStyle(fontSize: 13),
+      );
+    } else {
+      return Text(
+        "unk stats",
+        style: TextStyle(
+          fontSize: 13,
+          fontStyle: FontStyle.italic,
+        ),
+      );
     }
   }
 

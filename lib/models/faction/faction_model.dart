@@ -97,6 +97,14 @@ class Member {
     this.personalNote,
     this.personalNoteColor,
     this.hidden,
+    this.statsEstimated,
+    this.statsExactTotal,
+    this.statsExactTotalKnown,
+    this.statsExactUpdated,
+    this.statsStr,
+    this.statsSpd,
+    this.statsDef,
+    this.statsDex,
     //
     this.name,
     this.level,
@@ -123,6 +131,14 @@ class Member {
   String personalNote = "";
   String personalNoteColor = "";
   bool hidden = false;
+  String statsEstimated = "";
+  int statsExactTotal = -1;
+  int statsExactTotalKnown = -1;
+  int statsExactUpdated = 0;
+  int statsStr = -1;
+  int statsSpd = -1;
+  int statsDef = -1;
+  int statsDex = -1;
 
   String name;
   int level;
@@ -149,6 +165,14 @@ class Member {
         personalNote: json["personalNotes"] ?? "",
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
+        statsEstimated: json["statsEstimated"] ?? "",
+        statsExactTotal: json["statsExactTotal"] ?? -1,
+        statsExactTotalKnown: json["statsExactTotalKnown"] ?? -1,
+        statsExactUpdated: json["statsExactUpdated"] ?? 0,
+        statsStr: json["statsStr"] ?? -1,
+        statsSpd: json["statsSpd"] ?? -1,
+        statsDef: json["statsDef"] ?? -1,
+        statsDex: json["statsDex"] ?? -1,
         //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
@@ -172,6 +196,15 @@ class Member {
         "userWonOrDefended": userWonOrDefended,
         "personalNotes": personalNote,
         "personalNoteColor": personalNoteColor,
+        "hidden": hidden,
+        "statsEstimated": statsEstimated,
+        "statsExactTotal": statsExactTotal,
+        "statsExactTotalKnown": statsExactTotalKnown,
+        "statsExactUpdated": statsExactUpdated,
+        "statsStr": statsStr,
+        "statsSpd": statsSpd,
+        "statsDef": statsDef,
+        "statsDex": statsDex,
         //
         "name": name,
         "level": level == null ? null : level,
@@ -179,7 +212,6 @@ class Member {
         "last_action": lastAction.toJson(),
         "status": status.toJson(),
         "position": position,
-        "hidden": hidden,
       };
 }
 

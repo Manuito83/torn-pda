@@ -501,12 +501,12 @@ class _TargetsPageState extends State<TargetsPage> {
                                     // does not appear again in case of failure
                                     final inputId = _addIdController.text;
                                     _addIdController.text = '';
-                                    
+
                                     final AddTargetResult tryAddTarget = await targetsProvider.addTarget(
                                       targetId: inputId,
                                       attacks: await _targetsProvider.getAttacks(),
                                     );
-                                    
+
                                     BotToast.showText(
                                       text: tryAddTarget.success
                                           ? 'Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}]'

@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +18,7 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 
@@ -515,7 +515,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 SizedBox(width: 10),
                 Flexible(
                   child: Text(
-                    "${_formatBigNumbers(otherProfile.personalstats.networth)}",
+                    "${formatBigNumbers(otherProfile.personalstats.networth)}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -597,7 +597,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.strength)}",
+              text: "${formatBigNumbers(spyModel.strength)}",
               style: TextStyle(color: strColor, fontSize: 11),
             ),
           );
@@ -633,7 +633,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.speed)}",
+              text: "${formatBigNumbers(spyModel.speed)}",
               style: TextStyle(color: spdColor, fontSize: 11),
             ),
           );
@@ -669,7 +669,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.defense)}",
+              text: "${formatBigNumbers(spyModel.defense)}",
               style: TextStyle(color: defColor, fontSize: 11),
             ),
           );
@@ -705,7 +705,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.dexterity)}",
+              text: "${formatBigNumbers(spyModel.dexterity)}",
               style: TextStyle(color: dexColor, fontSize: 11),
             ),
           );
@@ -844,10 +844,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         strDiff = "Same as you";
         strColor = Colors.orange;
       } else if (result < 0) {
-        strDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        strDiff = "${formatBigNumbers(result.abs())} higher than you";
         strColor = Colors.red;
       } else {
-        strDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        strDiff = "${formatBigNumbers(result.abs())} lower than you";
         strColor = Colors.green;
       }
 
@@ -855,7 +855,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Strength: ${_formatBigNumbers(spyModel.strength)}",
+            "Strength: ${formatBigNumbers(spyModel.strength)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -880,10 +880,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
       } else if (result < 0) {
-        spdDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        spdDiff = "${formatBigNumbers(result.abs())} higher than you";
         spdColor = Colors.red;
       } else {
-        spdDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        spdDiff = "${formatBigNumbers(result.abs())} lower than you";
         spdColor = Colors.green;
       }
 
@@ -891,7 +891,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Speed: ${_formatBigNumbers(spyModel.speed)}",
+            "Speed: ${formatBigNumbers(spyModel.speed)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -916,10 +916,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         defDiff = "Same as you";
         defColor = Colors.orange;
       } else if (result < 0) {
-        defDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        defDiff = "${formatBigNumbers(result.abs())} higher than you";
         defColor = Colors.red;
       } else {
-        defDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        defDiff = "${formatBigNumbers(result.abs())} lower than you";
         defColor = Colors.green;
       }
 
@@ -927,7 +927,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Defense: ${_formatBigNumbers(spyModel.defense)}",
+            "Defense: ${formatBigNumbers(spyModel.defense)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -952,10 +952,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
       } else if (result < 0) {
-        dexDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        dexDiff = "${formatBigNumbers(result.abs())} higher than you";
         dexColor = Colors.red;
       } else {
-        dexDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        dexDiff = "${formatBigNumbers(result.abs())} lower than you";
         dexColor = Colors.green;
       }
 
@@ -963,7 +963,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dexterity: ${_formatBigNumbers(spyModel.dexterity)}",
+            "Dexterity: ${formatBigNumbers(spyModel.dexterity)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -988,10 +988,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         totalDiff = "Same as you";
         totalColor = Colors.orange;
       } else if (result < 0) {
-        totalDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        totalDiff = "${formatBigNumbers(result.abs())} higher than you";
         totalColor = Colors.red;
       } else {
-        totalDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        totalDiff = "${formatBigNumbers(result.abs())} lower than you";
         totalColor = Colors.green;
       }
 
@@ -999,7 +999,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL: ${_formatBigNumbers(spyModel.dexterity)}",
+            "TOTAL: ${formatBigNumbers(spyModel.dexterity)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1119,29 +1119,5 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     return "unk";
   }
 
-  String _formatBigNumbers(int moneyInput) {
-    final long = new NumberFormat("#,##0.0", "en_US");
-    final short = new NumberFormat("#,##0", "en_US");
-    String numberFormatted;
-
-    // Money standards to reduce string length (adding two zeros for .00)
-    final billion = 1000000000;
-    final million = 1000000;
-    final thousand = 1000;
-
-    // Profit
-    if (moneyInput < -billion || moneyInput > billion) {
-      final profitBillion = moneyInput / billion;
-      numberFormatted = '${long.format(profitBillion)}B';
-    } else if (moneyInput < -million || moneyInput > million) {
-      final profitMillion = moneyInput / million;
-      numberFormatted = '${long.format(profitMillion)}M';
-    } else if (moneyInput < -thousand || moneyInput > thousand) {
-      final profitThousand = moneyInput / thousand;
-      numberFormatted = '${long.format(profitThousand)}K';
-    } else {
-      numberFormatted = '${short.format(moneyInput)}';
-    }
-    return numberFormatted;
-  }
+  
 }
