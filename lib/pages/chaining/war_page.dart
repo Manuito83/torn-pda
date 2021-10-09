@@ -558,9 +558,18 @@ class AddFactionDialog extends StatelessWidget {
                 color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    faction.name,
-                    textAlign: TextAlign.center,
+                  child: Column(
+                    children: [
+                      Text(
+                        faction.name,
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        "[${faction.id}]",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 9),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -703,7 +712,10 @@ class WarTargetsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.of(context).orientation == Orientation.portrait) {
-      return ListView(children: getChildrenTargets());
+      return ListView(
+        shrinkWrap: true,
+        children: getChildrenTargets(),
+      );
     } else {
       return ListView(
         children: getChildrenTargets(),

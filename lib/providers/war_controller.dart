@@ -54,6 +54,8 @@ class WarController extends GetxController {
     final faction = apiResult as FactionModel;
     factions.add(faction);
 
+    dynamic allSpiesSuccess = await _getYataSpies(apiKey);
+
     // Add extra member information
     DateTime addedTime = DateTime.now();
     faction.members.forEach((memberId, member) {
@@ -71,6 +73,26 @@ class WarController extends GetxController {
             member.fairFight = t.fairFight;
           }
           break;
+        }
+      }
+
+      if (allSpiesSuccess != null) {
+        for (YataSpyModel spy in allSpiesSuccess) {
+          if (spy.targetName == member.name) {
+            member.statsExactTotal = spy.total;
+            member.statsExactUpdated = spy.update;
+            member.statsStr = spy.strength;
+            member.statsSpd = spy.speed;
+            member.statsDef = spy.defense;
+            member.statsDex = spy.dexterity;
+            int known = 0;
+            if (spy.strength != 1) known += spy.strength;
+            if (spy.speed != 1) known += spy.speed;
+            if (spy.defense != 1) known += spy.defense;
+            if (spy.dexterity != 1) known += spy.dexterity;
+            member.statsExactTotalKnown = known;
+            break;
+          }
         }
       }
     });
@@ -104,63 +126,61 @@ class WarController extends GetxController {
       allAttacksSuccess = await getAllAttacks(apiKey);
     }
 
+    member.isUpdating = true;
+    update();
+
     dynamic allSpiesSuccess = await _getYataSpies(apiKey);
 
     String memberKey = member.memberId.toString();
     bool error = false;
-    for (FactionModel f in factions) {
-      if (f.members.containsKey(memberKey)) {
-        // Initialise update animation
-        f.members[memberKey].isUpdating = true;
-        update();
 
-        // Perform update
-        try {
-          dynamic updatedTarget = await TornApiCaller.target(apiKey, memberKey).getOtherProfile;
-          if (updatedTarget is OtherProfileModel) {
-            f.members[memberKey].lifeMaximum = updatedTarget.life.current;
-            f.members[memberKey].lifeCurrent = updatedTarget.life.maximum;
-            f.members[memberKey].lastAction.relative = updatedTarget.lastAction.relative;
-            f.members[memberKey].lastAction.status = updatedTarget.lastAction.status;
-            f.members[memberKey].status.description = updatedTarget.status.description;
-            f.members[memberKey].status.state = updatedTarget.status.state;
-            f.members[memberKey].status.until = updatedTarget.status.until;
-            f.members[memberKey].status.color = updatedTarget.status.color;
-            f.members[memberKey].lastUpdated = DateTime.now();
-            if (allAttacksSuccess is AttackModel) {
-              _getRespectFF(allAttacksSuccess, member);
-            }
-            if (allSpiesSuccess != null) {
-              for (YataSpyModel spy in allSpiesSuccess) {
-                if (spy.targetName == f.members[memberKey].name) {
-                  f.members[memberKey].statsExactTotal = spy.total;
-                  f.members[memberKey].statsExactUpdated = spy.update;
-                  f.members[memberKey].statsStr = spy.strength;
-                  f.members[memberKey].statsSpd = spy.speed;
-                  f.members[memberKey].statsDef = spy.defense;
-                  f.members[memberKey].statsDex = spy.dexterity;
-                  int known = 0;
-                  if (spy.strength != 1) known += spy.strength;
-                  if (spy.speed != 1) known += spy.speed;
-                  if (spy.defense != 1) known += spy.defense;
-                  if (spy.dexterity != 1) known += spy.dexterity;
-                  f.members[memberKey].statsExactTotalKnown = known;
-                  break;
-                }
-              }
-            }
-            f.members[memberKey].statsEstimated = _calculateEstimatedStats(updatedTarget);
-          } else {
-            error = true;
-          }
-        } catch (e) {
-          error = true;
+    // Perform update
+    try {
+      dynamic updatedTarget = await TornApiCaller.target(apiKey, memberKey).getOtherProfile;
+      if (updatedTarget is OtherProfileModel) {
+        member.lifeMaximum = updatedTarget.life.current;
+        member.lifeCurrent = updatedTarget.life.maximum;
+        member.lastAction.relative = updatedTarget.lastAction.relative;
+        member.lastAction.status = updatedTarget.lastAction.status;
+        member.status.description = updatedTarget.status.description;
+        member.status.state = updatedTarget.status.state;
+        member.status.until = updatedTarget.status.until;
+        member.status.color = updatedTarget.status.color;
+        member.lastUpdated = DateTime.now();
+        if (allAttacksSuccess is AttackModel) {
+          _getRespectFF(allAttacksSuccess, member);
         }
-        // End animation and update
-        f.members[memberKey].isUpdating = false;
-        update();
+        if (allSpiesSuccess != null) {
+          for (YataSpyModel spy in allSpiesSuccess) {
+            if (spy.targetName == member.name) {
+              member.statsExactTotal = spy.total;
+              member.statsExactUpdated = spy.update;
+              member.statsStr = spy.strength;
+              member.statsSpd = spy.speed;
+              member.statsDef = spy.defense;
+              member.statsDex = spy.dexterity;
+              int known = 0;
+              if (spy.strength != 1) known += spy.strength;
+              if (spy.speed != 1) known += spy.speed;
+              if (spy.defense != 1) known += spy.defense;
+              if (spy.dexterity != 1) known += spy.dexterity;
+              member.statsExactTotalKnown = known;
+              break;
+            }
+          }
+        }
+        member.statsEstimated = _calculateEstimatedStats(updatedTarget);
+      } else {
+        error = true;
       }
+    } catch (e) {
+      error = true;
     }
+
+    // End animation and update
+    member.isUpdating = false;
+    update();
+
     // Return result and save if successful
     if (!error) {
       _updateResultAnimation(member: member, success: true);
@@ -427,6 +447,13 @@ class WarController extends GetxController {
         currentSort = WarSortType.nameAsc;
         break;
     }
+
+    List<String> savedSpies = await Prefs().getWarSpies();
+    for (String spyJson in savedSpies) {
+      YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
+      _spies.add(spyModel);
+    }
+    _lastSpiesDownload = DateTime.fromMicrosecondsSinceEpoch(await Prefs().getWarSpiesTime());
   }
 
   void savePreferences() {
@@ -467,6 +494,16 @@ class WarController extends GetxController {
         break;
     }
     Prefs().setWarMembersSort(sortToSave);
+  }
+
+  void saveSpies() {
+    List<String> spiesSave = <String>[];
+    for (YataSpyModel spy in _spies) {
+      String spyJson = yataSpyModelToJson(spy);
+      spiesSave.add(spyJson);
+    }
+    Prefs().setWarSpies(spiesSave);
+    Prefs().setWarSpiesTime(_lastSpiesDownload.millisecondsSinceEpoch);
   }
 
   void sortTargets(WarSortType sortType) {
@@ -545,7 +582,7 @@ class WarController extends GetxController {
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
       String yataURL = 'https://yata.yt/api/v1/spies/?key=${apiKey}';
-      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 2));
       if (resp.statusCode == 200) {
         dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {
@@ -561,6 +598,9 @@ class WarController extends GetxController {
       return _spies = null;
     }
     _lastSpiesDownload = DateTime.now();
-    return _spies = spies;
+    _spies = spies;
+    saveSpies();
+
+    return spies;
   }
 }

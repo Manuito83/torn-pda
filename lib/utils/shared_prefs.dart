@@ -20,6 +20,8 @@ class Prefs {
   final String _kWarFactions = "pda_warFactions";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kWarSpies = "pda_warSpies";
+  final String _kWarSpiesTime = "pda_warSpiesTime";
   // Other
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
@@ -273,7 +275,7 @@ class Prefs {
     return prefs.setBool(_kShowChainWidgetInWars, value);
   }
 
-    Future<String> getWarMembersSort() async {
+  Future<String> getWarMembersSort() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kWarMembersSort) ?? '';
   }
@@ -281,6 +283,26 @@ class Prefs {
   Future<bool> setWarMembersSort(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kWarMembersSort, value);
+  }
+
+  Future<List<String>> getWarSpies() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kWarSpies) ?? [];
+  }
+
+  Future<bool> setWarSpies(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kWarSpies, value);
+  }
+
+  Future<int> getWarSpiesTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kWarSpiesTime) ?? 0;
+  }
+
+  Future<bool> setWarSpiesTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kWarSpiesTime, value);
   }
 
   //**************
