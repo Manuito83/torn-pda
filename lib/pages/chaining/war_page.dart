@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
@@ -18,7 +19,6 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
-import '../../main.dart';
 
 class WarOptions {
   String description;
@@ -54,6 +54,8 @@ class WarPage extends StatefulWidget {
 }
 
 class _WarPageState extends State<WarPage> {
+  GlobalKey _showCaseAddFaction = GlobalKey();
+
   final _searchController = TextEditingController();
   final _addIdController = TextEditingController();
 
@@ -86,7 +88,6 @@ class _WarPageState extends State<WarPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
   }
 
   @override
@@ -100,24 +101,36 @@ class _WarPageState extends State<WarPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return Scaffold(
-      drawer: const Drawer(),
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
-          : null,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-        child: MediaQuery.of(context).orientation == Orientation.portrait
-            ? _mainColumn()
-            : SingleChildScrollView(
-                child: _mainColumn(),
-              ),
-      ),
+
+    return ShowCaseWidget(
+      builder: Builder(builder: (_) {
+        if (_w.showCaseAddFaction) {
+          // Delaying also (even Duration.zero works) to avoid state conflicts with build
+          Future.delayed(Duration(seconds: 1), () async {
+            ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction]);
+            _w.showCaseAddFaction = false;
+          });
+        }
+        return Scaffold(
+          drawer: const Drawer(),
+          appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(_),
+                )
+              : null,
+          body: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+            child: MediaQuery.of(context).orientation == Orientation.portrait
+                ? _mainColumn()
+                : SingleChildScrollView(
+                    child: _mainColumn(),
+                  ),
+          ),
+        );
+      }),
     );
   }
 
@@ -166,7 +179,7 @@ class _WarPageState extends State<WarPage> {
     });
   }
 
-  AppBar buildAppBar() {
+  AppBar buildAppBar(BuildContext _) {
     return AppBar(
       brightness: Brightness.dark,
       elevation: _settingsProvider.appBarTop ? 2 : 0,
@@ -180,16 +193,27 @@ class _WarPageState extends State<WarPage> {
         },
       ),
       actions: <Widget>[
-        IconButton(
-          icon: Image.asset(
-            'images/icons/faction.png',
-            width: 18,
-            height: 18,
-            color: Colors.white,
+        Showcase(
+          key: _showCaseAddFaction,
+          title: 'Welcome to War!',
+          description: "\nThe first thing you'll want to do is to add an enemy faction to your list. You can do so by "
+              "taping this icon."
+              "\n\nIf you don't know the faction's ID, you can optionally insert one of it's members' "
+              "ID (look for the 'person' icon)."
+              "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
+          descTextStyle: TextStyle(fontSize: 13),
+          contentPadding: EdgeInsets.all(20),
+          child: IconButton(
+            icon: Image.asset(
+              'images/icons/faction.png',
+              width: 18,
+              height: 18,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              _showAddDialog(context);
+            },
           ),
-          onPressed: () {
-            _showAddDialog(context);
-          },
         ),
         GetBuilder<WarController>(
           builder: (w) {

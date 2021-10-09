@@ -28,6 +28,8 @@ class WarController extends GetxController {
   bool updating = false;
   bool _stopUpdate = false;
 
+  bool showCaseAddFaction = false;
+
   DateTime _lastSpiesDownload;
   List<YataSpyModel> _spies = <YataSpyModel>[];
 
@@ -602,5 +604,10 @@ class WarController extends GetxController {
     saveSpies();
 
     return spies;
+  }
+
+  void launchShowCaseAddFaction() async {
+    showCaseAddFaction = true;
+    update();
   }
 }

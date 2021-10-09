@@ -118,8 +118,6 @@ class _TargetsPageState extends State<TargetsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<TargetsProvider>(context, listen: false).setFilterText('');
     });
-
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
   }
 
   @override
