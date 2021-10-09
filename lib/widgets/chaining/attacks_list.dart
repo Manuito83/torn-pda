@@ -30,6 +30,7 @@ class AttacksList extends StatelessWidget {
       );
     } else {
       return ListView(
+        shrinkWrap: true,
         children: getChildrenTargets(context),
       );
     }
