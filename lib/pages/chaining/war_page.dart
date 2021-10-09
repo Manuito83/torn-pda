@@ -34,9 +34,6 @@ class WarOptions {
       case "Hidden targets":
         iconData = Icons.undo_outlined;
         break;
-      case "Information":
-        iconData = Icons.info_outline_rounded;
-        break;
     }
   }
 }
@@ -65,7 +62,7 @@ class _WarPageState extends State<WarPage> {
 
   final _chainWidgetKey = GlobalKey();
 
-  final WarController _w = Get.put(WarController());
+  WarController _w;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
 
@@ -83,7 +80,6 @@ class _WarPageState extends State<WarPage> {
   final _popupOptionsChoices = <WarOptions>[
     WarOptions(description: "Toggle chain widget"),
     WarOptions(description: "Hidden targets"),
-    WarOptions(description: "Information"),
   ];
 
   @override
@@ -97,13 +93,14 @@ class _WarPageState extends State<WarPage> {
     _addIdController.dispose();
     _searchController.dispose();
     _w.stopUpdate();
+    Get.delete<WarController>();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _w = Get.put(WarController());
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-
     return ShowCaseWidget(
       builder: Builder(builder: (_) {
         if (_w.showCaseAddFaction) {
@@ -236,11 +233,8 @@ class _WarPageState extends State<WarPage> {
                   String message = "";
                   Color messageColor = Colors.green;
                   // Count all members
-                  int allMembers = 0;
+                  int allMembers = _w.orderedCardsDetails.length;
                   int updatedMembers = 0;
-                  for (FactionModel f in _w.factions.where((f) => !f.hidden)) {
-                    allMembers += f.members.values.where((m) => !m.hidden).length;
-                  }
 
                   if (allMembers == 0) {
                     message = "No targets to update!";
@@ -259,7 +253,9 @@ class _WarPageState extends State<WarPage> {
                         contentPadding: const EdgeInsets.all(10),
                       );
                     }
-                    updatedMembers = await _w.updateAllMembers(widget.userKey);
+                    List<int> result = await _w.updateAllMembers();
+                    allMembers = result[0]; // This might have changed if new members are added with integrityCheck()
+                    updatedMembers = result[1];
                   }
 
                   if (updatedMembers > 0 && updatedMembers == allMembers) {
@@ -313,9 +309,6 @@ class _WarPageState extends State<WarPage> {
                 break;
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);
-                break;
-              case "Information":
-                print("3"); // TODO
                 break;
             }
           },
@@ -541,7 +534,7 @@ class AddFactionDialog extends StatelessWidget {
                                 }
                               }
 
-                              final addFactionResult = await warController.addFaction(apiKey, inputId, targets);
+                              final addFactionResult = await warController.addFaction(inputId, targets);
 
                               Color messageColor = Colors.green;
                               if (addFactionResult.isEmpty || addFactionResult == "error_existing") {

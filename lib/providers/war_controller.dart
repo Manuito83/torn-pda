@@ -7,6 +7,7 @@ import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,8 @@ class WarCardDetails {
 }
 
 class WarController extends GetxController {
+  UserController _u = Get.put(UserController());
+
   List<FactionModel> factions = <FactionModel>[];
   List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
   bool showChainWidget = true;
@@ -32,6 +35,8 @@ class WarController extends GetxController {
 
   bool addFromUserId = false;
 
+  DateTime _lastIntegrityCheck;
+
   DateTime _lastSpiesDownload;
   List<YataSpyModel> _spies = <YataSpyModel>[];
 
@@ -41,7 +46,7 @@ class WarController extends GetxController {
     initialise();
   }
 
-  Future<String> addFaction(String apiKey, String factionId, List<TargetModel> targets) async {
+  Future<String> addFaction(String factionId, List<TargetModel> targets) async {
     stopUpdate();
     // Return custom error code if faction already exists
     for (FactionModel faction in factions) {
@@ -50,7 +55,8 @@ class WarController extends GetxController {
       }
     }
 
-    final apiResult = await TornApiCaller.faction(apiKey, factionId).getFaction;
+    // TODO!! REMOVE TEST FROM API!!
+    final apiResult = await TornApiCaller.faction(_u.apiKey, factionId).getFaction;
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";
     }
@@ -58,7 +64,7 @@ class WarController extends GetxController {
     final faction = apiResult as FactionModel;
     factions.add(faction);
 
-    dynamic allSpiesSuccess = await _getYataSpies(apiKey);
+    dynamic allSpiesSuccess = await _getYataSpies(_u.apiKey);
 
     // Add extra member information
     DateTime addedTime = DateTime.now();
@@ -124,23 +130,23 @@ class WarController extends GetxController {
 
   /// [allAttacks] is to be provided when updating several members at the same time, so that it does not have
   /// to call the API twice every time
-  Future<bool> updateSingleMember(Member member, String apiKey, {dynamic allAttacks, dynamic spies}) async {
+  Future<bool> updateSingleMember(Member member, {dynamic allAttacks, dynamic spies}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
-      allAttacksSuccess = await getAllAttacks(apiKey);
+      allAttacksSuccess = await getAllAttacks(_u.apiKey);
     }
 
     member.isUpdating = true;
     update();
 
-    dynamic allSpiesSuccess = await _getYataSpies(apiKey);
+    dynamic allSpiesSuccess = await _getYataSpies(_u.apiKey);
 
     String memberKey = member.memberId.toString();
     bool error = false;
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller.target(apiKey, memberKey).getOtherProfile;
+      dynamic updatedTarget = await TornApiCaller.target(_u.apiKey, memberKey).getOtherProfile;
       if (updatedTarget is OtherProfileModel) {
         member.lifeMaximum = updatedTarget.life.current;
         member.lifeCurrent = updatedTarget.life.maximum;
@@ -195,8 +201,10 @@ class WarController extends GetxController {
     return false;
   }
 
-  Future<int> updateAllMembers(String apiKey) async {
-    dynamic allAttacksSuccess = await getAllAttacks(apiKey);
+  Future<List<int>> updateAllMembers() async {
+    await _integrityCheck(force: true);
+
+    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
     int numberUpdated = 0;
 
     updating = true;
@@ -213,13 +221,12 @@ class WarController extends GetxController {
           _stopUpdate = false;
           updating = false;
           update();
-          return numberUpdated;
+          return [thisCards.length, numberUpdated];
         }
 
         if (f.members.containsKey(card.memberId.toString())) {
           bool memberSuccess = await updateSingleMember(
             f.members[card.memberId.toString()],
-            apiKey,
             allAttacks: allAttacksSuccess,
           );
           if (memberSuccess) {
@@ -238,12 +245,12 @@ class WarController extends GetxController {
     updating = false;
     update();
 
-    return numberUpdated;
+    return [thisCards.length, numberUpdated];
   }
 
-  Future updateSomeMembersAfterAttack(String apiKey, List<String> attackedMembers) async {
+  Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
     await Future.delayed(Duration(seconds: 15));
-    dynamic allAttacksSuccess = await getAllAttacks(apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
 
     updating = true;
     update();
@@ -264,7 +271,6 @@ class WarController extends GetxController {
         if (f.members.containsKey(id)) {
           await updateSingleMember(
             f.members[id],
-            apiKey,
             allAttacks: allAttacksSuccess,
           );
 
@@ -457,7 +463,11 @@ class WarController extends GetxController {
       YataSpyModel spyModel = yataSpyModelFromJson(spyJson);
       _spies.add(spyModel);
     }
-    _lastSpiesDownload = DateTime.fromMicrosecondsSinceEpoch(await Prefs().getWarSpiesTime());
+    _lastSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarSpiesTime());
+
+    _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
+
+    _integrityCheck();
   }
 
   void savePreferences() {
@@ -579,7 +589,8 @@ class WarController extends GetxController {
 
   Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {
     // If spies where updated less than an hour ago
-    if (_lastSpiesDownload != null && _lastSpiesDownload.difference(DateTime.now()).inHours < 1) {
+    if (_lastSpiesDownload != null && DateTime.now().difference(_lastSpiesDownload).inHours < 1) {
+      print("not getting spies!");
       return _spies;
     }
 
@@ -601,6 +612,7 @@ class WarController extends GetxController {
     } catch (e) {
       return _spies = null;
     }
+    print("getting spies!");
     _lastSpiesDownload = DateTime.now();
     _spies = spies;
     saveSpies();
@@ -615,6 +627,41 @@ class WarController extends GetxController {
 
   void toggleAddFromUserId() {
     addFromUserId = !addFromUserId;
+    update();
+  }
+
+  Future _integrityCheck({bool force = false}) async {
+    if (!force && DateTime.now().difference(_lastIntegrityCheck).inHours < 1) {
+      return;
+    }
+
+    for (FactionModel f in factions) {
+      final apiResult = await TornApiCaller.faction(_u.apiKey, f.id.toString()).getFaction;
+      if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
+        return;
+      }
+      FactionModel imported = apiResult as FactionModel;
+
+      Map<String, Member> thisMembers = Map.from(f.members);
+
+      // Remove members that do not longer belong to the faction
+      thisMembers.forEach((memberId, memberDetails) {
+        if (!imported.members.containsKey(memberId)) {
+          f.members.removeWhere((key, value) => key == memberId);
+        }
+      });
+
+      // Add new members that were not here before
+      imported.members.forEach((key, value) {
+        if (!thisMembers.containsKey(key)) {
+          f.members[key] = imported.members[key];
+          updateSingleMember(f.members[key]);
+        }
+      });
+    }
+
+    Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
+    savePreferences();
     update();
   }
 }

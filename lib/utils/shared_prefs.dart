@@ -22,6 +22,7 @@ class Prefs {
   final String _kWarMembersSort = "pda_warMembersSort";
   final String _kWarSpies = "pda_warSpies";
   final String _kWarSpiesTime = "pda_warSpiesTime";
+  final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
   // Other
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
@@ -303,6 +304,16 @@ class Prefs {
   Future<bool> setWarSpiesTime(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kWarSpiesTime, value);
+  }
+
+  Future<int> getWarIntegrityCheckTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kWarIntegrityCheckTime) ?? 0;
+  }
+
+  Future<bool> setWarIntegrityCheckTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kWarIntegrityCheckTime, value);
   }
 
   //**************

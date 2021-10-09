@@ -7,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
@@ -144,7 +143,7 @@ class _WarCardState extends State<WarCard> {
                           mainAxisSize: MainAxisSize.max,
                           children: <Widget>[
                             SizedBox(width: 3),
-                            _factionIcon(),
+                            _factionName(),
                             SizedBox(width: 3),
                             Text(
                               'L${_member.level}',
@@ -429,7 +428,7 @@ class _WarCardState extends State<WarCard> {
     }
   }
 
-  Widget _factionIcon() {
+  Widget _factionName() {
     Color borderColor = Colors.grey;
     List<double> dashPattern = [1, 2];
     if (_member.factionLeader == _member.memberId) {
@@ -1133,7 +1132,7 @@ class _WarCardState extends State<WarCard> {
   }
 
   void _updateThisMember() async {
-    bool success = await _w.updateSingleMember(_member, _userProvider.basic.userApiKey);
+    bool success = await _w.updateSingleMember(_member);
     String message = "Updated ${_member.name}!";
     Color color = Colors.green;
     if (!success) {
@@ -1164,7 +1163,7 @@ class _WarCardState extends State<WarCard> {
       contentPadding: EdgeInsets.all(10),
     );
 
-    _w.updateSomeMembersAfterAttack(_userProvider.basic.userApiKey, attackedIds);
+    _w.updateSomeMembersAfterAttack(attackedIds);
   }
 
   void _timerUpdateInformation() {

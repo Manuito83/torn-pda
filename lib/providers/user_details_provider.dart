@@ -1,8 +1,10 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -47,6 +49,9 @@ class UserDetailsProvider extends ChangeNotifier {
           basic = apiVerify;
 
           Prefs().setOwnDetails(ownProfileBasicToJson(basic));
+
+          UserController _u = Get.put(UserController());
+          _u.apiKey = basic.userApiKey;
         }
       }
     }
