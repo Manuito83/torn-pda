@@ -19,6 +19,7 @@ enum TipClass {
   travel,
   profile,
   chaining,
+  chainingWar,
   trading,
   deepLinks,
 }
@@ -49,6 +50,7 @@ class _TipsPageState extends State<TipsPage> {
   var _travelTipsList = <ExpandableTip>[];
   var _profileTipsList = <ExpandableTip>[];
   var _chainingTipsList = <ExpandableTip>[];
+  var _chainingWarTipsList = <ExpandableTip>[];
   var _tradingTipsList = <ExpandableTip>[];
   var _deepLinksTipsList = <ExpandableTip>[];
 
@@ -61,6 +63,7 @@ class _TipsPageState extends State<TipsPage> {
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
     _chainingTipsList = buildChainingTips();
+    _chainingWarTipsList = buildChainingWarTips();
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
 
@@ -113,9 +116,13 @@ class _TipsPageState extends State<TipsPage> {
               SizedBox(height: 10),
               tipsPanels(TipClass.profile),
               SizedBox(height: 25),
-              Text("CHAINING"),
+              Text("CHAINING - GENERAL"),
               SizedBox(height: 10),
               tipsPanels(TipClass.chaining),
+              SizedBox(height: 25),
+              Text("CHAINING - WAR"),
+              SizedBox(height: 10),
+              tipsPanels(TipClass.chainingWar),
               SizedBox(height: 25),
               Text("TRADING"),
               SizedBox(height: 10),
@@ -168,6 +175,9 @@ class _TipsPageState extends State<TipsPage> {
         break;
       case TipClass.chaining:
         listToShow = _chainingTipsList;
+        break;
+      case TipClass.chainingWar:
+        listToShow = _chainingWarTipsList;
         break;
       case TipClass.trading:
         listToShow = _tradingTipsList;
@@ -461,6 +471,77 @@ class _TipsPageState extends State<TipsPage> {
       ),
     );
     */
+    return tips;
+  }
+
+  List<ExpandableTip> buildChainingWarTips() {
+    var tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "What is this section for?",
+        expandedValue: "The War section, inside of Chaining, is designed to help with faction warring. You can "
+            "add entire enemy factions, sort their members, hide the ones you don't want to see, and use the list as "
+            "you would with the standard chaining list to attack several players in a row.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+          headerValue: "How can I add new factions?",
+          expandedValue: "Tap on the faction icon in the app bar and a new dialog will appear.\n\n"
+              "You can use the faction's ID if you know it. Otherwise, click on the person icon to the right: "
+              "this will allow you to enter the ID of any player that belongs to the faction instead."),
+    );
+    tips.add(
+      ExpandableTip(
+          headerValue: "Why is some information (e.g. life and stats) missing?",
+          expandedValue: "When you add a faction, some of its members information won't be retrieved from the API "
+              "to avoid unnecessary API calls. However, this information will be updated as soon as you "
+              "update an individual target or perform a global update (via the app bar)."),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "How are stats calculated?",
+        expandedValue: "If your faction maintains a list of spies in YATA, Torn PDA will retrieve it (at intervals "
+            "not shorter than an hour) and show exact stats in the cards (please bear in mind that you need to have "
+            "API Access [AA] permission for this, ask your faction leader about it!)."
+            "\n\nIf exact stats can't be obtained, then Torn PDA will calculate approximate stats whenever a target is "
+            "updated (individually or as part of a global update).",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Can I hide an entire faction temporarily?",
+        expandedValue: "Yes. Tap on the faction icon in the app bar and then use the 'eye' icon.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Can I hide a target?",
+        expandedValue: "Yes. Swipe right the target's card to hide it.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "How can I unhide targets?",
+        expandedValue: "Tap in the options (gear) icon in the app bar. If there are any hidden targets, you'll "
+            "be able to unhide them from there.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Where's the last online information gone?",
+        expandedValue: "You've got a good indication on the user's online status by looking at the indicator in the "
+            "third row of each card: grey (offline), orange (idle) and green (online).\n\n"
+            "If you need more details (like the number of hours offline), tap the indicator and a message will appear.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "How are factions updated (members joining/leaving)",
+        expandedValue: "Torn PDA will update each faction's roster upon entering the Chaining section (at intervals "
+            "not lower than 1 hour) or whenever a global update is performed by the user.",
+      ),
+    );
     return tips;
   }
 

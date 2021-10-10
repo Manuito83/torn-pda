@@ -590,7 +590,6 @@ class WarController extends GetxController {
   Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {
     // If spies where updated less than an hour ago
     if (_lastSpiesDownload != null && DateTime.now().difference(_lastSpiesDownload).inHours < 1) {
-      print("not getting spies!");
       return _spies;
     }
 
@@ -612,7 +611,6 @@ class WarController extends GetxController {
     } catch (e) {
       return _spies = null;
     }
-    print("getting spies!");
     _lastSpiesDownload = DateTime.now();
     _spies = spies;
     saveSpies();
