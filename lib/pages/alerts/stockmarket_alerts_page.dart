@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 import 'package:torn_pda/widgets/alerts/share_price_options.dart';
 
@@ -37,6 +38,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   UserDetailsProvider _userP;
   SettingsProvider _settingsP;
   ThemeProvider _themeP;
+
+  double _totalValue = 0;
+  double _totalProfit = 0;
 
   Future _stocksInitialised;
   bool _errorInitialising = false;
@@ -88,8 +92,31 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                               children: <Widget>[
                                 _alertActivator(),
                                 Divider(),
-                                SizedBox(height: 10),
                                 Text("Traded Companies"),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Value: ",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      formatProfit(inputDouble: _totalValue),
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      formatProfit(inputDouble: _totalProfit),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: _totalProfit >= 0 ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 SizedBox(height: 10),
                                 _allStocksList(),
                                 SizedBox(height: 50),
@@ -276,6 +303,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           listedStock.gain = totalMoneyGain;
           listedStock.percentageGain = averageGain * 100 / averageBought;
           listedStock.sharesOwned = totalShares;
+
+          _totalValue += totalShares * listedStock.currentPrice;
+          _totalProfit += totalMoneyGain;
         }
       }
     }

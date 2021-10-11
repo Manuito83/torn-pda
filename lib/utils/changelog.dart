@@ -44,8 +44,10 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_0.main.date = 'XX OCT 2021';
     String feat2_6_0_1 = "Chaining: added War section";
     String feat2_6_0_2 = "Alerts: you can now choose the refills notification time";
+    String feat2_6_0_3 = "Stocks: added overall value and profit information";
     v2_6_0.features.add(feat2_6_0_1);
     v2_6_0.features.add(feat2_6_0_2);
+    v2_6_0.features.add(feat2_6_0_3);
 
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();
