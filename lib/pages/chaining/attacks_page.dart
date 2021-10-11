@@ -125,7 +125,7 @@ class _AttacksPageState extends State<AttacksPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('Attacks'),
       leading: new IconButton(

@@ -50,12 +50,11 @@ class WarController extends GetxController {
     stopUpdate();
     // Return custom error code if faction already exists
     for (FactionModel faction in factions) {
-      if (faction.id == factionId) {
+      if (faction.id.toString() == factionId) {
         return "error_existing";
       }
     }
 
-    // TODO!! REMOVE TEST FROM API!!
     final apiResult = await TornApiCaller.faction(_u.apiKey, factionId).getFaction;
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";

@@ -524,7 +524,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Column(
         children: [
@@ -4906,7 +4906,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // ENERGY
       if (notification.payload.contains('energy')) {
-        var customTriggerRoundedUp = (_customEnergyTrigger + 4) / 5 * 5;
+        var customTriggerRoundedUp = _customEnergyTrigger + 4;
         if (_user.energy.current >= _user.energy.maximum ||
             (!_customEnergyMaxOverride && _user.energy.current > customTriggerRoundedUp)) {
           _cancelNotifications(ProfileNotification.energy);

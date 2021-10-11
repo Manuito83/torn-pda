@@ -180,7 +180,7 @@ class _WarPageState extends State<WarPage> {
 
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
-      brightness: Brightness.dark,
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War"),
@@ -500,6 +500,10 @@ class AddFactionDialog extends StatelessWidget {
                           child: const Text("Add"),
                           onPressed: () async {
                             if (addFormKey.currentState.validate()) {
+                              FocusScopeNode currentFocus = FocusScope.of(context);
+                              if (!currentFocus.hasPrimaryFocus) {
+                                currentFocus.unfocus();
+                              }
                               // Copy controller's text ot local variable
                               // early and delete the global, so that text
                               // does not appear again in case of failure
@@ -541,11 +545,16 @@ class AddFactionDialog extends StatelessWidget {
                                 messageColor = Colors.orange[700];
                               }
 
-                              String message = 'Added $addFactionResult [$inputId]';
+                              int time = 5;
+                              String message = 'Added $addFactionResult [$inputId]!'
+                                  '\n\nUpdate members/global to get more information (life, stats).';
+
                               if (addFactionResult.isEmpty) {
                                 message = 'Error adding $inputId';
+                                time = 3;
                               } else if (addFactionResult == "error_existing") {
                                 message = 'Faction $inputId is already in the list!';
+                                time = 3;
                               }
 
                               BotToast.showText(
@@ -555,7 +564,7 @@ class AddFactionDialog extends StatelessWidget {
                                   color: Colors.white,
                                 ),
                                 contentColor: messageColor,
-                                duration: const Duration(seconds: 3),
+                                duration: Duration(seconds: time),
                                 contentPadding: const EdgeInsets.all(10),
                               );
                             }

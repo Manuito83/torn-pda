@@ -969,7 +969,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,

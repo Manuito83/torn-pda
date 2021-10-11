@@ -530,7 +530,7 @@ class _TargetCardState extends State<TargetCard> {
 
     if (target.status.state == "Hospital") {
       // Handle if target is still in hospital
-      var now = DateTime.now().millisecondsSinceEpoch / 1000.floor();
+      var now = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
 
       if (target.status.until > now) {
         var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);

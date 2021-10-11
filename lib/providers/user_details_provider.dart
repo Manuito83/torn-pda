@@ -11,8 +11,11 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class UserDetailsProvider extends ChangeNotifier {
   OwnProfileBasic basic;
 
+  UserController _u = Get.put(UserController());
+
   void setUserDetails({@required OwnProfileBasic userDetails}) {
     basic = userDetails;
+    _u.apiKey = basic.userApiKey;
     Prefs().setOwnDetails(ownProfileBasicToJson(basic));
     notifyListeners();
   }
@@ -31,6 +34,10 @@ class UserDetailsProvider extends ChangeNotifier {
     // Check if we have an user at all (json is not empty)
     if (savedUser != '') {
       basic = ownProfileBasicFromJson(savedUser);
+
+      // Set API key in the controller, in case API is down
+      _u.apiKey = basic.userApiKey;
+      
       // Check if we have a valid API Key
       if (basic.userApiKeyValid) {
         // Call the API again to get the latest details (e.g. in case the
@@ -49,8 +56,8 @@ class UserDetailsProvider extends ChangeNotifier {
           basic = apiVerify;
 
           Prefs().setOwnDetails(ownProfileBasicToJson(basic));
-
-          UserController _u = Get.put(UserController());
+          
+          // Update API key
           _u.apiKey = basic.userApiKey;
         }
       }

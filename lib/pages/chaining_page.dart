@@ -142,7 +142,7 @@ class _ChainingPageState extends State<ChainingPage> {
                 ),
                 Image.asset(
                   'images/icons/faction.png',
-                  width: 18,
+                  width: 17,
                   color: isThemeLight ? Colors.white : _themeProvider.mainText,
                 ),
                 // Text('TAC', style: TextStyle(color: _themeProvider.mainText))

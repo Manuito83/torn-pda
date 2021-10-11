@@ -139,7 +139,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsP.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Text("Stock market alerts"),
