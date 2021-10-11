@@ -160,8 +160,16 @@ class _FirestoreHelper {
   }
 
   Future<void> subscribeToRefillsNotification(bool subscribe) async {
+    int currentRefillsTime = _firebaseUserModel.refillsTime;
     await _firestore.collection("players").doc(_uid).update({
       "refillsNotification": subscribe,
+      "refillsTime": currentRefillsTime,
+    });
+  }
+
+  Future<void> setRefillTime(int time) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "refillsTime": time,
     });
   }
 

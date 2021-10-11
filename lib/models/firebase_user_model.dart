@@ -18,6 +18,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool eventsNotification = false;
   List eventsFilter = [];
   bool refillsNotification = false;
+  int refillsTime = 22;
   List refillsRequested = [];
   bool racingSent = false;
   bool stockMarketNotification = false;
@@ -55,6 +56,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "eventsNotification": eventsNotification,
       "eventsFilter": eventsFilter,
       "refillsNotification": refillsNotification,
+      "refillsTime": refillsTime,
       "refillsRequested": refillsRequested,
       "racingSent": racingSent,
       "stockMarketNotification": stockMarketNotification,
@@ -78,6 +80,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..eventsNotification = data["eventsNotification"] ?? false
       ..eventsFilter = data["eventsFilter"] ?? []
       ..refillsNotification = data["refillsNotification"] ?? false
+      ..refillsTime = data["refillsTime"] ?? 22
       ..refillsRequested = data["refillsRequested"] ?? []
       ..racingSent = data["racingSent"] ?? false
       ..playerId = data["playerId"]

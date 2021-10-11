@@ -317,7 +317,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         value: _firebaseUserModel.refillsNotification ?? false,
                         title: const Text("Refills"),
                         subtitle: const Text(
-                          "Get notified (22:00 TCT) if you still have unused refills",
+                          "Get notified if you still have unused refills",
                           style: TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
@@ -331,6 +331,114 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         },
                       ),
                     ),
+                    if (_firebaseUserModel?.refillsNotification)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text(
+                                "Time",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            DropdownButton<int>(
+                              value: _firebaseUserModel?.refillsTime,
+                              items: [
+                                DropdownMenuItem(
+                                  value: 18,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "18:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 19,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "19:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 20,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "20:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 21,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "21:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 22,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "22:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 23,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "23:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  _firebaseUserModel?.refillsTime = value;
+                                });
+                                firestore.setRefillTime(value);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_firebaseUserModel?.refillsNotification)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
