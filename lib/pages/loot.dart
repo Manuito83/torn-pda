@@ -441,16 +441,16 @@ class _LootPageState extends State<LootPage> {
           }
 
           var timeRow = Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                width: 165,
-                child: Text(
-                  timeString,
-                  style: style,
-                ),
+              Text(
+                timeString,
+                style: style,
               ),
-              SizedBox(width: 15),
-              notificationIcon,
+              Padding(
+                padding: const EdgeInsets.only(right: 15),
+                child: notificationIcon,
+              ),
             ],
           );
 
