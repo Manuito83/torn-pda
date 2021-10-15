@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
   final String userKey;
@@ -216,7 +218,17 @@ class _ChainWidgetState extends State<ChainWidget> {
               ),
               SizedBox(width: 5),
               // Placeholder for another icon
-              SizedBox(width: 40),
+              SizedBox(
+                width: 40,
+                child: GestureDetector(
+                  child: Icon(
+                    Icons.settings,
+                  ),
+                  onTap: () {
+                    Get.to(() => ChainWidgetOptions());
+                  },
+                ),
+              ),
             ],
           ),
         ),
