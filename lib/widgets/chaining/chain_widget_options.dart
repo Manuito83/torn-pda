@@ -156,7 +156,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.green2Enabled,
               onChanged: (value) {
                 _chainStatusProvider.green2Enabled
-                    ? _chainStatusProvider.disableGreen2()
+                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.green2)
                     : _chainStatusProvider.enableGreen2();
               },
               activeTrackColor: Colors.lightGreenAccent,
@@ -187,7 +187,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setGreen2Range(range);
+                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.green2, range);
                     },
                   ),
                 ),
@@ -215,7 +215,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.orange1Enabled,
               onChanged: (value) {
                 _chainStatusProvider.orange1Enabled
-                    ? _chainStatusProvider.disableOrange1()
+                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.orange1)
                     : _chainStatusProvider.enableOrange1();
               },
               activeTrackColor: Colors.lightGreenAccent,
@@ -246,7 +246,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setOrange1Range(range);
+                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.orange1, range);
                     },
                   ),
                 ),
@@ -274,7 +274,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.orange2Enabled,
               onChanged: (value) {
                 _chainStatusProvider.orange2Enabled
-                    ? _chainStatusProvider.disableOrange2()
+                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.orange2)
                     : _chainStatusProvider.enableOrange2();
               },
               activeTrackColor: Colors.lightGreenAccent,
@@ -305,7 +305,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setOrange2Range(range);
+                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.orange2, range);
                     },
                   ),
                 ),
@@ -333,7 +333,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.red1Enabled,
               onChanged: (value) {
                 _chainStatusProvider.red1Enabled
-                    ? _chainStatusProvider.disableRed1()
+                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.red1)
                     : _chainStatusProvider.enableRed1();
               },
               activeTrackColor: Colors.lightGreenAccent,
@@ -364,7 +364,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setRed1Range(range);
+                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.red1, range);
                     },
                   ),
                 ),
@@ -392,7 +392,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.red2Enabled,
               onChanged: (value) {
                 _chainStatusProvider.red2Enabled
-                    ? _chainStatusProvider.disableRed2()
+                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.red2)
                     : _chainStatusProvider.enableRed2();
               },
               activeTrackColor: Colors.lightGreenAccent,
@@ -423,7 +423,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setRed2Range(range);
+                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.red2, range);
                     },
                   ),
                 ),
