@@ -236,31 +236,31 @@ class _ChainWidgetState extends State<ChainWidget> {
     );
   }
 
-  var lastReported = ChainWatcherDefcon.red1;
+  var lastReported = WatchDefcon.red1;
   _assessChainBorderWidth() {
     switch (_chainStatusProvider.chainWatcherDefcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         return 20.0;
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         return 20.0;
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         return 20.0;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         return 20.0;
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         return 20.0;
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         return 20.0;
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         return 20.0;
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         return 0.0;
         break;
     }

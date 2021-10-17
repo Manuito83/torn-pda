@@ -15,7 +15,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 
-enum ChainWatcherDefcon {
+enum WatchDefcon {
   cooldown,
   green1,
   green2,
@@ -67,8 +67,8 @@ class ChainStatusProvider extends ChangeNotifier {
     return _statusActive;
   }
 
-  ChainWatcherDefcon _chainWatcherDefcon = ChainWatcherDefcon.off;
-  ChainWatcherDefcon get chainWatcherDefcon {
+  WatchDefcon _chainWatcherDefcon = WatchDefcon.off;
+  WatchDefcon get chainWatcherDefcon {
     return _chainWatcherDefcon;
   }
 
@@ -135,7 +135,7 @@ class ChainStatusProvider extends ChangeNotifier {
   deactivateWatcher() {
     _watcherActive = false;
     _borderColor = Colors.transparent;
-    _chainWatcherDefcon = ChainWatcherDefcon.off;
+    _chainWatcherDefcon = WatchDefcon.off;
     _disableWakelock();
     //_audioCache.play('../sounds/alerts/tick.wav');
     notifyListeners();
@@ -297,8 +297,8 @@ class ChainStatusProvider extends ChangeNotifier {
   Future<void> _chainWatchCheck() async {
     // Return if there is an error with the model
     if (_modelError) {
-      if (_chainWatcherDefcon != ChainWatcherDefcon.off) {
-        _chainWatcherDefcon = ChainWatcherDefcon.off;
+      if (_chainWatcherDefcon != WatchDefcon.off) {
+        _chainWatcherDefcon = WatchDefcon.off;
         notifyListeners();
       }
       return;
@@ -306,8 +306,8 @@ class ChainStatusProvider extends ChangeNotifier {
 
     // If under cooldown, apply blue color and return
     if (chainModel.chain.cooldown > 0) {
-      if (_chainWatcherDefcon != ChainWatcherDefcon.cooldown) {
-        _chainWatcherDefcon = ChainWatcherDefcon.cooldown;
+      if (_chainWatcherDefcon != WatchDefcon.cooldown) {
+        _chainWatcherDefcon = WatchDefcon.cooldown;
         _borderColor = Colors.lightBlue[300];
         notifyListeners();
       }
@@ -317,8 +317,8 @@ class ChainStatusProvider extends ChangeNotifier {
     if (chainModel.chain.current >= 10 && currentSecondsCounter > 1) {
       // RED LEVEL 2
       if (currentSecondsCounter < 30) {
-        if (_chainWatcherDefcon != ChainWatcherDefcon.red2) {
-          _chainWatcherDefcon = ChainWatcherDefcon.red2;
+        if (_chainWatcherDefcon != WatchDefcon.red2) {
+          _chainWatcherDefcon = WatchDefcon.red2;
           if (_soundActive) {
             _audioCache.play('../sounds/alerts/warning2.wav');
           }
@@ -334,8 +334,8 @@ class ChainStatusProvider extends ChangeNotifier {
       }
       // RED LEVEL 1
       else if (currentSecondsCounter >= 30 && currentSecondsCounter < 60) {
-        if (_chainWatcherDefcon != ChainWatcherDefcon.red1) {
-          _chainWatcherDefcon = ChainWatcherDefcon.red1;
+        if (_chainWatcherDefcon != WatchDefcon.red1) {
+          _chainWatcherDefcon = WatchDefcon.red1;
           if (_soundActive) {
             _audioCache.play('../sounds/alerts/warning1.wav');
           }
@@ -351,8 +351,8 @@ class ChainStatusProvider extends ChangeNotifier {
       }
       // ORANGE 2
       else if (currentSecondsCounter >= 60 && currentSecondsCounter < 90) {
-        if (_chainWatcherDefcon != ChainWatcherDefcon.orange2) {
-          _chainWatcherDefcon = ChainWatcherDefcon.orange2;
+        if (_chainWatcherDefcon != WatchDefcon.orange2) {
+          _chainWatcherDefcon = WatchDefcon.orange2;
           if (_soundActive) {
             _audioCache.play('../sounds/alerts/alert2.wav');
           }
@@ -365,8 +365,8 @@ class ChainStatusProvider extends ChangeNotifier {
       }
       // ORANGE 1
       else if (currentSecondsCounter >= 90 && currentSecondsCounter < 120) {
-        if (_chainWatcherDefcon != ChainWatcherDefcon.orange1) {
-          _chainWatcherDefcon = ChainWatcherDefcon.orange1;
+        if (_chainWatcherDefcon != WatchDefcon.orange1) {
+          _chainWatcherDefcon = WatchDefcon.orange1;
           if (_soundActive) {
             _audioCache.play('../sounds/alerts/alert1.wav');
           }
@@ -379,21 +379,21 @@ class ChainStatusProvider extends ChangeNotifier {
       }
       // GREEN 2
       else if (currentSecondsCounter >= 120 && currentSecondsCounter < 150) {
-        if (_chainWatcherDefcon != ChainWatcherDefcon.green2) {
-          _chainWatcherDefcon = ChainWatcherDefcon.green2;
+        if (_chainWatcherDefcon != WatchDefcon.green2) {
+          _chainWatcherDefcon = WatchDefcon.green2;
         } else {
           _borderColor == Colors.transparent ? _borderColor = Colors.green : _borderColor = Colors.transparent;
         }
         // GREEN 1
       } else if (currentSecondsCounter >= 150) {
-        if (_chainWatcherDefcon != ChainWatcherDefcon.green1) {
-          _chainWatcherDefcon = ChainWatcherDefcon.green1;
+        if (_chainWatcherDefcon != WatchDefcon.green1) {
+          _chainWatcherDefcon = WatchDefcon.green1;
           _borderColor = Colors.green;
         }
       }
       // GREEN 1
     } else {
-      _chainWatcherDefcon = ChainWatcherDefcon.green1;
+      _chainWatcherDefcon = WatchDefcon.green1;
       _borderColor = Colors.green;
     }
     notifyListeners();
@@ -572,38 +572,33 @@ class ChainStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void enableGreen2() {
+  void resetAllDefcon() {
     _green2Enabled = true;
-    notifyListeners();
-  }
-
-  void enableOrange1() {
+    _green2Max = 150;
+    _green2Min = 120;
     _orange1Enabled = true;
-    notifyListeners();
-  }
-
-  void enableOrange2() {
+    _orange1Max = 120;
+    _orange1Min = 90;
     _orange2Enabled = true;
-    notifyListeners();
-  }
-
-  void enableRed1() {
+    _orange2Max = 90;
+    _orange2Min = 60;
     _red1Enabled = true;
-    notifyListeners();
-  }
-
-  void enableRed2() {
+    _red1Max = 60;
+    _red1Min = 30;
     _red2Enabled = true;
+    _red2Max = 30;
+    _red2Min = 0;
+    // TODO SAVE EVERYWHERE WE NOTIFY!
     notifyListeners();
   }
 
-  void setDefconRange(ChainWatcherDefcon defcon, RangeValues range, {bool consequence = false}) {
+  void setDefconRange(WatchDefcon defcon, RangeValues range, {bool consequence = false}) {
     switch (defcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != green2Min && range.start > green2Max - 20) {
           _green2Min = green2Max - 20;
@@ -615,29 +610,29 @@ class ChainStatusProvider extends ChangeNotifier {
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(ChainWatcherDefcon.green2);
+        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.green2);
         if (_green2Min < lowestPossibleValue) _green2Min = lowestPossibleValue;
 
         // Only move the other values around if we are really moving this bar
         if (!consequence) {
           // Below
           if (orange1Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange1, RangeValues(_orange1Min, _green2Min), consequence: true);
+            setDefconRange(WatchDefcon.orange1, RangeValues(_orange1Min, _green2Min), consequence: true);
           } else if (orange2Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange2, RangeValues(_orange2Min, _green2Min), consequence: true);
+            setDefconRange(WatchDefcon.orange2, RangeValues(_orange2Min, _green2Min), consequence: true);
           } else if (red1Enabled) {
-            setDefconRange(ChainWatcherDefcon.red1, RangeValues(_red1Min, _green2Min), consequence: true);
+            setDefconRange(WatchDefcon.red1, RangeValues(_red1Min, _green2Min), consequence: true);
           } else if (red2Enabled) {
-            setDefconRange(ChainWatcherDefcon.red2, RangeValues(_red2Min, _green2Min), consequence: true);
+            setDefconRange(WatchDefcon.red2, RangeValues(_red2Min, _green2Min), consequence: true);
           }
         }
 
         // If there is no other value active, this alert goes to 0:00
-        if (!_checkIfAnyActiveBelow(ChainWatcherDefcon.green2)) {
+        if (!_checkIfAnyActiveBelow(WatchDefcon.green2)) {
           _green2Min = 0;
         }
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != orange1Min && range.start > orange1Max - 20) {
           _orange1Min = orange1Max - 20;
@@ -652,31 +647,31 @@ class ChainStatusProvider extends ChangeNotifier {
         if (!consequence) {
           // Above
           if (green2Enabled) {
-            setDefconRange(ChainWatcherDefcon.green2, RangeValues(_orange1Max, _green2Max), consequence: true);
+            setDefconRange(WatchDefcon.green2, RangeValues(_orange1Max, _green2Max), consequence: true);
           }
           // Below
           if (orange2Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange2, RangeValues(_orange2Min, _orange1Min), consequence: true);
+            setDefconRange(WatchDefcon.orange2, RangeValues(_orange2Min, _orange1Min), consequence: true);
           } else if (red1Enabled) {
-            setDefconRange(ChainWatcherDefcon.red1, RangeValues(_red1Min, _orange1Min), consequence: true);
+            setDefconRange(WatchDefcon.red1, RangeValues(_red1Min, _orange1Min), consequence: true);
           } else if (red2Enabled) {
-            setDefconRange(ChainWatcherDefcon.red2, RangeValues(_red2Min, _orange1Min), consequence: true);
+            setDefconRange(WatchDefcon.red2, RangeValues(_red2Min, _orange1Min), consequence: true);
           }
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(ChainWatcherDefcon.orange1);
+        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.orange1);
         if (_orange1Min < lowestPossibleValue) _orange1Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(ChainWatcherDefcon.orange1);
+        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.orange1);
         if (_orange1Max > highestPossibleValue) _orange1Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
-        if (!_checkIfAnyActiveBelow(ChainWatcherDefcon.orange1)) {
+        if (!_checkIfAnyActiveBelow(WatchDefcon.orange1)) {
           _orange1Min = 0;
         }
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != orange2Min && range.start > orange2Max - 20) {
           _orange2Min = orange2Max - 20;
@@ -691,31 +686,31 @@ class ChainStatusProvider extends ChangeNotifier {
         if (!consequence) {
           // Above
           if (orange1Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange1, RangeValues(_orange2Max, _orange1Max), consequence: true);
+            setDefconRange(WatchDefcon.orange1, RangeValues(_orange2Max, _orange1Max), consequence: true);
           } else if (green2Enabled) {
-            setDefconRange(ChainWatcherDefcon.green2, RangeValues(_orange2Max, _green2Max), consequence: true);
+            setDefconRange(WatchDefcon.green2, RangeValues(_orange2Max, _green2Max), consequence: true);
           }
           // Below
           if (red1Enabled) {
-            setDefconRange(ChainWatcherDefcon.red1, RangeValues(_red1Min, _orange2Min), consequence: true);
+            setDefconRange(WatchDefcon.red1, RangeValues(_red1Min, _orange2Min), consequence: true);
           } else if (red2Enabled) {
-            setDefconRange(ChainWatcherDefcon.red2, RangeValues(_red2Min, _orange2Min), consequence: true);
+            setDefconRange(WatchDefcon.red2, RangeValues(_red2Min, _orange2Min), consequence: true);
           }
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(ChainWatcherDefcon.orange2);
+        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.orange2);
         if (_orange2Min < lowestPossibleValue) _orange2Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(ChainWatcherDefcon.orange2);
+        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.orange2);
         if (_orange2Max > highestPossibleValue) _orange2Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
-        if (!_checkIfAnyActiveBelow(ChainWatcherDefcon.orange2)) {
+        if (!_checkIfAnyActiveBelow(WatchDefcon.orange2)) {
           _orange2Min = 0;
         }
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != red1Min && range.start > red1Max - 20) {
           _red1Min = red1Max - 20;
@@ -730,31 +725,31 @@ class ChainStatusProvider extends ChangeNotifier {
         if (!consequence) {
           // Above
           if (orange2Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange2, RangeValues(_red1Max, _orange2Max), consequence: true);
+            setDefconRange(WatchDefcon.orange2, RangeValues(_red1Max, _orange2Max), consequence: true);
           } else if (orange1Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange1, RangeValues(_red1Max, _orange1Max), consequence: true);
+            setDefconRange(WatchDefcon.orange1, RangeValues(_red1Max, _orange1Max), consequence: true);
           } else if (green2Enabled) {
-            setDefconRange(ChainWatcherDefcon.green2, RangeValues(_red1Max, _green2Max), consequence: true);
+            setDefconRange(WatchDefcon.green2, RangeValues(_red1Max, _green2Max), consequence: true);
           }
           // Below
           if (red2Enabled) {
-            setDefconRange(ChainWatcherDefcon.red2, RangeValues(_red2Min, _red1Min), consequence: true);
+            setDefconRange(WatchDefcon.red2, RangeValues(_red2Min, _red1Min), consequence: true);
           }
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(ChainWatcherDefcon.red1);
+        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.red1);
         if (_red1Min < lowestPossibleValue) _red1Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(ChainWatcherDefcon.red1);
+        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.red1);
         if (_red1Max > highestPossibleValue) _red1Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
-        if (!_checkIfAnyActiveBelow(ChainWatcherDefcon.red1)) {
+        if (!_checkIfAnyActiveBelow(WatchDefcon.red1)) {
           _red1Min = 0;
         }
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         // Depending on which value moves, ensure it leaves a gap with the other
         if (range.start != red2Min && range.start > red2Max - 20) {
           _red2Min = red2Max - 20;
@@ -769,115 +764,619 @@ class ChainStatusProvider extends ChangeNotifier {
         if (!consequence) {
           // Above
           if (red1Enabled) {
-            setDefconRange(ChainWatcherDefcon.red1, RangeValues(_red2Max, _red1Max), consequence: true);
+            setDefconRange(WatchDefcon.red1, RangeValues(_red2Max, _red1Max), consequence: true);
           } else if (orange2Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange2, RangeValues(_red2Max, _orange2Max), consequence: true);
+            setDefconRange(WatchDefcon.orange2, RangeValues(_red2Max, _orange2Max), consequence: true);
           } else if (orange1Enabled) {
-            setDefconRange(ChainWatcherDefcon.orange1, RangeValues(_red2Max, _orange1Max), consequence: true);
+            setDefconRange(WatchDefcon.orange1, RangeValues(_red2Max, _orange1Max), consequence: true);
           } else if (green2Enabled) {
-            setDefconRange(ChainWatcherDefcon.green2, RangeValues(_red2Max, _green2Max), consequence: true);
+            setDefconRange(WatchDefcon.green2, RangeValues(_red2Max, _green2Max), consequence: true);
           }
         }
 
         // Limit lowest possible value so that a lower bar doesn't narrow too much
-        double lowestPossibleValue = _findLowestPossibleValue(ChainWatcherDefcon.red2);
+        double lowestPossibleValue = _findLowestPossibleValue(WatchDefcon.red2);
         if (_red2Min < lowestPossibleValue) _red2Min = lowestPossibleValue;
         // Limit highest
-        double highestPossibleValue = _findHighestPossibleValue(ChainWatcherDefcon.red2);
+        double highestPossibleValue = _findHighestPossibleValue(WatchDefcon.red2);
         if (_red2Max > highestPossibleValue) _red2Max = highestPossibleValue;
 
         // If there is no other value active, this alert goes to 0:00
-        if (!_checkIfAnyActiveBelow(ChainWatcherDefcon.red2)) {
+        if (!_checkIfAnyActiveBelow(WatchDefcon.red2)) {
           _red2Min = 0;
         }
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         break;
     }
 
     notifyListeners();
   }
 
-  void deactivateDefcon(ChainWatcherDefcon defcon) {
+  void activateDefcon(WatchDefcon defcon) {
+    switch (defcon) {
+      case WatchDefcon.cooldown:
+        break;
+      case WatchDefcon.green1:
+        break;
+      case WatchDefcon.green2:
+        // Try to make room to the left, find that's the first gap
+        WatchDefcon gapOwnerBelow;
+        if (orange1Enabled && orange1Max - orange1Min >= 40) {
+          gapOwnerBelow = WatchDefcon.orange1;
+        } else if (orange2Enabled && orange2Max - orange2Min >= 40) {
+          gapOwnerBelow = WatchDefcon.orange2;
+        } else if (red1Enabled && red1Max - red1Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red1;
+        } else if (red2Enabled && red2Max - red2Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red2;
+        }
+
+        // If there is a gap, use it by shrinking
+        if (gapOwnerBelow != null) {
+          if (gapOwnerBelow == WatchDefcon.red2) {
+            _shrinkLeft(WatchDefcon.red2);
+            if (red1Enabled) _displaceLeft(WatchDefcon.red1);
+            if (orange2Enabled) _displaceLeft(WatchDefcon.orange2);
+            if (orange1Enabled) _displaceLeft(WatchDefcon.orange1);
+          } else if (gapOwnerBelow == WatchDefcon.red1) {
+            _shrinkLeft(WatchDefcon.red1);
+            if (orange2Enabled) _displaceLeft(WatchDefcon.orange2);
+            if (orange1Enabled) _displaceLeft(WatchDefcon.orange1);
+          } else if (gapOwnerBelow == WatchDefcon.orange2) {
+            _shrinkLeft(WatchDefcon.orange2);
+            if (orange1Enabled) _displaceLeft(WatchDefcon.orange1);
+          } else if (gapOwnerBelow == WatchDefcon.orange1) {
+            _shrinkLeft(WatchDefcon.orange1);
+          }
+
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          _green2Min = lowerValue;
+          _green2Max = lowerValue + 20;
+        }
+
+        // If we could not make space to the left by shrinking or displacing, use the right
+        if (gapOwnerBelow == null) {
+          // Determine actual limits up and down
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          double upperValue = _findUpperDefconMinValue(defcon);
+          // Handle to special cases when there is nothing above the value
+          if (lowerValue == 0 && upperValue == 270) {
+            // If it's the only value in existence, limit it from 00:00 to the default one
+            upperValue = 150;
+          } else if (lowerValue > 0 && upperValue == 270) {
+            // If there is another value below, but nothing above, adjust lower side to +60 seconds or 04:30 (max)
+            lowerValue = _findLowerDefconMaxValue(defcon);
+            if (lowerValue + 60 > 270) {
+              upperValue = 270;
+            } else {
+              upperValue = lowerValue + 60;
+            }
+          }
+          // Assign final values
+          _green2Min = lowerValue;
+          _green2Max = upperValue;
+        }
+
+        // Activate
+        _green2Enabled = true;
+        break;
+
+      case WatchDefcon.orange1:
+        // Try to make room to the left, find that's the first gap
+        WatchDefcon gapOwnerBelow;
+        if (orange2Enabled && orange2Max - orange2Min >= 40) {
+          gapOwnerBelow = WatchDefcon.orange2;
+        } else if (red1Enabled && red1Max - red1Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red1;
+        } else if (red2Enabled && red2Max - red2Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red2;
+        }
+
+        // If there is a gap, use it by shrinking
+        if (gapOwnerBelow != null) {
+          if (gapOwnerBelow == WatchDefcon.red2) {
+            _shrinkLeft(WatchDefcon.red2);
+            if (red1Enabled) _displaceLeft(WatchDefcon.red1);
+            if (orange2Enabled) _displaceLeft(WatchDefcon.orange2);
+          }
+          if (gapOwnerBelow == WatchDefcon.red1) {
+            _shrinkLeft(WatchDefcon.red1);
+            if (orange2Enabled) _displaceLeft(WatchDefcon.orange2);
+          }
+          if (gapOwnerBelow == WatchDefcon.orange2) {
+            _shrinkLeft(WatchDefcon.orange2);
+          }
+
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          _orange1Min = lowerValue;
+          _orange1Max = lowerValue + 20;
+        }
+
+        // If we could not make space to the left by shrinking or displacing, try to the right
+        if (gapOwnerBelow == null) {
+          WatchDefcon gapOwnerAbove;
+          if (green2Enabled && green2Max - green2Min >= 40) {
+            gapOwnerAbove = WatchDefcon.green2;
+          }
+
+          // Try to move step by step
+          if (gapOwnerAbove != null) {
+            if (gapOwnerAbove == WatchDefcon.green2) {
+              _shrinkRight(WatchDefcon.green2);
+            }
+          } else {
+            // If no gaps, move everything to the right (we can't reach max because we could not move down)
+            _displaceRight(WatchDefcon.green2);
+          }
+
+          // Determine actual limits up and down
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          double upperValue = _findUpperDefconMinValue(defcon);
+          // Handle to special cases when there is nothing above the value
+          if (lowerValue == 0 && upperValue == 270) {
+            // If it's the only value in existence, limit it from 00:00 to the default one
+            upperValue = 120;
+          } else if (lowerValue > 0 && upperValue == 270) {
+            // If there is another value below, but nothing above, adjust lower side to +60 seconds or 04:30 (max)
+            lowerValue = _findLowerDefconMaxValue(defcon);
+            if (lowerValue + 60 > 270) {
+              upperValue = 270;
+            } else {
+              upperValue = lowerValue + 60;
+            }
+          }
+          // Assign final values
+          _orange1Min = lowerValue;
+          _orange1Max = upperValue;
+        }
+
+        // Activate
+        _orange1Enabled = true;
+        break;
+
+      case WatchDefcon.orange2:
+        // Try to make room to the left, find that's the first gap
+        WatchDefcon gapOwnerBelow;
+        if (red1Enabled && red1Max - red1Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red1;
+        } else if (red2Enabled && red2Max - red2Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red2;
+        }
+
+        // If there is a gap, use it by shrinking
+        if (gapOwnerBelow != null) {
+          if (gapOwnerBelow == WatchDefcon.red2) {
+            _shrinkLeft(WatchDefcon.red2);
+            if (red1Enabled) _displaceLeft(WatchDefcon.red1);
+          } else if (gapOwnerBelow == WatchDefcon.red1) {
+            _shrinkLeft(WatchDefcon.red1);
+          }
+
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          _orange2Min = lowerValue;
+          _orange2Max = lowerValue + 20;
+        }
+
+        // If we could not make space to the left by shrinking or displacing, try to the right
+        if (gapOwnerBelow == null) {
+          WatchDefcon gapOwnerAbove;
+          if (orange1Enabled && orange1Max - orange1Min >= 40) {
+            gapOwnerAbove = WatchDefcon.orange1;
+          } else if (green2Enabled && green2Max - green2Min >= 40) {
+            gapOwnerAbove = WatchDefcon.green2;
+          }
+
+          if (gapOwnerAbove != null) {
+            // Try to move step by step
+            if (gapOwnerAbove == WatchDefcon.green2) {
+              _shrinkRight(WatchDefcon.green2);
+              if (orange1Enabled) _displaceRight(WatchDefcon.orange1);
+            } else if (gapOwnerAbove == WatchDefcon.orange1) {
+              _shrinkRight(WatchDefcon.orange1);
+            }
+          } else {
+            // If no gaps, move everything to the right (we can't reach max because we could not move down)
+            _displaceRight(WatchDefcon.green2);
+            _displaceRight(WatchDefcon.orange1);
+          }
+
+          // Determine actual limits up and down
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          double upperValue = _findUpperDefconMinValue(defcon);
+          // Handle to special cases when there is nothing above the value
+          if (lowerValue == 0 && upperValue == 270) {
+            // If it's the only value in existence, limit it from 00:00 to the default one
+            upperValue = 90;
+          } else if (lowerValue > 0 && upperValue == 270) {
+            // If there is another value below, but nothing above, adjust lower side to +60 seconds or 04:30 (max)
+            lowerValue = _findLowerDefconMaxValue(defcon);
+            if (lowerValue + 60 > 270) {
+              upperValue = 270;
+            } else {
+              upperValue = lowerValue + 60;
+            }
+          }
+          // Assign final values
+          _orange2Min = lowerValue;
+          _orange2Max = upperValue;
+        }
+
+        // Activate
+        _orange2Enabled = true;
+        break;
+
+      case WatchDefcon.red1:
+        // Try to make room to the left, find that's the first gap
+        WatchDefcon gapOwnerBelow;
+        if (red2Enabled && red2Max - red2Min >= 40) {
+          gapOwnerBelow = WatchDefcon.red2;
+        }
+
+        // If there is a gap, use it by shrinking
+        if (gapOwnerBelow != null) {
+          _shrinkLeft(WatchDefcon.red2);
+
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          _red1Min = lowerValue;
+          _red1Max = lowerValue + 20;
+        }
+
+        // If we could not make space to the left by shrinking or displacing, try to the right
+        if (gapOwnerBelow == null) {
+          WatchDefcon gapOwnerAbove;
+          if (orange2Enabled && orange2Max - orange2Min >= 40) {
+            gapOwnerAbove = WatchDefcon.orange2;
+          } else if (orange1Enabled && orange1Max - orange1Min >= 40) {
+            gapOwnerAbove = WatchDefcon.orange1;
+          } else if (green2Enabled && green2Max - green2Min >= 40) {
+            gapOwnerAbove = WatchDefcon.green2;
+          }
+
+          // Try to move step by step
+          if (gapOwnerAbove != null) {
+            if (gapOwnerAbove == WatchDefcon.green2) {
+              _shrinkRight(WatchDefcon.green2);
+              if (orange1Enabled) _displaceRight(WatchDefcon.orange1);
+              if (orange2Enabled) _displaceRight(WatchDefcon.orange2);
+            } else if (gapOwnerAbove == WatchDefcon.orange1) {
+              _shrinkRight(WatchDefcon.orange1);
+              if (orange2Enabled) _displaceRight(WatchDefcon.orange2);
+            } else if (gapOwnerAbove == WatchDefcon.orange2) {
+              _shrinkRight(WatchDefcon.orange2);
+            }
+          } else {
+            // If no gaps, move everything to the right (we can't reach max because we could not move down)
+            _displaceRight(WatchDefcon.green2);
+            _displaceRight(WatchDefcon.orange1);
+            _displaceRight(WatchDefcon.orange2);
+          }
+
+          // Determine actual limits up and down
+          double lowerValue = _findLowerDefconMaxValue(defcon);
+          double upperValue = _findUpperDefconMinValue(defcon);
+          // Handle to special cases when there is nothing above the value
+          if (lowerValue == 0 && upperValue == 270) {
+            // If it's the only value in existence, limit it from 00:00 to the default one
+            upperValue = 60;
+          } else if (lowerValue > 0 && upperValue == 270) {
+            // If there is another value below, but nothing above, adjust lower side to +60 seconds or 04:30 (max)
+            lowerValue = _findLowerDefconMaxValue(defcon);
+            if (lowerValue + 60 > 270) {
+              upperValue = 270;
+            } else {
+              upperValue = lowerValue + 60;
+            }
+          }
+          // Assign final values
+          _red1Min = lowerValue;
+          _red1Max = upperValue;
+        }
+
+        // Activate
+        _red1Enabled = true;
+        break;
+
+      case WatchDefcon.red2:
+        // In Red 2 we can only make room above
+
+        // If there was a gap, use it by shrinking
+        WatchDefcon gapOwnerAbove;
+        if (red1Enabled && red1Max - red1Min >= 40) {
+          gapOwnerAbove = WatchDefcon.red1;
+        } else if (orange2Enabled && orange2Max - orange2Min >= 40) {
+          gapOwnerAbove = WatchDefcon.orange2;
+        } else if (orange1Enabled && orange1Max - orange1Min >= 40) {
+          gapOwnerAbove = WatchDefcon.orange1;
+        } else if (green2Enabled && green2Max - green2Min >= 40) {
+          gapOwnerAbove = WatchDefcon.green2;
+        }
+
+        if (gapOwnerAbove != null) {
+          // Try to move step by step
+          if (gapOwnerAbove == WatchDefcon.green2) {
+            _shrinkRight(WatchDefcon.green2);
+            if (orange1Enabled) _displaceRight(WatchDefcon.orange1);
+            if (orange2Enabled) _displaceRight(WatchDefcon.orange2);
+            if (red1Enabled) _displaceRight(WatchDefcon.red1);
+          }
+          if (gapOwnerAbove == WatchDefcon.orange1) {
+            _shrinkRight(WatchDefcon.orange1);
+            if (orange2Enabled) _displaceRight(WatchDefcon.orange2);
+            if (red1Enabled) _displaceRight(WatchDefcon.red1);
+          }
+          if (gapOwnerAbove == WatchDefcon.orange2) {
+            _shrinkRight(WatchDefcon.orange2);
+            if (red1Enabled) _displaceRight(WatchDefcon.red1);
+          }
+          if (gapOwnerAbove == WatchDefcon.red1) {
+            _shrinkRight(WatchDefcon.red1);
+          }
+        } else {
+          // If no gaps, move everything to the right (we can't reach max because we could not move down)
+          if (green2Enabled) _displaceRight(WatchDefcon.green2);
+          if (orange1Enabled) _displaceRight(WatchDefcon.orange1);
+          if (orange2Enabled) _displaceRight(WatchDefcon.orange2);
+          if (red1Enabled) _displaceRight(WatchDefcon.red1);
+        }
+
+        // Determine actual limits up and down
+        double lowerValue = _findLowerDefconMaxValue(defcon);
+        double upperValue = _findUpperDefconMinValue(defcon);
+        // Handle to special cases when there is nothing above the value
+        if (lowerValue == 0 && upperValue == 270) {
+          // If it's the only value in existence, limit it from 00:00 to the default one
+          upperValue = 30;
+        } else if (lowerValue > 0 && upperValue == 270) {
+          // If there is another value below, but nothing above, adjust lower side to +60 seconds or 04:30 (max)
+          lowerValue = _findLowerDefconMaxValue(defcon);
+          if (lowerValue + 60 > 270) {
+            upperValue = 270;
+          } else {
+            upperValue = lowerValue + 60;
+          }
+        }
+        // Assign final values
+        _red2Min = lowerValue;
+        _red2Max = upperValue;
+
+        // Activate
+        _red2Enabled = true;
+        break;
+
+      case WatchDefcon.off:
+        break;
+    }
+    notifyListeners();
+  }
+
+  void _shrinkLeft(WatchDefcon defcon) {
+    switch (defcon) {
+      case WatchDefcon.cooldown:
+        break;
+      case WatchDefcon.green1:
+        break;
+      case WatchDefcon.green2:
+        _green2Max -= 20;
+        break;
+      case WatchDefcon.orange1:
+        _orange1Max -= 20;
+        break;
+      case WatchDefcon.orange2:
+        _orange2Max -= 20;
+        break;
+      case WatchDefcon.red1:
+        _red1Max -= 20;
+        break;
+      case WatchDefcon.red2:
+        _red2Max -= 20;
+        break;
+      case WatchDefcon.off:
+        break;
+    }
+  }
+
+  void _shrinkRight(WatchDefcon defcon) {
+    switch (defcon) {
+      case WatchDefcon.cooldown:
+        break;
+      case WatchDefcon.green1:
+        break;
+      case WatchDefcon.green2:
+        _green2Min += 20;
+        break;
+      case WatchDefcon.orange1:
+        _orange1Min += 20;
+        break;
+      case WatchDefcon.orange2:
+        _orange2Min += 20;
+        break;
+      case WatchDefcon.red1:
+        _red1Min += 20;
+        break;
+      case WatchDefcon.red2:
+        _red2Min += 20;
+        break;
+      case WatchDefcon.off:
+        break;
+    }
+  }
+
+  void _displaceLeft(WatchDefcon defcon) {
+    switch (defcon) {
+      case WatchDefcon.cooldown:
+        break;
+      case WatchDefcon.green1:
+        break;
+      case WatchDefcon.green2:
+        _green2Min -= 20;
+        _green2Max -= 20;
+        break;
+      case WatchDefcon.orange1:
+        _orange1Min -= 20;
+        _orange1Max -= 20;
+        break;
+      case WatchDefcon.orange2:
+        _orange2Min -= 20;
+        _orange2Max -= 20;
+        break;
+      case WatchDefcon.red1:
+        _red1Min -= 20;
+        _red1Max -= 20;
+        break;
+      case WatchDefcon.red2:
+        _red2Min -= 20;
+        _red2Max -= 20;
+        break;
+      case WatchDefcon.off:
+        break;
+    }
+  }
+
+  void _displaceRight(WatchDefcon defcon) {
+    switch (defcon) {
+      case WatchDefcon.cooldown:
+        break;
+      case WatchDefcon.green1:
+        break;
+      case WatchDefcon.green2:
+        _green2Min += 20;
+        _green2Max += 20;
+        break;
+      case WatchDefcon.orange1:
+        _orange1Min += 20;
+        _orange1Max += 20;
+        break;
+      case WatchDefcon.orange2:
+        _orange2Min += 20;
+        _orange2Max += 20;
+        break;
+      case WatchDefcon.red1:
+        _red1Min += 20;
+        _red1Max += 20;
+        break;
+      case WatchDefcon.red2:
+        _red2Min += 20;
+        _red2Max += 20;
+        break;
+      case WatchDefcon.off:
+        break;
+    }
+  }
+
+  void deactivateDefcon(WatchDefcon defcon) {
     double upper = _findUpperDefconMinValue(defcon);
 
     switch (defcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         _green2Enabled = false;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         _orange1Enabled = false;
         if (upper == 270) break;
         if (orange2Enabled) {
-          setDefconRange(ChainWatcherDefcon.orange2, RangeValues(orange2Min, upper));
+          setDefconRange(WatchDefcon.orange2, RangeValues(orange2Min, upper));
         } else if (red1Enabled) {
-          setDefconRange(ChainWatcherDefcon.red1, RangeValues(red1Min, upper));
+          setDefconRange(WatchDefcon.red1, RangeValues(red1Min, upper));
         } else if (red2Enabled) {
-          setDefconRange(ChainWatcherDefcon.red2, RangeValues(red2Min, upper));
+          setDefconRange(WatchDefcon.red2, RangeValues(red2Min, upper));
+        } else {
+          // Ensure that we always reach the bottom
+          if (green2Enabled) {
+            _green2Min = 0;
+          }
         }
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         _orange2Enabled = false;
         if (upper == 270) break;
         if (red1Enabled) {
-          setDefconRange(ChainWatcherDefcon.red1, RangeValues(red1Min, upper));
+          setDefconRange(WatchDefcon.red1, RangeValues(red1Min, upper));
         } else if (red2Enabled) {
-          setDefconRange(ChainWatcherDefcon.red2, RangeValues(red2Min, upper));
+          setDefconRange(WatchDefcon.red2, RangeValues(red2Min, upper));
+        } else {
+          // Ensure that we always reach the bottom
+          if (orange1Enabled) {
+            _orange1Min = 0;
+          } else if (green2Enabled) {
+            _green2Min = 0;
+          }
         }
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         _red1Enabled = false;
         if (upper == 270) break;
         if (red2Enabled) {
-          setDefconRange(ChainWatcherDefcon.red2, RangeValues(red2Min, upper));
+          setDefconRange(WatchDefcon.red2, RangeValues(red2Min, upper));
+        } else {
+          // Ensure that we always reach the bottom
+          if (orange2Enabled) {
+            _orange2Min = 0;
+          } else if (orange1Enabled) {
+            _orange1Min = 0;
+          } else if (green2Enabled) {
+            _green2Min = 0;
+          }
         }
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         _red2Enabled = false;
+        // Ensure that we always reach the bottom
+        if (red1Enabled) {
+          _red1Min = 0;
+        } else if (orange2Enabled) {
+          _orange2Min = 0;
+        } else if (orange1Enabled) {
+          _orange1Min = 0;
+        } else if (green2Enabled) {
+          _green2Min = 0;
+        }
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         break;
     }
+
     notifyListeners();
   }
 
-  bool _checkIfAnyActiveBelow(ChainWatcherDefcon defcon) {
+  bool _checkIfAnyActiveBelow(WatchDefcon defcon) {
     switch (defcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         if (_orange1Enabled || orange2Enabled || red1Enabled || red2Enabled) return true;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         if (orange2Enabled || red1Enabled || red2Enabled) return true;
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         if (red1Enabled || red2Enabled) return true;
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         if (red2Enabled) return true;
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         break;
     }
     return false;
   }
 
-  double _findLowestPossibleValue(ChainWatcherDefcon defcon) {
+  // 'Possible' means that the next defcon is displaced until it leaves 20 seconds gap
+  double _findLowestPossibleValue(WatchDefcon defcon) {
     switch (defcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         if (_orange1Enabled) {
           return _orange1Min + 20;
         } else if (_orange2Enabled) {
@@ -889,7 +1388,7 @@ class ChainStatusProvider extends ChangeNotifier {
         }
         return 0;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         if (_orange2Enabled) {
           return _orange2Min + 20;
         } else if (_red1Enabled) {
@@ -899,40 +1398,41 @@ class ChainStatusProvider extends ChangeNotifier {
         }
         return 0;
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         if (_red1Enabled) {
           return _red1Min + 20;
         } else if (_red2Enabled) {
           return _red2Min + 20;
         }
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         if (_red2Enabled) {
           return _red2Min + 20;
         }
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         break;
     }
     return 0;
   }
 
-  double _findHighestPossibleValue(ChainWatcherDefcon defcon) {
+// 'Possible' means that the next defcon is displaced until it leaves 20 seconds gap
+  double _findHighestPossibleValue(WatchDefcon defcon) {
     switch (defcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         return 270;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         if (_green2Enabled) return _green2Max - 20;
         return 270;
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         if (_orange1Enabled) {
           return _orange1Max - 20;
         } else if (_green2Enabled) {
@@ -940,7 +1440,7 @@ class ChainStatusProvider extends ChangeNotifier {
         }
         return 270;
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         if (_orange2Enabled) {
           return _orange2Max - 20;
         } else if (_orange1Enabled) {
@@ -950,7 +1450,7 @@ class ChainStatusProvider extends ChangeNotifier {
         }
         return 270;
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         if (_red1Enabled) {
           return _red1Max - 20;
         } else if (_orange2Enabled) {
@@ -962,26 +1462,27 @@ class ChainStatusProvider extends ChangeNotifier {
         }
         return 270;
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         break;
     }
     return 270;
   }
 
-double _findUpperDefconMinValue(ChainWatcherDefcon defcon) {
+  // Without displacement, where is the upper defcon's minimum value
+  double _findUpperDefconMinValue(WatchDefcon defcon) {
     switch (defcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         return 270;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         if (_green2Enabled) return _green2Min;
         return 270;
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         if (_orange1Enabled) {
           return _orange1Min;
         } else if (_green2Enabled) {
@@ -989,7 +1490,7 @@ double _findUpperDefconMinValue(ChainWatcherDefcon defcon) {
         }
         return 270;
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         if (_orange2Enabled) {
           return _orange2Min;
         } else if (_orange1Enabled) {
@@ -999,7 +1500,7 @@ double _findUpperDefconMinValue(ChainWatcherDefcon defcon) {
         }
         return 270;
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         if (_red1Enabled) {
           return _red1Min;
         } else if (_orange2Enabled) {
@@ -1011,10 +1512,61 @@ double _findUpperDefconMinValue(ChainWatcherDefcon defcon) {
         }
         return 270;
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         break;
     }
     return 270;
   }
 
+  // Without displacement, where is the lower defcon's maximum value
+  double _findLowerDefconMaxValue(WatchDefcon defcon) {
+    switch (defcon) {
+      case WatchDefcon.cooldown:
+        break;
+      case WatchDefcon.green1:
+        break;
+      case WatchDefcon.green2:
+        if (orange1Enabled) {
+          return orange1Max;
+        } else if (orange2Enabled) {
+          return orange2Max;
+        } else if (red1Enabled) {
+          return red1Max;
+        } else if (red2Enabled) {
+          return red2Max;
+        }
+        return 0;
+        break;
+      case WatchDefcon.orange1:
+        if (orange2Enabled) {
+          return orange2Max;
+        } else if (red1Enabled) {
+          return red1Max;
+        } else if (red2Enabled) {
+          return red2Max;
+        }
+        return 0;
+        break;
+      case WatchDefcon.orange2:
+        if (red1Enabled) {
+          return red1Max;
+        } else if (red2Enabled) {
+          return red2Max;
+        }
+        return 0;
+        break;
+      case WatchDefcon.red1:
+        if (red2Enabled) {
+          return red2Max;
+        }
+        return 0;
+        break;
+      case WatchDefcon.red2:
+        return 0;
+        break;
+      case WatchDefcon.off:
+        break;
+    }
+    return 0;
+  }
 }

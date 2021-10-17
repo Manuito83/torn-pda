@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -84,6 +85,15 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           _willPopCallback();
         },
       ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.restore),
+          onPressed: () {
+            // TODO DIALOG
+            //_chainStatusProvider.resetAllDefcon();
+          },
+        ),
+      ],
     );
   }
 
@@ -156,8 +166,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.green2Enabled,
               onChanged: (value) {
                 _chainStatusProvider.green2Enabled
-                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.green2)
-                    : _chainStatusProvider.enableGreen2();
+                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.green2)
+                    : _chainStatusProvider.activateDefcon(WatchDefcon.green2);
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -187,7 +197,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.green2, range);
+                      _chainStatusProvider.setDefconRange(WatchDefcon.green2, range);
                     },
                   ),
                 ),
@@ -214,9 +224,10 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             Switch(
               value: _chainStatusProvider.orange1Enabled,
               onChanged: (value) {
+                // TODO: add try/catch everywhere
                 _chainStatusProvider.orange1Enabled
-                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.orange1)
-                    : _chainStatusProvider.enableOrange1();
+                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.orange1)
+                    : _chainStatusProvider.activateDefcon(WatchDefcon.orange1);
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -246,7 +257,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.orange1, range);
+                      _chainStatusProvider.setDefconRange(WatchDefcon.orange1, range);
                     },
                   ),
                 ),
@@ -274,8 +285,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.orange2Enabled,
               onChanged: (value) {
                 _chainStatusProvider.orange2Enabled
-                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.orange2)
-                    : _chainStatusProvider.enableOrange2();
+                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.orange2)
+                    : _chainStatusProvider.activateDefcon(WatchDefcon.orange2);
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -305,7 +316,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.orange2, range);
+                      _chainStatusProvider.setDefconRange(WatchDefcon.orange2, range);
                     },
                   ),
                 ),
@@ -333,8 +344,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.red1Enabled,
               onChanged: (value) {
                 _chainStatusProvider.red1Enabled
-                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.red1)
-                    : _chainStatusProvider.enableRed1();
+                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.red1)
+                    : _chainStatusProvider.activateDefcon(WatchDefcon.red1);
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -364,7 +375,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.red1, range);
+                      _chainStatusProvider.setDefconRange(WatchDefcon.red1, range);
                     },
                   ),
                 ),
@@ -392,8 +403,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
               value: _chainStatusProvider.red2Enabled,
               onChanged: (value) {
                 _chainStatusProvider.red2Enabled
-                    ? _chainStatusProvider.deactivateDefcon(ChainWatcherDefcon.red2)
-                    : _chainStatusProvider.enableRed2();
+                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.red2)
+                    : _chainStatusProvider.activateDefcon(WatchDefcon.red2);
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -423,7 +434,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     divisions: 27,
                     onChanged: (RangeValues range) {
                       range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(ChainWatcherDefcon.red2, range);
+                      _chainStatusProvider.setDefconRange(WatchDefcon.red2, range);
                     },
                   ),
                 ),
