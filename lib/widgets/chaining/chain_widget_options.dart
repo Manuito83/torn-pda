@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'package:audioplayers/audioplayers.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +21,8 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   ChainStatusProvider _chainStatusProvider;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+
+  AudioCache _audioCache = new AudioCache();
 
   @override
   Widget build(BuildContext context) {
@@ -89,8 +93,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         IconButton(
           icon: Icon(Icons.restore),
           onPressed: () {
-            // TODO DIALOG
-            //_chainStatusProvider.resetAllDefcon();
+            _openRestoreDialog();
           },
         ),
       ],
@@ -165,9 +168,13 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             Switch(
               value: _chainStatusProvider.green2Enabled,
               onChanged: (value) {
-                _chainStatusProvider.green2Enabled
-                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.green2)
-                    : _chainStatusProvider.activateDefcon(WatchDefcon.green2);
+                try {
+                  _chainStatusProvider.green2Enabled
+                      ? _chainStatusProvider.deactivateDefcon(WatchDefcon.green2)
+                      : _chainStatusProvider.activateDefcon(WatchDefcon.green2);
+                } catch (e) {
+                  _errorReset();
+                }
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -195,9 +202,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     values: RangeValues(_chainStatusProvider.green2Min, _chainStatusProvider.green2Max),
                     max: 270,
                     divisions: 27,
+                    activeColor: Colors.green[500],
                     onChanged: (RangeValues range) {
-                      range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(WatchDefcon.green2, range);
+                      try {
+                        range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
+                        _chainStatusProvider.setDefconRange(WatchDefcon.green2, range);
+                      } catch (e) {
+                        _errorReset();
+                      }
                     },
                   ),
                 ),
@@ -220,14 +232,30 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Orange pulse"),
+            Row(
+              children: [
+                Text("Orange pulse + caution "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    _audioCache.play('../sounds/alerts/alert1.wav');
+                  },
+                ),
+              ],
+            ),
             Switch(
               value: _chainStatusProvider.orange1Enabled,
               onChanged: (value) {
-                // TODO: add try/catch everywhere
-                _chainStatusProvider.orange1Enabled
-                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.orange1)
-                    : _chainStatusProvider.activateDefcon(WatchDefcon.orange1);
+                try {
+                  _chainStatusProvider.orange1Enabled
+                      ? _chainStatusProvider.deactivateDefcon(WatchDefcon.orange1)
+                      : _chainStatusProvider.activateDefcon(WatchDefcon.orange1);
+                } catch (e) {
+                  _errorReset();
+                }
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -255,9 +283,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     values: RangeValues(_chainStatusProvider.orange1Min, _chainStatusProvider.orange1Max),
                     max: 270,
                     divisions: 27,
+                    activeColor: Colors.orange[400],
                     onChanged: (RangeValues range) {
-                      range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(WatchDefcon.orange1, range);
+                      try {
+                        range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
+                        _chainStatusProvider.setDefconRange(WatchDefcon.orange1, range);
+                      } catch (e) {
+                        _errorReset();
+                      }
                     },
                   ),
                 ),
@@ -280,13 +313,30 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Orange pulse + sound"),
+            Row(
+              children: [
+                Text("Orange pulse + warning "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    _audioCache.play('../sounds/alerts/alert2.wav');
+                  },
+                ),
+              ],
+            ),
             Switch(
               value: _chainStatusProvider.orange2Enabled,
               onChanged: (value) {
-                _chainStatusProvider.orange2Enabled
-                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.orange2)
-                    : _chainStatusProvider.activateDefcon(WatchDefcon.orange2);
+                try {
+                  _chainStatusProvider.orange2Enabled
+                      ? _chainStatusProvider.deactivateDefcon(WatchDefcon.orange2)
+                      : _chainStatusProvider.activateDefcon(WatchDefcon.orange2);
+                } catch (e) {
+                  _errorReset();
+                }
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -314,9 +364,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     values: RangeValues(_chainStatusProvider.orange2Min, _chainStatusProvider.orange2Max),
                     max: 270,
                     divisions: 27,
+                    activeColor: Colors.orange[800],
                     onChanged: (RangeValues range) {
-                      range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(WatchDefcon.orange2, range);
+                      try {
+                        range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
+                        _chainStatusProvider.setDefconRange(WatchDefcon.orange2, range);
+                      } catch (e) {
+                        _errorReset();
+                      }
                     },
                   ),
                 ),
@@ -339,13 +394,30 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Red pulse"),
+            Row(
+              children: [
+                Text("Red pulse + caution "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    _audioCache.play('../sounds/alerts/warning1.wav');
+                  },
+                ),
+              ],
+            ),
             Switch(
               value: _chainStatusProvider.red1Enabled,
               onChanged: (value) {
-                _chainStatusProvider.red1Enabled
-                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.red1)
-                    : _chainStatusProvider.activateDefcon(WatchDefcon.red1);
+                try {
+                  _chainStatusProvider.red1Enabled
+                      ? _chainStatusProvider.deactivateDefcon(WatchDefcon.red1)
+                      : _chainStatusProvider.activateDefcon(WatchDefcon.red1);
+                } catch (e) {
+                  _errorReset();
+                }
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -373,9 +445,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     values: RangeValues(_chainStatusProvider.red1Min, _chainStatusProvider.red1Max),
                     max: 270,
                     divisions: 27,
+                    activeColor: Colors.red[400],
                     onChanged: (RangeValues range) {
-                      range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(WatchDefcon.red1, range);
+                      try {
+                        range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
+                        _chainStatusProvider.setDefconRange(WatchDefcon.red1, range);
+                      } catch (e) {
+                        _errorReset();
+                      }
                     },
                   ),
                 ),
@@ -398,13 +475,30 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Red pulse + sound"),
+            Row(
+              children: [
+                Text("Red pulse + warning "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.volume_up,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    _audioCache.play('../sounds/alerts/warning2.wav');
+                  },
+                ),
+              ],
+            ),
             Switch(
               value: _chainStatusProvider.red2Enabled,
               onChanged: (value) {
-                _chainStatusProvider.red2Enabled
-                    ? _chainStatusProvider.deactivateDefcon(WatchDefcon.red2)
-                    : _chainStatusProvider.activateDefcon(WatchDefcon.red2);
+                try {
+                  _chainStatusProvider.red2Enabled
+                      ? _chainStatusProvider.deactivateDefcon(WatchDefcon.red2)
+                      : _chainStatusProvider.activateDefcon(WatchDefcon.red2);
+                } catch (e) {
+                  _errorReset();
+                }
               },
               activeTrackColor: Colors.lightGreenAccent,
               activeColor: Colors.green,
@@ -432,9 +526,14 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     values: RangeValues(_chainStatusProvider.red2Min, _chainStatusProvider.red2Max),
                     max: 270,
                     divisions: 27,
+                    activeColor: Colors.red[800],
                     onChanged: (RangeValues range) {
-                      range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
-                      _chainStatusProvider.setDefconRange(WatchDefcon.red2, range);
+                      try {
+                        range = RangeValues(range.start.roundToDouble(), range.end.roundToDouble());
+                        _chainStatusProvider.setDefconRange(WatchDefcon.red2, range);
+                      } catch (e) {
+                        _errorReset();
+                      }
                     },
                   ),
                 ),
@@ -461,5 +560,117 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   Future<bool> _willPopCallback() async {
     Navigator.of(context).pop();
     return true;
+  }
+
+  void _errorReset() {
+    _chainStatusProvider.resetAllDefcon();
+    BotToast.showText(
+      text: "Ops! Error encountered, all warning levels have been reset!",
+      textStyle: const TextStyle(
+        fontSize: 13,
+        color: Colors.white,
+      ),
+      contentColor: Colors.red[800],
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  Future<void> _openRestoreDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider.background,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "Reset",
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Flexible(
+                          child: Text(
+                            "This will reactivate and reset all warning levels to their default values.",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: const Text("Reset"),
+                              onPressed: () {
+                                _chainStatusProvider.resetAllDefcon();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: const Text("Close"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: const SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(Icons.restore),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
