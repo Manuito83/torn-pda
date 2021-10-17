@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
+import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -430,6 +431,25 @@ class ChainStatusProvider extends ChangeNotifier {
     _soundActive = await Prefs().getChainWatcherSound();
     _vibrationActive = await Prefs().getChainWatcherVibration();
     _notificationActive = await Prefs().getChainWatcherNotificationsEnabled();
+
+    String savedSettings = await Prefs().getChainWatcherSettings();
+    ChainWatcherSettings model = chainWatcherModelFromJson(savedSettings);
+    _green2Enabled = model.green2Enabled;
+    _green2Max = model.green2Max;
+    _green2Min = model.green2Min;
+    _orange1Enabled = model.orange1Enabled;
+    _orange1Max = model.orange1Max;
+    _orange1Min = model.orange1Min;
+    _orange2Enabled = model.orange2Enabled;
+    _orange2Max = model.orange2Max;
+    _orange2Min = model.orange2Min;
+    _red1Enabled = model.red1Enabled;
+    _red1Max = model.red1Max;
+    _red1Min = model.red1Min;
+    _red2Enabled = model.red2Enabled;
+    _red2Max = model.red2Max;
+    _red2Min = model.red2Min;
+
   }
 
   void _scheduleNotification(
@@ -565,6 +585,7 @@ class ChainStatusProvider extends ChangeNotifier {
   void activatePanicMode() {
     _panicModeActive = true;
     notifyListeners();
+    // TODO SAVE PANIC MODE
   }
 
   void deactivatePanicMode() {
@@ -588,8 +609,8 @@ class ChainStatusProvider extends ChangeNotifier {
     _red2Enabled = true;
     _red2Max = 30;
     _red2Min = 0;
-    // TODO SAVE EVERYWHERE WE NOTIFY!
     notifyListeners();
+    _saveSettings();
   }
 
   void setDefconRange(WatchDefcon defcon, RangeValues range, {bool consequence = false}) {
@@ -791,6 +812,7 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    _saveSettings();
   }
 
   void activateDefcon(WatchDefcon defcon) {
@@ -1148,6 +1170,7 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
     }
     notifyListeners();
+    _saveSettings();
   }
 
   void _shrinkLeft(WatchDefcon defcon) {
@@ -1341,6 +1364,7 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     notifyListeners();
+    _saveSettings();
   }
 
   bool _checkIfAnyActiveBelow(WatchDefcon defcon) {
@@ -1568,5 +1592,26 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
     }
     return 0;
+  }
+
+  void _saveSettings() {
+    ChainWatcherSettings model = ChainWatcherSettings()
+      ..green2Enabled = green2Enabled
+      ..green2Max = _green2Max
+      ..green2Min = _green2Min
+      ..orange1Enabled = _orange1Enabled
+      ..orange1Max = _orange1Max
+      ..orange1Min = _orange1Min
+      ..orange2Enabled = _orange2Enabled
+      ..orange2Max = _orange2Max
+      ..orange2Min = _orange2Min
+      ..red1Enabled = _red1Enabled
+      ..red1Max = _red1Max
+      ..red1Min = _red1Min
+      ..red2Enabled = _red2Enabled
+      ..red2Max = _red2Max
+      ..red2Min = _red2Min;
+
+    Prefs().setChainWatcherSettings(chainWatcherModelToJson(model));
   }
 }
