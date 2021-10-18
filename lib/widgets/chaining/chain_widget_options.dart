@@ -234,7 +234,17 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Orange pulse + caution "),
+                Text("Orange pulse + "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    size: 18,
+                  ),
+                  onTap: () {
+                    _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
+                  },
+                ),
+                Text(" + caution "),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
@@ -315,7 +325,17 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Orange pulse + warning "),
+                Text("Orange pulse + "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    size: 18,
+                  ),
+                  onTap: () {
+                    _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
+                  },
+                ),
+                Text(" + warning "),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
@@ -396,7 +416,19 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Red pulse + caution "),
+                Text("Red pulse + "),
+                // TODO!! Only show if notifications active!
+                GestureDetector(
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    size: 18,
+                  ),
+                  onTap: () {
+                    _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
+                  },
+                ),
+                Text(" + caution "),
+                // TODO!! Only show if sound active!
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
@@ -477,7 +509,17 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Red pulse + warning "),
+                Text("Red pulse + "),
+                GestureDetector(
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    size: 18,
+                  ),
+                  onTap: () {
+                    _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
+                  },
+                ),
+                Text(" + warning "),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,

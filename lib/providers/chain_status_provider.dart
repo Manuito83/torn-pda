@@ -220,8 +220,8 @@ class ChainStatusProvider extends ChangeNotifier {
       //
       /*
       chainModel.chain
-        ..timeout = 90
-        ..current = 1816
+        ..timeout = 200
+        ..current = 1820
         ..max = 2500
         ..start = 1230000
         ..modifier = 1.23
@@ -317,7 +317,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
     if (chainModel.chain.current >= 10 && currentSecondsCounter > 1) {
       // RED LEVEL 2
-      if (currentSecondsCounter < 30) {
+      if (red2Enabled && currentSecondsCounter > _red2Min && currentSecondsCounter <= _red2Max) {
         if (_chainWatcherDefcon != WatchDefcon.red2) {
           _chainWatcherDefcon = WatchDefcon.red2;
           if (_soundActive) {
@@ -327,14 +327,14 @@ class ChainStatusProvider extends ChangeNotifier {
             _vibrate(3);
           }
           if (_notificationActive) {
-            _scheduleNotification(555, "", "RED CHAIN ALERT!", "Less than 30 seconds!");
+            showNotification(555, "", "RED CHAIN ALERT!", "Less than 30 seconds!");
           }
         } else {
           _borderColor == Colors.transparent ? _borderColor = Colors.red : _borderColor = Colors.transparent;
         }
       }
       // RED LEVEL 1
-      else if (currentSecondsCounter >= 30 && currentSecondsCounter < 60) {
+      else if (red1Enabled && currentSecondsCounter > _red1Min && currentSecondsCounter <= _red1Max) {
         if (_chainWatcherDefcon != WatchDefcon.red1) {
           _chainWatcherDefcon = WatchDefcon.red1;
           if (_soundActive) {
@@ -344,14 +344,14 @@ class ChainStatusProvider extends ChangeNotifier {
             _vibrate(3);
           }
           if (_notificationActive) {
-            _scheduleNotification(555, "", "RED CHAIN ALERT!", "Less than 60 seconds!");
+            showNotification(555, "", "RED CHAIN CAUTION!", "Less than 60 seconds!");
           }
         } else {
           _borderColor = Colors.red;
         }
       }
       // ORANGE 2
-      else if (currentSecondsCounter >= 60 && currentSecondsCounter < 90) {
+      else if (orange2Enabled && currentSecondsCounter > _orange2Min && currentSecondsCounter <= _orange2Max) {
         if (_chainWatcherDefcon != WatchDefcon.orange2) {
           _chainWatcherDefcon = WatchDefcon.orange2;
           if (_soundActive) {
@@ -365,7 +365,7 @@ class ChainStatusProvider extends ChangeNotifier {
         }
       }
       // ORANGE 1
-      else if (currentSecondsCounter >= 90 && currentSecondsCounter < 120) {
+      else if (orange1Enabled && currentSecondsCounter > _orange1Min && currentSecondsCounter <= _orange1Max) {
         if (_chainWatcherDefcon != WatchDefcon.orange1) {
           _chainWatcherDefcon = WatchDefcon.orange1;
           if (_soundActive) {
@@ -379,7 +379,7 @@ class ChainStatusProvider extends ChangeNotifier {
         }
       }
       // GREEN 2
-      else if (currentSecondsCounter >= 120 && currentSecondsCounter < 150) {
+      else if (green2Enabled && currentSecondsCounter > _green2Min && currentSecondsCounter <= _green2Max) {
         if (_chainWatcherDefcon != WatchDefcon.green2) {
           _chainWatcherDefcon = WatchDefcon.green2;
         } else {
@@ -449,10 +449,9 @@ class ChainStatusProvider extends ChangeNotifier {
     _red2Enabled = model.red2Enabled;
     _red2Max = model.red2Max;
     _red2Min = model.red2Min;
-
   }
 
-  void _scheduleNotification(
+  void showNotification(
     int id,
     String payload,
     String title,
@@ -490,16 +489,13 @@ class ChainStatusProvider extends ChangeNotifier {
       iOS: iOSPlatformChannelSpecifics,
     );
 
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-        notificationId,
-        notificationTitle,
-        notificationSubtitle,
-        //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)), // DEBUG
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 1)),
-        platformChannelSpecifics,
-        payload: notificationPayload,
-        androidAllowWhileIdle: true, // Deliver at exact time
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime);
+    await flutterLocalNotificationsPlugin.show(
+      notificationId,
+      notificationTitle,
+      notificationSubtitle,
+      platformChannelSpecifics,
+      payload: notificationPayload,
+    );
   }
 
   /// ##########################
