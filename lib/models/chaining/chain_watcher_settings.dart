@@ -25,6 +25,8 @@ class ChainWatcherSettings {
     this.red2Enabled,
     this.red2Max,
     this.red2Min,
+    this.panicEnabled,
+    this.panicValue,
   });
 
   bool green2Enabled;
@@ -42,6 +44,8 @@ class ChainWatcherSettings {
   bool red2Enabled;
   double red2Max;
   double red2Min;
+  bool panicEnabled;
+  double panicValue;
 
   factory ChainWatcherSettings.fromJson(Map<String, dynamic> json) => ChainWatcherSettings(
         green2Enabled: json["green2Enabled"] == null ? true : json["green2Enabled"],
@@ -59,6 +63,8 @@ class ChainWatcherSettings {
         red2Enabled: json["red2Enabled"] == null ? true : json["red2Enabled"],
         red2Max: json["red2Max"] == null ? 30 : json["red2Max"],
         red2Min: json["red2Min"] == null ? 0 : json["red2Min"],
+        panicEnabled: json["panicEnabled"] == null ? true : json["panicEnabled"],
+        panicValue: json["panicValue"] == null ? 40 : json["panicValue"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -77,5 +83,7 @@ class ChainWatcherSettings {
         "red2Enabled": red2Enabled == null ? null : red2Enabled,
         "red2Max": red2Max == null ? null : red2Max,
         "red2Min": red2Min == null ? null : red2Min,
+        "panicEnabled": panicEnabled == null ? null : panicEnabled,
+        "panicValue": panicValue == null ? null : panicValue,
       };
 }

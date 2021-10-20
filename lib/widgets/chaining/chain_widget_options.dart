@@ -3,14 +3,18 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
   @override
@@ -52,19 +56,36 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      SizedBox(height: 15),
+                      SizedBox(height: 10),
+                      Text("GENERAL", style: TextStyle(fontSize: 11)),
+                      _generalSettings(),
+                      Divider(),
+                      Text("PANIC MODE", style: TextStyle(fontSize: 11)),
                       _panicMode(),
                       Divider(),
+                      Text("PRESET ALERTS", style: TextStyle(fontSize: 11)),
                       _greenLevel2(),
-                      Divider(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                        child: Divider(),
+                      ),
                       _orangeLevel1(),
-                      Divider(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                        child: Divider(),
+                      ),
                       _orangeLevel2(),
-                      Divider(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                        child: Divider(),
+                      ),
                       _redLevel1(),
-                      Divider(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 100),
+                        child: Divider(),
+                      ),
                       _redLevel2(),
                       SizedBox(height: 50),
                     ],
@@ -100,6 +121,55 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     );
   }
 
+  Column _generalSettings() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text("Sound alerts"),
+            Switch(
+              value: _chainStatusProvider.soundEnabled,
+              onChanged: (value) {
+                _chainStatusProvider.changeSoundEnabled = value;
+              },
+              activeTrackColor: Colors.lightGreenAccent,
+              activeColor: Colors.green,
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text("Vibration"),
+            Switch(
+              value: _chainStatusProvider.vibrationEnabled,
+              onChanged: (value) {
+                _chainStatusProvider.changeVibrationEnabled = value;
+              },
+              activeTrackColor: Colors.lightGreenAccent,
+              activeColor: Colors.green,
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Text("Notification"),
+            Switch(
+              value: _chainStatusProvider.notificationsEnabled,
+              onChanged: (value) {
+                _chainStatusProvider.changeNotificationsEnabled = value;
+              },
+              activeTrackColor: Colors.lightGreenAccent,
+              activeColor: Colors.green,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Column _panicMode() {
     return Column(
       children: [
@@ -112,7 +182,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 IconButton(
                   icon: Icon(Icons.info_outline, size: 20),
                   onPressed: () {
-                    // TODO
+                    _openPanicModeInfoDialog();
                   },
                 ),
               ],
@@ -130,27 +200,71 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           ],
         ),
         if (_chainStatusProvider.panicModeEnabled)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
+          Column(
+            children: [
               Row(
-                children: [
-                  Image.asset(
-                    'images/awards/categories/crosshair.png',
-                    height: 15,
-                    color: _themeProvider.mainText,
+                children: <Widget>[
+                  Icon(
+                    Icons.alarm,
+                    size: 18,
                   ),
                   SizedBox(width: 10),
                   Text(
-                    "Targets",
+                    "00:00",
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: _chainStatusProvider.panicValue,
+                      max: 270,
+                      divisions: 27,
+                      activeColor: Colors.yellow,
+                      onChanged: (value) {
+                        _chainStatusProvider.setPanicValue(value);
+                      },
+                    ),
+                  ),
+                  Text(
+                    "${_printDuration(Duration(seconds: _chainStatusProvider.panicValue.toInt()))}",
+                    style: TextStyle(
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
-              IconButton(
-                icon: Icon(Icons.keyboard_arrow_right_outlined),
-                onPressed: () {
-                  // TODO
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Row(
+                    children: [
+                      Image.asset(
+                        'images/awards/categories/crosshair.png',
+                        height: 15,
+                        color: _themeProvider.mainText,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "Targets",
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.keyboard_arrow_right_outlined),
+                    onPressed: () {
+                      return showDialog<void>(
+                        context: context,
+                        barrierDismissible: false, // user must tap button!
+                        builder: (BuildContext context) {
+                          return AddChainTargetDialog(
+                            themeProvider: _themeProvider,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -621,7 +735,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   Future<void> _openRestoreDialog() {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -714,5 +828,334 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         );
       },
     );
+  }
+
+  Future<void> _openPanicModeInfoDialog() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0.0,
+          backgroundColor: Colors.transparent,
+          content: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                      top: 45,
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                    ),
+                    margin: const EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      color: _themeProvider.background,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 10.0,
+                          offset: Offset(0.0, 10.0),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // To make the card compact
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            "Panic Mode",
+                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Flexible(
+                          child: Text(
+                            "By enabling Panic Mode, a new 'P' icon will appear in the chain widget, which in turn will "
+                            "allow you to toggle the Panic Mode on/off when you desire.\n\n"
+                            "When Panic Mode is active, regardless of your alerts' configuration below, only the panic "
+                            "alert will sound. If you have targets configured, the browser will automatically open to "
+                            "the first available (non blue/red) one. Think about using easy/quick targets.\n\n"
+                            "This can be specially useful when chain watching while asleep, working, etc.\n\n"
+                            "Remember you need to leave Torn PDA open, "
+                            "with the screen active, for the Panic Mode to work as well.",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            TextButton(
+                              child: const Text("Panic!"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 26,
+                    backgroundColor: _themeProvider.background,
+                    child: CircleAvatar(
+                      backgroundColor: _themeProvider.background,
+                      radius: 22,
+                      child: const SizedBox(
+                        height: 34,
+                        width: 34,
+                        child: Icon(MdiIcons.alphaPCircleOutline),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class AddChainTargetDialog extends StatefulWidget {
+  AddChainTargetDialog({
+    Key key,
+    @required this.themeProvider,
+  }) : super(key: key);
+
+  final ThemeProvider themeProvider;
+
+  @override
+  _AddChainTargetDialogState createState() => _AddChainTargetDialogState();
+}
+
+class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
+  ChainStatusProvider _chainProvider;
+  final _addIdController = TextEditingController();
+  final _addFormKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _addIdController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
+    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: true);
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 0.0,
+      backgroundColor: Colors.transparent,
+      content: Stack(
+        children: <Widget>[
+          SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.only(
+                top: 45,
+                bottom: 16,
+                left: 16,
+                right: 16,
+              ),
+              margin: const EdgeInsets.only(top: 30),
+              decoration: BoxDecoration(
+                color: widget.themeProvider.background,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10.0,
+                    offset: Offset(0.0, 10.0),
+                  ),
+                ],
+              ),
+              child: Form(
+                key: _addFormKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // To make the card compact
+                  children: <Widget>[
+                    Row(
+                      children: [
+                        Flexible(
+                          child: TextFormField(
+                            style: const TextStyle(fontSize: 14),
+                            controller: _addIdController,
+                            maxLength: 10,
+                            minLines: 1,
+                            maxLines: 2,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              counterText: "",
+                              border: OutlineInputBorder(),
+                              labelText: 'Insert user ID',
+                            ),
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return "Cannot be empty!";
+                              }
+                              if (_chainProvider.panicTargets.length >= 5) {
+                                return "Maximum 5 targets!";
+                              }
+
+                              final n = num.tryParse(value);
+                              if (_chainProvider.panicTargets.where((t) => t.playerId.toString() == value).length > 0) {
+                                return "Already in the list!";
+                              }
+                              if (n == null) {
+                                return '$value is not a valid ID!';
+                              }
+                              _addIdController.text = value.trim();
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                    panicCards(),
+                    const SizedBox(height: 16.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        TextButton(
+                          child: const Text("Add"),
+                          onPressed: () async {
+                            if (_addFormKey.currentState.validate()) {
+                              FocusScopeNode currentFocus = FocusScope.of(context);
+                              if (!currentFocus.hasPrimaryFocus) {
+                                currentFocus.unfocus();
+                              }
+                              // Copy controller's text ot local variable
+                              // early and delete the global, so that text
+                              // does not appear again in case of failure
+                              String inputId = _addIdController.text;
+                              _addIdController.text = '';
+
+                              dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                              String message = "";
+                              Color messageColor = Colors.green[700];
+                              if (target is TargetModel) {
+                                inputId = target.faction.factionId.toString();
+                                _chainProvider.addPanicTarget(target);
+                              } else {
+                                message = "Can't locate the given target!";
+                                messageColor = Colors.orange[700];
+                              }
+
+                              BotToast.showText(
+                                text: message,
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: messageColor,
+                                duration: const Duration(seconds: 3),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                              return;
+                            }
+                          },
+                        ),
+                        TextButton(
+                          child: const Text("Close"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _addIdController.text = '';
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            child: CircleAvatar(
+              radius: 26,
+              backgroundColor: widget.themeProvider.background,
+              child: CircleAvatar(
+                backgroundColor: widget.themeProvider.mainText,
+                radius: 22,
+                child: SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: Image.asset(
+                    'images/awards/categories/crosshair.png',
+                    color: widget.themeProvider.background,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget panicCards() {
+    List<Widget> panicCards = <Widget>[];
+    for (TargetModel target in _chainProvider.panicTargets) {
+      panicCards.add(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            SizedBox(width: 30),
+            Flexible(
+              child: Card(
+                color: widget.themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        "${target.name} [${target.playerId}]",
+                        style: TextStyle(fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        "${target.faction.factionId != 0 ? '(${target.faction.factionName}) - ' : ''}L${target.level}",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 10),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 30,
+              child: GestureDetector(
+                onTap: () {
+                  _chainProvider.removePanicTarget(target);
+                },
+                child: Icon(Icons.delete_forever_outlined),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(children: panicCards);
   }
 }

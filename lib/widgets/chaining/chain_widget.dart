@@ -76,8 +76,9 @@ class _ChainWidgetState extends State<ChainWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (!_chainStatusProvider.panicModeEnabled) SizedBox(width: 35), // Centers the widget without P icon
               SizedBox(
-                width: 40,
+                width: 30,
                 child: !_chainStatusProvider.modelError
                     ? GestureDetector(
                         child: Icon(
@@ -102,7 +103,32 @@ class _ChainWidgetState extends State<ChainWidget> {
                       )
                     : SizedBox.shrink(),
               ),
-              SizedBox(width: 5),
+              if (_chainStatusProvider.panicModeEnabled)
+                SizedBox(
+                  width: 35,
+                  child: !_chainStatusProvider.modelError
+                      ? GestureDetector(
+                          child: Icon(
+                            MdiIcons.alphaPCircleOutline,
+                            color: _chainStatusProvider.panicModeActive
+                                ? widget.alwaysDarkBackground
+                                    ? Colors.orange[700]
+                                    : Colors.orange[900]
+                                : widget.alwaysDarkBackground
+                                    ? Colors.grey
+                                    : _themeProvider.mainText,
+                          ),
+                          onTap: () {
+                            if (_chainStatusProvider.panicModeActive) {
+                              _deactivatePanicMode();
+                            } else {
+                              _activatePanicMode();
+                            }
+                          },
+                        )
+                      : SizedBox.shrink(),
+                ),
+              SizedBox(width: 10),
               Column(
                 children: <Widget>[
                   FutureBuilder(
@@ -216,10 +242,9 @@ class _ChainWidgetState extends State<ChainWidget> {
                   ),
                 ],
               ),
-              SizedBox(width: 5),
-              // Placeholder for another icon
+              SizedBox(width: 10),
               SizedBox(
-                width: 40,
+                width: 30,
                 child: GestureDetector(
                   child: Icon(
                     Icons.settings,
@@ -228,6 +253,9 @@ class _ChainWidgetState extends State<ChainWidget> {
                     Get.to(() => ChainWidgetOptions());
                   },
                 ),
+              ),
+              SizedBox(
+                width: 35,
               ),
             ],
           ),
@@ -263,15 +291,22 @@ class _ChainWidgetState extends State<ChainWidget> {
       case WatchDefcon.off:
         return 0.0;
         break;
+      case WatchDefcon.panic:
+        return 20.0;
+        break;
     }
   }
 
-  void _activateChainWatcher() {
+  void _activateChainWatcher({bool withPanic = false}) {
     _chainStatusProvider.activateWatcher();
 
+    String message = 'Chain watcher activated!\n\nYour phone screen will remain on, consider plugging it in.';
+    if (withPanic) {
+      message = 'Panic mode activated!\n\nYour phone screen will remain on, consider plugging it in.';
+    }
+
     BotToast.showText(
-      text: 'Chain watcher activated!'
-          '\n\nYour phone screen will remain on, consider plugging it in.',
+      text: message,
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,
@@ -285,8 +320,49 @@ class _ChainWidgetState extends State<ChainWidget> {
   void _deactivateChainWatcher() {
     _chainStatusProvider.deactivateWatcher();
 
+    if (_chainStatusProvider.panicModeActive) {
+      _chainStatusProvider.deactivatePanicMode();
+    }
+
     BotToast.showText(
       text: 'Chain watcher deactivated!',
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.orange[700],
+      duration: Duration(seconds: 5),
+      contentPadding: EdgeInsets.all(10),
+    );
+  }
+
+  void _activatePanicMode() {
+    _chainStatusProvider.activatePanicMode();
+
+    String message = 'Panic mode activated!';
+    if (!_chainStatusProvider.watcherActive) {
+      message = 'Chain watcher and panic mode have been activated!'
+          '\n\nYour phone screen will remain on, consider plugging it in.';
+      _chainStatusProvider.activateWatcher();
+    }
+
+    BotToast.showText(
+      text: message,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green[700],
+      duration: Duration(seconds: 7),
+      contentPadding: EdgeInsets.all(10),
+    );
+  }
+
+  void _deactivatePanicMode() {
+    _chainStatusProvider.deactivatePanicMode();
+
+    BotToast.showText(
+      text: 'Panic mode deactivated!',
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,

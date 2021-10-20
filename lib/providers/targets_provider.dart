@@ -269,50 +269,37 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
-    void updatePass(bool showUpdateAnimation) async {
-      for (var tar in _targets) {
-        for (var i = 0; i < targetsIds.length; i++) {
-          if (tar.playerId.toString() == targetsIds[i]) {
-            if (showUpdateAnimation) {
-              tar.isUpdating = true;
-              notifyListeners();
+    for (var tar in _targets) {
+      for (var i = 0; i < targetsIds.length; i++) {
+        if (tar.playerId.toString() == targetsIds[i]) {
+          tar.isUpdating = true;
+          notifyListeners();
+          try {
+            dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
+            if (myUpdatedTargetModel is TargetModel) {
+              _getRespectFF(attacks, myUpdatedTargetModel);
+              _getTargetFaction(myUpdatedTargetModel);
+              _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
+              var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
+              _updateResultAnimation(newTarget, true);
+              newTarget.personalNote = tar.personalNote;
+              newTarget.personalNoteColor = tar.personalNoteColor;
+              newTarget.lastUpdated = DateTime.now();
+              _saveTargetsSharedPrefs();
+            } else {
+              tar.isUpdating = false;
+              _updateResultAnimation(tar, false);
             }
-            try {
-              dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
-              if (myUpdatedTargetModel is TargetModel) {
-                _getRespectFF(attacks, myUpdatedTargetModel);
-                _getTargetFaction(myUpdatedTargetModel);
-                _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-                var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
-                if (showUpdateAnimation) {
-                  _updateResultAnimation(newTarget, true);
-                }
-                newTarget.personalNote = tar.personalNote;
-                newTarget.personalNoteColor = tar.personalNoteColor;
-                newTarget.lastUpdated = DateTime.now();
-                _saveTargetsSharedPrefs();
-              } else {
-                if (showUpdateAnimation) {
-                  tar.isUpdating = false;
-                  _updateResultAnimation(tar, false);
-                }
-              }
-            } catch (e) {
-              if (showUpdateAnimation) {
-                tar.isUpdating = false;
-                _updateResultAnimation(tar, false);
-              }
-            }
-            if (targetsIds.length > 40) {
-              await Future.delayed(const Duration(seconds: 1), () {});
-            }
+          } catch (e) {
+            tar.isUpdating = false;
+            _updateResultAnimation(tar, false);
+          }
+          if (targetsIds.length > 40) {
+            await Future.delayed(const Duration(seconds: 1), () {});
           }
         }
       }
     }
-
-    await Future.delayed(Duration(seconds: 15));
-    updatePass(true);
   }
 
   Future<void> _updateResultAnimation(TargetModel target, bool success) async {

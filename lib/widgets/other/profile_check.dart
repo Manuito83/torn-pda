@@ -33,27 +33,17 @@ class ProfileAttackCheckWidget extends StatefulWidget {
   final ProfileCheckType profileCheckType;
 
   ProfileAttackCheckWidget(
-      {@required this.profileId,
-      @required this.apiKey,
-      @required this.profileCheckType,
-      @required Key key})
+      {@required this.profileId, @required this.apiKey, @required this.profileCheckType, @required Key key})
       : super(key: key);
 
   @override
-  _ProfileAttackCheckWidgetState createState() =>
-      _ProfileAttackCheckWidgetState();
+  _ProfileAttackCheckWidgetState createState() => _ProfileAttackCheckWidgetState();
 }
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   final _levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
   final _crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
-  final _networthTriggers = [
-    5000000,
-    50000000,
-    500000000,
-    5000000000,
-    50000000000
-  ];
+  final _networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
 
   final _ranksTriggers = {
     "Absolute beginner": 1,
@@ -232,6 +222,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     ).getOtherProfile;
 
     // FRIEND CHECK
+    if (!mounted) return; // We could be unmounted when rapidly skipping the first target
     var friendsProv = context.read<FriendsProvider>();
     if (!friendsProv.initialized) {
       await friendsProv.initFriends();
@@ -258,8 +249,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       }
 
       if (_userDetails.basic.faction.factionId != 0 &&
-          otherProfile.faction.factionId ==
-              _userDetails.basic.faction.factionId) {
+          otherProfile.faction.factionId == _userDetails.basic.faction.factionId) {
         _isOwnFaction = true;
       }
 
@@ -332,9 +322,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 style: TextStyle(
                   color: friendTextColor,
                   fontSize: 12,
-                  fontWeight: friendText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: friendText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -385,9 +373,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 factionText,
                 style: TextStyle(
                   color: factionColor,
-                  fontWeight: factionText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
               ),
@@ -418,9 +404,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 factionText,
                 style: TextStyle(
                   color: factionColor,
-                  fontWeight: factionText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
               ),
@@ -455,9 +439,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 partnerText,
                 style: TextStyle(
                   color: partnerColor,
-                  fontWeight: partnerText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: partnerText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
               ),
@@ -489,9 +471,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 style: TextStyle(
                   color: colleagueTextColor,
                   fontSize: 12,
-                  fontWeight: colleagueText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: colleagueText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -555,15 +535,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // 1 is disabled
     // 2 is only if spies
 
-    if (_settingsProvider.profileStatsEnabled == "0" ||
-        _settingsProvider.profileStatsEnabled == "2") {
+    if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
       var spyModel = YataSpyModel();
       var spyFoundInYata = false;
       try {
-        String yataURL =
-            'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
-        var resp =
-            await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+        String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
+        var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
         if (resp.statusCode == 200) {
           var spyJson = json.decode(resp.body);
           var spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
@@ -766,8 +743,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             ),
           ),
         );
-      } else if (!spyFoundInYata &&
-          _settingsProvider.profileStatsEnabled == "0") {
+      } else if (!spyFoundInYata && _settingsProvider.profileStatsEnabled == "0") {
         // Even if we have no YATA spy, but we want to show estimated stats
         var npcs = [4, 10, 15, 17, 19, 20];
         String estimatedStats = "";
@@ -804,9 +780,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
-                      fontStyle: estimatedStats == "unk"
-                          ? FontStyle.italic
-                          : FontStyle.normal,
+                      fontStyle: estimatedStats == "unk" ? FontStyle.italic : FontStyle.normal,
                     ),
                   ),
                 ),
@@ -1097,14 +1071,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   String _calculateStats(OtherProfileModel otherProfile) {
-    var levelIndex =
-        _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
-    var crimeIndex = _crimesTriggers
-            .lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) +
-        1;
-    var networthIndex = _networthTriggers
-            .lastIndexWhere((x) => x <= otherProfile.personalstats.networth) +
-        1;
+    var levelIndex = _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
+    var crimeIndex = _crimesTriggers.lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) + 1;
+    var networthIndex = _networthTriggers.lastIndexWhere((x) => x <= otherProfile.personalstats.networth) + 1;
     var rankIndex = 0;
     _ranksTriggers.forEach((tornRank, index) {
       if (otherProfile.rank.contains(tornRank)) {
@@ -1118,6 +1087,4 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
     return "unk";
   }
-
-  
 }

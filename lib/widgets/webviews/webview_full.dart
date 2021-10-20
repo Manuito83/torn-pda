@@ -260,10 +260,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      webView.pauseTimers();
-    } else {
-      webView.resumeTimers();
+    if (Platform.isAndroid) {
+      if (state == AppLifecycleState.paused) {
+        webView.pauseTimers();
+      } else {
+        webView.resumeTimers();
+      }
     }
   }
 
@@ -832,13 +834,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     /// Independent of tabs, iOS needs to get the loader.php (attack view)
                     /// to trigger the profile widget
                     if (Platform.isIOS && _settingsProvider.extraPlayerInformation) {
-                      if (resource.initiatorType == "xmlhttprequest"
-                          &&
-                          (resource.url.toString().contains("profiles.php?step=getProfileData")
-                              && !_profileTriggered)
-                          ||
-                          (resource.url.toString().contains("loader.php")
-                              && !_attackTriggered)) {
+                      if (resource.initiatorType == "xmlhttprequest" &&
+                              (resource.url.toString().contains("profiles.php?step=getProfileData") &&
+                                  !_profileTriggered) ||
+                          (resource.url.toString().contains("loader.php") && !_attackTriggered)) {
                         // Trigger once
                         if (_profileTriggerTime != null &&
                             (DateTime.now().difference(_profileTriggerTime).inSeconds) < 1) {

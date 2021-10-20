@@ -28,6 +28,7 @@ class Prefs {
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
   final String _kChainWatcherSettings = "pda_chainWatcherSettings";
+  final String _kChainWatcherPanicTargets = "pda_chainWatcherPanicTargets";
   final String _kChainWatcherSound = "pda_chainWatcherSound";
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kChainWatcherNotifications = "pda_chainWatcherNotifications";
@@ -356,6 +357,16 @@ class Prefs {
   Future<bool> setChainWatcherSettings(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kChainWatcherSettings, value);
+  }
+
+  Future<List<String>> getChainWatcherPanicTargets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kChainWatcherPanicTargets) ?? <String>[];
+  }
+
+  Future<bool> setChainWatcherPanicTargets(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kChainWatcherPanicTargets, value);
   }
 
   Future<bool> getChainWatcherSound() async {

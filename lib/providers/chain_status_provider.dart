@@ -4,15 +4,18 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 // Project imports:
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -24,10 +27,52 @@ enum WatchDefcon {
   orange2,
   red1,
   red2,
+  panic,
   off,
 }
 
 class ChainStatusProvider extends ChangeNotifier {
+  List<TargetModel> _panicTargets = <TargetModel>[];
+  List<TargetModel> get panicTargets {
+    return _panicTargets;
+  }
+
+  bool _soundEnabled = true;
+  
+  bool get soundEnabled {
+    return _soundEnabled;
+  }
+
+  set changeSoundEnabled(bool value) {
+    _soundEnabled = value;
+    _saveSettings();
+    notifyListeners();
+  }
+
+  bool _vibrationEnabled = true;
+  
+  bool get vibrationEnabled {
+    return _vibrationEnabled;
+  }
+
+  set changeVibrationEnabled(bool value) {
+    _vibrationEnabled = value;
+    _saveSettings();
+    notifyListeners();
+  }
+
+  bool _notificationsEnabled = true;
+ 
+  bool get notificationsEnabled {
+    return _notificationsEnabled;
+  }
+
+  set changeNotificationsEnabled(bool value) {
+    _notificationsEnabled = value;
+    _saveSettings();
+    notifyListeners();
+  }
+
   bool initialised = false;
   String _apiKey = "";
 
@@ -78,22 +123,12 @@ class ChainStatusProvider extends ChangeNotifier {
     return _borderColor;
   }
 
-  // This enables the icon, not the actual panic mode (handled by _panicModeActive)
-  bool _panicModeEnabled = false;
-  bool get panicModeEnabled {
-    return _panicModeEnabled;
-  }
-
   bool _panicModeActive = false;
   bool get panicModeActive {
     return _panicModeActive;
   }
 
   AudioCache _audioCache = new AudioCache();
-
-  bool _soundActive = true;
-  bool _vibrationActive = true;
-  bool _notificationActive = true;
 
   int _lastChainCount = 0;
   bool _wereWeChaining = false;
@@ -142,14 +177,26 @@ class ChainStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void enablePanicMode() {
-    _panicModeEnabled = true;
+  void activatePanicMode() {
+    _panicModeActive = true;
     notifyListeners();
   }
 
-  void disablePanicMode() {
-    _panicModeEnabled = false;
+  void deactivatePanicMode() {
+    _panicModeActive = false;
     notifyListeners();
+  }
+
+  void addPanicTarget(TargetModel target) {
+    panicTargets.add(target);
+    notifyListeners();
+    _saveSettings();
+  }
+
+  void removePanicTarget(TargetModel target) {
+    panicTargets.removeWhere((element) => element.playerId == target.playerId);
+    notifyListeners();
+    _saveSettings();
   }
 
   void _refreshChainClock(int secondsRemaining) {
@@ -220,8 +267,8 @@ class ChainStatusProvider extends ChangeNotifier {
       //
       /*
       chainModel.chain
-        ..timeout = 200
-        ..current = 1820
+        ..timeout = 50
+        ..current = 1984
         ..max = 2500
         ..start = 1230000
         ..modifier = 1.23
@@ -316,84 +363,128 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     if (chainModel.chain.current >= 10 && currentSecondsCounter > 1) {
-      // RED LEVEL 2
-      if (red2Enabled && currentSecondsCounter > _red2Min && currentSecondsCounter <= _red2Max) {
-        if (_chainWatcherDefcon != WatchDefcon.red2) {
-          _chainWatcherDefcon = WatchDefcon.red2;
-          if (_soundActive) {
-            _audioCache.play('../sounds/alerts/warning2.wav');
-          }
-          if (_vibrationActive) {
-            _vibrate(3);
-          }
-          if (_notificationActive) {
-            showNotification(555, "", "RED CHAIN ALERT!", "Less than 30 seconds!");
-          }
-        } else {
-          _borderColor == Colors.transparent ? _borderColor = Colors.red : _borderColor = Colors.transparent;
-        }
-      }
-      // RED LEVEL 1
-      else if (red1Enabled && currentSecondsCounter > _red1Min && currentSecondsCounter <= _red1Max) {
-        if (_chainWatcherDefcon != WatchDefcon.red1) {
-          _chainWatcherDefcon = WatchDefcon.red1;
-          if (_soundActive) {
-            _audioCache.play('../sounds/alerts/warning1.wav');
-          }
-          if (_vibrationActive) {
-            _vibrate(3);
-          }
-          if (_notificationActive) {
-            showNotification(555, "", "RED CHAIN CAUTION!", "Less than 60 seconds!");
-          }
-        } else {
-          _borderColor = Colors.red;
-        }
-      }
-      // ORANGE 2
-      else if (orange2Enabled && currentSecondsCounter > _orange2Min && currentSecondsCounter <= _orange2Max) {
-        if (_chainWatcherDefcon != WatchDefcon.orange2) {
-          _chainWatcherDefcon = WatchDefcon.orange2;
-          if (_soundActive) {
-            _audioCache.play('../sounds/alerts/alert2.wav');
-          }
-          if (_vibrationActive) {
-            _vibrate(3);
+      if (panicModeActive) {
+        // PANIC MODE LEVEL
+        if (currentSecondsCounter <= _panicValue) {
+          if (_chainWatcherDefcon != WatchDefcon.panic) {
+            _chainWatcherDefcon = WatchDefcon.panic;
+            if (_soundEnabled) {
+              _audioCache.play('../sounds/alerts/warning2.wav');
+            }
+            if (_vibrationEnabled) {
+              _vibrate(3);
+            }
+            if (_notificationsEnabled) {
+              showNotification(555, "", "CHAIN PANIC ALERT!", "Less than ${_currentChainTimeString} remaining!");
+            }
+            if (panicTargets.isNotEmpty) {
+              List<String> attacksIds = <String>[];
+              List<String> attacksNames = <String>[];
+              List<String> attackNotesColorList = <String>[];
+              List<String> attackNotesList = <String>[];
+              for (var tar in panicTargets) {
+                attacksIds.add(tar.playerId.toString());
+                attacksNames.add(tar.name);
+                attackNotesColorList.add('z');
+                attackNotesList.add('');
+              }
+              Get.to(
+                TornWebViewAttack(
+                  attackIdList: attacksIds,
+                  attackNameList: attacksNames,
+                  userKey: _apiKey,
+                  attackNotesColorList: attackNotesColorList,
+                  attackNotesList: attackNotesList,
+                ),
+              );
+            }
+          } else {
+            _borderColor == Colors.black ? _borderColor = Colors.yellow : _borderColor = Colors.black;
           }
         } else {
-          _borderColor == Colors.transparent ? _borderColor = Colors.orange : _borderColor = Colors.transparent;
-        }
-      }
-      // ORANGE 1
-      else if (orange1Enabled && currentSecondsCounter > _orange1Min && currentSecondsCounter <= _orange1Max) {
-        if (_chainWatcherDefcon != WatchDefcon.orange1) {
-          _chainWatcherDefcon = WatchDefcon.orange1;
-          if (_soundActive) {
-            _audioCache.play('../sounds/alerts/alert1.wav');
-          }
-          if (_vibrationActive) {
-            _vibrate(3);
-          }
-        } else {
-          _borderColor = Colors.orange;
-        }
-      }
-      // GREEN 2
-      else if (green2Enabled && currentSecondsCounter > _green2Min && currentSecondsCounter <= _green2Max) {
-        if (_chainWatcherDefcon != WatchDefcon.green2) {
-          _chainWatcherDefcon = WatchDefcon.green2;
-        } else {
-          _borderColor == Colors.transparent ? _borderColor = Colors.green : _borderColor = Colors.transparent;
-        }
-        // GREEN 1
-      } else if (currentSecondsCounter >= 150) {
-        if (_chainWatcherDefcon != WatchDefcon.green1) {
+          _borderColor = Colors.yellow;
           _chainWatcherDefcon = WatchDefcon.green1;
-          _borderColor = Colors.green;
+        }
+      } else {
+        // RED LEVEL 2
+        if (red2Enabled && currentSecondsCounter > _red2Min && currentSecondsCounter <= _red2Max) {
+          if (_chainWatcherDefcon != WatchDefcon.red2) {
+            _chainWatcherDefcon = WatchDefcon.red2;
+            if (_soundEnabled) {
+              _audioCache.play('../sounds/alerts/warning2.wav');
+            }
+            if (_vibrationEnabled) {
+              _vibrate(3);
+            }
+            if (_notificationsEnabled) {
+              showNotification(555, "", "RED CHAIN ALERT!", "Less than ${_currentChainTimeString} remaining!");
+            }
+          } else {
+            _borderColor == Colors.transparent ? _borderColor = Colors.red : _borderColor = Colors.transparent;
+          }
+        }
+        // RED LEVEL 1
+        else if (red1Enabled && currentSecondsCounter > _red1Min && currentSecondsCounter <= _red1Max) {
+          if (_chainWatcherDefcon != WatchDefcon.red1) {
+            _chainWatcherDefcon = WatchDefcon.red1;
+            if (_soundEnabled) {
+              _audioCache.play('../sounds/alerts/warning1.wav');
+            }
+            if (_vibrationEnabled) {
+              _vibrate(3);
+            }
+            if (_notificationsEnabled) {
+              showNotification(555, "", "RED CHAIN CAUTION!", "Less than ${_currentChainTimeString} remaining!");
+            }
+          } else {
+            _borderColor = Colors.red;
+          }
+        }
+        // ORANGE 2
+        else if (orange2Enabled && currentSecondsCounter > _orange2Min && currentSecondsCounter <= _orange2Max) {
+          if (_chainWatcherDefcon != WatchDefcon.orange2) {
+            _chainWatcherDefcon = WatchDefcon.orange2;
+            if (_soundEnabled) {
+              _audioCache.play('../sounds/alerts/alert2.wav');
+            }
+            if (_vibrationEnabled) {
+              _vibrate(3);
+            }
+          } else {
+            _borderColor == Colors.transparent ? _borderColor = Colors.orange : _borderColor = Colors.transparent;
+          }
+        }
+        // ORANGE 1
+        else if (orange1Enabled && currentSecondsCounter > _orange1Min && currentSecondsCounter <= _orange1Max) {
+          if (_chainWatcherDefcon != WatchDefcon.orange1) {
+            _chainWatcherDefcon = WatchDefcon.orange1;
+            if (_soundEnabled) {
+              _audioCache.play('../sounds/alerts/alert1.wav');
+            }
+            if (_vibrationEnabled) {
+              _vibrate(3);
+            }
+          } else {
+            _borderColor = Colors.orange;
+          }
+        }
+        // GREEN 2
+        else if (green2Enabled && currentSecondsCounter > _green2Min && currentSecondsCounter <= _green2Max) {
+          if (_chainWatcherDefcon != WatchDefcon.green2) {
+            _chainWatcherDefcon = WatchDefcon.green2;
+          } else {
+            _borderColor == Colors.transparent ? _borderColor = Colors.green : _borderColor = Colors.transparent;
+          }
+          // GREEN 1
+        } else {
+          if (_chainWatcherDefcon != WatchDefcon.green1) {
+            _chainWatcherDefcon = WatchDefcon.green1;
+            _borderColor = Colors.green;
+          }
         }
       }
-      // GREEN 1
     } else {
+      // GREEN 1
       _chainWatcherDefcon = WatchDefcon.green1;
       _borderColor = Colors.green;
     }
@@ -428,9 +519,9 @@ class ChainStatusProvider extends ChangeNotifier {
   loadPreferences({@required apiKey}) async {
     initialised = true;
     _apiKey = apiKey;
-    _soundActive = await Prefs().getChainWatcherSound();
-    _vibrationActive = await Prefs().getChainWatcherVibration();
-    _notificationActive = await Prefs().getChainWatcherNotificationsEnabled();
+    _soundEnabled = await Prefs().getChainWatcherSound();
+    _vibrationEnabled = await Prefs().getChainWatcherVibration();
+    _notificationsEnabled = await Prefs().getChainWatcherNotificationsEnabled();
 
     String savedSettings = await Prefs().getChainWatcherSettings();
     ChainWatcherSettings model = chainWatcherModelFromJson(savedSettings);
@@ -449,6 +540,13 @@ class ChainStatusProvider extends ChangeNotifier {
     _red2Enabled = model.red2Enabled;
     _red2Max = model.red2Max;
     _red2Min = model.red2Min;
+    _panicModeEnabled = model.panicEnabled;
+    _panicValue = model.panicValue;
+
+    List<String> savedPanicTargets = await Prefs().getChainWatcherPanicTargets();
+    for (String p in savedPanicTargets) {
+      panicTargets.add(targetModelFromJson(p));
+    }
   }
 
   void showNotification(
@@ -496,6 +594,37 @@ class ChainStatusProvider extends ChangeNotifier {
       platformChannelSpecifics,
       payload: notificationPayload,
     );
+  }
+
+  /// ##########################
+  /// PANIC MODE SETTINGS
+  /// ##########################
+
+  // This enables the icon, not the actual panic mode (handled by _panicModeActive)
+  bool _panicModeEnabled = false;
+  bool get panicModeEnabled {
+    return _panicModeEnabled;
+  }
+
+  double _panicValue = 40;
+  double get panicValue {
+    return _panicValue;
+  }
+
+  void enablePanicMode() {
+    _panicModeEnabled = true;
+    notifyListeners();
+  }
+
+  void disablePanicMode() {
+    _panicModeActive = false;
+    _panicModeEnabled = false;
+    notifyListeners();
+  }
+
+  void setPanicValue(double value) {
+    _panicValue = value;
+    notifyListeners();
   }
 
   /// ##########################
@@ -576,17 +705,6 @@ class ChainStatusProvider extends ChangeNotifier {
   double _red2Min = 0;
   double get red2Min {
     return _red2Min;
-  }
-
-  void activatePanicMode() {
-    _panicModeActive = true;
-    notifyListeners();
-    // TODO SAVE PANIC MODE
-  }
-
-  void deactivatePanicMode() {
-    _panicModeActive = false;
-    notifyListeners();
   }
 
   void resetAllDefcon() {
@@ -804,6 +922,8 @@ class ChainStatusProvider extends ChangeNotifier {
         }
         break;
       case WatchDefcon.off:
+        break;
+      case WatchDefcon.panic:
         break;
     }
 
@@ -1164,6 +1284,8 @@ class ChainStatusProvider extends ChangeNotifier {
 
       case WatchDefcon.off:
         break;
+      case WatchDefcon.panic:
+        break;
     }
     notifyListeners();
     _saveSettings();
@@ -1192,6 +1314,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.off:
         break;
+      case WatchDefcon.panic:
+        break;
     }
   }
 
@@ -1217,6 +1341,8 @@ class ChainStatusProvider extends ChangeNotifier {
         _red2Min += 20;
         break;
       case WatchDefcon.off:
+        break;
+      case WatchDefcon.panic:
         break;
     }
   }
@@ -1249,6 +1375,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.off:
         break;
+      case WatchDefcon.panic:
+        break;
     }
   }
 
@@ -1279,6 +1407,8 @@ class ChainStatusProvider extends ChangeNotifier {
         _red2Max += 20;
         break;
       case WatchDefcon.off:
+        break;
+      case WatchDefcon.panic:
         break;
     }
   }
@@ -1357,6 +1487,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.off:
         break;
+      case WatchDefcon.panic:
+        break;
     }
 
     notifyListeners();
@@ -1384,6 +1516,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.red2:
         break;
       case WatchDefcon.off:
+        break;
+      case WatchDefcon.panic:
         break;
     }
     return false;
@@ -1433,6 +1567,8 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.red2:
         break;
       case WatchDefcon.off:
+        break;
+      case WatchDefcon.panic:
         break;
     }
     return 0;
@@ -1484,6 +1620,8 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.off:
         break;
+      case WatchDefcon.panic:
+        break;
     }
     return 270;
   }
@@ -1533,6 +1671,8 @@ class ChainStatusProvider extends ChangeNotifier {
         return 270;
         break;
       case WatchDefcon.off:
+        break;
+      case WatchDefcon.panic:
         break;
     }
     return 270;
@@ -1586,11 +1726,17 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
       case WatchDefcon.off:
         break;
+      case WatchDefcon.panic:
+        break;
     }
     return 0;
   }
 
   void _saveSettings() {
+    Prefs().setChainWatcherSound(_soundEnabled);
+    Prefs().setChainWatcherVibration(_vibrationEnabled);
+    Prefs().setChainWatcherNotificationsEnabled(_notificationsEnabled);
+    
     ChainWatcherSettings model = ChainWatcherSettings()
       ..green2Enabled = green2Enabled
       ..green2Max = _green2Max
@@ -1606,8 +1752,15 @@ class ChainStatusProvider extends ChangeNotifier {
       ..red1Min = _red1Min
       ..red2Enabled = _red2Enabled
       ..red2Max = _red2Max
-      ..red2Min = _red2Min;
-
+      ..red2Min = _red2Min
+      ..panicEnabled = _panicModeEnabled
+      ..panicValue = _panicValue;
     Prefs().setChainWatcherSettings(chainWatcherModelToJson(model));
+
+    List<String> panicTargetsModel = <String>[];
+    for (TargetModel p in panicTargets) {
+      panicTargetsModel.add(targetModelToJson(p));
+    }
+    Prefs().setChainWatcherPanicTargets(panicTargetsModel);
   }
 }

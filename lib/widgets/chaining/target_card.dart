@@ -52,8 +52,7 @@ class _TargetCardState extends State<TargetCard> {
   @override
   void initState() {
     super.initState();
-    _updatedTicker =
-        new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
   }
 
   @override
@@ -102,8 +101,7 @@ class _TargetCardState extends State<TargetCard> {
           },
           child: Card(
             shape: RoundedRectangleBorder(
-                side: BorderSide(color: _borderColor(), width: 1.5),
-                borderRadius: BorderRadius.circular(4.0)),
+                side: BorderSide(color: _borderColor(), width: 1.5), borderRadius: BorderRadius.circular(4.0)),
             elevation: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,8 +153,7 @@ class _TargetCardState extends State<TargetCard> {
                                     ),
                                   ),
                                   closedColor: Colors.transparent,
-                                  closedBuilder:
-                                      (BuildContext context, VoidCallback openContainer) {
+                                  closedBuilder: (BuildContext context, VoidCallback openContainer) {
                                     return SizedBox(
                                       height: 22,
                                       width: 30,
@@ -236,12 +233,8 @@ class _TargetCardState extends State<TargetCard> {
                             Text(
                               'Updated $_lastUpdatedString',
                               style: TextStyle(
-                                color: _lastUpdatedMinutes <= 120
-                                    ? _themeProvider.mainText
-                                    : Colors.deepOrangeAccent,
-                                fontStyle: _lastUpdatedMinutes <= 120
-                                    ? FontStyle.normal
-                                    : FontStyle.italic,
+                                color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
+                                fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
                               ),
                             ),
                           ],
@@ -535,8 +528,7 @@ class _TargetCardState extends State<TargetCard> {
       if (target.status.until > now) {
         var endTimeStamp = DateTime.fromMillisecondsSinceEpoch(target.status.until * 1000);
         if (_lifeTicker == null) {
-          _lifeTicker =
-              Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
+          _lifeTicker = Timer.periodic(Duration(seconds: 1), (Timer t) => _refreshLifeClock(endTimeStamp));
         }
         _refreshLifeClock(endTimeStamp);
         lifeText = _currentLifeString;
@@ -773,6 +765,8 @@ class _TargetCardState extends State<TargetCard> {
       contentPadding: EdgeInsets.all(10),
     );
 
+    await Future.delayed(Duration(seconds: 15));
+    if (!mounted) return;
     await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
   }
 
@@ -819,8 +813,7 @@ class _TargetCardState extends State<TargetCard> {
 
       if (_lifeTicker != null) {
         _lifeTicker.cancel();
-        _lifeTicker = Timer.periodic(
-            Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
+        _lifeTicker = Timer.periodic(Duration(seconds: timerCadence), (Timer t) => _refreshLifeClock(timeEnd));
       }
 
       if (diff.inSeconds < 2) {

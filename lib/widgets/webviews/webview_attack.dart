@@ -119,6 +119,9 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     if (_chainStatusProvider.watcherActive) {
       _chainWidgetController.expanded = true;
     }
+
+    // TODO
+    _assessFirstTargetsOnLaunch();
   }
 
   @override
@@ -272,7 +275,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         await _goBackOrForward(details);
       },
       genericAppBar: AppBar(
-        brightness: Brightness.dark,
+        //brightness: Brightness.dark,
         leading: IconButton(
           icon: _backButtonPopsContext ? Icon(Icons.close) : Icon(Icons.arrow_back_ios),
           onPressed: () async {
@@ -495,147 +498,264 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   Widget _nextAttackActionButton() {
-    var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
     return IconButton(
       icon: Icon(Icons.skip_next),
-      onPressed: _nextButtonPressed
-          ? null
-          : () async {
-              // Turn button grey
-              setState(() {
-                _nextButtonPressed = true;
-              });
-
-              if (_skippingEnabled) {
-                // Counters for target skipping
-                int targetsSkipped = 0;
-                var originalPosition = _attackNumber;
-                bool reachedEnd = false;
-                var skippedNames = [];
-
-                // We'll skip maximum of 3 targets
-                for (var i = 0; i < 3; i++) {
-                  // Get the status of our next target
-                  var nextTarget =
-                      await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
-                          .getTarget;
-
-                  if (nextTarget is TargetModel) {
-                    // If in hospital or jail (even in a different country), we skip
-                    if (nextTarget.status.color == "red") {
-                      targetsSkipped++;
-                      skippedNames.add(nextTarget.name);
-                      _attackNumber++;
-                    }
-                    // If flying, we need to see if he is in a different country (if we are in the same
-                    // place, we can attack him)
-                    else if (nextTarget.status.color == "blue") {
-                      var user =
-                          await TornApiCaller.target(_userProv.basic.userApiKey, _userProv.basic.playerId.toString())
-                              .getTarget;
-                      if (user is TargetModel) {
-                        if (user.status.description != nextTarget.status.description) {
-                          targetsSkipped++;
-                          skippedNames.add(nextTarget.name);
-                          _attackNumber++;
-                        }
-                      }
-                    }
-                    // If we found a good target, we break here. But before, we gather
-                    // some more details if option is enabled
-                    else {
-                      if (_showOnlineFactionWarning) {
-                        _factionName = nextTarget.faction.factionName;
-                        _lastOnline = nextTarget.lastAction.timestamp;
-                      }
-                      break;
-                    }
-                    // If after looping we are over the target limit, it means we have reached the end
-                    // in which case we reset the position to the last target we attacked, and break
-                    if (_attackNumber >= widget.attackIdList.length - 1) {
-                      _attackNumber = originalPosition;
-                      reachedEnd = true;
-                      break;
-                    }
-                  }
-                  // If there is an error getting a target, don't skip
-                  else {
-                    _factionName = "";
-                    _lastOnline = 0;
-                    break;
-                  }
-                }
-
-                if (targetsSkipped > 0 && !reachedEnd) {
-                  BotToast.showText(
-                    text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
-                        "country",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.grey[600],
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                }
-
-                if (targetsSkipped > 0 && reachedEnd) {
-                  BotToast.showText(
-                    text: "No more targets, all remaining are either in jail, hospital or in a different "
-                        "country (${skippedNames.join(", ")})",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.grey[600],
-                    duration: Duration(seconds: 5),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-
-                  setState(() {
-                    _nextButtonPressed = false;
-                  });
-                  return;
-                }
-              }
-              // If skipping is disabled but notes are not, we still get information
-              // from the API
-              else {
-                if (_showOnlineFactionWarning) {
-                  var nextTarget =
-                      await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1])
-                          .getTarget;
-
-                  if (nextTarget is TargetModel) {
-                    _factionName = nextTarget.faction.factionName;
-                    _lastOnline = nextTarget.lastAction.timestamp;
-                  } else {
-                    _factionName = "";
-                    _lastOnline = 0;
-                  }
-                }
-              }
-
-              _attackNumber++;
-              await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
-              _attackedIds.add(widget.attackIdList[_attackNumber]);
-              setState(() {
-                _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
-              });
-              _backButtonPopsContext = true;
-
-              // Turn button back to usable
-              setState(() {
-                _nextButtonPressed = false;
-              });
-
-              // Show note for next target
-              if (_showNotes) {
-                _showNoteToast();
-              }
-            },
+      onPressed: _nextButtonPressed ? null : () => _launchNextAttack(),
     );
+  }
+
+  void _assessFirstTargetsOnLaunch() async {
+    if (_skippingEnabled) {
+      // Counters for target skipping
+      int targetsSkipped = 0;
+      var originalPosition = _attackNumber;
+      bool reachedEnd = false;
+      var skippedNames = [];
+
+      // We'll skip maximum of 3 targets
+      for (var i = 0; i < 3; i++) {
+        // Get the status of our next target
+        var nextTarget =
+            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[i]).getTarget;
+
+        if (nextTarget is TargetModel) {
+          // If in hospital or jail (even in a different country), we skip
+          if (nextTarget.status.color == "red") {
+            targetsSkipped++;
+            skippedNames.add(nextTarget.name);
+            _attackNumber++;
+          }
+          // If flying, we need to see if he is in a different country (if we are in the same
+          // place, we can attack him)
+          else if (nextTarget.status.color == "blue") {
+            var user =
+                await TornApiCaller.target(_userProv.basic.userApiKey, _userProv.basic.playerId.toString()).getTarget;
+            if (user is TargetModel) {
+              if (user.status.description != nextTarget.status.description) {
+                targetsSkipped++;
+                skippedNames.add(nextTarget.name);
+                _attackNumber++;
+              }
+            }
+          }
+          // If we found a good target, we break here. But before, we gather
+          // some more details if option is enabled
+          else {
+            if (_showOnlineFactionWarning) {
+              _factionName = nextTarget.faction.factionName;
+              _lastOnline = nextTarget.lastAction.timestamp;
+            }
+            break;
+          }
+          // If after looping we are over the target limit, it means we have reached the end
+          // in which case we reset the position to the last target we attacked, and break
+          if (_attackNumber >= widget.attackIdList.length) {
+            _attackNumber = originalPosition;
+            reachedEnd = true;
+            break;
+          }
+        }
+        // If there is an error getting a target, don't skip
+        else {
+          _factionName = "";
+          _lastOnline = 0;
+          break;
+        }
+      }
+
+      if (targetsSkipped > 0 && !reachedEnd) {
+        BotToast.showText(
+          text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+              "country",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+
+        var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+        if (!mounted) return;
+        await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+        _attackedIds.add(widget.attackIdList[_attackNumber]);
+        setState(() {
+          _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
+        });
+
+        // Show note for next target
+        if (_showNotes) {
+          _showNoteToast();
+        }
+
+        return;
+      }
+
+      if (targetsSkipped > 0 && reachedEnd) {
+        BotToast.showText(
+          text: "No more targets, all remaining are either in jail, hospital or in a different "
+              "country (${skippedNames.join(", ")})",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+
+        return;
+      }
+    }
+
+    // This will show the note of the first target, if applicable
+    if (_showNotes) {
+      if (_showOnlineFactionWarning) {
+        var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0]).getTarget;
+        if (nextTarget is TargetModel) {
+          _factionName = nextTarget.faction.factionName;
+          _lastOnline = nextTarget.lastAction.timestamp;
+        }
+      }
+      _showNoteToast();
+    }
+  }
+
+  /// Not to be used right after launch
+  void _launchNextAttack() async {
+    var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+    // Turn button grey
+    setState(() {
+      _nextButtonPressed = true;
+    });
+
+    if (_skippingEnabled) {
+      // Counters for target skipping
+      int targetsSkipped = 0;
+      var originalPosition = _attackNumber;
+      bool reachedEnd = false;
+      var skippedNames = [];
+
+      // We'll skip maximum of 3 targets
+      for (var i = 0; i < 3; i++) {
+        // Get the status of our next target
+        var nextTarget =
+            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1]).getTarget;
+
+        if (nextTarget is TargetModel) {
+          // If in hospital or jail (even in a different country), we skip
+          if (nextTarget.status.color == "red") {
+            targetsSkipped++;
+            skippedNames.add(nextTarget.name);
+            _attackNumber++;
+          }
+          // If flying, we need to see if he is in a different country (if we are in the same
+          // place, we can attack him)
+          else if (nextTarget.status.color == "blue") {
+            var user =
+                await TornApiCaller.target(_userProv.basic.userApiKey, _userProv.basic.playerId.toString()).getTarget;
+            if (user is TargetModel) {
+              if (user.status.description != nextTarget.status.description) {
+                targetsSkipped++;
+                skippedNames.add(nextTarget.name);
+                _attackNumber++;
+              }
+            }
+          }
+          // If we found a good target, we break here. But before, we gather
+          // some more details if option is enabled
+          else {
+            if (_showOnlineFactionWarning) {
+              _factionName = nextTarget.faction.factionName;
+              _lastOnline = nextTarget.lastAction.timestamp;
+            }
+            break;
+          }
+          // If after looping we are over the target limit, it means we have reached the end
+          // in which case we reset the position to the last target we attacked, and break
+          if (_attackNumber >= widget.attackIdList.length - 1) {
+            _attackNumber = originalPosition;
+            reachedEnd = true;
+            break;
+          }
+        }
+        // If there is an error getting a target, don't skip
+        else {
+          _factionName = "";
+          _lastOnline = 0;
+          break;
+        }
+      }
+
+      if (targetsSkipped > 0 && !reachedEnd) {
+        BotToast.showText(
+          text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+              "country",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+
+      if (targetsSkipped > 0 && reachedEnd) {
+        BotToast.showText(
+          text: "No more targets, all remaining are either in jail, hospital or in a different "
+              "country (${skippedNames.join(", ")})",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+
+        setState(() {
+          _nextButtonPressed = false;
+        });
+        return;
+      }
+    }
+    // If skipping is disabled but notes are not, we still get information
+    // from the API
+    else {
+      if (_showOnlineFactionWarning) {
+        var nextTarget =
+            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1]).getTarget;
+
+        if (nextTarget is TargetModel) {
+          _factionName = nextTarget.faction.factionName;
+          _lastOnline = nextTarget.lastAction.timestamp;
+        } else {
+          _factionName = "";
+          _lastOnline = 0;
+        }
+      }
+    }
+
+    _attackNumber++;
+    if (!mounted) return;
+    await _webViewController.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+    _attackedIds.add(widget.attackIdList[_attackNumber]);
+    setState(() {
+      _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
+    });
+    _backButtonPopsContext = true;
+
+    // Turn button back to usable
+    setState(() {
+      _nextButtonPressed = false;
+    });
+
+    // Show note for next target
+    if (_showNotes) {
+      _showNoteToast();
+    }
   }
 
   Widget _medicalActionButton() {
@@ -673,6 +793,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
   }
 
+  /// Use [onlyOne] when we want to get rid of several notes (e.g. to skip the very first target(s)
+  /// without showing the notes for the ones skipped)
   void _showNoteToast() {
     Color cardColor;
     switch (widget.attackNotesColorList[_attackNumber]) {
@@ -723,6 +845,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
 
     BotToast.showCustomText(
+      onlyOne: false,
       clickClose: true,
       ignoreContentClick: true,
       duration: Duration(seconds: 5),
@@ -917,20 +1040,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     _skippingEnabled = await Prefs().getTargetSkipping();
     _showNotes = await Prefs().getShowTargetsNotes();
     _showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-
-    // This will show the note of the first target, if applicable
-    if (_showNotes) {
-      if (_showOnlineFactionWarning) {
-        var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0]).getTarget;
-
-        if (nextTarget is TargetModel) {
-          _factionName = nextTarget.faction.factionName;
-          _lastOnline = nextTarget.lastAction.timestamp;
-        }
-      }
-
-      _showNoteToast();
-    }
   }
 
   Future<bool> _willPopCallback() async {
