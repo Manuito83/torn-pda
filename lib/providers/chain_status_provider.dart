@@ -38,7 +38,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   bool _soundEnabled = true;
-  
+
   bool get soundEnabled {
     return _soundEnabled;
   }
@@ -50,7 +50,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   bool _vibrationEnabled = true;
-  
+
   bool get vibrationEnabled {
     return _vibrationEnabled;
   }
@@ -62,7 +62,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   bool _notificationsEnabled = true;
- 
+
   bool get notificationsEnabled {
     return _notificationsEnabled;
   }
@@ -723,6 +723,7 @@ class ChainStatusProvider extends ChangeNotifier {
     _red2Enabled = true;
     _red2Max = 30;
     _red2Min = 0;
+    _panicValue = 40;
     notifyListeners();
     _saveSettings();
   }
@@ -1736,7 +1737,7 @@ class ChainStatusProvider extends ChangeNotifier {
     Prefs().setChainWatcherSound(_soundEnabled);
     Prefs().setChainWatcherVibration(_vibrationEnabled);
     Prefs().setChainWatcherNotificationsEnabled(_notificationsEnabled);
-    
+
     ChainWatcherSettings model = ChainWatcherSettings()
       ..green2Enabled = green2Enabled
       ..green2Max = _green2Max

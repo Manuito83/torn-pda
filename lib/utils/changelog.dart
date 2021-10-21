@@ -43,11 +43,15 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_0.main.version = 'Torn PDA v2.6.0';
     v2_6_0.main.date = 'XX OCT 2021';
     String feat2_6_0_1 = "Chaining: added War section";
-    String feat2_6_0_2 = "Alerts (refills): you can now choose the notification time";
-    String feat2_6_0_3 = "Alerts (stock market): added overall value and profit information";
+    String feat2_6_0_2 = "Chain widget: added Panic Mode";
+    String feat2_6_0_3 = "Chain widget: you can now choose the alert activation triggers";
+    String feat2_6_0_4 = "Alerts (refills): you can now choose the notification time";
+    String feat2_6_0_5 = "Alerts (stock market): added overall value and profit information";
     v2_6_0.features.add(feat2_6_0_1);
     v2_6_0.features.add(feat2_6_0_2);
     v2_6_0.features.add(feat2_6_0_3);
+    v2_6_0.features.add(feat2_6_0_4);
+    v2_6_0.features.add(feat2_6_0_5);
 
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();
