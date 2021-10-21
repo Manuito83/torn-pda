@@ -247,7 +247,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                 width: 30,
                 child: GestureDetector(
                   child: Icon(
-                    Icons.settings,
+                    Icons.settings_outlined,
+                    color: widget.alwaysDarkBackground ? Colors.grey : _themeProvider.mainText,
                   ),
                   onTap: () {
                     Get.to(() => ChainWidgetOptions());
