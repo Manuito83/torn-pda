@@ -2,7 +2,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
@@ -58,14 +57,16 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      SizedBox(height: 10),
-                      Text("GENERAL", style: TextStyle(fontSize: 11)),
+                      SizedBox(height: 15),
+                      Text("GENERAL SETTINGS", style: TextStyle(fontSize: 11)),
                       _generalSettings(),
                       Divider(),
+                      SizedBox(height: 5),
                       Text("PANIC MODE", style: TextStyle(fontSize: 11)),
                       _panicMode(),
                       Divider(),
-                      Text("PRESET ALERTS", style: TextStyle(fontSize: 11)),
+                      SizedBox(height: 5),
+                      Text("ALERT LEVELS", style: TextStyle(fontSize: 11)),
                       _greenLevel2(),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 100),
@@ -278,7 +279,12 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Text("Green pulse"),
+            Text(
+              "Green pulse",
+              style: TextStyle(
+                color: _chainStatusProvider.green2Enabled ? _themeProvider.mainText : Colors.grey,
+              ),
+            ),
             Switch(
               value: _chainStatusProvider.green2Enabled,
               onChanged: (value) {
@@ -347,26 +353,55 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Row(
-              children: [
-                Text("Orange pulse + "),
-                GestureDetector(
-                  child: Icon(
-                    Icons.chat_bubble_outline,
-                    size: 18,
-                  ),
-                  onTap: () {
-                    _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
-                  },
-                ),
-                Text(" + caution "),
-                GestureDetector(
-                  child: Icon(
-                    Icons.volume_up,
-                    size: 20,
-                  ),
-                  onTap: () {
-                    _audioCache.play('../sounds/alerts/alert1.wav');
-                  },
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Row(
+                  children: [
+                    Text(
+                      "Orange pulse + ",
+                      style: TextStyle(
+                        color: _chainStatusProvider.orange1Enabled ? _themeProvider.mainText : Colors.grey,
+                      ),
+                    ),
+                    GestureDetector(
+                      child: Icon(
+                        Icons.chat_bubble_outline,
+                        size: 18,
+                        color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.notificationsEnabled
+                            ? _themeProvider.mainText
+                            : Colors.grey,
+                      ),
+                      onTap: () {
+                        _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
+                      },
+                    ),
+                    Text(
+                      " + ",
+                      style: TextStyle(
+                        color: _chainStatusProvider.orange1Enabled ? _themeProvider.mainText : Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      " caution ",
+                      style: TextStyle(
+                        color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.soundEnabled
+                            ? _themeProvider.mainText
+                            : Colors.grey,
+                      ),
+                    ),
+                    GestureDetector(
+                      child: Icon(
+                        Icons.volume_up,
+                        size: 20,
+                        color: _chainStatusProvider.orange1Enabled && _chainStatusProvider.soundEnabled
+                            ? _themeProvider.mainText
+                            : Colors.grey,
+                      ),
+                      onTap: () {
+                        _audioCache.play('../sounds/alerts/alert1.wav');
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -439,21 +474,45 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Orange pulse + "),
+                Text(
+                  "Orange pulse + ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.orange2Enabled ? _themeProvider.mainText : Colors.grey,
+                  ),
+                ),
                 GestureDetector(
                   child: Icon(
                     Icons.chat_bubble_outline,
                     size: 18,
+                    color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.notificationsEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
                   },
                 ),
-                Text(" + warning "),
+                Text(
+                  " + ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.orange2Enabled ? _themeProvider.mainText : Colors.grey,
+                  ),
+                ),
+                Text(
+                  " warning ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
+                  ),
+                ),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
                     size: 20,
+                    color: _chainStatusProvider.orange2Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     _audioCache.play('../sounds/alerts/alert2.wav');
@@ -530,23 +589,45 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Red pulse + "),
-                // TODO!! Only show if notifications active!
+                Text(
+                  "Red pulse + ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.red1Enabled ? _themeProvider.mainText : Colors.grey,
+                  ),
+                ),
                 GestureDetector(
                   child: Icon(
                     Icons.chat_bubble_outline,
                     size: 18,
+                    color: _chainStatusProvider.red1Enabled && _chainStatusProvider.notificationsEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
                   },
                 ),
-                Text(" + caution "),
-                // TODO!! Only show if sound active!
+                Text(
+                  " + ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.red1Enabled ? _themeProvider.mainText : Colors.grey,
+                  ),
+                ),
+                Text(
+                  " caution ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.red1Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
+                  ),
+                ),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
                     size: 20,
+                    color: _chainStatusProvider.red1Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     _audioCache.play('../sounds/alerts/warning1.wav');
@@ -623,21 +704,45 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
           children: <Widget>[
             Row(
               children: [
-                Text("Red pulse + "),
+                Text(
+                  "Red pulse + ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.red2Enabled ? _themeProvider.mainText : Colors.grey,
+                  ),
+                ),
                 GestureDetector(
                   child: Icon(
                     Icons.chat_bubble_outline,
                     size: 18,
+                    color: _chainStatusProvider.red2Enabled && _chainStatusProvider.notificationsEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     _chainStatusProvider.showNotification(555, "", "CHAIN ALERT!", "XX:XX time remaining!");
                   },
                 ),
-                Text(" + warning "),
+                Text(
+                  " + ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.red2Enabled ? _themeProvider.mainText : Colors.grey,
+                  ),
+                ),
+                Text(
+                  " warning ",
+                  style: TextStyle(
+                    color: _chainStatusProvider.red2Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
+                  ),
+                ),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
                     size: 20,
+                    color: _chainStatusProvider.red2Enabled && _chainStatusProvider.soundEnabled
+                        ? _themeProvider.mainText
+                        : Colors.grey,
                   ),
                   onTap: () {
                     _audioCache.play('../sounds/alerts/warning2.wav');
@@ -1054,6 +1159,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                               if (target is TargetModel) {
                                 inputId = target.faction.factionId.toString();
                                 _chainProvider.addPanicTarget(target);
+                                message = "Added ${target.name}!";
                               } else {
                                 message = "Can't locate the given target!";
                                 messageColor = Colors.orange[700];
