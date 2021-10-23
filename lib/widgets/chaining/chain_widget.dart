@@ -21,11 +21,13 @@ import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 class ChainWidget extends StatefulWidget {
   final String userKey;
   final bool alwaysDarkBackground;
+  final Function callBackOptions;
 
   ChainWidget({
     @required Key key,
     @required this.userKey,
     @required this.alwaysDarkBackground,
+    this.callBackOptions,
   }) : super(key: key);
 
   @override
@@ -251,7 +253,11 @@ class _ChainWidgetState extends State<ChainWidget> {
                     color: widget.alwaysDarkBackground ? Colors.grey : _themeProvider.mainText,
                   ),
                   onTap: () {
-                    Get.to(() => ChainWidgetOptions());
+                    Get.to(
+                      () => ChainWidgetOptions(
+                        callBackOptions: _callBackChainOptions,
+                      ),
+                    );
                   },
                 ),
               ),
@@ -263,6 +269,12 @@ class _ChainWidgetState extends State<ChainWidget> {
         ),
       ),
     );
+  }
+
+  void _callBackChainOptions() {
+    setState(() {
+      widget.callBackOptions();
+    });
   }
 
   var lastReported = WatchDefcon.red1;

@@ -231,6 +231,7 @@ class _TargetsPageState extends State<TargetsPage> {
           key: _chainWidgetKey,
           userKey: widget.userKey,
           alwaysDarkBackground: false,
+          callBackOptions: _callBackChainOptions,
         ),
         if (_targetsProvider.currentColorFilterOut.isNotEmpty)
           Padding(
@@ -862,5 +863,11 @@ class _TargetsPageState extends State<TargetsPage> {
 
   Future _restorePreferences() async {
     _yataButtonEnabled = await Prefs().getYataTargetsEnabled();
+  }
+
+  void _callBackChainOptions() {
+    setState(() {
+      // Makes sure to update cards' border when out of panic options
+    });
   }
 }

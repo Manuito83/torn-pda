@@ -7,8 +7,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
+import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
-import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -32,8 +32,8 @@ enum WatchDefcon {
 }
 
 class ChainStatusProvider extends ChangeNotifier {
-  List<TargetModel> _panicTargets = <TargetModel>[];
-  List<TargetModel> get panicTargets {
+  List<PanicTargetModel> _panicTargets = <PanicTargetModel>[];
+  List<PanicTargetModel> get panicTargets {
     return _panicTargets;
   }
 
@@ -187,14 +187,27 @@ class ChainStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addPanicTarget(TargetModel target) {
+  void addPanicTarget(PanicTargetModel target) {
     panicTargets.add(target);
     notifyListeners();
     _saveSettings();
   }
 
-  void removePanicTarget(TargetModel target) {
-    panicTargets.removeWhere((element) => element.playerId == target.playerId);
+  void removePanicTarget(PanicTargetModel target) {
+    panicTargets.removeWhere((element) => element.id == target.id);
+    notifyListeners();
+    _saveSettings();
+  }
+
+  
+  void reorderPanicTarget(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      // removing the item at oldIndex will shorten the list by 1
+      newIndex -= 1;
+    }
+    var oldItem = panicTargets[oldIndex];
+    panicTargets.removeAt(oldIndex);
+    panicTargets.insert(newIndex, oldItem);
     notifyListeners();
     _saveSettings();
   }
@@ -383,7 +396,7 @@ class ChainStatusProvider extends ChangeNotifier {
               List<String> attackNotesColorList = <String>[];
               List<String> attackNotesList = <String>[];
               for (var tar in panicTargets) {
-                attacksIds.add(tar.playerId.toString());
+                attacksIds.add(tar.id.toString());
                 attacksNames.add(tar.name);
                 attackNotesColorList.add('z');
                 attackNotesList.add('');
@@ -545,7 +558,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
     List<String> savedPanicTargets = await Prefs().getChainWatcherPanicTargets();
     for (String p in savedPanicTargets) {
-      panicTargets.add(targetModelFromJson(p));
+      panicTargets.add(panicTargetModelFromJson(p));
     }
   }
 
@@ -1759,8 +1772,8 @@ class ChainStatusProvider extends ChangeNotifier {
     Prefs().setChainWatcherSettings(chainWatcherModelToJson(model));
 
     List<String> panicTargetsModel = <String>[];
-    for (TargetModel p in panicTargets) {
-      panicTargetsModel.add(targetModelToJson(p));
+    for (PanicTargetModel p in panicTargets) {
+      panicTargetsModel.add(panicTargetModelToJson(p));
     }
     Prefs().setChainWatcherPanicTargets(panicTargetsModel);
   }

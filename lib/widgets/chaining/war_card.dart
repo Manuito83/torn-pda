@@ -13,7 +13,9 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
@@ -47,6 +49,7 @@ class _WarCardState extends State<WarCard> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
+  ChainStatusProvider _chainProvider;
 
   Timer _updatedTicker;
   Timer _lifeTicker;
@@ -63,6 +66,9 @@ class _WarCardState extends State<WarCard> {
   void initState() {
     super.initState();
     _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
   }
 
   @override
@@ -77,19 +83,21 @@ class _WarCardState extends State<WarCard> {
     _member = widget.memberModel;
     _returnLastUpdated();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
-      key: UniqueKey(),
       actionPane: SlidableDrawerActionPane(),
       actionExtentRatio: 0.25,
+      // Issues with Percent Indicator
+      /*
       dismissal: SlidableDismissal(
         child: SlidableDrawerDismissal(),
         resizeDuration: Duration(seconds: 1),
         onDismissed: (actionType) {
           _w.hideMember(_member);
         },
+        // Only dismiss left
+        dismissThresholds: <SlideActionType, double>{SlideActionType.primary: 0.0},
       ),
+      */
       actions: <Widget>[
         IconSlideAction(
           caption: 'Hide',
@@ -97,6 +105,49 @@ class _WarCardState extends State<WarCard> {
           icon: Icons.delete,
           onTap: () {
             _w.hideMember(_member);
+          },
+        ),
+      ],
+      secondaryActions: <Widget>[
+        IconSlideAction(
+          caption: 'Add to panic!',
+          color: Colors.blue,
+          icon: MdiIcons.alphaPCircleOutline,
+          onTap: () {
+            String message = "Added ${_member.name} as a Panic Mode target!";
+            Color messageColor = Colors.green;
+
+            if (_chainProvider.panicTargets.where((t) => t.name == _member.name).length > 0) {
+              message = "${_member.name} is already in your Panic Mode list!";
+              messageColor = Colors.orange[700];
+            } else {
+              if (_chainProvider.panicTargets.length < 10) {
+                setState(() {
+                  _chainProvider.addPanicTarget(
+                    PanicTargetModel()
+                      ..name = _member.name
+                      ..level = _member.level
+                      ..id = _member.memberId
+                      ..factionName = _member.factionName,
+                  );
+                  // Convert to target with the needed fields
+                });
+              } else {
+                message = "There are already 10 targets in the Panic Mode list, remove some!";
+                messageColor = Colors.orange[700];
+              }
+            }
+
+            BotToast.showText(
+              text: message,
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: messageColor,
+              duration: Duration(seconds: 5),
+              contentPadding: EdgeInsets.all(10),
+            );
           },
         ),
       ],
@@ -108,189 +159,211 @@ class _WarCardState extends State<WarCard> {
           },
           child: Card(
             shape: RoundedRectangleBorder(
-                side: BorderSide(color: _borderColor(), width: 1.5), borderRadius: BorderRadius.circular(4.0)),
+              side: BorderSide(color: _borderColor(), width: 1.5),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
             elevation: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                // LINE 1
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(15, 5, 10, 0),
-                  child: Row(
-                    children: <Widget>[
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: BorderSide(
+                      color: _chainProvider.panicTargets.where((t) => t.name == _member.name).length > 0
+                          ? Colors.blue
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // LINE 1
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(15, 5, 10, 0),
+                      child: Row(
                         children: <Widget>[
-                          _attackIcon(),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 5),
-                          ),
-                          SizedBox(
-                            width: 95,
-                            child: Text(
-                              '${_member.name}',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              _attackIcon(),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 5),
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Flexible(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          mainAxisSize: MainAxisSize.max,
-                          children: <Widget>[
-                            SizedBox(width: 3),
-                            _factionName(),
-                            SizedBox(width: 3),
-                            Text(
-                              'L${_member.level}',
-                            ),
-                            Row(
-                              children: [
-                                SizedBox(
-                                  height: 22,
-                                  width: 30,
-                                  child: _addAsTargetButton(),
+                              SizedBox(
+                                width: 95,
+                                child: Text(
+                                  '${_member.name}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                SizedBox(width: 5),
-                                SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: _refreshIcon(),
+                              ),
+                            ],
+                          ),
+                          Flexible(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisSize: MainAxisSize.max,
+                              children: <Widget>[
+                                SizedBox(width: 3),
+                                _factionName(),
+                                SizedBox(width: 3),
+                                Text(
+                                  'L${_member.level}',
+                                ),
+                                Row(
+                                  children: [
+                                    SizedBox(
+                                      height: 22,
+                                      width: 30,
+                                      child: _addAsTargetButton(),
+                                    ),
+                                    SizedBox(width: 5),
+                                    SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: _refreshIcon(),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // LINE 2
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    mainAxisSize: MainAxisSize.max,
-                    children: <Widget>[
-                      _returnRespectFF(_member.respectGain, _member.fairFight),
-                      _returnHealth(_member),
-                    ],
-                  ),
-                ),
-                // LINE 3
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(17, 5, 15, 0),
-                  child: Row(
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          _travelIcon(),
-                          GestureDetector(
-                            child: _member.lastAction.status == "Offline"
-                                ? Icon(Icons.remove_circle, size: 16, color: Colors.grey)
-                                : _member.lastAction.status == "Idle"
-                                    ? Icon(Icons.adjust, size: 16, color: Colors.orange)
-                                    : Icon(Icons.circle, size: 16, color: Colors.green[400]),
-                            onTap: () {
-                              BotToast.showText(
-                                text: HtmlParser.fix('Online '
-                                    '${_member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative}'),
-                                textStyle: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.grey[800],
-                                duration: Duration(seconds: 5),
-                                contentPadding: EdgeInsets.all(10),
-                              );
-                            },
                           ),
-                          SizedBox(width: 8),
-                          _statsWidget(),
                         ],
                       ),
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            Icon(Icons.refresh, size: 14),
-                            Text(
-                              ' $_lastUpdatedString',
-                              style: TextStyle(
-                                color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
-                                fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
+                    ),
+                    // LINE 2
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.max,
+                        children: <Widget>[
+                          _returnRespectFF(_member.respectGain, _member.fairFight),
+                          _returnHealth(_member),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                // LINE 4
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(10, 5, 15, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Row(
-                          children: <Widget>[
-                            SizedBox(
-                              width: 30,
-                              height: 20,
-                              child: IconButton(
-                                padding: EdgeInsets.all(0),
-                                iconSize: 20,
-                                icon: Icon(
-                                  MdiIcons.notebookEditOutline,
-                                  color: _returnTargetNoteColor(),
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  _showNotesDialog();
+                    ),
+                    // LINE 3
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(17, 5, 15, 0),
+                      child: Row(
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              _travelIcon(),
+                              GestureDetector(
+                                child: _member.lastAction.status == "Offline"
+                                    ? Icon(Icons.remove_circle, size: 16, color: Colors.grey)
+                                    : _member.lastAction.status == "Idle"
+                                        ? Icon(Icons.adjust, size: 16, color: Colors.orange)
+                                        : Icon(Icons.circle, size: 16, color: Colors.green[400]),
+                                onTap: () {
+                                  BotToast.showText(
+                                    text: HtmlParser.fix('Online '
+                                        '${_member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative}'),
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.grey[800],
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
                                 },
                               ),
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              'Notes: ',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            Flexible(
-                              child: Text(
-                                '${_member.personalNote}',
-                                style: TextStyle(
-                                  color: _returnTargetNoteColor(),
-                                  fontSize: 12,
+                              SizedBox(width: 8),
+                              _statsWidget(),
+                            ],
+                          ),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                Icon(Icons.refresh, size: 14),
+                                Text(
+                                  ' $_lastUpdatedString',
+                                  style: TextStyle(
+                                    color:
+                                        _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
+                                    fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
+                                    fontSize: 13,
+                                  ),
                                 ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // LINE 4
+                    Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(10, 5, 15, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Row(
+                              children: <Widget>[
+                                SizedBox(
+                                  width: 30,
+                                  height: 20,
+                                  child: IconButton(
+                                    padding: EdgeInsets.all(0),
+                                    iconSize: 20,
+                                    icon: Icon(
+                                      MdiIcons.notebookEditOutline,
+                                      color: _returnTargetNoteColor(),
+                                      size: 18,
+                                    ),
+                                    onPressed: () {
+                                      _showNotesDialog();
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Notes: ',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    '${_member.personalNote}',
+                                    style: TextStyle(
+                                      color: _returnTargetNoteColor(),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 2),
+                            child: Text(
+                              '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId) + 1}'
+                              '/${_w.orderedCardsDetails.length}',
+                              style: TextStyle(
+                                color: Colors.brown[400],
+                                fontSize: 11,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 2),
-                        child: Text(
-                          '${_w.orderedCardsDetails.indexWhere((element) => element.memberId == _member.memberId)}'
-                          '/${_w.orderedCardsDetails.length}',
-                          style: TextStyle(
-                            color: Colors.brown[400],
-                            fontSize: 11,
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 10),
+                  ],
                 ),
-                SizedBox(height: 10),
-              ],
+              ),
             ),
           ),
         ),
@@ -645,15 +718,17 @@ class _WarCardState extends State<WarCard> {
           'Life ',
           style: TextStyle(fontSize: 13),
         ),
-        LinearPercentIndicator(
-          width: 100,
-          lineHeight: 14,
-          progressColor: lifeBarColor,
-          center: Text(
-            lifeText,
-            style: TextStyle(color: Colors.black, fontSize: 12),
+        Flexible(
+          child: LinearPercentIndicator(
+            width: 100,
+            lineHeight: 14,
+            progressColor: lifeBarColor,
+            center: Text(
+              lifeText,
+              style: TextStyle(color: Colors.black, fontSize: 12),
+            ),
+            percent: lifePercentage == null ? 0 : lifePercentage,
           ),
-          percent: lifePercentage == null ? 0 : lifePercentage,
         ),
         hospitalWarning,
       ],

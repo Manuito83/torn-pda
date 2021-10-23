@@ -166,6 +166,7 @@ class _WarPageState extends State<WarPage> {
               key: _chainWidgetKey,
               userKey: widget.userKey,
               alwaysDarkBackground: false,
+              callBackOptions: _callBackChainOptions,
             ),
           context.orientation == Orientation.portrait
               ? Flexible(
@@ -393,6 +394,12 @@ class _WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.colorAsc);
         break;
     }
+  }
+
+  void _callBackChainOptions() {
+    setState(() {
+      // Makes sure to update cards' border when out of panic options
+    });
   }
 }
 
