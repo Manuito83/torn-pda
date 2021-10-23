@@ -47,11 +47,13 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_0_3 = "Chain widget: you can now choose the alert activation triggers";
     String feat2_6_0_4 = "Alerts (refills): you can now choose the notification time";
     String feat2_6_0_5 = "Alerts (stock market): added overall value and profit information";
+    String feat2_6_0_6 = "Friendly factions can now be added using members' IDs";
     v2_6_0.features.add(feat2_6_0_1);
     v2_6_0.features.add(feat2_6_0_2);
     v2_6_0.features.add(feat2_6_0_3);
     v2_6_0.features.add(feat2_6_0_4);
     v2_6_0.features.add(feat2_6_0_5);
+    v2_6_0.features.add(feat2_6_0_6);
 
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();

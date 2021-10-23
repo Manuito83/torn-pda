@@ -427,191 +427,182 @@ class AddFactionDialog extends StatelessWidget {
       ),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
-      content: Stack(
-        children: <Widget>[
-          SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.only(
-                top: 45,
-                bottom: 16,
-                left: 16,
-                right: 16,
+      content: Container(
+        width: double.maxFinite,
+        padding: const EdgeInsets.only(
+          top: 45,
+          bottom: 16,
+          left: 16,
+          right: 16,
+        ),
+        margin: const EdgeInsets.only(top: 30),
+        decoration: BoxDecoration(
+          color: themeProvider.background,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10.0,
+              offset: Offset(0.0, 10.0),
+            ),
+          ],
+        ),
+        child: Form(
+          key: addFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // To make the card compact
+            children: <Widget>[
+              Text(
+                "Add Faction to War",
+                style: const TextStyle(fontSize: 13),
               ),
-              margin: const EdgeInsets.only(top: 30),
-              decoration: BoxDecoration(
-                color: themeProvider.background,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10.0,
-                    offset: Offset(0.0, 10.0),
+              SizedBox(height: 5),
+              Text(
+                "Press the icon to the right to switch between faction ID or player ID input",
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 15),
+              Row(
+                children: [
+                  Flexible(
+                    child: TextFormField(
+                      style: const TextStyle(fontSize: 14),
+                      controller: addIdController,
+                      maxLength: 10,
+                      minLines: 1,
+                      maxLines: 2,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        counterText: "",
+                        border: OutlineInputBorder(),
+                        labelText: !warController.addFromUserId ? 'Insert faction ID' : 'Insert user ID',
+                      ),
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return "Cannot be empty!";
+                        }
+                        final n = num.tryParse(value);
+                        if (n == null) {
+                          return '$value is not a valid ID!';
+                        }
+                        addIdController.text = value.trim();
+                        return null;
+                      },
+                    ),
+                  ),
+                  IconButton(
+                    icon: warController.addFromUserId
+                        ? Image.asset(
+                            'images/icons/faction.png',
+                            color: themeProvider.mainText,
+                            width: 16,
+                          )
+                        : Icon(Icons.person),
+                    onPressed: () {
+                      warController.toggleAddFromUserId();
+                    },
                   ),
                 ],
               ),
-              child: Form(
-                key: addFormKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min, // To make the card compact
-                  children: <Widget>[
-                    Row(
-                      children: [
-                        Flexible(
-                          child: TextFormField(
-                            style: const TextStyle(fontSize: 14),
-                            controller: addIdController,
-                            maxLength: 10,
-                            minLines: 1,
-                            maxLines: 2,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              counterText: "",
-                              border: OutlineInputBorder(),
-                              labelText: !warController.addFromUserId ? 'Insert faction ID' : 'Insert user ID',
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Cannot be empty!";
-                              }
-                              final n = num.tryParse(value);
-                              if (n == null) {
-                                return '$value is not a valid ID!';
-                              }
-                              addIdController.text = value.trim();
-                              return null;
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          icon: warController.addFromUserId
-                              ? Image.asset(
-                                  'images/icons/faction.png',
-                                  color: themeProvider.mainText,
-                                  width: 16,
-                                )
-                              : Icon(Icons.person),
-                          onPressed: () {
-                            warController.toggleAddFromUserId();
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16.0),
-                    factionCards(),
-                    const SizedBox(height: 16.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        TextButton(
-                          child: const Text("Add"),
-                          onPressed: () async {
-                            if (addFormKey.currentState.validate()) {
-                              FocusScopeNode currentFocus = FocusScope.of(context);
-                              if (!currentFocus.hasPrimaryFocus) {
-                                currentFocus.unfocus();
-                              }
-                              // Copy controller's text ot local variable
-                              // early and delete the global, so that text
-                              // does not appear again in case of failure
-                              String inputId = addIdController.text;
-                              addIdController.text = '';
+              const SizedBox(height: 16.0),
+              Expanded(
+                child: factionCards(),
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  TextButton(
+                    child: const Text("Add"),
+                    onPressed: () async {
+                      if (addFormKey.currentState.validate()) {
+                        FocusScopeNode currentFocus = FocusScope.of(context);
+                        if (!currentFocus.hasPrimaryFocus) {
+                          currentFocus.unfocus();
+                        }
+                        // Copy controller's text ot local variable
+                        // early and delete the global, so that text
+                        // does not appear again in case of failure
+                        String inputId = addIdController.text;
+                        addIdController.text = '';
 
-                              // If an user ID was inserted, we need to transform it first
-                              if (warController.addFromUserId) {
-                                dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
-                                String convertError = "";
-                                if (target is TargetModel) {
-                                  inputId = target.faction.factionId.toString();
-                                  if (inputId == "0") {
-                                    convertError = "${target.name} does not belong to a faction!";
-                                  }
-                                } else {
-                                  convertError = "Can't locate the given target!";
-                                }
-
-                                if (convertError.isNotEmpty) {
-                                  BotToast.showText(
-                                    text: convertError,
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.orange[700],
-                                    duration: const Duration(seconds: 3),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                  return;
-                                }
-                              }
-
-                              final addFactionResult = await warController.addFaction(inputId, targets);
-
-                              Color messageColor = Colors.green;
-                              if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
-                                messageColor = Colors.orange[700];
-                              }
-
-                              int time = 5;
-                              String message = 'Added $addFactionResult [$inputId]!'
-                                  '\n\nUpdate members/global to get more information (life, stats).';
-
-                              if (addFactionResult.isEmpty) {
-                                message = 'Error adding $inputId';
-                                time = 3;
-                              } else if (addFactionResult == "error_existing") {
-                                message = 'Faction $inputId is already in the list!';
-                                time = 3;
-                              }
-
-                              BotToast.showText(
-                                text: message,
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: messageColor,
-                                duration: Duration(seconds: time),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
+                        // If an user ID was inserted, we need to transform it first
+                        if (warController.addFromUserId) {
+                          dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                          String convertError = "";
+                          if (target is TargetModel) {
+                            inputId = target.faction.factionId.toString();
+                            if (inputId == "0") {
+                              convertError = "${target.name} does not belong to a faction!";
                             }
-                          },
-                        ),
-                        TextButton(
-                          child: const Text("Close"),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            addIdController.text = '';
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            child: CircleAvatar(
-              radius: 26,
-              backgroundColor: themeProvider.background,
-              child: CircleAvatar(
-                backgroundColor: themeProvider.mainText,
-                radius: 22,
-                child: SizedBox(
-                  height: 22,
-                  width: 22,
-                  child: Image.asset(
-                    'images/icons/faction.png',
-                    color: themeProvider.background,
+                          } else {
+                            convertError = "Can't locate the given target!";
+                          }
+
+                          if (convertError.isNotEmpty) {
+                            BotToast.showText(
+                              text: convertError,
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.orange[700],
+                              duration: const Duration(seconds: 3),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                            return;
+                          }
+                        }
+
+                        final addFactionResult = await warController.addFaction(inputId, targets);
+
+                        Color messageColor = Colors.green;
+                        if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
+                          messageColor = Colors.orange[700];
+                        }
+
+                        int time = 5;
+                        String message = 'Added $addFactionResult [$inputId]!'
+                            '\n\nUpdate members/global to get more information (life, stats).';
+
+                        if (addFactionResult.isEmpty) {
+                          message = 'Error adding $inputId';
+                          time = 3;
+                        } else if (addFactionResult == "error_existing") {
+                          message = 'Faction $inputId is already in the list!';
+                          time = 3;
+                        }
+
+                        BotToast.showText(
+                          text: message,
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: messageColor,
+                          duration: Duration(seconds: time),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      }
+                    },
                   ),
-                ),
+                  TextButton(
+                    child: const Text("Close"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      addIdController.text = '';
+                    },
+                  ),
+                ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -666,7 +657,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
       );
     }
-    return Column(children: factionCards);
+    return ListView(children: factionCards);
   }
 }
 
