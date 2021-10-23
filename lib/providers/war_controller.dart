@@ -88,7 +88,7 @@ class WarController extends GetxController {
       if (allSpiesSuccess != null) {
         for (YataSpyModel spy in allSpiesSuccess) {
           if (spy.targetName == member.name) {
-            member.statsExactTotal = spy.total;
+            member.statsExactTotal = member.statsSort = spy.total;
             member.statsExactUpdated = spy.update;
             member.statsStr = spy.strength;
             member.statsSpd = spy.speed;
@@ -162,7 +162,7 @@ class WarController extends GetxController {
         if (allSpiesSuccess != null) {
           for (YataSpyModel spy in allSpiesSuccess) {
             if (spy.targetName == member.name) {
-              member.statsExactTotal = spy.total;
+              member.statsExactTotal = member.statsSort = spy.total;
               member.statsExactUpdated = spy.update;
               member.statsStr = spy.strength;
               member.statsSpd = spy.speed;
@@ -178,7 +178,39 @@ class WarController extends GetxController {
             }
           }
         }
-        member.statsEstimated = _calculateEstimatedStats(updatedTarget);
+
+        member.statsEstimated = _assignEstimatedStats(updatedTarget);
+
+        // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
+        // if exact does not exist (-1)
+        if (member.statsExactTotal == -1) {
+          switch (member.statsEstimated) {
+            case "< 2k":
+              member.statsSort = 2000;
+              break;
+            case "2k - 25k":
+              member.statsSort = 25000;
+              break;
+            case "20k - 250k":
+              member.statsSort = 250000;
+              break;
+            case "200k - 2.5M":
+              member.statsSort = 2500000;
+              break;
+            case "2M - 25M":
+              member.statsSort = 25000000;
+              break;
+            case "20M - 250M":
+              member.statsSort = 200000000;
+              break;
+            case "> 200M":
+              member.statsSort = 250000000;
+              break;
+            default:
+              member.statsSort = 0;
+              break;
+          }
+        }
       } else {
         error = true;
       }
@@ -449,6 +481,12 @@ class WarController extends GetxController {
       case 'respectAsc':
         currentSort = WarSortType.respectAsc;
         break;
+      case 'statsDes':
+        currentSort = WarSortType.statsDes;
+        break;
+      case 'statsAsc':
+        currentSort = WarSortType.statsDes;
+        break;
       case 'nameDes':
         currentSort = WarSortType.nameDes;
         break;
@@ -499,6 +537,12 @@ class WarController extends GetxController {
       case WarSortType.nameAsc:
         sortToSave = 'nameDes';
         break;
+      case WarSortType.statsDes:
+        sortToSave = 'statsDes';
+        break;
+      case WarSortType.statsAsc:
+        sortToSave = 'statsAsc';
+        break;
       case WarSortType.colorDes:
         sortToSave = 'colorDes';
         break;
@@ -525,7 +569,7 @@ class WarController extends GetxController {
     update();
   }
 
-  String _calculateEstimatedStats(OtherProfileModel member) {
+  String _assignEstimatedStats(OtherProfileModel member) {
     final levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
     final crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
     final networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];

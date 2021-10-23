@@ -73,6 +73,8 @@ class _WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.respectAsc),
     WarSort(type: WarSortType.nameDes),
     WarSort(type: WarSortType.nameAsc),
+    WarSort(type: WarSortType.statsDes),
+    WarSort(type: WarSortType.statsAsc),
     WarSort(type: WarSortType.colorAsc),
     WarSort(type: WarSortType.colorDes),
   ];
@@ -386,6 +388,12 @@ class _WarPageState extends State<WarPage> {
         break;
       case WarSortType.nameAsc:
         _w.sortTargets(WarSortType.nameAsc);
+        break;
+      case WarSortType.statsDes:
+        _w.sortTargets(WarSortType.statsDes);
+        break;
+      case WarSortType.statsAsc:
+        _w.sortTargets(WarSortType.statsAsc);
         break;
       case WarSortType.colorDes:
         _w.sortTargets(WarSortType.colorDes);
@@ -841,6 +849,12 @@ class WarTargetsList extends StatelessWidget {
         break;
       case WarSortType.nameAsc:
         filteredCards.sort((a, b) => a.memberModel.name.toLowerCase().compareTo(b.memberModel.name.toLowerCase()));
+        break;
+      case WarSortType.statsDes:
+        filteredCards.sort((a, b) => b.memberModel.statsSort.compareTo(a.memberModel.statsSort));
+        break;
+      case WarSortType.statsAsc:
+        filteredCards.sort((a, b) => a.memberModel.statsSort.compareTo(b.memberModel.statsSort));
         break;
       case WarSortType.colorDes:
         filteredCards.sort((a, b) =>
