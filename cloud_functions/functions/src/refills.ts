@@ -23,7 +23,7 @@ export const refillsGroup = {
       // Get the list of subscribers
       // NOTE Torn PDA v2.6.0 introduces refillsTime. Instead of adding the time here
       // which might be possible in the future, we get all users subscribes 6 times per day and compare with desired time
-      // TODO: after v2.6.0 ensure all users contain "refillsTime" (defaulted to 22) and introduce it as a condition below
+      // TODO: v2.6.0 uploads refillsTime every 48 hours. When all users contain "refillsTime" (defaulted to 22), introduce it as a condition below
       const response = await admin
         .firestore()
         .collection("players")

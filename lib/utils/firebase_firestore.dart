@@ -32,9 +32,14 @@ class _FirestoreHelper {
   }) async {
     if (_alreadyUploaded && !userTriggered) return;
     _alreadyUploaded = true;
-    _firebaseUserModel = FirebaseUserModel();
+
     final platform = Platform.isAndroid ? "android" : "ios";
     final token = await _messaging.getToken();
+
+    // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
+    // Otherwise, an empty object will be returned
+    _firebaseUserModel = await getUserProfile(force: true);
+
     await _firestore.collection("players").doc(_uid).set(
       {
         "uid": _uid,
@@ -50,16 +55,14 @@ class _FirestoreHelper {
         "platform": platform,
         "version": appVersion,
         "faction": profile.faction.factionId,
+        // Ensures all users have a refill time after v2.6.0.
+        "refillsTime": _firebaseUserModel.refillsTime, // Defaults to 22 if null (new user)
 
-        /// This is a unique identifier to identify this user and target notification
+        // This is a unique identifier to identify this user and target notification
         "token": token,
       },
       SetOptions(merge: true),
     );
-
-    // Gets current alerts in case this user was already existing (after uninstall/reinstall
-    // with saved settings for Android)
-    await getUserProfile(force: true);
   }
 
   Future<void> subscribeToTravelNotification(bool subscribe) async {
@@ -210,8 +213,12 @@ class _FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel> getUserProfile({bool force = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    var firestoreUser = await _firestore.collection("players").doc(_uid).get();
-    return _firebaseUserModel = FirebaseUserModel.fromMap(firestoreUser.data());
+    var userReceived = await _firestore.collection("players").doc(_uid).get();
+    if (userReceived.data() == null) {
+      // New user does not return anything, so we use default fields in the model
+      return FirebaseUserModel();
+    }
+    return _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data());
   }
 
   Future deleteUserProfile() async {
