@@ -109,47 +109,49 @@ class _WarCardState extends State<WarCard> {
         ),
       ],
       secondaryActions: <Widget>[
-        IconSlideAction(
-          caption: 'Add to panic!',
-          color: Colors.blue,
-          icon: MdiIcons.alphaPCircleOutline,
-          onTap: () {
-            String message = "Added ${_member.name} as a Panic Mode target!";
-            Color messageColor = Colors.green;
+        _chainProvider.panicTargets.where((t) => t.name == _member.name).length == 0
+            ? IconSlideAction(
+                caption: 'Add to panic!',
+                color: Colors.blue,
+                icon: MdiIcons.alphaPCircleOutline,
+                onTap: () {
+                  String message = "Added ${_member.name} as a Panic Mode target!";
+                  Color messageColor = Colors.green;
 
-            if (_chainProvider.panicTargets.where((t) => t.name == _member.name).length > 0) {
-              message = "${_member.name} is already in your Panic Mode list!";
-              messageColor = Colors.orange[700];
-            } else {
-              if (_chainProvider.panicTargets.length < 10) {
-                setState(() {
-                  _chainProvider.addPanicTarget(
-                    PanicTargetModel()
-                      ..name = _member.name
-                      ..level = _member.level
-                      ..id = _member.memberId
-                      ..factionName = _member.factionName,
+                  if (_chainProvider.panicTargets.length < 10) {
+                    setState(() {
+                      _chainProvider.addPanicTarget(
+                        PanicTargetModel()
+                          ..name = _member.name
+                          ..level = _member.level
+                          ..id = _member.memberId
+                          ..factionName = _member.factionName,
+                      );
+                      // Convert to target with the needed fields
+                    });
+                  } else {
+                    message = "There are already 10 targets in the Panic Mode list, remove some!";
+                    messageColor = Colors.orange[700];
+                  }
+
+                  BotToast.showText(
+                    text: message,
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: messageColor,
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
                   );
-                  // Convert to target with the needed fields
-                });
-              } else {
-                message = "There are already 10 targets in the Panic Mode list, remove some!";
-                messageColor = Colors.orange[700];
-              }
-            }
-
-            BotToast.showText(
-              text: message,
-              textStyle: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
+                },
+              )
+            : IconSlideAction(
+                caption: 'PANIC TARGET',
+                color: Colors.blue,
+                icon: MdiIcons.alphaPCircleOutline,
+                onTap: null,
               ),
-              contentColor: messageColor,
-              duration: Duration(seconds: 5),
-              contentPadding: EdgeInsets.all(10),
-            );
-          },
-        ),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
