@@ -11,7 +11,6 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 // Project imports:
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -537,24 +536,26 @@ class ChainStatusProvider extends ChangeNotifier {
     _notificationsEnabled = await Prefs().getChainWatcherNotificationsEnabled();
 
     String savedSettings = await Prefs().getChainWatcherSettings();
-    ChainWatcherSettings model = chainWatcherModelFromJson(savedSettings);
-    _green2Enabled = model.green2Enabled;
-    _green2Max = model.green2Max;
-    _green2Min = model.green2Min;
-    _orange1Enabled = model.orange1Enabled;
-    _orange1Max = model.orange1Max;
-    _orange1Min = model.orange1Min;
-    _orange2Enabled = model.orange2Enabled;
-    _orange2Max = model.orange2Max;
-    _orange2Min = model.orange2Min;
-    _red1Enabled = model.red1Enabled;
-    _red1Max = model.red1Max;
-    _red1Min = model.red1Min;
-    _red2Enabled = model.red2Enabled;
-    _red2Max = model.red2Max;
-    _red2Min = model.red2Min;
-    _panicModeEnabled = model.panicEnabled;
-    _panicValue = model.panicValue;
+    if (savedSettings.isNotEmpty) {
+      ChainWatcherSettings model = chainWatcherModelFromJson(savedSettings);
+      _green2Enabled = model.green2Enabled;
+      _green2Max = model.green2Max;
+      _green2Min = model.green2Min;
+      _orange1Enabled = model.orange1Enabled;
+      _orange1Max = model.orange1Max;
+      _orange1Min = model.orange1Min;
+      _orange2Enabled = model.orange2Enabled;
+      _orange2Max = model.orange2Max;
+      _orange2Min = model.orange2Min;
+      _red1Enabled = model.red1Enabled;
+      _red1Max = model.red1Max;
+      _red1Min = model.red1Min;
+      _red2Enabled = model.red2Enabled;
+      _red2Max = model.red2Max;
+      _red2Min = model.red2Min;
+      _panicModeEnabled = model.panicEnabled;
+      _panicValue = model.panicValue;
+    }
 
     List<String> savedPanicTargets = await Prefs().getChainWatcherPanicTargets();
     for (String p in savedPanicTargets) {
