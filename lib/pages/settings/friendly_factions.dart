@@ -220,7 +220,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   Future<void> _showAddDialog(BuildContext _) {
     return showDialog<void>(
         context: _,
-        barrierDismissible: false, // user must tap button!
+        barrierDismissible: true, // user must tap button!
         builder: (BuildContext context) {
           return AddFriendlyFactionDialog(
             themeProvider: _themeProvider,

@@ -120,7 +120,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       _chainWidgetController.expanded = true;
     }
 
-    // TODO
     _assessFirstTargetsOnLaunch();
   }
 
@@ -398,12 +397,13 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     var url = await _webViewController.currentUrl();
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: true, // user must tap button!
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _currentPageTitle,
           url: url.toString(),
           stockWebView: _webViewController,
+          userProvider: _userProv,
         );
       },
     );
@@ -515,8 +515,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
-            await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[i]).getTarget;
+        var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[i]).getTarget;
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip

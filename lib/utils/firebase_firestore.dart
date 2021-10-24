@@ -57,6 +57,7 @@ class _FirestoreHelper {
         "faction": profile.faction.factionId,
         // Ensures all users have a refill time after v2.6.0.
         "refillsTime": _firebaseUserModel.refillsTime, // Defaults to 22 if null (new user)
+        "factionAssistMessage": _firebaseUserModel.factionAssistMessage, // Defaults to true
 
         // This is a unique identifier to identify this user and target notification
         "token": token,
@@ -254,6 +255,12 @@ class _FirestoreHelper {
       return true;
     }).catchError((error) {
       return false;
+    });
+  }
+
+  Future<void> toggleFactionAssistMessage(bool active) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "factionAssistMessage": active,
     });
   }
 }

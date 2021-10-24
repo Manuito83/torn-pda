@@ -18,6 +18,7 @@ enum TipClass {
   browserTabs,
   travel,
   profile,
+  factionCommunication,
   chaining,
   chainingWar,
   trading,
@@ -49,6 +50,7 @@ class _TipsPageState extends State<TipsPage> {
   var _browserTabsTipList = <ExpandableTip>[];
   var _travelTipsList = <ExpandableTip>[];
   var _profileTipsList = <ExpandableTip>[];
+  var _factionCommunicationTipsList = <ExpandableTip>[];
   var _chainingTipsList = <ExpandableTip>[];
   var _chainingWarTipsList = <ExpandableTip>[];
   var _tradingTipsList = <ExpandableTip>[];
@@ -62,6 +64,7 @@ class _TipsPageState extends State<TipsPage> {
     _browserTabsTipList = buildBrowserTabsTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
+    _factionCommunicationTipsList = buildFactionCommunicationTips();
     _chainingTipsList = buildChainingTips();
     _chainingWarTipsList = buildChainingWarTips();
     _tradingTipsList = buildTradingTips();
@@ -115,6 +118,10 @@ class _TipsPageState extends State<TipsPage> {
               Text("PROFILE SECTION"),
               SizedBox(height: 10),
               tipsPanels(TipClass.profile),
+              SizedBox(height: 25),
+              Text("FACTION COMMUNICATION"),
+              SizedBox(height: 10),
+              tipsPanels(TipClass.factionCommunication),
               SizedBox(height: 25),
               Text("CHAINING - GENERAL"),
               SizedBox(height: 10),
@@ -172,6 +179,9 @@ class _TipsPageState extends State<TipsPage> {
         break;
       case TipClass.profile:
         listToShow = _profileTipsList;
+        break;
+      case TipClass.factionCommunication:
+        listToShow = _factionCommunicationTipsList;
         break;
       case TipClass.chaining:
         listToShow = _chainingTipsList;
@@ -451,8 +461,57 @@ class _TipsPageState extends State<TipsPage> {
     return tips;
   }
 
+List<ExpandableTip> buildFactionCommunicationTips() {
+    var tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "Request attack assistance from your faction mates",
+        expandedValue: "When you are in the attack screen, the browser's URL menu (accessed by short tapping "
+            "the title bar if using the full browser, of by long-pressing the bottom bar if using the quick browser) will "
+            "offer a new button, marked in red, labelled 'FACTION ASSISTANCE'.\n\n"
+            "Tapping this button will send a notification to all your faction mates that use Torn PDA and have the "
+            "'Faction assist messages' option enabled in the Alerts section.\n\nBy tapping the notification they will be "
+            "able to join your attack and provide assistance.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Toggle attack assist messages",
+        expandedValue: "You can toggle this option in the Alerts section.",
+      ),
+    );
+    return tips;
+  }
+
   List<ExpandableTip> buildChainingTips() {
     var tips = <ExpandableTip>[];
+    tips.add(
+      ExpandableTip(
+        headerValue: "Panic Mode (chain watcher)",
+        expandedValue: "By enabling Panic Mode, a new 'P' icon will appear in the chain widget, which in turn will "
+            "allow you to toggle the Panic Mode on/off when you desire.\n\n"
+            "When Panic Mode is active, regardless of your alerts' configuration below, only the panic "
+            "alert will sound. If you have targets configured, the browser will automatically open to "
+            "the first available (non blue/red) one. Think about using easy/quick targets.\n\n"
+            "This can be specially useful when chain watching while asleep, working, etc.\n\n"
+            "Remember you need to leave Torn PDA open, "
+            "with the screen active, for the Panic Mode to work as well.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Add targets to Panic Mode",
+        expandedValue: "You can add or remove targets from the Panic Mode list either via the chain widget's "
+            "options menu or by swiping left on any target card.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Targets cards with blue (right) border",
+        expandedValue: "A blue border on the right han side of your standard/war targets' cards means that they "
+            "are part of your Panic Mode targets.",
+      ),
+    );
     tips.add(
       ExpandableTip(
         headerValue: "Sync targets with YATA",

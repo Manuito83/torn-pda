@@ -26,6 +26,7 @@ dependencies:
   bot_toast: ^4.0.1
   bubble_showcase: ^1.0.0
   cloud_firestore: ^1.0.7
+  cloud_functions: ^3.0.5
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
   device_info: ^2.0.0

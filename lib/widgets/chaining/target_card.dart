@@ -138,7 +138,31 @@ class _TargetCardState extends State<TargetCard> {
                 caption: 'PANIC TARGET',
                 color: Colors.blue,
                 icon: MdiIcons.alphaPCircleOutline,
-                onTap: null,
+                onTap: () {
+                  String message = "Removed ${_target.name} as a Panic Mode target!";
+                  Color messageColor = Colors.green;
+
+                  setState(() {
+                    _chainProvider.removePanicTarget(
+                      PanicTargetModel()
+                        ..name = _target.name
+                        ..level = _target.level
+                        ..id = _target.playerId
+                        ..factionName = _target.faction.factionName,
+                    );
+                  });
+
+                  BotToast.showText(
+                    text: message,
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: messageColor,
+                    duration: Duration(seconds: 5),
+                    contentPadding: EdgeInsets.all(10),
+                  );
+                },
               ),
       ],
       child: Padding(

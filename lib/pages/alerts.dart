@@ -506,6 +506,28 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.factionAssistMessage ?? false,
+                        title: const Text("Faction assist messages"),
+                        subtitle: const Text(
+                          "Receive attack assist messages manually triggered by your faction mates",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.factionAssistMessage = value;
+                          });
+                          firestore.toggleFactionAssistMessage(value);
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 60),
                   ],
                 ),

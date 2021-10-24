@@ -41,19 +41,22 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
     v2_6_0.main.version = 'Torn PDA v2.6.0';
-    v2_6_0.main.date = 'XX OCT 2021';
+    v2_6_0.main.date = '01 NOV 2021';
     String feat2_6_0_1 = "Chaining: added War section";
-    String feat2_6_0_2 = "Chain widget: added Panic Mode";
-    String feat2_6_0_3 = "Chain widget: you can now choose the alert activation triggers";
-    String feat2_6_0_4 = "Alerts (refills): you can now choose the notification time";
-    String feat2_6_0_5 = "Alerts (stock market): added overall value and profit information";
-    String feat2_6_0_6 = "Friendly factions can now be added using members' IDs";
+    String feat2_6_0_2 = "Chaining: you can now send attack assistance notifications to your faction mates using "
+        "Torn PDA (see Tips section - Faction Communication)";
+    String feat2_6_0_3 = "Chain widget: added Panic Mode";
+    String feat2_6_0_4 = "Chain widget: you can now choose the alert activation triggers";
+    String feat2_6_0_5 = "Alerts (refills): you can now choose the notification time";
+    String feat2_6_0_6 = "Alerts (stock market): added overall value and profit information";
+    String feat2_6_0_7 = "Friendly factions can now also be added using members' IDs";
     v2_6_0.features.add(feat2_6_0_1);
     v2_6_0.features.add(feat2_6_0_2);
     v2_6_0.features.add(feat2_6_0_3);
     v2_6_0.features.add(feat2_6_0_4);
     v2_6_0.features.add(feat2_6_0_5);
     v2_6_0.features.add(feat2_6_0_6);
+    v2_6_0.features.add(feat2_6_0_7);
 
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();

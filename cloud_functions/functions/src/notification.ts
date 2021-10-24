@@ -21,6 +21,7 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
           "Alerts energy",
           "",
           "",
+          "",
           subscriber.vibration,
         )
       );
@@ -74,6 +75,7 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
           "notification_nerve",
           "#FF0000",
           "Alerts nerve",
+          "",
           "",
           "",
           subscriber.vibration,
@@ -185,6 +187,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             "Alerts hospital",
             "",
             "",
+            "",
             subscriber.vibration,
           )
         );
@@ -219,6 +222,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             "Alerts hospital",
             "",
             "",
+            "",
             subscriber.vibration,
           )
         );
@@ -250,6 +254,7 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
             'notification_hospital',
             '#FFFF00',
             "Alerts hospital",
+            "",
             "",
             "",
             subscriber.vibration,
@@ -298,6 +303,7 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
           "notification_drugs",
           "#FF00c3",
           "Alerts drugs",
+          "",
           "",
           "",
           subscriber.vibration,
@@ -353,6 +359,7 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
           "notification_racing",
           "#FF9900",
           "Alerts racing",
+          "",
           "",
           "",
           subscriber.vibration,
@@ -486,6 +493,7 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
           "#7B1FA2",
           "Alerts messages",
           tornMessageId,
+          "",
           "",
           subscriber.vibration,
         )
@@ -686,6 +694,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             "Alerts events",
             "",
             "",
+            "",
             subscriber.vibration,
           )
         );
@@ -750,6 +759,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             "Alerts trades",
             "",
             tradeId,
+            "",
             subscriber.vibration,
           )
         );
@@ -809,6 +819,7 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
           "notification_travel",
           "#389500",
           "Alerts restocks",
+          "",
           "",
           "",
           subscriber.vibration,
@@ -912,6 +923,7 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
           "Alerts stocks",
           "",
           "",
+          "",
           subscriber.vibration,
         )
       );
@@ -934,6 +946,7 @@ export async function sendNotificationToUser(
   channelId: string,
   tornMessageId: string = "",
   tornTradeId: string = "",
+  assistId: string = "",
   vibration: string,
   sound: string = "slow_spring_board.aiff",
 ): Promise<any> {
@@ -983,12 +996,13 @@ export async function sendNotificationToUser(
     },
     data: {
       // This are needed so that the information is contained 
-      // in onLaundh/onResume message information
+      // in onLaunch/onResume message information
       title: title,
       body: body,
       channelId: channelId,
       tornMessageId: tornMessageId,
       tornTradeId: tornTradeId,
+      assistId: assistId,
     },
   };
 

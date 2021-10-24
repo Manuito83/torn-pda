@@ -2596,6 +2596,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           url: url.toString(),
           inAppWebview: webView,
           callFindInPage: _activateFindInPage,
+          userProvider: _userProvider,
         );
       },
     );

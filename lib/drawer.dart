@@ -373,19 +373,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool drugs = false;
     bool refills = false;
     bool stockMarket = false;
+    bool assists = false;
 
     var channel = '';
     var messageId = '';
     var tradeId = '';
+    var assistId = '';
 
     if (Platform.isIOS) {
       channel = message["channelId"] as String;
       messageId = message["tornMessageId"] as String;
       tradeId = message["tornTradeId"] as String;
+      assistId = message["assistId"] as String;
     } else if (Platform.isAndroid) {
       channel = message["channelId"] as String;
       messageId = message["tornMessageId"] as String;
       tradeId = message["tornTradeId"] as String;
+      assistId = message["assistId"] as String;
     }
 
     if (channel.contains("Alerts travel")) {
@@ -412,6 +416,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       refills = true;
     } else if (channel.contains("Alerts stocks")) {
       stockMarket = true;
+    } else if (channel.contains("Alerts assists")) {
+      assists = true;
     }
 
     if (travel) {
@@ -457,6 +463,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       browserUrl = "https://www.torn.com/points.php";
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
+    } else if (assists) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
     }
 
     if (launchBrowser) {
@@ -539,6 +548,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         browserUrl = 'https://www.torn.com/points.php';
       } else if (payload.contains('stockMarket')) {
         // Not implemented (there is a box showing in _getBackGroundNotifications)
+      } else if (payload.contains('assistId:')) {
+        launchBrowser = true;
+        final assistId = payload.split(':');
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
       }
 
       if (launchBrowser) {

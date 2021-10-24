@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -41,8 +42,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '2.6.0';
-const String androidVersion = '144';
-const String iosVersion = '154';
+const String androidVersion = '145';
+const String iosVersion = '155';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -87,6 +88,8 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   if (kDebugMode) {
+    // TODO: ONLY FOR TESTING FUNCTIONS LOCALLY, COMMENT AFTERWARDS
+    //FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
   }
