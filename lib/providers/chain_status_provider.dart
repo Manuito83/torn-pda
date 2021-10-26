@@ -407,6 +407,7 @@ class ChainStatusProvider extends ChangeNotifier {
                   userKey: _apiKey,
                   attackNotesColorList: attackNotesColorList,
                   attackNotesList: attackNotesList,
+                  panic: true, // This will skip first target if red/blue regardless of user preferences
                 ),
               );
             }

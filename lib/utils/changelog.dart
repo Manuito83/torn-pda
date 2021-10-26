@@ -45,12 +45,13 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_0_1 = "Chaining: added War section";
     String feat2_6_0_2 = "Chaining: you can now send attack assistance notifications to your faction mates using "
         "Torn PDA (see Tips section - Faction Communication)";
-    String feat2_6_0_3 = "Chain widget: added Panic Mode";
-    String feat2_6_0_4 = "Chain widget: you can now choose the alert activation triggers";
-    String feat2_6_0_5 = "Alerts (refills): you can now choose the notification time";
-    String feat2_6_0_6 = "Alerts (stock market): added overall value and profit information";
-    String feat2_6_0_7 = "Friendly factions can now also be added using members' IDs";
-    String feat2_6_0_8 = "Fixed respect and fair fight not being properly recorded in some cases";
+    String feat2_6_0_3 = "Chaining: added option to skip first target as well (disabled by default)";
+    String feat2_6_0_4 = "Chain widget: added Panic Mode";
+    String feat2_6_0_5 = "Chain widget: you can now choose the alert activation triggers";
+    String feat2_6_0_6 = "Alerts (refills): you can now choose the notification time";
+    String feat2_6_0_7 = "Alerts (stock market): added overall value and profit information";
+    String feat2_6_0_8 = "Friendly factions can now also be added using members' IDs";
+    String feat2_6_0_9 = "Fixed respect and fair fight not being properly recorded in some cases";
     v2_6_0.features.add(feat2_6_0_1);
     v2_6_0.features.add(feat2_6_0_2);
     v2_6_0.features.add(feat2_6_0_3);
@@ -59,6 +60,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_0.features.add(feat2_6_0_6);
     v2_6_0.features.add(feat2_6_0_7);
     v2_6_0.features.add(feat2_6_0_8);
+    v2_6_0.features.add(feat2_6_0_9);
 
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();

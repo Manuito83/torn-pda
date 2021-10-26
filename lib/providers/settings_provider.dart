@@ -32,7 +32,6 @@ enum BrowserRefreshSetting {
 }
 
 class SettingsProvider extends ChangeNotifier {
-
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
   set changeBrowser(BrowserSetting browserType) {
@@ -429,6 +428,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _targetSkippingAll = true;
+  bool get targetSkippingAll => _targetSkippingAll;
+  set changeTargetSkippingAll(bool value) {
+    _targetSkippingAll = value;
+    Prefs().setTargetSkipping(targetSkippingAll);
+    notifyListeners();
+  }
+
+  var _targetSkippingFirst = true;
+  bool get targetSkippingFirst => _targetSkippingFirst;
+  set changeTargetSkippingFirst(bool value) {
+    _targetSkippingFirst = value;
+    Prefs().setTargetSkipping(targetSkippingFirst);
+    notifyListeners();
+  }
+
   int _lastAppUse = 0;
   int get lastAppUse => _lastAppUse;
   set updateLastUsed(int timeStamp) {
@@ -564,6 +579,9 @@ class SettingsProvider extends ChangeNotifier {
         _travelTicket = TravelTicket.business;
         break;
     }
+
+    _targetSkippingAll = await Prefs().getTargetSkippingAll();
+    _targetSkippingFirst = await Prefs().getTargetSkippingFirst();
 
     notifyListeners();
   }

@@ -21,9 +21,6 @@ class TargetsOptionsPage extends StatefulWidget {
 }
 
 class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
-  // Skipping
-  bool _skippingEnabled = true;
-
   // Targets notes while chaining
   bool _showTargetsNotes = true;
   bool _showOnlineFactionWarning = true;
@@ -176,11 +173,10 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   children: <Widget>[
                                     Text("Skip red/blue targets"),
                                     Switch(
-                                      value: _skippingEnabled,
+                                      value: _settingsProvider.targetSkippingAll,
                                       onChanged: (value) {
-                                        Prefs().setTargetSkipping(value);
                                         setState(() {
-                                          _skippingEnabled = value;
+                                          _settingsProvider.changeTargetSkippingAll = value;
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
@@ -193,7 +189,8 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
                                   'If enabled, targets that are in hospital, jail or in another '
-                                  'country will be skipped (max 3 at a time, to avoid delays)',
+                                  'country will be skipped (max 3 at a time, to avoid delays). '
+                                  'This does NOT affect Panic Mode.',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -201,6 +198,44 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                   ),
                                 ),
                               ),
+                              SizedBox(height: 15),
+                              if (_settingsProvider.targetSkippingAll)
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Text("Also skip first target"),
+                                          Switch(
+                                            value: _settingsProvider.targetSkippingFirst,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _settingsProvider.changeTargetSkippingFirst = value;
+                                              });
+                                            },
+                                            activeTrackColor: Colors.lightGreenAccent,
+                                            activeColor: Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Text(
+                                        'If enabled, your first, manually selected target will be skipped as well if it\'s '
+                                        'red/blue. This might be useful if your list is not updated and the target you '
+                                        'select is not available. This does NOT affect Panic Mode.',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               SizedBox(height: 15),
                               Divider(),
                               SizedBox(height: 5),
@@ -330,7 +365,6 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   Future _restorePreferences() async {
     var showTargetsNotes = await Prefs().getShowTargetsNotes();
     var showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-    var skippingEnabled = await Prefs().getTargetSkipping();
     var soundEnabled = await Prefs().getChainWatcherSound();
     var vibrationEnabled = await Prefs().getChainWatcherVibration();
     var yataEnabled = await Prefs().getYataTargetsEnabled();
@@ -340,7 +374,6 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
     setState(() {
       _showTargetsNotes = showTargetsNotes;
       _showOnlineFactionWarning = showOnlineFactionWarning;
-      _skippingEnabled = skippingEnabled;
       _soundAlertsEnabled = soundEnabled;
       _vibrationAlertsEnabled = vibrationEnabled;
       _yataTargetsEnabled = yataEnabled;

@@ -25,6 +25,7 @@ class Prefs {
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
   // Other
   final String _kTargetSkipping = "pda_targetSkipping";
+  final String _kTargetSkippingFirst = "pda_targetSkippingFirst";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
   final String _kChainWatcherSettings = "pda_chainWatcherSettings";
@@ -319,7 +320,7 @@ class Prefs {
   }
 
   //**************
-  Future<bool> getTargetSkipping() async {
+  Future<bool> getTargetSkippingAll() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkipping) ?? true;
   }
@@ -327,6 +328,16 @@ class Prefs {
   Future<bool> setTargetSkipping(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTargetSkipping, value);
+  }
+
+    Future<bool> getTargetSkippingFirst() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTargetSkippingFirst) ?? false;
+  }
+
+  Future<bool> setTargetSkippingFirst(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTargetSkippingFirst, value);
   }
 
   Future<bool> getShowTargetsNotes() async {

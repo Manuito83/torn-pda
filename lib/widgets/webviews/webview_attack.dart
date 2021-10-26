@@ -39,6 +39,7 @@ class TornWebViewAttack extends StatefulWidget {
   final Function(List<String>) attacksCallback;
   final String userKey;
   final bool war;
+  final bool panic;
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
@@ -50,6 +51,7 @@ class TornWebViewAttack extends StatefulWidget {
     this.attacksCallback,
     @required this.userKey,
     this.war = false,
+    this.panic = false,
   });
 
   @override
@@ -72,7 +74,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   var _chatRemovalEnabled = true;
   var _chatRemovalActive = false;
 
-  bool _skippingEnabled = true;
   bool _showNotes = true;
   bool _showOnlineFactionWarning = true;
   int _attackNumber = 0;
@@ -120,6 +121,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       _chainWidgetController.expanded = true;
     }
 
+    // Decide if voluntarily skipping first target (always when it's a panic target)
     _assessFirstTargetsOnLaunch();
   }
 
@@ -505,7 +507,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   }
 
   void _assessFirstTargetsOnLaunch() async {
-    if (_skippingEnabled) {
+    if (widget.panic || (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -629,7 +631,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       _nextButtonPressed = true;
     });
 
-    if (_skippingEnabled) {
+    if (widget.panic || _settingsProvider.targetSkippingAll) {
       // Counters for target skipping
       int targetsSkipped = 0;
       var originalPosition = _attackNumber;
@@ -1036,7 +1038,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       _chatRemovalActive = removalActive;
     });
 
-    _skippingEnabled = await Prefs().getTargetSkipping();
     _showNotes = await Prefs().getShowTargetsNotes();
     _showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
   }
