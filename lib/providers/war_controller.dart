@@ -157,7 +157,7 @@ class WarController extends GetxController {
         member.status.color = updatedTarget.status.color;
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
-          _getRespectFF(allAttacksSuccess, member);
+          _getRespectFF(allAttacksSuccess, member, oldRespect: member.respectGain, oldFF: member.fairFight);
         }
         if (allSpiesSuccess != null) {
           for (YataSpyModel spy in allSpiesSuccess) {
@@ -341,7 +341,12 @@ class WarController extends GetxController {
     }
   }
 
-  void _getRespectFF(AttackModel attackModel, Member member) {
+  void _getRespectFF(
+    AttackModel attackModel,
+    Member member, {
+    double oldRespect = -1,
+    double oldFF = -1,
+  }) {
     double respect = -1;
     double fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
@@ -377,8 +382,24 @@ class WarController extends GetxController {
         }
       });
 
-      member.respectGain = respect;
-      member.fairFight = fairFight;
+      // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
+      // Otherwise, they default to -1 upon class instantiation
+      if (respect != -1) {
+        member.respectGain = respect;
+      } else if (respect == -1 && oldRespect != -1) {
+        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
+        // otherwise it will default to -1). This can happen when the last attack on this target is not within the
+        // last 100 total attacks and therefore it's not returned in the attackModel.
+        member.respectGain = oldRespect;
+      }
+
+      // Same as above
+      if (fairFight != -1) {
+        member.fairFight = fairFight;
+      } else if (fairFight == -1 && oldFF != -1) {
+        member.fairFight = oldFF;
+      }
+
       if (userWonOrDefended.isNotEmpty) {
         member.userWonOrDefended = userWonOrDefended.first;
       } else {

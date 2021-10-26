@@ -118,11 +118,17 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void _getRespectFF(AttackModel attackModel, TargetModel myNewTargetModel) {
+  void _getRespectFF(
+    AttackModel attackModel,
+    TargetModel myNewTargetModel, {
+    double oldRespect = -1,
+    double oldFF = -1,
+  }) {
     double respect = -1;
     double fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
     if (attackModel is AttackModel) {
+      
       attackModel.attacks.forEach((key, value) {
         // We look for the our target in the the attacks list
         if (myNewTargetModel.playerId == value.defenderId || myNewTargetModel.playerId == value.attackerId) {
@@ -153,9 +159,25 @@ class TargetsProvider extends ChangeNotifier {
           }
         }
       });
+      
+      // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
+      // Otherwise, they default to -1 upon class instantiation
+      if (respect != -1) {
+        myNewTargetModel.respectGain = respect;
+      } else if (respect == -1 && oldRespect != -1) {
+        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or 
+        // otherwise it will default to -1). This can happen when the last attack on this target is not within the 
+        // last 100 total attacks and therefore it's not returned in the attackModel.
+        myNewTargetModel.respectGain = oldRespect;
+      }
 
-      myNewTargetModel.respectGain = respect;
-      myNewTargetModel.fairFight = fairFight;
+      // Same as above
+      if (fairFight != -1) {
+        myNewTargetModel.fairFight = fairFight;
+      } else if (fairFight == -1 && oldFF != -1) {
+        myNewTargetModel.fairFight = oldFF;
+      }
+
       if (userWonOrDefended.isNotEmpty) {
         myNewTargetModel.userWonOrDefended = userWonOrDefended.first;
       } else {
@@ -190,7 +212,12 @@ class TargetsProvider extends ChangeNotifier {
     try {
       dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
-        _getRespectFF(attacks, myUpdatedTargetModel);
+        _getRespectFF(
+          attacks,
+          myUpdatedTargetModel,
+          oldRespect: targetToUpdate.respectGain,
+          oldFF: targetToUpdate.fairFight,
+        );
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(targetToUpdate)] = myUpdatedTargetModel;
         var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
@@ -228,7 +255,12 @@ class TargetsProvider extends ChangeNotifier {
       try {
         dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
         if (myUpdatedTargetModel is TargetModel) {
-          _getRespectFF(attacks, myUpdatedTargetModel);
+          _getRespectFF(
+            attacks,
+            myUpdatedTargetModel,
+            oldRespect: _targets[i].respectGain,
+            oldFF: _targets[i].fairFight,
+          );
           _getTargetFaction(myUpdatedTargetModel);
           var notes = _targets[i].personalNote;
           var notesColor = _targets[i].personalNoteColor;
@@ -277,7 +309,12 @@ class TargetsProvider extends ChangeNotifier {
           try {
             dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
             if (myUpdatedTargetModel is TargetModel) {
-              _getRespectFF(attacks, myUpdatedTargetModel);
+              _getRespectFF(
+                attacks,
+                myUpdatedTargetModel,
+                oldRespect: _targets[_targets.indexOf(tar)].respectGain,
+                oldFF: _targets[_targets.indexOf(tar)].fairFight,
+              );
               _getTargetFaction(myUpdatedTargetModel);
               _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
               var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];

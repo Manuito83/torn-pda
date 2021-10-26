@@ -135,6 +135,7 @@ class _WarCardState extends State<WarCard> {
                   }
 
                   BotToast.showText(
+                    clickClose: true,
                     text: message,
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -165,6 +166,7 @@ class _WarCardState extends State<WarCard> {
                   });
 
                   BotToast.showText(
+                    clickClose: true,
                     text: message,
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -293,6 +295,7 @@ class _WarCardState extends State<WarCard> {
                                         : Icon(Icons.circle, size: 16, color: Colors.green[400]),
                                 onTap: () {
                                   BotToast.showText(
+                                    clickClose: true,
                                     text: HtmlParser.fix('Online '
                                         '${_member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative}'),
                                     textStyle: TextStyle(
@@ -449,6 +452,7 @@ class _WarCardState extends State<WarCard> {
         onPressed: () {
           targetsProvider.deleteTargetById(_member.memberId.toString());
           BotToast.showText(
+            clickClose: true,
             text: HtmlParser.fix('Removed ${_member.name}!'),
             textStyle: TextStyle(
               fontSize: 14,
@@ -492,6 +496,7 @@ class _WarCardState extends State<WarCard> {
 
                 if (tryAddTarget.success) {
                   BotToast.showText(
+                    clickClose: true,
                     text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
                         'main targets list in Torn PDA!'),
                     textStyle: TextStyle(
@@ -504,6 +509,7 @@ class _WarCardState extends State<WarCard> {
                   );
                 } else if (!tryAddTarget.success) {
                   BotToast.showText(
+                    clickClose: true,
                     text: HtmlParser.fix('Error adding ${_member.memberId}. ${tryAddTarget.errorReason}'),
                     textStyle: TextStyle(
                       fontSize: 14,
@@ -540,6 +546,7 @@ class _WarCardState extends State<WarCard> {
 
     void showFactionToast() {
       BotToast.showText(
+        clickClose: true,
         text: HtmlParser.fix("${_member.name} belongs to faction "
             "${_member.factionName} as "
             "${_member.position}"),
@@ -797,6 +804,7 @@ class _WarCardState extends State<WarCard> {
             borderRadius: BorderRadius.circular(100),
             onTap: () {
               BotToast.showText(
+                clickClose: true,
                 text: _member.status.description,
                 textStyle: TextStyle(
                   fontSize: 14,
@@ -1241,6 +1249,7 @@ class _WarCardState extends State<WarCard> {
       color = Colors.orange[700];
     }
     BotToast.showText(
+      clickClose: true,
       text: message,
       textStyle: TextStyle(
         fontSize: 14,
@@ -1254,6 +1263,7 @@ class _WarCardState extends State<WarCard> {
 
   void _updateSeveralTargets(List<String> attackedIds) async {
     BotToast.showText(
+      clickClose: true,
       text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
       textStyle: TextStyle(
         fontSize: 14,

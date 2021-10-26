@@ -245,6 +245,7 @@ class _WarPageState extends State<WarPage> {
                   } else {
                     if (allMembers > 60) {
                       BotToast.showText(
+                        clickClose: true,
                         text: "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
                             "issues with API request limits!",
                         textStyle: const TextStyle(
@@ -270,6 +271,7 @@ class _WarPageState extends State<WarPage> {
 
                   if (mounted) {
                     BotToast.showText(
+                      clickClose: true,
                       text: message,
                       textStyle: const TextStyle(
                         fontSize: 14,
@@ -340,7 +342,7 @@ class _WarPageState extends State<WarPage> {
   Future<void> _showAddDialog(BuildContext _) {
     return showDialog<void>(
       context: _,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: true, // user must tap button!
       builder: (BuildContext context) {
         return GetBuilder<WarController>(
           builder: (w) => AddFactionDialog(
@@ -554,6 +556,7 @@ class AddFactionDialog extends StatelessWidget {
 
                           if (convertError.isNotEmpty) {
                             BotToast.showText(
+                              clickClose: true,
                               text: convertError,
                               textStyle: const TextStyle(
                                 fontSize: 14,
@@ -587,6 +590,7 @@ class AddFactionDialog extends StatelessWidget {
                         }
 
                         BotToast.showText(
+                          clickClose: true,
                           text: message,
                           textStyle: const TextStyle(
                             fontSize: 14,
