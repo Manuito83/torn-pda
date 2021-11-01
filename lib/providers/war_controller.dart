@@ -81,6 +81,7 @@ class WarController extends GetxController {
             member.respectGain = t.respectGain;
             member.fairFight = t.fairFight;
           }
+          member.lifeSort = _getLifeSort(member);
           break;
         }
       }
@@ -159,6 +160,7 @@ class WarController extends GetxController {
         if (allAttacksSuccess is AttackModel) {
           _getRespectFF(allAttacksSuccess, member, oldRespect: member.respectGain, oldFF: member.fairFight);
         }
+        member.lifeSort = _getLifeSort(member);
         if (allSpiesSuccess != null) {
           for (YataSpyModel spy in allSpiesSuccess) {
             if (spy.targetName == member.name) {
@@ -558,6 +560,12 @@ class WarController extends GetxController {
       case WarSortType.nameAsc:
         sortToSave = 'nameDes';
         break;
+      case WarSortType.lifeDes:
+        sortToSave = 'nameDes';
+        break;
+      case WarSortType.lifeAsc:
+        sortToSave = 'nameDes';
+        break;
       case WarSortType.statsDes:
         sortToSave = 'statsDes';
         break;
@@ -725,5 +733,13 @@ class WarController extends GetxController {
     Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
     savePreferences();
     update();
+  }
+
+  int _getLifeSort(Member member) {
+    if (member.status.state != "Hospital") {
+      return member.lifeCurrent;
+    } else {
+      return -(member.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
+    }
   }
 }

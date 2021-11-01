@@ -308,15 +308,12 @@ class _TargetCardState extends State<TargetCard> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(left: 12),
+                                padding: const EdgeInsets.only(left: 13),
                                 child: Text(
-                                  'Action: ',
+                                  _target.lastAction.relative == "0 minutes ago"
+                                      ? 'now'
+                                      : _target.lastAction.relative.replaceAll(' ago', ''),
                                 ),
-                              ),
-                              Text(
-                                _target.lastAction.relative == "0 minutes ago"
-                                    ? 'now'
-                                    : _target.lastAction.relative.replaceAll(' ago', ''),
                               ),
                             ],
                           ),
@@ -324,8 +321,9 @@ class _TargetCardState extends State<TargetCard> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
+                                Icon(Icons.refresh, size: 15),
                                 Text(
-                                  'Updated $_lastUpdatedString',
+                                  ' $_lastUpdatedString',
                                   style: TextStyle(
                                     color:
                                         _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
@@ -362,7 +360,7 @@ class _TargetCardState extends State<TargetCard> {
                                     },
                                   ),
                                 ),
-                                SizedBox(width: 8),
+                                SizedBox(width: 4),
                                 Text('Notes: '),
                                 Flexible(
                                   child: Text(

@@ -26,8 +26,6 @@ import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
 
-import '../../main.dart';
-
 class TargetsOptions {
   String description;
   IconData iconData;
@@ -97,6 +95,8 @@ class _TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.respectAsc),
     TargetSort(type: TargetSortType.nameDes),
     TargetSort(type: TargetSortType.nameAsc),
+    TargetSort(type: TargetSortType.lifeDes),
+    TargetSort(type: TargetSortType.lifeAsc),
     TargetSort(type: TargetSortType.colorAsc),
     TargetSort(type: TargetSortType.colorDes),
   ];
@@ -586,6 +586,12 @@ class _TargetsPageState extends State<TargetsPage> {
         break;
       case TargetSortType.nameAsc:
         _targetsProvider.sortTargets(TargetSortType.nameAsc);
+        break;
+      case TargetSortType.lifeDes:
+        _targetsProvider.sortTargets(TargetSortType.lifeDes);
+        break;
+      case TargetSortType.lifeAsc:
+        _targetsProvider.sortTargets(TargetSortType.lifeAsc);
         break;
       case TargetSortType.colorDes:
         _targetsProvider.sortTargets(TargetSortType.colorDes);

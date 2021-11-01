@@ -83,6 +83,7 @@ class TargetsProvider extends ChangeNotifier {
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
       myNewTargetModel.personalNoteColor = notesColor;
+      myNewTargetModel.lifeSort = _getLifeSort(myNewTargetModel);
       _targets.add(myNewTargetModel);
       sortTargets(_currentSort);
       notifyListeners();
@@ -128,7 +129,6 @@ class TargetsProvider extends ChangeNotifier {
     double fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
     if (attackModel is AttackModel) {
-      
       attackModel.attacks.forEach((key, value) {
         // We look for the our target in the the attacks list
         if (myNewTargetModel.playerId == value.defenderId || myNewTargetModel.playerId == value.attackerId) {
@@ -159,14 +159,14 @@ class TargetsProvider extends ChangeNotifier {
           }
         }
       });
-      
+
       // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
       // Otherwise, they default to -1 upon class instantiation
       if (respect != -1) {
         myNewTargetModel.respectGain = respect;
       } else if (respect == -1 && oldRespect != -1) {
-        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or 
-        // otherwise it will default to -1). This can happen when the last attack on this target is not within the 
+        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
+        // otherwise it will default to -1). This can happen when the last attack on this target is not within the
         // last 100 total attacks and therefore it's not returned in the attackModel.
         myNewTargetModel.respectGain = oldRespect;
       }
@@ -225,6 +225,7 @@ class TargetsProvider extends ChangeNotifier {
         newTarget.personalNote = targetToUpdate.personalNote;
         newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
+        newTarget.lifeSort = _getLifeSort(newTarget);
         _saveTargetsSharedPrefs();
         return true;
       } else {
@@ -269,6 +270,7 @@ class TargetsProvider extends ChangeNotifier {
           _targets[i].personalNote = notes;
           _targets[i].personalNoteColor = notesColor;
           _targets[i].lastUpdated = DateTime.now();
+          _targets[i].lifeSort = _getLifeSort(_targets[i]);
           _saveTargetsSharedPrefs();
           numberSuccessful++;
         } else {
@@ -322,6 +324,7 @@ class TargetsProvider extends ChangeNotifier {
               newTarget.personalNote = tar.personalNote;
               newTarget.personalNoteColor = tar.personalNoteColor;
               newTarget.lastUpdated = DateTime.now();
+              newTarget.lifeSort = _getLifeSort(newTarget);
               _saveTargetsSharedPrefs();
             } else {
               tar.isUpdating = false;
@@ -419,6 +422,12 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.nameAsc:
         _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
+      case TargetSortType.lifeDes:
+        _targets.sort((a, b) => b.lifeSort.compareTo(a.lifeSort));
+        break;
+      case TargetSortType.lifeAsc:
+        _targets.sort((a, b) => a.lifeSort.compareTo(b.lifeSort));
+        break;
       case TargetSortType.colorDes:
         _targets.sort((a, b) => b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
         break;
@@ -474,6 +483,12 @@ class TargetsProvider extends ChangeNotifier {
         sortToSave = 'nameDes';
         break;
       case TargetSortType.nameAsc:
+        sortToSave = 'nameDes';
+        break;
+      case TargetSortType.lifeDes:
+        sortToSave = 'nameDes';
+        break;
+      case TargetSortType.lifeAsc:
         sortToSave = 'nameDes';
         break;
       case TargetSortType.colorDes:
@@ -637,6 +652,14 @@ class TargetsProvider extends ChangeNotifier {
       }
     } catch (e) {
       return "";
+    }
+  }
+
+  int _getLifeSort(TargetModel myNewTargetModel) {
+    if (myNewTargetModel.status.state != "Hospital") {
+      return myNewTargetModel.life.current;
+    } else {
+      return -(myNewTargetModel.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
     }
   }
 }

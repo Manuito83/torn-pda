@@ -9,6 +9,8 @@ enum WarSortType {
   colorDes,
   statsDes,
   statsAsc,
+  lifeDes,
+  lifeAsc,
 }
 
 class WarSort {
@@ -46,6 +48,12 @@ class WarSort {
         break;
       case WarSortType.statsAsc:
         description = 'Sort by stats (asc)';
+        break;
+      case WarSortType.lifeDes:
+        description = 'Sort by life (des)';
+        break;
+      case WarSortType.lifeAsc:
+        description = 'Sort by life (asc)';
         break;
     }
   }
