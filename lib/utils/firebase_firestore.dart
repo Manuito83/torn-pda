@@ -26,11 +26,11 @@ class _FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<void> uploadUsersProfileDetail(
+  Future<FirebaseUserModel> uploadUsersProfileDetail(
     OwnProfileBasic profile, {
     bool userTriggered = false,
   }) async {
-    if (_alreadyUploaded && !userTriggered) return;
+    if (_alreadyUploaded && !userTriggered) return null;
     _alreadyUploaded = true;
 
     final platform = Platform.isAndroid ? "android" : "ios";
@@ -48,10 +48,10 @@ class _FirestoreHelper {
         "apiKey": profile.userApiKey,
         "life": profile.life.current,
         "playerId": profile.playerId,
-        "energyLastCheckFull": true,
-        "nerveLastCheckFull": true,
-        "drugsInfluence": false,
-        "racingSent": true,
+        "energyLastCheckFull": _firebaseUserModel.energyLastCheckFull, // Defaults
+        "nerveLastCheckFull": _firebaseUserModel.nerveLastCheckFull, // Defaults
+        "drugsInfluence": _firebaseUserModel.drugsInfluence, // Defaults
+        "racingSent": _firebaseUserModel.racingSent, // Defaults
         "platform": platform,
         "version": appVersion,
         "faction": profile.faction.factionId,
@@ -64,6 +64,8 @@ class _FirestoreHelper {
       },
       SetOptions(merge: true),
     );
+
+    return _firebaseUserModel;
   }
 
   Future<void> subscribeToTravelNotification(bool subscribe) async {
@@ -157,7 +159,8 @@ class _FirestoreHelper {
 
   Future<void> removeFromEventsFilter(String filter) async {
     List currentFilter = _firebaseUserModel.eventsFilter;
-    currentFilter.remove(filter);
+    // Avoid duplicities by removing more than one item if they exist
+    currentFilter.removeWhere((element) => element == filter);
     await _firestore.collection("players").doc(_uid).update({
       "eventsFilter": currentFilter,
     });
@@ -179,7 +182,9 @@ class _FirestoreHelper {
 
   Future<void> addToRefillsRequested(String request) async {
     List currentRequests = _firebaseUserModel.refillsRequested;
-    currentRequests.add(request);
+    if (!currentRequests.contains(request)) {
+      currentRequests.add(request);
+    }
     await _firestore.collection("players").doc(_uid).update({
       "refillsRequested": currentRequests,
     });
@@ -187,7 +192,8 @@ class _FirestoreHelper {
 
   Future<void> removeFromRefillsRequested(String request) async {
     List currentRequests = _firebaseUserModel.refillsRequested;
-    currentRequests.remove(request);
+    // Avoid duplicities by removing more than one item if they exist
+    currentRequests.removeWhere((element) => element == request);
     await _firestore.collection("players").doc(_uid).update({
       "refillsRequested": currentRequests,
     });

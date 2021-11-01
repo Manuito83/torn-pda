@@ -62,7 +62,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.data is FirebaseUserModel) {
-              _firebaseUserModel = snapshot.data as FirebaseUserModel;
+              if (_firebaseUserModel == null) {
+                // We don't use the snapshot data any longer if we have updated the model after a reset
+                _firebaseUserModel = snapshot.data as FirebaseUserModel;
+              }
               return SingleChildScrollView(
                 child: Column(
                   children: [
@@ -699,7 +702,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
                 final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
                 firestore.setUID(mFirebaseUser.uid);
-                await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                FirebaseUserModel fb = await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                setState(() {
+                  _firebaseUserModel = fb;
+                });
                 await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
                 if (Platform.isAndroid) {
@@ -709,30 +715,34 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                   // Update channel preferences
                   firestore.setVibrationPattern(alertsVibration);
                 }
-              }
 
-              BotToast.showText(
-                text: "Reset successful",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.green[800],
-                duration: const Duration(seconds: 5),
-                contentPadding: const EdgeInsets.all(10),
-              );
+                BotToast.showText(
+                  text: "Reset successful",
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green[800],
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+
+                return;
+              }
             } catch (e) {
-              BotToast.showText(
-                text: "There was an error: $e",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.orange[800],
-                duration: const Duration(seconds: 5),
-                contentPadding: const EdgeInsets.all(10),
-              );
+              // Same message below
             }
+
+            BotToast.showText(
+              text: "There was an error updating the database, try again later!",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[800],
+              duration: const Duration(seconds: 5),
+              contentPadding: const EdgeInsets.all(10),
+            );
           },
         ),
         TextButton(

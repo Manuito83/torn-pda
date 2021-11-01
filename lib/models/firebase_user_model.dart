@@ -7,9 +7,9 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool travelNotification = false;
   bool foreignRestockNotification = false;
   bool energyNotification = false;
-  bool energyLastCheckFull = false;
+  bool energyLastCheckFull = true;
   bool nerveNotification = false;
-  bool nerveLastCheckFull = false;
+  bool nerveLastCheckFull = true;
   bool hospitalNotification = false;
   bool drugsNotification = false;
   bool drugsInfluence = false;
@@ -20,7 +20,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool refillsNotification = false;
   int refillsTime = 22;
   List refillsRequested = [];
-  bool racingSent = false;
+  bool racingSent = true;
   bool stockMarketNotification = false;
   List stockMarketShares = [];
   bool factionAssistMessage = true;

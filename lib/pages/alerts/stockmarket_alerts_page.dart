@@ -50,7 +50,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     super.initState();
     _settingsP = Provider.of<SettingsProvider>(context, listen: false);
     _userP = Provider.of<UserDetailsProvider>(context, listen: false);
-    if (!widget.calledFromMenu) _fbUser = widget.fbUser;
+    if (!widget.calledFromMenu) _fbUser = widget.fbUser; // We are NOT getting updated stocks every time
     _stocksInitialised = _initialiseStocks();
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'stockMarket'});
   }
@@ -259,7 +259,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
     // the alerts pages, like in other cases
     if (widget.calledFromMenu) {
-      _fbUser = await firestore.getUserProfile(force: false);
+      _fbUser = await firestore.getUserProfile(force: false); // We are NOT getting updated stocks every time
     }
 
     var allStocksReply = await TornApiCaller.stockmarket(_userP.basic.userApiKey).getAllStocks;
