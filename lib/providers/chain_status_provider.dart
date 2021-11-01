@@ -227,7 +227,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
   void _refreshCooldownClock(int secondsRemaining) {
     Duration timeOut = Duration(seconds: secondsRemaining);
-    String timeOutHours = timeOut.inHours.remainder(24).toString();
+    String timeOutHours = timeOut.inHours.toString();
     String timeOutMin = timeOut.inMinutes.remainder(60).toString();
     String timeOutSec = timeOut.inSeconds.remainder(60).toString();
     if (timeOut.inHours.remainder(24) < 10) {
