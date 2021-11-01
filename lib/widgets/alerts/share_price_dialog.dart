@@ -28,6 +28,9 @@ class SharePriceDialog extends StatefulWidget {
 class _SharePriceDialogState extends State<SharePriceDialog> {
   ThemeProvider _themeProvider;
 
+  bool _inputCashGain = true;
+  bool _inputCashLoss = true;
+
   final _gainController = new TextEditingController();
   final _lossController = new TextEditingController();
   var _formKey = GlobalKey<FormState>();
@@ -35,31 +38,43 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
   final _gainFocus = FocusNode();
   final _lossFocus = FocusNode();
 
-  String _gainHint = "";
-  String _lossHint = "";
+  String _gainHintCash = "";
+  String _gainHintPercent = "";
+  String _lossHintCash = "";
+  String _lossHintPercent = "";
 
   @override
   void initState() {
     super.initState();
 
     if (widget.stock.alertGain == null) {
-      _gainHint = "\$${removeZeroDecimals(widget.stock.currentPrice + 10)}";
+      double initCash = widget.stock.currentPrice + 10;
+      double initPercent = (widget.stock.currentPrice + 10) * 100 / widget.stock.currentPrice - 100;
+      _gainHintCash = "\$${removeZeroDecimals(initCash)}";
+      _gainHintPercent = "+${initPercent.toStringAsFixed(2)}%";
     } else {
-      var gainExisting = "${(removeZeroDecimals(widget.stock.alertGain))}";
+      String gainExisting = "${(removeZeroDecimals(widget.stock.alertGain))}";
       _gainController.value = TextEditingValue(
         text: gainExisting,
         selection: TextSelection.collapsed(offset: gainExisting.length),
       );
+      _gainHintCash = "\$${removeZeroDecimals(widget.stock.alertGain)}";
+      _gainHintPercent = "+${(widget.stock.alertGain * 100 / widget.stock.currentPrice - 100).toStringAsFixed(2)}%";
     }
 
     if (widget.stock.alertLoss == null) {
-      _lossHint = "\$${removeZeroDecimals(widget.stock.currentPrice - 10)}";
+      double initCash = widget.stock.currentPrice - 10;
+      double initPercent = (widget.stock.currentPrice - 10) * 100 / widget.stock.currentPrice - 100;
+      _lossHintCash = "\$${removeZeroDecimals(initCash)}";
+      _lossHintPercent = "${initPercent.toStringAsFixed(2)}%";
     } else {
-      var lossExisting = "${removeZeroDecimals(widget.stock.alertLoss)}";
+      String lossExisting = "${(removeZeroDecimals(widget.stock.alertLoss))}";
       _lossController.value = TextEditingValue(
         text: lossExisting,
         selection: TextSelection.collapsed(offset: lossExisting.length),
       );
+      _lossHintCash = "\$${removeZeroDecimals(widget.stock.alertLoss)}";
+      _lossHintPercent = "${(widget.stock.alertLoss * 100 / widget.stock.currentPrice - 100).toStringAsFixed(2)}%";
     }
   }
 
@@ -120,7 +135,13 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         style: TextStyle(fontSize: 13),
                       ),
                     ),
-                    SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 3),
+                      child: Text(
+                        '${_inputCashGain ? _gainHintPercent.isEmpty ? "" : "($_gainHintPercent)" : _gainHintCash.isEmpty ? "" : "($_gainHintCash)"}',
+                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                      ),
+                    ),
                     Row(
                       children: [
                         Flexible(
@@ -128,18 +149,17 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                             focusNode: _gainFocus,
                             child: TextFormField(
                               style: TextStyle(
-                                  fontSize: 13,
-                                  color:
-                                      _cleanNumber(_gainController.text) < widget.stock.currentPrice
-                                          ? Colors.orange[800]
-                                          : _themeProvider.mainText),
+                                fontSize: 13,
+                                color: _returnColor(fromGain: true),
+                              ),
                               controller: _gainController,
                               maxLength: 7,
                               minLines: 1,
                               maxLines: 1,
                               decoration: InputDecoration(
-                                prefixText: "\$ ",
-                                labelText: _gainHint,
+                                floatingLabelBehavior: FloatingLabelBehavior.never,
+                                prefixText: _inputCashGain ? "\$ " : "\% ",
+                                labelText: _inputCashGain ? _gainHintCash : _gainHintPercent,
                                 labelStyle: TextStyle(fontStyle: FontStyle.italic),
                                 //hintText: _gainHint,
                                 counterText: "",
@@ -149,37 +169,95 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               keyboardType: TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d+(\.)?(\d{1,2})?'),
+                                  RegExp(r'^\+?\d+(\.)?(\d{1,2})?'),
                                 )
                               ],
                               onChanged: (gainString) {
                                 if (gainString.isNotEmpty) {
-                                  var gainAmount = _cleanNumber(gainString);
-                                  // Calculate percentage and show as hint
+                                  var gainInput = _cleanNumberAbs(gainString);
+
+                                  // We update the hints independently of if we are inputting cash or percentage,
+                                  // so that we keep both always up to date
+                                  // Percentage hint
+                                  var sign = "";
+                                  if (gainInput > widget.stock.currentPrice) {
+                                    sign = "+";
+                                  }
+                                  var percentage = (gainInput * 100 / widget.stock.currentPrice) - 100;
+
+                                  // Cash hint
+                                  double cash = 0;
+                                  if (_inputCashGain) {
+                                    cash = gainInput;
+                                  } else {
+                                    cash = (gainInput * widget.stock.currentPrice / 100) + widget.stock.currentPrice;
+                                  }
+
                                   setState(() {
-                                    var sign = "";
-                                    if (gainAmount > widget.stock.currentPrice) {
-                                      sign = "+";
+                                    // Update both hints
+                                    _gainHintPercent = "$sign${percentage.toStringAsFixed(2)}%";
+                                    _gainHintCash = "\$${cash.toStringAsFixed(2)}";
+
+                                    // If we are inserting percentage, make sure there is a "+" sign in the
+                                    // actual text field (automatically, as we don't allow the user to input "+")
+                                    if (!_inputCashGain && !_gainController.text.contains("+")) {
+                                      String addSign = "\+${_gainController.text}";
+                                      _gainController.value = TextEditingValue(
+                                        text: addSign,
+                                        selection: TextSelection.collapsed(offset: addSign.length),
+                                      );
                                     }
-                                    var per = (gainAmount * 100 / widget.stock.currentPrice) - 100;
-                                    _gainHint = "$sign${per.toStringAsFixed(2)}%";
                                   });
                                 } else {
                                   setState(() {
-                                    _gainHint = "";
+                                    _gainHintCash = "";
+                                    _gainHintPercent = "";
                                   });
                                 }
                               },
                               validator: (value) {
-                                if (value.isNotEmpty &&
-                                    _cleanNumber(_gainController.text) <=
-                                        widget.stock.currentPrice) {
-                                  return "Must be above current price!";
+                                double priceValidator = _cleanNumber(_gainController.text);
+                                if (!_inputCashGain) {
+                                  priceValidator =
+                                      (priceValidator * widget.stock.currentPrice / 100) + widget.stock.currentPrice;
+                                }
+                                if (value.isNotEmpty && priceValidator <= widget.stock.currentPrice) {
+                                  return "Must be above ${widget.stock.currentPrice}!";
                                 }
                                 return null;
                               },
                             ),
                           ),
+                        ),
+                        IconButton(
+                          icon: _inputCashGain ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
+                          onPressed: () {
+                            setState(() {
+                              _inputCashGain = !_inputCashGain;
+
+                              // If the text field is not empty (using only hints), it is not enough to update
+                              // just the hints. We need to update the text field as well
+                              if (_gainController.text.isNotEmpty) {
+                                if (_inputCashGain) {
+                                  // Change from percentage to cash
+                                  _gainHintPercent = "${_gainController.text}%";
+                                  var newText = _gainHintCash.replaceAll("\$", "").replaceAll("%", "");
+                                  _gainController.value = TextEditingValue(
+                                    text: newText,
+                                    selection: TextSelection.collapsed(offset: newText.length),
+                                  );
+                                } else {
+                                  // Change from cash to percentage
+                                  _gainHintCash = "\$${_gainController.text}";
+                                  var newText = _gainHintPercent.replaceAll("\$", "").replaceAll("%", "");
+                                  _gainController.value = TextEditingValue(
+                                    text: newText,
+                                    selection: TextSelection.collapsed(offset: newText.length),
+                                  );
+                                }
+                              }
+                            });
+                          },
                         ),
                         IconButton(
                           icon: Icon(Icons.delete_outline, color: Colors.red[700]),
@@ -189,7 +267,8 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               selection: TextSelection.collapsed(offset: 0),
                             );
                             setState(() {
-                              _gainHint = "disabled!";
+                              _gainHintCash = "";
+                              _gainHintPercent = "";
                             });
                             _gainFocus.unfocus();
                           },
@@ -204,7 +283,13 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         style: TextStyle(fontSize: 13),
                       ),
                     ),
-                    SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 3),
+                      child: Text(
+                        '${_inputCashLoss ? _lossHintPercent.isEmpty ? "" : "($_lossHintPercent)" : _lossHintCash.isEmpty ? "" : "($_lossHintCash)"}',
+                        style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                      ),
+                    ),
                     Row(
                       children: [
                         Flexible(
@@ -212,18 +297,17 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                             focusNode: _lossFocus,
                             child: TextFormField(
                               style: TextStyle(
-                                  fontSize: 13,
-                                  color:
-                                      _cleanNumber(_lossController.text) > widget.stock.currentPrice
-                                          ? Colors.orange[800]
-                                          : _themeProvider.mainText),
+                                fontSize: 13,
+                                color: _returnColor(fromGain: false),
+                              ),
                               controller: _lossController,
                               maxLength: 7,
                               minLines: 1,
                               maxLines: 2,
                               decoration: InputDecoration(
-                                prefixText: "\$ ",
-                                labelText: _lossHint,
+                                floatingLabelBehavior: FloatingLabelBehavior.never,
+                                prefixText: _inputCashLoss ? "\$ " : "\% ",
+                                labelText: _inputCashLoss ? _lossHintCash : _lossHintPercent,
                                 labelStyle: TextStyle(fontStyle: FontStyle.italic),
                                 //hintText: _lossHint,
                                 counterText: "",
@@ -233,37 +317,98 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               keyboardType: TextInputType.numberWithOptions(decimal: true),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d+(\.)?(\d{1,2})?'),
+                                  RegExp(r'^\-?\d+(\.)?(\d{1,2})?'),
                                 )
                               ],
                               onChanged: (lossString) {
                                 if (lossString.isNotEmpty) {
-                                  var lossAmount = _cleanNumber(lossString);
-                                  // Calculate percentage and show as hint
+                                  var lossInput = _cleanNumberAbs(lossString);
+
+                                  // We update the hints independently of if we are inputting cash or percentage,
+                                  // so that we keep both always up to date
+                                  // Percentage hint
+                                  var sign = "";
+                                  if (lossInput > widget.stock.currentPrice) {
+                                    sign = "+";
+                                  }
+                                  var percentage = (lossInput * 100 / widget.stock.currentPrice) - 100;
+
+                                  // Cash hint
+                                  double cash = 0;
+                                  if (_inputCashLoss) {
+                                    cash = lossInput;
+                                  } else {
+                                    cash = widget.stock.currentPrice - (lossInput * widget.stock.currentPrice / 100);
+                                  }
+
                                   setState(() {
-                                    var sign = "";
-                                    if (lossAmount > widget.stock.currentPrice) {
-                                      sign = "+";
+                                    // Update both hints
+                                    _lossHintPercent = "$sign${percentage.toStringAsFixed(2)}%";
+                                    _lossHintCash = "\$${cash.toStringAsFixed(2)}";
+
+                                    // If we are inserting percentage, make sure there is a "+" sign in the
+                                    // actual text field (automatically, as we don't allow the user to input "+")
+                                    if (!_inputCashLoss && !_lossController.text.contains("-")) {
+                                      String addSign = "\-${_lossController.text}";
+                                      _lossController.value = TextEditingValue(
+                                        text: addSign,
+                                        selection: TextSelection.collapsed(offset: addSign.length),
+                                      );
                                     }
-                                    var per = (lossAmount * 100 / widget.stock.currentPrice) - 100;
-                                    _lossHint = "$sign${per.toStringAsFixed(2)}%";
                                   });
                                 } else {
                                   setState(() {
-                                    _lossHint = "";
+                                    _lossHintCash = "";
+                                    _lossHintPercent = "";
                                   });
                                 }
                               },
                               validator: (value) {
-                                if (value.isNotEmpty &&
-                                    _cleanNumber(_lossController.text) >=
-                                        widget.stock.currentPrice) {
-                                  return "Must be below current price!";
+                                double priceValidator = _cleanNumber(_lossController.text);
+                                if (!_inputCashLoss) {
+                                  priceValidator =
+                                      widget.stock.currentPrice + (priceValidator * widget.stock.currentPrice / 100);
+                                }
+                                if (value.isNotEmpty && priceValidator >= widget.stock.currentPrice) {
+                                  return "Must be below ${widget.stock.currentPrice}!";
+                                }
+                                if (value.isNotEmpty && priceValidator <= 0) {
+                                  return "Must be above \$0!";
                                 }
                                 return null;
                               },
                             ),
                           ),
+                        ),
+                        IconButton(
+                          icon: _inputCashLoss ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
+                          onPressed: () {
+                            setState(() {
+                              _inputCashLoss = !_inputCashLoss;
+
+                              // If the text field is not empty (using only hints), it is not enough to update
+                              // just the hints. We need to update the text field as well
+                              if (_lossController.text.isNotEmpty) {
+                                if (_inputCashLoss) {
+                                  // Change from percentage to cash
+                                  _lossHintPercent = "${_lossController.text}%";
+                                  var newText = _lossHintCash.replaceAll("\$", "").replaceAll("%", "");
+                                  _lossController.value = TextEditingValue(
+                                    text: newText,
+                                    selection: TextSelection.collapsed(offset: newText.length),
+                                  );
+                                } else {
+                                  // Change from cash to percentage
+                                  _lossHintCash = "\$${_lossController.text}";
+                                  var newText = _lossHintPercent.replaceAll("\$", "").replaceAll("%", "");
+                                  _lossController.value = TextEditingValue(
+                                    text: newText,
+                                    selection: TextSelection.collapsed(offset: newText.length),
+                                  );
+                                }
+                              }
+                            });
+                          },
                         ),
                         IconButton(
                           icon: Icon(Icons.delete_outline, color: Colors.red[700]),
@@ -273,7 +418,8 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                               selection: TextSelection.collapsed(offset: 0),
                             );
                             setState(() {
-                              _lossHint = "disabled!";
+                              _lossHintCash = "";
+                              _lossHintPercent = "";
                             });
                             _lossFocus.unfocus();
                           },
@@ -287,7 +433,6 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                         TextButton(
                           child: Text("Set"),
                           onPressed: () async {
-
                             bool success = false;
 
                             // Might be passed as null if we are removing
@@ -304,22 +449,29 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
                                 } else {
                                   // Set gain
                                   if (_gainController.text.isNotEmpty) {
-                                    gain = _cleanNumber(_gainController.text);
+                                    gain = _cleanNumberAbs(_gainController.text);
+                                    if (!_inputCashGain) {
+                                      gain = (gain * widget.stock.currentPrice / 100) + widget.stock.currentPrice;
+                                      gain = _cleanNumberAbs(gain.toStringAsFixed(2));
+                                    }
                                     action += "G-$gain-";
                                   } else {
                                     action += "G-n-";
                                   }
                                   // Set loss
                                   if (_lossController.text.isNotEmpty) {
-                                    loss = _cleanNumber(_lossController.text);
-                                    action += "L-${_cleanNumber(_lossController.text)}";
+                                    loss = _cleanNumberAbs(_lossController.text);
+                                    if (!_inputCashLoss) {
+                                      loss = widget.stock.currentPrice - (loss * widget.stock.currentPrice / 100);
+                                      loss = _cleanNumberAbs(loss.toStringAsFixed(2));
+                                    }
+                                    action += "L-${_cleanNumberAbs(loss.toStringAsFixed(2))}";
                                   } else {
                                     action += "L-n";
                                   }
                                 }
                                 // Upload
-                                success = await firestore.addStockMarketShare(
-                                    widget.stock.acronym, action);
+                                success = await firestore.addStockMarketShare(widget.stock.acronym, action);
                               } else {
                                 // Return with no validation
                                 return;
@@ -401,7 +553,27 @@ class _SharePriceDialogState extends State<SharePriceDialog> {
     return double.parse(text);
   }
 
+  double _cleanNumberAbs(String text) {
+    if (text.isEmpty) return 0;
+    return double.parse(text).abs();
+  }
+
   String removeZeroDecimals(double input) {
     return input.toString().replaceAll(RegExp(r"([.]*0)(?!.*\d)"), "");
+  }
+
+  Color _returnColor({@required bool fromGain}) {
+    if (fromGain) {
+      if (_cleanNumber(_gainHintCash.replaceAll("\$", "")) < widget.stock.currentPrice) {
+        return Colors.orange[800];
+      }
+    } else if (!fromGain) {
+      double lossCheck = _cleanNumber(_lossHintCash.replaceAll("\$", ""));
+      if (lossCheck > widget.stock.currentPrice || lossCheck <= 0) {
+        return Colors.orange[800];
+      }
+    }
+
+    return _themeProvider.mainText;
   }
 }

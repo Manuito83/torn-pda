@@ -50,8 +50,9 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_0_5 = "Chain widget: you can now choose the alert activation triggers";
     String feat2_6_0_6 = "Alerts (refills): you can now choose the notification time";
     String feat2_6_0_7 = "Alerts (stock market): added overall value and profit information";
-    String feat2_6_0_8 = "Friendly factions can now also be added using members' IDs";
-    String feat2_6_0_9 = "Fixed respect and fair fight not being properly recorded in some cases";
+    String feat2_6_0_8 = "Alerts (stock market): alerts can now be based on gain/loss percentages";
+    String feat2_6_0_9 = "Friendly factions can now also be added using members' IDs";
+    String feat2_6_0_10 = "Fixed respect and fair fight not being properly recorded in some cases";
     v2_6_0.features.add(feat2_6_0_1);
     v2_6_0.features.add(feat2_6_0_2);
     v2_6_0.features.add(feat2_6_0_3);
@@ -61,6 +62,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_0.features.add(feat2_6_0_7);
     v2_6_0.features.add(feat2_6_0_8);
     v2_6_0.features.add(feat2_6_0_9);
+    v2_6_0.features.add(feat2_6_0_10);
 
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();
