@@ -2219,10 +2219,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // Retry several times and allow the map to load. If the user lands in the city list, this will
-    // also trigger and the user will have 60 seconds to load the map (after that, only reloading
+    // also trigger and the user will have 30 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
     List<dom.Element> query;
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 30; i++) {
       if (!mounted) break;
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.isNotEmpty) {
