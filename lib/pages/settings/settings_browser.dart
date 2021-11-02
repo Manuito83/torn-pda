@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +17,7 @@ import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
@@ -439,7 +441,21 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ElevatedButton(
                     child: Text("Clear"),
                     onPressed: () async {
+                      // This resets cache when the browser opens again
                       _settingsProvider.setClearCacheNextOpportunity = true;
+                      // Clear tabs now
+                      Prefs().setWebViewTabs('{"tabsSave": []}');
+
+                      BotToast.showText(
+                        text: "Browser cache and tabs have been reset!",
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.grey[600],
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
                     },
                   ),
                 ],
@@ -448,7 +464,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Note: this will clear your browser\'s cache. It can be '
+                'Note: this will clear your browser\'s cache and current tabs. It can be '
                 'useful in case of errors (sections not loading correctly, etc.). '
                 'You\'ll be logged-out from Torn and all other sites',
                 style: TextStyle(

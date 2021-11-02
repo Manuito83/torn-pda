@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
     v2_6_0.main.version = 'Torn PDA v2.6.0';
-    v2_6_0.main.date = '01 NOV 2021';
+    v2_6_0.main.date = '08 NOV 2021';
     String feat2_6_0_1 = "Chaining: added War section";
     String feat2_6_0_2 = "Chaining: you can now send attack assistance notifications to your faction mates using "
         "Torn PDA (see Tips section - Faction Communication)";

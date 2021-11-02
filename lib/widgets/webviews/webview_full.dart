@@ -203,7 +203,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _localChatRemovalActive = widget.chatRemovalActive;
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
+    _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
@@ -748,14 +748,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       });
                     }
 
-                    if (progress > 75) _pullToRefreshController.endRefreshing();
+                    if (progress > 75) {
+                      _pullToRefreshController.endRefreshing();
 
-                    // onProgressChanged gets called before onLoadStart, so it works
-                    // both to add or remove widgets. It is much faster.
-                    _assessSectionsWithWidgets();
-                    // We reset here the triggers for the sections that are called every
-                    // time so that they can be called again
-                    _resetSectionsWithWidgets();
+                      // onProgressChanged gets called before onLoadStart, so it works
+                      // both to add or remove widgets. It is much faster.
+                      _assessSectionsWithWidgets();
+                      // We reset here the triggers for the sections that are called every
+                      // time so that they can be called again
+                      _resetSectionsWithWidgets();
+                    }
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -877,7 +879,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       _assessTrades(document, pageTitle);
                     }
 
-                    // Properties (vault) for initialisation and live transactions
+                    // Properties (vault) for initialization and live transactions
                     if (resource.url.toString().contains("properties.php") ||
                         (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
@@ -902,7 +904,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       }
                     }
 
-                    // Jail for initialisation and live transactions
+                    // Jail for initialization and live transactions
                     if (resource.url.toString().contains("jailview.php")) {
                       // Trigger once
                       if (_jailOnResourceTriggerTime != null &&
@@ -921,7 +923,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       dom.Document document = parse(html);
 
                       List<dom.Element> query;
-                      for (var i = 0; i < 60; i++) {
+                      for (var i = 0; i < 2; i++) {
                         if (!mounted) break;
                         query = document.querySelectorAll(".users-list > li");
                         if (query.isNotEmpty) {
@@ -1226,7 +1228,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         leading: IconButton(
           icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
           onPressed: () async {
-            // Normal behaviour is just to pop and go to previous page
+            // Normal behavior is just to pop and go to previous page
             if (_backButtonPopsContext) {
               if (widget.customCallBack != null) {
                 widget.customCallBack();
@@ -1398,7 +1400,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// Note: several other modules are called in onProgressChanged, since it's
   /// faster. The ones here probably would not benefit from it.
   Future _assessGeneral(dom.Document document) async {
-    _assessBackButtonBehaviour();
+    _assessBackButtonBehavior();
     _assessTravel(document);
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
@@ -1545,7 +1547,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Future _assessBackButtonBehaviour() async {
+  Future _assessBackButtonBehavior() async {
     // If we are NOT moving to a place with a vault, we show an X and close upon button press
     if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
         !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
@@ -1553,7 +1555,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _backButtonPopsContext = true;
     }
     // However, if we are in a place with a vault AND we come from Trades, we'll change
-    // the back button behaviour to ensure we are returning to Trades
+    // the back button behavior to ensure we are returning to Trades
     else {
       final history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
@@ -2220,7 +2222,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // also trigger and the user will have 60 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
     List<dom.Element> query;
-    for (var i = 0; i < 60; i++) {
+    for (var i = 0; i < 5; i++) {
       if (!mounted) break;
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.isNotEmpty) {

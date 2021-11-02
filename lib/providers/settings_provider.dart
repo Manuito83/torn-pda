@@ -61,7 +61,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _clearCacheNextOpportunity = false;
-  bool get clearCacheNextOpportunity {
+  bool get getClearCacheNextOpportunityAndReset {
     if (_clearCacheNextOpportunity) {
       setClearCacheNextOpportunity = false;
       return true;

@@ -93,6 +93,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
 
+  String _userUID = "";
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Allows to space alerts when app is on the foreground
@@ -803,10 +805,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 8:
-        return const SettingsPage();
+        return SettingsPage(changeUID: changeUID);
         break;
       case 9:
-        return AboutPage();
+        return AboutPage(uid: _userUID);
         break;
       case 10:
         return TipsPage();
@@ -911,9 +913,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       final user = await firebaseAuth.currentUser();
       if (user == null) {
         _updateFirebaseDetails();
+        _userUID = "";
       } else {
         final uid = await firebaseAuth.getUID();
         firestore.setUID(uid as String);
+        _userUID = uid as String;
       }
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
@@ -1175,5 +1179,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  void changeUID(String UID) {
+    _userUID = UID;
   }
 }

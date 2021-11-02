@@ -16,6 +16,10 @@ import 'package:torn_pda/utils/changelog.dart';
 import '../main.dart';
 
 class AboutPage extends StatefulWidget {
+  final String uid;
+
+  AboutPage({@required this.uid});
+
   @override
   _AboutPageState createState() => _AboutPageState();
 }
@@ -34,6 +38,7 @@ class _AboutPageState extends State<AboutPage> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
     return Scaffold(
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -290,6 +295,18 @@ class _AboutPageState extends State<AboutPage> {
                       ],
                     ),
                   ),
+                  if (widget.uid.isNotEmpty)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        Flexible(
+                          flex: 2,
+                          child: Text(
+                            "UID: ${widget.uid.substring(widget.uid.length - 4)}",
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),

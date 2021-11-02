@@ -32,7 +32,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({Key key}) : super(key: key);
+  final Function changeUID;
+
+  SettingsPage({@required this.changeUID, Key key}) : super(key: key);
 
   @override
   _SettingsPageState createState() => _SettingsPageState();
@@ -703,6 +705,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     await FirebaseMessaging.instance.deleteToken();
                                     await firestore.deleteUserProfile();
                                     await firebaseAuth.signOut();
+                                    widget.changeUID("");
                                   },
                                 ),
                               ),
@@ -1399,10 +1402,11 @@ class _SettingsPageState extends State<SettingsPage> {
           firestore.setUID(mFirebaseUser.uid);
           await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
-
           if (Platform.isAndroid) {
             firestore.setVibrationPattern(_vibrationValue);
           }
+          // Returns UID to Drawer so that it can be passed to settings
+          widget.changeUID(mFirebaseUser.uid);
         }
       } else if (myProfile is ApiError) {
         setState(() {
