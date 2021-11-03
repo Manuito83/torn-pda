@@ -31,7 +31,7 @@ class WarController extends GetxController {
   bool updating = false;
   bool _stopUpdate = false;
 
-  bool showCaseAddFaction = false;
+  bool showCaseStart = false;
 
   bool addFromUserId = false;
 
@@ -48,6 +48,9 @@ class WarController extends GetxController {
 
   Future<String> addFaction(String factionId, List<TargetModel> targets) async {
     stopUpdate();
+
+    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+
     // Return custom error code if faction already exists
     for (FactionModel faction in factions) {
       if (faction.id.toString() == factionId) {
@@ -69,6 +72,7 @@ class WarController extends GetxController {
     DateTime addedTime = DateTime.now();
     faction.members.forEach((memberId, member) {
       // Last updated time
+      member.memberId = int.parse(memberId);
       member.lastUpdated = addedTime;
       for (var t in targets) {
         // Try to match information with pre-existing targets
@@ -105,6 +109,15 @@ class WarController extends GetxController {
           }
         }
       }
+
+      if (allAttacksSuccess is AttackModel) {
+        _getRespectFF(
+          allAttacksSuccess,
+          member,
+          oldRespect: member.respectGain,
+          oldFF: member.fairFight,
+        );
+      }
     });
 
     update();
@@ -130,7 +143,7 @@ class WarController extends GetxController {
 
   /// [allAttacks] is to be provided when updating several members at the same time, so that it does not have
   /// to call the API twice every time
-  Future<bool> updateSingleMember(Member member, {dynamic allAttacks, dynamic spies}) async {
+  Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
       allAttacksSuccess = await getAllAttacks(_u.apiKey);
@@ -148,6 +161,7 @@ class WarController extends GetxController {
     try {
       dynamic updatedTarget = await TornApiCaller.target(_u.apiKey, memberKey).getOtherProfile;
       if (updatedTarget is OtherProfileModel) {
+        member.overrideEasyLife = true;
         member.lifeMaximum = updatedTarget.life.current;
         member.lifeCurrent = updatedTarget.life.maximum;
         member.lastAction.relative = updatedTarget.lastAction.relative;
@@ -234,7 +248,7 @@ class WarController extends GetxController {
     return false;
   }
 
-  Future<List<int>> updateAllMembers() async {
+  Future<List<int>> updateAllMembersFull() async {
     await _integrityCheck(force: true);
 
     dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
@@ -258,7 +272,7 @@ class WarController extends GetxController {
         }
 
         if (f.members.containsKey(card.memberId.toString())) {
-          bool memberSuccess = await updateSingleMember(
+          bool memberSuccess = await updateSingleMemberFull(
             f.members[card.memberId.toString()],
             allAttacks: allAttacksSuccess,
           );
@@ -279,6 +293,79 @@ class WarController extends GetxController {
     update();
 
     return [thisCards.length, numberUpdated];
+  }
+
+  Future<int> updateAllMembersEasy() async {
+    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+
+    stopUpdate();
+
+    await _integrityCheck(force: true);
+    dynamic allSpiesSuccess = await _getYataSpies(_u.apiKey);
+
+    int numberUpdated = 0;
+
+    for (FactionModel f in factions) {
+      final apiResult = await TornApiCaller.faction(_u.apiKey, f.id.toString()).getFaction;
+      if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
+        return 0;
+      }
+      final apiFaction = apiResult as FactionModel;
+
+      DateTime updatedTime = DateTime.now();
+
+      apiFaction.members.forEach((apiMemberId, apiMember) {
+        if (f.members.containsKey(apiMemberId)) {
+          f.members[apiMemberId].overrideEasyLife = false;
+
+          f.members[apiMemberId].justUpdatedWithSuccess = true;
+          update();
+          Future.delayed(Duration(seconds: 2)).then((value) {
+            f.members[apiMemberId].justUpdatedWithSuccess = false;
+            update();
+          });
+
+          f.members[apiMemberId].lastUpdated = updatedTime;
+          f.members[apiMemberId].status = apiMember.status;
+
+          if (allSpiesSuccess != null) {
+            for (YataSpyModel spy in allSpiesSuccess) {
+              if (spy.targetName == apiMember.name) {
+                f.members[apiMemberId].statsExactTotal = apiMember.statsSort = spy.total;
+                f.members[apiMemberId].statsExactUpdated = spy.update;
+                f.members[apiMemberId].statsStr = spy.strength;
+                f.members[apiMemberId].statsSpd = spy.speed;
+                f.members[apiMemberId].statsDef = spy.defense;
+                f.members[apiMemberId].statsDex = spy.dexterity;
+                int known = 0;
+                if (spy.strength != 1) known += spy.strength;
+                if (spy.speed != 1) known += spy.speed;
+                if (spy.defense != 1) known += spy.defense;
+                if (spy.dexterity != 1) known += spy.dexterity;
+                f.members[apiMemberId]?.statsExactTotalKnown = known;
+                break;
+              }
+            }
+          }
+
+          if (allAttacksSuccess is AttackModel) {
+            _getRespectFF(
+              allAttacksSuccess,
+              f.members[apiMemberId],
+              oldRespect: f.members[apiMemberId].respectGain,
+              oldFF: f.members[apiMemberId].fairFight,
+            );
+          }
+
+          numberUpdated++;
+        }
+      });
+    }
+
+    update();
+    savePreferences();
+    print(numberUpdated); // !!TODO
+    return numberUpdated;
   }
 
   Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
@@ -302,7 +389,7 @@ class WarController extends GetxController {
         }
 
         if (f.members.containsKey(id)) {
-          await updateSingleMember(
+          await updateSingleMemberFull(
             f.members[id],
             allAttacks: allAttacksSuccess,
           );
@@ -691,7 +778,7 @@ class WarController extends GetxController {
   }
 
   void launchShowCaseAddFaction() async {
-    showCaseAddFaction = true;
+    showCaseStart = true;
     update();
   }
 
@@ -725,7 +812,7 @@ class WarController extends GetxController {
       imported.members.forEach((key, value) {
         if (!thisMembers.containsKey(key)) {
           f.members[key] = imported.members[key];
-          updateSingleMember(f.members[key]);
+          updateSingleMemberFull(f.members[key]);
         }
       });
     }

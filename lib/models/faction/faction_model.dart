@@ -107,6 +107,7 @@ class Member {
     this.statsDex,
     this.statsSort,
     this.lifeSort,
+    this.overrideEasyLife,
     //
     this.name,
     this.level,
@@ -143,6 +144,7 @@ class Member {
   int statsDex = -1;
   int statsSort = 0; // Mixed estimates and exacts so that members can be sorted
   int lifeSort = 0;
+  bool overrideEasyLife = false;
 
   String name;
   int level;
@@ -179,6 +181,7 @@ class Member {
         statsDex: json["statsDex"] ?? -1,
         statsSort: json["statsSort"] ?? 0,
         lifeSort: json["lifeSort"] == null ? json["lifeCurrent"] ?? 0 : json["lifeSort"],
+        overrideEasyLife: json["overrideEasyLife"] ?? false,
         //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
@@ -213,6 +216,7 @@ class Member {
         "statsDex": statsDex,
         "statsSort": statsSort,
         "lifeSort": lifeSort,
+        "overrideEasyLife": overrideEasyLife,
         //
         "name": name,
         "level": level == null ? null : level,

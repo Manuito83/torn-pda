@@ -461,7 +461,7 @@ class _TipsPageState extends State<TipsPage> {
     return tips;
   }
 
-List<ExpandableTip> buildFactionCommunicationTips() {
+  List<ExpandableTip> buildFactionCommunicationTips() {
     var tips = <ExpandableTip>[];
     tips.add(
       ExpandableTip(
@@ -545,17 +545,28 @@ List<ExpandableTip> buildFactionCommunicationTips() {
     );
     tips.add(
       ExpandableTip(
-          headerValue: "How can I add new factions?",
-          expandedValue: "Tap on the faction icon in the app bar and a new dialog will appear.\n\n"
-              "You can use the faction's ID if you know it. Otherwise, click on the person icon to the right: "
-              "this will allow you to enter the ID of any player that belongs to the faction instead."),
+        headerValue: "How can I add new factions?",
+        expandedValue: "Tap on the faction icon in the app bar and a new dialog will appear.\n\n"
+            "You can use the faction's ID if you know it. Otherwise, click on the person icon to the right: "
+            "this will allow you to enter the ID of any player that belongs to the faction instead.",
+      ),
     );
     tips.add(
       ExpandableTip(
-          headerValue: "Why is some information (e.g. life and stats) missing?",
-          expandedValue: "When you add a faction, some of its members information won't be retrieved from the API "
-              "to avoid unnecessary API calls. However, this information will be updated as soon as you "
-              "update an individual target or perform a global update (via the app bar)."),
+        headerValue: "Why is some information (e.g. life and stats) missing?",
+        expandedValue: "When you add a faction, some of its members information won't be retrieved from the API "
+            "to avoid unnecessary API calls. However, this information will be updated as soon as you "
+            "update an individual target or perform a global update (via the app bar).",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Updating faction targets",
+        expandedValue: "There are a couple of ways to update faction targets.\n\nWith a short tap, you can perform "
+            "a quick update with minimal target information (some stats and life information won't be available).\n\n"
+            "A long-press will start a slower but full update of all targets.\n\n"
+            "Alternatively, you can update targets individually. This also show expanded information.",
+      ),
     );
     tips.add(
       ExpandableTip(

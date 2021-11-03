@@ -167,230 +167,233 @@ class _TargetCardState extends State<TargetCard> {
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 0),
-        child: GestureDetector(
-          onTap: () {
-            _startAttack();
-          },
-          child: Card(
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: _borderColor(),
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(4.0),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: _borderColor(),
+              width: 1.5,
             ),
-            elevation: 2,
-            child: ClipPath(
-              clipper: ShapeBorderClipper(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(3),
-                ),
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          elevation: 2,
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(3),
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border(
-                    right: BorderSide(
-                      color: _chainProvider.panicTargets.where((t) => t.name == _target.name).length > 0
-                          ? Colors.blue
-                          : Colors.transparent,
-                      width: 2,
-                    ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(
+                    color: _chainProvider.panicTargets.where((t) => t.name == _target.name).length > 0
+                        ? Colors.blue
+                        : Colors.transparent,
+                    width: 2,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    // LINE 1
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(15, 5, 10, 0),
-                      child: Row(
-                        children: <Widget>[
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              _attackIcon(),
-                              Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 5),
-                              ),
-                              SizedBox(
-                                width: 95,
-                                child: Text(
-                                  '${_target.name}',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  // LINE 1
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(12, 5, 10, 0),
+                    child: Row(
+                      children: <Widget>[
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            GestureDetector(
+                              onTap: () {
+                                _startAttack();
+                              },
+                              child: Row(
+                                children: [
+                                  _attackIcon(),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 5),
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              mainAxisSize: MainAxisSize.max,
-                              children: <Widget>[
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(width: 5),
-                                    OpenContainer(
-                                      transitionDuration: Duration(milliseconds: 500),
-                                      transitionType: ContainerTransitionType.fadeThrough,
-                                      openBuilder: (BuildContext context, VoidCallback _) {
-                                        return TargetDetailsPage(target: _target);
-                                      },
-                                      closedElevation: 0,
-                                      closedShape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                          Radius.circular(56 / 2),
-                                        ),
+                                  SizedBox(
+                                    width: 95,
+                                    child: Text(
+                                      '${_target.name}',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      closedColor: Colors.transparent,
-                                      closedBuilder: (BuildContext context, VoidCallback openContainer) {
-                                        return SizedBox(
-                                          height: 22,
-                                          width: 30,
-                                          child: Icon(
-                                            Icons.info_outline,
-                                            size: 20,
-                                          ),
-                                        );
-                                      },
                                     ),
-                                    SizedBox(width: 5),
-                                    _factionIcon(),
-                                  ],
-                                ),
-                                Text(
-                                  'Lvl ${_target.level}',
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 3),
-                                  child: SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: _refreshIcon(),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // LINE 2
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        mainAxisSize: MainAxisSize.max,
-                        children: <Widget>[
-                          _returnRespectFF(_target.respectGain, _target.fairFight),
-                          _returnHealth(_target),
-                        ],
-                      ),
-                    ),
-                    // LINE 3
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(17, 5, 15, 0),
-                      child: Row(
-                        children: <Widget>[
-                          Row(
+                          ],
+                        ),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisSize: MainAxisSize.max,
                             children: <Widget>[
-                              _travelIcon(),
-                              Container(
-                                width: 14,
-                                height: 14,
-                                decoration: BoxDecoration(
-                                  color: _returnStatusColor(_target.lastAction.status),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 13),
-                                child: Text(
-                                  _target.lastAction.relative == "0 minutes ago"
-                                      ? 'now'
-                                      : _target.lastAction.relative.replaceAll(' ago', ''),
-                                ),
-                              ),
-                            ],
-                          ),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: <Widget>[
-                                Icon(Icons.refresh, size: 15),
-                                Text(
-                                  ' $_lastUpdatedString',
-                                  style: TextStyle(
-                                    color:
-                                        _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
-                                    fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // LINE 4
-                    Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(10, 5, 15, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Row(
-                              children: <Widget>[
-                                SizedBox(
-                                  width: 30,
-                                  height: 20,
-                                  child: IconButton(
-                                    padding: EdgeInsets.all(0),
-                                    iconSize: 20,
-                                    icon: Icon(
-                                      MdiIcons.notebookEditOutline,
-                                      color: _returnTargetNoteColor(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(width: 5),
+                                  OpenContainer(
+                                    transitionDuration: Duration(milliseconds: 500),
+                                    transitionType: ContainerTransitionType.fadeThrough,
+                                    openBuilder: (BuildContext context, VoidCallback _) {
+                                      return TargetDetailsPage(target: _target);
+                                    },
+                                    closedElevation: 0,
+                                    closedShape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(56 / 2),
+                                      ),
                                     ),
-                                    onPressed: () {
-                                      _showNotesDialog();
+                                    closedColor: Colors.transparent,
+                                    closedBuilder: (BuildContext context, VoidCallback openContainer) {
+                                      return SizedBox(
+                                        height: 22,
+                                        width: 30,
+                                        child: Icon(
+                                          Icons.info_outline,
+                                          size: 20,
+                                        ),
+                                      );
                                     },
                                   ),
+                                  SizedBox(width: 5),
+                                  _factionIcon(),
+                                ],
+                              ),
+                              Text(
+                                'Lvl ${_target.level}',
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 3),
+                                child: SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: _refreshIcon(),
                                 ),
-                                SizedBox(width: 4),
-                                Text('Notes: '),
-                                Flexible(
-                                  child: Text(
-                                    '${_target.personalNote}',
-                                    style: TextStyle(
-                                      color: _returnTargetNoteColor(),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 10),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 2),
-                            child: Text(
-                              '${_targetsProvider.allTargets.indexOf(_target) + 1}'
-                              '/${_targetsProvider.allTargets.length}',
-                              style: TextStyle(
-                                color: Colors.brown[400],
-                                fontSize: 11,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // LINE 2
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(16, 5, 15, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        _returnRespectFF(_target.respectGain, _target.fairFight),
+                        _returnHealth(_target),
+                      ],
+                    ),
+                  ),
+                  // LINE 3
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(15, 5, 15, 0),
+                    child: Row(
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            _travelIcon(),
+                            Container(
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: _returnStatusColor(_target.lastAction.status),
+                                shape: BoxShape.circle,
                               ),
                             ),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 13),
+                              child: Text(
+                                _target.lastAction.relative == "0 minutes ago"
+                                    ? 'now'
+                                    : _target.lastAction.relative.replaceAll(' ago', ''),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Icon(Icons.refresh, size: 15),
+                              Text(
+                                ' $_lastUpdatedString',
+                                style: TextStyle(
+                                  color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
+                                  fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 10),
-                  ],
-                ),
+                  ),
+                  // LINE 4
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(8, 5, 15, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            children: <Widget>[
+                              SizedBox(
+                                width: 30,
+                                height: 20,
+                                child: IconButton(
+                                  padding: EdgeInsets.all(0),
+                                  iconSize: 20,
+                                  icon: Icon(
+                                    MdiIcons.notebookEditOutline,
+                                    color: _returnTargetNoteColor(),
+                                  ),
+                                  onPressed: () {
+                                    _showNotesDialog();
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Text('Notes: '),
+                              Flexible(
+                                child: Text(
+                                  '${_target.personalNote}',
+                                  style: TextStyle(
+                                    color: _returnTargetNoteColor(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 2),
+                          child: Text(
+                            '${_targetsProvider.allTargets.indexOf(_target) + 1}'
+                            '/${_targetsProvider.allTargets.length}',
+                            style: TextStyle(
+                              color: Colors.brown[400],
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                ],
               ),
             ),
           ),

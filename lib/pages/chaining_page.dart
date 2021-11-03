@@ -185,7 +185,7 @@ class _ChainingPageState extends State<ChainingPage> {
         analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
         if (!_settingsProvider.showCases.contains("war_add_faction")) {
           Get.put(WarController()).launchShowCaseAddFaction();
-          _settingsProvider.addShowCase = "war_add_faction";
+          _settingsProvider.addShowCase = "war";
         }
         break;
     }

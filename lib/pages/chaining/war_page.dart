@@ -54,6 +54,7 @@ class WarPage extends StatefulWidget {
 
 class _WarPageState extends State<WarPage> {
   GlobalKey _showCaseAddFaction = GlobalKey();
+  GlobalKey _showCaseUpdate = GlobalKey();
 
   final _searchController = TextEditingController();
   final _addIdController = TextEditingController();
@@ -65,6 +66,8 @@ class _WarPageState extends State<WarPage> {
   WarController _w;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+
+  bool _quickUpdateActive = false;
 
   final _popupSortChoices = <WarSort>[
     WarSort(type: WarSortType.levelDes),
@@ -107,11 +110,11 @@ class _WarPageState extends State<WarPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return ShowCaseWidget(
       builder: Builder(builder: (_) {
-        if (_w.showCaseAddFaction) {
+        if (_w.showCaseStart) {
           // Delaying also (even Duration.zero works) to avoid state conflicts with build
           Future.delayed(Duration(seconds: 1), () async {
-            ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction]);
-            _w.showCaseAddFaction = false;
+            ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction, _showCaseUpdate]);
+            _w.showCaseStart = false;
           });
         }
         return Scaffold(
@@ -219,74 +222,136 @@ class _WarPageState extends State<WarPage> {
             },
           ),
         ),
-        GetBuilder<WarController>(
-          builder: (w) {
-            if (w.updating)
-              return IconButton(
-                icon: Icon(
-                  MdiIcons.closeOctagonOutline,
-                  color: Colors.orange[700],
-                ),
-                onPressed: () async {
-                  _w.stopUpdate();
-                },
-              );
-            else
-              return IconButton(
-                icon: Icon(Icons.refresh),
-                onPressed: () async {
-                  String message = "";
-                  Color messageColor = Colors.green;
-                  // Count all members
-                  int allMembers = _w.orderedCardsDetails.length;
-                  int updatedMembers = 0;
+        Showcase(
+          key: _showCaseUpdate,
+          title: 'Updating targets!',
+          description: "\nThere are a couple of ways to update faction targets.\n\nWith a short tap, you can perform "
+              "a quick update with minimal target information (some stats and life information won't be available).\n\n"
+              "A long-press will start a slower but full update of all targets.\n\n"
+              "Alternatively, you can update targets individually.",
+          descTextStyle: TextStyle(fontSize: 13),
+          contentPadding: EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: GetBuilder<WarController>(
+              builder: (w) {
+                if (w.updating)
+                  return GestureDetector(
+                    child: Icon(
+                      MdiIcons.closeOctagonOutline,
+                      color: Colors.orange[700],
+                    ),
+                    onTap: () async {
+                      _w.stopUpdate();
+                    },
+                  );
+                else
+                  return GestureDetector(
+                    child: Icon(Icons.refresh, color: _quickUpdateActive ? Colors.grey : Colors.white),
+                    // Quick update
+                    onTap: _quickUpdateActive
+                        ? null
+                        : () async {
+                            setState(() {
+                              _quickUpdateActive = true;
+                            });
 
-                  if (allMembers == 0) {
-                    message = "No targets to update!";
-                    messageColor = Colors.orange[700];
-                  } else {
-                    if (allMembers > 60) {
-                      BotToast.showText(
-                        clickClose: true,
-                        text: "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
-                            "issues with API request limits!",
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: messageColor,
-                        duration: const Duration(seconds: 3),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    }
-                    List<int> result = await _w.updateAllMembers();
-                    allMembers = result[0]; // This might have changed if new members are added with integrityCheck()
-                    updatedMembers = result[1];
-                  }
+                            int updatedMembers = await _w.updateAllMembersEasy();
 
-                  if (updatedMembers > 0 && updatedMembers == allMembers) {
-                    message = 'Successfully updated $updatedMembers war targets!';
-                  } else if (updatedMembers > 0 && updatedMembers < allMembers) {
-                    message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!';
-                    messageColor = Colors.orange[700];
-                  }
+                            String message = "";
+                            Color messageColor = Colors.green;
+                            // Count all members
+                            int allMembers = _w.orderedCardsDetails.length;
 
-                  if (mounted) {
-                    BotToast.showText(
-                      clickClose: true,
-                      text: message,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: messageColor,
-                      duration: const Duration(seconds: 3),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  }
-                },
-              );
-          },
+                            if (allMembers == 0) {
+                              message = "No targets to update!";
+                              messageColor = Colors.orange[700];
+                            } else if (updatedMembers > 0 && updatedMembers == allMembers) {
+                              message = 'Successfully updated $updatedMembers war targets!\n\n'
+                                  'A quick update was performed (only stats, state and online status).';
+                            } else if (updatedMembers > 0 && updatedMembers < allMembers) {
+                              message =
+                                  'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!\n\n'
+                                  'A quick update was performed (only stats, state and online status).';
+                              messageColor = Colors.orange[700];
+                            }
+
+                            if (mounted) {
+                              BotToast.showText(
+                                clickClose: true,
+                                text: message,
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: messageColor,
+                                duration: const Duration(seconds: 5),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }
+
+                            setState(() {
+                              _quickUpdateActive = false;
+                            });
+                          },
+                    // Full update
+                    onLongPress: () async {
+                      String message = "";
+                      Color messageColor = Colors.green;
+                      // Count all members
+                      int allMembers = _w.orderedCardsDetails.length;
+                      int updatedMembers = 0;
+
+                      if (allMembers == 0) {
+                        message = "No targets to update!";
+                        messageColor = Colors.orange[700];
+                      } else {
+                        if (allMembers > 60) {
+                          BotToast.showText(
+                            clickClose: true,
+                            text:
+                                "Updating $allMembers war targets, this might take a while. Extra time needed to avoid "
+                                "issues with API request limits!",
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: messageColor,
+                            duration: const Duration(seconds: 3),
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        }
+                        List<int> result = await _w.updateAllMembersFull();
+                        allMembers =
+                            result[0]; // This might have changed if new members are added with integrityCheck()
+                        updatedMembers = result[1];
+                      }
+
+                      if (updatedMembers > 0 && updatedMembers == allMembers) {
+                        message = 'Successfully updated $updatedMembers war targets!';
+                      } else if (updatedMembers > 0 && updatedMembers < allMembers) {
+                        message = 'Updated $updatedMembers war targets, but ${allMembers - updatedMembers} failed!';
+                        messageColor = Colors.orange[700];
+                      }
+
+                      if (mounted) {
+                        BotToast.showText(
+                          clickClose: true,
+                          text: message,
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: messageColor,
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      }
+                    },
+                  );
+              },
+            ),
+          ),
         ),
         PopupMenuButton<WarSort>(
           icon: const Icon(
