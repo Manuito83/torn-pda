@@ -225,7 +225,7 @@ class _WarPageState extends State<WarPage> {
         Showcase(
           key: _showCaseUpdate,
           title: 'Updating targets!',
-          description: "\nThere are a couple of ways to update faction targets.\n\nWith a short tap, you can perform "
+          description: "\nThere are a couple of ways to update war targets.\n\nWith a short tap, you can perform "
               "a quick update with minimal target information (some stats and life information won't be available).\n\n"
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
