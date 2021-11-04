@@ -935,7 +935,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           document = parse(updatedHtml);
                         }
                       }
-
                       if (query.isNotEmpty) {
                         _assessJail(document);
                       }
@@ -2683,10 +2682,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // If it's the first time we enter (we have no jailModel) or if we are reentering (expandable is empty), we call
     // the widget and get values from shared preferences.
     if (_jailModel == null || _jailExpandable is! JailWidget) {
-      _jailExpandable = JailWidget(
-        webview: webView,
-        fireScriptCallback: _fireJailScriptCallback,
-      );
+      setState(() {
+        _jailExpandable = JailWidget(
+          webview: webView,
+          fireScriptCallback: _fireJailScriptCallback,
+        );
+      });
     }
     // Otherwise, we are changing pages or reloading. We just need to fire the script. Any changes in the script
     // while the widget is shown will be handled by the callback (which also triggers the script)
