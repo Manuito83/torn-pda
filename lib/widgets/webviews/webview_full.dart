@@ -1415,6 +1415,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool getVault = false;
     bool getProfile = false;
     bool getAttack = false;
+    bool getJail = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
         (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
@@ -1449,6 +1450,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (!_currentUrl.contains("jailview.php") && (_jailExpandable is JailWidget)) {
       // This is different to the others, here we call only so that jail is deactivated
       _jailExpandable = const SizedBox.shrink();
+    } else if (_currentUrl.contains("jailview.php") && (_jailExpandable is! JailWidget)) {
+      // Note: jail is also in onResource. This will make sure jail activates correctly
+      // in some devices
+      getJail = true;
     }
 
     if (_settingsProvider.extraPlayerInformation) {
@@ -1483,6 +1488,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (getVault) _assessVault(doc: doc, pageTitle: pageTitle);
       if (getProfile) _assessProfileAttack();
       if (getAttack) _assessProfileAttack();
+      if (getJail) _assessJail(doc);
     }
   }
 
