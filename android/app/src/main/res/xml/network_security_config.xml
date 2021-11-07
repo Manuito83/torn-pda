@@ -2,5 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">torn.com</domain>
+        <!-- 10.0.2.2 localhost for the emulator (cloud functions tests using http)-->
+        <domain>10.0.2.2</domain>
     </domain-config>
 </network-security-config>

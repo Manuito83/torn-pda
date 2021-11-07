@@ -5,6 +5,8 @@ enum TargetSortType {
   respectAsc,
   nameDes,
   nameAsc,
+  lifeDes,
+  lifeAsc,
   colorAsc,
   colorDes,
 }
@@ -32,6 +34,12 @@ class TargetSort {
         break;
       case TargetSortType.nameAsc:
         description = 'Sort by name (asc)';
+        break;
+      case TargetSortType.lifeDes:
+        description = 'Sort by life (des)';
+        break;
+      case TargetSortType.lifeAsc:
+        description = 'Sort by life (asc)';
         break;
       case TargetSortType.colorDes:
         description = 'Sort by color (#-R-Y-G)';

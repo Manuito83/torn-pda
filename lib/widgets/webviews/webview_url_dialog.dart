@@ -8,13 +8,18 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -24,14 +29,15 @@ class WebviewUrlDialog extends StatefulWidget {
   final String url;
   final InAppWebViewController inAppWebview;
   final WebViewController stockWebView;
+  final UserDetailsProvider userProvider;
 
-  WebviewUrlDialog({
-    this.callFindInPage,
-    @required this.title,
-    @required this.url,
-    this.inAppWebview,
-    this.stockWebView,
-  });
+  WebviewUrlDialog(
+      {this.callFindInPage,
+      @required this.title,
+      @required this.url,
+      this.inAppWebview,
+      this.stockWebView,
+      @required this.userProvider});
 
   @override
   _WebviewUrlDialogState createState() => _WebviewUrlDialogState();
@@ -107,6 +113,81 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     SizedBox(height: 15),
+                    if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
+                        widget.userProvider.basic.faction.factionId != 0)
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.red,
+                          onPrimary: Colors.white,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(MdiIcons.fencing, size: 20),
+                            SizedBox(width: 5),
+                            Text('FACTION ASSISTANCE', style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                        onPressed: () async {
+                          BotToast.showText(
+                            onlyOne: true,
+                            text: "Requesting assistance from faction members!",
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+
+                          Navigator.of(context).pop();
+
+                          String attackId = widget.url.split("user2ID=")[1];
+                          var t = await TornApiCaller.target(widget.userProvider.basic.userApiKey, attackId).getTarget;
+
+                          int membersNotified = 0;
+                          if (t is TargetModel) {
+                            membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                              attackName: t.name,
+                              attackId: attackId,
+                              attackLevel: t.level.toString(),
+                            );
+                          } else {
+                            membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                              attackName: "",
+                              attackId: attackId,
+                              attackLevel: "",
+                            );
+                          }
+
+                          String membersMessage = "$membersNotified faction member${membersNotified == 1 ? "" : "s"} "
+                              "${membersNotified == 1 ? "has" : "have"} been notified!";
+                          Color membersColor = Colors.green;
+
+                          if (membersNotified == 0) {
+                            membersMessage = "No faction member could be notified (not using Torn PDA or "
+                                "assists messages deactivated)!";
+                            membersColor = Colors.orange[700];
+                          } else if (membersNotified == -1) {
+                            membersMessage = "There was a problem locating your faction's details, please try again!";
+                            membersColor = Colors.orange[700];
+                          }
+
+                          BotToast.showText(
+                            onlyOne: true,
+                            text: membersMessage,
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: membersColor,
+                            duration: Duration(seconds: 5),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                        },
+                      ),
+                    SizedBox(height: 5),
                     Row(
                       children: [
                         Flexible(
@@ -335,7 +416,6 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
-      
       String url = _customURLController.text.toLowerCase().replaceAll(" ", "");
       if (!url.contains("https://") || !url.contains("http://")) {
         url = 'https://' + url;

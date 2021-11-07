@@ -62,7 +62,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.data is FirebaseUserModel) {
-              _firebaseUserModel = snapshot.data as FirebaseUserModel;
+              if (_firebaseUserModel == null) {
+                // We don't use the snapshot data any longer if we have updated the model after a reset
+                _firebaseUserModel = snapshot.data as FirebaseUserModel;
+              }
               return SingleChildScrollView(
                 child: Column(
                   children: [
@@ -317,7 +320,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         value: _firebaseUserModel.refillsNotification ?? false,
                         title: const Text("Refills"),
                         subtitle: const Text(
-                          "Get notified (22:00 TCT) if you still have unused refills",
+                          "Get notified if you still have unused refills",
                           style: TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
@@ -331,6 +334,114 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         },
                       ),
                     ),
+                    if (_firebaseUserModel?.refillsNotification)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            const Padding(
+                              padding: EdgeInsets.only(left: 10),
+                              child: Text(
+                                "Time",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            DropdownButton<int>(
+                              value: _firebaseUserModel?.refillsTime,
+                              items: [
+                                DropdownMenuItem(
+                                  value: 18,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "18:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 19,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "19:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 20,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "20:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 21,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "21:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 22,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "22:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 23,
+                                  child: SizedBox(
+                                    width: 80,
+                                    child: Text(
+                                      "23:00 TCT",
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) async {
+                                setState(() {
+                                  _firebaseUserModel?.refillsTime = value;
+                                });
+                                firestore.setRefillTime(value);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_firebaseUserModel?.refillsNotification)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
@@ -398,6 +509,28 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blueGrey,
+                        value: _firebaseUserModel.factionAssistMessage ?? false,
+                        title: const Text("Faction assist messages"),
+                        subtitle: const Text(
+                          "Receive attack assist messages manually triggered by your faction mates",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _firebaseUserModel?.factionAssistMessage = value;
+                          });
+                          firestore.toggleFactionAssistMessage(value);
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 60),
                   ],
                 ),
@@ -415,7 +548,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Alerts'),
       leading: IconButton(
@@ -569,7 +702,10 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
                 final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
                 firestore.setUID(mFirebaseUser.uid);
-                await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                FirebaseUserModel fb = await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                setState(() {
+                  _firebaseUserModel = fb;
+                });
                 await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
                 if (Platform.isAndroid) {
@@ -579,30 +715,34 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                   // Update channel preferences
                   firestore.setVibrationPattern(alertsVibration);
                 }
-              }
 
-              BotToast.showText(
-                text: "Reset successful",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.green[800],
-                duration: const Duration(seconds: 5),
-                contentPadding: const EdgeInsets.all(10),
-              );
+                BotToast.showText(
+                  text: "Reset successful",
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green[800],
+                  duration: const Duration(seconds: 5),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+
+                return;
+              }
             } catch (e) {
-              BotToast.showText(
-                text: "There was an error: $e",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.orange[800],
-                duration: const Duration(seconds: 5),
-                contentPadding: const EdgeInsets.all(10),
-              );
+              // Same message below
             }
+
+            BotToast.showText(
+              text: "There was an error updating the database, try again later!",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[800],
+              duration: const Duration(seconds: 5),
+              contentPadding: const EdgeInsets.all(10),
+            );
           },
         ),
         TextButton(

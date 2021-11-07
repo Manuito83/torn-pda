@@ -173,7 +173,7 @@ class _JobPointsDialogState extends State<JobPointsDialog> {
         ),
       );
     }
-    
+
     return Column(
       children: [
         Text(

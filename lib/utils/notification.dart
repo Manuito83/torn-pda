@@ -34,16 +34,19 @@ Future showNotificationBoth(Map payload, int notId) async {
   String channel = '';
   String messageId = '';
   String tradeId = '';
+  String assistId = '';
 
   if (payload.isNotEmpty) {
     if (Platform.isAndroid) {
       channel = payload["channelId"] ?? '';
       messageId = payload["tornMessageId"] ?? '';
       tradeId = payload["tornTradeId"] ?? '';
+      assistId = payload["assistId"] ?? '';
     } else {
       channel = payload["channelId"] ?? '';
       messageId = payload["tornMessageId"] ?? '';
       tradeId = payload["tornTradeId"] ?? '';
+      assistId = payload["assistId"] ?? '';
     }
   }
 
@@ -144,14 +147,23 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts stocks';
     channelName = 'Alerts stocks';
     channelDescription = 'Automatic alerts for stocks';
+  } else if (channel.contains("Alerts assists")) {
+    notificationIcon = "notification_assists";
+    notificationColor = Colors.red;
+    onTapPayload += 'assistId:$assistId';
+    channelId = 'Alerts assists';
+    channelName = 'Alerts assists';
+    channelDescription = 'Automatic alerts for assists';
   }
-
 
   if (Platform.isAndroid) {
     var modifier = await getNotificationChannelsModifiers();
 
     // Add s for custom sounds
     if (channelId.contains("travel")) {
+      channelId = "$channelId ${modifier.channelIdModifier} s";
+      channelName = "$channelName ${modifier.channelIdModifier} s";
+    } else if (channelId.contains("assists")) {
       channelId = "$channelId ${modifier.channelIdModifier} s";
       channelName = "$channelName ${modifier.channelIdModifier} s";
     } else {
@@ -200,6 +212,14 @@ Future showNotificationBoth(Map payload, int notId) async {
         iOS: IOSNotificationDetails(
           presentSound: true,
           sound: 'aircraft_seatbelt.aiff',
+        ),
+      );
+    } else if (channelName.contains("assists")) {
+      platformChannelSpecifics = NotificationDetails(
+        android: null,
+        iOS: IOSNotificationDetails(
+          presentSound: true,
+          sound: 'sword_clash.aiff',
         ),
       );
     }
@@ -566,6 +586,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Automatic alerts for stocks',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts assists ${modifier.channelIdModifier} s',
+      'Alerts assists ${modifier.channelIdModifier} s',
+      'Automatic alerts for assists',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),

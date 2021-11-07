@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_card.dart';
 import 'package:torn_pda/widgets/alerts/share_price_options.dart';
 
@@ -38,6 +39,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   SettingsProvider _settingsP;
   ThemeProvider _themeP;
 
+  double _totalValue = 0;
+  double _totalProfit = 0;
+
   Future _stocksInitialised;
   bool _errorInitialising = false;
 
@@ -46,7 +50,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     super.initState();
     _settingsP = Provider.of<SettingsProvider>(context, listen: false);
     _userP = Provider.of<UserDetailsProvider>(context, listen: false);
-    if (!widget.calledFromMenu) _fbUser = widget.fbUser;
+    if (!widget.calledFromMenu) _fbUser = widget.fbUser; // We are NOT getting updated stocks every time
     _stocksInitialised = _initialiseStocks();
     analytics.logEvent(name: 'section_changed', parameters: {'section': 'stockMarket'});
   }
@@ -88,8 +92,31 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                               children: <Widget>[
                                 _alertActivator(),
                                 Divider(),
-                                SizedBox(height: 10),
                                 Text("Traded Companies"),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Value: ",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      formatProfit(inputDouble: _totalValue),
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      " - ${_totalProfit >= 0 ? 'Profit' : 'Loss'}: ",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                    Text(
+                                      formatProfit(inputDouble: _totalProfit),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: _totalProfit >= 0 ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                                 SizedBox(height: 10),
                                 _allStocksList(),
                                 SizedBox(height: 50),
@@ -139,7 +166,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsP.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Text("Stock market alerts"),
@@ -232,7 +259,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
     // the alerts pages, like in other cases
     if (widget.calledFromMenu) {
-      _fbUser = await firestore.getUserProfile(force: false);
+      _fbUser = await firestore.getUserProfile(force: false); // We are NOT getting updated stocks every time
     }
 
     var allStocksReply = await TornApiCaller.stockmarket(_userP.basic.userApiKey).getAllStocks;
@@ -276,6 +303,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           listedStock.gain = totalMoneyGain;
           listedStock.percentageGain = averageGain * 100 / averageBought;
           listedStock.sharesOwned = totalShares;
+
+          _totalValue += totalShares * listedStock.currentPrice;
+          _totalProfit += totalMoneyGain;
         }
       }
     }

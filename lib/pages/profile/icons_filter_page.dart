@@ -80,7 +80,7 @@ class _IconsFilterPageState extends State<IconsFilterPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: widget.settingsProvider.appBarTop ? 2 : 0,
       title: Text("Filter icons"),
       leading: new IconButton(

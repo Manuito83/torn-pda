@@ -203,7 +203,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _localChatRemovalActive = widget.chatRemovalActive;
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _clearCacheFirstOpportunity = _settingsProvider.clearCacheNextOpportunity;
+    _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
@@ -215,9 +215,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialWebViewOptions = InAppWebViewGroupOptions(
       crossPlatform: InAppWebViewOptions(
+        transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
-        transparentBackground: true,  // Prevents white flash on initialization
 
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
@@ -260,10 +260,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      webView.pauseTimers();
-    } else {
-      webView.resumeTimers();
+    if (Platform.isAndroid) {
+      if (state == AppLifecycleState.paused) {
+        webView.pauseTimers();
+      } else {
+        webView.resumeTimers();
+      }
     }
   }
 
@@ -746,14 +748,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       });
                     }
 
-                    if (progress > 75) _pullToRefreshController.endRefreshing();
+                    if (progress > 75) {
+                      _pullToRefreshController.endRefreshing();
 
-                    // onProgressChanged gets called before onLoadStart, so it works
-                    // both to add or remove widgets. It is much faster.
-                    _assessSectionsWithWidgets();
-                    // We reset here the triggers for the sections that are called every
-                    // time so that they can be called again
-                    _resetSectionsWithWidgets();
+                      // onProgressChanged gets called before onLoadStart, so it works
+                      // both to add or remove widgets. It is much faster.
+                      _assessSectionsWithWidgets();
+                      // We reset here the triggers for the sections that are called every
+                      // time so that they can be called again
+                      _resetSectionsWithWidgets();
+                    }
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -832,13 +836,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     /// Independent of tabs, iOS needs to get the loader.php (attack view)
                     /// to trigger the profile widget
                     if (Platform.isIOS && _settingsProvider.extraPlayerInformation) {
-                      if (resource.initiatorType == "xmlhttprequest"
-                          &&
-                          (resource.url.toString().contains("profiles.php?step=getProfileData")
-                              && !_profileTriggered)
-                          ||
-                          (resource.url.toString().contains("loader.php")
-                              && !_attackTriggered)) {
+                      if (resource.initiatorType == "xmlhttprequest" &&
+                              (resource.url.toString().contains("profiles.php?step=getProfileData") &&
+                                  !_profileTriggered) ||
+                          (resource.url.toString().contains("loader.php") && !_attackTriggered)) {
                         // Trigger once
                         if (_profileTriggerTime != null &&
                             (DateTime.now().difference(_profileTriggerTime).inSeconds) < 1) {
@@ -878,7 +879,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       _assessTrades(document, pageTitle);
                     }
 
-                    // Properties (vault) for initialisation and live transactions
+                    // Properties (vault) for initialization and live transactions
                     if (resource.url.toString().contains("properties.php") ||
                         (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
@@ -903,7 +904,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       }
                     }
 
-                    // Jail for initialisation and live transactions
+                    // Jail for initialization and live transactions
                     if (resource.url.toString().contains("jailview.php")) {
                       // Trigger once
                       if (_jailOnResourceTriggerTime != null &&
@@ -922,7 +923,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       dom.Document document = parse(html);
 
                       List<dom.Element> query;
-                      for (var i = 0; i < 60; i++) {
+                      for (var i = 0; i < 2; i++) {
                         if (!mounted) break;
                         query = document.querySelectorAll(".users-list > li");
                         if (query.isNotEmpty) {
@@ -934,7 +935,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           document = parse(updatedHtml);
                         }
                       }
-
                       if (query.isNotEmpty) {
                         _assessJail(document);
                       }
@@ -1227,7 +1227,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         leading: IconButton(
           icon: _backButtonPopsContext ? const Icon(Icons.close) : const Icon(Icons.arrow_back_ios),
           onPressed: () async {
-            // Normal behaviour is just to pop and go to previous page
+            // Normal behavior is just to pop and go to previous page
             if (_backButtonPopsContext) {
               if (widget.customCallBack != null) {
                 widget.customCallBack();
@@ -1399,7 +1399,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// Note: several other modules are called in onProgressChanged, since it's
   /// faster. The ones here probably would not benefit from it.
   Future _assessGeneral(dom.Document document) async {
-    _assessBackButtonBehaviour();
+    _assessBackButtonBehavior();
     _assessTravel(document);
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
@@ -1414,6 +1414,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool getVault = false;
     bool getProfile = false;
     bool getAttack = false;
+    bool getJail = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
         (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
@@ -1448,6 +1449,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (!_currentUrl.contains("jailview.php") && (_jailExpandable is JailWidget)) {
       // This is different to the others, here we call only so that jail is deactivated
       _jailExpandable = const SizedBox.shrink();
+    } else if (_currentUrl.contains("jailview.php") && (_jailExpandable is! JailWidget)) {
+      // Note: jail is also in onResource. This will make sure jail activates correctly
+      // in some devices
+      getJail = true;
     }
 
     if (_settingsProvider.extraPlayerInformation) {
@@ -1482,6 +1487,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (getVault) _assessVault(doc: doc, pageTitle: pageTitle);
       if (getProfile) _assessProfileAttack();
       if (getAttack) _assessProfileAttack();
+      if (getJail) _assessJail(doc);
     }
   }
 
@@ -1546,7 +1552,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Future _assessBackButtonBehaviour() async {
+  Future _assessBackButtonBehavior() async {
     // If we are NOT moving to a place with a vault, we show an X and close upon button press
     if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
         !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
@@ -1554,7 +1560,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _backButtonPopsContext = true;
     }
     // However, if we are in a place with a vault AND we come from Trades, we'll change
-    // the back button behaviour to ensure we are returning to Trades
+    // the back button behavior to ensure we are returning to Trades
     else {
       final history = await webView.getCopyBackForwardList();
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
@@ -2218,10 +2224,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     // Retry several times and allow the map to load. If the user lands in the city list, this will
-    // also trigger and the user will have 60 seconds to load the map (after that, only reloading
+    // also trigger and the user will have 30 seconds to load the map (after that, only reloading
     // or browsing out/in of city will force a reload)
     List<dom.Element> query;
-    for (var i = 0; i < 60; i++) {
+    for (var i = 0; i < 30; i++) {
       if (!mounted) break;
       query = document.querySelectorAll("#map .leaflet-marker-pane *");
       if (query.isNotEmpty) {
@@ -2597,6 +2603,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           url: url.toString(),
           inAppWebview: webView,
           callFindInPage: _activateFindInPage,
+          userProvider: _userProvider,
         );
       },
     );
@@ -2675,10 +2682,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // If it's the first time we enter (we have no jailModel) or if we are reentering (expandable is empty), we call
     // the widget and get values from shared preferences.
     if (_jailModel == null || _jailExpandable is! JailWidget) {
-      _jailExpandable = JailWidget(
-        webview: webView,
-        fireScriptCallback: _fireJailScriptCallback,
-      );
+      setState(() {
+        _jailExpandable = JailWidget(
+          webview: webView,
+          fireScriptCallback: _fireJailScriptCallback,
+        );
+      });
     }
     // Otherwise, we are changing pages or reloading. We just need to fire the script. Any changes in the script
     // while the widget is shown will be handled by the callback (which also triggers the script)

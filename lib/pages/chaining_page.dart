@@ -1,5 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -8,12 +10,16 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
 //import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
+import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
+
+import '../main.dart';
 //import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
@@ -27,6 +33,7 @@ class _ChainingPageState extends State<ChainingPage> {
   ThemeProvider _themeProvider;
   ChainStatusProvider _chainStatusProvider;
   Future _preferencesLoaded;
+  SettingsProvider _settingsProvider;
 
   int _currentPage = 0;
   bool _isAppBarTop;
@@ -44,8 +51,9 @@ class _ChainingPageState extends State<ChainingPage> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    bool isThemeLight = _themeProvider.currentTheme == AppTheme.light ? true : false;
-    double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final bool isThemeLight = _themeProvider.currentTheme == AppTheme.light || false;
+    final double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
     return Scaffold(
       extendBody: true,
       body: FutureBuilder(
@@ -68,6 +76,9 @@ class _ChainingPageState extends State<ChainingPage> {
                       AttacksPage(
                         userKey: _myCurrentKey,
                       ),
+                      WarPage(
+                        userKey: _myCurrentKey,
+                      ),
                       /*
                       TacPage(
                         userKey: _myCurrentKey,
@@ -78,11 +89,11 @@ class _ChainingPageState extends State<ChainingPage> {
                 ),
                 if (!_isAppBarTop)
                   BounceTabBar(
-                    initialIndex: 0,
                     onTabChanged: (index) {
                       setState(() {
                         _currentPage = index;
                       });
+                      handleSectionChange(index);
                     },
                     backgroundColor: isThemeLight ? Colors.blueGrey : Colors.grey[900],
                     items: [
@@ -92,7 +103,11 @@ class _ChainingPageState extends State<ChainingPage> {
                         width: 28,
                       ),
                       Icon(
-                        Icons.person,
+                        Icons.people,
+                        color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                      ),
+                      Icon(
+                        MdiIcons.wall,
                         color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
@@ -102,17 +117,17 @@ class _ChainingPageState extends State<ChainingPage> {
               ],
             );
           } else {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
         },
       ),
       bottomNavigationBar: _isAppBarTop
           ? BounceTabBar(
-              initialIndex: 0,
               onTabChanged: (index) {
                 setState(() {
                   _currentPage = index;
                 });
+                handleSectionChange(index);
               },
               backgroundColor: isThemeLight ? Colors.blueGrey : Colors.grey[900],
               items: [
@@ -122,14 +137,19 @@ class _ChainingPageState extends State<ChainingPage> {
                   width: 28,
                 ),
                 Icon(
-                  Icons.person,
+                  Icons.people,
+                  color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                ),
+                Image.asset(
+                  'images/icons/faction.png',
+                  width: 17,
                   color: isThemeLight ? Colors.white : _themeProvider.mainText,
                 ),
                 // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
               ],
               locationTop: false,
             )
-          : SizedBox.shrink(),
+          : const SizedBox.shrink(),
     );
   }
 
@@ -142,12 +162,32 @@ class _ChainingPageState extends State<ChainingPage> {
   */
 
   Future _restorePreferences() async {
-    var userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    final userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _myCurrentKey = userDetails.basic.userApiKey;
     //_tacEnabled = await Prefs().getTACEnabled();
 
     if (!_chainStatusProvider.initialised) {
       await _chainStatusProvider.loadPreferences(apiKey: _myCurrentKey);
+    }
+  }
+
+  // IndexedStack loads all sections at the same time, but we need to load certain things when we
+  // enter the section
+  void handleSectionChange(int index) {
+    switch (index) {
+      case 0:
+        analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
+        break;
+      case 1:
+        analytics.logEvent(name: 'section_changed', parameters: {'section': 'attacks'});
+        break;
+      case 2:
+        analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
+        if (!_settingsProvider.showCases.contains("war")) {
+          Get.put(WarController()).launchShowCaseAddFaction();
+          _settingsProvider.addShowCase = "war";
+        }
+        break;
     }
   }
 }

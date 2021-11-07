@@ -7,9 +7,9 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool travelNotification = false;
   bool foreignRestockNotification = false;
   bool energyNotification = false;
-  bool energyLastCheckFull = false;
+  bool energyLastCheckFull = true;
   bool nerveNotification = false;
-  bool nerveLastCheckFull = false;
+  bool nerveLastCheckFull = true;
   bool hospitalNotification = false;
   bool drugsNotification = false;
   bool drugsInfluence = false;
@@ -18,10 +18,12 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool eventsNotification = false;
   List eventsFilter = [];
   bool refillsNotification = false;
+  int refillsTime = 22;
   List refillsRequested = [];
-  bool racingSent = false;
+  bool racingSent = true;
   bool stockMarketNotification = false;
   List stockMarketShares = [];
+  bool factionAssistMessage = true;
 
   FirebaseUserModel();
 
@@ -55,10 +57,12 @@ class FirebaseUserModel extends OwnProfileExtended {
       "eventsNotification": eventsNotification,
       "eventsFilter": eventsFilter,
       "refillsNotification": refillsNotification,
+      "refillsTime": refillsTime,
       "refillsRequested": refillsRequested,
       "racingSent": racingSent,
       "stockMarketNotification": stockMarketNotification,
       "stockMarketShares": stockMarketShares,
+      "factionAssistMessage": factionAssistMessage,
     };
   }
 
@@ -78,6 +82,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..eventsNotification = data["eventsNotification"] ?? false
       ..eventsFilter = data["eventsFilter"] ?? []
       ..refillsNotification = data["refillsNotification"] ?? false
+      ..refillsTime = data["refillsTime"] ?? 22
       ..refillsRequested = data["refillsRequested"] ?? []
       ..racingSent = data["racingSent"] ?? false
       ..playerId = data["playerId"]
@@ -86,6 +91,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..life = Life()
       ..life.current = data["life"]
       ..stockMarketNotification = data["stockMarketNotification"] ?? false
-      ..stockMarketShares = data["stockMarketShares"] ?? [];
+      ..stockMarketShares = data["stockMarketShares"] ?? []
+      ..factionAssistMessage = data["factionAssistMessage"] ?? true;
   }
 }

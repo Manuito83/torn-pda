@@ -116,7 +116,7 @@ class _VaultOptionsPageState extends State<VaultOptionsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text("Vault options"),
       leading: new IconButton(

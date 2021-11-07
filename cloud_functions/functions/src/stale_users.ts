@@ -32,6 +32,7 @@ export const staleGroup = {
             "Alerts stale user",
             "",
             "",
+            "",
             "medium",
           )
         );

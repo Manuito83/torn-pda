@@ -8,15 +8,28 @@ class Prefs {
   ///
   /// Instantiation of the SharedPreferences library
   ///
+  // General
   final String _kAppVersion = "pda_appVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
+  // War targets
+  final String _kWarFactions = "pda_warFactions";
+  final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
+  final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kWarSpies = "pda_warSpies";
+  final String _kWarSpiesTime = "pda_warSpiesTime";
+  final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
+  // Other
   final String _kTargetSkipping = "pda_targetSkipping";
+  final String _kTargetSkippingFirst = "pda_targetSkippingFirst";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
+  final String _kChainWatcherSettings = "pda_chainWatcherSettings";
+  final String _kChainWatcherPanicTargets = "pda_chainWatcherPanicTargets";
   final String _kChainWatcherSound = "pda_chainWatcherSound";
   final String _kChainWatcherVibration = "pda_chainWatcherVibration";
   final String _kChainWatcherNotifications = "pda_chainWatcherNotifications";
@@ -246,7 +259,68 @@ class Prefs {
   }
 
   //**************
-  Future<bool> getTargetSkipping() async {
+  Future<List<String>> getWarFactions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kWarFactions) ?? <String>[];
+  }
+
+  Future<bool> setWarFactions(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kWarFactions, value);
+  }
+
+  Future<bool> getShowChainWidgetInWars() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowChainWidgetInWars) ?? true;
+  }
+
+  Future<bool> setShowChainWidgetInWars(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowChainWidgetInWars, value);
+  }
+
+  Future<String> getWarMembersSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWarMembersSort) ?? '';
+  }
+
+  Future<bool> setWarMembersSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWarMembersSort, value);
+  }
+
+  Future<List<String>> getWarSpies() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kWarSpies) ?? [];
+  }
+
+  Future<bool> setWarSpies(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kWarSpies, value);
+  }
+
+  Future<int> getWarSpiesTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kWarSpiesTime) ?? 0;
+  }
+
+  Future<bool> setWarSpiesTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kWarSpiesTime, value);
+  }
+
+  Future<int> getWarIntegrityCheckTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kWarIntegrityCheckTime) ?? 0;
+  }
+
+  Future<bool> setWarIntegrityCheckTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kWarIntegrityCheckTime, value);
+  }
+
+  //**************
+  Future<bool> getTargetSkippingAll() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkipping) ?? true;
   }
@@ -254,6 +328,16 @@ class Prefs {
   Future<bool> setTargetSkipping(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTargetSkipping, value);
+  }
+
+    Future<bool> getTargetSkippingFirst() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTargetSkippingFirst) ?? false;
+  }
+
+  Future<bool> setTargetSkippingFirst(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTargetSkippingFirst, value);
   }
 
   Future<bool> getShowTargetsNotes() async {
@@ -274,6 +358,26 @@ class Prefs {
   Future<bool> setShowOnlineFactionWarning(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowOnlineFactionWarning, value);
+  }
+
+  Future<String> getChainWatcherSettings() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kChainWatcherSettings) ?? '';
+  }
+
+  Future<bool> setChainWatcherSettings(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kChainWatcherSettings, value);
+  }
+
+  Future<List<String>> getChainWatcherPanicTargets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kChainWatcherPanicTargets) ?? <String>[];
+  }
+
+  Future<bool> setChainWatcherPanicTargets(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kChainWatcherPanicTargets, value);
   }
 
   Future<bool> getChainWatcherSound() async {
@@ -1608,5 +1712,4 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kShowCases, value);
   }
-
 }

@@ -26,6 +26,7 @@ import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
@@ -524,7 +525,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
+      //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Column(
         children: [
@@ -4906,7 +4907,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // ENERGY
       if (notification.payload.contains('energy')) {
-        var customTriggerRoundedUp = (_customEnergyTrigger + 4) / 5 * 5;
+        var customTriggerRoundedUp = _customEnergyTrigger + 4;
         if (_user.energy.current >= _user.energy.maximum ||
             (!_customEnergyMaxOverride && _user.energy.current > customTriggerRoundedUp)) {
           _cancelNotifications(ProfileNotification.energy);
@@ -6515,10 +6516,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
 
     // Pass to global widget
-    setState(() {
-      _rentedProperties = currentItem;
-      _rentedPropertiesWidget = Column(children: propertyLines);
-    });
+    if (mounted) {
+      setState(() {
+        _rentedProperties = currentItem;
+        _rentedPropertiesWidget = Column(children: propertyLines);
+      });
+    }
   }
 
   void _disregardCrimeCallback() {

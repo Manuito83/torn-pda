@@ -26,15 +26,20 @@ class _FirestoreHelper {
   }
 
   // Settings, when user initialized after API key validated
-  Future<void> uploadUsersProfileDetail(
+  Future<FirebaseUserModel> uploadUsersProfileDetail(
     OwnProfileBasic profile, {
     bool userTriggered = false,
   }) async {
-    if (_alreadyUploaded && !userTriggered) return;
+    if (_alreadyUploaded && !userTriggered) return null;
     _alreadyUploaded = true;
-    _firebaseUserModel = FirebaseUserModel();
+
     final platform = Platform.isAndroid ? "android" : "ios";
     final token = await _messaging.getToken();
+
+    // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
+    // Otherwise, an empty object will be returned
+    _firebaseUserModel = await getUserProfile(force: true);
+
     await _firestore.collection("players").doc(_uid).set(
       {
         "uid": _uid,
@@ -43,23 +48,24 @@ class _FirestoreHelper {
         "apiKey": profile.userApiKey,
         "life": profile.life.current,
         "playerId": profile.playerId,
-        "energyLastCheckFull": true,
-        "nerveLastCheckFull": true,
-        "drugsInfluence": false,
-        "racingSent": true,
+        "energyLastCheckFull": _firebaseUserModel.energyLastCheckFull, // Defaults
+        "nerveLastCheckFull": _firebaseUserModel.nerveLastCheckFull, // Defaults
+        "drugsInfluence": _firebaseUserModel.drugsInfluence, // Defaults
+        "racingSent": _firebaseUserModel.racingSent, // Defaults
         "platform": platform,
         "version": appVersion,
         "faction": profile.faction.factionId,
+        // Ensures all users have a refill time after v2.6.0.
+        "refillsTime": _firebaseUserModel.refillsTime, // Defaults to 22 if null (new user)
+        "factionAssistMessage": _firebaseUserModel.factionAssistMessage, // Defaults to true
 
-        /// This is a unique identifier to identify this user and target notification
+        // This is a unique identifier to identify this user and target notification
         "token": token,
       },
       SetOptions(merge: true),
     );
 
-    // Gets current alerts in case this user was already existing (after uninstall/reinstall
-    // with saved settings for Android)
-    await getUserProfile(force: true);
+    return _firebaseUserModel;
   }
 
   Future<void> subscribeToTravelNotification(bool subscribe) async {
@@ -153,21 +159,32 @@ class _FirestoreHelper {
 
   Future<void> removeFromEventsFilter(String filter) async {
     List currentFilter = _firebaseUserModel.eventsFilter;
-    currentFilter.remove(filter);
+    // Avoid duplicities by removing more than one item if they exist
+    currentFilter.removeWhere((element) => element == filter);
     await _firestore.collection("players").doc(_uid).update({
       "eventsFilter": currentFilter,
     });
   }
 
   Future<void> subscribeToRefillsNotification(bool subscribe) async {
+    int currentRefillsTime = _firebaseUserModel.refillsTime;
     await _firestore.collection("players").doc(_uid).update({
       "refillsNotification": subscribe,
+      "refillsTime": currentRefillsTime,
+    });
+  }
+
+  Future<void> setRefillTime(int time) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "refillsTime": time,
     });
   }
 
   Future<void> addToRefillsRequested(String request) async {
     List currentRequests = _firebaseUserModel.refillsRequested;
-    currentRequests.add(request);
+    if (!currentRequests.contains(request)) {
+      currentRequests.add(request);
+    }
     await _firestore.collection("players").doc(_uid).update({
       "refillsRequested": currentRequests,
     });
@@ -175,7 +192,8 @@ class _FirestoreHelper {
 
   Future<void> removeFromRefillsRequested(String request) async {
     List currentRequests = _firebaseUserModel.refillsRequested;
-    currentRequests.remove(request);
+    // Avoid duplicities by removing more than one item if they exist
+    currentRequests.removeWhere((element) => element == request);
     await _firestore.collection("players").doc(_uid).update({
       "refillsRequested": currentRequests,
     });
@@ -202,8 +220,12 @@ class _FirestoreHelper {
   // Init State in alerts
   Future<FirebaseUserModel> getUserProfile({bool force = false}) async {
     if (_firebaseUserModel != null && !force) return _firebaseUserModel;
-    var firestoreUser = await _firestore.collection("players").doc(_uid).get();
-    return _firebaseUserModel = FirebaseUserModel.fromMap(firestoreUser.data());
+    var userReceived = await _firestore.collection("players").doc(_uid).get();
+    if (userReceived.data() == null) {
+      // New user does not return anything, so we use default fields in the model
+      return FirebaseUserModel();
+    }
+    return _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data());
   }
 
   Future deleteUserProfile() async {
@@ -239,6 +261,12 @@ class _FirestoreHelper {
       return true;
     }).catchError((error) {
       return false;
+    });
+  }
+
+  Future<void> toggleFactionAssistMessage(bool active) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "factionAssistMessage": active,
     });
   }
 }

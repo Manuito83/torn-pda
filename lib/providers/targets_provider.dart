@@ -35,8 +35,7 @@ class UpdateTargetsResult {
   int numberErrors;
   int numberSuccessful;
 
-  UpdateTargetsResult(
-      {@required this.success, @required this.numberErrors, @required this.numberSuccessful});
+  UpdateTargetsResult({@required this.success, @required this.numberErrors, @required this.numberSuccessful});
 }
 
 class TargetsProvider extends ChangeNotifier {
@@ -84,6 +83,7 @@ class TargetsProvider extends ChangeNotifier {
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
       myNewTargetModel.personalNoteColor = notesColor;
+      myNewTargetModel.lifeSort = _getLifeSort(myNewTargetModel);
       _targets.add(myNewTargetModel);
       sortTargets(_currentSort);
       notifyListeners();
@@ -119,15 +119,19 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void _getRespectFF(AttackModel attackModel, TargetModel myNewTargetModel) {
+  void _getRespectFF(
+    AttackModel attackModel,
+    TargetModel myNewTargetModel, {
+    double oldRespect = -1,
+    double oldFF = -1,
+  }) {
     double respect = -1;
     double fairFight = -1; // Unknown
     List<bool> userWonOrDefended = <bool>[];
     if (attackModel is AttackModel) {
       attackModel.attacks.forEach((key, value) {
         // We look for the our target in the the attacks list
-        if (myNewTargetModel.playerId == value.defenderId ||
-            myNewTargetModel.playerId == value.attackerId) {
+        if (myNewTargetModel.playerId == value.defenderId || myNewTargetModel.playerId == value.attackerId) {
           // Only update if we have still not found a positive value (because
           // we lost or we have no records)
           if (value.respectGain > 0) {
@@ -156,8 +160,24 @@ class TargetsProvider extends ChangeNotifier {
         }
       });
 
-      myNewTargetModel.respectGain = respect;
-      myNewTargetModel.fairFight = fairFight;
+      // Respect and fair fight should only update if they are not unknown (-1), which means we have a value
+      // Otherwise, they default to -1 upon class instantiation
+      if (respect != -1) {
+        myNewTargetModel.respectGain = respect;
+      } else if (respect == -1 && oldRespect != -1) {
+        // If it is unknown BUT we have a previously recorded value, we need to provide it for the new target (or
+        // otherwise it will default to -1). This can happen when the last attack on this target is not within the
+        // last 100 total attacks and therefore it's not returned in the attackModel.
+        myNewTargetModel.respectGain = oldRespect;
+      }
+
+      // Same as above
+      if (fairFight != -1) {
+        myNewTargetModel.fairFight = fairFight;
+      } else if (fairFight == -1 && oldFF != -1) {
+        myNewTargetModel.fairFight = oldFF;
+      }
+
       if (userWonOrDefended.isNotEmpty) {
         myNewTargetModel.userWonOrDefended = userWonOrDefended.first;
       } else {
@@ -190,10 +210,14 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel =
-          await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
+      dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
       if (myUpdatedTargetModel is TargetModel) {
-        _getRespectFF(attacks, myUpdatedTargetModel);
+        _getRespectFF(
+          attacks,
+          myUpdatedTargetModel,
+          oldRespect: targetToUpdate.respectGain,
+          oldFF: targetToUpdate.fairFight,
+        );
         _getTargetFaction(myUpdatedTargetModel);
         _targets[_targets.indexOf(targetToUpdate)] = myUpdatedTargetModel;
         var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
@@ -201,6 +225,7 @@ class TargetsProvider extends ChangeNotifier {
         newTarget.personalNote = targetToUpdate.personalNote;
         newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
+        newTarget.lifeSort = _getLifeSort(newTarget);
         _saveTargetsSharedPrefs();
         return true;
       } else {
@@ -229,10 +254,14 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel =
-            await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
+        dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
         if (myUpdatedTargetModel is TargetModel) {
-          _getRespectFF(attacks, myUpdatedTargetModel);
+          _getRespectFF(
+            attacks,
+            myUpdatedTargetModel,
+            oldRespect: _targets[i].respectGain,
+            oldFF: _targets[i].fairFight,
+          );
           _getTargetFaction(myUpdatedTargetModel);
           var notes = _targets[i].personalNote;
           var notesColor = _targets[i].personalNoteColor;
@@ -241,6 +270,7 @@ class TargetsProvider extends ChangeNotifier {
           _targets[i].personalNote = notes;
           _targets[i].personalNoteColor = notesColor;
           _targets[i].lastUpdated = DateTime.now();
+          _targets[i].lifeSort = _getLifeSort(_targets[i]);
           _saveTargetsSharedPrefs();
           numberSuccessful++;
         } else {
@@ -273,51 +303,43 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
-    void updatePass(bool showUpdateAnimation) async {
-      for (var tar in _targets) {
-        for (var i = 0; i < targetsIds.length; i++) {
-          if (tar.playerId.toString() == targetsIds[i]) {
-            if (showUpdateAnimation) {
-              tar.isUpdating = true;
-              notifyListeners();
+    for (var tar in _targets) {
+      for (var i = 0; i < targetsIds.length; i++) {
+        if (tar.playerId.toString() == targetsIds[i]) {
+          tar.isUpdating = true;
+          notifyListeners();
+          try {
+            dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
+            if (myUpdatedTargetModel is TargetModel) {
+              _getRespectFF(
+                attacks,
+                myUpdatedTargetModel,
+                oldRespect: _targets[_targets.indexOf(tar)].respectGain,
+                oldFF: _targets[_targets.indexOf(tar)].fairFight,
+              );
+              _getTargetFaction(myUpdatedTargetModel);
+              _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
+              var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
+              _updateResultAnimation(newTarget, true);
+              newTarget.personalNote = tar.personalNote;
+              newTarget.personalNoteColor = tar.personalNoteColor;
+              newTarget.lastUpdated = DateTime.now();
+              newTarget.lifeSort = _getLifeSort(newTarget);
+              _saveTargetsSharedPrefs();
+            } else {
+              tar.isUpdating = false;
+              _updateResultAnimation(tar, false);
             }
-            try {
-              dynamic myUpdatedTargetModel =
-                  await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
-              if (myUpdatedTargetModel is TargetModel) {
-                _getRespectFF(attacks, myUpdatedTargetModel);
-                _getTargetFaction(myUpdatedTargetModel);
-                _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-                var newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
-                if (showUpdateAnimation) {
-                  _updateResultAnimation(newTarget, true);
-                }
-                newTarget.personalNote = tar.personalNote;
-                newTarget.personalNoteColor = tar.personalNoteColor;
-                newTarget.lastUpdated = DateTime.now();
-                _saveTargetsSharedPrefs();
-              } else {
-                if (showUpdateAnimation) {
-                  tar.isUpdating = false;
-                  _updateResultAnimation(tar, false);
-                }
-              }
-            } catch (e) {
-              if (showUpdateAnimation) {
-                tar.isUpdating = false;
-                _updateResultAnimation(tar, false);
-              }
-            }
-            if (targetsIds.length > 40) {
-              await Future.delayed(const Duration(seconds: 1), () {});
-            }
+          } catch (e) {
+            tar.isUpdating = false;
+            _updateResultAnimation(tar, false);
+          }
+          if (targetsIds.length > 40) {
+            await Future.delayed(const Duration(seconds: 1), () {});
           }
         }
       }
     }
-
-    await Future.delayed(Duration(seconds: 15));
-    updatePass(true);
   }
 
   Future<void> _updateResultAnimation(TargetModel target, bool success) async {
@@ -400,13 +422,17 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.nameAsc:
         _targets.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
         break;
+      case TargetSortType.lifeDes:
+        _targets.sort((a, b) => b.lifeSort.compareTo(a.lifeSort));
+        break;
+      case TargetSortType.lifeAsc:
+        _targets.sort((a, b) => a.lifeSort.compareTo(b.lifeSort));
+        break;
       case TargetSortType.colorDes:
-        _targets.sort((a, b) =>
-            b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) => b.personalNoteColor.toLowerCase().compareTo(a.personalNoteColor.toLowerCase()));
         break;
       case TargetSortType.colorAsc:
-        _targets.sort((a, b) =>
-            a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
+        _targets.sort((a, b) => a.personalNoteColor.toLowerCase().compareTo(b.personalNoteColor.toLowerCase()));
         break;
     }
     _saveSortSharedPrefs();
@@ -457,6 +483,12 @@ class TargetsProvider extends ChangeNotifier {
         sortToSave = 'nameDes';
         break;
       case TargetSortType.nameAsc:
+        sortToSave = 'nameDes';
+        break;
+      case TargetSortType.lifeDes:
+        sortToSave = 'nameDes';
+        break;
+      case TargetSortType.lifeAsc:
         sortToSave = 'nameDes';
         break;
       case TargetSortType.colorDes:
@@ -525,6 +557,12 @@ class TargetsProvider extends ChangeNotifier {
         break;
       case 'nameAsc':
         _currentSort = TargetSortType.nameAsc;
+        break;
+      case 'colorAsc':
+        _currentSort = TargetSortType.colorDes;
+        break;
+      case 'colorDes':
+        _currentSort = TargetSortType.colorAsc;
         break;
     }
 
@@ -614,6 +652,14 @@ class TargetsProvider extends ChangeNotifier {
       }
     } catch (e) {
       return "";
+    }
+  }
+
+  int _getLifeSort(TargetModel myNewTargetModel) {
+    if (myNewTargetModel.status.state != "Hospital") {
+      return myNewTargetModel.life.current;
+    } else {
+      return -(myNewTargetModel.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
     }
   }
 }

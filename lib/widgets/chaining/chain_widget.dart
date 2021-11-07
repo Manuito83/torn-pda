@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -15,15 +16,18 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
   final String userKey;
   final bool alwaysDarkBackground;
+  final Function callBackOptions;
 
   ChainWidget({
     @required Key key,
     @required this.userKey,
     @required this.alwaysDarkBackground,
+    this.callBackOptions,
   }) : super(key: key);
 
   @override
@@ -74,8 +78,9 @@ class _ChainWidgetState extends State<ChainWidget> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (!_chainStatusProvider.panicModeEnabled) SizedBox(width: 35), // Centers the widget without P icon
               SizedBox(
-                width: 40,
+                width: 30,
                 child: !_chainStatusProvider.modelError
                     ? GestureDetector(
                         child: Icon(
@@ -100,7 +105,32 @@ class _ChainWidgetState extends State<ChainWidget> {
                       )
                     : SizedBox.shrink(),
               ),
-              SizedBox(width: 5),
+              if (_chainStatusProvider.panicModeEnabled)
+                SizedBox(
+                  width: 35,
+                  child: !_chainStatusProvider.modelError
+                      ? GestureDetector(
+                          child: Icon(
+                            MdiIcons.alphaPCircleOutline,
+                            color: _chainStatusProvider.panicModeActive
+                                ? widget.alwaysDarkBackground
+                                    ? Colors.orange[700]
+                                    : Colors.orange[900]
+                                : widget.alwaysDarkBackground
+                                    ? Colors.grey
+                                    : _themeProvider.mainText,
+                          ),
+                          onTap: () {
+                            if (_chainStatusProvider.panicModeActive) {
+                              _deactivatePanicMode();
+                            } else {
+                              _activatePanicMode();
+                            }
+                          },
+                        )
+                      : SizedBox.shrink(),
+                ),
+              SizedBox(width: 10),
               Column(
                 children: <Widget>[
                   FutureBuilder(
@@ -214,9 +244,26 @@ class _ChainWidgetState extends State<ChainWidget> {
                   ),
                 ],
               ),
-              SizedBox(width: 5),
-              // Placeholder for another icon
-              SizedBox(width: 40),
+              SizedBox(width: 10),
+              SizedBox(
+                width: 30,
+                child: GestureDetector(
+                  child: Icon(
+                    Icons.settings_outlined,
+                    color: widget.alwaysDarkBackground ? Colors.grey : _themeProvider.mainText,
+                  ),
+                  onTap: () {
+                    Get.to(
+                      () => ChainWidgetOptions(
+                        callBackOptions: _callBackChainOptions,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                width: 35,
+              ),
             ],
           ),
         ),
@@ -224,42 +271,55 @@ class _ChainWidgetState extends State<ChainWidget> {
     );
   }
 
-  var lastReported = ChainWatcherDefcon.red1;
+  void _callBackChainOptions() {
+    setState(() {
+      widget.callBackOptions();
+    });
+  }
+
+  var lastReported = WatchDefcon.red1;
   _assessChainBorderWidth() {
     switch (_chainStatusProvider.chainWatcherDefcon) {
-      case ChainWatcherDefcon.cooldown:
+      case WatchDefcon.cooldown:
         return 20.0;
         break;
-      case ChainWatcherDefcon.green1:
+      case WatchDefcon.green1:
         return 20.0;
         break;
-      case ChainWatcherDefcon.green2:
+      case WatchDefcon.green2:
         return 20.0;
         break;
-      case ChainWatcherDefcon.orange1:
+      case WatchDefcon.orange1:
         return 20.0;
         break;
-      case ChainWatcherDefcon.orange2:
+      case WatchDefcon.orange2:
         return 20.0;
         break;
-      case ChainWatcherDefcon.red1:
+      case WatchDefcon.red1:
         return 20.0;
         break;
-      case ChainWatcherDefcon.red2:
+      case WatchDefcon.red2:
         return 20.0;
         break;
-      case ChainWatcherDefcon.off:
+      case WatchDefcon.off:
         return 0.0;
+        break;
+      case WatchDefcon.panic:
+        return 20.0;
         break;
     }
   }
 
-  void _activateChainWatcher() {
+  void _activateChainWatcher({bool withPanic = false}) {
     _chainStatusProvider.activateWatcher();
 
+    String message = 'Chain watcher activated!\n\nYour phone screen will remain on, consider plugging it in.';
+    if (withPanic) {
+      message = 'Panic mode activated!\n\nYour phone screen will remain on, consider plugging it in.';
+    }
+
     BotToast.showText(
-      text: 'Chain watcher activated!'
-          '\n\nYour phone screen will remain on, consider plugging it in.',
+      text: message,
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,
@@ -273,8 +333,49 @@ class _ChainWidgetState extends State<ChainWidget> {
   void _deactivateChainWatcher() {
     _chainStatusProvider.deactivateWatcher();
 
+    if (_chainStatusProvider.panicModeActive) {
+      _chainStatusProvider.deactivatePanicMode();
+    }
+
     BotToast.showText(
       text: 'Chain watcher deactivated!',
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.orange[700],
+      duration: Duration(seconds: 5),
+      contentPadding: EdgeInsets.all(10),
+    );
+  }
+
+  void _activatePanicMode() {
+    _chainStatusProvider.activatePanicMode();
+
+    String message = 'Panic mode activated!';
+    if (!_chainStatusProvider.watcherActive) {
+      message = 'Chain watcher and panic mode have been activated!'
+          '\n\nYour phone screen will remain on, consider plugging it in.';
+      _chainStatusProvider.activateWatcher();
+    }
+
+    BotToast.showText(
+      text: message,
+      textStyle: TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green[700],
+      duration: Duration(seconds: 7),
+      contentPadding: EdgeInsets.all(10),
+    );
+  }
+
+  void _deactivatePanicMode() {
+    _chainStatusProvider.deactivatePanicMode();
+
+    BotToast.showText(
+      text: 'Panic mode deactivated!',
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,

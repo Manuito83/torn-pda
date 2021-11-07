@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +18,7 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 
@@ -33,27 +33,17 @@ class ProfileAttackCheckWidget extends StatefulWidget {
   final ProfileCheckType profileCheckType;
 
   ProfileAttackCheckWidget(
-      {@required this.profileId,
-      @required this.apiKey,
-      @required this.profileCheckType,
-      @required Key key})
+      {@required this.profileId, @required this.apiKey, @required this.profileCheckType, @required Key key})
       : super(key: key);
 
   @override
-  _ProfileAttackCheckWidgetState createState() =>
-      _ProfileAttackCheckWidgetState();
+  _ProfileAttackCheckWidgetState createState() => _ProfileAttackCheckWidgetState();
 }
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   final _levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
   final _crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
-  final _networthTriggers = [
-    5000000,
-    50000000,
-    500000000,
-    5000000000,
-    50000000000
-  ];
+  final _networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
 
   final _ranksTriggers = {
     "Absolute beginner": 1,
@@ -232,6 +222,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     ).getOtherProfile;
 
     // FRIEND CHECK
+    if (!mounted) return; // We could be unmounted when rapidly skipping the first target
     var friendsProv = context.read<FriendsProvider>();
     if (!friendsProv.initialized) {
       await friendsProv.initFriends();
@@ -258,8 +249,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       }
 
       if (_userDetails.basic.faction.factionId != 0 &&
-          otherProfile.faction.factionId ==
-              _userDetails.basic.faction.factionId) {
+          otherProfile.faction.factionId == _userDetails.basic.faction.factionId) {
         _isOwnFaction = true;
       }
 
@@ -332,9 +322,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 style: TextStyle(
                   color: friendTextColor,
                   fontSize: 12,
-                  fontWeight: friendText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: friendText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -385,9 +373,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 factionText,
                 style: TextStyle(
                   color: factionColor,
-                  fontWeight: factionText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
               ),
@@ -418,9 +404,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 factionText,
                 style: TextStyle(
                   color: factionColor,
-                  fontWeight: factionText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
               ),
@@ -455,9 +439,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 partnerText,
                 style: TextStyle(
                   color: partnerColor,
-                  fontWeight: partnerText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: partnerText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                   fontSize: 12,
                 ),
               ),
@@ -489,9 +471,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 style: TextStyle(
                   color: colleagueTextColor,
                   fontSize: 12,
-                  fontWeight: colleagueText.contains("CAUTION")
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: colleagueText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -515,7 +495,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 SizedBox(width: 10),
                 Flexible(
                   child: Text(
-                    "${_formatBigNumbers(otherProfile.personalstats.networth)}",
+                    "${formatBigNumbers(otherProfile.personalstats.networth)}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -555,15 +535,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // 1 is disabled
     // 2 is only if spies
 
-    if (_settingsProvider.profileStatsEnabled == "0" ||
-        _settingsProvider.profileStatsEnabled == "2") {
+    if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
       var spyModel = YataSpyModel();
       var spyFoundInYata = false;
       try {
-        String yataURL =
-            'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
-        var resp =
-            await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+        String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
+        var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
         if (resp.statusCode == 200) {
           var spyJson = json.decode(resp.body);
           var spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
@@ -597,7 +574,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.strength)}",
+              text: "${formatBigNumbers(spyModel.strength)}",
               style: TextStyle(color: strColor, fontSize: 11),
             ),
           );
@@ -633,7 +610,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.speed)}",
+              text: "${formatBigNumbers(spyModel.speed)}",
               style: TextStyle(color: spdColor, fontSize: 11),
             ),
           );
@@ -669,7 +646,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.defense)}",
+              text: "${formatBigNumbers(spyModel.defense)}",
               style: TextStyle(color: defColor, fontSize: 11),
             ),
           );
@@ -705,7 +682,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${_formatBigNumbers(spyModel.dexterity)}",
+              text: "${formatBigNumbers(spyModel.dexterity)}",
               style: TextStyle(color: dexColor, fontSize: 11),
             ),
           );
@@ -766,8 +743,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             ),
           ),
         );
-      } else if (!spyFoundInYata &&
-          _settingsProvider.profileStatsEnabled == "0") {
+      } else if (!spyFoundInYata && _settingsProvider.profileStatsEnabled == "0") {
         // Even if we have no YATA spy, but we want to show estimated stats
         var npcs = [4, 10, 15, 17, 19, 20];
         String estimatedStats = "";
@@ -804,9 +780,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
-                      fontStyle: estimatedStats == "unk"
-                          ? FontStyle.italic
-                          : FontStyle.normal,
+                      fontStyle: estimatedStats == "unk" ? FontStyle.italic : FontStyle.normal,
                     ),
                   ),
                 ),
@@ -844,10 +818,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         strDiff = "Same as you";
         strColor = Colors.orange;
       } else if (result < 0) {
-        strDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        strDiff = "${formatBigNumbers(result.abs())} higher than you";
         strColor = Colors.red;
       } else {
-        strDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        strDiff = "${formatBigNumbers(result.abs())} lower than you";
         strColor = Colors.green;
       }
 
@@ -855,7 +829,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Strength: ${_formatBigNumbers(spyModel.strength)}",
+            "Strength: ${formatBigNumbers(spyModel.strength)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -880,10 +854,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
       } else if (result < 0) {
-        spdDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        spdDiff = "${formatBigNumbers(result.abs())} higher than you";
         spdColor = Colors.red;
       } else {
-        spdDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        spdDiff = "${formatBigNumbers(result.abs())} lower than you";
         spdColor = Colors.green;
       }
 
@@ -891,7 +865,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Speed: ${_formatBigNumbers(spyModel.speed)}",
+            "Speed: ${formatBigNumbers(spyModel.speed)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -916,10 +890,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         defDiff = "Same as you";
         defColor = Colors.orange;
       } else if (result < 0) {
-        defDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        defDiff = "${formatBigNumbers(result.abs())} higher than you";
         defColor = Colors.red;
       } else {
-        defDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        defDiff = "${formatBigNumbers(result.abs())} lower than you";
         defColor = Colors.green;
       }
 
@@ -927,7 +901,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Defense: ${_formatBigNumbers(spyModel.defense)}",
+            "Defense: ${formatBigNumbers(spyModel.defense)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -952,10 +926,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
       } else if (result < 0) {
-        dexDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        dexDiff = "${formatBigNumbers(result.abs())} higher than you";
         dexColor = Colors.red;
       } else {
-        dexDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        dexDiff = "${formatBigNumbers(result.abs())} lower than you";
         dexColor = Colors.green;
       }
 
@@ -963,7 +937,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dexterity: ${_formatBigNumbers(spyModel.dexterity)}",
+            "Dexterity: ${formatBigNumbers(spyModel.dexterity)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -988,10 +962,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         totalDiff = "Same as you";
         totalColor = Colors.orange;
       } else if (result < 0) {
-        totalDiff = "${_formatBigNumbers(result.abs())} higher than you";
+        totalDiff = "${formatBigNumbers(result.abs())} higher than you";
         totalColor = Colors.red;
       } else {
-        totalDiff = "${_formatBigNumbers(result.abs())} lower than you";
+        totalDiff = "${formatBigNumbers(result.abs())} lower than you";
         totalColor = Colors.green;
       }
 
@@ -999,7 +973,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL: ${_formatBigNumbers(spyModel.dexterity)}",
+            "TOTAL: ${formatBigNumbers(spyModel.dexterity)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1097,14 +1071,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   String _calculateStats(OtherProfileModel otherProfile) {
-    var levelIndex =
-        _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
-    var crimeIndex = _crimesTriggers
-            .lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) +
-        1;
-    var networthIndex = _networthTriggers
-            .lastIndexWhere((x) => x <= otherProfile.personalstats.networth) +
-        1;
+    var levelIndex = _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
+    var crimeIndex = _crimesTriggers.lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) + 1;
+    var networthIndex = _networthTriggers.lastIndexWhere((x) => x <= otherProfile.personalstats.networth) + 1;
     var rankIndex = 0;
     _ranksTriggers.forEach((tornRank, index) {
       if (otherProfile.rank.contains(tornRank)) {
@@ -1117,31 +1086,5 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       return _statsResults[finalIndex];
     }
     return "unk";
-  }
-
-  String _formatBigNumbers(int moneyInput) {
-    final long = new NumberFormat("#,##0.0", "en_US");
-    final short = new NumberFormat("#,##0", "en_US");
-    String numberFormatted;
-
-    // Money standards to reduce string length (adding two zeros for .00)
-    final billion = 1000000000;
-    final million = 1000000;
-    final thousand = 1000;
-
-    // Profit
-    if (moneyInput < -billion || moneyInput > billion) {
-      final profitBillion = moneyInput / billion;
-      numberFormatted = '${long.format(profitBillion)}B';
-    } else if (moneyInput < -million || moneyInput > million) {
-      final profitMillion = moneyInput / million;
-      numberFormatted = '${long.format(profitMillion)}M';
-    } else if (moneyInput < -thousand || moneyInput > thousand) {
-      final profitThousand = moneyInput / thousand;
-      numberFormatted = '${long.format(profitThousand)}K';
-    } else {
-      numberFormatted = '${short.format(moneyInput)}';
-    }
-    return numberFormatted;
   }
 }

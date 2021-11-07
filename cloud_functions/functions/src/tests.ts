@@ -22,6 +22,7 @@ export const testGroup = {
           "Alerts travel",
           "",
           "",
+          "",
           "medium",
           "aircraft_seatbelt.aiff"
         )
@@ -37,6 +38,7 @@ export const testGroup = {
           "notification_travel",
           "#2196F3",
           "Alerts travel",
+          "",
           "",
           "",
           "medium",

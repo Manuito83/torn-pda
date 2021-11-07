@@ -93,6 +93,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
 
+  String _userUID = "";
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Allows to space alerts when app is on the foreground
@@ -373,19 +375,23 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool drugs = false;
     bool refills = false;
     bool stockMarket = false;
+    bool assists = false;
 
     var channel = '';
     var messageId = '';
     var tradeId = '';
+    var assistId = '';
 
     if (Platform.isIOS) {
       channel = message["channelId"] as String;
       messageId = message["tornMessageId"] as String;
       tradeId = message["tornTradeId"] as String;
+      assistId = message["assistId"] as String;
     } else if (Platform.isAndroid) {
       channel = message["channelId"] as String;
       messageId = message["tornMessageId"] as String;
       tradeId = message["tornTradeId"] as String;
+      assistId = message["assistId"] as String;
     }
 
     if (channel.contains("Alerts travel")) {
@@ -412,6 +418,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       refills = true;
     } else if (channel.contains("Alerts stocks")) {
       stockMarket = true;
+    } else if (channel.contains("Alerts assists")) {
+      assists = true;
     }
 
     if (travel) {
@@ -457,6 +465,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       browserUrl = "https://www.torn.com/points.php";
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
+    } else if (assists) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
     }
 
     if (launchBrowser) {
@@ -539,6 +550,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         browserUrl = 'https://www.torn.com/points.php';
       } else if (payload.contains('stockMarket')) {
         // Not implemented (there is a box showing in _getBackGroundNotifications)
+      } else if (payload.contains('assistId:')) {
+        launchBrowser = true;
+        final assistId = payload.split(':');
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
       }
 
       if (launchBrowser) {
@@ -790,10 +805,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 8:
-        return const SettingsPage();
+        return SettingsPage(changeUID: changeUID);
         break;
       case 9:
-        return AboutPage();
+        return AboutPage(uid: _userUID);
         break;
       case 10:
         return TipsPage();
@@ -898,9 +913,11 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       final user = await firebaseAuth.currentUser();
       if (user == null) {
         _updateFirebaseDetails();
+        _userUID = "";
       } else {
         final uid = await firebaseAuth.getUID();
         firestore.setUID(uid as String);
+        _userUID = uid as String;
       }
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
@@ -1162,5 +1179,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  void changeUID(String UID) {
+    _userUID = UID;
   }
 }

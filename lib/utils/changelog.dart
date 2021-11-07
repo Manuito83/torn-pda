@@ -38,6 +38,39 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.0
+    var v2_6_0 = ChangeLogItem();
+    v2_6_0.main.version = 'Torn PDA v2.6.0';
+    v2_6_0.main.date = '08 NOV 2021';
+    String feat2_6_0_1 = "Chaining: added War section";
+    String feat2_6_0_2 = "Chaining: you can now send attack assistance notifications to your faction mates using "
+        "Torn PDA (see Tips section - Faction Communication)";
+    String feat2_6_0_3 = "Chaining: you can now sort targets by life";
+    String feat2_6_0_4 = "Chaining: added option to skip first target as well (disabled by default)";
+    String feat2_6_0_5 = "Chaining: the tap area in cards to start an attack has been reduced to the gun sight icon "
+        "and target name, to avoid conflicts with other icons";
+    String feat2_6_0_6 = "Chain widget: added Panic Mode";
+    String feat2_6_0_7 = "Chain widget: you can now choose the alert activation triggers";
+    String feat2_6_0_8 = "Alerts (refills): you can now choose the notification time";
+    String feat2_6_0_9 = "Alerts (stock market): added overall value and profit information";
+    String feat2_6_0_10 = "Alerts (stock market): alerts can now be based on gain/loss percentages";
+    String feat2_6_0_11 = "Friendly factions can now also be added using members' IDs";
+    String feat2_6_0_12 = "Fixed respect and fair fight not being properly recorded in some cases";
+    String feat2_6_0_13 = "Fixed chaining cooldown counter";
+    v2_6_0.features.add(feat2_6_0_1);
+    v2_6_0.features.add(feat2_6_0_2);
+    v2_6_0.features.add(feat2_6_0_3);
+    v2_6_0.features.add(feat2_6_0_4);
+    v2_6_0.features.add(feat2_6_0_5);
+    v2_6_0.features.add(feat2_6_0_6);
+    v2_6_0.features.add(feat2_6_0_7);
+    v2_6_0.features.add(feat2_6_0_8);
+    v2_6_0.features.add(feat2_6_0_9);
+    v2_6_0.features.add(feat2_6_0_10);
+    v2_6_0.features.add(feat2_6_0_11);
+    v2_6_0.features.add(feat2_6_0_12);
+    v2_6_0.features.add(feat2_6_0_13);
+
     // VERSION 2.5.3
     var v2_5_3 = ChangeLogItem();
     v2_5_3.main.version = 'Torn PDA v2.5.3';
@@ -909,6 +942,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_0);
     itemList.add(v2_5_3);
     itemList.add(v2_5_2);
     itemList.add(v2_5_1);
