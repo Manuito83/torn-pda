@@ -247,7 +247,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       },
     );
 
-    //AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+    if (Platform.isAndroid) {
+        AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+    }
   }
 
   @override
