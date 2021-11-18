@@ -7,13 +7,17 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.os.Build;
 import java.util.List;
 import io.flutter.plugin.common.MethodChannel;
+import android.appwidget.AppWidgetManager;
 
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "tornpda.channel";
+
+    private MethodChannel.Result myResult;
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -29,8 +33,18 @@ public class MainActivity extends FlutterActivity {
                 if(call.method.equals("deleteNotificationChannels")){
                     deleteNotificationChannels();
                 }
+
+                if(call.method.equals("cuac")){
+                    cuac();
+                }
             }
         );
+    }
+
+    private void cuac () {
+        AppWidgetManager lala = AppWidgetManager.getInstance(this);
+        ComponentName name = new ComponentName(this, HomeWidgetTornPda.class);
+        myResult.success(lala.getAppWidgetIds(name));
     }
 
     // This cancel Firebase notifications upon request from the Flutter app, as the local plugins also cancels its

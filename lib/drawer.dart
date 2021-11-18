@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -31,6 +34,7 @@ import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -45,6 +49,7 @@ import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:uni_links/uni_links.dart';
 
 import 'main.dart';
+import 'models/profile/own_profile_model.dart';
 
 class DrawerPage extends StatefulWidget {
   @override
@@ -225,6 +230,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // Handle notifications
     _getBackGroundNotifications();
     _removeExistingNotifications();
+
+    // Handle home widget
+    HomeWidget.setAppGroupId('torn_pda');
+    //HomeWidget.registerBackgroundCallback(backgroundCallback);
+    _loadWidgetData();
+
+    // TODO!
+    print("bu");
+    var lala = platform.invokeMethod('cuac').then((value) => print("cuac dice " + value));
   }
 
   @override
@@ -1066,6 +1080,28 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       FlutterAppBadger.removeBadge();
     } catch (e) {
       // Not supported?
+    }
+  }
+
+  Future<void> _loadWidgetData() async {
+    try {
+      bool enabled = await HomeWidget.getWidgetData<bool>('enabled');
+      log(enabled.toString());
+
+      HomeWidget.getWidgetData<String>('title', defaultValue: '').then((value) async {
+        print(value);
+        UserController _u = Get.put(UserController());
+        String apiKey = _u.apiKey;
+        if (apiKey.isNotEmpty) {
+          var apiResponse = await TornApiCaller.ownExtended(apiKey, 3).getProfileExtended;
+          if (apiResponse is OwnProfileExtended) {
+            HomeWidget.saveWidgetData<String>('title', apiResponse.energy.current.toString());
+            HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+          }
+        }
+      });
+    } on PlatformException catch (exception) {
+      log('Error Getting Data. $exception');
     }
   }
 

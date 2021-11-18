@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
