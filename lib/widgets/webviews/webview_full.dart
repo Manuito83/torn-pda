@@ -248,7 +248,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
 
     if (Platform.isAndroid) {
-        AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+      AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
     }
   }
 
@@ -2261,10 +2261,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       final dynamic apiResponse = await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
+        apiResponse.items.forEach((key, value) {
+          // Assign correct ids
+          value.id = key;
+        });
         final tornItems = apiResponse.items.values.toList();
         final itemsFound = <Item>[];
         for (final mapItem in mapItemsList) {
-          final Item itemMatch = tornItems[int.parse(mapItem) - 1];
+          final Item itemMatch = tornItems.firstWhere((element) => element.id == mapItem);
           itemsFound.add(itemMatch);
         }
         if (mounted) {
