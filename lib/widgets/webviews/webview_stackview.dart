@@ -431,9 +431,9 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("jailview.php")) {
-      return Image.asset('images/icons/map/jail.png');
+      return Image.asset('images/icons/map/jail.png', color: _themeProvider.mainText);
     } else if (url.contains("hospitalview.php")) {
-      return Image.asset('images/icons/map/hospital.png');
+      return Image.asset('images/icons/map/hospital.png', color: _themeProvider.mainText);
     } else if (url.contains("events.php")) {
       return Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
     } else if (url.contains("properties.php")) {
