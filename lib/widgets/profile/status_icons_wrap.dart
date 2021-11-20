@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 
-/// ! Add new icons to the model as well
+// ! Add new icons to the model as well
 final allowedIcons = <String, Map<String, String>>{
   "icon12": {"url": "", "name" : "Low life"},
   // Needs to add ID
@@ -51,8 +51,8 @@ final allowedIcons = <String, Map<String, String>>{
   "icon86": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name" : "OC ready"},
 };
 
-class StatusIconsWrap extends StatelessWidget {
-  const StatusIconsWrap({
+class StatusIconsWrap extends StatefulWidget {
+  StatusIconsWrap({
     Key key,
     @required this.user,
     @required this.openBrowser,
@@ -63,11 +63,17 @@ class StatusIconsWrap extends StatelessWidget {
   final Function openBrowser;
   final SettingsProvider settingsProvider;
 
+ @override
+  _StatusIconsWrapState createState() => _StatusIconsWrapState();
+}
+
+class _StatusIconsWrapState extends State<StatusIconsWrap> {
+  
   @override
   Widget build(BuildContext context) {
     List<Widget> iconList = <Widget>[];
-    if (user.icons is TornIcons) {
-      iconList = _fillIcons(user.icons as TornIcons);
+    if (widget.user.icons is TornIcons) {
+      iconList = _fillIcons(widget.user.icons as TornIcons);
     }
 
     return Wrap(
@@ -83,7 +89,7 @@ class StatusIconsWrap extends StatelessWidget {
 
     parsedIcons.forEach((iconNumber, details) {
       if (details != null) {
-        if (allowedIcons.containsKey(iconNumber) && !settingsProvider.iconsFiltered.contains(iconNumber)) {
+        if (allowedIcons.containsKey(iconNumber) && !widget.settingsProvider.iconsFiltered.contains(iconNumber)) {
           final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
           iconList.add(
             GestureDetector(
@@ -102,13 +108,13 @@ class StatusIconsWrap extends StatelessWidget {
               },
               onDoubleTap: () {
                 final String url = _constructUrl(iconNumber);
-                final bool dialog = settingsProvider.useQuickBrowser || false;
-                openBrowser(url: url, dialogRequested: dialog);
+                final bool dialog = widget.settingsProvider.useQuickBrowser || false;
+                widget.openBrowser(url: url, dialogRequested: dialog);
               },
               onLongPress: () {
                 final String url = _constructUrl(iconNumber);
                 const bool dialog = false;
-                openBrowser(url: url, dialogRequested: dialog);
+                widget.openBrowser(url: url, dialogRequested: dialog);
               },
             ),
           );
@@ -124,7 +130,7 @@ class StatusIconsWrap extends StatelessWidget {
     if (allowedIcons[key]["url"].isNotEmpty) {
       url = allowedIcons[key]["url"];
       if (key == "icon13") {
-        url += user.playerId.toString();
+        url += widget.user.playerId.toString();
       }
     }
     return url;
