@@ -1,7 +1,6 @@
 // Dart imports:
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -150,7 +149,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts assists")) {
     notificationIcon = "notification_assists";
     notificationColor = Colors.red;
-    onTapPayload += 'assistId:$assistId';
+    onTapPayload += 'assistId:$assistId###assistDetails:${payload["body"]}';
     channelId = 'Alerts assists';
     channelName = 'Alerts assists';
     channelDescription = 'Automatic alerts for assists';

@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -10,7 +11,10 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -20,6 +24,9 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/stats_calculator.dart';
+import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -143,21 +150,95 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
                           Navigator.of(context).pop();
 
+                          String apiKey = widget.userProvider.basic.userApiKey;
+
                           String attackId = widget.url.split("user2ID=")[1];
-                          var t = await TornApiCaller.target(widget.userProvider.basic.userApiKey, attackId).getTarget;
+                          var t = await TornApiCaller.target(apiKey, attackId).getOtherProfile;
+
+                          // Get stats from YATA
+                          var spyModel = YataSpyModel();
+                          var spyFoundInYata = false;
+                          try {
+                            String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=$apiKey';
+                            var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+                            if (resp.statusCode == 200) {
+                              var spyJson = json.decode(resp.body);
+                              var spiedStats = spyJson["spies"]["$attackId"];
+                              if (spiedStats != null) {
+                                spyModel = yataSpyModelFromJson(json.encode(spiedStats));
+                                spyFoundInYata = true;
+                              }
+                            }
+                          } catch (e) {
+                            // Won't get YATA details
+                          }
 
                           int membersNotified = 0;
-                          if (t is TargetModel) {
+                          if (t is OtherProfileModel) {
+                            // Fill stats either way
+                            String exactStats = "";
+                            String estimatedStats = "";
+                            if (spyFoundInYata) {
+                              String total = formatBigNumbers(spyModel.total);
+                              String str = formatBigNumbers(spyModel.strength);
+                              String spd = formatBigNumbers(spyModel.speed);
+                              String def = formatBigNumbers(spyModel.defense);
+                              String dex = formatBigNumbers(spyModel.dexterity);
+                              exactStats = "${total} (STR $str, SPD $spd, DEF $def, DEX $dex), "
+                                  "updated ${readTimestamp(spyModel.update)}";
+                            } else {
+                              estimatedStats = StatsCalculator.calculateStats(
+                                criminalRecordTotal: t.criminalrecord.total,
+                                level: t.level,
+                                networth: t.personalstats.networth,
+                                rank: t.rank,
+                              );
+
+                              var own = await TornApiCaller.ownPersonalStats(apiKey).getOwnPersonalStats;
+                              if (own is OwnPersonalStatsModel) {
+                                int xanaxComparison = t.personalstats.xantaken - own.personalstats.xantaken;
+                                int refillsComparison = t.personalstats.refills - own.personalstats.refills;
+                                int drinksComparison = t.personalstats.energydrinkused - own.personalstats.energydrinkused;
+
+                                String xanaxString = "";
+                                if (xanaxComparison.isNegative) {
+                                  xanaxString = "Xanax: ${xanaxComparison.abs()} LESS than you";
+                                } else {
+                                  xanaxString = "Xanax: ${xanaxComparison.abs()} MORE than you";
+                                }
+
+                                String refillsString = "";
+                                if (refillsComparison.isNegative) {
+                                  refillsString = "Refills (E): ${refillsComparison.abs()} LESS than you";
+                                } else {
+                                  refillsString = "Refills (E): ${refillsComparison.abs()} MORE than you";
+                                }
+
+                                String drinksString = "";
+                                if (drinksComparison.isNegative) {
+                                  drinksString = "Drinks (E): ${drinksComparison.abs()} LESS than you";
+                                } else {
+                                  drinksString = "Drinks (E): ${drinksComparison.abs()} MORE than you";
+                                }
+
+                                estimatedStats += "\n>> $xanaxString";
+                                estimatedStats += "\n>> $refillsString";
+                                estimatedStats += "\n>> $drinksString";
+                              }
+                            }
+
                             membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackName: t.name,
                               attackId: attackId,
+                              attackName: t.name,
                               attackLevel: t.level.toString(),
+                              attackLife: "${t.life.current}/${t.life.maximum}",
+                              attackAge: t.age.toString(),
+                              estimatedStats: estimatedStats,
+                              exactStats: exactStats,
                             );
                           } else {
                             membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                              attackName: "",
                               attackId: attackId,
-                              attackLevel: "",
                             );
                           }
 

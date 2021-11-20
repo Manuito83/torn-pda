@@ -11,6 +11,7 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
+import 'package:torn_pda/utils/stats_calculator.dart';
 
 class WarCardDetails {
   int cardPosition;
@@ -195,7 +196,12 @@ class WarController extends GetxController {
           }
         }
 
-        member.statsEstimated = _assignEstimatedStats(updatedTarget);
+        member.statsEstimated = StatsCalculator.calculateStats(
+          criminalRecordTotal: updatedTarget.criminalrecord.total,
+          level: updatedTarget.level,
+          networth: updatedTarget.personalstats.networth,
+          rank: updatedTarget.rank,
+        );
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
         // if exact does not exist (-1)
@@ -683,67 +689,6 @@ class WarController extends GetxController {
     currentSort = sortType;
     savePreferences();
     update();
-  }
-
-  String _assignEstimatedStats(OtherProfileModel member) {
-    final levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
-    final crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
-    final networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
-
-    final _ranksTriggers = {
-      "Absolute beginner": 1,
-      "Beginner": 2,
-      "Inexperienced": 3,
-      "Rookie": 4,
-      "Novice": 5,
-      "Below average": 6,
-      "Average": 7,
-      "Reasonable": 8,
-      "Above average": 9,
-      "Competent": 10,
-      "Highly competent": 11,
-      "Veteran": 12,
-      "Distinguished": 13,
-      "Highly distinguished": 14,
-      "Professional": 15,
-      "Star": 16,
-      "Master": 17,
-      "Outstanding": 18,
-      "Celebrity": 19,
-      "Supreme": 20,
-      "Idolized": 21,
-      "Champion": 22,
-      "Heroic": 23,
-      "Legendary": 24,
-      "Elite": 25,
-      "Invincible": 26,
-    };
-
-    final _statsResults = [
-      "< 2k",
-      "2k - 25k",
-      "20k - 250k",
-      "200k - 2.5M",
-      "2M - 25M",
-      "20M - 250M",
-      "> 200M",
-    ];
-
-    var levelIndex = levelTriggers.lastIndexWhere((x) => x <= member.level) + 1;
-    var crimeIndex = crimesTriggers.lastIndexWhere((x) => x <= member.criminalrecord.total) + 1;
-    var networthIndex = networthTriggers.lastIndexWhere((x) => x <= member.personalstats.networth) + 1;
-    var rankIndex = 0;
-    _ranksTriggers.forEach((tornRank, index) {
-      if (member.rank.contains(tornRank)) {
-        rankIndex = index;
-      }
-    });
-
-    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
-    if (finalIndex >= 0 && finalIndex <= 6) {
-      return _statsResults[finalIndex];
-    }
-    return "";
   }
 
   Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {

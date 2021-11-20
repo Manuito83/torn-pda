@@ -7,7 +7,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
@@ -468,6 +467,20 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (assists) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+
+      BotToast.showText(
+        align: Alignment(0, 0),
+        crossPage: true,
+        clickClose: true,
+        text: message["body"],
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[700],
+        duration: const Duration(seconds: 10),
+        contentPadding: const EdgeInsets.all(10),
+      );
     }
 
     if (launchBrowser) {
@@ -552,8 +565,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         // Not implemented (there is a box showing in _getBackGroundNotifications)
       } else if (payload.contains('assistId:')) {
         launchBrowser = true;
-        final assistId = payload.split(':');
+        final assistSplit = payload.split('###');
+        final assistId = assistSplit[0].split(':');
+        final assistBody = assistSplit[1].split('assistDetails:');
         browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
+
+        BotToast.showText(
+          align: Alignment(0, 0),
+          crossPage: true,
+          clickClose: true,
+          text: assistBody[1],
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[700],
+          duration: const Duration(seconds: 10),
+          contentPadding: const EdgeInsets.all(10),
+        );
       }
 
       if (launchBrowser) {

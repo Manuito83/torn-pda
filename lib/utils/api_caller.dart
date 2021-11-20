@@ -23,6 +23,7 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
@@ -39,6 +40,7 @@ enum ApiSelection {
   travel,
   ownBasic,
   ownExtended,
+  ownPersonalStats,
   ownMisc,
   bazaar,
   otherProfile,
@@ -126,6 +128,7 @@ class TornApiCaller {
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.ownBasic(this.apiKey);
   TornApiCaller.ownExtended(this.apiKey, this.limit);
+  TornApiCaller.ownPersonalStats(this.apiKey);
   TornApiCaller.ownMisc(this.apiKey);
   TornApiCaller.bazaar(this.apiKey);
   TornApiCaller.otherProfile(this.apiKey, this.queryId);
@@ -173,6 +176,18 @@ class TornApiCaller {
     });
     if (apiResult is http.Response) {
       return OwnProfileExtended.fromJson(json.decode(apiResult.body));
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getOwnPersonalStats async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.ownPersonalStats).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      return OwnPersonalStatsModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -459,6 +474,9 @@ class TornApiCaller {
         url += '?selections=profile,bars,networth,'
             'cooldowns,events,travel,icons,'
             'money,education,messages';
+        break;
+      case ApiSelection.ownPersonalStats:
+        url += '?selections=personalstats';
         break;
       case ApiSelection.ownMisc:
         url += '?selections=money,education,workstats,battlestats,jobpoints,properties,skills';

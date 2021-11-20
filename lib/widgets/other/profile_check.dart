@@ -20,6 +20,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
+import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 
 enum ProfileCheckType {
@@ -41,49 +42,6 @@ class ProfileAttackCheckWidget extends StatefulWidget {
 }
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
-  final _levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
-  final _crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
-  final _networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
-
-  final _ranksTriggers = {
-    "Absolute beginner": 1,
-    "Beginner": 2,
-    "Inexperienced": 3,
-    "Rookie": 4,
-    "Novice": 5,
-    "Below average": 6,
-    "Average": 7,
-    "Reasonable": 8,
-    "Above average": 9,
-    "Competent": 10,
-    "Highly competent": 11,
-    "Veteran": 12,
-    "Distinguished": 13,
-    "Highly distinguished": 14,
-    "Professional": 15,
-    "Star": 16,
-    "Master": 17,
-    "Outstanding": 18,
-    "Celebrity": 19,
-    "Supreme": 20,
-    "Idolized": 21,
-    "Champion": 22,
-    "Heroic": 23,
-    "Legendary": 24,
-    "Elite": 25,
-    "Invincible": 26,
-  };
-
-  final _statsResults = [
-    "< 2k",
-    "2k - 25k",
-    "20k - 250k",
-    "200k - 2.5M",
-    "2M - 25M",
-    "20M - 250M",
-    "> 200M",
-  ];
-
   Future _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
@@ -751,7 +709,12 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           estimatedStats = "NPC!";
         } else {
           try {
-            estimatedStats = _calculateStats(otherProfile);
+            estimatedStats = StatsCalculator.calculateStats(
+              criminalRecordTotal: otherProfile.criminalrecord.total,
+              level: otherProfile.level,
+              networth: otherProfile.personalstats.networth,
+              rank: otherProfile.rank,
+            );
           } catch (e) {
             estimatedStats = "unk";
           }
@@ -1070,21 +1033,5 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
   }
 
-  String _calculateStats(OtherProfileModel otherProfile) {
-    var levelIndex = _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
-    var crimeIndex = _crimesTriggers.lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) + 1;
-    var networthIndex = _networthTriggers.lastIndexWhere((x) => x <= otherProfile.personalstats.networth) + 1;
-    var rankIndex = 0;
-    _ranksTriggers.forEach((tornRank, index) {
-      if (otherProfile.rank.contains(tornRank)) {
-        rankIndex = index;
-      }
-    });
 
-    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
-    if (finalIndex >= 0 && finalIndex <= 6) {
-      return _statsResults[finalIndex];
-    }
-    return "unk";
-  }
 }

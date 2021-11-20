@@ -38,6 +38,17 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.1
+    var v2_6_1 = ChangeLogItem();
+    v2_6_1.main.version = 'Torn PDA v2.6.1';
+    v2_6_1.main.date = '01 DEC 2021';
+    String feat2_6_1_1 = "Chaining: the faction assist requests now also sends extended information and stats";
+    String feat2_6_1_2 = "Fixed city items being incorrectly identified";
+    String feat2_6_1_3 = "Fixed other UI issues";
+    v2_6_1.features.add(feat2_6_1_1);
+    v2_6_1.features.add(feat2_6_1_2);
+    v2_6_1.features.add(feat2_6_1_3);
+
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
     v2_6_0.main.version = 'Torn PDA v2.6.0';
@@ -942,6 +953,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_1);
     itemList.add(v2_6_0);
     itemList.add(v2_5_3);
     itemList.add(v2_5_2);

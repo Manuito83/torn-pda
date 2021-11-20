@@ -35,7 +35,6 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   int _capacity;
   bool _inventoryEnabled;
   bool _showArrivalTime;
-  TravelTicket _ticket;
 
   @override
   void initState() {
@@ -43,7 +42,6 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     _capacity = widget.capacity;
     _inventoryEnabled = widget.inventoryEnabled;
     _showArrivalTime = widget.showArrivalTime;
-    _ticket = widget.settingsProvider.travelTicket;
   }
 
   @override
