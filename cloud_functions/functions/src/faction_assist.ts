@@ -33,8 +33,8 @@ export const factionAssistGroup = {
             .where("active", "==", true)
             .where("faction", "==", faction)
             .where("factionAssistMessage", "==", true)
-            .where("name", "==", `Manuito`) // TODO!!
-            //.where("name", "!=", `${callingUser.data().name}`) // Not the requestor's own name
+            //.where("name", "==", `Manuito`)  // DEBUG (change also 'main.dart' to redirect functions)
+            .where("name", "!=", `${callingUser.data().name}`) // Not the requestor's own name
             .get();
 
         const factionMembers = response.docs.map((d) => d.data());
@@ -48,7 +48,7 @@ export const factionAssistGroup = {
         let attackId = data["attackId"].toString();
 
         let attackName = data["attackName"];
-        if (attackName === "") {
+        if (attackName === "" || attackName === undefined) {
             attackName = `ID ${attackId}`;
         } else {
             attackName = `${data["attackName"]}`;
@@ -56,14 +56,14 @@ export const factionAssistGroup = {
 
         let attackLevelAge = data["attackLevel"];
         let attackAge = data["attackAge"];
-        if (attackLevelAge === "" || attackAge === "") {
+        if (attackLevelAge === "" || attackLevelAge === undefined || attackAge === "" || attackAge === undefined) {
             attackLevelAge = "";
         } else {
             attackLevelAge = `\n- Level ${attackLevelAge} (${attackAge} days old)`;
         }
 
         let attackLife = data["attackLife"];
-        if (attackLife === "") {
+        if (attackLife === "" || attackLife === undefined) {
             attackLife = "";
         } else {
             attackLife = `\n- Life ${attackLife}`;
@@ -71,10 +71,10 @@ export const factionAssistGroup = {
 
         let estimatedStats = data["estimatedStats"];
         let exactStats = data["exactStats"];
-        if (exactStats === "") {
+        if (exactStats === "" || exactStats === undefined) {
             exactStats = "";
             // If exact stats are not available, add estimated
-            if (estimatedStats === "") {
+            if (estimatedStats === "" || estimatedStats === undefined) {
                 estimatedStats = "";
             } else {
                 estimatedStats = `\n- Estimated stats: ${estimatedStats}`;
@@ -92,7 +92,7 @@ export const factionAssistGroup = {
                 sendNotificationToUser(
                     thisMember.token,
                     `Attack assist request!`,
-                    `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}:` +
+                    `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}!` +
                     `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}`,
                     "notification_assist",
                     "#FF0000",
