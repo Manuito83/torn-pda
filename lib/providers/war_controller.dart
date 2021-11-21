@@ -769,7 +769,7 @@ class WarController extends GetxController {
 
   int _getLifeSort(Member member) {
     if (member.status.state != "Hospital") {
-      return member.;
+      return member.lifeCurrent;
     } else {
       return -(member.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
     }
