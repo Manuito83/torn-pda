@@ -932,3 +932,18 @@ String jailJS({
     123;
   ''';
 }
+
+String MiniProfiles() {
+  return '''
+    \$(document).on("click","[class*=profile-mini-_userWrap]", async function(e){
+        window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);
+    });
+
+    \$(document).on("click","[class*=profile-mini-_factionWrap]",function(e){
+        window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);
+    });
+
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}

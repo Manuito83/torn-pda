@@ -215,15 +215,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialWebViewOptions = InAppWebViewGroupOptions(
       crossPlatform: InAppWebViewOptions(
-        transparentBackground: true,
-        clearCache: _clearCacheFirstOpportunity,
-        useOnLoadResource: true,
+          transparentBackground: true,
+          clearCache: _clearCacheFirstOpportunity,
+          useOnLoadResource: true,
+          javaScriptCanOpenWindowsAutomatically: true
 
-        /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
-        /// hospital timer, company applications, etc. There is a but on iOS if we activate it
-        /// and deactivate it dynamically, where onLoadResource stops triggering!
-        //useShouldInterceptAjaxRequest: false,
-      ),
+          /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
+          /// hospital timer, company applications, etc. There is a but on iOS if we activate it
+          /// and deactivate it dynamically, where onLoadResource stops triggering!
+          //useShouldInterceptAjaxRequest: false,
+          ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
         supportMultipleWindows: true,
@@ -690,9 +691,36 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onWebViewCreated: (c) {
                   webView = c;
                   _terminalProvider.terminal = "Terminal";
+
+                  if (Platform.isAndroid) {
+                    // MiniProfiles don't work in inAppWebView, so we use a handler from JS
+                    webView.addJavaScriptHandler(
+                      handlerName: 'handlerMiniProfiles',
+                      callback: (args) {
+                        if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
+                            (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
+                          _loadUrl(args[0]);
+                        } else {
+                          // If we are using tabs, add a tab
+                          _webViewProvider.addTab(url: args[0]);
+                          _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                        }
+                      },
+                    );
+                  }
                 },
                 onCreateWindow: (c, request) async {
                   if (!mounted) return true;
+
+                  if (Platform.isAndroid) {
+                    // Prevent MiniProfiles from opening images (error in inAppWebView)
+                    // we will use a handler instead. // TODO review next updates
+                    if (request.request.url.toString().contains("awardimages.torn.com") ||
+                        request.request.url.toString().contains("factiontags.torn.com")) {
+                      return false;
+                    }
+                  }
+
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
@@ -786,7 +814,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       // it too early (before it has changed)
                       _reportPageTitle();
                     }
-
                     _assessGeneral(document);
 
                     // This is used in case the user presses reload. We need to wait for the page
@@ -795,6 +822,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                       _scrollAfterLoad = false;
                     }
+                    
+                    if (Platform.isAndroid) {
+                      webView.evaluateJavascript(source: MiniProfiles());
+                    }
+                    
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
