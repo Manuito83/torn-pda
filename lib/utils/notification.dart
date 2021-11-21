@@ -34,6 +34,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   String messageId = '';
   String tradeId = '';
   String assistId = '';
+  String bulkDetails = '';
 
   if (payload.isNotEmpty) {
     if (Platform.isAndroid) {
@@ -41,11 +42,13 @@ Future showNotificationBoth(Map payload, int notId) async {
       messageId = payload["tornMessageId"] ?? '';
       tradeId = payload["tornTradeId"] ?? '';
       assistId = payload["assistId"] ?? '';
+      bulkDetails = payload["bulkDetails"] ?? '';
     } else {
       channel = payload["channelId"] ?? '';
       messageId = payload["tornMessageId"] ?? '';
       tradeId = payload["tornTradeId"] ?? '';
       assistId = payload["assistId"] ?? '';
+      bulkDetails = payload["bulkDetails"] ?? '';
     }
   }
 
@@ -149,7 +152,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts assists")) {
     notificationIcon = "notification_assists";
     notificationColor = Colors.red;
-    onTapPayload += 'assistId:$assistId###assistDetails:${payload["body"]}';
+    onTapPayload += 'assistId:$assistId###assistDetails:${payload["body"]}###bulkDetails:$bulkDetails';
     channelId = 'Alerts assists';
     channelName = 'Alerts assists';
     channelDescription = 'Automatic alerts for assists';

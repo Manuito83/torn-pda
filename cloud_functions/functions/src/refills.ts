@@ -78,6 +78,7 @@ export const refillsGroup = {
                   "",
                   "",
                   "",
+                  "",
                   thisUser.vibration,
                 )
               );
@@ -127,6 +128,7 @@ export const refillsGroup = {
                     "notification_refills",
                     "#0000FF",
                     "Alerts refills",
+                    "",
                     "",
                     "",
                     "",

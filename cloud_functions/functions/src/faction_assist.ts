@@ -71,6 +71,7 @@ export const factionAssistGroup = {
 
         let estimatedStats = data["estimatedStats"];
         let exactStats = data["exactStats"];
+        let bulkDetails = "";
         if (exactStats === "" || exactStats === undefined) {
             exactStats = "";
             // If exact stats are not available, add estimated
@@ -78,6 +79,10 @@ export const factionAssistGroup = {
                 estimatedStats = "";
             } else {
                 estimatedStats = `\n- Estimated stats: ${estimatedStats}`;
+                let xanax = data["xanax"];
+                let refills = data["refills"];
+                let drinks = data["drinks"];
+                bulkDetails = `xanax:${xanax}#refills:${refills}#drinks:${drinks}`;
             }
 
         } else {
@@ -100,6 +105,7 @@ export const factionAssistGroup = {
                     "",
                     "",
                     attackId,
+                    bulkDetails,
                     thisMember.vibration,
                     "sword_clash.aiff"
                 )

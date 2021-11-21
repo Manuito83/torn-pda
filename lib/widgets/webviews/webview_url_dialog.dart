@@ -14,7 +14,6 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
-import 'package:torn_pda/models/profile/own_stats_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -194,37 +193,10 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 rank: t.rank,
                               );
 
-                              var own = await TornApiCaller.ownPersonalStats(apiKey).getOwnPersonalStats;
-                              if (own is OwnPersonalStatsModel) {
-                                int xanaxComparison = t.personalstats.xantaken - own.personalstats.xantaken;
-                                int refillsComparison = t.personalstats.refills - own.personalstats.refills;
-                                int drinksComparison = t.personalstats.energydrinkused - own.personalstats.energydrinkused;
-
-                                String xanaxString = "";
-                                if (xanaxComparison.isNegative) {
-                                  xanaxString = "Xanax: ${xanaxComparison.abs()} LESS than you";
-                                } else {
-                                  xanaxString = "Xanax: ${xanaxComparison.abs()} MORE than you";
-                                }
-
-                                String refillsString = "";
-                                if (refillsComparison.isNegative) {
-                                  refillsString = "Refills (E): ${refillsComparison.abs()} LESS than you";
-                                } else {
-                                  refillsString = "Refills (E): ${refillsComparison.abs()} MORE than you";
-                                }
-
-                                String drinksString = "";
-                                if (drinksComparison.isNegative) {
-                                  drinksString = "Drinks (E): ${drinksComparison.abs()} LESS than you";
-                                } else {
-                                  drinksString = "Drinks (E): ${drinksComparison.abs()} MORE than you";
-                                }
-
-                                estimatedStats += "\n>> $xanaxString";
-                                estimatedStats += "\n>> $refillsString";
-                                estimatedStats += "\n>> $drinksString";
-                              }
+                              estimatedStats += "\n- Xanax: ${t.personalstats.xantaken}";
+                              estimatedStats += "\n- Refills (E): ${t.personalstats.refills}";
+                              estimatedStats += "\n- Drinks (E): ${t.personalstats.energydrinkused}";
+                              estimatedStats += "\n(tap to get a comparison with you)";
                             }
 
                             membersNotified = await firebaseFunctions.sendAttackAssistMessage(
@@ -235,6 +207,9 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               attackAge: t.age.toString(),
                               estimatedStats: estimatedStats,
                               exactStats: exactStats,
+                              xanax: t.personalstats.xantaken.toString(),
+                              refills: t.personalstats.refills.toString(),
+                              drinks: t.personalstats.energydrinkused.toString(),
                             );
                           } else {
                             membersNotified = await firebaseFunctions.sendAttackAssistMessage(

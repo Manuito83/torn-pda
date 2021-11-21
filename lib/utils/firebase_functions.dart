@@ -11,6 +11,9 @@ class _FirebaseFunctions {
     String attackLife = "",
     String attackAge = "",
     String estimatedStats = "",
+    String xanax = "unk",
+    String refills = "unk",
+    String drinks = "unk",
     String exactStats = "",
   }) async {
     HttpsCallable callable = FirebaseFunctions.instanceFor(
@@ -26,6 +29,9 @@ class _FirebaseFunctions {
       'attackLife': attackLife,
       'attackAge': attackAge,
       'estimatedStats': estimatedStats,
+      'xanax': xanax,
+      'refills': refills,
+      'drinks': drinks,
       'exactStats': exactStats,
     });
 
