@@ -163,8 +163,8 @@ class WarController extends GetxController {
       dynamic updatedTarget = await TornApiCaller.target(_u.apiKey, memberKey).getOtherProfile;
       if (updatedTarget is OtherProfileModel) {
         member.overrideEasyLife = true;
-        member.lifeMaximum = updatedTarget.life.current;
-        member.lifeCurrent = updatedTarget.life.maximum;
+        member.lifeMaximum = updatedTarget.life.maximum;
+        member.lifeCurrent = updatedTarget.life.current;
         member.lastAction.relative = updatedTarget.lastAction.relative;
         member.lastAction.status = updatedTarget.lastAction.status;
         member.status.description = updatedTarget.status.description;
@@ -769,7 +769,7 @@ class WarController extends GetxController {
 
   int _getLifeSort(Member member) {
     if (member.status.state != "Hospital") {
-      return member.lifeCurrent;
+      return member.;
     } else {
       return -(member.status.until - DateTime.now().millisecondsSinceEpoch / 1000).round();
     }
