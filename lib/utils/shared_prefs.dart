@@ -91,6 +91,10 @@ class Prefs {
   final String _kHospitalNotificationAhead = "pda_hospitalNotificationAhead";
   final String _kHospitalAlarmAhead = "pda_hospitalAlarmAhead";
   final String _kHospitalTimerAhead = "pda_hospitalTimesAhead";
+  final String _kJailNotificationType = "pda_jailNotificationType";
+  final String _kJailNotificationAhead = "pda_jailNotificationAhead";
+  final String _kJailAlarmAhead = "pda_jailAlarmAhead";
+  final String _kJailTimerAhead = "pda_jailTimesAhead";
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -1039,6 +1043,46 @@ class Prefs {
   Future<bool> setHospitalTimerAhead(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kHospitalTimerAhead, value);
+  }
+
+  Future<String> getJailNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kJailNotificationType) ?? '0';
+  }
+
+  Future<bool> setJailNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kJailNotificationType, value);
+  }
+
+  Future<int> getJailNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJailNotificationAhead) ?? 40;
+  }
+
+  Future<bool> setJailNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJailNotificationAhead, value);
+  }
+
+  Future<int> getJailAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJailAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setJailAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJailAlarmAhead, value);
+  }
+
+  Future<int> getJailTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJailTimerAhead) ?? 40;
+  }
+
+  Future<bool> setJailTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJailTimerAhead, value);
   }
 
   Future<bool> getManualAlarmVibration() async {

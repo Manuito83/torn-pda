@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
+import 'package:torn_pda/pages/profile/jail_ahead_options.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
@@ -263,6 +264,34 @@ class _ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                       MaterialPageRoute(
                         builder: (context) {
                           return HospitalAheadOptions();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
+      }
+
+      if (element == ProfileNotification.jail) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Jail notification timings"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return JailAheadOptions();
                         },
                       ),
                     );
