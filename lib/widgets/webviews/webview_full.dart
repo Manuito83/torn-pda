@@ -218,6 +218,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           transparentBackground: true,
           clearCache: _clearCacheFirstOpportunity,
           useOnLoadResource: true,
+          useShouldOverrideUrlLoading: true,
           javaScriptCanOpenWindowsAutomatically: true
 
           /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
@@ -709,6 +710,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     );
                   }
                 },
+                shouldOverrideUrlLoading: (c, request) async {
+                  if (request.request.url.toString().contains("http://")) {
+                    _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
+                    return NavigationActionPolicy.CANCEL;
+                  }
+                  return NavigationActionPolicy.ALLOW;
+                },
                 onCreateWindow: (c, request) async {
                   if (!mounted) return true;
 
@@ -725,10 +733,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
                       (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
-                    _loadUrl(request.request.url.toString());
+                    String url = request.request.url.toString().replaceAll("http:", "https:");
+                    _loadUrl(url);
                   } else {
                     // If we are using tabs, add a tab
-                    _webViewProvider.addTab(url: request.request.url.toString());
+                    String url = request.request.url.toString().replaceAll("http:", "https:");
+                    _webViewProvider.addTab(url: url);
                     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                   }
                   return true;
@@ -822,11 +832,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                       _scrollAfterLoad = false;
                     }
-                    
+
                     if (Platform.isAndroid) {
                       webView.evaluateJavascript(source: MiniProfiles());
                     }
-                    
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
