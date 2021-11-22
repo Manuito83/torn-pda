@@ -48,6 +48,7 @@ import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VaultsOptions {
   String description;
@@ -999,6 +1000,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     print("TORN PDA CONSOLE: ${consoleMessage.message}");
                   }
                 },
+                onLongPressHitTestResult: (controller, result) {
+                  // If not in this page already
+                  if (result.extra.replaceAll("#", "") != _currentUrl &&
+                      // And the link does not go to a profile (in which case the mini profile opens)
+                      (result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE &&
+                              !result.extra.contains("https://www.torn.com/profiles.php?XID=") ||
+                          // Or, if it goes to an image, it's not an award image (let mini profiles work)
+                          (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
+                              !result.extra.contains("awardimages")))) {
+                    _showLongPressCard(result);
+                  }
+                },
                 /*
                 shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
                   // VAULT EVENTS
@@ -1012,14 +1025,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       });
                     }
                   }
-
+              
                   /*
                   // This will intercept ajax calls performed when the bazaar reached 100 items
                   // and needs to be reloaded, so that we can remove and add again the fill buttons
                   if (x == null) return x;
                   if (x.data == null) return x;
                   if (x.url == null) return x;
-
+              
                   if (x.data.contains("step=getList&type=All&start=") &&
                       x.url.contains('inventory.php') &&
                       _bazaarActive &&
@@ -1030,7 +1043,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     });
                   }
                   */
-
+              
                   // MAIN AJAX REQUEST RETURN
                   return x;
                 },
@@ -2798,5 +2811,104 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future<bool> _willPopCallback() async {
     _tryGoBack();
     return false;
+  }
+
+  void _showLongPressCard(InAppWebViewHitTestResult result) {
+    BotToast.showCustomText(
+      onlyOne: false,
+      clickClose: true,
+      ignoreContentClick: false,
+      crossPage: false,
+      duration: Duration(seconds: 5),
+      toastBuilder: (textCancel) => Align(
+        alignment: Alignment(0, 0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Card(
+              color: Colors.grey[700],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                      child: GestureDetector(
+                        child: Text(
+                          "Copy link",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: result.extra));
+                          BotToast.showText(
+                            text: "Link copied to the clipboard!",
+                            textStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.grey[700],
+                            duration: Duration(seconds: 2),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                        },
+                      ),
+                    ),
+                    if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
+                        (widget.dialog && _settingsProvider.useTabsFullBrowser))
+                      Column(
+                        children: [
+                          SizedBox(width: 150, child: Divider(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                            child: GestureDetector(
+                              child: Text(
+                                "Open in new tab",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onTap: () {
+                                // If we are using tabs, add a tab
+                                String url = result.extra.replaceAll("http:", "https:");
+                                _webViewProvider.addTab(url: url);
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                textCancel();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    SizedBox(width: 150, child: Divider(color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),
+                      child: GestureDetector(
+                        child: Text(
+                          "External browser",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () async {
+                          if (await canLaunch(result.extra)) {
+                            await launch(result.extra, forceSafariVC: false);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -43,17 +43,19 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_1.main.version = 'Torn PDA v2.6.1';
     v2_6_1.main.date = '01 DEC 2021';
     String feat2_6_1_1 = "Chaining: the faction assist requests now also sends extended information and stats";
-    String feat2_6_1_2 = "Profile: properly separated jail from hospital manual notifications";
-    String feat2_6_1_3 = "Fixed life sorting in for war targets";
-    String feat2_6_1_4 = "Fixed city items being incorrectly identified";
-    String feat2_6_1_5 = "Fixed mini profiles not properly redirecting in some devices";
-    String feat2_6_1_6 = "Fixed other UI issues";
+    String feat2_6_1_2 = "Browser: long-pressing a link will open a menu with several options";
+    String feat2_6_1_3 = "Profile: properly separated jail from hospital manual notifications";
+    String feat2_6_1_4 = "Fixed life sorting in for war targets";
+    String feat2_6_1_5 = "Fixed city items being incorrectly identified";
+    String feat2_6_1_6 = "Fixed mini profiles not properly redirecting in some devices";
+    String feat2_6_1_7 = "Fixed other UI issues";
     v2_6_1.features.add(feat2_6_1_1);
     v2_6_1.features.add(feat2_6_1_2);
     v2_6_1.features.add(feat2_6_1_3);
     v2_6_1.features.add(feat2_6_1_4);
     v2_6_1.features.add(feat2_6_1_5);
     v2_6_1.features.add(feat2_6_1_6);
+    v2_6_1.features.add(feat2_6_1_7);
 
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
