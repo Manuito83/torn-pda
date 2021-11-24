@@ -1038,7 +1038,7 @@ class _WarCardState extends State<WarCard> {
       } else {
         var dexDiff = "";
         Color dexColor;
-        var result = _userProvider.basic.strength - _member.statsDex;
+        var result = _userProvider.basic.dexterity - _member.statsDex;
         if (result == 0) {
           dexDiff = "Same as you";
           dexColor = Colors.orange;

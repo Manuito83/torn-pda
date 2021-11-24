@@ -884,7 +884,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var dexDiff = "";
       Color dexColor;
-      var result = _userDetails.basic.strength - spyModel.dexterity;
+      var result = _userDetails.basic.dexterity - spyModel.dexterity;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -936,7 +936,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL: ${formatBigNumbers(spyModel.dexterity)}",
+            "TOTAL: ${formatBigNumbers(spyModel.total)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
