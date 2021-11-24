@@ -148,6 +148,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _hospitalTriggerTime;
   DateTime _urlTriggerTime;
   DateTime _profileTriggerTime;
+  DateTime _searchTriggerTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -233,6 +234,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
+        disableLongPressContextMenuOnLinks: true,
       ),
     );
 
@@ -862,6 +864,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       }
                     }
 
+                    /// Same for hospital
                     if (widget.useTabs && Platform.isIOS) {
                       if (resource.initiatorType == "xmlhttprequest" &&
                           resource.url.toString().contains("hospitalview.php")) {
@@ -871,6 +874,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           return;
                         }
                         _hospitalTriggerTime = DateTime.now();
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
+                    }
+
+                    /// Same for advanced search results
+                    if (widget.useTabs && Platform.isIOS) {
+                      if (resource.initiatorType == "xmlhttprequest" &&
+                          resource.url.toString().contains("page.php")) {
+                        // Trigger once
+                        if (_searchTriggerTime != null &&
+                            (DateTime.now().difference(_searchTriggerTime).inSeconds) < 1) {
+                          return;
+                        }
+                        _searchTriggerTime = DateTime.now();
                         var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                       }
