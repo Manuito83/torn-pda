@@ -47,7 +47,8 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _secondaryInitialised = false;
 
-  Future initialiseMain({@required String initUrl, bool dialog = false}) async {
+  /// [recallLastSession] should be used to open a browser session where we left it last time
+  Future initialiseMain({@required String initUrl, bool dialog = false, bool recallLastSession = false}) async {
     _useDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
@@ -56,13 +57,33 @@ class WebViewProvider extends ChangeNotifier {
     _useTabIcons = await Prefs().getUseTabsIcons();
     _hideTabs = await Prefs().getHideTabs();
 
+    // This saves if we are using a dialog or not, so that the next session can replicate if we recall from T menu
+    Prefs().setWebViewLastSessionUsedDialog(dialog);
+
     // Add the main opener
-    await addTab(url: initUrl, chatRemovalActive: chatRemovalActiveGlobal);
+    String url = initUrl;
+    if (recallLastSession) {
+      String savedJson = await Prefs().getWebViewMainTab();
+      TabSaveModel savedMain = tabSaveModelFromJson(savedJson);
+      if (savedMain.tabsSave.length > 0) {
+        addTab(
+          url: savedMain.tabsSave[0].url,
+          pageTitle: savedMain.tabsSave[0].pageTitle,
+          chatRemovalActive: savedMain.tabsSave[0].chatRemovalActive,
+          historyBack: savedMain.tabsSave[0].historyBack,
+          historyForward: savedMain.tabsSave[0].historyForward,
+        );
+      } else {
+        await addTab(url: "https://www.torn.com", chatRemovalActive: chatRemovalActiveGlobal);
+      }
+    } else {
+      await addTab(url: url, chatRemovalActive: chatRemovalActiveGlobal);
+    }
     _currentTab = 0;
   }
 
-  Future initialiseSecondary({@required bool useTabs}) async {
-    var savedJson = await Prefs().getWebViewTabs();
+  Future initialiseSecondary({@required bool useTabs, bool recallLastSession = false}) async {
+    var savedJson = await Prefs().getWebViewSecondaryTabs();
     var savedWebViews = tabSaveModelFromJson(savedJson);
 
     _secondaryInitialised = true;
@@ -89,7 +110,11 @@ class WebViewProvider extends ChangeNotifier {
 
     // Make sure we start at the first tab. We don't need to call activateTab because we have
     // still not initialised completely and the StackView is not live
-    _currentTab = 0;
+    if (recallLastSession && useTabs) {
+      _currentTab = await Prefs().getWebViewLastActiveTab();
+    } else {
+      _currentTab = 0;
+    }
   }
 
   Future addTab({
@@ -288,25 +313,40 @@ class WebViewProvider extends ChangeNotifier {
     // loading the main and reporting back URL or page title (which triggers a save)!
     if (!_secondaryInitialised) return;
 
-    var saveModel = TabSaveModel()..tabsSave = <TabsSave>[];
-    for (var i = 1; i < _tabList.length; i++) {
-      saveModel.tabsSave.add(
-        TabsSave()
-          ..url = _tabList[i].currentUrl
-          ..pageTitle = _tabList[i].pageTitle
-          ..chatRemovalActive = _tabList[i].chatRemovalActiveTab
-          ..historyBack = _tabList[i].historyBack
-          ..historyForward = _tabList[i].historyForward,
-      );
+    TabSaveModel saveMainModel = TabSaveModel()..tabsSave = <TabsSave>[];
+    TabSaveModel saveSecondaryModel = TabSaveModel()..tabsSave = <TabsSave>[];
+    for (var i = 0; i < _tabList.length; i++) {
+      if (i == 0) {
+        saveMainModel.tabsSave.add(
+          TabsSave()
+            ..url = _tabList[0].currentUrl
+            ..pageTitle = _tabList[0].pageTitle
+            ..chatRemovalActive = _tabList[0].chatRemovalActiveTab
+            ..historyBack = _tabList[0].historyBack
+            ..historyForward = _tabList[0].historyForward,
+        );
+      } else {
+        saveSecondaryModel.tabsSave.add(
+          TabsSave()
+            ..url = _tabList[i].currentUrl
+            ..pageTitle = _tabList[i].pageTitle
+            ..chatRemovalActive = _tabList[i].chatRemovalActiveTab
+            ..historyBack = _tabList[i].historyBack
+            ..historyForward = _tabList[i].historyForward,
+        );
+      }
     }
-    String json = tabSaveModelToJson(saveModel);
-    Prefs().setWebViewTabs(json);
+    String mainJson = tabSaveModelToJson(saveMainModel);
+    String secondaryJson = tabSaveModelToJson(saveSecondaryModel);
+    Prefs().setWebViewMainTab(mainJson);
+    Prefs().setWebViewSecondaryTabs(secondaryJson);
   }
 
   void clearOnDispose() {
     _tabList.clear();
     _secondaryInitialised = false;
     // It is necessary to bring this to 0 so that on opening no checks are performed in tabs that don't exist yet
+    Prefs().setWebViewLastActiveTab(_currentTab);
     _currentTab = 0;
   }
 
@@ -368,6 +408,7 @@ class WebViewProvider extends ChangeNotifier {
     @required String url,
     @required bool useDialog,
     bool awaitable = false,
+    bool recallLastSession = false,
   }) async {
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
@@ -378,28 +419,28 @@ class WebViewProvider extends ChangeNotifier {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
           if (awaitable) {
-            await openBrowserDialog(context, url);
+            await openBrowserDialog(context, url, recallLastSession: recallLastSession);
           } else {
-            openBrowserDialog(context, url);
+            openBrowserDialog(context, url, recallLastSession: recallLastSession);
           }
         } else {
           if (awaitable) {
             await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: url),
+                builder: (BuildContext context) => WebViewStackView(initUrl: url, recallLastSession: recallLastSession),
               ),
             );
           } else {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: url),
+                builder: (BuildContext context) => WebViewStackView(initUrl: url, recallLastSession: recallLastSession),
               ),
             );
           }
         }
       }
     } else {
-      if (await canLaunch(url)) {
+      if (!recallLastSession && await canLaunch(url)) {
         await launch(url, forceSafariVC: false);
       }
     }

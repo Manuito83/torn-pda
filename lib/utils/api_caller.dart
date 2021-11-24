@@ -62,7 +62,7 @@ enum ApiSelection {
 class ApiError {
   int errorId;
   String errorReason;
-  ApiError({int errorId}) {
+  ApiError({int errorId, String info = ""}) {
     switch (errorId) {
       // Torn PDA codes
       case 100:
@@ -70,7 +70,7 @@ class ApiError {
         break;
       // Torn codes
       case 0:
-        errorReason = 'no connection';
+        errorReason = 'no connection${info}';
         break;
       case 1:
         errorReason = 'key is empty';
@@ -542,12 +542,12 @@ class TornApiCaller {
         // Otherwise, return a good json response
         return response;
       } else {
-        return ApiError(errorId: 0);
+        return ApiError(errorId: 0, info: " [${response.statusCode}: ${response.body}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
-    } catch (_) {
-      return ApiError(errorId: 0);
+    } catch (e) {
+      return ApiError(errorId: 0, info: " [$e]");
     }
   }
 }

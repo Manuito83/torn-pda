@@ -301,6 +301,13 @@ class _TipsPageState extends State<TipsPage> {
     );
     tips.add(
       ExpandableTip(
+        headerValue: "Restore previous browsing session",
+        expandedValue: "You can restore your previous browsing session, including the first tab, active tab and "
+        "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
         headerValue: "How can I browse back or forward?",
         expandedValue:
             "If using the full browser, swipe your finger right or left across the title bar to browse back or "

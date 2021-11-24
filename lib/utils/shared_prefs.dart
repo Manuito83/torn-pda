@@ -47,6 +47,7 @@ class Prefs {
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
+  final String _kTMenuButtonLongPressBrowser = "pda_tMenuButtonLongPressBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -151,7 +152,10 @@ class Prefs {
   // WebView Tabs
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
-  final String _kWebViewTabs = "pda_webViewTabs";
+  final String _kWebViewLastActiveTab = "pda_webViewLastActiveTab";
+  final String _kWebViewLastSessionUsedDialog = "pda_webViewLastSessionUsedDialog";
+  final String _kWebViewMainTab = "pda_webViewMainTab";
+  final String _kWebViewSecondaryTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
@@ -334,7 +338,7 @@ class Prefs {
     return prefs.setBool(_kTargetSkipping, value);
   }
 
-    Future<bool> getTargetSkippingFirst() async {
+  Future<bool> getTargetSkippingFirst() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkippingFirst) ?? false;
   }
@@ -554,6 +558,16 @@ class Prefs {
   Future<bool> setUseQuickBrowser(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseQuickBrowser, value);
+  }
+
+  Future<String> getTMenuButtonLongPressBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kUseQuickBrowser) ?? "quick";
+  }
+
+  Future<bool> setTMenuButtonLongPressBrowser(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kUseQuickBrowser, value);
   }
 
   Future<bool> getClearBrowserCacheNextOpportunity() async {
@@ -1683,14 +1697,44 @@ class Prefs {
   /// -----------------------------
   /// METHODS FOR WEB VIEW TABS
   /// -----------------------------
-  Future<String> getWebViewTabs() async {
+  Future<int> getWebViewLastActiveTab() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebViewTabs) ?? '{"tabsSave": []}';
+    return prefs.getInt(_kWebViewLastActiveTab) ?? 0;
   }
 
-  Future<bool> setWebViewTabs(String value) async {
+  Future<bool> setWebViewLastActiveTab(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWebViewTabs, value);
+    return prefs.setInt(_kWebViewLastActiveTab, value);
+  }
+
+  Future<bool> getWebViewLastSessionUsedDialog() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebViewLastSessionUsedDialog) ?? true;
+  }
+
+  Future<bool> setWebViewLastSessionUsedDialog(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebViewLastSessionUsedDialog, value);
+  }
+
+  Future<String> getWebViewMainTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewMainTab) ?? '{"tabsSave": []}';
+  }
+
+  Future<bool> setWebViewMainTab(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewMainTab, value);
+  }
+
+  Future<String> getWebViewSecondaryTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewSecondaryTabs) ?? '{"tabsSave": []}';
+  }
+
+  Future<bool> setWebViewSecondaryTabs(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewSecondaryTabs, value);
   }
 
   Future<bool> getUseTabsFullBrowser() async {

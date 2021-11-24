@@ -14,10 +14,12 @@ import 'package:torn_pda/widgets/animated_indexedstack.dart';
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
   final bool dialog;
+  final bool recallLastSession;
 
   const WebViewStackView({
     this.initUrl = "https://www.torn.com",
     this.dialog = false,
+    this.recallLastSession = false,
     Key key,
   }) : super(key: key);
 
@@ -65,6 +67,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialiseMain(
       initUrl: widget.initUrl,
       dialog: widget.dialog,
+      recallLastSession: widget.recallLastSession,
     );
   }
 
@@ -170,7 +173,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   void _initialiseSecondary() async {
     await Future.delayed(Duration(milliseconds: 1000));
     if (!mounted) return;
-    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(useTabs: _useTabs);
+    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
+      useTabs: _useTabs,
+      recallLastSession: widget.recallLastSession,
+    );
   }
 
   @override

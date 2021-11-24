@@ -8,6 +8,7 @@ Future<void> openBrowserDialog(
   BuildContext _,
   String initUrl, {
   Function callBack,
+  bool recallLastSession = false,
 }) {
   double width = MediaQuery.of(_).size.width;
   double hPad = 15;
@@ -31,7 +32,7 @@ Future<void> openBrowserDialog(
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 8, horizontal: frame),
-          child: WebViewStackView(initUrl: initUrl, dialog: true),
+          child: WebViewStackView(initUrl: initUrl, dialog: true, recallLastSession: recallLastSession),
         ),
       );
     },

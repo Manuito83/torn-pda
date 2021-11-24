@@ -444,7 +444,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       // This resets cache when the browser opens again
                       _settingsProvider.setClearCacheNextOpportunity = true;
                       // Clear tabs now
-                      Prefs().setWebViewTabs('{"tabsSave": []}');
+                      Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
 
                       BotToast.showText(
                         text: "Browser cache and tabs have been reset!",

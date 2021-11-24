@@ -342,7 +342,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: buildAppBar(),
             )
           : null,
-      floatingActionButton: buildSpeedDial(),
+      floatingActionButton: Stack(
+        children: [
+          buildSpeedDial(),
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              width: 56,
+              height: 56,
+            ),
+            onLongPress: () async {
+              bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
+              _launchBrowser(url: "", dialogRequested: lastSessionWasDialog, recallLastSession: true);
+            },
+          ),
+        ],
+      ),
       body: Container(
         child: FutureBuilder(
           future: _apiFetched,
@@ -4506,7 +4521,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           shape: BoxShape.circle,
           image: new DecorationImage(
             fit: BoxFit.fill,
-            image: AssetImage("images/icons/torn_t_logo.png"),
+            image: AssetImage("images/icons/torn_t_logo_restore.png"),
           ),
         ),
       ),
@@ -4665,12 +4680,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  void _launchBrowser({@required String url, @required bool dialogRequested}) async {
+  void _launchBrowser({@required String url, @required bool dialogRequested, bool recallLastSession = false}) async {
     if (!_settingsProvider.useQuickBrowser) dialogRequested = false;
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
       useDialog: dialogRequested,
+      recallLastSession: recallLastSession,
     );
   }
 

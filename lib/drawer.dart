@@ -694,7 +694,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           }
         } catch (e) {
           // Leave as it was
-          print(e);
         }
 
         BotToast.showText(
