@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -51,7 +52,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   UserDetailsProvider _userDetails;
   var _expandableController = ExpandableController();
 
-  Widget _estimatedStatsWidget; // Has to be null at the beginning
+  Widget _statsWidget; // Has to be null at the beginning
   Widget _errorDetailsWidget = SizedBox.shrink();
 
   var _isTornPda = false;
@@ -119,7 +120,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_estimatedStatsWidget != null) _estimatedStatsWidget,
+              if (_statsWidget != null) _statsWidget,
               if (_networthWidgetEnabled) _networthWidget,
               if (_isTornPda) _tornPdaWidget,
               // Container so that the background color can be changed for certain widgets
@@ -653,6 +654,33 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         }
 
+        Widget onlineStatus = Row(
+          children: [
+            otherProfile.lastAction.status == "Offline"
+                ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+                : otherProfile.lastAction.status == "Idle"
+                    ? Icon(Icons.adjust, size: 12, color: Colors.orange)
+                    : Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  otherProfile.lastAction.relative
+                      .replaceAll("minute ago", "m")
+                      .replaceAll("minutes ago", "m")
+                      .replaceAll("hour ago", "h")
+                      .replaceAll("hours ago", "h")
+                      .replaceAll("day ago", "d")
+                      .replaceAll("days ago", "d"),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                  ),
+                ),
+              ),
+          ],
+        );
+
         Color infoColorStats = Colors.white;
         if (spyModel.total != -1) {
           infoColorStats = Colors.red;
@@ -663,7 +691,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           }
         }
 
-        _estimatedStatsWidget = Container(
+        _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
             padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
@@ -684,16 +712,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        child: Icon(
-                          Icons.info_outline,
-                          color: infoColorStats,
-                          size: 18,
+                      onlineStatus,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 2),
+                        child: GestureDetector(
+                          child: Icon(
+                            Icons.info_outline,
+                            color: infoColorStats,
+                            size: 18,
+                          ),
+                          onTap: () {
+                            _showSpiedDetailsDialog(spyModel);
+                          },
                         ),
-                        onTap: () {
-                          _showDetailsDialog(spyModel);
-                        },
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -705,8 +737,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // Even if we have no YATA spy, but we want to show estimated stats
         var npcs = [4, 10, 15, 17, 19, 20];
         String estimatedStats = "";
+        bool npc = false;
         if (npcs.contains(otherProfile.playerId)) {
           estimatedStats = "NPC!";
+          npc = true;
         } else {
           try {
             estimatedStats = StatsCalculator.calculateStats(
@@ -716,37 +750,165 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               rank: otherProfile.rank,
             );
           } catch (e) {
-            estimatedStats = "unk";
+            estimatedStats = "(EST) UNK";
           }
         }
 
-        _estimatedStatsWidget = Container(
+        // Globals
+        int xanaxComparison = 0;
+        Color xanaxColor = Colors.orange;
+        int refillComparison = 0;
+        Color refillColor = Colors.orange;
+        Color sslColor = Colors.green;
+        int ecstasy = 0;
+        int lsd = 0;
+
+        List<Widget> additional = <Widget>[];
+        var own = await TornApiCaller.ownPersonalStats(_userDetails.basic.userApiKey).getOwnPersonalStats;
+        if (own is OwnPersonalStatsModel) {
+          // XANAX
+          int otherXanax = otherProfile.personalstats.xantaken;
+          int myXanax = own.personalstats.xantaken;
+          xanaxComparison = otherXanax - myXanax;
+          if (xanaxComparison < -10) {
+            xanaxColor = Colors.green;
+          } else if (xanaxComparison > 10) {
+            xanaxColor = Colors.red;
+          }
+          Text xanaxText = Text(
+            "XAN",
+            style: TextStyle(color: xanaxColor, fontSize: 11),
+          );
+
+          // REFILLS
+          int otherRefill = otherProfile.personalstats.refills;
+          int myRefill = own.personalstats.refills;
+          refillComparison = otherRefill - myRefill;
+          refillColor = Colors.orange;
+          if (refillComparison < -10) {
+            refillColor = Colors.green;
+          } else if (refillComparison > 10) {
+            refillColor = Colors.red;
+          }
+          Text refillText = Text(
+            "RFL",
+            style: TextStyle(color: refillColor, fontSize: 11),
+          );
+
+          /// SSL
+          /// If (xan + esc) > 150, SSL is blank;
+          /// if (esc + xan) < 150 & LSD < 50, SSL is green;
+          /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
+          /// if (esc + xan) < 150 & LSD > 100 SSL is red
+          Widget sslWidget = SizedBox.shrink();
+          sslColor = Colors.green;
+          ecstasy = otherProfile.personalstats.exttaken;
+          lsd = otherProfile.personalstats.lsdtaken;
+          if (otherXanax + ecstasy <= 150) {
+            if (lsd > 50 && lsd < 50) {
+              sslColor = Colors.orange;
+            } else if (lsd > 100) {
+              sslColor = Colors.red;
+            }
+            sslWidget = Text(
+              "SSL",
+              style: TextStyle(
+                color: sslColor,
+                fontSize: 11,
+              ),
+            );
+          }
+
+          additional.add(xanaxText);
+          additional.add(SizedBox(width: 5));
+          additional.add(refillText);
+          additional.add(SizedBox(width: 5));
+          additional.add(sslWidget);
+          additional.add(SizedBox(width: 5));
+        }
+
+        // ONLINE STATUS
+        Widget onlineStatus = Row(
+          children: [
+            otherProfile.lastAction.status == "Offline"
+                ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+                : otherProfile.lastAction.status == "Idle"
+                    ? Icon(Icons.adjust, size: 12, color: Colors.orange)
+                    : Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  otherProfile.lastAction.relative
+                      .replaceAll("minute ago", "m")
+                      .replaceAll("minutes ago", "m")
+                      .replaceAll("hour ago", "h")
+                      .replaceAll("hours ago", "h")
+                      .replaceAll("day ago", "d")
+                      .replaceAll("days ago", "d"),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                  ),
+                ),
+              ),
+          ],
+        );
+
+        _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
             padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: Text(
-                    "(EST) STATS:",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
+                Row(
+                  children: [
+                    Text(
+                      npc ? "" : "(EST)",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      estimatedStats,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    if (!npc)
+                      Row(
+                        children: additional,
+                      ),
+                  ],
+                ),
+                if (!npc) onlineStatus,
+                if (!npc)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 2),
+                    child: GestureDetector(
+                      child: Icon(
+                        Icons.info_outline,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      onTap: () {
+                        _showEstimatedDetailsDialog(
+                          xanaxComparison,
+                          xanaxColor,
+                          refillComparison,
+                          refillColor,
+                          sslColor,
+                          otherProfile,
+                        );
+                      },
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    estimatedStats,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontStyle: estimatedStats == "unk" ? FontStyle.italic : FontStyle.normal,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -761,7 +923,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
   }
 
-  void _showDetailsDialog(YataSpyModel spyModel) {
+  void _showSpiedDetailsDialog(YataSpyModel spyModel) {
     String lastUpdated = "";
     if (spyModel.update != 0) {
       lastUpdated = readTimestamp(spyModel.update);
@@ -1033,5 +1195,140 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
   }
 
+  void _showEstimatedDetailsDialog(
+    int xanaxCompare,
+    Color xanaxColor,
+    int refillCompare,
+    Color refillColor,
+    Color sslColor,
+    OtherProfileModel otherProfile,
+  ) {
+    String xanaxRelative = "SAME as you";
+    if (xanaxCompare > 0) {
+      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
+    } else {
+      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
+    }
+    Widget xanaxWidget = Text(
+      "Xanax: $xanaxRelative",
+      style: TextStyle(color: xanaxColor),
+    );
 
+    String refillRelative = "SAME as you";
+    if (refillCompare > 0) {
+      refillRelative = "${refillCompare.abs()} MORE than you";
+    } else {
+      refillRelative = "${refillCompare.abs()} LESS than you";
+    }
+    Widget refillWidget = Text(
+      "Refills: $refillRelative",
+      style: TextStyle(color: refillColor),
+    );
+
+    Widget sslWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text("SSL analysis: "),
+            Text(
+              "${sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
+              style: TextStyle(
+                color: sslColor,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          "Xanax: ${otherProfile.personalstats.xantaken}",
+          style: TextStyle(fontSize: 12),
+        ),
+        Text(
+          "Ecstasy: ${otherProfile.personalstats.exttaken}",
+          style: TextStyle(fontSize: 12),
+        ),
+        Text(
+          "LSD: ${otherProfile.personalstats.lsdtaken}",
+          style: TextStyle(fontSize: 12),
+        ),
+      ],
+    );
+
+    BotToast.showAnimationWidget(
+      clickClose: false,
+      allowClick: false,
+      onlyOne: true,
+      wrapToastAnimation: (controller, cancel, child) => Stack(
+        children: <Widget>[
+          GestureDetector(
+            onTap: () {
+              cancel();
+            },
+            child: AnimatedBuilder(
+              builder: (_, child) => Opacity(
+                opacity: controller.value,
+                child: child,
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: Colors.black26),
+                child: SizedBox.expand(),
+              ),
+              animation: controller,
+            ),
+          ),
+          CustomOffsetAnimation(
+            controller: controller,
+            child: child,
+          )
+        ],
+      ),
+      toastBuilder: (cancelFunc) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        title: Text(otherProfile.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (otherProfile.faction.factionName != "0")
+              Padding(
+                padding: const EdgeInsets.all(4),
+                child: Text(
+                  "Faction: ${otherProfile.faction.factionName}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            if (otherProfile.lastAction.relative.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(4),
+                child: Text(
+                  "Online: ${otherProfile.lastAction.relative.replaceAll("0 minutes ago", "now")}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: xanaxWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: refillWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: sslWidget,
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              cancelFunc();
+            },
+            child: const Text('Thanks'),
+          ),
+        ],
+      ),
+      animationDuration: Duration(milliseconds: 300),
+    );
+  }
 }
