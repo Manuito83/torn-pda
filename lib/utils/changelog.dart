@@ -53,7 +53,8 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_1_7 = "Fixed life sorting for war targets";
     String feat2_6_1_8 = "Fixed city items being incorrectly identified";
     String feat2_6_1_9 = "Fixed mini profiles not properly redirecting in some devices";
-    String feat2_6_1_10 = "Fixed other UI issues";
+    String feat2_6_1_10 = "Fixed links in images not working properly";
+    String feat2_6_1_11 = "Fixed other UI issues";
     v2_6_1.features.add(feat2_6_1_1);
     if (Platform.isAndroid) v2_6_1.features.add(feat2_6_1_2);
     if (Platform.isIOS) v2_6_1.features.add(feat2_6_1_3);
@@ -64,6 +65,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_1.features.add(feat2_6_1_8);
     v2_6_1.features.add(feat2_6_1_9);
     v2_6_1.features.add(feat2_6_1_10);
+    v2_6_1.features.add(feat2_6_1_11);
 
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
