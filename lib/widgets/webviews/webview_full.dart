@@ -217,17 +217,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     _initialWebViewOptions = InAppWebViewGroupOptions(
       crossPlatform: InAppWebViewOptions(
-          transparentBackground: true,
-          clearCache: _clearCacheFirstOpportunity,
-          useOnLoadResource: true,
-          useShouldOverrideUrlLoading: true,
-          javaScriptCanOpenWindowsAutomatically: true
+        transparentBackground: true,
+        clearCache: _clearCacheFirstOpportunity,
+        useOnLoadResource: true,
+        useShouldOverrideUrlLoading: true,
+        javaScriptCanOpenWindowsAutomatically: true,
 
-          /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
-          /// hospital timer, company applications, etc. There is a but on iOS if we activate it
-          /// and deactivate it dynamically, where onLoadResource stops triggering!
-          //useShouldInterceptAjaxRequest: false,
-          ),
+        /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
+        /// hospital timer, company applications, etc. There is a but on iOS if we activate it
+        /// and deactivate it dynamically, where onLoadResource stops triggering!
+        //useShouldInterceptAjaxRequest: false,
+      ),
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
         supportMultipleWindows: true,
@@ -881,8 +881,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                     /// Same for advanced search results
                     if (widget.useTabs && Platform.isIOS) {
-                      if (resource.initiatorType == "xmlhttprequest" &&
-                          resource.url.toString().contains("page.php")) {
+                      if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("page.php")) {
                         // Trigger once
                         if (_searchTriggerTime != null &&
                             (DateTime.now().difference(_searchTriggerTime).inSeconds) < 1) {
@@ -1018,16 +1017,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     print("TORN PDA CONSOLE: ${consoleMessage.message}");
                   }
                 },
-                onLongPressHitTestResult: (controller, result) {
-                  // If not in this page already
-                  if (result.extra.replaceAll("#", "") != _currentUrl &&
-                      // And the link does not go to a profile (in which case the mini profile opens)
-                      (result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE &&
-                              !result.extra.contains("https://www.torn.com/profiles.php?XID=") ||
-                          // Or, if it goes to an image, it's not an award image (let mini profiles work)
-                          (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
-                              !result.extra.contains("awardimages")))) {
-                    _showLongPressCard(result);
+                onLongPressHitTestResult: (controller, result) async {
+                  var focus = await controller.requestFocusNodeHref();
+
+                  if (result.extra != null) {
+                    // If not in this page already
+                    if (result.extra.replaceAll("#", "") != _currentUrl &&
+                        // And the link does not go to a profile (in which case the mini profile opens)
+                        (result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE &&
+                                !result.extra.contains("https://www.torn.com/profiles.php?XID=") ||
+                            // Or, if it goes to an image, it's not an award image (let mini profiles work)
+                            (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
+                                !result.extra.contains("awardimages")))) {
+                      _showLongPressCard(focus.src, focus.url);
+                    }
                   }
                 },
                 /*
@@ -2831,7 +2834,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return false;
   }
 
-  void _showLongPressCard(InAppWebViewHitTestResult result) {
+  void _showLongPressCard(String src, Uri url) {
     BotToast.showCustomText(
       onlyOne: false,
       clickClose: true,
@@ -2851,31 +2854,57 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
-                      child: GestureDetector(
-                        child: Text(
-                          "Copy link",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: result.extra));
-                          BotToast.showText(
-                            text: "Link copied to the clipboard!",
-                            textStyle: TextStyle(
-                              fontSize: 14,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                        child: GestureDetector(
+                          child: Text(
+                            "Copy link",
+                            style: TextStyle(
+                              fontSize: 12,
                               color: Colors.white,
                             ),
-                            contentColor: Colors.grey[700],
-                            duration: Duration(seconds: 2),
-                            contentPadding: EdgeInsets.all(10),
-                          );
-                        },
+                          ),
+                          onTap: () {
+                            var open = url.toString()?? src;
+                            Clipboard.setData(ClipboardData(text: open));
+                            BotToast.showText(
+                              text: "Link copied to the clipboard: ${open}",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[700],
+                              duration: Duration(seconds: 2),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                    if (src != null)
+                      Column(
+                        children: [
+                          SizedBox(width: 150, child: Divider(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                            child: GestureDetector(
+                              child: Text(
+                                "Open image in new tab",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onTap: () {
+                                // If we are using tabs, add a tab
+                                String u = src.replaceAll("http:", "https:");
+                                _webViewProvider.addTab(url: u);
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                textCancel();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
                         (widget.dialog && _settingsProvider.useTabsFullBrowser))
                       Column(
@@ -2885,7 +2914,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                             padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
                             child: GestureDetector(
                               child: Text(
-                                "Open in new tab",
+                                "Open link in new tab",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.white,
@@ -2893,8 +2922,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                               ),
                               onTap: () {
                                 // If we are using tabs, add a tab
-                                String url = result.extra.replaceAll("http:", "https:");
-                                _webViewProvider.addTab(url: url);
+                                String u = url.toString().replaceAll("http:", "https:");
+                                _webViewProvider.addTab(url: u);
                                 _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                                 textCancel();
                               },
@@ -2914,8 +2943,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           ),
                         ),
                         onTap: () async {
-                          if (await canLaunch(result.extra)) {
-                            await launch(result.extra, forceSafariVC: false);
+                          var open = url.toString() ?? src;
+                          if (await canLaunch(open)) {
+                            await launch(open, forceSafariVC: false);
                           }
                         },
                       ),
