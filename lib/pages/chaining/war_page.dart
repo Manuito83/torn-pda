@@ -208,6 +208,8 @@ class _WarPageState extends State<WarPage> {
               "\n\nIf you don't know the faction's ID, you can optionally insert one of it's members' "
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
+          textColor: _themeProvider.mainText,
+          showcaseBackgroundColor: _themeProvider.background,
           descTextStyle: TextStyle(fontSize: 13),
           contentPadding: EdgeInsets.all(20),
           child: IconButton(
@@ -229,6 +231,8 @@ class _WarPageState extends State<WarPage> {
               "a quick update with minimal target information (some stats and life information won't be available).\n\n"
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
+          textColor: _themeProvider.mainText,
+          showcaseBackgroundColor: _themeProvider.background,
           descTextStyle: TextStyle(fontSize: 13),
           contentPadding: EdgeInsets.all(20),
           child: Padding(

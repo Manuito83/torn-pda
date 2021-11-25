@@ -621,6 +621,8 @@ class WarController extends GetxController {
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
 
     _integrityCheck();
+
+    update();
   }
 
   void savePreferences() {

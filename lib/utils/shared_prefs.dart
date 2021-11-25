@@ -24,6 +24,7 @@ class Prefs {
   final String _kWarSpiesTime = "pda_warSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
   // Other
+  final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kTargetSkippingFirst = "pda_targetSkippingFirst";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
@@ -47,7 +48,6 @@ class Prefs {
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
-  final String _kTMenuButtonLongPressBrowser = "pda_tMenuButtonLongPressBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -328,6 +328,16 @@ class Prefs {
   }
 
   //**************
+  Future<int> getChainingCurrentPage() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kChainingCurrentPage) ?? 0;
+  }
+
+  Future<bool> setChainingCurrentPage(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kChainingCurrentPage, value);
+  }
+  
   Future<bool> getTargetSkippingAll() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkipping) ?? true;
