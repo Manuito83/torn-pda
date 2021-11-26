@@ -1635,7 +1635,7 @@ class _WarCardState extends State<WarCard> {
     Widget enhancementWidget = Row(
       children: [
         Text(
-          "> Enhancement: ",
+          "> Enhancer(s): ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(
@@ -1664,6 +1664,13 @@ class _WarCardState extends State<WarCard> {
               ),
             ),
           ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Text(
+            "[Sports Science Lab Gym]",
+            style: TextStyle(fontSize: 9),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 20),
