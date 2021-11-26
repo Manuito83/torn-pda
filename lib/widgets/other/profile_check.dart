@@ -1262,7 +1262,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     Widget refillWidget = Row(
       children: [
         Text(
-          "> Refills: ",
+          "> (E) Refills: ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(

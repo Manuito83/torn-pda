@@ -1613,7 +1613,7 @@ class _WarCardState extends State<WarCard> {
     Widget refillWidget = Row(
       children: [
         Text(
-          "> Refills: ",
+          "> (E) Refills: ",
           style: TextStyle(fontSize: 14),
         ),
         Flexible(
