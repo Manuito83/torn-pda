@@ -7,6 +7,7 @@ import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -144,10 +145,15 @@ class WarController extends GetxController {
 
   /// [allAttacks] is to be provided when updating several members at the same time, so that it does not have
   /// to call the API twice every time
-  Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies}) async {
+  Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies, dynamic ownStats}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
       allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    }
+
+    dynamic ownStatsSuccess = ownStats;
+    if (ownStatsSuccess == null) {
+      ownStatsSuccess = await getOwnStats(_u.apiKey);
     }
 
     member.isUpdating = true;
@@ -202,6 +208,19 @@ class WarController extends GetxController {
           networth: updatedTarget.personalstats.networth,
           rank: updatedTarget.rank,
         );
+
+        member.statsComparisonSuccess = false;
+        if (ownStatsSuccess is OwnPersonalStatsModel) {
+          member.statsComparisonSuccess = true;
+          member.memberXanax = updatedTarget.personalstats.xantaken;
+          member.myXanax = 0;
+          member.memberRefill = updatedTarget.personalstats.refills;
+          member.myRefill = 0;
+          member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
+          member.myEnhancement = 0;
+          member.memberEcstasy = updatedTarget.personalstats.exttaken;
+          member.memberLsd = updatedTarget.personalstats.lsdtaken;
+        }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
         // if exact does not exist (-1)
@@ -258,6 +277,7 @@ class WarController extends GetxController {
     await _integrityCheck(force: true);
 
     dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
     int numberUpdated = 0;
 
     updating = true;
@@ -281,6 +301,7 @@ class WarController extends GetxController {
           bool memberSuccess = await updateSingleMemberFull(
             f.members[card.memberId.toString()],
             allAttacks: allAttacksSuccess,
+            ownStats: ownStatsSuccess,
           );
           if (memberSuccess) {
             numberUpdated++;
@@ -377,6 +398,7 @@ class WarController extends GetxController {
   Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
     await Future.delayed(Duration(seconds: 15));
     dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
 
     updating = true;
     update();
@@ -398,6 +420,7 @@ class WarController extends GetxController {
           await updateSingleMemberFull(
             f.members[id],
             allAttacks: allAttacksSuccess,
+            ownStats: ownStatsSuccess,
           );
 
           if (attackedMembers.length > 60) {
@@ -560,6 +583,14 @@ class WarController extends GetxController {
   dynamic getAllAttacks(String _userKey) async {
     var result = await TornApiCaller.attacks(_userKey).getAttacks;
     if (result is AttackModel) {
+      return result;
+    }
+    return false;
+  }
+
+  dynamic getOwnStats(String _userKey) async {
+    var result = await TornApiCaller.ownPersonalStats(_userKey).getOwnPersonalStats;
+    if (result is OwnPersonalStatsModel) {
       return result;
     }
     return false;

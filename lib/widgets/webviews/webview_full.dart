@@ -2556,6 +2556,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               profileId: userId,
               apiKey: _userProvider.basic.userApiKey,
               profileCheckType: ProfileCheckType.profile,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {
@@ -2578,6 +2579,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               profileId: userId,
               apiKey: _userProvider.basic.userApiKey,
               profileCheckType: ProfileCheckType.attack,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {

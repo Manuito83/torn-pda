@@ -181,12 +181,6 @@ class _ChainingPageState extends State<ChainingPage> {
   }
   */
 
-  @override
-  void dispose() {
-    Prefs().setChainingCurrentPage(_currentPage);
-    super.dispose();
-  }
-
   Future _restorePreferences() async {
     final userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
     _myCurrentKey = userDetails.basic.userApiKey;
@@ -220,9 +214,11 @@ class _ChainingPageState extends State<ChainingPage> {
     switch (index) {
       case 0:
         analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
+        Prefs().setChainingCurrentPage(_currentPage);
         break;
       case 1:
         analytics.logEvent(name: 'section_changed', parameters: {'section': 'attacks'});
+        Prefs().setChainingCurrentPage(_currentPage);
         break;
       case 2:
         analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
@@ -230,6 +226,7 @@ class _ChainingPageState extends State<ChainingPage> {
           Get.put(WarController()).launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
+        Prefs().setChainingCurrentPage(_currentPage);
         break;
     }
   }

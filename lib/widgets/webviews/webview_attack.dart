@@ -999,6 +999,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               profileId: userId,
               apiKey: _userProv.basic.userApiKey,
               profileCheckType: ProfileCheckType.profile,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {
@@ -1020,6 +1021,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               profileId: userId,
               apiKey: _userProv.basic.userApiKey,
               profileCheckType: ProfileCheckType.attack,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {

@@ -17,6 +17,7 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -33,10 +34,15 @@ class ProfileAttackCheckWidget extends StatefulWidget {
   final int profileId;
   final String apiKey;
   final ProfileCheckType profileCheckType;
+  final ThemeProvider themeProvider;
 
-  ProfileAttackCheckWidget(
-      {@required this.profileId, @required this.apiKey, @required this.profileCheckType, @required Key key})
-      : super(key: key);
+  ProfileAttackCheckWidget({
+    @required this.profileId,
+    @required this.apiKey,
+    @required this.profileCheckType,
+    @required Key key,
+    @required this.themeProvider,
+  }) : super(key: key);
 
   @override
   _ProfileAttackCheckWidgetState createState() => _ProfileAttackCheckWidgetState();
@@ -759,6 +765,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Color xanaxColor = Colors.orange;
         int refillComparison = 0;
         Color refillColor = Colors.orange;
+        int enhancementComparison = 0;
+        Color enhancementColor = Colors.white;
         Color sslColor = Colors.green;
         int ecstasy = 0;
         int lsd = 0;
@@ -795,6 +803,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             style: TextStyle(color: refillColor, fontSize: 11),
           );
 
+          // ENHANCEMENT
+          int otherEnhancement = otherProfile.personalstats.statenhancersused;
+          int myEnhancement = own.personalstats.statenhancersused;
+          enhancementComparison = otherEnhancement - myEnhancement;
+          if (enhancementComparison < 0) {
+            enhancementColor = Colors.green;
+          } else if (enhancementComparison > 0) {
+            enhancementColor = Colors.red;
+          }
+          Text enhancementText = Text(
+            "ENH",
+            style: TextStyle(color: enhancementColor, fontSize: 11),
+          );
+
           /// SSL
           /// If (xan + esc) > 150, SSL is blank;
           /// if (esc + xan) < 150 & LSD < 50, SSL is green;
@@ -811,7 +833,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               sslColor = Colors.red;
             }
             sslWidget = Text(
-              "SSL",
+              "[SSL]",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 11,
@@ -822,6 +844,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           additional.add(xanaxText);
           additional.add(SizedBox(width: 5));
           additional.add(refillText);
+          additional.add(SizedBox(width: 5));
+          additional.add(enhancementText);
           additional.add(SizedBox(width: 5));
           additional.add(sslWidget);
           additional.add(SizedBox(width: 5));
@@ -903,6 +927,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           xanaxColor,
                           refillComparison,
                           refillColor,
+                          enhancementComparison,
+                          enhancementColor,
                           sslColor,
                           otherProfile,
                         );
@@ -1200,6 +1226,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     Color xanaxColor,
     int refillCompare,
     Color refillColor,
+    int enhancementCompare,
+    Color enhancementColor,
     Color sslColor,
     OtherProfileModel otherProfile,
   ) {
@@ -1209,10 +1237,21 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       xanaxRelative = "${xanaxCompare.abs()} LESS than you";
     }
-    Widget xanaxWidget = Text(
-      "Xanax: $xanaxRelative",
-      style: TextStyle(color: xanaxColor),
+    Widget xanaxWidget = Row(
+      children: [
+        Text(
+          "> Xanax: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$xanaxRelative",
+            style: TextStyle(color: xanaxColor, fontSize: 14),
+          ),
+        ),
+      ],
     );
+    ;
 
     String refillRelative = "SAME as you";
     if (refillCompare > 0) {
@@ -1220,9 +1259,41 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       refillRelative = "${refillCompare.abs()} LESS than you";
     }
-    Widget refillWidget = Text(
-      "Refills: $refillRelative",
-      style: TextStyle(color: refillColor),
+    Widget refillWidget = Row(
+      children: [
+        Text(
+          "> Refills: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$refillRelative",
+            style: TextStyle(color: refillColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    String enhancementRelative = "SAME as you";
+    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider.mainText;
+    if (enhancementCompare > 0) {
+      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
+    } else if (enhancementCompare < 0) {
+      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
+    }
+    Widget enhancementWidget = Row(
+      children: [
+        Text(
+          "> Enhancement: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$enhancementRelative",
+            style: TextStyle(color: enhancementColor, fontSize: 14),
+          ),
+        ),
+      ],
     );
 
     Widget sslWidget = Column(
@@ -1230,26 +1301,38 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       children: [
         Row(
           children: [
-            Text("SSL analysis: "),
+            Text(
+              "> SSL probability: ",
+              style: TextStyle(fontSize: 14),
+            ),
             Text(
               "${sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
               style: TextStyle(
                 color: sslColor,
+                fontSize: 14,
               ),
             ),
           ],
         ),
-        Text(
-          "Xanax: ${otherProfile.personalstats.xantaken}",
-          style: TextStyle(fontSize: 12),
-        ),
-        Text(
-          "Ecstasy: ${otherProfile.personalstats.exttaken}",
-          style: TextStyle(fontSize: 12),
-        ),
-        Text(
-          "LSD: ${otherProfile.personalstats.lsdtaken}",
-          style: TextStyle(fontSize: 12),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Xanax: ${otherProfile.personalstats.xantaken}",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                "Ecstasy: ${otherProfile.personalstats.exttaken}",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                "LSD: ${otherProfile.personalstats.lsdtaken}",
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1291,7 +1374,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           children: [
             if (otherProfile.faction.factionName != "0")
               Padding(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(2),
                 child: Text(
                   "Faction: ${otherProfile.faction.factionName}",
                   style: TextStyle(fontSize: 12),
@@ -1299,7 +1382,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               ),
             if (otherProfile.lastAction.relative.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(2),
                 child: Text(
                   "Online: ${otherProfile.lastAction.relative.replaceAll("0 minutes ago", "now")}",
                   style: TextStyle(fontSize: 12),
@@ -1312,6 +1395,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
               child: refillWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: enhancementWidget,
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),

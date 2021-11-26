@@ -288,50 +288,31 @@ class _WarCardState extends State<WarCard> {
                   Padding(
                     padding: EdgeInsetsDirectional.fromSTEB(14, 5, 15, 0),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
+                        _statsWidget(),
                         Row(
-                          children: <Widget>[
+                          children: [
                             _travelIcon(),
-                            GestureDetector(
-                              child: _member.lastAction.status == "Offline"
-                                  ? Icon(Icons.remove_circle, size: 16, color: Colors.grey)
-                                  : _member.lastAction.status == "Idle"
-                                      ? Icon(Icons.adjust, size: 16, color: Colors.orange)
-                                      : Icon(Icons.circle, size: 16, color: Colors.green[400]),
-                              onTap: () {
-                                BotToast.showText(
-                                  clickClose: true,
-                                  text: HtmlParser.fix('Online '
-                                      '${_member.lastAction.relative == "0 minutes ago" ? 'now' : _member.lastAction.relative}'),
-                                  textStyle: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: Colors.grey[800],
-                                  duration: Duration(seconds: 5),
-                                  contentPadding: EdgeInsets.all(10),
-                                );
-                              },
-                            ),
-                            SizedBox(width: 8),
-                            _statsWidget(),
-                          ],
-                        ),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              Icon(Icons.refresh, size: 14),
-                              Text(
-                                ' $_lastUpdatedString',
-                                style: TextStyle(
-                                  color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
-                                  fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
-                                  fontSize: 12,
-                                ),
+                            _lastOnlineWidget(),
+                            SizedBox(width: 5),
+                            Icon(Icons.refresh, size: 12),
+                            SizedBox(width: 2),
+                            Text(
+                              _lastUpdatedString
+                                  .replaceAll("minute ago", "m")
+                                  .replaceAll("minutes ago", "m")
+                                  .replaceAll("hour ago", "h")
+                                  .replaceAll("hours ago", "h")
+                                  .replaceAll("day ago", "d")
+                                  .replaceAll("days ago", "d"),
+                              style: TextStyle(
+                                color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
+                                fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
+                                fontSize: 11,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1229,9 +1210,143 @@ class _WarCardState extends State<WarCard> {
         ],
       );
     } else if (_member.statsEstimated.isNotEmpty) {
-      return Text(
-        "${_member.statsEstimated} (est.)",
-        style: TextStyle(fontSize: 12),
+      if (!_member.statsComparisonSuccess) {
+        return Text(
+          "unk stats",
+          style: TextStyle(
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+          ),
+        );
+      }
+
+      // Globals
+      int xanaxComparison = 0;
+      Color xanaxColor = Colors.orange;
+      int refillComparison = 0;
+      Color refillColor = Colors.orange;
+      int enhancementComparison = 0;
+      Color enhancementColor = _themeProvider.mainText;
+      Color sslColor = Colors.green;
+      int ecstasy = 0;
+      int lsd = 0;
+
+      List<Widget> additional = <Widget>[];
+      // XANAX
+      int otherXanax = _member.memberXanax;
+      int myXanax = _member.myXanax;
+      xanaxComparison = otherXanax - myXanax;
+      if (xanaxComparison < -10) {
+        xanaxColor = Colors.green;
+      } else if (xanaxComparison > 10) {
+        xanaxColor = Colors.red;
+      }
+      Text xanaxText = Text(
+        "X",
+        style: TextStyle(color: xanaxColor, fontSize: 11),
+      );
+
+      // REFILLS
+      int otherRefill = _member.memberRefill;
+      int myRefill = _member.myRefill;
+      refillComparison = otherRefill - myRefill;
+      refillColor = Colors.orange;
+      if (refillComparison < -10) {
+        refillColor = Colors.green;
+      } else if (refillComparison > 10) {
+        refillColor = Colors.red;
+      }
+      Text refillText = Text(
+        "R",
+        style: TextStyle(color: refillColor, fontSize: 11),
+      );
+
+      // ENHANCER
+      int otherEnhancement = _member.memberEnhancement;
+      int myEnhancement = _member.myEnhancement;
+      enhancementComparison = otherEnhancement - myEnhancement;
+      if (enhancementComparison < 0) {
+        enhancementColor = Colors.green;
+      } else if (enhancementComparison > 0) {
+        enhancementColor = Colors.red;
+      }
+      Text enhancementText = Text(
+        "E",
+        style: TextStyle(color: enhancementColor, fontSize: 11),
+      );
+
+      /// SSL
+      /// If (xan + esc) > 150, SSL is blank;
+      /// if (esc + xan) < 150 & LSD < 50, SSL is green;
+      /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
+      /// if (esc + xan) < 150 & LSD > 100 SSL is red
+      Widget sslWidget = SizedBox.shrink();
+      sslColor = Colors.green;
+      ecstasy = _member.memberEcstasy;
+      lsd = _member.memberLsd;
+      if (otherXanax + ecstasy <= 150) {
+        if (lsd > 50 && lsd < 50) {
+          sslColor = Colors.orange;
+        } else if (lsd > 100) {
+          sslColor = Colors.red;
+        }
+        sslWidget = Text(
+          "[SSL]",
+          style: TextStyle(
+            color: sslColor,
+            fontSize: 11,
+          ),
+        );
+      }
+
+      additional.add(xanaxText);
+      additional.add(SizedBox(width: 5));
+      additional.add(refillText);
+      additional.add(SizedBox(width: 5));
+      additional.add(enhancementText);
+      additional.add(SizedBox(width: 5));
+      additional.add(sslWidget);
+      additional.add(SizedBox(width: 5));
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            "(EST)",
+            style: TextStyle(
+              fontSize: 11,
+            ),
+          ),
+          SizedBox(width: 5),
+          Text(
+            _member.statsEstimated,
+            style: TextStyle(
+              fontSize: 11,
+            ),
+          ),
+          SizedBox(width: 5),
+          Row(
+            children: additional,
+          ),
+          GestureDetector(
+            child: Icon(
+              Icons.info_outline,
+              size: 16,
+            ),
+            onTap: () {
+              _showEstimatedDetailsDialog(
+                xanaxComparison,
+                xanaxColor,
+                refillComparison,
+                refillColor,
+                enhancementComparison,
+                enhancementColor,
+                sslColor,
+                _member,
+              );
+            },
+          ),
+        ],
       );
     } else {
       return Text(
@@ -1424,5 +1539,233 @@ class _WarCardState extends State<WarCard> {
         }
         break;
     }
+  }
+
+  Widget _lastOnlineWidget() {
+    return Row(
+      children: [
+        _member.lastAction.status == "Offline"
+            ? Icon(Icons.remove_circle, size: 12, color: Colors.grey)
+            : _member.lastAction.status == "Idle"
+                ? Icon(Icons.adjust, size: 12, color: Colors.orange)
+                : Icon(Icons.circle, size: 12, color: Colors.green),
+        if (_member.lastAction.status == "Offline" || _member.lastAction.status == "Idle")
+          Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: Text(
+              _member.lastAction.relative
+                  .replaceAll("minute ago", "m")
+                  .replaceAll("minutes ago", "m")
+                  .replaceAll("hour ago", "h")
+                  .replaceAll("hours ago", "h")
+                  .replaceAll("day ago", "d")
+                  .replaceAll("days ago", "d"),
+              style: TextStyle(
+                fontSize: 11,
+                color: _member.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showEstimatedDetailsDialog(
+    int xanaxCompare,
+    Color xanaxColor,
+    int refillCompare,
+    Color refillColor,
+    int enhancementCompare,
+    Color enhancementColor,
+    Color sslColor,
+    Member member,
+  ) {
+    String xanaxRelative = "SAME as you";
+    if (xanaxCompare > 0) {
+      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
+    } else {
+      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
+    }
+    Widget xanaxWidget = Row(
+      children: [
+        Text(
+          "> Xanax: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$xanaxRelative",
+            style: TextStyle(color: xanaxColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+    ;
+
+    String refillRelative = "SAME as you";
+    if (refillCompare > 0) {
+      refillRelative = "${refillCompare.abs()} MORE than you";
+    } else {
+      refillRelative = "${refillCompare.abs()} LESS than you";
+    }
+    Widget refillWidget = Row(
+      children: [
+        Text(
+          "> Refills: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$refillRelative",
+            style: TextStyle(color: refillColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    String enhancementRelative = "SAME as you";
+    if (enhancementColor == Colors.white) enhancementColor = _themeProvider.mainText;
+    if (enhancementCompare > 0) {
+      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
+    } else if (enhancementCompare < 0) {
+      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
+    }
+    Widget enhancementWidget = Row(
+      children: [
+        Text(
+          "> Enhancement: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$enhancementRelative",
+            style: TextStyle(color: enhancementColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    Widget sslWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              "> SSL probability: ",
+              style: TextStyle(fontSize: 14),
+            ),
+            Text(
+              "${sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
+              style: TextStyle(
+                color: sslColor,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Xanax: ${member.memberXanax}",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                "Ecstasy: ${member.memberEcstasy}",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                "LSD: ${member.memberLsd}",
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    BotToast.showAnimationWidget(
+      clickClose: false,
+      allowClick: false,
+      onlyOne: true,
+      wrapToastAnimation: (controller, cancel, child) => Stack(
+        children: <Widget>[
+          GestureDetector(
+            onTap: () {
+              cancel();
+            },
+            child: AnimatedBuilder(
+              builder: (_, child) => Opacity(
+                opacity: controller.value,
+                child: child,
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: Colors.black26),
+                child: SizedBox.expand(),
+              ),
+              animation: controller,
+            ),
+          ),
+          CustomOffsetAnimation(
+            controller: controller,
+            child: child,
+          )
+        ],
+      ),
+      toastBuilder: (cancelFunc) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        title: Text(member.name),
+        backgroundColor: _themeProvider.background,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (member.factionName != "0")
+              Padding(
+                padding: const EdgeInsets.all(2),
+                child: Text(
+                  "Faction: ${member.factionName}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            if (member.lastAction.relative.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(2),
+                child: Text(
+                  "Online: ${member.lastAction.relative.replaceAll("0 minutes ago", "now")}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: xanaxWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: refillWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: enhancementWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: sslWidget,
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              cancelFunc();
+            },
+            child: const Text('Thanks'),
+          ),
+        ],
+      ),
+      animationDuration: Duration(milliseconds: 300),
+    );
   }
 }
