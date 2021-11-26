@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -1518,17 +1519,18 @@ class _WarCardState extends State<WarCard> {
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
         }
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => TornWebViewAttack(
-              attackIdList: attacksIds,
-              attackNameList: attacksNames,
-              attackNotesList: attackNotes,
-              attackNotesColorList: attacksNotesColor,
-              attacksCallback: _updateSeveralTargets,
-              userKey: _userProvider.basic.userApiKey,
-              war: true,
-            ),
+        Get.to(
+          TornWebViewAttack(
+            attackIdList: attacksIds,
+            attackNameList: attacksNames,
+            attackNotesList: attackNotes,
+            attackNotesColorList: attacksNotesColor,
+            attacksCallback: _updateSeveralTargets,
+            userKey: _userProvider.basic.userApiKey,
+            war: true,
+            showNotes: await Prefs().getShowTargetsNotes(),
+            showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
+            showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
           ),
         );
         break;

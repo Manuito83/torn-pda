@@ -28,6 +28,7 @@ class Prefs {
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kTargetSkippingFirst = "pda_targetSkippingFirst";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
+  final String _kShowBlankTargetsNotes = "pda_showBlankTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
   final String _kChainWatcherSettings = "pda_chainWatcherSettings";
   final String _kChainWatcherPanicTargets = "pda_chainWatcherPanicTargets";
@@ -366,6 +367,16 @@ class Prefs {
   Future<bool> setShowTargetsNotes(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowTargetsNotes, value);
+  }
+
+  Future<bool> getShowBlankTargetsNotes() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowBlankTargetsNotes) ?? false;
+  }
+
+  Future<bool> setShowBlankTargetsNotes(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowBlankTargetsNotes, value);
   }
 
   Future<bool> getShowOnlineFactionWarning() async {

@@ -408,6 +408,9 @@ class ChainStatusProvider extends ChangeNotifier {
                   attackNotesColorList: attackNotesColorList,
                   attackNotesList: attackNotesList,
                   panic: true, // This will skip first target if red/blue regardless of user preferences
+                  showNotes: await Prefs().getShowTargetsNotes(),
+                  showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
+                  showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
                 ),
               );
             }

@@ -9,11 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -956,16 +958,18 @@ class _TargetCardState extends State<TargetCard> {
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
         }
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => TornWebViewAttack(
-              attackIdList: attacksIds,
-              attackNameList: attacksNames,
-              attackNotesList: attackNotes,
-              attackNotesColorList: attacksNotesColor,
-              attacksCallback: _updateSeveralTargets,
-              userKey: _userProvider.basic.userApiKey,
-            ),
+
+        Get.to(
+          TornWebViewAttack(
+            attackIdList: attacksIds,
+            attackNameList: attacksNames,
+            attackNotesList: attackNotes,
+            attackNotesColorList: attacksNotesColor,
+            attacksCallback: _updateSeveralTargets,
+            userKey: _userProvider.basic.userApiKey,
+            showNotes: await Prefs().getShowTargetsNotes(),
+            showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
+            showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
           ),
         );
         break;
