@@ -213,11 +213,11 @@ class WarController extends GetxController {
         if (ownStatsSuccess is OwnPersonalStatsModel) {
           member.statsComparisonSuccess = true;
           member.memberXanax = updatedTarget.personalstats.xantaken;
-          member.myXanax = 0;
+          member.myXanax = ownStatsSuccess.personalstats.xantaken;
           member.memberRefill = updatedTarget.personalstats.refills;
-          member.myRefill = 0;
+          member.myRefill = ownStatsSuccess.personalstats.refills;
           member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
-          member.myEnhancement = 0;
+          member.myEnhancement = ownStatsSuccess.personalstats.statenhancersused;
           member.memberEcstasy = updatedTarget.personalstats.exttaken;
           member.memberLsd = updatedTarget.personalstats.lsdtaken;
         }

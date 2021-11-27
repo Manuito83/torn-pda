@@ -5,50 +5,50 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 // ! Add new icons to the model as well
 final allowedIcons = <String, Map<String, String>>{
-  "icon12": {"url": "", "name" : "Low life"},
+  "icon12": {"url": "", "name": "Low life"},
   // Needs to add ID
-  "icon13": {"url": "https://www.torn.com/bounties.php?userID=", "name" : "Bounty"},
-  "icon15": {"url": "https://www.torn.com/hospitalview.php", "name" : "Hospital"},
-  "icon16": {"url": "https://www.torn.com/jailview.php", "name" : "Jail"},
-  "icon17": {"url": "https://www.torn.com/loader.php?sid=racing", "name" : "Racing in progress"},
-  "icon18": {"url": "https://www.torn.com/loader.php?sid=racing", "name" : "Racing completed"},
-  "icon20": {"url": "https://www.torn.com/education.php#/step=main", "name" : "Education completed"},
-  "icon30": {"url": "https://www.torn.com/bank.php", "name" : "Investment completed"},
-  "icon37": {"url": "https://www.torn.com/trade.php", "name" : "Trade in progress"},
-  "icon39": {"url": "", "name" : "Booster (0-6hr)"},
-  "icon40": {"url": "", "name" : "Booster (6-12hr)"},
-  "icon41": {"url": "", "name" : "Booster (12-18hr)"},
-  "icon42": {"url": "", "name" : "Booster (18-24hr)"},
-  "icon43": {"url": "", "name" : "Booster (24hr+)"},
-  "icon44": {"url": "", "name" : "Medical (0-90m)"},
-  "icon45": {"url": "", "name" : "Medical (90-180m)"},
-  "icon46": {"url": "", "name" : "Medical (180-270m)"},
-  "icon47": {"url": "", "name" : "Medical (270-360m)"},
-  "icon48": {"url": "", "name" : "Medical (360m+)"},
-  "icon49": {"url": "", "name" : "Drug (0-10m)"},
-  "icon50": {"url": "", "name" : "Drug (10-60m)"},
-  "icon51": {"url": "", "name" : "Drug (1-2hr)"},
-  "icon52": {"url": "", "name" : "Drug (2-5hr)"},
-  "icon53": {"url": "", "name" : "Drug (5hr+)"},
-  "icon57": {"url": "", "name" : "Addiction (1-4%)"},
-  "icon58": {"url": "", "name" : "Addiction (5-9%)"},
-  "icon59": {"url": "", "name" : "Addiction (10-19%)"},
-  "icon60": {"url": "", "name" : "Addiction (20-29%)"},
-  "icon61": {"url": "", "name" : "Addiction (30%+)"},
-  "icon63": {"url": "", "name" : "Radiation (1-17%)"},
-  "icon64": {"url": "", "name" : "Radiation (18-34%)"},
-  "icon65": {"url": "", "name" : "Radiation (35-50%)"},
-  "icon66": {"url": "", "name" : "Radiation (51-67%)"},
-  "icon67": {"url": "", "name" : "Radiation (68%+)"},
+  "icon13": {"url": "https://www.torn.com/bounties.php?userID=", "name": "Bounty"},
+  "icon15": {"url": "https://www.torn.com/hospitalview.php", "name": "Hospital"},
+  "icon16": {"url": "https://www.torn.com/jailview.php", "name": "Jail"},
+  "icon17": {"url": "https://www.torn.com/loader.php?sid=racing", "name": "Racing in progress"},
+  "icon18": {"url": "https://www.torn.com/loader.php?sid=racing", "name": "Racing completed"},
+  "icon20": {"url": "https://www.torn.com/education.php#/step=main", "name": "Education completed"},
+  "icon30": {"url": "https://www.torn.com/bank.php", "name": "Investment completed"},
+  "icon37": {"url": "https://www.torn.com/trade.php", "name": "Trade in progress"},
+  "icon39": {"url": "", "name": "Booster (0-6hr)"},
+  "icon40": {"url": "", "name": "Booster (6-12hr)"},
+  "icon41": {"url": "", "name": "Booster (12-18hr)"},
+  "icon42": {"url": "", "name": "Booster (18-24hr)"},
+  "icon43": {"url": "", "name": "Booster (24hr+)"},
+  "icon44": {"url": "", "name": "Medical (0-90m)"},
+  "icon45": {"url": "", "name": "Medical (90-180m)"},
+  "icon46": {"url": "", "name": "Medical (180-270m)"},
+  "icon47": {"url": "", "name": "Medical (270-360m)"},
+  "icon48": {"url": "", "name": "Medical (360m+)"},
+  "icon49": {"url": "", "name": "Drug (0-10m)"},
+  "icon50": {"url": "", "name": "Drug (10-60m)"},
+  "icon51": {"url": "", "name": "Drug (1-2hr)"},
+  "icon52": {"url": "", "name": "Drug (2-5hr)"},
+  "icon53": {"url": "", "name": "Drug (5hr+)"},
+  "icon57": {"url": "", "name": "Addiction (1-4%)"},
+  "icon58": {"url": "", "name": "Addiction (5-9%)"},
+  "icon59": {"url": "", "name": "Addiction (10-19%)"},
+  "icon60": {"url": "", "name": "Addiction (20-29%)"},
+  "icon61": {"url": "", "name": "Addiction (30%+)"},
+  "icon63": {"url": "", "name": "Radiation (1-17%)"},
+  "icon64": {"url": "", "name": "Radiation (18-34%)"},
+  "icon65": {"url": "", "name": "Radiation (35-50%)"},
+  "icon66": {"url": "", "name": "Radiation (51-67%)"},
+  "icon67": {"url": "", "name": "Radiation (68%+)"},
   "icon68": {"url": "", "name": "Reading book"},
-  "icon75": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (defending)"},
-  "icon76": {"url": "https://www.torn.com/factions.php?step=your#/", "name" : "War (assaulting)"},
-  "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (4-6%)"},
-  "icon79": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (6-8%)"},
-  "icon80": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name" : "Upkeep due (8%+)"},
-  "icon84": {"url": "https://www.torn.com/page.php?sid=stocks", "name" : "Dividend ready"},
-  "icon85": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name" : "OC being planned"},
-  "icon86": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name" : "OC ready"},
+  "icon75": {"url": "https://www.torn.com/factions.php?step=your#/", "name": "War (defending)"},
+  "icon76": {"url": "https://www.torn.com/factions.php?step=your#/", "name": "War (assaulting)"},
+  "icon78": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (4-6%)"},
+  "icon79": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (6-8%)"},
+  "icon80": {"url": "https://www.torn.com/properties.php#/p=options&tab=upkeep", "name": "Upkeep due (8%+)"},
+  "icon84": {"url": "https://www.torn.com/page.php?sid=stocks", "name": "Dividend ready"},
+  "icon85": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name": "OC being planned"},
+  "icon86": {"url": "https://www.torn.com/factions.php?step=your#/tab=crimes", "name": "OC ready"},
 };
 
 class StatusIconsWrap extends StatefulWidget {
@@ -63,12 +63,11 @@ class StatusIconsWrap extends StatefulWidget {
   final Function openBrowser;
   final SettingsProvider settingsProvider;
 
- @override
+  @override
   _StatusIconsWrapState createState() => _StatusIconsWrapState();
 }
 
 class _StatusIconsWrapState extends State<StatusIconsWrap> {
-  
   @override
   Widget build(BuildContext context) {
     List<Widget> iconList = <Widget>[];
@@ -90,34 +89,45 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
     parsedIcons.forEach((iconNumber, details) {
       if (details != null) {
         if (allowedIcons.containsKey(iconNumber) && !widget.settingsProvider.iconsFiltered.contains(iconNumber)) {
-          final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
-          iconList.add(
-            GestureDetector(
-              child: icon,
-              onTap: () {
-                BotToast.showText(
-                  text: details.replaceAll("0 days, 0 hours, ", "").replaceAll("0 days, ", ""),
-                  textStyle: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.blue[700],
-                  duration: const Duration(seconds: 5),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              },
-              onDoubleTap: () {
-                final String url = _constructUrl(iconNumber);
-                final bool dialog = widget.settingsProvider.useQuickBrowser || false;
-                widget.openBrowser(url: url, dialogRequested: dialog);
-              },
-              onLongPress: () {
-                final String url = _constructUrl(iconNumber);
-                const bool dialog = false;
-                widget.openBrowser(url: url, dialogRequested: dialog);
-              },
-            ),
-          );
+          bool skip = false;
+
+          // See https://www.torn.com/forums.php#/p=threads&f=19&t=16251998&b=0&a=0&start=0
+          if (iconNumber == "icon12") {
+            if (widget.user.life.current > widget.user.life.maximum / 4) {
+              skip = true;
+            }
+          }
+
+          if (!skip) {
+            final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
+            iconList.add(
+              GestureDetector(
+                child: icon,
+                onTap: () {
+                  BotToast.showText(
+                    text: details.replaceAll("0 days, 0 hours, ", "").replaceAll("0 days, ", ""),
+                    textStyle: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.blue[700],
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                },
+                onDoubleTap: () {
+                  final String url = _constructUrl(iconNumber);
+                  final bool dialog = widget.settingsProvider.useQuickBrowser || false;
+                  widget.openBrowser(url: url, dialogRequested: dialog);
+                },
+                onLongPress: () {
+                  final String url = _constructUrl(iconNumber);
+                  const bool dialog = false;
+                  widget.openBrowser(url: url, dialogRequested: dialog);
+                },
+              ),
+            );
+          }
         }
       }
     });

@@ -161,6 +161,7 @@ class Prefs {
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
+  final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
@@ -1791,6 +1792,16 @@ class Prefs {
   Future<bool> getUseTabsIcons() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kUseTabsIcons) ?? true;
+  }
+
+  Future<bool> setTabsHideBarColor(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTabsHideBarColor, value);
+  }
+
+  Future<int> getTabsHideBarColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
   }
 
   Future<bool> setUseTabsIcons(bool value) async {

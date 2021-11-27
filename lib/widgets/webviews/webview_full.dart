@@ -2908,7 +2908,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ],
                       ),
                     if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
-                        (widget.dialog && _settingsProvider.useTabsFullBrowser))
+                        (!widget.dialog && _settingsProvider.useTabsFullBrowser))
                       Column(
                         children: [
                           SizedBox(width: 150, child: Divider(color: Colors.white)),

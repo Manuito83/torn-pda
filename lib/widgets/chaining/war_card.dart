@@ -1229,6 +1229,7 @@ class _WarCardState extends State<WarCard> {
       int enhancementComparison = 0;
       Color enhancementColor = _themeProvider.mainText;
       Color sslColor = Colors.green;
+      bool sslProb = true;
       int ecstasy = 0;
       int lsd = 0;
 
@@ -1285,7 +1286,9 @@ class _WarCardState extends State<WarCard> {
       sslColor = Colors.green;
       ecstasy = _member.memberEcstasy;
       lsd = _member.memberLsd;
-      if (otherXanax + ecstasy <= 150) {
+      if (otherXanax + ecstasy > 150) {
+        sslProb = false;
+      } else {
         if (lsd > 50 && lsd < 50) {
           sslColor = Colors.orange;
         } else if (lsd > 100) {
@@ -1343,6 +1346,7 @@ class _WarCardState extends State<WarCard> {
                 enhancementComparison,
                 enhancementColor,
                 sslColor,
+                sslProb,
                 _member,
               );
             },
@@ -1580,6 +1584,7 @@ class _WarCardState extends State<WarCard> {
     int enhancementCompare,
     Color enhancementColor,
     Color sslColor,
+    bool sslProb,
     Member member,
   ) {
     String xanaxRelative = "SAME as you";
@@ -1657,7 +1662,7 @@ class _WarCardState extends State<WarCard> {
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              "${sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
+              "${!sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 14,

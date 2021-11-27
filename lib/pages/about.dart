@@ -329,7 +329,7 @@ class _AboutPageState extends State<AboutPage> {
                         style: DefaultTextStyle.of(context).style,
                         children: <TextSpan>[
                           TextSpan(
-                            text: 'Manuito [2225097]',
+                            text: 'Manuito',
                             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
@@ -360,11 +360,27 @@ class _AboutPageState extends State<AboutPage> {
                         style: DefaultTextStyle.of(context).style,
                         children: <TextSpan>[
                           TextSpan(
-                            text: 'Phillip_J_Fry [2184575]',
+                            text: 'Phillip_J_Fry',
                             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
                                 var url = 'https://www.torn.com/profiles.php?XID=2184575';
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
+                              },
+                          ),
+                          TextSpan(
+                            text: ', ',
+                          ),
+                          TextSpan(
+                            text: 'VioletStorm',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                var url = 'https://www.torn.com/profiles.php?XID=2233317';
                                 await context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
@@ -391,7 +407,7 @@ class _AboutPageState extends State<AboutPage> {
                         style: DefaultTextStyle.of(context).style,
                         children: <TextSpan>[
                           TextSpan(
-                            text: 'Kivou [2000607]',
+                            text: 'Kivou',
                             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () async {
@@ -404,7 +420,7 @@ class _AboutPageState extends State<AboutPage> {
                               },
                           ),
                           TextSpan(
-                            text: ' for the resources offered by YATA.',
+                            text: ' for the resources and support offered by YATA.',
                             style: DefaultTextStyle.of(context).style,
                           ),
                         ],

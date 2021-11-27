@@ -3,11 +3,9 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 // Package imports:
 import 'package:android_intent/android_intent.dart';
@@ -26,8 +24,6 @@ import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/firebase_functions.dart';
-import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';

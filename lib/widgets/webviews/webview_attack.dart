@@ -987,7 +987,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
       int userId = 0;
 
-      if (page.contains('torn.com/profiles.php?XID=')) {
+      if (page.contains('torn.com/profiles.php?')) {
         if (page == _lastProfileVisited) {
           return;
         }

@@ -195,6 +195,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _tabsHideBarColor = 0xFF4CAF40;
+  int get tabsHideBarColor => _tabsHideBarColor;
+  set changeTabsHideBarColor(int value) {
+    _tabsHideBarColor = value;
+    Prefs().setTabsHideBarColor(_tabsHideBarColor);
+    notifyListeners();
+  }
+
   var _chatRemoveEnabled = true;
   bool get chatRemoveEnabled => _chatRemoveEnabled;
   set changeChatRemoveEnabled(bool value) {
@@ -476,6 +484,7 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
     _useTabsBrowserDialog = await Prefs().getUseTabsBrowserDialog();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
+    _tabsHideBarColor = await Prefs().getTabsHideBarColor();
 
     var refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {

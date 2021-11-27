@@ -768,6 +768,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         int enhancementComparison = 0;
         Color enhancementColor = Colors.white;
         Color sslColor = Colors.green;
+        bool sslProb = true;
         int ecstasy = 0;
         int lsd = 0;
 
@@ -826,7 +827,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           sslColor = Colors.green;
           ecstasy = otherProfile.personalstats.exttaken;
           lsd = otherProfile.personalstats.lsdtaken;
-          if (otherXanax + ecstasy <= 150) {
+          if (otherXanax + ecstasy > 150) {
+            sslProb = false;
+          } else {
             if (lsd > 50 && lsd < 50) {
               sslColor = Colors.orange;
             } else if (lsd > 100) {
@@ -930,6 +933,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           enhancementComparison,
                           enhancementColor,
                           sslColor,
+                          sslProb,
                           otherProfile,
                         );
                       },
@@ -1229,6 +1233,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     int enhancementCompare,
     Color enhancementColor,
     Color sslColor,
+    bool sslProb,
     OtherProfileModel otherProfile,
   ) {
     String xanaxRelative = "SAME as you";
@@ -1306,7 +1311,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               style: TextStyle(fontSize: 14),
             ),
             Text(
-              "${sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
+              "${!sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
               style: TextStyle(
                 color: sslColor,
                 fontSize: 14,

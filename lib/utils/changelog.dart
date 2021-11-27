@@ -52,13 +52,15 @@ class _ChangeLogState extends State<ChangeLog> {
         "with link preview, consider disabling it)";
     String feat2_6_1_6 = "Browser: restore the previous browsing session, including browser type and active tab, "
         "by long-pressing the T menu floating icon in the Profile section";
-    String feat2_6_1_7 = "Profile: properly separated jail from hospital manual notifications";
-    String feat2_6_1_8 = "Fixed incorrect spied stats total and dexterity comparison";
-    String feat2_6_1_9 = "Fixed life sorting for war targets";
-    String feat2_6_1_10 = "Fixed city items being incorrectly identified";
-    String feat2_6_1_11 = "Fixed mini profiles not properly redirecting in some devices";
-    String feat2_6_1_12 = "Fixed links in images not working properly";
-    String feat2_6_1_13 = "Fixed other UI issues";
+    String feat2_6_1_7 = "Browser: you can now choose the colour of the tabs hide bar";    
+    String feat2_6_1_8 = "Profile: properly separated jail from hospital manual notifications";
+    String feat2_6_1_9 = "Fixed incorrect spied stats total and dexterity comparison";
+    String feat2_6_1_10 = "Fixed life sorting for war targets";
+    String feat2_6_1_11 = "Fixed city items being incorrectly identified";
+    String feat2_6_1_12 = "Fixed mini profiles not properly redirecting in some devices";
+    String feat2_6_1_13 = "Fixed links in images not working properly";
+    String feat2_6_1_14 = "- Fixed employee activity script";
+    String feat2_6_1_15 = "Fixed other UI issues";
     v2_6_1.features.add(feat2_6_1_1);
     v2_6_1.features.add(feat2_6_1_2);
     v2_6_1.features.add(feat2_6_1_3);
@@ -72,6 +74,8 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_1.features.add(feat2_6_1_11);
     v2_6_1.features.add(feat2_6_1_12);
     v2_6_1.features.add(feat2_6_1_13);
+    v2_6_1.features.add(feat2_6_1_14);
+    v2_6_1.features.add(feat2_6_1_15);
 
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
