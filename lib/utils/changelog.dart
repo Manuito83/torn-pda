@@ -59,7 +59,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_1_11 = "Fixed city items being incorrectly identified";
     String feat2_6_1_12 = "Fixed mini profiles not properly redirecting in some devices";
     String feat2_6_1_13 = "Fixed links in images not working properly";
-    String feat2_6_1_14 = "- Fixed employee activity script";
+    String feat2_6_1_14 = "Fixed employee activity script";
     String feat2_6_1_15 = "Fixed other UI issues";
     v2_6_1.features.add(feat2_6_1_1);
     v2_6_1.features.add(feat2_6_1_2);
