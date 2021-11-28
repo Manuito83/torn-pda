@@ -723,14 +723,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onCreateWindow: (c, request) async {
                   if (!mounted) return true;
 
+                  // Not required any longer with inAppWebView PR #1042
+                  // (otherwise, two tabs will open)
+                  /*
                   if (Platform.isAndroid) {
                     // Prevent MiniProfiles from opening images (error in inAppWebView)
-                    // we will use a handler instead. // TODO review next updates
+                    // we will use a handler instead.
                     if (request.request.url.toString().contains("awardimages.torn.com") ||
                         request.request.url.toString().contains("factiontags.torn.com")) {
                       return false;
                     }
                   }
+                  */
+                  
 
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
@@ -836,9 +841,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       _scrollAfterLoad = false;
                     }
 
+                    // Not required any longer with inAppWebView PR #1042
+                    // (otherwise, two tabs will open)
+                    /*
                     if (Platform.isAndroid) {
                       webView.evaluateJavascript(source: MiniProfiles());
                     }
+                    */
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
