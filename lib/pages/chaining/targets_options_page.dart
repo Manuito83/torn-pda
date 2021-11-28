@@ -1,5 +1,4 @@
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -23,12 +22,8 @@ class TargetsOptionsPage extends StatefulWidget {
 class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
   // Targets notes while chaining
   bool _showTargetsNotes = true;
+  bool _showBlankTargetsNotes = true;
   bool _showOnlineFactionWarning = true;
-
-  // Chain watcher
-  bool _soundAlertsEnabled = true;
-  bool _vibrationAlertsEnabled = true;
-  bool _watcherNotificationsEnabled = true;
 
   // Yata import
   bool _yataTargetsEnabled = true;
@@ -127,6 +122,44 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                 ),
                               ),
                               SizedBox(height: 15),
+                              if (_showTargetsNotes)
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Text("Show blank notes"),
+                                          Switch(
+                                            value: _showBlankTargetsNotes,
+                                            onChanged: (value) {
+                                              Prefs().setShowBlankTargetsNotes(value);
+                                              setState(() {
+                                                _showBlankTargetsNotes = value;
+                                              });
+                                            },
+                                            activeTrackColor: Colors.lightGreenAccent,
+                                            activeColor: Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                                      child: Text(
+                                        'If enabled, you will be shown a colored square even if your target\'s note is empty, '
+                                        'so that you are aware of the color even if no details have been entered.',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(height: 15),
+                                  ],
+                                ),
                               if (_showTargetsNotes)
                                 Column(
                                   children: [
@@ -364,21 +397,17 @@ class _TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
   Future _restorePreferences() async {
     var showTargetsNotes = await Prefs().getShowTargetsNotes();
+    var showBlankTargetsNotes = await Prefs().getShowBlankTargetsNotes();
     var showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
-    var soundEnabled = await Prefs().getChainWatcherSound();
-    var vibrationEnabled = await Prefs().getChainWatcherVibration();
     var yataEnabled = await Prefs().getYataTargetsEnabled();
     //var tacEnabled = await Prefs().getTACEnabled();
-    var notifications = await Prefs().getChainWatcherNotificationsEnabled();
 
     setState(() {
       _showTargetsNotes = showTargetsNotes;
+      _showBlankTargetsNotes = showBlankTargetsNotes;
       _showOnlineFactionWarning = showOnlineFactionWarning;
-      _soundAlertsEnabled = soundEnabled;
-      _vibrationAlertsEnabled = vibrationEnabled;
       _yataTargetsEnabled = yataEnabled;
       //_tacEnabled = tacEnabled;
-      _watcherNotificationsEnabled = notifications;
     });
   }
 

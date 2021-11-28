@@ -48,6 +48,7 @@ import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VaultsOptions {
   String description;
@@ -147,6 +148,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _hospitalTriggerTime;
   DateTime _urlTriggerTime;
   DateTime _profileTriggerTime;
+  DateTime _searchTriggerTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -218,6 +220,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
         useOnLoadResource: true,
+        useShouldOverrideUrlLoading: true,
+        javaScriptCanOpenWindowsAutomatically: true,
 
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
@@ -230,6 +234,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
+        disableLongPressContextMenuOnLinks: true,
       ),
     );
 
@@ -248,7 +253,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
 
     if (Platform.isAndroid) {
-        AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+      AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
     }
   }
 
@@ -690,17 +695,58 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onWebViewCreated: (c) {
                   webView = c;
                   _terminalProvider.terminal = "Terminal";
+
+                  if (Platform.isAndroid) {
+                    // MiniProfiles don't work in inAppWebView, so we use a handler from JS
+                    webView.addJavaScriptHandler(
+                      handlerName: 'handlerMiniProfiles',
+                      callback: (args) {
+                        if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
+                            (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
+                          _loadUrl(args[0]);
+                        } else {
+                          // If we are using tabs, add a tab
+                          _webViewProvider.addTab(url: args[0]);
+                          _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                        }
+                      },
+                    );
+                  }
+                },
+                shouldOverrideUrlLoading: (c, request) async {
+                  if (request.request.url.toString().contains("http://")) {
+                    _loadUrl(request.request.url.toString().replaceAll("http:", "https:"));
+                    return NavigationActionPolicy.CANCEL;
+                  }
+                  return NavigationActionPolicy.ALLOW;
                 },
                 onCreateWindow: (c, request) async {
                   if (!mounted) return true;
+
+                  // Not required any longer with inAppWebView PR #1042
+                  // (otherwise, two tabs will open)
+                  /*
+                  if (Platform.isAndroid) {
+                    // Prevent MiniProfiles from opening images (error in inAppWebView)
+                    // we will use a handler instead.
+                    if (request.request.url.toString().contains("awardimages.torn.com") ||
+                        request.request.url.toString().contains("factiontags.torn.com")) {
+                      return false;
+                    }
+                  }
+                  */
+                  
+
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
                       (!widget.dialog && !_settingsProvider.useTabsFullBrowser)) {
-                    _loadUrl(request.request.url.toString());
+                    String url = request.request.url.toString().replaceAll("http:", "https:");
+                    _loadUrl(url);
                   } else {
                     // If we are using tabs, add a tab
-                    _webViewProvider.addTab(url: request.request.url.toString());
+                    String url = request.request.url.toString().replaceAll("http:", "https:");
+                    _webViewProvider.addTab(url: url);
                     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
                   }
                   return true;
@@ -786,7 +832,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       // it too early (before it has changed)
                       _reportPageTitle();
                     }
-
                     _assessGeneral(document);
 
                     // This is used in case the user presses reload. We need to wait for the page
@@ -795,6 +840,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                       _scrollAfterLoad = false;
                     }
+
+                    // Not required any longer with inAppWebView PR #1042
+                    // (otherwise, two tabs will open)
+                    /*
+                    if (Platform.isAndroid) {
+                      webView.evaluateJavascript(source: MiniProfiles());
+                    }
+                    */
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -820,6 +873,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       }
                     }
 
+                    /// Same for hospital
                     if (widget.useTabs && Platform.isIOS) {
                       if (resource.initiatorType == "xmlhttprequest" &&
                           resource.url.toString().contains("hospitalview.php")) {
@@ -829,6 +883,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                           return;
                         }
                         _hospitalTriggerTime = DateTime.now();
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
+                    }
+
+                    /// Same for advanced search results
+                    if (widget.useTabs && Platform.isIOS) {
+                      if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("page.php")) {
+                        // Trigger once
+                        if (_searchTriggerTime != null &&
+                            (DateTime.now().difference(_searchTriggerTime).inSeconds) < 1) {
+                          return;
+                        }
+                        _searchTriggerTime = DateTime.now();
                         var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                       }
@@ -958,6 +1026,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     print("TORN PDA CONSOLE: ${consoleMessage.message}");
                   }
                 },
+                onLongPressHitTestResult: (controller, result) async {
+                  var focus = await controller.requestFocusNodeHref();
+
+                  if (result.extra != null) {
+                    // If not in this page already
+                    if (result.extra.replaceAll("#", "") != _currentUrl &&
+                        // And the link does not go to a profile (in which case the mini profile opens)
+                        (result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE &&
+                                !result.extra.contains("https://www.torn.com/profiles.php?XID=") ||
+                            // Or, if it goes to an image, it's not an award image (let mini profiles work)
+                            (result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE &&
+                                !result.extra.contains("awardimages")))) {
+                      _showLongPressCard(focus.src, focus.url);
+                    }
+                  }
+                },
                 /*
                 shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
                   // VAULT EVENTS
@@ -971,14 +1055,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       });
                     }
                   }
-
+              
                   /*
                   // This will intercept ajax calls performed when the bazaar reached 100 items
                   // and needs to be reloaded, so that we can remove and add again the fill buttons
                   if (x == null) return x;
                   if (x.data == null) return x;
                   if (x.url == null) return x;
-
+              
                   if (x.data.contains("step=getList&type=All&start=") &&
                       x.url.contains('inventory.php') &&
                       _bazaarActive &&
@@ -989,7 +1073,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     });
                   }
                   */
-
+              
                   // MAIN AJAX REQUEST RETURN
                   return x;
                 },
@@ -2261,10 +2345,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       final dynamic apiResponse = await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
       if (apiResponse is ItemsModel) {
+        apiResponse.items.forEach((key, value) {
+          // Assign correct ids
+          value.id = key;
+        });
         final tornItems = apiResponse.items.values.toList();
         final itemsFound = <Item>[];
         for (final mapItem in mapItemsList) {
-          final Item itemMatch = tornItems[int.parse(mapItem) - 1];
+          final Item itemMatch = tornItems.firstWhere((element) => element.id == mapItem);
           itemsFound.add(itemMatch);
         }
         if (mounted) {
@@ -2477,6 +2565,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               profileId: userId,
               apiKey: _userProvider.basic.userApiKey,
               profileCheckType: ProfileCheckType.profile,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {
@@ -2499,6 +2588,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               profileId: userId,
               apiKey: _userProvider.basic.userApiKey,
               profileCheckType: ProfileCheckType.attack,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {
@@ -2753,5 +2843,131 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future<bool> _willPopCallback() async {
     _tryGoBack();
     return false;
+  }
+
+  void _showLongPressCard(String src, Uri url) {
+    BotToast.showCustomText(
+      onlyOne: false,
+      clickClose: true,
+      ignoreContentClick: false,
+      crossPage: false,
+      duration: Duration(seconds: 5),
+      toastBuilder: (textCancel) => Align(
+        alignment: Alignment(0, 0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Card(
+              color: Colors.grey[700],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                        child: GestureDetector(
+                          child: Text(
+                            "Copy link",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onTap: () {
+                            var open = url.toString()?? src;
+                            Clipboard.setData(ClipboardData(text: open));
+                            BotToast.showText(
+                              text: "Link copied to the clipboard: ${open}",
+                              textStyle: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[700],
+                              duration: Duration(seconds: 2),
+                              contentPadding: EdgeInsets.all(10),
+                            );
+                          },
+                        ),
+                      ),
+                    if (src != null)
+                      Column(
+                        children: [
+                          SizedBox(width: 150, child: Divider(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                            child: GestureDetector(
+                              child: Text(
+                                "Open image in new tab",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onTap: () {
+                                // If we are using tabs, add a tab
+                                String u = src.replaceAll("http:", "https:");
+                                _webViewProvider.addTab(url: u);
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                textCancel();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    if ((widget.dialog && _settingsProvider.useTabsBrowserDialog) ||
+                        (!widget.dialog && _settingsProvider.useTabsFullBrowser))
+                      Column(
+                        children: [
+                          SizedBox(width: 150, child: Divider(color: Colors.white)),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
+                            child: GestureDetector(
+                              child: Text(
+                                "Open link in new tab",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onTap: () {
+                                // If we are using tabs, add a tab
+                                String u = url.toString().replaceAll("http:", "https:");
+                                _webViewProvider.addTab(url: u);
+                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                textCancel();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    SizedBox(width: 150, child: Divider(color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 5, 0, 20),
+                      child: GestureDetector(
+                        child: Text(
+                          "External browser",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () async {
+                          var open = url.toString() ?? src;
+                          if (await canLaunch(open)) {
+                            await launch(open, forceSafariVC: false);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

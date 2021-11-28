@@ -1,7 +1,6 @@
 // Dart imports:
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -15,7 +14,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // IDS
-// 101 -> 107 profile cooldowns
+// 101 -> 108 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
 // 400 loot
@@ -35,6 +34,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   String messageId = '';
   String tradeId = '';
   String assistId = '';
+  String bulkDetails = '';
 
   if (payload.isNotEmpty) {
     if (Platform.isAndroid) {
@@ -42,11 +42,13 @@ Future showNotificationBoth(Map payload, int notId) async {
       messageId = payload["tornMessageId"] ?? '';
       tradeId = payload["tornTradeId"] ?? '';
       assistId = payload["assistId"] ?? '';
+      bulkDetails = payload["bulkDetails"] ?? '';
     } else {
       channel = payload["channelId"] ?? '';
       messageId = payload["tornMessageId"] ?? '';
       tradeId = payload["tornTradeId"] ?? '';
       assistId = payload["assistId"] ?? '';
+      bulkDetails = payload["bulkDetails"] ?? '';
     }
   }
 
@@ -150,7 +152,7 @@ Future showNotificationBoth(Map payload, int notId) async {
   } else if (channel.contains("Alerts assists")) {
     notificationIcon = "notification_assists";
     notificationColor = Colors.red;
-    onTapPayload += 'assistId:$assistId';
+    onTapPayload += 'assistId:$assistId###assistDetails:${payload["body"]}###bulkDetails:$bulkDetails';
     channelId = 'Alerts assists';
     channelName = 'Alerts assists';
     channelDescription = 'Automatic alerts for assists';
@@ -415,6 +417,19 @@ Future configureNotificationChannels({String mod = ""}) async {
       'Manual hospital ${modifier.channelIdModifier}',
       'Manual hospital ${modifier.channelIdModifier}',
       'Manual notifications for hospital',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual jail ${modifier.channelIdModifier}',
+      'Manual jail ${modifier.channelIdModifier}',
+      'Manual notifications for jail',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

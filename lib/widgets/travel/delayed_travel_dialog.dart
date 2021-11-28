@@ -1,9 +1,7 @@
 // Dart imports:
 import 'dart:io';
-import 'dart:ui';
 
 // Flutter imports:
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:

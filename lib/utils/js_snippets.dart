@@ -932,3 +932,20 @@ String jailJS({
     123;
   ''';
 }
+
+// Not required any longer with inAppWebView PR #1042
+// (otherwise, two tabs will open)
+String MiniProfiles() {
+  return '''
+    \$(document).on("click","[class*=profile-mini-_userWrap]", async function(e){
+        window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);
+    });
+
+    \$(document).on("click","[class*=profile-mini-_factionWrap]",function(e){
+        window.flutter_inappwebview.callHandler('handlerMiniProfiles', e.target.href);
+    });
+
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}

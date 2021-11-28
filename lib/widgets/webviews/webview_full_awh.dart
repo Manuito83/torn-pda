@@ -40,7 +40,6 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
 
   URLRequest _initialUrl;
   String _pageTitle = "";
-  String _currentUrl = '';
 
   double progress = 0;
 
@@ -166,7 +165,6 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
               return;
             },
             onLoadStart: (c, uri) async {
-              _currentUrl = uri.toString();
             },
             onProgressChanged: (c, progress) async {
               if (mounted) {
@@ -176,7 +174,6 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
               }
             },
             onLoadStop: (c, uri) async {
-              _currentUrl = uri.toString();
             },
           ),
         ),

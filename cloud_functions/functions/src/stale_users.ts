@@ -33,6 +33,7 @@ export const staleGroup = {
             "",
             "",
             "",
+            "",
             "medium",
           )
         );

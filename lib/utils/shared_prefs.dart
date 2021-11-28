@@ -24,9 +24,11 @@ class Prefs {
   final String _kWarSpiesTime = "pda_warSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
   // Other
+  final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
   final String _kTargetSkippingFirst = "pda_targetSkippingFirst";
   final String _kShowTargetsNotes = "pda_showTargetsNotes";
+  final String _kShowBlankTargetsNotes = "pda_showBlankTargetsNotes";
   final String _kShowOnlineFactionWarning = "pda_showOnlineFactionWarning";
   final String _kChainWatcherSettings = "pda_chainWatcherSettings";
   final String _kChainWatcherPanicTargets = "pda_chainWatcherPanicTargets";
@@ -91,6 +93,10 @@ class Prefs {
   final String _kHospitalNotificationAhead = "pda_hospitalNotificationAhead";
   final String _kHospitalAlarmAhead = "pda_hospitalAlarmAhead";
   final String _kHospitalTimerAhead = "pda_hospitalTimesAhead";
+  final String _kJailNotificationType = "pda_jailNotificationType";
+  final String _kJailNotificationAhead = "pda_jailNotificationAhead";
+  final String _kJailAlarmAhead = "pda_jailAlarmAhead";
+  final String _kJailTimerAhead = "pda_jailTimesAhead";
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -147,11 +153,15 @@ class Prefs {
   // WebView Tabs
   final String _kChatRemovalEnabled = "pda_chatRemovalEnabled";
   final String _kChatRemovalActive = "pda_chatRemovalActive";
-  final String _kWebViewTabs = "pda_webViewTabs";
+  final String _kWebViewLastActiveTab = "pda_webViewLastActiveTab";
+  final String _kWebViewLastSessionUsedDialog = "pda_webViewLastSessionUsedDialog";
+  final String _kWebViewMainTab = "pda_webViewMainTab";
+  final String _kWebViewSecondaryTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
+  final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
@@ -320,6 +330,16 @@ class Prefs {
   }
 
   //**************
+  Future<int> getChainingCurrentPage() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kChainingCurrentPage) ?? 0;
+  }
+
+  Future<bool> setChainingCurrentPage(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kChainingCurrentPage, value);
+  }
+  
   Future<bool> getTargetSkippingAll() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkipping) ?? true;
@@ -330,7 +350,7 @@ class Prefs {
     return prefs.setBool(_kTargetSkipping, value);
   }
 
-    Future<bool> getTargetSkippingFirst() async {
+  Future<bool> getTargetSkippingFirst() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkippingFirst) ?? false;
   }
@@ -348,6 +368,16 @@ class Prefs {
   Future<bool> setShowTargetsNotes(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowTargetsNotes, value);
+  }
+
+  Future<bool> getShowBlankTargetsNotes() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowBlankTargetsNotes) ?? false;
+  }
+
+  Future<bool> setShowBlankTargetsNotes(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowBlankTargetsNotes, value);
   }
 
   Future<bool> getShowOnlineFactionWarning() async {
@@ -550,6 +580,16 @@ class Prefs {
   Future<bool> setUseQuickBrowser(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseQuickBrowser, value);
+  }
+
+  Future<String> getTMenuButtonLongPressBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kUseQuickBrowser) ?? "quick";
+  }
+
+  Future<bool> setTMenuButtonLongPressBrowser(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kUseQuickBrowser, value);
   }
 
   Future<bool> getClearBrowserCacheNextOpportunity() async {
@@ -1039,6 +1079,46 @@ class Prefs {
   Future<bool> setHospitalTimerAhead(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kHospitalTimerAhead, value);
+  }
+
+  Future<String> getJailNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kJailNotificationType) ?? '0';
+  }
+
+  Future<bool> setJailNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kJailNotificationType, value);
+  }
+
+  Future<int> getJailNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJailNotificationAhead) ?? 40;
+  }
+
+  Future<bool> setJailNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJailNotificationAhead, value);
+  }
+
+  Future<int> getJailAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJailAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setJailAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJailAlarmAhead, value);
+  }
+
+  Future<int> getJailTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kJailTimerAhead) ?? 40;
+  }
+
+  Future<bool> setJailTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kJailTimerAhead, value);
   }
 
   Future<bool> getManualAlarmVibration() async {
@@ -1639,14 +1719,44 @@ class Prefs {
   /// -----------------------------
   /// METHODS FOR WEB VIEW TABS
   /// -----------------------------
-  Future<String> getWebViewTabs() async {
+  Future<int> getWebViewLastActiveTab() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebViewTabs) ?? '{"tabsSave": []}';
+    return prefs.getInt(_kWebViewLastActiveTab) ?? 0;
   }
 
-  Future<bool> setWebViewTabs(String value) async {
+  Future<bool> setWebViewLastActiveTab(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWebViewTabs, value);
+    return prefs.setInt(_kWebViewLastActiveTab, value);
+  }
+
+  Future<bool> getWebViewLastSessionUsedDialog() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebViewLastSessionUsedDialog) ?? true;
+  }
+
+  Future<bool> setWebViewLastSessionUsedDialog(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebViewLastSessionUsedDialog, value);
+  }
+
+  Future<String> getWebViewMainTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewMainTab) ?? '{"tabsSave": []}';
+  }
+
+  Future<bool> setWebViewMainTab(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewMainTab, value);
+  }
+
+  Future<String> getWebViewSecondaryTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebViewSecondaryTabs) ?? '{"tabsSave": []}';
+  }
+
+  Future<bool> setWebViewSecondaryTabs(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebViewSecondaryTabs, value);
   }
 
   Future<bool> getUseTabsFullBrowser() async {
@@ -1682,6 +1792,16 @@ class Prefs {
   Future<bool> getUseTabsIcons() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kUseTabsIcons) ?? true;
+  }
+
+  Future<bool> setTabsHideBarColor(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTabsHideBarColor, value);
+  }
+
+  Future<int> getTabsHideBarColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
   }
 
   Future<bool> setUseTabsIcons(bool value) async {

@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
+import 'package:torn_pda/pages/profile/jail_ahead_options.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
@@ -48,6 +49,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
   String _medicalDropDownValue;
   String _boosterDropDownValue;
   String _hospitalDropDownValue;
+  String _jailDropDownValue;
 
   Future _preferencesLoaded;
 
@@ -173,6 +175,10 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         case ProfileNotification.hospital:
           typeString = 'Hospital';
           profileType = ProfileNotification.hospital;
+          break;
+        case ProfileNotification.jail:
+          typeString = 'Jail';
+          profileType = ProfileNotification.jail;
           break;
       }
 
@@ -347,6 +353,34 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         );
         types.add(SizedBox(height: 10));
       }
+
+      if (element == ProfileNotification.jail) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Text("Jail notification timings"),
+                IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return JailAheadOptions();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(SizedBox(height: 10));
+      }
     });
 
     return Column(
@@ -380,6 +414,9 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
         break;
       case ProfileNotification.hospital:
         value = _hospitalDropDownValue;
+        break;
+      case ProfileNotification.jail:
+        value = _jailDropDownValue;
         break;
     }
 
@@ -476,6 +513,12 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
               _hospitalDropDownValue = value;
             });
             break;
+          case ProfileNotification.jail:
+            Prefs().setJailNotificationType(value);
+            setState(() {
+              _jailDropDownValue = value;
+            });
+            break;
         }
       },
     );
@@ -502,6 +545,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
     var drugsType = await Prefs().getDrugNotificationType();
     var medicalType = await Prefs().getMedicalNotificationType();
     var hospitalType = await Prefs().getHospitalNotificationType();
+    var jailType = await Prefs().getJailNotificationType();
     var boosterType = await Prefs().getBoosterNotificationType();
 
     setState(() {
@@ -519,6 +563,7 @@ class _ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroi
       _drugDropDownValue = drugsType;
       _medicalDropDownValue = medicalType;
       _hospitalDropDownValue = hospitalType;
+      _jailDropDownValue = jailType;
       _boosterDropDownValue = boosterType;
     });
   }

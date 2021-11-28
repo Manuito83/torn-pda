@@ -7,10 +7,12 @@ import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
+import 'package:torn_pda/utils/stats_calculator.dart';
 
 class WarCardDetails {
   int cardPosition;
@@ -143,10 +145,15 @@ class WarController extends GetxController {
 
   /// [allAttacks] is to be provided when updating several members at the same time, so that it does not have
   /// to call the API twice every time
-  Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies}) async {
+  Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies, dynamic ownStats}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
       allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    }
+
+    dynamic ownStatsSuccess = ownStats;
+    if (ownStatsSuccess == null) {
+      ownStatsSuccess = await getOwnStats(_u.apiKey);
     }
 
     member.isUpdating = true;
@@ -162,8 +169,8 @@ class WarController extends GetxController {
       dynamic updatedTarget = await TornApiCaller.target(_u.apiKey, memberKey).getOtherProfile;
       if (updatedTarget is OtherProfileModel) {
         member.overrideEasyLife = true;
-        member.lifeMaximum = updatedTarget.life.current;
-        member.lifeCurrent = updatedTarget.life.maximum;
+        member.lifeMaximum = updatedTarget.life.maximum;
+        member.lifeCurrent = updatedTarget.life.current;
         member.lastAction.relative = updatedTarget.lastAction.relative;
         member.lastAction.status = updatedTarget.lastAction.status;
         member.status.description = updatedTarget.status.description;
@@ -195,7 +202,25 @@ class WarController extends GetxController {
           }
         }
 
-        member.statsEstimated = _assignEstimatedStats(updatedTarget);
+        member.statsEstimated = StatsCalculator.calculateStats(
+          criminalRecordTotal: updatedTarget.criminalrecord.total,
+          level: updatedTarget.level,
+          networth: updatedTarget.personalstats.networth,
+          rank: updatedTarget.rank,
+        );
+
+        member.statsComparisonSuccess = false;
+        if (ownStatsSuccess is OwnPersonalStatsModel) {
+          member.statsComparisonSuccess = true;
+          member.memberXanax = updatedTarget.personalstats.xantaken;
+          member.myXanax = ownStatsSuccess.personalstats.xantaken;
+          member.memberRefill = updatedTarget.personalstats.refills;
+          member.myRefill = ownStatsSuccess.personalstats.refills;
+          member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
+          member.myEnhancement = ownStatsSuccess.personalstats.statenhancersused;
+          member.memberEcstasy = updatedTarget.personalstats.exttaken;
+          member.memberLsd = updatedTarget.personalstats.lsdtaken;
+        }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
         // if exact does not exist (-1)
@@ -252,6 +277,7 @@ class WarController extends GetxController {
     await _integrityCheck(force: true);
 
     dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
     int numberUpdated = 0;
 
     updating = true;
@@ -275,6 +301,7 @@ class WarController extends GetxController {
           bool memberSuccess = await updateSingleMemberFull(
             f.members[card.memberId.toString()],
             allAttacks: allAttacksSuccess,
+            ownStats: ownStatsSuccess,
           );
           if (memberSuccess) {
             numberUpdated++;
@@ -371,6 +398,7 @@ class WarController extends GetxController {
   Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
     await Future.delayed(Duration(seconds: 15));
     dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
 
     updating = true;
     update();
@@ -392,6 +420,7 @@ class WarController extends GetxController {
           await updateSingleMemberFull(
             f.members[id],
             allAttacks: allAttacksSuccess,
+            ownStats: ownStatsSuccess,
           );
 
           if (attackedMembers.length > 60) {
@@ -559,6 +588,14 @@ class WarController extends GetxController {
     return false;
   }
 
+  dynamic getOwnStats(String _userKey) async {
+    var result = await TornApiCaller.ownPersonalStats(_userKey).getOwnPersonalStats;
+    if (result is OwnPersonalStatsModel) {
+      return result;
+    }
+    return false;
+  }
+
   void toggleChainWidget() {
     showChainWidget = !showChainWidget;
     savePreferences();
@@ -615,6 +652,8 @@ class WarController extends GetxController {
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
 
     _integrityCheck();
+
+    update();
   }
 
   void savePreferences() {
@@ -683,67 +722,6 @@ class WarController extends GetxController {
     currentSort = sortType;
     savePreferences();
     update();
-  }
-
-  String _assignEstimatedStats(OtherProfileModel member) {
-    final levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
-    final crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
-    final networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
-
-    final _ranksTriggers = {
-      "Absolute beginner": 1,
-      "Beginner": 2,
-      "Inexperienced": 3,
-      "Rookie": 4,
-      "Novice": 5,
-      "Below average": 6,
-      "Average": 7,
-      "Reasonable": 8,
-      "Above average": 9,
-      "Competent": 10,
-      "Highly competent": 11,
-      "Veteran": 12,
-      "Distinguished": 13,
-      "Highly distinguished": 14,
-      "Professional": 15,
-      "Star": 16,
-      "Master": 17,
-      "Outstanding": 18,
-      "Celebrity": 19,
-      "Supreme": 20,
-      "Idolized": 21,
-      "Champion": 22,
-      "Heroic": 23,
-      "Legendary": 24,
-      "Elite": 25,
-      "Invincible": 26,
-    };
-
-    final _statsResults = [
-      "< 2k",
-      "2k - 25k",
-      "20k - 250k",
-      "200k - 2.5M",
-      "2M - 25M",
-      "20M - 250M",
-      "> 200M",
-    ];
-
-    var levelIndex = levelTriggers.lastIndexWhere((x) => x <= member.level) + 1;
-    var crimeIndex = crimesTriggers.lastIndexWhere((x) => x <= member.criminalrecord.total) + 1;
-    var networthIndex = networthTriggers.lastIndexWhere((x) => x <= member.personalstats.networth) + 1;
-    var rankIndex = 0;
-    _ranksTriggers.forEach((tornRank, index) {
-      if (member.rank.contains(tornRank)) {
-        rankIndex = index;
-      }
-    });
-
-    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
-    if (finalIndex >= 0 && finalIndex <= 6) {
-      return _statsResults[finalIndex];
-    }
-    return "";
   }
 
   Future<List<YataSpyModel>> _getYataSpies(String apiKey) async {

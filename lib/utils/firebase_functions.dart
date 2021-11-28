@@ -6,8 +6,15 @@ final firebaseFunctions = _FirebaseFunctions();
 class _FirebaseFunctions {
   Future<int> sendAttackAssistMessage({
     @required String attackId,
-    @required String attackName,
-    @required String attackLevel,
+    String attackName = "",
+    String attackLevel = "",
+    String attackLife = "",
+    String attackAge = "",
+    String estimatedStats = "",
+    String xanax = "unk",
+    String refills = "unk",
+    String drinks = "unk",
+    String exactStats = "",
   }) async {
     HttpsCallable callable = FirebaseFunctions.instanceFor(
       region: 'us-east4',
@@ -19,6 +26,13 @@ class _FirebaseFunctions {
       'attackId': attackId,
       'attackName': attackName,
       'attackLevel': attackLevel,
+      'attackLife': attackLife,
+      'attackAge': attackAge,
+      'estimatedStats': estimatedStats,
+      'xanax': xanax,
+      'refills': refills,
+      'drinks': drinks,
+      'exactStats': exactStats,
     });
 
     // Data comes with number of people notified

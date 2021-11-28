@@ -12,21 +12,21 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class HospitalAheadOptions extends StatefulWidget {
+class JailAheadOptions extends StatefulWidget {
   final Function callback;
 
-  HospitalAheadOptions({
+  JailAheadOptions({
     this.callback,
   });
 
   @override
-  _HospitalAheadOptionsState createState() => _HospitalAheadOptionsState();
+  _JailAheadOptionsState createState() => _JailAheadOptionsState();
 }
 
-class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
-  int _hospitalNotificationAheadValue;
-  int _hospitalAlarmAheadDropDownValue;
-  int _hospitalTimerAheadDropDownValue;
+class _JailAheadOptionsState extends State<JailAheadOptions> {
+  int _jailNotificationAheadValue;
+  int _jailAlarmAheadDropDownValue;
+  int _jailTimerAheadDropDownValue;
 
   Future _preferencesLoaded;
 
@@ -77,7 +77,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                               Padding(
                                 padding: const EdgeInsets.all(20.0),
                                 child: Text('Here you can specify your preferred notification '
-                                    'trigger time before hospital release'),
+                                    'trigger time before jail release'),
                               ),
                               _rowsWithTypes(),
                               SizedBox(height: 50),
@@ -104,7 +104,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Hospital notification"),
+      title: Text("Jail notification"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
@@ -132,7 +132,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
-                child: _hospitalNotificationAheadDropDown(),
+                child: _jailNotificationAheadDropDown(),
               ),
             ],
           ),
@@ -157,7 +157,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           Flexible(
-                            child: _hospitalAlarmAheadDropDown(),
+                            child: _jailAlarmAheadDropDown(),
                           ),
                         ],
                       ),
@@ -194,7 +194,7 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                   padding: EdgeInsets.only(left: 20),
                 ),
                 Flexible(
-                  child: _hospitalTimerAheadDropDown(),
+                  child: _jailTimerAheadDropDown(),
                 ),
               ],
             ),
@@ -203,9 +203,9 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
     );
   }
 
-  DropdownButton _hospitalNotificationAheadDropDown() {
+  DropdownButton _jailNotificationAheadDropDown() {
     return DropdownButton<int>(
-      value: _hospitalNotificationAheadValue,
+      value: _jailNotificationAheadValue,
       items: [
         DropdownMenuItem(
           value: 20,
@@ -274,17 +274,17 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalNotificationAhead(value);
+        Prefs().setJailNotificationAhead(value);
         setState(() {
-          _hospitalNotificationAheadValue = value;
+          _jailNotificationAheadValue = value;
         });
       },
     );
   }
 
-  DropdownButton _hospitalAlarmAheadDropDown() {
+  DropdownButton _jailAlarmAheadDropDown() {
     return DropdownButton<int>(
-      value: _hospitalAlarmAheadDropDownValue,
+      value: _jailAlarmAheadDropDownValue,
       items: [
         DropdownMenuItem(
           value: 0,
@@ -340,17 +340,17 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalAlarmAhead(value);
+        Prefs().setJailAlarmAhead(value);
         setState(() {
-          _hospitalAlarmAheadDropDownValue = value;
+          _jailAlarmAheadDropDownValue = value;
         });
       },
     );
   }
 
-  DropdownButton _hospitalTimerAheadDropDown() {
+  DropdownButton _jailTimerAheadDropDown() {
     return DropdownButton<int>(
-      value: _hospitalTimerAheadDropDownValue,
+      value: _jailTimerAheadDropDownValue,
       items: [
         DropdownMenuItem(
           value: 20,
@@ -419,23 +419,23 @@ class _HospitalAheadOptionsState extends State<HospitalAheadOptions> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setHospitalTimerAhead(value);
+        Prefs().setJailTimerAhead(value);
         setState(() {
-          _hospitalTimerAheadDropDownValue = value;
+          _jailTimerAheadDropDownValue = value;
         });
       },
     );
   }
 
   Future _restorePreferences() async {
-    var hospitalNotificationAhead = await Prefs().getHospitalNotificationAhead();
-    var hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
-    var hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
+    var jailNotificationAhead = await Prefs().getJailNotificationAhead();
+    var jailAlarmAhead = await Prefs().getJailAlarmAhead();
+    var jailTimerAhead = await Prefs().getJailTimerAhead();
 
     setState(() {
-      _hospitalNotificationAheadValue = hospitalNotificationAhead;
-      _hospitalAlarmAheadDropDownValue = hospitalAlarmAhead;
-      _hospitalTimerAheadDropDownValue = hospitalTimerAhead;
+      _jailNotificationAheadValue = jailNotificationAhead;
+      _jailAlarmAheadDropDownValue = jailAlarmAhead;
+      _jailTimerAheadDropDownValue = jailTimerAhead;
     });
   }
 

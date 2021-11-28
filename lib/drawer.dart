@@ -8,7 +8,6 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
@@ -21,6 +20,7 @@ import 'package:quick_actions/quick_actions.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
@@ -395,17 +395,20 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     var messageId = '';
     var tradeId = '';
     var assistId = '';
+    var bulkDetails = '';
 
     if (Platform.isIOS) {
       channel = message["channelId"] as String;
       messageId = message["tornMessageId"] as String;
       tradeId = message["tornTradeId"] as String;
       assistId = message["assistId"] as String;
+      bulkDetails = message["bulkDetails"] as String;
     } else if (Platform.isAndroid) {
       channel = message["channelId"] as String;
       messageId = message["tornMessageId"] as String;
       tradeId = message["tornTradeId"] as String;
       assistId = message["assistId"] as String;
+      bulkDetails = message["bulkDetails"] as String;
     }
 
     if (channel.contains("Alerts travel")) {
@@ -482,6 +485,81 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (assists) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+
+      Color totalColor = Colors.grey[700];
+      try {
+        if (bulkDetails.isNotEmpty) {
+          final bulkList = bulkDetails.split("#");
+          int otherXanax = int.tryParse(bulkList[0].split("xanax:")[1]);
+          int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
+          int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
+
+          var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+          if (own is OwnPersonalStatsModel) {
+            int xanaxComparison = otherXanax - own.personalstats.xantaken;
+            int refillsComparison = otherRefills - own.personalstats.refills;
+            int drinksComparison = otherDrinks - own.personalstats.energydrinkused;
+
+            int otherTotals = otherXanax + otherRefills + otherDrinks;
+            int myTotals = own.personalstats.xantaken + own.personalstats.refills + own.personalstats.energydrinkused;
+
+            if (otherTotals < myTotals - myTotals * 0.1) {
+              totalColor = Colors.green[700];
+            } else if (otherTotals >= myTotals - myTotals * 0.1 && otherTotals <= myTotals + myTotals * 0.1) {
+              totalColor = Colors.orange[700];
+            } else {
+              totalColor = Colors.red[700];
+            }
+
+            String xanaxString = "";
+            if (xanaxComparison.isNegative) {
+              xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+            } else {
+              xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
+            }
+
+            String refillsString = "";
+            if (refillsComparison.isNegative) {
+              refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+            } else {
+              refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
+            }
+
+            String drinksString = "";
+            if (drinksComparison.isNegative) {
+              drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+            } else {
+              drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
+            }
+
+            if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+              int begin = message["body"].indexOf("\n- Xanax");
+              int last = message["body"].length;
+              message["body"] = message["body"].replaceRange(begin, last, "");
+              message["body"] += xanaxString;
+              message["body"] += refillsString;
+              message["body"] += drinksString;
+            }
+          }
+        }
+      } catch (e) {
+        // Leave as it was
+        print(e);
+      }
+
+      BotToast.showText(
+        align: Alignment(0, 0),
+        crossPage: true,
+        clickClose: true,
+        text: message["body"],
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: totalColor,
+        duration: const Duration(seconds: 10),
+        contentPadding: const EdgeInsets.all(10),
+      );
     }
 
     if (launchBrowser) {
@@ -559,15 +637,92 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('211')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
-      } else if (payload.contains('refills')) {
+      } else if (payload.contains('refills') && (!payload.contains("Xanax"))) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/points.php';
       } else if (payload.contains('stockMarket')) {
         // Not implemented (there is a box showing in _getBackGroundNotifications)
       } else if (payload.contains('assistId:')) {
         launchBrowser = true;
-        final assistId = payload.split(':');
+        final assistSplit = payload.split('###');
+        final assistId = assistSplit[0].split(':');
+        final assistBody = assistSplit[1].split('assistDetails:');
+        final bulkDetails = assistSplit[2].split('bulkDetails:');
         browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
+
+        Color totalColor = Colors.grey[700];
+        try {
+          if (bulkDetails[1].isNotEmpty) {
+            final bulkList = bulkDetails[1].split("#");
+            int otherXanax = int.tryParse(bulkList[0].split("xanax:")[1]);
+            int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
+            int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
+
+            var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+            if (own is OwnPersonalStatsModel) {
+              int xanaxComparison = otherXanax - own.personalstats.xantaken;
+              int refillsComparison = otherRefills - own.personalstats.refills;
+              int drinksComparison = otherDrinks - own.personalstats.energydrinkused;
+
+              int otherTotals = otherXanax + otherRefills + otherDrinks;
+              int myTotals = own.personalstats.xantaken + own.personalstats.refills + own.personalstats.energydrinkused;
+
+              if (otherTotals < myTotals - myTotals * 0.1) {
+                totalColor = Colors.green[700];
+              } else if (otherTotals >= myTotals - myTotals * 0.1 && otherTotals <= myTotals + myTotals * 0.1) {
+                totalColor = Colors.orange[700];
+              } else {
+                totalColor = Colors.red[700];
+              }
+
+              String xanaxString = "";
+              if (xanaxComparison.isNegative) {
+                xanaxString = "\n- Xanax: ${xanaxComparison.abs()} LESS than you";
+              } else {
+                xanaxString = "\n- Xanax: ${xanaxComparison.abs()} MORE than you";
+              }
+
+              String refillsString = "";
+              if (refillsComparison.isNegative) {
+                refillsString = "\n- Refills (E): ${refillsComparison.abs()} LESS than you";
+              } else {
+                refillsString = "\n- Refills (E): ${refillsComparison.abs()} MORE than you";
+              }
+
+              String drinksString = "";
+              if (drinksComparison.isNegative) {
+                drinksString = "\n- Drinks (E): ${drinksComparison.abs()} LESS than you";
+              } else {
+                drinksString = "\n- Drinks (E): ${drinksComparison.abs()} MORE than you";
+              }
+
+              if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+                int begin = assistBody[1].indexOf("\n- Xanax");
+                int last = assistBody[1].length;
+                assistBody[1] = assistBody[1].replaceRange(begin, last, "");
+                assistBody[1] += xanaxString;
+                assistBody[1] += refillsString;
+                assistBody[1] += drinksString;
+              }
+            }
+          }
+        } catch (e) {
+          // Leave as it was
+        }
+
+        BotToast.showText(
+          align: Alignment(0, 0),
+          crossPage: true,
+          clickClose: true,
+          text: assistBody[1],
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: totalColor,
+          duration: const Duration(seconds: 10),
+          contentPadding: const EdgeInsets.all(10),
+        );
       }
 
       if (launchBrowser) {

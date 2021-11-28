@@ -23,6 +23,7 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
@@ -39,6 +40,7 @@ enum ApiSelection {
   travel,
   ownBasic,
   ownExtended,
+  ownPersonalStats,
   ownMisc,
   bazaar,
   otherProfile,
@@ -60,7 +62,7 @@ enum ApiSelection {
 class ApiError {
   int errorId;
   String errorReason;
-  ApiError({int errorId}) {
+  ApiError({int errorId, String info = ""}) {
     switch (errorId) {
       // Torn PDA codes
       case 100:
@@ -68,7 +70,7 @@ class ApiError {
         break;
       // Torn codes
       case 0:
-        errorReason = 'no connection';
+        errorReason = 'no connection${info}';
         break;
       case 1:
         errorReason = 'key is empty';
@@ -126,6 +128,7 @@ class TornApiCaller {
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.ownBasic(this.apiKey);
   TornApiCaller.ownExtended(this.apiKey, this.limit);
+  TornApiCaller.ownPersonalStats(this.apiKey);
   TornApiCaller.ownMisc(this.apiKey);
   TornApiCaller.bazaar(this.apiKey);
   TornApiCaller.otherProfile(this.apiKey, this.queryId);
@@ -173,6 +176,18 @@ class TornApiCaller {
     });
     if (apiResult is http.Response) {
       return OwnProfileExtended.fromJson(json.decode(apiResult.body));
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> get getOwnPersonalStats async {
+    dynamic apiResult;
+    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.ownPersonalStats).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      return OwnPersonalStatsModel.fromJson(json.decode(apiResult.body));
     } else if (apiResult is ApiError) {
       return apiResult;
     }
@@ -460,6 +475,9 @@ class TornApiCaller {
             'cooldowns,events,travel,icons,'
             'money,education,messages';
         break;
+      case ApiSelection.ownPersonalStats:
+        url += '?selections=personalstats';
+        break;
       case ApiSelection.ownMisc:
         url += '?selections=money,education,workstats,battlestats,jobpoints,properties,skills';
         break;
@@ -524,12 +542,12 @@ class TornApiCaller {
         // Otherwise, return a good json response
         return response;
       } else {
-        return ApiError(errorId: 0);
+        return ApiError(errorId: 0, info: " [${response.statusCode}: ${response.body}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
-    } catch (_) {
-      return ApiError(errorId: 0);
+    } catch (e) {
+      return ApiError(errorId: 0, info: " [$e]");
     }
   }
 }

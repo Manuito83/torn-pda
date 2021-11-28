@@ -16,6 +16,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
 
@@ -88,7 +89,55 @@ class _ChainingPageState extends State<ChainingPage> {
                   ),
                 ),
                 if (!_isAppBarTop)
-                  BounceTabBar(
+                  FutureBuilder(
+                    future: _preferencesLoaded,
+                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        return BounceTabBar(
+                          onTabChanged: (index) {
+                            setState(() {
+                              _currentPage = index;
+                            });
+                            handleSectionChange(index);
+                          },
+                          backgroundColor: isThemeLight ? Colors.blueGrey : Colors.grey[900],
+                          items: [
+                            Image.asset(
+                              'images/icons/ic_target_account_black_48dp.png',
+                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                              width: 28,
+                            ),
+                            Icon(
+                              Icons.people,
+                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                            ),
+                            Icon(
+                              MdiIcons.wall,
+                              color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                            ),
+                            // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
+                          ],
+                          locationTop: true,
+                        );
+                      } else {
+                        return SizedBox.shrink();
+                      }
+                    },
+                  ),
+              ],
+            );
+          } else {
+            return const CircularProgressIndicator();
+          }
+        },
+      ),
+      bottomNavigationBar: _isAppBarTop
+          ? FutureBuilder(
+              future: _preferencesLoaded,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return BounceTabBar(
+                    initialIndex: _currentPage,
                     onTabChanged: (index) {
                       setState(() {
                         _currentPage = index;
@@ -106,48 +155,19 @@ class _ChainingPageState extends State<ChainingPage> {
                         Icons.people,
                         color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
-                      Icon(
-                        MdiIcons.wall,
+                      Image.asset(
+                        'images/icons/faction.png',
+                        width: 17,
                         color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                     ],
-                    locationTop: true,
-                  ),
-              ],
-            );
-          } else {
-            return const CircularProgressIndicator();
-          }
-        },
-      ),
-      bottomNavigationBar: _isAppBarTop
-          ? BounceTabBar(
-              onTabChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-                handleSectionChange(index);
+                    locationTop: false,
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
               },
-              backgroundColor: isThemeLight ? Colors.blueGrey : Colors.grey[900],
-              items: [
-                Image.asset(
-                  'images/icons/ic_target_account_black_48dp.png',
-                  color: isThemeLight ? Colors.white : _themeProvider.mainText,
-                  width: 28,
-                ),
-                Icon(
-                  Icons.people,
-                  color: isThemeLight ? Colors.white : _themeProvider.mainText,
-                ),
-                Image.asset(
-                  'images/icons/faction.png',
-                  width: 17,
-                  color: isThemeLight ? Colors.white : _themeProvider.mainText,
-                ),
-                // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
-              ],
-              locationTop: false,
             )
           : const SizedBox.shrink(),
     );
@@ -169,12 +189,9 @@ class _ChainingPageState extends State<ChainingPage> {
     if (!_chainStatusProvider.initialised) {
       await _chainStatusProvider.loadPreferences(apiKey: _myCurrentKey);
     }
-  }
 
-  // IndexedStack loads all sections at the same time, but we need to load certain things when we
-  // enter the section
-  void handleSectionChange(int index) {
-    switch (index) {
+    _currentPage = await Prefs().getChainingCurrentPage();
+    switch (_currentPage) {
       case 0:
         analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
         break;
@@ -187,6 +204,29 @@ class _ChainingPageState extends State<ChainingPage> {
           Get.put(WarController()).launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
+        break;
+    }
+  }
+
+  // IndexedStack loads all sections at the same time, but we need to load certain things when we
+  // enter the section
+  void handleSectionChange(int index) {
+    switch (index) {
+      case 0:
+        analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
+        Prefs().setChainingCurrentPage(_currentPage);
+        break;
+      case 1:
+        analytics.logEvent(name: 'section_changed', parameters: {'section': 'attacks'});
+        Prefs().setChainingCurrentPage(_currentPage);
+        break;
+      case 2:
+        analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
+        if (!_settingsProvider.showCases.contains("war")) {
+          Get.put(WarController()).launchShowCaseAddFaction();
+          _settingsProvider.addShowCase = "war";
+        }
+        Prefs().setChainingCurrentPage(_currentPage);
         break;
     }
   }

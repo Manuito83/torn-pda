@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import 'package:torn_pda/models/profile/other_profile_model.dart';
+
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
 
@@ -109,6 +111,16 @@ class Member {
     this.lifeSort,
     this.overrideEasyLife,
     //
+    this.statsComparisonSuccess,
+    this.memberXanax,
+    this.myXanax,
+    this.memberRefill,
+    this.myRefill,
+    this.memberEnhancement,
+    this.myEnhancement,
+    this.memberEcstasy,
+    this.memberLsd,
+    //
     this.name,
     this.level,
     this.daysInFaction,
@@ -145,6 +157,16 @@ class Member {
   int statsSort = 0; // Mixed estimates and exacts so that members can be sorted
   int lifeSort = 0;
   bool overrideEasyLife = false;
+  // For stats estimates calculation
+  bool statsComparisonSuccess = false;
+  int memberXanax = 0;
+  int myXanax = 0;
+  int memberRefill = 0;
+  int myRefill = 0;
+  int memberEnhancement = 0;
+  int myEnhancement = 0;
+  int memberEcstasy = 0;
+  int memberLsd = 0;
 
   String name;
   int level;
@@ -182,6 +204,15 @@ class Member {
         statsSort: json["statsSort"] ?? 0,
         lifeSort: json["lifeSort"] == null ? json["lifeCurrent"] ?? 0 : json["lifeSort"],
         overrideEasyLife: json["overrideEasyLife"] ?? false,
+        statsComparisonSuccess: json["statsComparisonSuccess"] ?? false,
+        memberXanax: json["memberXanax"] ?? 0,
+        myXanax: json["myXanax"] ?? 0,
+        memberRefill: json["memberRefill"] ?? 0,
+        myRefill: json["myRefill"] ?? 0,
+        memberEnhancement: json["memberEnhancement"] ?? 0,
+        myEnhancement: json["myEnhancement"] ?? 0,
+        memberEcstasy: json["memberEcstasy"] ?? 0,
+        memberLsd: json["memberLsd"] ?? 0,
         //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
@@ -217,6 +248,15 @@ class Member {
         "statsSort": statsSort,
         "lifeSort": lifeSort,
         "overrideEasyLife": overrideEasyLife,
+        "statsComparisonSuccess": statsComparisonSuccess,
+        "memberXanax": memberXanax,
+        "myXanax": myXanax,
+        "memberRefill": memberRefill,
+        "myRefill": myRefill,
+        "memberEnhancement": memberEnhancement,
+        "myEnhancement": myEnhancement,
+        "memberEcstasy": memberEcstasy,
+        "memberLsd": memberLsd,
         //
         "name": name,
         "level": level == null ? null : level,

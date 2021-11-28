@@ -17,7 +17,6 @@ import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
-import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
@@ -444,7 +443,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       // This resets cache when the browser opens again
                       _settingsProvider.setClearCacheNextOpportunity = true;
                       // Clear tabs now
-                      Prefs().setWebViewTabs('{"tabsSave": []}');
+                      Prefs().setWebViewSecondaryTabs('{"tabsSave": []}');
 
                       BotToast.showText(
                         text: "Browser cache and tabs have been reset!",
@@ -706,14 +705,14 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: [
               GestureDetector(
                 onTap: () {
-                  _showColorPicker(context);
+                  _showColorPickerChat(context);
                 },
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      Text("Choose highlight color"),
+                      Text("Choose highlight colour"),
                       Container(
                         width: 25,
                         height: 25,
@@ -945,42 +944,115 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
             ],
           ),
+        if ((_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog) &&
+            _settingsProvider.useTabsHideFeature)
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _showColorPickerTabs(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text("Choose hide bar colour"),
+                        Container(
+                          width: 25,
+                          height: 25,
+                          color: Color(_settingsProvider.tabsHideBarColor),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Choose the colour of the bar that indicates that tabs are hidden',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
       ],
     );
   }
 
-  void _showColorPicker(BuildContext context) {
+  void _showColorPickerTabs(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color!'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: Color(_settingsProvider.tabsHideBarColor),
+              //enableAlpha: false,
+              onColorChanged: (color) {
+                setState(() {
+                  _settingsProvider.changeTabsHideBarColor = color.value;
+                });
+              },
+              showLabel: true,
+              pickerAreaHeightPercent: 0.8,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Got it'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showColorPickerChat(BuildContext context) {
     var pickerColor = _highlightColor;
     showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Pick a color!'),
-            content: SingleChildScrollView(
-              child: ColorPicker(
-                pickerColor: _highlightColor,
-                //enableAlpha: false,
-                onColorChanged: (color) {
-                  _settingsProvider.changeHighlightColor = color.value;
-                  setState(() {
-                    pickerColor = color;
-                  });
-                },
-                showLabel: true,
-                pickerAreaHeightPercent: 0.8,
-              ),
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color!'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: _highlightColor,
+              //enableAlpha: false,
+              onColorChanged: (color) {
+                _settingsProvider.changeHighlightColor = color.value;
+                setState(() {
+                  pickerColor = color;
+                });
+              },
+              showLabel: true,
+              pickerAreaHeightPercent: 0.8,
             ),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Got it'),
-                onPressed: () {
-                  setState(() => _highlightColor = pickerColor);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        });
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Got it'),
+              onPressed: () {
+                setState(() => _highlightColor = pickerColor);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   AppBar buildAppBar() {

@@ -3,11 +3,9 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 // Package imports:
 import 'package:android_intent/android_intent.dart';
@@ -26,8 +24,6 @@ import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/firebase_functions.dart';
-import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
@@ -69,6 +65,7 @@ enum ProfileNotification {
   nerve,
   life,
   hospital,
+  jail,
   drugs,
   medical,
   booster,
@@ -153,10 +150,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _medicalNotificationTime;
   DateTime _boosterNotificationTime;
   DateTime _hospitalReleaseTime;
+  DateTime _jailReleaseTime;
 
   int _hospitalNotificationAhead;
   int _hospitalTimerAhead;
   int _hospitalAlarmAhead;
+  int _jailNotificationAhead;
+  int _jailTimerAhead;
+  int _jailAlarmAhead;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -166,6 +167,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _medicalNotificationsPending = false;
   bool _boosterNotificationsPending = false;
   bool _hospitalNotificationsPending = false;
+  bool _jailNotificationsPending = false;
 
   NotificationType _travelNotificationType;
   NotificationType _energyNotificationType;
@@ -175,6 +177,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   NotificationType _medicalNotificationType;
   NotificationType _boosterNotificationType;
   NotificationType _hospitalNotificationType;
+  NotificationType _jailNotificationType;
 
   int _customEnergyTrigger;
   int _customNerveTrigger;
@@ -190,6 +193,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData _medicalNotificationIcon;
   IconData _boosterNotificationIcon;
   IconData _hospitalNotificationIcon;
+  IconData _jailNotificationIcon;
 
   bool _alarmSound;
   bool _alarmVibration;
@@ -334,7 +338,22 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               child: buildAppBar(),
             )
           : null,
-      floatingActionButton: buildSpeedDial(),
+      floatingActionButton: Stack(
+        children: [
+          buildSpeedDial(),
+          GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            child: Container(
+              width: 56,
+              height: 56,
+            ),
+            onLongPress: () async {
+              bool lastSessionWasDialog = await Prefs().getWebViewLastSessionUsedDialog();
+              _launchBrowser(url: "", dialogRequested: lastSessionWasDialog, recallLastSession: true);
+            },
+          ),
+        ],
+      ),
       body: Container(
         child: FutureBuilder(
           future: _apiFetched,
@@ -1034,7 +1053,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           stateBall(),
                         ],
                       ),
-                      if (_user.status.color == 'red') _notificationIcon(ProfileNotification.hospital)
+                      if (_user.status.color == 'red' && _user.status.state == "Hospital")
+                        _notificationIcon(ProfileNotification.hospital),
+                      if (_user.status.color == 'red' && _user.status.state == "Jail")
+                        _notificationIcon(ProfileNotification.hospital),
                     ],
                   ),
                   BazaarStatusCard(
@@ -2121,6 +2143,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Hospital release timer set for $formattedTimeTimer';
         notificationType = _hospitalNotificationType;
         notificationIcon = _hospitalNotificationIcon;
+        break;
+
+      case ProfileNotification.jail:
+        _jailReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user.status.until * 1000);
+        secondsToGo = _jailReleaseTime.difference(DateTime.now()).inSeconds;
+        notificationsPending = _jailNotificationsPending;
+
+        var notificationTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
+        var formattedTime = TimeFormatter(
+          inputTime: notificationTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        var alarmTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
+        var formattedTimeAlarm = TimeFormatter(
+          inputTime: alarmTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        var timerTime = _jailReleaseTime.add(Duration(seconds: -_jailNotificationAhead));
+        var formattedTimeTimer = TimeFormatter(
+          inputTime: timerTime,
+          timeFormatSetting: _settingsProvider.currentTimeFormat,
+          timeZoneSetting: _settingsProvider.currentTimeZone,
+        ).formatHour;
+
+        notificationSetString = 'Jail release notification set for $formattedTime';
+        notificationCancelString = 'Jail release notification cancelled!';
+        alarmSetString = 'Jail release alarm set for $formattedTimeAlarm';
+        timerSetString = 'Jail release timer set for $formattedTimeTimer';
+        notificationType = _jailNotificationType;
+        notificationIcon = _jailNotificationIcon;
         break;
     }
 
@@ -4461,7 +4517,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           shape: BoxShape.circle,
           image: new DecorationImage(
             fit: BoxFit.fill,
-            image: AssetImage("images/icons/torn_t_logo.png"),
+            image: AssetImage("images/icons/torn_t_logo_restore.png"),
           ),
         ),
       ),
@@ -4620,12 +4676,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     );
   }
 
-  void _launchBrowser({@required String url, @required bool dialogRequested}) async {
+  void _launchBrowser({@required String url, @required bool dialogRequested, bool recallLastSession = false}) async {
     if (!_settingsProvider.useQuickBrowser) dialogRequested = false;
     _webViewProvider.openBrowserPreference(
       context: context,
       url: url,
       useDialog: dialogRequested,
+      recallLastSession: recallLastSession,
     );
   }
 
@@ -4750,6 +4807,16 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle = 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
         break;
+      case ProfileNotification.jail:
+        notificationId = 108;
+        secondsToNotification = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailNotificationAhead;
+        channelTitle = 'Manual jail';
+        channelSubtitle = 'Manual jail';
+        channelDescription = 'Manual notifications for jail';
+        notificationTitle = 'Jail release';
+        notificationSubtitle = 'You are about to be released from jail!';
+        notificationPayload += 'jail';
+        break;
     }
 
     var modifier = await getNotificationChannelsModifiers();
@@ -4814,6 +4881,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool medical = false;
     bool booster = false;
     bool hospital = false;
+    bool jail = false;
 
     var pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -4835,6 +4903,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           booster = true;
         } else if (notification.payload.contains('hospital')) {
           hospital = true;
+        } else if (notification.payload.contains('jail')) {
+          jail = true;
         }
       }
     }
@@ -4849,6 +4919,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _medicalNotificationsPending = medical;
         _boosterNotificationsPending = booster;
         _hospitalNotificationsPending = hospital;
+        _jailNotificationsPending = jail;
       });
     }
   }
@@ -4878,6 +4949,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         break;
       case ProfileNotification.hospital:
         await flutterLocalNotificationsPlugin.cancel(107);
+        break;
+      case ProfileNotification.jail:
+        await flutterLocalNotificationsPlugin.cancel(108);
         break;
     }
 
@@ -5282,6 +5356,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
     _hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
 
+    var jail = await Prefs().getJailNotificationType();
+    _jailNotificationAhead = await Prefs().getJailNotificationAhead();
+    _jailAlarmAhead = await Prefs().getJailAlarmAhead();
+    _jailTimerAhead = await Prefs().getJailTimerAhead();
+
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
 
@@ -5391,6 +5470,17 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _hospitalNotificationIcon = Icons.timer;
       }
 
+      if (jail == '0') {
+        _jailNotificationType = NotificationType.notification;
+        _jailNotificationIcon = Icons.chat_bubble_outline;
+      } else if (jail == '1') {
+        _jailNotificationType = NotificationType.alarm;
+        _jailNotificationIcon = Icons.notifications_none;
+      } else if (jail == '2') {
+        _jailNotificationType = NotificationType.timer;
+        _jailNotificationIcon = Icons.timer;
+      }
+
       _eventsExpController.expanded = expandEvents;
       _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
@@ -5447,6 +5537,12 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA Hospital';
+        break;
+      case ProfileNotification.jail:
+        var alarmTime = _jailReleaseTime.add(Duration(minutes: -_jailAlarmAhead));
+        hour = alarmTime.hour;
+        minute = alarmTime.minute;
+        message = 'Torn PDA Jail';
         break;
     }
 
@@ -5531,6 +5627,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.hospital:
         totalSeconds = _hospitalReleaseTime.difference(DateTime.now()).inSeconds - _hospitalTimerAhead;
         message = 'Torn PDA Hospital';
+        break;
+      case ProfileNotification.jail:
+        totalSeconds = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailTimerAhead;
+        message = 'Torn PDA Jail';
         break;
     }
 

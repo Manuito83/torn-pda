@@ -38,6 +38,45 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.1
+    var v2_6_1 = ChangeLogItem();
+    v2_6_1.main.version = 'Torn PDA v2.6.1';
+    v2_6_1.main.date = '01 DEC 2021';
+    String feat2_6_1_1 =
+        "Estimated stats now include xanax, refill, enhancer and SSL details (profiles and war targets)";
+    String feat2_6_1_2 = "Chaining: you can now optionally show empty notes (color reminder) when attacking a target "
+        "(disabled by default)";
+    String feat2_6_1_3 = "Chaining: the faction assist requests now also sends extended information and stats";
+    String feat2_6_1_4 = "Browser: long-pressing a link in Torn will open a contextual menu with options";
+    String feat2_6_1_5 = "Browser: long-pressing a link in Torn will open a contextual menu with options (interferes "
+        "with link preview, consider disabling it)";
+    String feat2_6_1_6 = "Browser: restore the previous browsing session, including browser type and active tab, "
+        "by long-pressing the T menu floating icon in the Profile section";
+    String feat2_6_1_7 = "Browser: you can now choose the colour of the tabs hide bar";    
+    String feat2_6_1_8 = "Profile: properly separated jail from hospital manual notifications";
+    String feat2_6_1_9 = "Fixed incorrect spied stats total and dexterity comparison";
+    String feat2_6_1_10 = "Fixed life sorting for war targets";
+    String feat2_6_1_11 = "Fixed city items being incorrectly identified";
+    String feat2_6_1_12 = "Fixed mini profiles not properly redirecting in some devices";
+    String feat2_6_1_13 = "Fixed links in images not working properly";
+    String feat2_6_1_14 = "Fixed employee activity script";
+    String feat2_6_1_15 = "Fixed other UI issues";
+    v2_6_1.features.add(feat2_6_1_1);
+    v2_6_1.features.add(feat2_6_1_2);
+    v2_6_1.features.add(feat2_6_1_3);
+    if (Platform.isAndroid) v2_6_1.features.add(feat2_6_1_4);
+    if (Platform.isIOS) v2_6_1.features.add(feat2_6_1_5);
+    v2_6_1.features.add(feat2_6_1_6);
+    v2_6_1.features.add(feat2_6_1_7);
+    v2_6_1.features.add(feat2_6_1_8);
+    v2_6_1.features.add(feat2_6_1_9);
+    v2_6_1.features.add(feat2_6_1_10);
+    v2_6_1.features.add(feat2_6_1_11);
+    v2_6_1.features.add(feat2_6_1_12);
+    v2_6_1.features.add(feat2_6_1_13);
+    v2_6_1.features.add(feat2_6_1_14);
+    v2_6_1.features.add(feat2_6_1_15);
+
     // VERSION 2.6.0
     var v2_6_0 = ChangeLogItem();
     v2_6_0.main.version = 'Torn PDA v2.6.0';
@@ -942,6 +981,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_1);
     itemList.add(v2_6_0);
     itemList.add(v2_5_3);
     itemList.add(v2_5_2);

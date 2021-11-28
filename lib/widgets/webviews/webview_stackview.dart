@@ -14,10 +14,12 @@ import 'package:torn_pda/widgets/animated_indexedstack.dart';
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
   final bool dialog;
+  final bool recallLastSession;
 
   const WebViewStackView({
     this.initUrl = "https://www.torn.com",
     this.dialog = false,
+    this.recallLastSession = false,
     Key key,
   }) : super(key: key);
 
@@ -65,6 +67,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     providerInitialised = Provider.of<WebViewProvider>(context, listen: false).initialiseMain(
       initUrl: widget.initUrl,
       dialog: widget.dialog,
+      recallLastSession: widget.recallLastSession,
     );
   }
 
@@ -134,7 +137,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                 builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done && _useTabs) {
                     if (_webViewProvider.hideTabs) {
-                      return Divider(color: Colors.green, thickness: 4, height: 4);
+                      return Divider(
+                        color: Color(_settingsProvider.tabsHideBarColor),
+                        thickness: 4,
+                        height: 4,
+                      );
                     } else {
                       return _bottomNavBar(_);
                     }
@@ -170,7 +177,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
   void _initialiseSecondary() async {
     await Future.delayed(Duration(milliseconds: 1000));
     if (!mounted) return;
-    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(useTabs: _useTabs);
+    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
+      useTabs: _useTabs,
+      recallLastSession: widget.recallLastSession,
+    );
   }
 
   @override
@@ -431,9 +441,9 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("jailview.php")) {
-      return Image.asset('images/icons/map/jail.png');
+      return Image.asset('images/icons/map/jail.png', color: _themeProvider.mainText);
     } else if (url.contains("hospitalview.php")) {
-      return Image.asset('images/icons/map/hospital.png');
+      return Image.asset('images/icons/map/hospital.png', color: _themeProvider.mainText);
     } else if (url.contains("events.php")) {
       return Image.asset('images/icons/home/events.png', color: _themeProvider.mainText);
     } else if (url.contains("properties.php")) {

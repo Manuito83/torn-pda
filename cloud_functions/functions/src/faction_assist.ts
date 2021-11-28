@@ -33,6 +33,7 @@ export const factionAssistGroup = {
             .where("active", "==", true)
             .where("faction", "==", faction)
             .where("factionAssistMessage", "==", true)
+            //.where("name", "==", `Manuito`)  // DEBUG (change also 'main.dart' to redirect functions)
             .where("name", "!=", `${callingUser.data().name}`) // Not the requestor's own name
             .get();
 
@@ -47,17 +48,45 @@ export const factionAssistGroup = {
         let attackId = data["attackId"].toString();
 
         let attackName = data["attackName"];
-        if (attackName === "") {
-            attackName = ` ID ${attackId}`;
+        if (attackName === "" || attackName === undefined) {
+            attackName = `ID ${attackId}`;
         } else {
-            attackName = ` ${data["attackName"]}`;
+            attackName = `${data["attackName"]}`;
         }
 
-        let attackLevel = data["attackLevel"];
-        if (attackLevel === "") {
-            attackLevel = "";
+        let attackLevelAge = data["attackLevel"];
+        let attackAge = data["attackAge"];
+        if (attackLevelAge === "" || attackLevelAge === undefined || attackAge === "" || attackAge === undefined) {
+            attackLevelAge = "";
         } else {
-            attackLevel = ` (level ${attackLevel})`;
+            attackLevelAge = `\n- Level ${attackLevelAge} (${attackAge} days old)`;
+        }
+
+        let attackLife = data["attackLife"];
+        if (attackLife === "" || attackLife === undefined) {
+            attackLife = "";
+        } else {
+            attackLife = `\n- Life ${attackLife}`;
+        }
+
+        let estimatedStats = data["estimatedStats"];
+        let exactStats = data["exactStats"];
+        let bulkDetails = "";
+        if (exactStats === "" || exactStats === undefined) {
+            exactStats = "";
+            // If exact stats are not available, add estimated
+            if (estimatedStats === "" || estimatedStats === undefined) {
+                estimatedStats = "";
+            } else {
+                estimatedStats = `\n- Estimated stats: ${estimatedStats}`;
+                let xanax = data["xanax"];
+                let refills = data["refills"];
+                let drinks = data["drinks"];
+                bulkDetails = `xanax:${xanax}#refills:${refills}#drinks:${drinks}`;
+            }
+
+        } else {
+            exactStats = `\n- Spied stats: ${exactStats}`;
         }
 
         let membersNotified = 0;
@@ -68,13 +97,15 @@ export const factionAssistGroup = {
                 sendNotificationToUser(
                     thisMember.token,
                     `Attack assist request!`,
-                    `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking${attackName}${attackLevel}!`,
+                    `${callingUser.data().name} (level ${callingUser.data().level}) needs help attacking ${attackName}!` +
+                    `${attackLevelAge}${attackLife}${estimatedStats}${exactStats}`,
                     "notification_assist",
                     "#FF0000",
                     "Alerts assists",
                     "",
                     "",
                     attackId,
+                    bulkDetails,
                     thisMember.vibration,
                     "sword_clash.aiff"
                 )

@@ -40,6 +40,9 @@ class TornWebViewAttack extends StatefulWidget {
   final String userKey;
   final bool war;
   final bool panic;
+  final bool showNotes;
+  final bool showBlankNotes;
+  final bool showOnlineFactionWarning;
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
@@ -52,6 +55,9 @@ class TornWebViewAttack extends StatefulWidget {
     @required this.userKey,
     this.war = false,
     this.panic = false,
+    @required this.showNotes,
+    @required this.showBlankNotes,
+    @required this.showOnlineFactionWarning,
   });
 
   @override
@@ -74,8 +80,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   var _chatRemovalEnabled = true;
   var _chatRemovalActive = false;
 
-  bool _showNotes = true;
-  bool _showOnlineFactionWarning = true;
   int _attackNumber = 0;
   List<String> _attackedIds = [];
 
@@ -542,7 +546,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (_showOnlineFactionWarning) {
+            if (widget.showOnlineFactionWarning) {
               _factionName = nextTarget.faction.factionName;
               _lastOnline = nextTarget.lastAction.timestamp;
             }
@@ -586,7 +590,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         });
 
         // Show note for next target
-        if (_showNotes) {
+        if (widget.showNotes) {
           _showNoteToast();
         }
 
@@ -611,8 +615,8 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
 
     // This will show the note of the first target, if applicable
-    if (_showNotes) {
-      if (_showOnlineFactionWarning) {
+    if (widget.showNotes) {
+      if (widget.showOnlineFactionWarning) {
         var nextTarget = await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[0]).getTarget;
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;
@@ -667,7 +671,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           // If we found a good target, we break here. But before, we gather
           // some more details if option is enabled
           else {
-            if (_showOnlineFactionWarning) {
+            if (widget.showOnlineFactionWarning) {
               _factionName = nextTarget.faction.factionName;
               _lastOnline = nextTarget.lastAction.timestamp;
             }
@@ -725,7 +729,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     // If skipping is disabled but notes are not, we still get information
     // from the API
     else {
-      if (_showOnlineFactionWarning) {
+      if (widget.showOnlineFactionWarning) {
         var nextTarget =
             await TornApiCaller.target(_userProv.basic.userApiKey, widget.attackIdList[_attackNumber + 1]).getTarget;
 
@@ -754,7 +758,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     });
 
     // Show note for next target
-    if (_showNotes) {
+    if (widget.showNotes) {
       _showNoteToast();
     }
   }
@@ -841,7 +845,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     }
 
     // Do nothing if note is empty
-    if (widget.attackNotesList[_attackNumber].isEmpty && extraInfo.isEmpty) {
+    if (widget.attackNotesList[_attackNumber].isEmpty && !widget.showBlankNotes && extraInfo.isEmpty) {
       return;
     }
 
@@ -983,7 +987,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
       int userId = 0;
 
-      if (page.contains('torn.com/profiles.php?XID=')) {
+      if (page.contains('torn.com/profiles.php?')) {
         if (page == _lastProfileVisited) {
           return;
         }
@@ -999,6 +1003,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               profileId: userId,
               apiKey: _userProv.basic.userApiKey,
               profileCheckType: ProfileCheckType.profile,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {
@@ -1020,6 +1025,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               profileId: userId,
               apiKey: _userProv.basic.userApiKey,
               profileCheckType: ProfileCheckType.attack,
+              themeProvider: _themeProvider,
             );
           });
         } catch (e) {
@@ -1037,9 +1043,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       _chatRemovalEnabled = removalEnabled;
       _chatRemovalActive = removalActive;
     });
-
-    _showNotes = await Prefs().getShowTargetsNotes();
-    _showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
   }
 
   Future<bool> _willPopCallback() async {

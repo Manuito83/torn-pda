@@ -14,12 +14,15 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
+import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 
 enum ProfileCheckType {
@@ -31,59 +34,21 @@ class ProfileAttackCheckWidget extends StatefulWidget {
   final int profileId;
   final String apiKey;
   final ProfileCheckType profileCheckType;
+  final ThemeProvider themeProvider;
 
-  ProfileAttackCheckWidget(
-      {@required this.profileId, @required this.apiKey, @required this.profileCheckType, @required Key key})
-      : super(key: key);
+  ProfileAttackCheckWidget({
+    @required this.profileId,
+    @required this.apiKey,
+    @required this.profileCheckType,
+    @required Key key,
+    @required this.themeProvider,
+  }) : super(key: key);
 
   @override
   _ProfileAttackCheckWidgetState createState() => _ProfileAttackCheckWidgetState();
 }
 
 class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
-  final _levelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
-  final _crimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
-  final _networthTriggers = [5000000, 50000000, 500000000, 5000000000, 50000000000];
-
-  final _ranksTriggers = {
-    "Absolute beginner": 1,
-    "Beginner": 2,
-    "Inexperienced": 3,
-    "Rookie": 4,
-    "Novice": 5,
-    "Below average": 6,
-    "Average": 7,
-    "Reasonable": 8,
-    "Above average": 9,
-    "Competent": 10,
-    "Highly competent": 11,
-    "Veteran": 12,
-    "Distinguished": 13,
-    "Highly distinguished": 14,
-    "Professional": 15,
-    "Star": 16,
-    "Master": 17,
-    "Outstanding": 18,
-    "Celebrity": 19,
-    "Supreme": 20,
-    "Idolized": 21,
-    "Champion": 22,
-    "Heroic": 23,
-    "Legendary": 24,
-    "Elite": 25,
-    "Invincible": 26,
-  };
-
-  final _statsResults = [
-    "< 2k",
-    "2k - 25k",
-    "20k - 250k",
-    "200k - 2.5M",
-    "2M - 25M",
-    "20M - 250M",
-    "> 200M",
-  ];
-
   Future _checkedPerson;
   bool _infoToShow = false;
   bool _errorToShow = false;
@@ -93,7 +58,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   UserDetailsProvider _userDetails;
   var _expandableController = ExpandableController();
 
-  Widget _estimatedStatsWidget; // Has to be null at the beginning
+  Widget _statsWidget; // Has to be null at the beginning
   Widget _errorDetailsWidget = SizedBox.shrink();
 
   var _isTornPda = false;
@@ -161,7 +126,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_estimatedStatsWidget != null) _estimatedStatsWidget,
+              if (_statsWidget != null) _statsWidget,
               if (_networthWidgetEnabled) _networthWidget,
               if (_isTornPda) _tornPdaWidget,
               // Container so that the background color can be changed for certain widgets
@@ -695,6 +660,33 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         }
 
+        Widget onlineStatus = Row(
+          children: [
+            otherProfile.lastAction.status == "Offline"
+                ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+                : otherProfile.lastAction.status == "Idle"
+                    ? Icon(Icons.adjust, size: 12, color: Colors.orange)
+                    : Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  otherProfile.lastAction.relative
+                      .replaceAll("minute ago", "m")
+                      .replaceAll("minutes ago", "m")
+                      .replaceAll("hour ago", "h")
+                      .replaceAll("hours ago", "h")
+                      .replaceAll("day ago", "d")
+                      .replaceAll("days ago", "d"),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                  ),
+                ),
+              ),
+          ],
+        );
+
         Color infoColorStats = Colors.white;
         if (spyModel.total != -1) {
           infoColorStats = Colors.red;
@@ -705,7 +697,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           }
         }
 
-        _estimatedStatsWidget = Container(
+        _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
             padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
@@ -726,16 +718,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           ),
                         ),
                       ),
-                      GestureDetector(
-                        child: Icon(
-                          Icons.info_outline,
-                          color: infoColorStats,
-                          size: 18,
+                      onlineStatus,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 2),
+                        child: GestureDetector(
+                          child: Icon(
+                            Icons.info_outline,
+                            color: infoColorStats,
+                            size: 18,
+                          ),
+                          onTap: () {
+                            _showSpiedDetailsDialog(spyModel);
+                          },
                         ),
-                        onTap: () {
-                          _showDetailsDialog(spyModel);
-                        },
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -747,43 +743,202 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         // Even if we have no YATA spy, but we want to show estimated stats
         var npcs = [4, 10, 15, 17, 19, 20];
         String estimatedStats = "";
+        bool npc = false;
         if (npcs.contains(otherProfile.playerId)) {
           estimatedStats = "NPC!";
+          npc = true;
         } else {
           try {
-            estimatedStats = _calculateStats(otherProfile);
+            estimatedStats = StatsCalculator.calculateStats(
+              criminalRecordTotal: otherProfile.criminalrecord.total,
+              level: otherProfile.level,
+              networth: otherProfile.personalstats.networth,
+              rank: otherProfile.rank,
+            );
           } catch (e) {
-            estimatedStats = "unk";
+            estimatedStats = "(EST) UNK";
           }
         }
 
-        _estimatedStatsWidget = Container(
+        // Globals
+        int xanaxComparison = 0;
+        Color xanaxColor = Colors.orange;
+        int refillComparison = 0;
+        Color refillColor = Colors.orange;
+        int enhancementComparison = 0;
+        Color enhancementColor = Colors.white;
+        Color sslColor = Colors.green;
+        bool sslProb = true;
+        int ecstasy = 0;
+        int lsd = 0;
+
+        List<Widget> additional = <Widget>[];
+        var own = await TornApiCaller.ownPersonalStats(_userDetails.basic.userApiKey).getOwnPersonalStats;
+        if (own is OwnPersonalStatsModel) {
+          // XANAX
+          int otherXanax = otherProfile.personalstats.xantaken;
+          int myXanax = own.personalstats.xantaken;
+          xanaxComparison = otherXanax - myXanax;
+          if (xanaxComparison < -10) {
+            xanaxColor = Colors.green;
+          } else if (xanaxComparison > 10) {
+            xanaxColor = Colors.red;
+          }
+          Text xanaxText = Text(
+            "XAN",
+            style: TextStyle(color: xanaxColor, fontSize: 11),
+          );
+
+          // REFILLS
+          int otherRefill = otherProfile.personalstats.refills;
+          int myRefill = own.personalstats.refills;
+          refillComparison = otherRefill - myRefill;
+          refillColor = Colors.orange;
+          if (refillComparison < -10) {
+            refillColor = Colors.green;
+          } else if (refillComparison > 10) {
+            refillColor = Colors.red;
+          }
+          Text refillText = Text(
+            "RFL",
+            style: TextStyle(color: refillColor, fontSize: 11),
+          );
+
+          // ENHANCEMENT
+          int otherEnhancement = otherProfile.personalstats.statenhancersused;
+          int myEnhancement = own.personalstats.statenhancersused;
+          enhancementComparison = otherEnhancement - myEnhancement;
+          if (enhancementComparison < 0) {
+            enhancementColor = Colors.green;
+          } else if (enhancementComparison > 0) {
+            enhancementColor = Colors.red;
+          }
+          Text enhancementText = Text(
+            "ENH",
+            style: TextStyle(color: enhancementColor, fontSize: 11),
+          );
+
+          /// SSL
+          /// If (xan + esc) > 150, SSL is blank;
+          /// if (esc + xan) < 150 & LSD < 50, SSL is green;
+          /// if (esc + xan) < 150 & LSD > 50 & LSD < 100, SSL is yellow;
+          /// if (esc + xan) < 150 & LSD > 100 SSL is red
+          Widget sslWidget = SizedBox.shrink();
+          sslColor = Colors.green;
+          ecstasy = otherProfile.personalstats.exttaken;
+          lsd = otherProfile.personalstats.lsdtaken;
+          if (otherXanax + ecstasy > 150) {
+            sslProb = false;
+          } else {
+            if (lsd > 50 && lsd < 50) {
+              sslColor = Colors.orange;
+            } else if (lsd > 100) {
+              sslColor = Colors.red;
+            }
+            sslWidget = Text(
+              "[SSL]",
+              style: TextStyle(
+                color: sslColor,
+                fontSize: 11,
+              ),
+            );
+          }
+
+          additional.add(xanaxText);
+          additional.add(SizedBox(width: 5));
+          additional.add(refillText);
+          additional.add(SizedBox(width: 5));
+          additional.add(enhancementText);
+          additional.add(SizedBox(width: 5));
+          additional.add(sslWidget);
+          additional.add(SizedBox(width: 5));
+        }
+
+        // ONLINE STATUS
+        Widget onlineStatus = Row(
+          children: [
+            otherProfile.lastAction.status == "Offline"
+                ? Icon(Icons.remove_circle, size: 10, color: Colors.grey)
+                : otherProfile.lastAction.status == "Idle"
+                    ? Icon(Icons.adjust, size: 12, color: Colors.orange)
+                    : Icon(Icons.circle, size: 12, color: Colors.green),
+            if (otherProfile.lastAction.status == "Offline" || otherProfile.lastAction.status == "Idle")
+              Padding(
+                padding: const EdgeInsets.only(left: 2),
+                child: Text(
+                  otherProfile.lastAction.relative
+                      .replaceAll("minute ago", "m")
+                      .replaceAll("minutes ago", "m")
+                      .replaceAll("hour ago", "h")
+                      .replaceAll("hours ago", "h")
+                      .replaceAll("day ago", "d")
+                      .replaceAll("days ago", "d"),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: otherProfile.lastAction.status == "Idle" ? Colors.orange : Colors.grey,
+                  ),
+                ),
+              ),
+          ],
+        );
+
+        _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
             padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
-                  child: Text(
-                    "(EST) STATS:",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
+                Row(
+                  children: [
+                    Text(
+                      npc ? "" : "(EST)",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Text(
+                      estimatedStats,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    if (!npc)
+                      Row(
+                        children: additional,
+                      ),
+                  ],
+                ),
+                if (!npc) onlineStatus,
+                if (!npc)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 2),
+                    child: GestureDetector(
+                      child: Icon(
+                        Icons.info_outline,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      onTap: () {
+                        _showEstimatedDetailsDialog(
+                          xanaxComparison,
+                          xanaxColor,
+                          refillComparison,
+                          refillColor,
+                          enhancementComparison,
+                          enhancementColor,
+                          sslColor,
+                          sslProb,
+                          otherProfile,
+                        );
+                      },
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    estimatedStats,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontStyle: estimatedStats == "unk" ? FontStyle.italic : FontStyle.normal,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -798,7 +953,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
   }
 
-  void _showDetailsDialog(YataSpyModel spyModel) {
+  void _showSpiedDetailsDialog(YataSpyModel spyModel) {
     String lastUpdated = "";
     if (spyModel.update != 0) {
       lastUpdated = readTimestamp(spyModel.update);
@@ -921,7 +1076,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var dexDiff = "";
       Color dexColor;
-      var result = _userDetails.basic.strength - spyModel.dexterity;
+      var result = _userDetails.basic.dexterity - spyModel.dexterity;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -973,7 +1128,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL: ${formatBigNumbers(spyModel.dexterity)}",
+            "TOTAL: ${formatBigNumbers(spyModel.total)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1070,21 +1225,209 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     );
   }
 
-  String _calculateStats(OtherProfileModel otherProfile) {
-    var levelIndex = _levelTriggers.lastIndexWhere((x) => x <= otherProfile.level) + 1;
-    var crimeIndex = _crimesTriggers.lastIndexWhere((x) => x <= otherProfile.criminalrecord.total) + 1;
-    var networthIndex = _networthTriggers.lastIndexWhere((x) => x <= otherProfile.personalstats.networth) + 1;
-    var rankIndex = 0;
-    _ranksTriggers.forEach((tornRank, index) {
-      if (otherProfile.rank.contains(tornRank)) {
-        rankIndex = index;
-      }
-    });
-
-    var finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
-    if (finalIndex >= 0 && finalIndex <= 6) {
-      return _statsResults[finalIndex];
+  void _showEstimatedDetailsDialog(
+    int xanaxCompare,
+    Color xanaxColor,
+    int refillCompare,
+    Color refillColor,
+    int enhancementCompare,
+    Color enhancementColor,
+    Color sslColor,
+    bool sslProb,
+    OtherProfileModel otherProfile,
+  ) {
+    String xanaxRelative = "SAME as you";
+    if (xanaxCompare > 0) {
+      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
+    } else {
+      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
     }
-    return "unk";
+    Widget xanaxWidget = Row(
+      children: [
+        Text(
+          "> Xanax: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$xanaxRelative",
+            style: TextStyle(color: xanaxColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+    ;
+
+    String refillRelative = "SAME as you";
+    if (refillCompare > 0) {
+      refillRelative = "${refillCompare.abs()} MORE than you";
+    } else {
+      refillRelative = "${refillCompare.abs()} LESS than you";
+    }
+    Widget refillWidget = Row(
+      children: [
+        Text(
+          "> (E) Refills: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$refillRelative",
+            style: TextStyle(color: refillColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    String enhancementRelative = "SAME as you";
+    if (enhancementColor == Colors.white) enhancementColor = widget.themeProvider.mainText;
+    if (enhancementCompare > 0) {
+      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
+    } else if (enhancementCompare < 0) {
+      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
+    }
+    Widget enhancementWidget = Row(
+      children: [
+        Text(
+          "> Enhancer(s): ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$enhancementRelative",
+            style: TextStyle(color: enhancementColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    Widget sslWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              "> SSL probability: ",
+              style: TextStyle(fontSize: 14),
+            ),
+            Text(
+              "${!sslProb ? "none" : sslColor == Colors.green ? "low" : sslColor == Colors.orange ? "med" : "high"}",
+              style: TextStyle(
+                color: sslColor,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Text(
+            "[Sports Science Lab Gym]",
+            style: TextStyle(fontSize: 9),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Xanax: ${otherProfile.personalstats.xantaken}",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                "Ecstasy: ${otherProfile.personalstats.exttaken}",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                "LSD: ${otherProfile.personalstats.lsdtaken}",
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    BotToast.showAnimationWidget(
+      clickClose: false,
+      allowClick: false,
+      onlyOne: true,
+      wrapToastAnimation: (controller, cancel, child) => Stack(
+        children: <Widget>[
+          GestureDetector(
+            onTap: () {
+              cancel();
+            },
+            child: AnimatedBuilder(
+              builder: (_, child) => Opacity(
+                opacity: controller.value,
+                child: child,
+              ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: Colors.black26),
+                child: SizedBox.expand(),
+              ),
+              animation: controller,
+            ),
+          ),
+          CustomOffsetAnimation(
+            controller: controller,
+            child: child,
+          )
+        ],
+      ),
+      toastBuilder: (cancelFunc) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        title: Text(otherProfile.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (otherProfile.faction.factionName != "0")
+              Padding(
+                padding: const EdgeInsets.all(2),
+                child: Text(
+                  "Faction: ${otherProfile.faction.factionName}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            if (otherProfile.lastAction.relative.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(2),
+                child: Text(
+                  "Online: ${otherProfile.lastAction.relative.replaceAll("0 minutes ago", "now")}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: xanaxWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: refillWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: enhancementWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: sslWidget,
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              cancelFunc();
+            },
+            child: const Text('Thanks'),
+          ),
+        ],
+      ),
+      animationDuration: Duration(milliseconds: 300),
+    );
   }
 }
