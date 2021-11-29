@@ -8,7 +8,7 @@ import Flutter
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     if #available(iOS 10.0, *) {
-      UNUserNotificationCenter.current().delegate = self as?
+        UNUserNotificationCenter.current().delegate = self as?
         UNUserNotificationCenterDelegate
     }
     GeneratedPluginRegistrant.register(with: self)
@@ -22,6 +22,17 @@ import Flutter
   let channel = FlutterMethodChannel(name: "plugins.flutter.io/quick_actions", binaryMessenger: controller! as! FlutterBinaryMessenger)
   channel.invokeMethod("launch", arguments: shortcutItem.type)
   }
+    
+    override func applicationDidBecomeActive(_ application: UIApplication) {
+        if #available(iOS 14.0, *) {
+            WidgetCenter.shared.getCurrentConfigurations { (result) in
+                guard let widgets = try? result.get() else { return }
+                widgets.forEach { (widget) in
+                    print(widget.debugDescription)
+                }
+            }
+        }
+    }
 }
 
 // Flutter 2.2.3 USB keyboard fix
