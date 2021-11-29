@@ -193,13 +193,13 @@ class _ChainingPageState extends State<ChainingPage> {
     _currentPage = await Prefs().getChainingCurrentPage();
     switch (_currentPage) {
       case 0:
-        analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
+        analytics.setCurrentScreen(screenName: 'targets');
         break;
       case 1:
-        analytics.logEvent(name: 'section_changed', parameters: {'section': 'attacks'});
+        analytics.setCurrentScreen(screenName: 'attacks');
         break;
       case 2:
-        analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
+        analytics.setCurrentScreen(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.put(WarController()).launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
@@ -213,15 +213,15 @@ class _ChainingPageState extends State<ChainingPage> {
   void handleSectionChange(int index) {
     switch (index) {
       case 0:
-        analytics.logEvent(name: 'section_changed', parameters: {'section': 'targets'});
+        analytics.setCurrentScreen(screenName: 'targets');
         Prefs().setChainingCurrentPage(_currentPage);
         break;
       case 1:
-        analytics.logEvent(name: 'section_changed', parameters: {'section': 'attacks'});
+        analytics.setCurrentScreen(screenName: 'attacks');
         Prefs().setChainingCurrentPage(_currentPage);
         break;
       case 2:
-        analytics.logEvent(name: 'section_changed', parameters: {'section': 'war'});
+        analytics.setCurrentScreen(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.put(WarController()).launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";

@@ -83,7 +83,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'settings'});
+    analytics.setCurrentScreen(screenName: 'settings');
   }
 
   @override

@@ -1,8 +1,10 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 // Package imports:
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -28,6 +30,8 @@ import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
+
+import '../main.dart';
 
 enum ApiType {
   user,
@@ -445,8 +449,12 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> _apiCall(ApiType apiType,
-      {String prefix, @required ApiSelection apiSelection, int limit = 100}) async {
+  Future<dynamic> _apiCall(
+    ApiType apiType, {
+    String prefix,
+    @required ApiSelection apiSelection,
+    int limit = 100,
+  }) async {
     String url = 'https://api.torn.com/';
     switch (apiType) {
       case ApiType.user:
@@ -542,11 +550,27 @@ class TornApiCaller {
         // Otherwise, return a good json response
         return response;
       } else {
+        analytics.logEvent(
+          name: 'api_error',
+          parameters: {
+            'type': 'status',
+            'status_code': response.statusCode,
+            'response_body': response.body.length > 99 ? response.body.substring(0, 99) : response.body,
+          },
+        );
         return ApiError(errorId: 0, info: " [${response.statusCode}: ${response.body}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
-    } catch (e) {
+    } catch (e, trace) {
+      FirebaseCrashlytics.instance.recordError(e, trace, reason: 'api_error');
+      analytics.logEvent(
+        name: 'api_error',
+        parameters: {
+          'type': 'exception',
+          'error': e.toString().length > 99 ? e.toString().substring(0, 99) : e.toString(),
+        },
+      );
       return ApiError(errorId: 0, info: " [$e]");
     }
   }

@@ -49,7 +49,7 @@ class TornTraderComm {
 
     for (var product in sellerItems) {
       var item = TtOutItem(
-        name: product.name,
+        name: product.playerName,
         quantity: product.quantity,
         id: product.id,
       );

@@ -44,7 +44,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _firestoreProfileReceived = firestore.getUserProfile();
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'alerts'});
+    analytics.setCurrentScreen(screenName: 'alerts');
   }
 
   @override

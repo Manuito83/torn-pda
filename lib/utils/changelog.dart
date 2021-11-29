@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.1
     var v2_6_1 = ChangeLogItem();
     v2_6_1.main.version = 'Torn PDA v2.6.1';
-    v2_6_1.main.date = '01 DEC 2021';
+    v2_6_1.main.date = '04 DEC 2021';
     String feat2_6_1_1 =
         "Estimated stats now include xanax, refill, enhancer and SSL details (profiles and war targets)";
     String feat2_6_1_2 = "Chaining: you can now optionally show empty notes (color reminder) when attacking a target "

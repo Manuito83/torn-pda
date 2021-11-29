@@ -52,7 +52,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     _userP = Provider.of<UserDetailsProvider>(context, listen: false);
     if (!widget.calledFromMenu) _fbUser = widget.fbUser; // We are NOT getting updated stocks every time
     _stocksInitialised = _initialiseStocks();
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'stockMarket'});
+    analytics.setCurrentScreen(screenName: 'stockMarket');
   }
 
   @override

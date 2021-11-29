@@ -70,7 +70,7 @@ class _TipsPageState extends State<TipsPage> {
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
 
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'tips'});
+    analytics.setCurrentScreen(screenName: 'tips');
   }
 
   @override

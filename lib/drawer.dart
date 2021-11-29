@@ -1015,10 +1015,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _onSelectItem(int index) async {
-/*    await analytics.logEvent(
-        name: 'section_changed',
-        parameters: {'section': _drawerItemsList[index]});*/
-
     Navigator.of(context).pop();
     setState(() {
       _selected = index;

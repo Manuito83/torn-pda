@@ -95,7 +95,7 @@ class _AwardsPageState extends State<AwardsPage> {
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'awards'});
+    analytics.setCurrentScreen(screenName: 'awards');
   }
 
   @override

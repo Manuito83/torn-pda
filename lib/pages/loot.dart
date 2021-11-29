@@ -77,7 +77,7 @@ class _LootPageState extends State<LootPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'loot'});
+    analytics.setCurrentScreen(screenName: 'loot');
     _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
   }
 

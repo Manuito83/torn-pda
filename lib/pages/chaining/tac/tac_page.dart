@@ -107,7 +107,7 @@ class _TacPageState extends State<TacPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
 
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'tac'});
+    analytics.setCurrentScreen(screenName: 'tac');
   }
 
   @override

@@ -291,7 +291,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     });
 
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'profile'});
+    analytics.setCurrentScreen(screenName: 'profile');
   }
 
   void _requestIOSPermissions() {

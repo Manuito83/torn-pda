@@ -71,7 +71,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
     _ticker = new Timer.periodic(Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics.logEvent(name: 'section_changed', parameters: {'section': 'travel'});
+    analytics.setCurrentScreen(screenName: 'travel');
   }
 
   @override
