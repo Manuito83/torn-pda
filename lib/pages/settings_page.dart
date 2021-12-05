@@ -991,6 +991,19 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "6",
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Items",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         // TODO: use settings provider for this?
