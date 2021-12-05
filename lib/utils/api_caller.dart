@@ -20,6 +20,7 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -38,6 +39,7 @@ enum ApiType {
   faction,
   torn,
   property,
+  market,
 }
 
 enum ApiSelection {
@@ -61,6 +63,7 @@ enum ApiSelection {
   friends,
   property,
   stocks,
+  marketItem,
 }
 
 class ApiError {
@@ -148,6 +151,7 @@ class TornApiCaller {
   TornApiCaller.friends(this.apiKey, this.queryId);
   TornApiCaller.property(this.apiKey, this.queryId);
   TornApiCaller.stockmarket(this.apiKey);
+  TornApiCaller.marketItem(this.apiKey, this.queryId);
 
   Future<dynamic> get getTravel async {
     dynamic apiResult;
@@ -449,6 +453,22 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> get getMarketItem async {
+    dynamic apiResult;
+    await _apiCall(ApiType.market, prefix: this.queryId, apiSelection: ApiSelection.marketItem).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is http.Response) {
+      try {
+        return MarketItemModel.fromJson(json.decode(apiResult.body));
+      } catch (e) {
+        return ApiError();
+      }
+    } else if (apiResult is ApiError) {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _apiCall(
     ApiType apiType, {
     String prefix,
@@ -468,6 +488,9 @@ class TornApiCaller {
         break;
       case ApiType.property:
         url += 'property/';
+        break;
+        case ApiType.market:
+        url += 'market/';
         break;
     }
 
@@ -533,6 +556,9 @@ class TornApiCaller {
         break;
       case ApiSelection.stocks:
         url += '$prefix?selections=stocks';
+        break;
+        case ApiSelection.marketItem:
+        url += '$prefix?selections=bazaar,itemmarket';
         break;
     }
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';

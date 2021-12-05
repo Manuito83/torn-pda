@@ -28,7 +28,9 @@ class ItemsModel {
 }
 
 class Item {
-  String id; // Manually entered, as it don't follow the same order in the map
+  String id; // Manually entered, as it doesn't follow the same order in the map
+  int inventoryOwned;
+  //
   String name;
   String description;
   String effect;
@@ -43,6 +45,7 @@ class Item {
 
   Item({
     this.id,
+    this.inventoryOwned = 0,
     this.name,
     this.description,
     this.effect,
