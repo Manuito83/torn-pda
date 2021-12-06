@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -28,7 +29,14 @@ class ItemsPage extends StatefulWidget {
 
 class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   List<Item> _allItems = <Item>[];
-  InventoryModel _inventory = InventoryModel();
+
+  ScrollController _filterScroll = ScrollController();
+  ScrollPhysics _filterPhysics = NeverScrollableScrollPhysics();
+  PanelController _pc = PanelController();
+  final double _initFabHeight = 25.0;
+  double _fabHeight = 25.0;
+  double _panelHeightOpen = 400.0;
+  double _panelHeightClosed = 75.0;
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
@@ -43,12 +51,25 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   bool _inventorySuccess = false;
   String _errorMessage = "";
 
+  // Filters
+  bool _filterOwnedItems = false;
+  List<String> _hiddenCategories = <String>[];
+  Map<String, String> _allCategories = Map<String, String>();
+
   @override
   void initState() {
     super.initState();
     _loadedApiItems = _getAllItems();
     _searchController.addListener(onSearchInputTextChange);
     analytics.setCurrentScreen(screenName: 'items');
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _filterScroll.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -64,23 +85,100 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-        future: _loadedApiItems,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_itemsSuccess) {
-              return _itemsMain();
-            }
-            return _errorMain();
-          } else {
-            return Center(
-              child: Padding(
-                padding: EdgeInsets.all(10),
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-        },
+      body: Stack(
+        children: [
+          FutureBuilder(
+            future: _loadedApiItems,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_itemsSuccess) {
+                  return _itemsMain();
+                }
+                return _errorMain();
+              } else {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+            },
+          ),
+
+          // Sliding panel
+          FutureBuilder(
+            future: _loadedApiItems,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_itemsSuccess) {
+                  return SlidingUpPanel(
+                      controller: _pc,
+                      maxHeight: _panelHeightOpen,
+                      minHeight: _panelHeightClosed,
+                      renderPanelSheet: false,
+                      backdropEnabled: true,
+                      isDraggable: false,
+                      parallaxEnabled: false,
+                      parallaxOffset: .0,
+                      panelBuilder: (sc) => _bottomPanel(sc),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(18.0),
+                        topRight: Radius.circular(18.0),
+                      ),
+                      onPanelClosed: () {
+                        _filterScroll.animateTo(
+                          0,
+                          duration: Duration(milliseconds: 200),
+                          curve: Curves.ease,
+                        );
+                        _filterPhysics = NeverScrollableScrollPhysics();
+                      },
+                      onPanelOpened: () {
+                        _filterPhysics = AlwaysScrollableScrollPhysics();
+                      },
+                      onPanelSlide: (double pos) {
+                        setState(() {
+                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                        });
+                      });
+                } else {
+                  return SizedBox.shrink();
+                }
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
+
+          // FAB
+          FutureBuilder(
+            future: _loadedApiItems,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (_itemsSuccess) {
+                  return Positioned(
+                    right: 35.0,
+                    bottom: _fabHeight,
+                    child: FloatingActionButton.extended(
+                      icon: Icon(Icons.filter_list),
+                      label: Text("Filter"),
+                      elevation: 4,
+                      onPressed: () {
+                        _pc.isPanelOpen ? _pc.close() : _pc.open();
+                      },
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
+              } else {
+                return SizedBox.shrink();
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -108,8 +206,13 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           child: ListView.builder(
             itemCount: _allItems.length,
             itemBuilder: (context, index) {
-              bool inFilter = _allItems[index].name.toLowerCase().contains(_currentSearchFilter);
-              if (inFilter) {
+              bool inSearch = _allItems[index].name.toLowerCase().contains(_currentSearchFilter);
+              bool inCategoryFilter = !_hiddenCategories.contains(_allItems[index].type.name);
+              bool owned = true;
+              if (_filterOwnedItems && _allItems[index].inventoryOwned == 0) {
+                owned = false;
+              }
+              if (inSearch && inCategoryFilter && owned) {
                 return ItemCard(
                   item: _allItems[index],
                   settingsProvider: _settingsProvider,
@@ -159,6 +262,142 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _bottomPanel(ScrollController sc) {
+    return SingleChildScrollView(
+      controller: _filterScroll,
+      physics: _filterPhysics,
+      child: Container(
+        decoration: BoxDecoration(
+            color: _themeProvider.background,
+            borderRadius: BorderRadius.all(Radius.circular(20.0)),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 2.0,
+                color: Colors.orange[800],
+              ),
+            ]),
+        margin: const EdgeInsets.all(24.0),
+        child: Column(
+          children: <Widget>[
+            SizedBox(
+              height: 12.0,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 30,
+                  height: 5,
+                  decoration:
+                      BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
+                ),
+              ],
+            ),
+            SizedBox(height: 40.0),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: <Widget>[
+                  Row(
+                    children: [
+                      Text("Only owned"),
+                      Switch(
+                        value: _filterOwnedItems,
+                        onChanged: (value) {
+                          //Prefs().setShowAchievedAwards(value);
+                          setState(() {
+                            _filterOwnedItems = value;
+                          });
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  RawChip(
+                    showCheckmark: true,
+                    selected: _hiddenCategories.isEmpty ? true : false,
+                    side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
+                    avatar: CircleAvatar(
+                      backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
+                    ),
+                    label: Text(
+                      "ALL",
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    selectedColor: Colors.transparent,
+                    disabledColor: Colors.grey,
+                    onSelected: (bool isSelected) {
+                      if (isSelected) {
+                        setState(() {
+                          _hiddenCategories.clear();
+                        });
+                      } else {
+                        var fullList = [];
+                        for (var cat in _allCategories.keys) {
+                          fullList.add(cat);
+                        }
+                        setState(() {
+                          _hiddenCategories = List<String>.from(fullList);
+                        });
+                      }
+                      //Prefs().setHiddenAwardCategories(_hiddenCategories);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: _categoryFilterWrap(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _categoryFilterWrap() {
+    var catChips = <Widget>[];
+    for (var cat in _allCategories.entries) {
+      switch (cat.key) {
+        case "MELEE":
+          break;
+      }
+
+      String titleCapitalized = cat.key.replaceAll("_", " ").toLowerCase();
+      titleCapitalized = titleCapitalized.replaceFirst(titleCapitalized[0], titleCapitalized[0].toUpperCase());
+
+      catChips.add(
+        RawChip(
+          showCheckmark: false,
+          selected: _hiddenCategories.contains(cat.key) ? false : true,
+          side: BorderSide(color: _hiddenCategories.contains(cat.key) ? Colors.grey[600] : Colors.green, width: 1.5),
+          label: Text(
+            "${titleCapitalized} (${cat.value})",
+            style: TextStyle(fontSize: 10),
+          ),
+          selectedColor: Colors.transparent,
+          disabledColor: Colors.grey,
+          onSelected: (bool isSelected) {
+            setState(() {
+              isSelected ? _hiddenCategories.remove(cat.key) : _hiddenCategories.add(cat.key);
+            });
+            //Prefs().setHiddenAwardCategories(_hiddenCategories);
+          },
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 5,
+      children: catChips,
+    );
+  }
+
   void onSearchInputTextChange() {
     setState(() {
       _currentSearchFilter = _searchController.text.toLowerCase();
@@ -178,7 +417,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       _itemsSuccess = true;
     }
 
-    apiItems.items.forEach((id, details) {
+    var tornItems = apiItems as ItemsModel;
+    tornItems.items.forEach((id, details) {
       details.name = EmojiParser.fix(details.name);
       details.id = id;
 
@@ -194,8 +434,20 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         _inventorySuccess = true;
       }
 
+      // Populate categories
+      if (!_allCategories.containsKey(details.type.name)) {
+        _allCategories.addAll({details.type.name: ""});
+      }
+
       _allItems.add(details);
     });
+
+    // Fill categories statistics
+    _allCategories.forEach((key, value) {
+      int amount = _allItems.where((element) => element.type.name == key).length;
+      _allCategories[key] = amount.toString();
+    });
+
     // Sort them
     _allItems.sort((a, b) => a.name.compareTo(b.name));
   }
