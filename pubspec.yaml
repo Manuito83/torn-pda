@@ -29,6 +29,7 @@ dependencies:
   cloud_functions: ^3.0.5
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
+  dio: ^4.0.4
   device_info: ^2.0.0
   dotted_border: ^2.0.0
   easy_rich_text: ^0.5.3

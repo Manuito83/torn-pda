@@ -1,12 +1,10 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 // Package imports:
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
@@ -158,9 +156,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.travel).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return TravelModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return TravelModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -170,9 +168,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.ownBasic).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return OwnProfileBasic.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return OwnProfileBasic.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -182,9 +180,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended, limit: limit).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return OwnProfileExtended.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return OwnProfileExtended.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -194,9 +192,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.ownPersonalStats).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return OwnPersonalStatsModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return OwnPersonalStatsModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -206,9 +204,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.ownMisc).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return OwnProfileMisc.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return OwnProfileMisc.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -218,9 +216,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.bazaar).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return BazaarModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return BazaarModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -230,9 +228,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.otherProfile).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return OtherProfileModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return OtherProfileModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -242,9 +240,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.target).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return TargetModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return TargetModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -254,9 +252,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.attacks).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return AttackModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return AttackModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -266,9 +264,9 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.attacksFull).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
-      return AttackFullModel.fromJson(json.decode(apiResult.body));
-    } else if (apiResult is ApiError) {
+    if (apiResult is! ApiError) {
+      return AttackFullModel.fromJson(apiResult);
+    } else {
       return apiResult;
     }
   }
@@ -278,13 +276,13 @@ class TornApiCaller {
     await _apiCall(ApiType.faction, apiSelection: ApiSelection.chainStatus).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return ChainModel.fromJson(json.decode(apiResult.body));
+        return ChainModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -294,13 +292,13 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.bars).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return BarsModel.fromJson(json.decode(apiResult.body));
+        return BarsModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -310,13 +308,13 @@ class TornApiCaller {
     await _apiCall(ApiType.torn, apiSelection: ApiSelection.items).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return ItemsModel.fromJson(json.decode(apiResult.body));
+        return ItemsModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -326,13 +324,13 @@ class TornApiCaller {
     await _apiCall(ApiType.user, apiSelection: ApiSelection.inventory).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return InventoryModel.fromJson(json.decode(apiResult.body));
+        return InventoryModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -342,13 +340,13 @@ class TornApiCaller {
     await _apiCall(ApiType.torn, apiSelection: ApiSelection.education).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return TornEducationModel.fromJson(json.decode(apiResult.body));
+        return TornEducationModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -362,13 +360,13 @@ class TornApiCaller {
     ).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return FactionModel.fromJson(json.decode(apiResult.body));
+        return FactionModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -378,13 +376,13 @@ class TornApiCaller {
     await _apiCall(ApiType.faction, apiSelection: ApiSelection.factionCrimes).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return FactionCrimesModel.fromJson(json.decode(apiResult.body));
+        return FactionCrimesModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -394,13 +392,13 @@ class TornApiCaller {
     await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.friends).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return FriendModel.fromJson(json.decode(apiResult.body));
+        return FriendModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -410,13 +408,13 @@ class TornApiCaller {
     await _apiCall(ApiType.property, prefix: this.queryId, apiSelection: ApiSelection.property).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return PropertyModel.fromJson(json.decode(apiResult.body));
+        return PropertyModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -426,13 +424,13 @@ class TornApiCaller {
     await _apiCall(ApiType.torn, prefix: this.queryId, apiSelection: ApiSelection.stocks).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return StockMarketModel.fromJson(json.decode(apiResult.body));
+        return StockMarketModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -442,13 +440,13 @@ class TornApiCaller {
     await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.stocks).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return StockMarketUserModel.fromJson(json.decode(apiResult.body));
+        return StockMarketUserModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -458,13 +456,13 @@ class TornApiCaller {
     await _apiCall(ApiType.market, prefix: this.queryId, apiSelection: ApiSelection.marketItem).then((value) {
       apiResult = value;
     });
-    if (apiResult is http.Response) {
+    if (apiResult is! ApiError) {
       try {
-        return MarketItemModel.fromJson(json.decode(apiResult.body));
+        return MarketItemModel.fromJson(apiResult);
       } catch (e) {
         return ApiError();
       }
-    } else if (apiResult is ApiError) {
+    } else {
       return apiResult;
     }
   }
@@ -489,7 +487,7 @@ class TornApiCaller {
       case ApiType.property:
         url += 'property/';
         break;
-        case ApiType.market:
+      case ApiType.market:
         url += 'market/';
         break;
     }
@@ -557,7 +555,7 @@ class TornApiCaller {
       case ApiSelection.stocks:
         url += '$prefix?selections=stocks';
         break;
-        case ApiSelection.marketItem:
+      case ApiSelection.marketItem:
         url += '$prefix?selections=bazaar,itemmarket';
         break;
     }
@@ -566,30 +564,29 @@ class TornApiCaller {
     //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
     //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2
     try {
-      final response = await http.get(Uri.parse(url)).timeout(Duration(seconds: 20));
+      final response = await Dio().get(url).timeout(Duration(seconds: 20));
       if (response.statusCode == 200) {
         // Check if json is responding with errors
-        var jsonResponse = json.decode(response.body);
-        if (jsonResponse['error'] != null) {
-          return ApiError(errorId: jsonResponse['error']['code']);
+        if (response.data['error'] != null) {
+          return ApiError(errorId: response.data['error']['code']);
         }
         // Otherwise, return a good json response
-        return response;
+        return response.data;
       } else {
         analytics.logEvent(
           name: 'api_error',
           parameters: {
             'type': 'status',
             'status_code': response.statusCode,
-            'response_body': response.body.length > 99 ? response.body.substring(0, 99) : response.body,
+            'response_body': response.data.length > 99 ? response.data.substring(0, 99) : response.data,
           },
         );
-        return ApiError(errorId: 0, info: " [${response.statusCode}: ${response.body}]");
+        return ApiError(errorId: 0, info: " [${response.statusCode}: ${response.data}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
-    } catch (e, trace) {
-      FirebaseCrashlytics.instance.recordError(e, trace, reason: 'api_error');
+    } catch (e) {
+      // Analytics limits at 100 chars
       analytics.logEvent(
         name: 'api_error',
         parameters: {
@@ -597,7 +594,8 @@ class TornApiCaller {
           'error': e.toString().length > 99 ? e.toString().substring(0, 99) : e.toString(),
         },
       );
-      return ApiError(errorId: 0, info: " [$e]");
+      // We limit to 200 here (it will be shown to the user)
+      return ApiError(errorId: 0, info: " [${e.toString().length > 200 ? e.toString().substring(0, 200) : e}]");
     }
   }
 }
