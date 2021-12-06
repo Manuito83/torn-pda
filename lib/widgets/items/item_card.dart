@@ -2,6 +2,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/src/provider.dart';
+import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -15,12 +16,14 @@ class ItemCard extends StatefulWidget {
   final SettingsProvider settingsProvider;
   final ThemeProvider themeProvider;
   final String apiKey;
+  final bool inventorySuccess;
 
   ItemCard({
     @required this.item,
     @required this.settingsProvider,
     @required this.themeProvider,
     @required this.apiKey,
+    @required this.inventorySuccess,
     Key key,
   }) : super(key: key);
 
@@ -115,7 +118,7 @@ class _ItemCardState extends State<ItemCard> {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              "(inv: x${widget.item.inventoryOwned})",
+                              widget.inventorySuccess ? "(inv: x${widget.item.inventoryOwned})" : "(inv: error)",
                               style: TextStyle(fontSize: 9),
                             ),
                           ],
@@ -234,12 +237,12 @@ class _ItemCardState extends State<ItemCard> {
       if (_marketItem.itemmarket != null) {
         List<Widget> marketList = <Widget>[];
         var mIndex = 0;
-        for (var b in _marketItem.itemmarket) {
+        for (var m in _marketItem.itemmarket) {
           if (mIndex >= 3) break;
           mIndex++;
           marketList.add(
             Text(
-              "${b.quantity}x \$${decimalFormat.format(b.cost)}",
+              "${m.quantity}x \$${decimalFormat.format(m.cost)}",
               style: TextStyle(
                 fontSize: 10,
               ),
@@ -252,29 +255,28 @@ class _ItemCardState extends State<ItemCard> {
       return Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   bazaarHeader,
                   SizedBox(height: 2),
                   bazaarColumn,
                 ],
               ),
-              Column(
-                children: [
-                  SizedBox(
-                    height: 40,
-                    child: VerticalDivider(
-                      color: Colors.black,
-                    ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: SizedBox(
+                  height: 40,
+                  child: VerticalDivider(
+                    color: Colors.black,
                   ),
-                ],
+                ),
               ),
               Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   marketHeader,
                   SizedBox(height: 2),

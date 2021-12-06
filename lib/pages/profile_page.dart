@@ -123,7 +123,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _apiFetched;
   bool _apiGoodData = false;
-  String _apiError = '';
+  ApiError _apiError = ApiError();
   int _apiRetries = 0;
 
   OwnProfileExtended _user;
@@ -474,7 +474,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 );
               } else {
-                var error = _apiError.isEmpty ? "" : ": $_apiError";
                 return RefreshIndicator(
                   onRefresh: () async {
                     _fetchApi();
@@ -501,7 +500,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Column(
                             children: [
                               Text(
-                                'There was an error$error\n\n'
+                                'There was an error: ${_apiError.errorReason}',
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_apiError.errorDetails.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Error details:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 5),
+                                      Text(
+                                        _apiError.errorDetails,
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 10,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              SizedBox(height: 20),
+                              Text(
                                 'Torn PDA is retrying automatically. '
                                 'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
                                 textAlign: TextAlign.center,
@@ -4268,8 +4295,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _apiRetries++;
           } else {
             _apiGoodData = false;
-            var error = apiResponse as ApiError;
-            _apiError = error.errorReason;
+            _apiError = apiResponse as ApiError;
             _apiRetries = 0;
           }
         }

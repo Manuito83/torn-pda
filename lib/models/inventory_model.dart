@@ -15,11 +15,11 @@ class InventoryModel {
     this.inventory,
   });
 
-  List<Display> display;
+  List<DisplayCabinet> display;
   List<Inventory> inventory;
 
   factory InventoryModel.fromJson(Map<String, dynamic> json) => InventoryModel(
-    display: json["display"] == null ? null : List<Display>.from(json["display"].map((x) => Display.fromJson(x))),
+    display: json["display"] == null ? null : List<DisplayCabinet>.from(json["display"].map((x) => DisplayCabinet.fromJson(x))),
     inventory: json["inventory"] == null ? null : List<Inventory>.from(json["inventory"].map((x) => Inventory.fromJson(x))),
   );
 
@@ -29,8 +29,8 @@ class InventoryModel {
   };
 }
 
-class Display {
-  Display({
+class DisplayCabinet {
+  DisplayCabinet({
     this.id,
     this.name,
     this.type,
@@ -46,7 +46,7 @@ class Display {
   int circulation;
   int marketPrice;
 
-  factory Display.fromJson(Map<String, dynamic> json) => Display(
+  factory DisplayCabinet.fromJson(Map<String, dynamic> json) => DisplayCabinet(
     id: json["ID"] == null ? null : json["ID"],
     name: json["name"] == null ? null : json["name"],
     type: json["type"] == null ? null : json["type"],

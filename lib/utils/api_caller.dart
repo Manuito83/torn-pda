@@ -67,7 +67,8 @@ enum ApiSelection {
 class ApiError {
   int errorId;
   String errorReason;
-  ApiError({int errorId, String info = ""}) {
+  String errorDetails;
+  ApiError({int errorId = 0, String details = ""}) {
     switch (errorId) {
       // Torn PDA codes
       case 100:
@@ -75,7 +76,8 @@ class ApiError {
         break;
       // Torn codes
       case 0:
-        errorReason = 'no connection${info}';
+        errorReason = 'no connection';
+        errorDetails = details;
         break;
       case 1:
         errorReason = 'key is empty';
@@ -581,7 +583,7 @@ class TornApiCaller {
             'response_body': response.data.length > 99 ? response.data.substring(0, 99) : response.data,
           },
         );
-        return ApiError(errorId: 0, info: " [${response.statusCode}: ${response.data}]");
+        return ApiError(errorId: 0, details: " [${response.statusCode}: ${response.data}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
@@ -594,8 +596,8 @@ class TornApiCaller {
           'error': e.toString().length > 99 ? e.toString().substring(0, 99) : e.toString(),
         },
       );
-      // We limit to 200 here (it will be shown to the user)
-      return ApiError(errorId: 0, info: " [${e.toString().length > 200 ? e.toString().substring(0, 200) : e}]");
+      // We limit to a bit more here (it will be shown to the user)
+      return ApiError(errorId: 0, details: " [${e.toString().length > 140 ? e.toString().substring(0, 140) : e}]");
     }
   }
 }
