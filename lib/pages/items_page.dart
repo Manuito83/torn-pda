@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
+import 'package:torn_pda/models/items/items_sort.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 
@@ -55,6 +56,20 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   bool _filterOwnedItems = false;
   List<String> _hiddenCategories = <String>[];
   Map<String, String> _allCategories = Map<String, String>();
+
+  // Sorting
+  final _popupSortChoices = <ItemsSort>[
+    ItemsSort(type: ItemsSortType.nameAsc),
+    ItemsSort(type: ItemsSortType.nameDes),
+    ItemsSort(type: ItemsSortType.categoryAsc),
+    ItemsSort(type: ItemsSortType.categoryDes),
+    ItemsSort(type: ItemsSortType.ownedAsc),
+    ItemsSort(type: ItemsSortType.ownedDes),
+    ItemsSort(type: ItemsSortType.valueAsc),
+    ItemsSort(type: ItemsSortType.valueDes),
+    ItemsSort(type: ItemsSortType.circulationAsc),
+    ItemsSort(type: ItemsSortType.circulationDes),
+  ];
 
   @override
   void initState() {
@@ -195,6 +210,29 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         },
       ),
       title: Text('Items'),
+      actions: [
+        _itemsSuccess
+            ? PopupMenuButton<ItemsSort>(
+                icon: Icon(
+                  Icons.sort,
+                ),
+                onSelected: _sortItems,
+                itemBuilder: (BuildContext context) {
+                  return _popupSortChoices.map((ItemsSort choice) {
+                    return PopupMenuItem<ItemsSort>(
+                      value: choice,
+                      child: Text(
+                        choice.description,
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    );
+                  }).toList();
+                },
+              )
+            : SizedBox.shrink(),
+      ],
     );
   }
 
@@ -414,7 +452,10 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       _errorMessage = error.errorReason;
       return;
     } else {
-      _itemsSuccess = true;
+      setState(() {
+        // Activates action icons
+        _itemsSuccess = true;
+      });
     }
 
     var tornItems = apiItems as ItemsModel;
@@ -448,7 +489,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       _allCategories[key] = amount.toString();
     });
 
-    // Sort them
+    // Sort them // TODO!
     _allItems.sort((a, b) => a.name.compareTo(b.name));
   }
 
@@ -476,5 +517,76 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         SizedBox(height: 50),
       ],
     );
+  }
+
+  void _sortItems(ItemsSort choice) {
+    String sortToSave;
+    switch (choice.type) {
+      case ItemsSortType.nameDes:
+        setState(() {
+          _allItems.sort((a, b) => b.name.compareTo(a.name));
+        });
+        sortToSave = 'nameDes';
+        break;
+      case ItemsSortType.nameAsc:
+        setState(() {
+          _allItems.sort((a, b) => a.name.compareTo(b.name));
+        });
+        sortToSave = 'nameAsc';
+        break;
+      case ItemsSortType.categoryDes:
+        setState(() {
+          _allItems.sort((a, b) => b.type.name.compareTo(a.type.name));
+        });
+        sortToSave = 'categoryDes';
+        break;
+      case ItemsSortType.categoryAsc:
+        setState(() {
+          _allItems.sort((a, b) => a.type.name.compareTo(b.type.name));
+        });
+        sortToSave = 'categoryAsc';
+        break;
+      case ItemsSortType.valueDes:
+        setState(() {
+          _allItems.sort((a, b) => b.marketValue.compareTo(a.marketValue));
+        });
+        sortToSave = 'valueDes';
+        break;
+      case ItemsSortType.valueAsc:
+        setState(() {
+          _allItems.sort((a, b) => a.marketValue.compareTo(b.marketValue));
+        });
+        sortToSave = 'valueAsc';
+        break;
+      case ItemsSortType.ownedDes:
+        setState(() {
+          _allItems.sort((a, b) => b.inventoryOwned.compareTo(a.inventoryOwned));
+        });
+        sortToSave = 'ownedDes';
+        break;
+      case ItemsSortType.ownedAsc:
+        setState(() {
+          _allItems.sort((a, b) => a.inventoryOwned.compareTo(b.inventoryOwned));
+        });
+        sortToSave = 'ownedAsc';
+        break;
+      case ItemsSortType.circulationDes:
+        setState(() {
+          _allItems.sort((a, b) => b.circulation.compareTo(a.circulation));
+        });
+        sortToSave = 'circulationDes';
+        break;
+      case ItemsSortType.circulationAsc:
+        setState(() {
+          _allItems.sort((a, b) => a.circulation.compareTo(b.circulation));
+        });
+        sortToSave = 'circulationAsc';
+        break;
+      /*
+    if (!initialLoad) {
+      Prefs().setAwardsSort(sortToSave);
+    }
+    */
+    }
   }
 }
