@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/emoji_parser.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/items/item_card.dart';
 
 class ItemsPage extends StatefulWidget {
@@ -343,7 +344,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                       Switch(
                         value: _filterOwnedItems,
                         onChanged: (value) {
-                          //Prefs().setShowAchievedAwards(value);
+                          Prefs().setShowOnlyOwnedItems(value);
                           setState(() {
                             _filterOwnedItems = value;
                           });
@@ -382,7 +383,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                           _hiddenCategories = List<String>.from(fullList);
                         });
                       }
-                      //Prefs().setHiddenAwardCategories(_hiddenCategories);
+                      Prefs().setHiddenItemsCategories(_hiddenCategories);
                     },
                   ),
                 ],
@@ -424,7 +425,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
             setState(() {
               isSelected ? _hiddenCategories.remove(cat.key) : _hiddenCategories.add(cat.key);
             });
-            //Prefs().setHiddenAwardCategories(_hiddenCategories);
+            Prefs().setHiddenItemsCategories(_hiddenCategories);
           },
         ),
       );
@@ -489,8 +490,49 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       _allCategories[key] = amount.toString();
     });
 
-    // Sort them // TODO!
-    _allItems.sort((a, b) => a.name.compareTo(b.name));
+    // Sort them for the first time
+    String savedSort = await Prefs().getItemsSort();
+    var awardsSort = ItemsSort();
+    switch (savedSort) {
+      case '':
+        awardsSort.type = ItemsSortType.nameAsc;
+        break;
+      case 'categoryDes':
+        awardsSort.type = ItemsSortType.categoryDes;
+        break;
+      case 'categoryAsc':
+        awardsSort.type = ItemsSortType.categoryAsc;
+        break;
+      case 'nameDes':
+        awardsSort.type = ItemsSortType.nameDes;
+        break;
+      case 'nameAsc':
+        awardsSort.type = ItemsSortType.nameAsc;
+        break;
+      case 'valueAsc':
+        awardsSort.type = ItemsSortType.valueAsc;
+        break;
+      case 'valueDes':
+        awardsSort.type = ItemsSortType.valueDes;
+        break;
+      case 'ownedAsc':
+        awardsSort.type = ItemsSortType.ownedAsc;
+        break;
+      case 'ownedDes':
+        awardsSort.type = ItemsSortType.ownedDes;
+        break;
+      case 'circulationAsc':
+        awardsSort.type = ItemsSortType.circulationAsc;
+        break;
+      case 'circulationDes':
+        awardsSort.type = ItemsSortType.circulationDes;
+        break;
+    }
+    _sortItems(awardsSort, initialLoad: true);
+
+    // Reset saved filters
+    _hiddenCategories = await Prefs().getHiddenItemsCategories();
+    _filterOwnedItems = await Prefs().getShowOnlyOwnedItems();
   }
 
   Widget _errorMain() {
@@ -519,7 +561,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     );
   }
 
-  void _sortItems(ItemsSort choice) {
+  void _sortItems(ItemsSort choice, {bool initialLoad = false}) {
     String sortToSave;
     switch (choice.type) {
       case ItemsSortType.nameDes:
@@ -582,11 +624,10 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         });
         sortToSave = 'circulationAsc';
         break;
-      /*
-    if (!initialLoad) {
-      Prefs().setAwardsSort(sortToSave);
     }
-    */
+
+    if (!initialLoad) {
+      Prefs().setItemsSort(sortToSave);
     }
   }
 }

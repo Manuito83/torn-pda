@@ -850,7 +850,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   void _errorReset() {
     _chainStatusProvider.resetAllDefcon();
     BotToast.showText(
-      text: "Ops! Error encountered, all warning levels have been reset!",
+      text: "Oops! Error encountered, all warning levels have been reset!",
       textStyle: const TextStyle(
         fontSize: 13,
         color: Colors.white,

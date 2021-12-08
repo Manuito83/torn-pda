@@ -236,7 +236,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                               ),
                               SizedBox(height: 15),
                               Text(
-                                'OPS!',
+                                'OOPS!',
                                 style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                               ),
                               Padding(

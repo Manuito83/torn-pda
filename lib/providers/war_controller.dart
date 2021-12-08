@@ -217,6 +217,8 @@ class WarController extends GetxController {
           member.memberRefill = updatedTarget.personalstats.refills;
           member.myRefill = ownStatsSuccess.personalstats.refills;
           member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
+          member.memberCans = updatedTarget.personalstats.cantaken;
+          member.myCans = ownStatsSuccess.personalstats.cantaken;
           member.myEnhancement = ownStatsSuccess.personalstats.statenhancersused;
           member.memberEcstasy = updatedTarget.personalstats.exttaken;
           member.memberLsd = updatedTarget.personalstats.lsdtaken;

@@ -163,6 +163,10 @@ class Prefs {
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
+  // Items
+  final String _kItemsSort = "pda_itemssSort";
+  final String _kShowOnlyOwnedItems = "pda_showOnlyOwnedItems";
+  final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
 
@@ -1520,6 +1524,40 @@ class Prefs {
   Future<bool> setHiddenAwardCategories(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kHiddenAwardCategories, value);
+  }
+
+
+  /// ----------------------------
+  /// Methods for Items
+  /// ----------------------------
+    Future<String> getItemsSort() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kItemsSort) ?? '';
+  }
+
+  Future<bool> setItemsSort(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kItemsSort, value);
+  }
+
+  Future<bool> getShowOnlyOwnedItems() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowOnlyOwnedItems) ?? false;
+  }
+
+  Future<bool> setShowOnlyOwnedItems(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowOnlyOwnedItems, value);
+  }
+
+  Future<List<String>> getHiddenItemsCategories() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kHiddenItemsCategories) ?? <String>[];
+  }
+
+  Future<bool> setHiddenItemsCategories(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kHiddenItemsCategories, value);
   }
 
   /// ----------------------------
