@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 
 class ItemCard extends StatefulWidget {
@@ -68,19 +70,30 @@ class _ItemCardState extends State<ItemCard> {
                   Expanded(
                     child: Row(
                       children: [
-                        Padding(
-                          padding: EdgeInsets.all(2),
-                          child: Image.asset(
-                            'images/torn_items/small/${widget.item.id}_small.png',
-                            width: 35,
-                            height: 35,
-                            errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: Text("?"),
-                              );
-                            },
-                          ),
+                        Column(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(2),
+                              child: Image.asset(
+                                'images/torn_items/small/${widget.item.id}_small.png',
+                                width: 35,
+                                height: 35,
+                                errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 10),
+                                    child: Text("?"),
+                                  );
+                                },
+                              ),
+                            ),
+                            Text(
+                              "[ID ${widget.item.id}]",
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: Colors.brown[300],
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(width: 10),
                         Expanded(
@@ -96,9 +109,14 @@ class _ItemCardState extends State<ItemCard> {
                                 "Value: \$${decimalFormat.format(widget.item.marketValue)}",
                                 style: TextStyle(fontSize: 10),
                               ),
-                              Text(
-                                "Circulation: ${formatBigNumbers(widget.item.circulation)}",
-                                style: TextStyle(fontSize: 10),
+                              Row(
+                                children: [
+                                  Text(
+                                    "Circulation: ${formatBigNumbers(widget.item.circulation)}",
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                  _rarityIcon(),
+                                ],
                               ),
                             ],
                           ),
@@ -113,7 +131,13 @@ class _ItemCardState extends State<ItemCard> {
                           children: [
                             Image.asset(
                               'images/icons/map/item_market.png',
-                              color: widget.themeProvider.mainText,
+                              color: widget.item.circulation == 0
+                                  ? Colors.red[400]
+                                  : widget.inventorySuccess
+                                      ? widget.item.inventoryOwned > 0
+                                          ? Colors.green
+                                          : widget.themeProvider.mainText
+                                      : widget.themeProvider.mainText,
                               height: 14,
                             ),
                             SizedBox(height: 4),
@@ -179,13 +203,88 @@ class _ItemCardState extends State<ItemCard> {
     Widget description = Padding(
       padding: EdgeInsetsDirectional.only(top: 15),
       child: Text(
-        widget.item.description,
+        HtmlParser.fix(widget.item.description),
         style: TextStyle(
           fontStyle: FontStyle.italic,
           fontSize: 10,
         ),
       ),
     );
+
+    Widget requirement = SizedBox.shrink();
+    if (widget.item.requirement.isNotEmpty) {
+      requirement = Padding(
+        padding: EdgeInsetsDirectional.only(top: 15),
+        child: Text(
+          HtmlParser.fix("Requirement: ${widget.item.name}"),
+          style: TextStyle(
+            fontStyle: FontStyle.italic,
+            fontSize: 10,
+          ),
+        ),
+      );
+    }
+
+    Widget effect = SizedBox.shrink();
+    if (widget.item.effect.isNotEmpty) {
+      effect = Padding(
+        padding: EdgeInsetsDirectional.only(top: 15),
+        child: Text(
+          HtmlParser.fix("Effect: ${widget.item.effect}"),
+          style: TextStyle(
+            fontStyle: FontStyle.italic,
+            fontSize: 10,
+          ),
+        ),
+      );
+    }
+
+    Widget weaponType = SizedBox.shrink();
+    if (widget.item.weaponType != null) {
+      effect = Padding(
+        padding: EdgeInsetsDirectional.only(top: 15),
+        child: Text(
+          HtmlParser.fix("Weapon type: ${widget.item.weaponType}"),
+          style: TextStyle(
+            fontStyle: FontStyle.italic,
+            fontSize: 10,
+          ),
+        ),
+      );
+    }
+
+    Widget coverage = SizedBox.shrink();
+    if (widget.item.coverage != null) {
+      effect = Padding(
+        padding: EdgeInsetsDirectional.only(top: 15),
+        child: Column(
+          children: [
+            Text("Full body coverage: ${widget.item.coverage.fullBodyCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Head coverage: ${widget.item.coverage.headCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Throat coverage: ${widget.item.coverage.throatCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Foot coverage: ${widget.item.coverage.footCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Leg coverage: ${widget.item.coverage.legCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Hand coverage: ${widget.item.coverage.handCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Arm coverage: ${widget.item.coverage.armCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Heart coverage: ${widget.item.coverage.heartCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Stomach coverage: ${widget.item.coverage.stomachCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Chest coverage: ${widget.item.coverage.chestCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+            Text("Groin coverage: ${widget.item.coverage.groinCoverage}",
+                style: TextStyle(fontStyle: FontStyle.italic, fontSize: 10)),
+          ],
+        ),
+      );
+    }
 
     if (_footerSuccessful) {
       // Bazaar
@@ -286,6 +385,10 @@ class _ItemCardState extends State<ItemCard> {
             ],
           ),
           description,
+          effect,
+          requirement,
+          weaponType,
+          coverage,
         ],
       );
     }
@@ -302,6 +405,55 @@ class _ItemCardState extends State<ItemCard> {
           ),
           description,
         ],
+      ),
+    );
+  }
+
+  Widget _rarityIcon() {
+    String file;
+    String message;
+    if (widget.item.circulation < 100) {
+      file = "extremely_rare";
+      message = "Extremely rare";
+    } else if (widget.item.circulation >= 100 && widget.item.circulation < 500) {
+      file = "very_rare";
+      message = "Very rar";
+    } else if (widget.item.circulation >= 500 && widget.item.circulation < 1000) {
+      file = "rare";
+      message = "Rare";
+    } else if (widget.item.circulation >= 1000 && widget.item.circulation < 2500) {
+      file = "limited";
+      message = "Limited";
+    } else if (widget.item.circulation >= 2500 && widget.item.circulation < 5000) {
+      file = "uncommon";
+      message = "Uncommon";
+    } else if (widget.item.circulation >= 5000 && widget.item.circulation < 500000) {
+      file = "common";
+      message = "Common";
+    } else {
+      file = "very_common";
+      message = "Very common";
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: GestureDetector(
+        onTap: () {
+          BotToast.showText(
+            text: message,
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey,
+            duration: Duration(seconds: 1),
+            contentPadding: EdgeInsets.all(10),
+          );
+        },
+        child: Image.asset(
+          "images/icons/rarity/${file}.png",
+          width: 12,
+        ),
       ),
     );
   }

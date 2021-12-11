@@ -9,6 +9,8 @@ enum ItemsSortType {
   valueAsc,
   circulationDes,
   circulationAsc,
+  idDes,
+  idAsc,
 }
 
 class ItemsSort {
@@ -46,6 +48,12 @@ class ItemsSort {
         break;
       case ItemsSortType.circulationAsc:
         description = 'Sort by circulation (asc)';
+        break;
+              case ItemsSortType.idDes:
+        description = 'Sort by id (des)';
+        break;
+      case ItemsSortType.idAsc:
+        description = 'Sort by id (asc)';
         break;
     }
   }

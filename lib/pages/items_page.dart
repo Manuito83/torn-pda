@@ -70,6 +70,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     ItemsSort(type: ItemsSortType.valueDes),
     ItemsSort(type: ItemsSortType.circulationAsc),
     ItemsSort(type: ItemsSortType.circulationDes),
+    ItemsSort(type: ItemsSortType.idAsc),
+    ItemsSort(type: ItemsSortType.idDes),
   ];
 
   @override
@@ -143,11 +145,6 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                         topRight: Radius.circular(18.0),
                       ),
                       onPanelClosed: () {
-                        _filterScroll.animateTo(
-                          0,
-                          duration: Duration(milliseconds: 200),
-                          curve: Curves.ease,
-                        );
                         _filterPhysics = NeverScrollableScrollPhysics();
                       },
                       onPanelOpened: () {
@@ -245,22 +242,30 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           child: ListView.builder(
             itemCount: _allItems.length,
             itemBuilder: (context, index) {
-              bool inSearch = _allItems[index].name.toLowerCase().contains(_currentSearchFilter);
+              bool inSearch = _allItems[index].name.toLowerCase().contains(_currentSearchFilter) ||
+                  _allItems[index].id.toString().toLowerCase().contains(_currentSearchFilter);
+
               bool inCategoryFilter = !_hiddenCategories.contains(_allItems[index].type.name);
               bool owned = true;
               if (_filterOwnedItems && _allItems[index].inventoryOwned == 0) {
                 owned = false;
               }
-              if (inSearch && inCategoryFilter && owned) {
-                return ItemCard(
-                  item: _allItems[index],
-                  settingsProvider: _settingsProvider,
-                  themeProvider: _themeProvider,
-                  apiKey: _u.apiKey,
-                  inventorySuccess: _inventorySuccess,
-                );
-              }
-              return SizedBox.shrink();
+              return Column(
+                children: [
+                  if (inSearch && inCategoryFilter && owned)
+                    ItemCard(
+                      item: _allItems[index],
+                      settingsProvider: _settingsProvider,
+                      themeProvider: _themeProvider,
+                      apiKey: _u.apiKey,
+                      inventorySuccess: _inventorySuccess,
+                    ),
+                  if (index == _allItems.length - 1)
+                    SizedBox(
+                      height: 80,
+                    ),
+                ],
+              );
             },
           ),
         ),
@@ -278,7 +283,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           maxLength: 30,
           decoration: InputDecoration(
             isDense: true,
-            labelText: "Search",
+            labelText: "Search name or id",
             counterText: "",
             prefixIcon: Icon(Icons.search),
             border: OutlineInputBorder(
@@ -318,21 +323,45 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         margin: const EdgeInsets.all(24.0),
         child: Column(
           children: <Widget>[
-            SizedBox(
-              height: 12.0,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  width: 30,
-                  height: 5,
-                  decoration:
-                      BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.all(Radius.circular(12.0))),
+            GestureDetector(
+              onVerticalDragEnd: (details) {
+                if (details.velocity.pixelsPerSecond.dy < 0) {
+                  _pc.open();
+                } else if (details.velocity.pixelsPerSecond.dy > 0) {
+                  _pc.close();
+                }
+              },
+              child: Container(
+                color: Colors.transparent,
+                child: Column(
+                  children: [
+                    Column(
+                      children: [
+                        SizedBox(
+                          height: 12.0,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Container(
+                              width: 30,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[400],
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(12.0),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 40.0),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 40.0),
             Padding(
               padding: const EdgeInsets.only(left: 20, right: 20),
               child: Row(
@@ -621,6 +650,18 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       case ItemsSortType.circulationAsc:
         setState(() {
           _allItems.sort((a, b) => a.circulation.compareTo(b.circulation));
+        });
+        sortToSave = 'circulationAsc';
+        break;
+      case ItemsSortType.idDes:
+        setState(() {
+          _allItems.sort((a, b) => int.parse(b.id).compareTo(int.parse(a.id)));
+        });
+        sortToSave = 'circulationDes';
+        break;
+      case ItemsSortType.idAsc:
+        setState(() {
+          _allItems.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
         });
         sortToSave = 'circulationAsc';
         break;

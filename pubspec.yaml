@@ -113,6 +113,7 @@ flutter:
     - images/icons/inventory/
     - images/icons/home/
     - images/icons/status/
+    - images/icons/rarity/
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/
