@@ -3,7 +3,6 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/src/provider.dart';
-import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -19,6 +18,7 @@ class ItemCard extends StatefulWidget {
   final ThemeProvider themeProvider;
   final String apiKey;
   final bool inventorySuccess;
+  final bool pinned;
 
   ItemCard({
     @required this.item,
@@ -26,6 +26,7 @@ class ItemCard extends StatefulWidget {
     @required this.themeProvider,
     @required this.apiKey,
     @required this.inventorySuccess,
+    @required this.pinned,
     Key key,
   }) : super(key: key);
 
@@ -56,143 +57,160 @@ class _ItemCardState extends State<ItemCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ExpandablePanel(
-        controller: _expandableController,
-        collapsed: null,
-        theme: ExpandableThemeData(iconColor: widget.themeProvider.mainText),
-        header: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color: widget.pinned ? Colors.green : Colors.blue,
+                width: 2,
+              ),
+            ),
+          ),
+          child: ExpandablePanel(
+            controller: _expandableController,
+            collapsed: null,
+            theme: ExpandableThemeData(iconColor: widget.themeProvider.mainText),
+            header: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Column(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
                           children: [
-                            Padding(
-                              padding: EdgeInsets.all(2),
-                              child: Image.asset(
-                                'images/torn_items/small/${widget.item.id}_small.png',
-                                width: 35,
-                                height: 35,
-                                errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(left: 10),
-                                    child: Text("?"),
-                                  );
-                                },
-                              ),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.all(2),
+                                  child: Image.asset(
+                                    'images/torn_items/small/${widget.item.id}_small.png',
+                                    width: 35,
+                                    height: 35,
+                                    errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(left: 10),
+                                        child: Text("?"),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                Text(
+                                  "[ID ${widget.item.id}]",
+                                  style: TextStyle(
+                                    fontSize: 8,
+                                    color: Colors.brown[300],
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              "[ID ${widget.item.id}]",
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.brown[300],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.item.name,
-                                style: TextStyle(fontSize: 13),
-                              ),
-                              Text(
-                                "Value: \$${decimalFormat.format(widget.item.marketValue)}",
-                                style: TextStyle(fontSize: 10),
-                              ),
-                              Row(
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Circulation: ${formatBigNumbers(widget.item.circulation)}",
+                                    widget.item.name,
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                  Text(
+                                    "Value: \$${decimalFormat.format(widget.item.marketValue)}",
                                     style: TextStyle(fontSize: 10),
                                   ),
-                                  _rarityIcon(),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "Circulation: ${formatBigNumbers(widget.item.circulation)}",
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                      _rarityIcon(),
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        child: Column(
-                          children: [
-                            Image.asset(
-                              'images/icons/map/item_market.png',
-                              color: widget.item.circulation == 0
-                                  ? Colors.red[400]
-                                  : widget.inventorySuccess
-                                      ? widget.item.inventoryOwned > 0
-                                          ? Colors.green
-                                          : widget.themeProvider.mainText
-                                      : widget.themeProvider.mainText,
-                              height: 14,
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              widget.inventorySuccess ? "(inv: x${widget.item.inventoryOwned})" : "(inv: error)",
-                              style: TextStyle(fontSize: 9),
                             ),
                           ],
                         ),
-                        onTap: () async {
-                          var url =
-                              "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                          var dialog = widget.settingsProvider.useQuickBrowser || false;
-                          context.read<WebViewProvider>().openBrowserPreference(
-                                context: context,
-                                url: url,
-                                useDialog: dialog,
-                                awaitable: true,
-                              );
-                        },
-                        onLongPress: () async {
-                          var url =
-                              "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                          context.read<WebViewProvider>().openBrowserPreference(
-                                context: context,
-                                url: url,
-                                useDialog: false,
-                                awaitable: true,
-                              );
-                        },
+                      ),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            child: Column(
+                              children: [
+                                Image.asset(
+                                  'images/icons/map/item_market.png',
+                                  color: widget.item.circulation == 0
+                                      ? Colors.red[400]
+                                      : widget.inventorySuccess
+                                          ? widget.item.inventoryOwned > 0
+                                              ? Colors.green
+                                              : widget.themeProvider.mainText
+                                          : widget.themeProvider.mainText,
+                                  height: 14,
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  widget.inventorySuccess ? "(inv: x${widget.item.inventoryOwned})" : "(inv: error)",
+                                  style: TextStyle(fontSize: 9),
+                                ),
+                              ],
+                            ),
+                            onTap: () async {
+                              var url =
+                                  "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                              var dialog = widget.settingsProvider.useQuickBrowser || false;
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    useDialog: dialog,
+                                    awaitable: true,
+                                  );
+                            },
+                            onLongPress: () async {
+                              var url =
+                                  "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                              context.read<WebViewProvider>().openBrowserPreference(
+                                    context: context,
+                                    url: url,
+                                    useDialog: false,
+                                    awaitable: true,
+                                  );
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
+                  SizedBox(width: 10),
                 ],
               ),
-              SizedBox(width: 10),
-            ],
-          ),
-        ),
-        expanded: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-          child: FutureBuilder(
-            future: _footerInformationRetrieved,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return _footerWidget();
-              } else {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-            },
+            ),
+            expanded: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+              child: FutureBuilder(
+                future: _footerInformationRetrieved,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return _footerWidget();
+                  } else {
+                    return Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
           ),
         ),
       ),

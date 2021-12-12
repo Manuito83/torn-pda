@@ -9,7 +9,6 @@ import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class QuickItemsProvider extends ChangeNotifier {
@@ -164,7 +163,7 @@ class QuickItemsProvider extends ChangeNotifier {
 
           _fullQuickItemsList.add(
             QuickItem()
-              ..name = EmojiParser.fix(itemProperties.name)
+              ..name = itemProperties.name
               ..description = itemProperties.description
               ..number = int.parse(itemNumber)
               ..active = savedActive,

@@ -47,7 +47,6 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/external/nuke_revive.dart';
 import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -2597,7 +2596,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       String message = HtmlParser.fix(e.event);
-      message = EmojiParser.fix(message);
+      message = message;
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll('Please click here to continue.', '');
       message = message.replaceAll(' [view]', '.');
@@ -2821,7 +2820,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         msg.title = msg.title.toString();
       }
 
-      String title = EmojiParser.fix(msg.title);
+      String title = msg.title;
       Widget insideIcon = _messagesInsideIconCases(msg.type);
 
       IndicatorStyle iconBubble;

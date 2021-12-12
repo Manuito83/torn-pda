@@ -167,6 +167,7 @@ class Prefs {
   final String _kItemsSort = "pda_itemssSort";
   final String _kShowOnlyOwnedItems = "pda_showOnlyOwnedItems";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
+  final String _kPinnedItems = "pda_pinnedItems";
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
 
@@ -343,7 +344,7 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kChainingCurrentPage, value);
   }
-  
+
   Future<bool> getTargetSkippingAll() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kTargetSkipping) ?? true;
@@ -1526,11 +1527,10 @@ class Prefs {
     return prefs.setStringList(_kHiddenAwardCategories, value);
   }
 
-
   /// ----------------------------
   /// Methods for Items
   /// ----------------------------
-    Future<String> getItemsSort() async {
+  Future<String> getItemsSort() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kItemsSort) ?? '';
   }
@@ -1558,6 +1558,16 @@ class Prefs {
   Future<bool> setHiddenItemsCategories(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kHiddenItemsCategories, value);
+  }
+
+  Future<List<String>> getPinnedItems() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kPinnedItems) ?? <String>[];
+  }
+
+  Future<bool> setPinnedItems(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kPinnedItems, value);
   }
 
   /// ----------------------------

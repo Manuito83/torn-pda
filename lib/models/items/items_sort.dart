@@ -49,11 +49,14 @@ class ItemsSort {
       case ItemsSortType.circulationAsc:
         description = 'Sort by circulation (asc)';
         break;
-              case ItemsSortType.idDes:
+      case ItemsSortType.idDes:
         description = 'Sort by id (des)';
         break;
       case ItemsSortType.idAsc:
         description = 'Sort by id (asc)';
+        break;
+      default:
+        description = 'Sort by name (asc)';
         break;
     }
   }

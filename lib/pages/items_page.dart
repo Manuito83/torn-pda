@@ -3,9 +3,12 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 // Package imports:
 import 'package:get/get.dart';
+import 'package:http/http.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/main.dart';
@@ -18,7 +21,6 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/items/item_card.dart';
 
@@ -30,7 +32,10 @@ class ItemsPage extends StatefulWidget {
 }
 
 class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
+  List<Widget> _allItemsCards = <Widget>[];
   List<Item> _allItems = <Item>[];
+
+  List<Item> _pinnedItems = <Item>[];
 
   ScrollController _filterScroll = ScrollController();
   ScrollPhysics _filterPhysics = NeverScrollableScrollPhysics();
@@ -59,6 +64,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   Map<String, String> _allCategories = Map<String, String>();
 
   // Sorting
+  ItemsSort _currentSort = ItemsSort();
   final _popupSortChoices = <ItemsSort>[
     ItemsSort(type: ItemsSortType.nameAsc),
     ItemsSort(type: ItemsSortType.nameDes),
@@ -214,7 +220,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                 icon: Icon(
                   Icons.sort,
                 ),
-                onSelected: _sortItems,
+                onSelected: _sortAndRebuildItemsCards,
                 itemBuilder: (BuildContext context) {
                   return _popupSortChoices.map((ItemsSort choice) {
                     return PopupMenuItem<ItemsSort>(
@@ -237,35 +243,11 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   Widget _itemsMain() {
     return Column(
       children: [
-        _searchBar(),
         Expanded(
           child: ListView.builder(
-            itemCount: _allItems.length,
+            itemCount: _allItemsCards.length,
             itemBuilder: (context, index) {
-              bool inSearch = _allItems[index].name.toLowerCase().contains(_currentSearchFilter) ||
-                  _allItems[index].id.toString().toLowerCase().contains(_currentSearchFilter);
-
-              bool inCategoryFilter = !_hiddenCategories.contains(_allItems[index].type.name);
-              bool owned = true;
-              if (_filterOwnedItems && _allItems[index].inventoryOwned == 0) {
-                owned = false;
-              }
-              return Column(
-                children: [
-                  if (inSearch && inCategoryFilter && owned)
-                    ItemCard(
-                      item: _allItems[index],
-                      settingsProvider: _settingsProvider,
-                      themeProvider: _themeProvider,
-                      apiKey: _u.apiKey,
-                      inventorySuccess: _inventorySuccess,
-                    ),
-                  if (index == _allItems.length - 1)
-                    SizedBox(
-                      height: 80,
-                    ),
-                ],
-              );
+              return _allItemsCards[index];
             },
           ),
         ),
@@ -283,6 +265,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           maxLength: 30,
           decoration: InputDecoration(
             isDense: true,
+            contentPadding: EdgeInsets.all(8),
             labelText: "Search name or id",
             counterText: "",
             prefixIcon: Icon(Icons.search),
@@ -400,19 +383,16 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                     disabledColor: Colors.grey,
                     onSelected: (bool isSelected) {
                       if (isSelected) {
-                        setState(() {
-                          _hiddenCategories.clear();
-                        });
+                        _hiddenCategories.clear();
                       } else {
                         var fullList = [];
                         for (var cat in _allCategories.keys) {
                           fullList.add(cat);
                         }
-                        setState(() {
-                          _hiddenCategories = List<String>.from(fullList);
-                        });
+                        _hiddenCategories = List<String>.from(fullList);
                       }
                       Prefs().setHiddenItemsCategories(_hiddenCategories);
+                      _rebuildItemsCards();
                     },
                   ),
                 ],
@@ -451,10 +431,9 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           selectedColor: Colors.transparent,
           disabledColor: Colors.grey,
           onSelected: (bool isSelected) {
-            setState(() {
-              isSelected ? _hiddenCategories.remove(cat.key) : _hiddenCategories.add(cat.key);
-            });
+            isSelected ? _hiddenCategories.remove(cat.key) : _hiddenCategories.add(cat.key);
             Prefs().setHiddenItemsCategories(_hiddenCategories);
+            _rebuildItemsCards();
           },
         ),
       );
@@ -467,9 +446,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   }
 
   void onSearchInputTextChange() {
-    setState(() {
-      _currentSearchFilter = _searchController.text.toLowerCase();
-    });
+    _currentSearchFilter = _searchController.text.toLowerCase();
+    _rebuildItemsCards();
   }
 
   Future _getAllItems() async {
@@ -488,9 +466,11 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       });
     }
 
+    List<String> savedPins = await Prefs().getPinnedItems();
+
     var tornItems = apiItems as ItemsModel;
     tornItems.items.forEach((id, details) {
-      details.name = EmojiParser.fix(details.name);
+      details.name = details.name;
       details.id = id;
 
       // Inventory details
@@ -511,6 +491,10 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       }
 
       _allItems.add(details);
+
+      if (savedPins.contains(details.id)) {
+        _pinnedItems.add(details);
+      }
     });
 
     // Fill categories statistics
@@ -521,43 +505,43 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     // Sort them for the first time
     String savedSort = await Prefs().getItemsSort();
-    var awardsSort = ItemsSort();
+    ItemsSort itemSort = ItemsSort();
     switch (savedSort) {
       case '':
-        awardsSort.type = ItemsSortType.nameAsc;
+        itemSort.type = ItemsSortType.nameAsc;
         break;
       case 'categoryDes':
-        awardsSort.type = ItemsSortType.categoryDes;
+        itemSort.type = ItemsSortType.categoryDes;
         break;
       case 'categoryAsc':
-        awardsSort.type = ItemsSortType.categoryAsc;
+        itemSort.type = ItemsSortType.categoryAsc;
         break;
       case 'nameDes':
-        awardsSort.type = ItemsSortType.nameDes;
+        itemSort.type = ItemsSortType.nameDes;
         break;
       case 'nameAsc':
-        awardsSort.type = ItemsSortType.nameAsc;
+        itemSort.type = ItemsSortType.nameAsc;
         break;
       case 'valueAsc':
-        awardsSort.type = ItemsSortType.valueAsc;
+        itemSort.type = ItemsSortType.valueAsc;
         break;
       case 'valueDes':
-        awardsSort.type = ItemsSortType.valueDes;
+        itemSort.type = ItemsSortType.valueDes;
         break;
       case 'ownedAsc':
-        awardsSort.type = ItemsSortType.ownedAsc;
+        itemSort.type = ItemsSortType.ownedAsc;
         break;
       case 'ownedDes':
-        awardsSort.type = ItemsSortType.ownedDes;
+        itemSort.type = ItemsSortType.ownedDes;
         break;
       case 'circulationAsc':
-        awardsSort.type = ItemsSortType.circulationAsc;
+        itemSort.type = ItemsSortType.circulationAsc;
         break;
       case 'circulationDes':
-        awardsSort.type = ItemsSortType.circulationDes;
+        itemSort.type = ItemsSortType.circulationDes;
         break;
     }
-    _sortItems(awardsSort, initialLoad: true);
+    _sortAndRebuildItemsCards(itemSort, initialLoad: true);
 
     // Reset saved filters
     _hiddenCategories = await Prefs().getHiddenItemsCategories();
@@ -590,85 +574,219 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     );
   }
 
-  void _sortItems(ItemsSort choice, {bool initialLoad = false}) {
+  void _sortAndRebuildItemsCards(ItemsSort choice, {bool initialLoad = false}) {
+    _currentSort = choice;
     String sortToSave;
     switch (choice.type) {
       case ItemsSortType.nameDes:
         setState(() {
           _allItems.sort((a, b) => b.name.compareTo(a.name));
+          _pinnedItems.sort((a, b) => b.name.compareTo(a.name));
         });
         sortToSave = 'nameDes';
         break;
       case ItemsSortType.nameAsc:
         setState(() {
           _allItems.sort((a, b) => a.name.compareTo(b.name));
+          _pinnedItems.sort((a, b) => a.name.compareTo(b.name));
         });
         sortToSave = 'nameAsc';
         break;
       case ItemsSortType.categoryDes:
         setState(() {
           _allItems.sort((a, b) => b.type.name.compareTo(a.type.name));
+          _pinnedItems.sort((a, b) => b.type.name.compareTo(a.type.name));
         });
         sortToSave = 'categoryDes';
         break;
       case ItemsSortType.categoryAsc:
         setState(() {
           _allItems.sort((a, b) => a.type.name.compareTo(b.type.name));
+          _pinnedItems.sort((a, b) => a.type.name.compareTo(b.type.name));
         });
         sortToSave = 'categoryAsc';
         break;
       case ItemsSortType.valueDes:
         setState(() {
           _allItems.sort((a, b) => b.marketValue.compareTo(a.marketValue));
+          _pinnedItems.sort((a, b) => b.marketValue.compareTo(a.marketValue));
         });
         sortToSave = 'valueDes';
         break;
       case ItemsSortType.valueAsc:
         setState(() {
           _allItems.sort((a, b) => a.marketValue.compareTo(b.marketValue));
+          _pinnedItems.sort((a, b) => a.marketValue.compareTo(b.marketValue));
         });
         sortToSave = 'valueAsc';
         break;
       case ItemsSortType.ownedDes:
         setState(() {
           _allItems.sort((a, b) => b.inventoryOwned.compareTo(a.inventoryOwned));
+          _pinnedItems.sort((a, b) => b.inventoryOwned.compareTo(a.inventoryOwned));
         });
         sortToSave = 'ownedDes';
         break;
       case ItemsSortType.ownedAsc:
         setState(() {
           _allItems.sort((a, b) => a.inventoryOwned.compareTo(b.inventoryOwned));
+          _pinnedItems.sort((a, b) => a.inventoryOwned.compareTo(b.inventoryOwned));
         });
         sortToSave = 'ownedAsc';
         break;
       case ItemsSortType.circulationDes:
         setState(() {
           _allItems.sort((a, b) => b.circulation.compareTo(a.circulation));
+          _pinnedItems.sort((a, b) => b.circulation.compareTo(a.circulation));
         });
         sortToSave = 'circulationDes';
         break;
       case ItemsSortType.circulationAsc:
         setState(() {
           _allItems.sort((a, b) => a.circulation.compareTo(b.circulation));
+          _pinnedItems.sort((a, b) => a.circulation.compareTo(b.circulation));
         });
         sortToSave = 'circulationAsc';
         break;
       case ItemsSortType.idDes:
         setState(() {
           _allItems.sort((a, b) => int.parse(b.id).compareTo(int.parse(a.id)));
+          _pinnedItems.sort((a, b) => int.parse(b.id).compareTo(int.parse(a.id)));
         });
         sortToSave = 'circulationDes';
         break;
       case ItemsSortType.idAsc:
         setState(() {
           _allItems.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
+          _pinnedItems.sort((a, b) => int.parse(a.id).compareTo(int.parse(b.id)));
         });
         sortToSave = 'circulationAsc';
         break;
     }
 
+    _rebuildItemsCards();
+
     if (!initialLoad) {
       Prefs().setItemsSort(sortToSave);
     }
+  }
+
+  void _rebuildItemsCards() {
+    var newList = <Widget>[];
+
+    // Pinned items
+    if (_pinnedItems.isNotEmpty) {
+      List<Widget> pinnedCards = <Widget>[];
+      for (Item thisPinned in _pinnedItems) {
+        pinnedCards.add(
+          Slidable(
+            actionPane: SlidableDrawerActionPane(),
+            actionExtentRatio: 0.25,
+            actions: <Widget>[
+              IconSlideAction(
+                caption: 'Unpin',
+                color: Colors.green,
+                icon: MdiIcons.pinOff,
+                onTap: () {
+                  _pinnedItems.remove(thisPinned);
+                  _savePinnedItems();
+                  _sortAndRebuildItemsCards(_currentSort);
+                },
+              ),
+            ],
+            child: ItemCard(
+              item: thisPinned,
+              settingsProvider: _settingsProvider,
+              themeProvider: _themeProvider,
+              apiKey: _u.apiKey,
+              inventorySuccess: _inventorySuccess,
+              pinned: true,
+            ),
+          ),
+        );
+      }
+
+      newList.add(
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "PINNED ITEMS",
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+            Column(children: pinnedCards),
+            SizedBox(
+              width: 80,
+              child: Divider(
+                thickness: 2,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Search bar
+    newList.add(_searchBar());
+
+    // Items
+    for (Item item in _allItems) {
+      bool inSearch = item.name.toLowerCase().contains(_currentSearchFilter) ||
+          item.id.toString().toLowerCase().contains(_currentSearchFilter);
+
+      bool inCategoryFilter = !_hiddenCategories.contains(item.type.name);
+      bool owned = true;
+      if (_filterOwnedItems && item.inventoryOwned == 0) {
+        owned = false;
+      }
+
+      bool isNotPinned = !_pinnedItems.contains(item);
+
+      if (inSearch && inCategoryFilter && owned && isNotPinned) {
+        newList.add(
+          Slidable(
+            actionPane: SlidableDrawerActionPane(),
+            actionExtentRatio: 0.25,
+            actions: <Widget>[
+              IconSlideAction(
+                caption: 'Pin',
+                color: Colors.blue,
+                icon: MdiIcons.pinOutline,
+                onTap: () {
+                  _pinnedItems.add(item);
+                  _savePinnedItems();
+                  _sortAndRebuildItemsCards(_currentSort);
+                },
+              ),
+            ],
+            child: ItemCard(
+              item: item,
+              settingsProvider: _settingsProvider,
+              themeProvider: _themeProvider,
+              apiKey: _u.apiKey,
+              inventorySuccess: _inventorySuccess,
+              pinned: false,
+            ),
+          ),
+        );
+      }
+    }
+
+    // Footer
+    newList.add(SizedBox(height: 90));
+
+    setState(() {
+      _allItemsCards = List<Widget>.from(newList);
+    });
+  }
+
+  void _savePinnedItems() {
+    List<String> pins = <String>[];
+    for (Item pinnedItem in _pinnedItems) {
+      pins.add(pinnedItem.id);
+    }
+    Prefs().setPinnedItems(pins);
   }
 }
