@@ -357,9 +357,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                         value: _filterOwnedItems,
                         onChanged: (value) {
                           Prefs().setShowOnlyOwnedItems(value);
-                          setState(() {
-                            _filterOwnedItems = value;
-                          });
+                          _filterOwnedItems = value;
+                          _rebuildItemsCards();
                         },
                         activeTrackColor: Colors.lightGreenAccent,
                         activeColor: Colors.green,

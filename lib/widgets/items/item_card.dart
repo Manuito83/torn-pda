@@ -119,7 +119,7 @@ class _ItemCardState extends State<ItemCard> {
                                 children: [
                                   Text(
                                     widget.item.name,
-                                    style: TextStyle(fontSize: 13),
+                                    style: TextStyle(fontSize: 12),
                                   ),
                                   Text(
                                     "Value: \$${decimalFormat.format(widget.item.marketValue)}",
@@ -141,49 +141,53 @@ class _ItemCardState extends State<ItemCard> {
                         ),
                       ),
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          GestureDetector(
-                            child: Column(
-                              children: [
-                                Image.asset(
-                                  'images/icons/map/item_market.png',
-                                  color: widget.item.circulation == 0
-                                      ? Colors.red[400]
-                                      : widget.inventorySuccess
-                                          ? widget.item.inventoryOwned > 0
-                                              ? Colors.green
-                                              : widget.themeProvider.mainText
-                                          : widget.themeProvider.mainText,
-                                  height: 14,
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  widget.inventorySuccess ? "(inv: x${widget.item.inventoryOwned})" : "(inv: error)",
-                                  style: TextStyle(fontSize: 9),
-                                ),
-                              ],
+                          SizedBox(
+                            width: 70,
+                            child: GestureDetector(
+                              child: Column(
+                                children: [
+                                  Image.asset(
+                                    'images/icons/map/item_market.png',
+                                    color: widget.item.circulation == 0
+                                        ? Colors.red[400]
+                                        : widget.inventorySuccess
+                                            ? widget.item.inventoryOwned > 0
+                                                ? Colors.green
+                                                : widget.themeProvider.mainText
+                                            : widget.themeProvider.mainText,
+                                    height: 14,
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    widget.inventorySuccess ? "inv: x${widget.item.inventoryOwned}" : "inv: error",
+                                    style: TextStyle(fontSize: 9),
+                                  ),
+                                ],
+                              ),
+                              onTap: () async {
+                                var url =
+                                    "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                                var dialog = widget.settingsProvider.useQuickBrowser || false;
+                                context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: dialog,
+                                      awaitable: true,
+                                    );
+                              },
+                              onLongPress: () async {
+                                var url =
+                                    "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                                context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: false,
+                                      awaitable: true,
+                                    );
+                              },
                             ),
-                            onTap: () async {
-                              var url =
-                                  "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                              var dialog = widget.settingsProvider.useQuickBrowser || false;
-                              context.read<WebViewProvider>().openBrowserPreference(
-                                    context: context,
-                                    url: url,
-                                    useDialog: dialog,
-                                    awaitable: true,
-                                  );
-                            },
-                            onLongPress: () async {
-                              var url =
-                                  "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                              context.read<WebViewProvider>().openBrowserPreference(
-                                    context: context,
-                                    url: url,
-                                    useDialog: false,
-                                    awaitable: true,
-                                  );
-                            },
                           ),
                         ],
                       ),
@@ -430,12 +434,17 @@ class _ItemCardState extends State<ItemCard> {
   Widget _rarityIcon() {
     String file;
     String message;
-    if (widget.item.circulation < 100) {
+    if (widget.item.circulation == 0) {
+      return SizedBox.shrink();
+    } else if (widget.item.circulation == 1) {
+      file = "one_of_a_kind";
+      message = "One of a kind";
+    } else if (widget.item.circulation > 1 && widget.item.circulation < 100) {
       file = "extremely_rare";
       message = "Extremely rare";
     } else if (widget.item.circulation >= 100 && widget.item.circulation < 500) {
       file = "very_rare";
-      message = "Very rar";
+      message = "Very rare";
     } else if (widget.item.circulation >= 500 && widget.item.circulation < 1000) {
       file = "rare";
       message = "Rare";
