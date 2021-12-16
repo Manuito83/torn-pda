@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -76,11 +77,6 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    var allWebViews = <Widget>[];
-    for (var tab in _webViewProvider.tabList) {
-      allWebViews.add(tab.webView);
-    }
-
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.of(context).orientation == Orientation.portrait
@@ -97,21 +93,30 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                 future: providerInitialised,
                 builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                   if (snapshot.connectionState == ConnectionState.done) {
+                    var allWebViews = <Widget>[];
+                    for (var tab in _webViewProvider.tabList) {
+                      allWebViews.add(tab.webView);
+                    }
+
+                    if (allWebViews.isEmpty) _closeWithError();
+
                     if (!secondaryInitialised) {
                       secondaryInitialised = true;
                       _initialiseSecondary();
                     }
+
                     if (_useTabs) {
                       try {
                         return AnimatedIndexedStack(
                           index: _webViewProvider.currentTab,
                           children: allWebViews,
                           duration: 100,
+                          errorCallback: _closeWithError,
                         );
                       } catch (e) {
-                        FirebaseCrashlytics.instance.log("PDA Crash at AnimatedIndexedStack (webview with tabs): $e");
-                        FirebaseCrashlytics.instance.recordError(e, null);
-                        return _closeWithError();
+                        FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
+                        FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                        _closeWithError();
                       }
                     } else {
                       try {
@@ -122,14 +127,15 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                           ],
                         );
                       } catch (e) {
-                        FirebaseCrashlytics.instance.log("PDA Crash at IndexedStack (webview with no tabs): $e");
-                        FirebaseCrashlytics.instance.recordError(e, null);
-                        return _closeWithError();
+                        FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
+                        FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                        _closeWithError();
                       }
                     }
                   } else {
                     return Center(child: CircularProgressIndicator());
                   }
+                  return SizedBox.shrink();
                 },
               ),
               bottomNavigationBar: FutureBuilder(
@@ -157,7 +163,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     );
   }
 
-  Center _closeWithError() {
+  void _closeWithError() {
     BotToast.showText(
       clickClose: true,
       crossPage: true,
@@ -170,8 +176,8 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       duration: Duration(seconds: 2),
       contentPadding: EdgeInsets.all(10),
     );
-    Navigator.of(context).pop();
-    return Center(child: CircularProgressIndicator());
+
+    Get.back();
   }
 
   void _initialiseSecondary() async {

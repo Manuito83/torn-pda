@@ -343,10 +343,16 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void clearOnDispose() {
+    // Ensure tab number is correct before saving active session
+    if (_currentTab >= _tabList.length) {
+      _tabList.length == 1 ? _currentTab = 0 : _currentTab = _tabList.length - 1;
+    }
+    Prefs().setWebViewLastActiveTab(_currentTab);
+
     _tabList.clear();
     _secondaryInitialised = false;
+
     // It is necessary to bring this to 0 so that on opening no checks are performed in tabs that don't exist yet
-    Prefs().setWebViewLastActiveTab(_currentTab);
     _currentTab = 0;
   }
 

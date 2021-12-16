@@ -3,7 +3,6 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:

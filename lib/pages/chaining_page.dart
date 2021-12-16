@@ -86,6 +86,7 @@ class _ChainingPageState extends State<ChainingPage> {
                       ),
                       */
                     ],
+                    errorCallback: null,
                   ),
                 ),
                 if (!_isAppBarTop)
