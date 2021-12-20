@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 // Package imports:
 import 'package:dio/dio.dart';
@@ -475,7 +476,7 @@ class TornApiCaller {
     @required ApiSelection apiSelection,
     int limit = 100,
   }) async {
-    String url = 'https://api.torn.com/';
+    String url = 'http://api.torn.com/';
     switch (apiType) {
       case ApiType.user:
         url += 'user/';
@@ -575,6 +576,7 @@ class TornApiCaller {
         // Otherwise, return a good json response
         return response.data;
       } else {
+        log("Api code ${response.statusCode}: ${response.data}");
         analytics.logEvent(
           name: 'api_error',
           parameters: {
