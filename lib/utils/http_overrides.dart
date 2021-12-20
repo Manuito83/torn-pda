@@ -4,9 +4,7 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = ((X509Certificate cert, String host, int port) {
-        final isValidHost = ["api.torn.com"].contains(host);
-        return isValidHost;
-      });
+      ..maxConnectionsPerHost = 5
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
   }
 }

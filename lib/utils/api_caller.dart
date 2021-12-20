@@ -639,7 +639,14 @@ class TornApiCaller {
     //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
     //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2
     try {
-      final response = await Dio().get(url).timeout(Duration(seconds: 20));
+      final response = await Dio(
+        BaseOptions(
+          connectTimeout: 10000,
+          receiveTimeout: 10000,
+          contentType: 'application/json',
+        ),
+      ).get(url);
+
       if (response.statusCode == 200) {
         // Check if json is responding with errors
         if (response.data['error'] != null) {
@@ -657,11 +664,12 @@ class TornApiCaller {
             'response_body': response.data.length > 99 ? response.data.substring(0, 99) : response.data,
           },
         );
-        return ApiError(errorId: 0, details: " [${response.statusCode}: ${response.data}]");
+        return ApiError(errorId: 0, details: "API STATUS CODE\n[${response.statusCode}: ${response.data}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
     } catch (e) {
+      log("API CATCH [$e]");
       // Analytics limits at 100 chars
       analytics.logEvent(
         name: 'api_error',
@@ -671,7 +679,8 @@ class TornApiCaller {
         },
       );
       // We limit to a bit more here (it will be shown to the user)
-      return ApiError(errorId: 0, details: " [${e.toString().length > 140 ? e.toString().substring(0, 140) : e}]");
+      String error = e.toString();
+      return ApiError(errorId: 0, details: "API CATCH\n[${error.length > 300 ? error.substring(0, 300) : e}]");
     }
   }
 }
