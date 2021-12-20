@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -127,6 +128,8 @@ class ChainStatusProvider extends ChangeNotifier {
     return _panicModeActive;
   }
 
+  bool widgetVisible = false;
+
   AudioCache _audioCache = new AudioCache();
 
   int _lastChainCount = 0;
@@ -151,13 +154,15 @@ class ChainStatusProvider extends ChangeNotifier {
         }
       },
     );
+
+    log("Chain watcher timers activated!");
   }
 
   deactivateStatus() {
-    _tickerCallChainApi.cancel();
-    _tickerDecreaseCount.cancel();
+    _tickerCallChainApi?.cancel();
+    _tickerDecreaseCount?.cancel();
     _statusActive = false;
-    print("deactivating status!");
+    log("Chain watcher timers deactivated!");
   }
 
   void activateWatcher() {
@@ -198,7 +203,6 @@ class ChainStatusProvider extends ChangeNotifier {
     _saveSettings();
   }
 
-  
   void reorderPanicTarget(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       // removing the item at oldIndex will shorten the list by 1
@@ -293,6 +297,8 @@ class ChainStatusProvider extends ChangeNotifier {
         _lastChainCount = 0;
         _currentSecondsCounter = 0;
         _refreshChainClock(currentSecondsCounter);
+
+        tryToDeactivateStatus();
       } else if (chainModel.chain.cooldown > 0) {
         // OPTION 2, WE ARE WITH COOLDOWN
         // If current seconds is zero, is because we are entering the app,
@@ -1781,5 +1787,11 @@ class ChainStatusProvider extends ChangeNotifier {
       panicTargetsModel.add(panicTargetModelToJson(p));
     }
     Prefs().setChainWatcherPanicTargets(panicTargetsModel);
+  }
+
+  void tryToDeactivateStatus() {
+    if (!widgetVisible && !watcherActive && chainModel.chain.current == 0 && chainModel.chain.timeout == 0) {
+      deactivateStatus();
+    }
   }
 }

@@ -46,6 +46,10 @@ class _ChainWidgetState extends State<ChainWidget> {
 
   @override
   void dispose() {
+    if (!_chainStatusProvider.watcherActive) {
+      _chainStatusProvider.widgetVisible = false;
+      _chainStatusProvider.tryToDeactivateStatus();
+    }
     super.dispose();
   }
 
@@ -54,6 +58,7 @@ class _ChainWidgetState extends State<ChainWidget> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: true);
     initialise();
+    _chainStatusProvider.widgetVisible = true;
 
     Color titleColor;
     if (widget.alwaysDarkBackground) {

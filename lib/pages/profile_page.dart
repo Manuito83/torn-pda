@@ -277,6 +277,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
+    _startApiTimer();
+
+    analytics.setCurrentScreen(screenName: 'profile');
+  }
+
+  void _startApiTimer() {
+    _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
       _fetchApi();
 
@@ -289,8 +296,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _miscTick = 0;
       }
     });
-
-    analytics.setCurrentScreen(screenName: 'profile');
   }
 
   void _requestIOSPermissions() {
@@ -305,7 +310,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _tickerCallApi.cancel();
+    _tickerCallApi?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -314,12 +319,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       await _fetchApi();
+      _startApiTimer();
       if (_apiGoodData) {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
         _getBazaarInfo();
       }
+    } else if (state == AppLifecycleState.paused) {
+      _tickerCallApi?.cancel();
     }
   }
 
