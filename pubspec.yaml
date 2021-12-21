@@ -53,7 +53,7 @@ dependencies:
   flutter_speed_dial: ^4.0.0-dev.1
   get: ^4.3.8
   html: ^0.15.0
-  http: ^0.13.2
+  http: ^0.13.4
   lint: ^1.5.3
   ## flutter pub run import_sorter:main
   import_sorter: ^4.5.0
