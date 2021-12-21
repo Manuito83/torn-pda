@@ -2,7 +2,6 @@
 import 'dart:async';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -19,13 +18,11 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget_options.dart';
 
 class ChainWidget extends StatefulWidget {
-  final String userKey;
   final bool alwaysDarkBackground;
   final Function callBackOptions;
 
   ChainWidget({
     @required Key key,
-    @required this.userKey,
     @required this.alwaysDarkBackground,
     this.callBackOptions,
   }) : super(key: key);

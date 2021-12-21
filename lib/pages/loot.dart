@@ -701,10 +701,7 @@ class _LootPageState extends State<LootPage> {
     try {
       for (var id in _npcIds) {
         // Get each target from our static list from Torn
-        var tornTarget = await TornApiCaller.target(
-          _userProvider.basic.userApiKey,
-          id.toString(),
-        ).getTarget;
+        var tornTarget = await TornApiCaller().getTarget(playerId: id.toString());
 
         var newNpcLoot = LootModel();
         if (tornTarget is TargetModel) {

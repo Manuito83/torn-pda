@@ -201,7 +201,6 @@ class _TacCardState extends State<TacCard> {
               attackNotesList: attackNotes,
               attackNotesColorList: attacksNotesColor,
               //attacksCallback: _updateSeveralTargets,
-              userKey: _userProvider.basic.userApiKey,
             ),
           ),
         );

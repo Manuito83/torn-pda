@@ -785,15 +785,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future tornItems() async {
-        _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
+        _allTornItems = await TornApiCaller().getItems();
       }
 
       Future inventory() async {
-        _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
+        _inventory = await TornApiCaller().getInventory();
       }
 
       Future profileMisc() async {
-        _travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
+        _travelModel = await TornApiCaller().getTravel();
       }
 
       // Get all APIs at the same time
@@ -1275,7 +1275,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   _refreshMoney() async {
-    var travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
+    var travelModel = await TornApiCaller().getTravel();
     if (travelModel is TravelModel && mounted) {
       setState(() {
         _travelModel = travelModel;

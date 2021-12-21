@@ -26,7 +26,6 @@ class QuickItemsProvider extends ChangeNotifier {
   String _currentSearchFilter = '';
   String get searchFilter => _currentSearchFilter;
 
-  String _apiKey = "";
 
   var _quickItemTypes = [
     ItemType.ALCOHOL,
@@ -41,10 +40,9 @@ class QuickItemsProvider extends ChangeNotifier {
     "box of tissues",
   ];
 
-  Future loadItems({@required String apiKey}) async {
+  Future loadItems() async {
     if (_firstLoad) {
       _firstLoad = false;
-      _apiKey = apiKey;
       await _loadSaveActiveItems();
       _itemSuccess = await _getAllTornItems();
       updateInventoryQuantities(fullUpdate: true);
@@ -144,7 +142,7 @@ class QuickItemsProvider extends ChangeNotifier {
   }
 
   Future _getAllTornItems() async {
-    var allTornItems = await TornApiCaller.items(_apiKey).getItems;
+    var allTornItems = await TornApiCaller().getItems();
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
@@ -179,7 +177,7 @@ class QuickItemsProvider extends ChangeNotifier {
   /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
   /// visible in the widget. Only makes sense if entering the options page
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
-    var inventoryItems = await TornApiCaller.items(_apiKey).getInventory;
+    var inventoryItems = await TornApiCaller().getInventory();
     if (inventoryItems is InventoryModel) {
       if (fullUpdate) {
         for (var quickItem in _fullQuickItemsList) {

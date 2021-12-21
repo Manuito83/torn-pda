@@ -1549,7 +1549,6 @@ class _WarCardState extends State<WarCard> {
             attackNotesList: attackNotes,
             attackNotesColorList: attacksNotesColor,
             attacksCallback: _updateSeveralTargets,
-            userKey: _userProvider.basic.userApiKey,
             war: true,
             showNotes: await Prefs().getShowTargetsNotes(),
             showBlankNotes: await Prefs().getShowBlankTargetsNotes(),

@@ -181,10 +181,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    var otherProfile = await TornApiCaller.target(
-      widget.apiKey,
-      widget.profileId.toString(),
-    ).getOtherProfile;
+    var otherProfile = await TornApiCaller().getOtherProfile(playerId: widget.profileId.toString());
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target
@@ -775,7 +772,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         int lsd = 0;
 
         List<Widget> additional = <Widget>[];
-        var own = await TornApiCaller.ownPersonalStats(_userDetails.basic.userApiKey).getOwnPersonalStats;
+        var own = await TornApiCaller().getOwnPersonalStats();
         if (own is OwnPersonalStatsModel) {
           // XANAX
           int otherXanax = otherProfile.personalstats.xantaken;

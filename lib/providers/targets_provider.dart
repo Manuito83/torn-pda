@@ -76,7 +76,7 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
 
-    dynamic myNewTargetModel = await TornApiCaller.target(_userKey, targetId).getTarget;
+    dynamic myNewTargetModel = await TornApiCaller().getTarget(playerId: targetId);
 
     if (myNewTargetModel is TargetModel) {
       _getRespectFF(attacks, myNewTargetModel);
@@ -108,7 +108,7 @@ class TargetsProvider extends ChangeNotifier {
   /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
   /// the attack variable we provide is the same and we only requested it once.
   dynamic getAttacks() async {
-    return await TornApiCaller.attacks(_userKey).getAttacks;
+    return await TornApiCaller().getAttacks();
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
@@ -210,7 +210,7 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, targetToUpdate.playerId.toString()).getTarget;
+      dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: targetToUpdate.playerId.toString());
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(
           attacks,
@@ -254,7 +254,7 @@ class TargetsProvider extends ChangeNotifier {
     dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, _targets[i].playerId.toString()).getTarget;
+        dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: _targets[i].playerId.toString());
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(
             attacks,
@@ -309,7 +309,7 @@ class TargetsProvider extends ChangeNotifier {
           tar.isUpdating = true;
           notifyListeners();
           try {
-            dynamic myUpdatedTargetModel = await TornApiCaller.target(_userKey, tar.playerId.toString()).getTarget;
+            dynamic myUpdatedTargetModel = await TornApiCaller().getTarget(playerId: tar.playerId.toString());
             if (myUpdatedTargetModel is TargetModel) {
               _getRespectFF(
                 attacks,

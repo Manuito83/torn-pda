@@ -848,7 +848,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchTornApi() async {
-    var myTravel = await TornApiCaller.travel(_myCurrentKey).getTravel;
+    var myTravel = await TornApiCaller().getTravel();
     if (myTravel is TravelModel) {
       _apiRetries = 0;
       setState(() {

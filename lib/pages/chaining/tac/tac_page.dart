@@ -148,7 +148,6 @@ class _TacPageState extends State<TacPage> {
         SizedBox(height: 5),
         ChainWidget(
           key: _chainWidgetKey,
-          userKey: widget.userKey,
           alwaysDarkBackground: false,
         ),
         _filtersCard(),
@@ -418,10 +417,7 @@ class _TacPageState extends State<TacPage> {
 
     for (var i = 0; i < _tacProvider.targetsList.length; i++) {
       if (mounted) {
-        dynamic target = await TornApiCaller.target(
-          _userProvider.basic.userApiKey,
-          _tacProvider.targetsList[i].id.toString(),
-        ).getTarget;
+        dynamic target = await TornApiCaller().getTarget(playerId: _tacProvider.targetsList[i].id.toString());
 
         if (target is TargetModel) {
           _tacProvider.getSingleStatus(i, target);
@@ -651,7 +647,7 @@ class _TacPageState extends State<TacPage> {
       _targetCards.clear();
     });
     int currentChainHit = 0;
-    var chainResponse = await TornApiCaller.chain(widget.userKey).getChainStatus;
+    var chainResponse = await TornApiCaller().getChainStatus();
     if (chainResponse is ChainModel) {
       currentChainHit = chainResponse.chain.current;
     }

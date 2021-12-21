@@ -16,7 +16,6 @@ class ItemCard extends StatefulWidget {
   final Item item;
   final SettingsProvider settingsProvider;
   final ThemeProvider themeProvider;
-  final String apiKey;
   final bool inventorySuccess;
   final bool pinned;
 
@@ -24,7 +23,6 @@ class ItemCard extends StatefulWidget {
     @required this.item,
     @required this.settingsProvider,
     @required this.themeProvider,
-    @required this.apiKey,
     @required this.inventorySuccess,
     @required this.pinned,
     Key key,
@@ -486,7 +484,7 @@ class _ItemCardState extends State<ItemCard> {
   }
 
   Future _getFooterInformation() async {
-    var apiResponse = await TornApiCaller.marketItem(widget.apiKey, widget.item.id).getMarketItem;
+    var apiResponse = await TornApiCaller().getMarketItem(itemId: widget.item.id);
     if (apiResponse is MarketItemModel) {
       setState(() {
         _footerSuccessful = true;

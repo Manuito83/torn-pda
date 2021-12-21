@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 // Package imports:
-import 'package:get/get.dart';
-import 'package:http/http.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -15,7 +13,6 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items/items_sort.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/providers/user_controller.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -47,7 +44,6 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   SettingsProvider _settingsProvider;
   ThemeProvider _themeProvider;
-  UserController _u = Get.put(UserController());
 
   String _currentSearchFilter = '';
   final _searchController = new TextEditingController();
@@ -451,8 +447,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   Future _getAllItems() async {
     // First get all Torn items
-    var apiItems = await TornApiCaller.items(_u.apiKey).getItems;
-    var apiInventory = await TornApiCaller.items(_u.apiKey).getInventory;
+    var apiItems = await TornApiCaller().getItems();
+    var apiInventory = await TornApiCaller().getInventory();
 
     if (apiItems is! ItemsModel) {
       ApiError error = apiItems as ApiError;
@@ -697,7 +693,6 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               item: thisPinned,
               settingsProvider: _settingsProvider,
               themeProvider: _themeProvider,
-              apiKey: _u.apiKey,
               inventorySuccess: _inventorySuccess,
               pinned: true,
             ),
@@ -764,7 +759,6 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               item: item,
               settingsProvider: _settingsProvider,
               themeProvider: _themeProvider,
-              apiKey: _u.apiKey,
               inventorySuccess: _inventorySuccess,
               pinned: false,
             ),

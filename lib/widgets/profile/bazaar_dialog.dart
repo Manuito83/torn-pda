@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
 
 // Project imports:
-import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 
 class BazaarDialog extends StatelessWidget {
-  final BazaarModel bazaarModel;
+  final List<Bazaar> bazaarModel;
   final Function openTapCallback;
   final Function openLongPressCallback;
   final int items;
@@ -73,7 +73,7 @@ class BazaarDialog extends StatelessWidget {
                   style: TextStyle(fontSize: 13),
                 ),
                 Text(
-                  bazaarModel.bazaar.length == 1 ? "" : " (${bazaarModel.bazaar.length} stacks)",
+                  bazaarModel.length == 1 ? "" : " (${bazaarModel.length} stacks)",
                   style: TextStyle(fontSize: 13),
                 ),
               ],
@@ -117,7 +117,7 @@ class BazaarDialog extends StatelessWidget {
     // Currency configuration
     final costCurrency = new NumberFormat("#,##0", "en_US");
 
-    bazaarModel.bazaar.forEach((element) {
+    bazaarModel.forEach((element) {
       var marketDiff = element.marketPrice - element.price;
       Color marketColor = Colors.green;
       var marketString = "";

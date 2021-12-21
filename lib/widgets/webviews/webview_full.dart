@@ -2021,7 +2021,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (!mounted) return;
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
-      userApiKey: _userProvider.basic.userApiKey,
       playerId: _userProvider.basic.playerId,
       sellerName: sellerName,
       sellerId: sellerId,
@@ -2343,7 +2342,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      final dynamic apiResponse = await TornApiCaller.items(_userProvider.basic.userApiKey).getItems;
+      final dynamic apiResponse = await TornApiCaller().getItems();
       if (apiResponse is ItemsModel) {
         apiResponse.items.forEach((key, value) {
           // Assign correct ids
@@ -2495,8 +2494,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _quickItemsTriggered = true;
 
       final quickItemsProvider = context.read<QuickItemsProvider>();
-      final key = _userProvider.basic.userApiKey;
-      quickItemsProvider.loadItems(apiKey: key);
+      quickItemsProvider.loadItems();
 
       setState(() {
         _quickItemsController.expanded = true;
@@ -2737,7 +2735,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await TornApiCaller.bars(_userProvider.basic.userApiKey).getBars;
+      final stats = await TornApiCaller().getBars();
       if (stats is BarsModel) {
         var message = "";
         if (stats.chain.current > 10 && stats.chain.cooldown == 0) {

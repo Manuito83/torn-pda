@@ -525,7 +525,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
       // If an user ID was inserted, we need to transform it first
       if (_addFromUserId) {
-        dynamic target = await TornApiCaller.target(userProv.basic.userApiKey, inputId).getTarget;
+        dynamic target = await TornApiCaller().getTarget(playerId: inputId);
         String convertError = "";
         if (target is TargetModel) {
           inputId = target.faction.factionId.toString();
@@ -582,10 +582,7 @@ class _AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         }
       }
 
-      var retrievedFaction = await TornApiCaller.faction(
-        userProv.basic.userApiKey,
-        inputId,
-      ).getFaction;
+      var retrievedFaction = await TornApiCaller().getFaction(factionId: inputId);
 
       if (retrievedFaction is FactionModel) {
         if (retrievedFaction.name.isNotEmpty) {

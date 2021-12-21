@@ -36,7 +36,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -201,7 +200,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
-  BazaarModel _bazaarModel;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -292,7 +290,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _miscTick++;
       } else {
         _getMiscCardInfo();
-        _getBazaarInfo();
         _miscTick = 0;
       }
     });
@@ -324,7 +321,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
-        _getBazaarInfo();
       }
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
@@ -371,7 +367,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   onRefresh: () async {
                     _fetchApi();
                     _getMiscCardInfo();
-                    _getBazaarInfo();
                     _miscTick = 0;
                     await Future.delayed(Duration(seconds: 1));
                   },
@@ -1094,7 +1089,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ],
                   ),
                   BazaarStatusCard(
-                    bazaarModel: _bazaarModel,
+                    bazaarModel: _miscModel.bazaar,
                     launchBrowser: _launchBrowser,
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
@@ -4267,8 +4262,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber > limit) limit = _messagesShowNumber;
     if (_eventsShowNumber > limit) limit = _eventsShowNumber;
 
-    var apiResponse = await TornApiCaller.ownExtended(_userProv.basic.userApiKey, limit).getProfileExtended;
-    var apiChain = await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
+    var apiResponse = await TornApiCaller().getProfileExtended(limit: limit);
+    var apiChain = await TornApiCaller().getChainStatus();
 
     if (mounted) {
       setState(() {
@@ -4317,7 +4312,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //  - (async) Bazaar
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
-      _getBazaarInfo();
     }
 
     _retrievePendingNotifications();
@@ -4325,13 +4319,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse = await TornApiCaller.ownMisc(_userProv.basic.userApiKey).getProfileMisc;
+      var miscApiResponse = await TornApiCaller().getProfileMisc();
 
-      var educationResponse = await TornApiCaller.education(_userProv.basic.userApiKey).getEducation;
+      if (_tornEducationModel == null) {
+        _tornEducationModel = await TornApiCaller().getEducation();
+      }
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
-      if (miscApiResponse is OwnProfileMisc && educationResponse is TornEducationModel) {
+      if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
         // Get this async
         if (_settingsProvider.oCrimesEnabled) {
           _getFactionCrimes();
@@ -4349,7 +4345,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         setState(() {
           _miscModel = miscApiResponse;
           _miscApiFetchedOnce = true;
-          _tornEducationModel = educationResponse;
         });
       }
     } catch (e) {
@@ -4359,7 +4354,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _getFactionCrimes() async {
     try {
-      var factionCrimes = await TornApiCaller.factionCrimes(_userProv.basic.userApiKey).getFactionCrimes;
+      var factionCrimes = await TornApiCaller().getFactionCrimes();
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes is FactionCrimesModel) {
@@ -4516,19 +4511,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // Don't fill anything
-    }
-  }
-
-  Future _getBazaarInfo() async {
-    try {
-      var bazaarApiResponse = await TornApiCaller.bazaar(_userProv.basic.userApiKey).getBazaar;
-      if (bazaarApiResponse is BazaarModel) {
-        setState(() {
-          _bazaarModel = bazaarApiResponse;
-        });
-      }
-    } catch (e) {
-      // If something fails, we simple don't show the bazaar section
     }
   }
 
@@ -6574,7 +6556,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (element) async {
-      var rentDetails = await TornApiCaller.property(_userProv.basic.userApiKey, element).getProperty;
+      var rentDetails = await TornApiCaller().getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;

@@ -29,8 +29,6 @@ class ChainingPage extends StatefulWidget {
 }
 
 class _ChainingPageState extends State<ChainingPage> {
-  String _myCurrentKey = '';
-
   ThemeProvider _themeProvider;
   ChainStatusProvider _chainStatusProvider;
   Future _preferencesLoaded;
@@ -70,16 +68,11 @@ class _ChainingPageState extends State<ChainingPage> {
                     duration: 200,
                     children: <Widget>[
                       TargetsPage(
-                        userKey: _myCurrentKey,
                         // Used to add or remove TAC tab
                         //tabCallback: _tabCallback,
                       ),
-                      AttacksPage(
-                        userKey: _myCurrentKey,
-                      ),
-                      WarPage(
-                        userKey: _myCurrentKey,
-                      ),
+                      AttacksPage(),
+                      WarPage(),
                       /*
                       TacPage(
                         userKey: _myCurrentKey,
@@ -183,12 +176,10 @@ class _ChainingPageState extends State<ChainingPage> {
   */
 
   Future _restorePreferences() async {
-    final userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
-    _myCurrentKey = userDetails.basic.userApiKey;
     //_tacEnabled = await Prefs().getTACEnabled();
 
     if (!_chainStatusProvider.initialised) {
-      await _chainStatusProvider.loadPreferences(apiKey: _myCurrentKey);
+      await _chainStatusProvider.loadPreferences();
     }
 
     _currentPage = await Prefs().getChainingCurrentPage();

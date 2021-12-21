@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.2
     var v2_6_2 = ChangeLogItem();
     v2_6_2.main.version = 'Torn PDA v2.6.2';
-    v2_6_2.main.date = '23 DEC 2021';
+    v2_6_2.main.date = '25 DEC 2021';
     String feat2_6_2_1 = "New section: Items";
     String feat2_6_2_2 = "Added cans to estimated stats (needs war targets update)";
     v2_6_2.features.add(feat2_6_2_1);

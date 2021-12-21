@@ -51,7 +51,7 @@ class WarController extends GetxController {
   Future<String> addFaction(String factionId, List<TargetModel> targets) async {
     stopUpdate();
 
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
 
     // Return custom error code if faction already exists
     for (FactionModel faction in factions) {
@@ -60,7 +60,7 @@ class WarController extends GetxController {
       }
     }
 
-    final apiResult = await TornApiCaller.faction(_u.apiKey, factionId).getFaction;
+    final apiResult = await TornApiCaller().getFaction(factionId: factionId);
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";
     }
@@ -148,12 +148,12 @@ class WarController extends GetxController {
   Future<bool> updateSingleMemberFull(Member member, {dynamic allAttacks, dynamic spies, dynamic ownStats}) async {
     dynamic allAttacksSuccess = allAttacks;
     if (allAttacksSuccess == null) {
-      allAttacksSuccess = await getAllAttacks(_u.apiKey);
+      allAttacksSuccess = await getAllAttacks();
     }
 
     dynamic ownStatsSuccess = ownStats;
     if (ownStatsSuccess == null) {
-      ownStatsSuccess = await getOwnStats(_u.apiKey);
+      ownStatsSuccess = await getOwnStats();
     }
 
     member.isUpdating = true;
@@ -166,7 +166,7 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      dynamic updatedTarget = await TornApiCaller.target(_u.apiKey, memberKey).getOtherProfile;
+      dynamic updatedTarget = await TornApiCaller().getOtherProfile(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
         member.overrideEasyLife = true;
         member.lifeMaximum = updatedTarget.life.maximum;
@@ -278,8 +278,8 @@ class WarController extends GetxController {
   Future<List<int>> updateAllMembersFull() async {
     await _integrityCheck(force: true);
 
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
-    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
+    dynamic ownStatsSuccess = await getOwnStats();
     int numberUpdated = 0;
 
     updating = true;
@@ -325,7 +325,7 @@ class WarController extends GetxController {
   }
 
   Future<int> updateAllMembersEasy() async {
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
 
     stopUpdate();
 
@@ -335,7 +335,7 @@ class WarController extends GetxController {
     int numberUpdated = 0;
 
     for (FactionModel f in factions) {
-      final apiResult = await TornApiCaller.faction(_u.apiKey, f.id.toString()).getFaction;
+      final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return 0;
       }
@@ -399,8 +399,8 @@ class WarController extends GetxController {
 
   Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
     await Future.delayed(Duration(seconds: 15));
-    dynamic allAttacksSuccess = await getAllAttacks(_u.apiKey);
-    dynamic ownStatsSuccess = await getOwnStats(_u.apiKey);
+    dynamic allAttacksSuccess = await getAllAttacks();
+    dynamic ownStatsSuccess = await getOwnStats();
 
     updating = true;
     update();
@@ -582,16 +582,16 @@ class WarController extends GetxController {
     return membersHidden;
   }
 
-  dynamic getAllAttacks(String _userKey) async {
-    var result = await TornApiCaller.attacks(_userKey).getAttacks;
+  dynamic getAllAttacks() async {
+    var result = await TornApiCaller().getAttacks();
     if (result is AttackModel) {
       return result;
     }
     return false;
   }
 
-  dynamic getOwnStats(String _userKey) async {
-    var result = await TornApiCaller.ownPersonalStats(_userKey).getOwnPersonalStats;
+  dynamic getOwnStats() async {
+    var result = await TornApiCaller().getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -773,7 +773,7 @@ class WarController extends GetxController {
     }
 
     for (FactionModel f in factions) {
-      final apiResult = await TornApiCaller.faction(_u.apiKey, f.id.toString()).getFaction;
+      final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return;
       }

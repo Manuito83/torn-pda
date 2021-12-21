@@ -482,7 +482,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+          var own = await TornApiCaller().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
             int xanaxComparison = otherXanax - own.personalstats.xantaken;
             int refillsComparison = otherRefills - own.personalstats.refills;
@@ -646,7 +646,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+            var own = await TornApiCaller().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
               int xanaxComparison = otherXanax - own.personalstats.xantaken;
               int refillsComparison = otherRefills - own.personalstats.refills;
@@ -1109,7 +1109,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+    final dynamic prof = await TornApiCaller().getProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof

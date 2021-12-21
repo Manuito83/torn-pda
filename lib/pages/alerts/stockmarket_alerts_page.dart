@@ -262,8 +262,8 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _fbUser = await firestore.getUserProfile(force: false); // We are NOT getting updated stocks every time
     }
 
-    var allStocksReply = await TornApiCaller.stockmarket(_userP.basic.userApiKey).getAllStocks;
-    var userStocksReply = await TornApiCaller.stockmarket(_userP.basic.userApiKey).getUserStocks;
+    var allStocksReply = await TornApiCaller().getAllStocks();
+    var userStocksReply = await TornApiCaller().getUserStocks();
 
     if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
       _errorInitialising = true;

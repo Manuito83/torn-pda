@@ -1180,7 +1180,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           String inputId = _addIdController.text;
                           _addIdController.text = '';
 
-                          dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
                           String message = "";
                           Color messageColor = Colors.green[700];
                           if (target is TargetModel) {

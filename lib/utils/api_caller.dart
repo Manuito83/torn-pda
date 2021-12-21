@@ -1,12 +1,12 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 
 // Package imports:
 import 'package:dio/dio.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_full_model.dart';
@@ -21,7 +21,6 @@ import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
@@ -31,9 +30,11 @@ import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 
 import '../main.dart';
 
+/*
 enum ApiType {
   user,
   faction,
@@ -41,6 +42,7 @@ enum ApiType {
   property,
   market,
 }
+*/
 
 enum ApiSelection {
   travel,
@@ -62,7 +64,8 @@ enum ApiSelection {
   factionCrimes,
   friends,
   property,
-  stocks,
+  userStocks,
+  tornStocks,
   marketItem,
 }
 
@@ -139,10 +142,7 @@ class ApiError {
 }
 
 class TornApiCaller {
-  String apiKey;
-  String queryId;
-  int limit;
-
+  /*
   TornApiCaller.travel(this.apiKey);
   TornApiCaller.ownBasic(this.apiKey);
   TornApiCaller.ownExtended(this.apiKey, this.limit);
@@ -163,10 +163,11 @@ class TornApiCaller {
   TornApiCaller.property(this.apiKey, this.queryId);
   TornApiCaller.stockmarket(this.apiKey);
   TornApiCaller.marketItem(this.apiKey, this.queryId);
+  */
 
-  Future<dynamic> get getTravel async {
+  Future<dynamic> getTravel() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.travel).then((value) {
+    await _apiCall(apiSelection: ApiSelection.travel).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -181,9 +182,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getProfileBasic async {
+  Future<dynamic> getProfileBasic({String forcedApiKey = ""}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownBasic).then((value) {
+    await _apiCall(apiSelection: ApiSelection.ownBasic, forcedApiKey: forcedApiKey).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -198,9 +199,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getProfileExtended async {
+  Future<dynamic> getProfileExtended({@required int limit}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownExtended, limit: limit).then((value) {
+    await _apiCall(apiSelection: ApiSelection.ownExtended, limit: limit).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -215,9 +216,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getOwnPersonalStats async {
+  Future<dynamic> getOwnPersonalStats() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.ownPersonalStats).then((value) {
+    await _apiCall(apiSelection: ApiSelection.ownPersonalStats).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -232,9 +233,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getProfileMisc async {
+  Future<dynamic> getProfileMisc() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.ownMisc).then((value) {
+    await _apiCall(apiSelection: ApiSelection.ownMisc).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -249,26 +250,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getBazaar async {
+  Future<dynamic> getOtherProfile({@required String playerId}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.bazaar).then((value) {
-      apiResult = value;
-    });
-    if (apiResult is! ApiError) {
-      try {
-        return BazaarModel.fromJson(apiResult);
-      } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, details: "$e\n$trace");
-      }
-    } else {
-      return apiResult;
-    }
-  }
-
-  Future<dynamic> get getOtherProfile async {
-    dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.otherProfile).then((value) {
+    await _apiCall(prefix: playerId, apiSelection: ApiSelection.otherProfile).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -283,9 +267,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getTarget async {
+  Future<dynamic> getTarget({@required String playerId}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.target).then((value) {
+    await _apiCall(prefix: playerId, apiSelection: ApiSelection.target).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -300,9 +284,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getAttacks async {
+  Future<dynamic> getAttacks() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.attacks).then((value) {
+    await _apiCall(apiSelection: ApiSelection.attacks).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -317,9 +301,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getAttacksFull async {
+  Future<dynamic> getAttacksFull() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.attacksFull).then((value) {
+    await _apiCall(apiSelection: ApiSelection.attacksFull).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -334,9 +318,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getChainStatus async {
+  Future<dynamic> getChainStatus() async {
     dynamic apiResult;
-    await _apiCall(ApiType.faction, apiSelection: ApiSelection.chainStatus).then((value) {
+    await _apiCall(apiSelection: ApiSelection.chainStatus).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -351,9 +335,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getBars async {
+  Future<dynamic> getBars() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.bars).then((value) {
+    await _apiCall(apiSelection: ApiSelection.bars).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -368,9 +352,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getItems async {
+  Future<dynamic> getItems() async {
     dynamic apiResult;
-    await _apiCall(ApiType.torn, apiSelection: ApiSelection.items).then((value) {
+    await _apiCall(apiSelection: ApiSelection.items).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -385,9 +369,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getInventory async {
+  Future<dynamic> getInventory() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, apiSelection: ApiSelection.inventory).then((value) {
+    await _apiCall(apiSelection: ApiSelection.inventory).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -402,9 +386,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getEducation async {
+  Future<dynamic> getEducation() async {
     dynamic apiResult;
-    await _apiCall(ApiType.torn, apiSelection: ApiSelection.education).then((value) {
+    await _apiCall(apiSelection: ApiSelection.education).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -419,13 +403,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getFaction async {
+  Future<dynamic> getFaction({@required String factionId}) async {
     dynamic apiResult;
-    await _apiCall(
-      ApiType.faction,
-      prefix: queryId,
-      apiSelection: ApiSelection.faction,
-    ).then((value) {
+    await _apiCall(prefix: factionId, apiSelection: ApiSelection.faction).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -440,9 +420,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getFactionCrimes async {
+  Future<dynamic> getFactionCrimes() async {
     dynamic apiResult;
-    await _apiCall(ApiType.faction, apiSelection: ApiSelection.factionCrimes).then((value) {
+    await _apiCall(apiSelection: ApiSelection.factionCrimes).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -457,9 +437,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getFriends async {
+  Future<dynamic> getFriends({@required String playerId}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.friends).then((value) {
+    await _apiCall(prefix: playerId, apiSelection: ApiSelection.friends).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -474,9 +454,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getProperty async {
+  Future<dynamic> getProperty({@required String propertyId}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.property, prefix: this.queryId, apiSelection: ApiSelection.property).then((value) {
+    await _apiCall(prefix: propertyId, apiSelection: ApiSelection.property).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -491,9 +471,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getAllStocks async {
+  Future<dynamic> getAllStocks() async {
     dynamic apiResult;
-    await _apiCall(ApiType.torn, prefix: this.queryId, apiSelection: ApiSelection.stocks).then((value) {
+    await _apiCall(apiSelection: ApiSelection.tornStocks).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -508,9 +488,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getUserStocks async {
+  Future<dynamic> getUserStocks() async {
     dynamic apiResult;
-    await _apiCall(ApiType.user, prefix: this.queryId, apiSelection: ApiSelection.stocks).then((value) {
+    await _apiCall(apiSelection: ApiSelection.userStocks).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -525,9 +505,9 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> get getMarketItem async {
+  Future<dynamic> getMarketItem({@required String itemId}) async {
     dynamic apiResult;
-    await _apiCall(ApiType.market, prefix: this.queryId, apiSelection: ApiSelection.marketItem).then((value) {
+    await _apiCall(prefix: itemId, apiSelection: ApiSelection.marketItem).then((value) {
       apiResult = value;
     });
     if (apiResult is! ApiError) {
@@ -542,102 +522,92 @@ class TornApiCaller {
     }
   }
 
-  Future<dynamic> _apiCall(
-    ApiType apiType, {
-    String prefix,
+  Future<dynamic> _apiCall({
     @required ApiSelection apiSelection,
+    String prefix = "",
     int limit = 100,
+    String forcedApiKey = "",
   }) async {
-    String url = 'http://api.torn.com/';
-    switch (apiType) {
-      case ApiType.user:
-        url += 'user/';
-        break;
-      case ApiType.faction:
-        url += 'faction/';
-        break;
-      case ApiType.torn:
-        url += 'torn/';
-        break;
-      case ApiType.property:
-        url += 'property/';
-        break;
-      case ApiType.market:
-        url += 'market/';
-        break;
+    String apiKey = "";
+    if (forcedApiKey != "") {
+      apiKey = forcedApiKey;
+    } else {
+      UserController user = Get.put(UserController());
+      apiKey = user.apiKey;
     }
+
+    String url = 'https://api.torn.com/';
 
     switch (apiSelection) {
       case ApiSelection.travel:
-        url += '?selections=money,travel';
+        url += 'user/?selections=money,travel';
         break;
       case ApiSelection.ownBasic:
-        url += '?selections=profile,battlestats';
+        url += 'user/?selections=profile,battlestats';
         break;
       case ApiSelection.ownExtended:
-        url += '?selections=profile,bars,networth,'
-            'cooldowns,events,travel,icons,'
-            'money,education,messages';
+        url += 'user/?selections=profile,bars,networth,cooldowns,events,travel,icons,money,education,messages';
         break;
       case ApiSelection.ownPersonalStats:
-        url += '?selections=personalstats';
+        url += 'user/?selections=personalstats';
         break;
       case ApiSelection.ownMisc:
-        url += '?selections=money,education,workstats,battlestats,jobpoints,properties,skills';
+        url += 'user/?selections=money,education,workstats,battlestats,jobpoints,properties,skills,bazaar';
         break;
       case ApiSelection.bazaar:
-        url += '?selections=bazaar';
+        url += 'user/?selections=bazaar';
         break;
       case ApiSelection.otherProfile:
-        url += '$prefix?selections=profile,crimes,personalstats';
+        url += 'user/$prefix?selections=profile,crimes,personalstats';
         break;
       case ApiSelection.target:
-        url += '$prefix?selections=profile,discord';
+        url += 'user/$prefix?selections=profile,discord';
         break;
       case ApiSelection.attacks:
-        url += '$prefix?selections=attacks';
+        url += 'user/$prefix?selections=attacks';
         break;
       case ApiSelection.attacksFull:
-        url += '$prefix?selections=attacksfull';
+        url += 'user/$prefix?selections=attacksfull';
         break;
       case ApiSelection.chainStatus:
-        url += '?selections=chain';
+        url += 'faction/?selections=chain';
         break;
       case ApiSelection.bars:
-        url += '?selections=bars';
+        url += 'user/?selections=bars';
         break;
       case ApiSelection.items:
-        url += '?selections=items';
+        url += 'torn/?selections=items';
         break;
       case ApiSelection.inventory:
-        url += '?selections=inventory,display';
+        url += 'user/?selections=inventory,display';
         break;
       case ApiSelection.education:
-        url += '?selections=education';
+        url += 'torn/?selections=education';
         break;
       case ApiSelection.faction:
-        url += '$prefix?selections=';
+        url += 'faction/$prefix?selections=';
         break;
       case ApiSelection.factionCrimes:
-        url += '?selections=crimes';
+        url += 'faction/?selections=crimes';
         break;
       case ApiSelection.friends:
-        url += '$prefix?selections=profile,discord';
+        url += 'user/$prefix?selections=profile,discord';
         break;
       case ApiSelection.property:
-        url += '$prefix?selections=property';
+        url += 'property/$prefix?selections=property';
         break;
-      case ApiSelection.stocks:
-        url += '$prefix?selections=stocks';
+      case ApiSelection.userStocks:
+        url += 'user/?selections=stocks';
+        break;
+      case ApiSelection.tornStocks:
+        url += 'torn/?selections=stocks';
         break;
       case ApiSelection.marketItem:
-        url += '$prefix?selections=bazaar,itemmarket';
+        url += 'market/$prefix?selections=bazaar,itemmarket';
         break;
     }
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';
 
-    //url = 'http://www.google.com:81';  // DEBUG FOR TIMEOUT!
-    //await new Future.delayed(const Duration(seconds : 5));  // DEBUG TIMEOUT 2
     try {
       final response = await Dio(
         BaseOptions(

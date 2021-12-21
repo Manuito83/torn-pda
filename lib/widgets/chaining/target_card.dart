@@ -966,7 +966,6 @@ class _TargetCardState extends State<TargetCard> {
             attackNotesList: attackNotes,
             attackNotesColorList: attacksNotesColor,
             attacksCallback: _updateSeveralTargets,
-            userKey: _userProvider.basic.userApiKey,
             showNotes: await Prefs().getShowTargetsNotes(),
             showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
             showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),

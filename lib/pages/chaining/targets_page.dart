@@ -49,12 +49,10 @@ class TargetsOptions {
 }
 
 class TargetsPage extends StatefulWidget {
-  final String userKey;
   //final Function tabCallback;
 
   const TargetsPage({
     Key key,
-    @required this.userKey,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -229,7 +227,6 @@ class _TargetsPageState extends State<TargetsPage> {
         ),
         ChainWidget(
           key: _chainWidgetKey,
-          userKey: widget.userKey,
           alwaysDarkBackground: false,
           callBackOptions: _callBackChainOptions,
         ),

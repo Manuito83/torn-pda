@@ -1395,7 +1395,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
 
-      dynamic myProfile = await TornApiCaller.ownBasic(_myCurrentKey).getProfileBasic;
+      dynamic myProfile = await TornApiCaller().getProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
