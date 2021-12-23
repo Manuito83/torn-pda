@@ -120,6 +120,8 @@ class Member {
     this.myEnhancement,
     this.memberEcstasy,
     this.memberLsd,
+    this.memberCans,
+    this.myCans,
     //
     this.name,
     this.level,
@@ -167,6 +169,8 @@ class Member {
   int myEnhancement = 0;
   int memberEcstasy = 0;
   int memberLsd = 0;
+  int memberCans = 0;
+  int myCans = 0;
 
   String name;
   int level;
@@ -213,6 +217,8 @@ class Member {
         myEnhancement: json["myEnhancement"] ?? 0,
         memberEcstasy: json["memberEcstasy"] ?? 0,
         memberLsd: json["memberLsd"] ?? 0,
+        memberCans: json["memberCans"] ?? 0,
+        myCans: json["myCans"] ?? 0,
         //
         name: json["name"],
         level: json["level"] == null ? null : json["level"],
@@ -257,6 +263,8 @@ class Member {
         "myEnhancement": myEnhancement,
         "memberEcstasy": memberEcstasy,
         "memberLsd": memberLsd,
+        "memberCans": memberCans,
+        "myCans": myCans,
         //
         "name": name,
         "level": level == null ? null : level,

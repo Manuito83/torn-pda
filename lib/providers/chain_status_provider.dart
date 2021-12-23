@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +74,6 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   bool initialised = false;
-  String _apiKey = "";
 
   int _accumulatedErrors = 0;
 
@@ -127,6 +127,8 @@ class ChainStatusProvider extends ChangeNotifier {
     return _panicModeActive;
   }
 
+  bool widgetVisible = false;
+
   AudioCache _audioCache = new AudioCache();
 
   int _lastChainCount = 0;
@@ -151,13 +153,15 @@ class ChainStatusProvider extends ChangeNotifier {
         }
       },
     );
+
+    log("Chain watcher timers activated!");
   }
 
   deactivateStatus() {
-    _tickerCallChainApi.cancel();
-    _tickerDecreaseCount.cancel();
+    _tickerCallChainApi?.cancel();
+    _tickerDecreaseCount?.cancel();
     _statusActive = false;
-    print("deactivating status!");
+    log("Chain watcher timers deactivated!");
   }
 
   void activateWatcher() {
@@ -198,7 +202,6 @@ class ChainStatusProvider extends ChangeNotifier {
     _saveSettings();
   }
 
-  
   void reorderPanicTarget(int oldIndex, int newIndex) {
     if (oldIndex < newIndex) {
       // removing the item at oldIndex will shorten the list by 1
@@ -262,13 +265,13 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   Future<void> getEnergy() async {
-    dynamic myBars = await TornApiCaller.bars(_apiKey).getBars;
+    dynamic myBars = await TornApiCaller().getBars();
     _barsModel = myBars;
     notifyListeners();
   }
 
   Future<void> getChainStatus() async {
-    var chainResponse = await TornApiCaller.chain(_apiKey).getChainStatus;
+    var chainResponse = await TornApiCaller().getChainStatus();
 
     if (chainResponse is ChainModel) {
       _accumulatedErrors = 0;
@@ -279,13 +282,15 @@ class ChainStatusProvider extends ChangeNotifier {
       //
       /*
       chainModel.chain
-        ..timeout = 50
-        ..current = 1984
+        ..timeout = 200
+        ..current = 51
         ..max = 2500
         ..start = 1230000
         ..modifier = 1.23
         ..cooldown = 0;
       */
+
+      tryToDeactivateStatus();
 
       // OPTION 1, NOT CHAINING
       if ((chainModel.chain.current == 0 || chainModel.chain.timeout == 0) && chainModel.chain.cooldown == 0) {
@@ -404,7 +409,6 @@ class ChainStatusProvider extends ChangeNotifier {
                 TornWebViewAttack(
                   attackIdList: attacksIds,
                   attackNameList: attacksNames,
-                  userKey: _apiKey,
                   attackNotesColorList: attackNotesColorList,
                   attackNotesList: attackNotesList,
                   panic: true, // This will skip first target if red/blue regardless of user preferences
@@ -532,9 +536,8 @@ class ChainStatusProvider extends ChangeNotifier {
     });
   }
 
-  loadPreferences({@required apiKey}) async {
+  loadPreferences() async {
     initialised = true;
-    _apiKey = apiKey;
     _soundEnabled = await Prefs().getChainWatcherSound();
     _vibrationEnabled = await Prefs().getChainWatcherVibration();
     _notificationsEnabled = await Prefs().getChainWatcherNotificationsEnabled();
@@ -1781,5 +1784,15 @@ class ChainStatusProvider extends ChangeNotifier {
       panicTargetsModel.add(panicTargetModelToJson(p));
     }
     Prefs().setChainWatcherPanicTargets(panicTargetsModel);
+  }
+
+  /// Deactivates status when the widget is out of view, the watcher is not being used and we are no longer chaining
+  /// Does not apply to cooldown
+  void tryToDeactivateStatus() {
+    if (!widgetVisible &&
+        !watcherActive &&
+        ((chainModel.chain.current == 0 && chainModel.chain.timeout == 0) || _chainModel.chain.cooldown > 0)) {
+      deactivateStatus();
+    }
   }
 }

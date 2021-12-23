@@ -181,10 +181,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    var otherProfile = await TornApiCaller.target(
-      widget.apiKey,
-      widget.profileId.toString(),
-    ).getOtherProfile;
+    var otherProfile = await TornApiCaller().getOtherProfile(playerId: widget.profileId.toString());
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target
@@ -767,13 +764,15 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         Color refillColor = Colors.orange;
         int enhancementComparison = 0;
         Color enhancementColor = Colors.white;
+        int cansComparison = 0;
+        Color cansColor = Colors.orange;
         Color sslColor = Colors.green;
         bool sslProb = true;
         int ecstasy = 0;
         int lsd = 0;
 
         List<Widget> additional = <Widget>[];
-        var own = await TornApiCaller.ownPersonalStats(_userDetails.basic.userApiKey).getOwnPersonalStats;
+        var own = await TornApiCaller().getOwnPersonalStats();
         if (own is OwnPersonalStatsModel) {
           // XANAX
           int otherXanax = otherProfile.personalstats.xantaken;
@@ -818,6 +817,20 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             style: TextStyle(color: enhancementColor, fontSize: 11),
           );
 
+          // CANS
+          int otherCans = otherProfile.personalstats.cantaken;
+          int myCans = own.personalstats.cantaken;
+          cansComparison = otherCans - myCans;
+          if (cansComparison < 0) {
+            cansColor = Colors.green;
+          } else if (cansComparison > 0) {
+            cansColor = Colors.red;
+          }
+          Text cansText = Text(
+            "CAN",
+            style: TextStyle(color: cansColor, fontSize: 11),
+          );
+
           /// SSL
           /// If (xan + esc) > 150, SSL is blank;
           /// if (esc + xan) < 150 & LSD < 50, SSL is green;
@@ -849,6 +862,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           additional.add(refillText);
           additional.add(SizedBox(width: 5));
           additional.add(enhancementText);
+          additional.add(SizedBox(width: 5));
+          additional.add(cansText);
           additional.add(SizedBox(width: 5));
           additional.add(sslWidget);
           additional.add(SizedBox(width: 5));
@@ -932,6 +947,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           refillColor,
                           enhancementComparison,
                           enhancementColor,
+                          cansComparison,
+                          cansColor,
                           sslColor,
                           sslProb,
                           otherProfile,
@@ -1232,6 +1249,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     Color refillColor,
     int enhancementCompare,
     Color enhancementColor,
+    int cansCompare,
+    Color cansColor,
     Color sslColor,
     bool sslProb,
     OtherProfileModel otherProfile,
@@ -1296,6 +1315,27 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           child: Text(
             "$enhancementRelative",
             style: TextStyle(color: enhancementColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    String cansRelative = "SAME as you";
+    if (cansCompare > 0) {
+      cansRelative = "${cansCompare.abs()} MORE than you";
+    } else if (cansCompare < 0) {
+      cansRelative = "${cansCompare.abs()} LESS than you";
+    }
+    Widget cansWidget = Row(
+      children: [
+        Text(
+          "> Cans: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$cansRelative",
+            style: TextStyle(color: cansColor, fontSize: 14),
           ),
         ),
       ],
@@ -1411,6 +1451,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
               child: enhancementWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: cansWidget,
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),

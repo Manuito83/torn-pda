@@ -17,9 +17,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/chaining/attacks_list.dart';
 
 class AttacksPage extends StatefulWidget {
-  final String userKey;
-
-  const AttacksPage({Key key, @required this.userKey}) : super(key: key);
+  const AttacksPage({Key key}) : super(key: key);
 
   @override
   _AttacksPageState createState() => _AttacksPageState();

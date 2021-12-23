@@ -36,7 +36,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
-import 'package:torn_pda/models/profile/bazaar_model.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -47,7 +46,6 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/emoji_parser.dart';
 import 'package:torn_pda/utils/external/nuke_revive.dart';
 import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -123,7 +121,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future _apiFetched;
   bool _apiGoodData = false;
-  String _apiError = '';
+  ApiError _apiError = ApiError();
   int _apiRetries = 0;
 
   OwnProfileExtended _user;
@@ -202,7 +200,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _miscTick = 0;
   OwnProfileMisc _miscModel;
   TornEducationModel _tornEducationModel;
-  BazaarModel _bazaarModel;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -278,6 +275,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
+    _startApiTimer();
+
+    analytics.setCurrentScreen(screenName: 'profile');
+  }
+
+  void _startApiTimer() {
+    _tickerCallApi?.cancel();
     _tickerCallApi = new Timer.periodic(Duration(seconds: 20), (Timer t) {
       _fetchApi();
 
@@ -286,12 +290,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _miscTick++;
       } else {
         _getMiscCardInfo();
-        _getBazaarInfo();
         _miscTick = 0;
       }
     });
-
-    analytics.setCurrentScreen(screenName: 'profile');
   }
 
   void _requestIOSPermissions() {
@@ -306,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _tickerCallApi.cancel();
+    _tickerCallApi?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -315,12 +316,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       await _fetchApi();
+      _startApiTimer();
       if (_apiGoodData) {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
-        _getBazaarInfo();
       }
+    } else if (state == AppLifecycleState.paused) {
+      _tickerCallApi?.cancel();
     }
   }
 
@@ -364,7 +367,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   onRefresh: () async {
                     _fetchApi();
                     _getMiscCardInfo();
-                    _getBazaarInfo();
                     _miscTick = 0;
                     await Future.delayed(Duration(seconds: 1));
                   },
@@ -474,7 +476,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 );
               } else {
-                var error = _apiError.isEmpty ? "" : ": $_apiError";
                 return RefreshIndicator(
                   onRefresh: () async {
                     _fetchApi();
@@ -501,7 +502,35 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           child: Column(
                             children: [
                               Text(
-                                'There was an error$error\n\n'
+                                'There was an error: ${_apiError.errorReason}',
+                                textAlign: TextAlign.center,
+                              ),
+                              if (_apiError.errorDetails.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 20),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Error details:',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 5),
+                                      Text(
+                                        _apiError.errorDetails,
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          fontSize: 10,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              SizedBox(height: 20),
+                              Text(
                                 'Torn PDA is retrying automatically. '
                                 'If you have good Internet connectivity, it might be an issue with Torn\'s API.',
                                 textAlign: TextAlign.center,
@@ -1060,7 +1089,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ],
                   ),
                   BazaarStatusCard(
-                    bazaarModel: _bazaarModel,
+                    bazaarModel: _miscModel.bazaar,
                     launchBrowser: _launchBrowser,
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
@@ -2570,7 +2599,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       String message = HtmlParser.fix(e.event);
-      message = EmojiParser.fix(message);
+      message = message;
       message = message.replaceAll('View the details here!', '');
       message = message.replaceAll('Please click here to continue.', '');
       message = message.replaceAll(' [view]', '.');
@@ -2794,7 +2823,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         msg.title = msg.title.toString();
       }
 
-      String title = EmojiParser.fix(msg.title);
+      String title = msg.title;
       Widget insideIcon = _messagesInsideIconCases(msg.type);
 
       IndicatorStyle iconBubble;
@@ -4233,8 +4262,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber > limit) limit = _messagesShowNumber;
     if (_eventsShowNumber > limit) limit = _eventsShowNumber;
 
-    var apiResponse = await TornApiCaller.ownExtended(_userProv.basic.userApiKey, limit).getProfileExtended;
-    var apiChain = await TornApiCaller.chain(_userProv.basic.userApiKey).getChainStatus;
+    var apiResponse = await TornApiCaller().getProfileExtended(limit: limit);
+    var apiChain = await TornApiCaller().getChainStatus();
 
     if (mounted) {
       setState(() {
@@ -4268,8 +4297,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _apiRetries++;
           } else {
             _apiGoodData = false;
-            var error = apiResponse as ApiError;
-            _apiError = error.errorReason;
+            _apiError = apiResponse as ApiError;
             _apiRetries = 0;
           }
         }
@@ -4284,7 +4312,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //  - (async) Bazaar
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
-      _getBazaarInfo();
     }
 
     _retrievePendingNotifications();
@@ -4292,13 +4319,15 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future _getMiscCardInfo() async {
     try {
-      var miscApiResponse = await TornApiCaller.ownMisc(_userProv.basic.userApiKey).getProfileMisc;
+      var miscApiResponse = await TornApiCaller().getProfileMisc();
 
-      var educationResponse = await TornApiCaller.education(_userProv.basic.userApiKey).getEducation;
+      if (_tornEducationModel == null) {
+        _tornEducationModel = await TornApiCaller().getEducation();
+      }
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
-      if (miscApiResponse is OwnProfileMisc && educationResponse is TornEducationModel) {
+      if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
         // Get this async
         if (_settingsProvider.oCrimesEnabled) {
           _getFactionCrimes();
@@ -4316,7 +4345,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         setState(() {
           _miscModel = miscApiResponse;
           _miscApiFetchedOnce = true;
-          _tornEducationModel = educationResponse;
         });
       }
     } catch (e) {
@@ -4326,7 +4354,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _getFactionCrimes() async {
     try {
-      var factionCrimes = await TornApiCaller.factionCrimes(_userProv.basic.userApiKey).getFactionCrimes;
+      var factionCrimes = await TornApiCaller().getFactionCrimes();
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes is FactionCrimesModel) {
@@ -4483,19 +4511,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // Don't fill anything
-    }
-  }
-
-  Future _getBazaarInfo() async {
-    try {
-      var bazaarApiResponse = await TornApiCaller.bazaar(_userProv.basic.userApiKey).getBazaar;
-      if (bazaarApiResponse is BazaarModel) {
-        setState(() {
-          _bazaarModel = bazaarApiResponse;
-        });
-      }
-    } catch (e) {
-      // If something fails, we simple don't show the bazaar section
     }
   }
 
@@ -6541,7 +6556,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (element) async {
-      var rentDetails = await TornApiCaller.property(_userProv.basic.userApiKey, element).getProperty;
+      var rentDetails = await TornApiCaller().getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         var timeLeft = rentDetails.property.rented.daysLeft;

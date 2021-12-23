@@ -850,7 +850,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   void _errorReset() {
     _chainStatusProvider.resetAllDefcon();
     BotToast.showText(
-      text: "Ops! Error encountered, all warning levels have been reset!",
+      text: "Oops! Error encountered, all warning levels have been reset!",
       textStyle: const TextStyle(
         fontSize: 13,
         color: Colors.white,
@@ -1180,7 +1180,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
                           String inputId = _addIdController.text;
                           _addIdController.text = '';
 
-                          dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
                           String message = "";
                           Color messageColor = Colors.green[700];
                           if (target is TargetModel) {

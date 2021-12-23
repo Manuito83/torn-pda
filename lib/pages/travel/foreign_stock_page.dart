@@ -1,16 +1,13 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
-import 'package:flutter/painting.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -239,7 +236,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                               ),
                               SizedBox(height: 15),
                               Text(
-                                'OPS!',
+                                'OOPS!',
                                 style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
                               ),
                               Padding(
@@ -788,15 +785,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future tornItems() async {
-        _allTornItems = await TornApiCaller.items(widget.apiKey).getItems;
+        _allTornItems = await TornApiCaller().getItems();
       }
 
       Future inventory() async {
-        _inventory = await TornApiCaller.inventory(widget.apiKey).getInventory;
+        _inventory = await TornApiCaller().getInventory();
       }
 
       Future profileMisc() async {
-        _travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
+        _travelModel = await TornApiCaller().getTravel();
       }
 
       // Get all APIs at the same time
@@ -1278,7 +1275,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   _refreshMoney() async {
-    var travelModel = await TornApiCaller.travel(widget.apiKey).getTravel;
+    var travelModel = await TornApiCaller().getTravel();
     if (travelModel is TravelModel && mounted) {
       setState(() {
         _travelModel = travelModel;

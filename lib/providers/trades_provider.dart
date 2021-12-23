@@ -47,7 +47,6 @@ class TradesProvider extends ChangeNotifier {
 
   void updateTrades({
     @required playerId,
-    @required String userApiKey,
     @required String sellerName,
     @required int sellerId,
     @required int tradeId,
@@ -106,7 +105,7 @@ class TradesProvider extends ChangeNotifier {
     if (leftItemsElements.length > 0 || rightItemsElements.length > 0) {
       var allTornItems;
       try {
-        allTornItems = await TornApiCaller.items(userApiKey).getItems;
+        allTornItems = await TornApiCaller().getItems();
       } catch (e) {
         print(e);
       }

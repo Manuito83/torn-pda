@@ -24,6 +24,7 @@ import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
+import 'package:torn_pda/pages/items_page.dart';
 import 'package:torn_pda/pages/loot.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
@@ -52,8 +53,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  final int _settingsPosition = 8;
-  final int _aboutPosition = 9;
+  final int _settingsPosition = 9;
+  final int _aboutPosition = 10;
   var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -65,6 +66,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Loot",
     "Friends",
     "Awards",
+    "Items",
     "Stock Market",
     "Alerts",
     "Settings",
@@ -480,7 +482,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+          var own = await TornApiCaller().getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
             int xanaxComparison = otherXanax - own.personalstats.xantaken;
             int refillsComparison = otherRefills - own.personalstats.refills;
@@ -644,7 +646,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             int otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            var own = await TornApiCaller.ownPersonalStats(_userProvider.basic.userApiKey).getOwnPersonalStats;
+            var own = await TornApiCaller().getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
               int xanaxComparison = otherXanax - own.personalstats.xantaken;
               int refillsComparison = otherRefills - own.personalstats.refills;
@@ -954,18 +956,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return AwardsPage();
         break;
       case 6:
-        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
+        return ItemsPage();
         break;
       case 7:
-        return AlertsSettings(_onChangeStockMarketInMenu);
+        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
         break;
       case 8:
-        return SettingsPage(changeUID: changeUID);
+        return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 9:
-        return AboutPage(uid: _userUID);
+        return SettingsPage(changeUID: changeUID);
         break;
       case 10:
+        return AboutPage(uid: _userUID);
+        break;
+      case 11:
         return TipsPage();
         break;
 
@@ -995,18 +1000,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return const Icon(MdiIcons.trophy);
         break;
       case 6:
-        return const Icon(MdiIcons.bankTransfer);
+        return const Icon(MdiIcons.packageVariantClosed);
         break;
       case 7:
-        return const Icon(Icons.notifications_active);
+        return const Icon(MdiIcons.bankTransfer);
         break;
       case 8:
-        return const Icon(Icons.settings);
+        return const Icon(Icons.notifications_active);
         break;
       case 9:
-        return const Icon(Icons.info_outline);
+        return const Icon(Icons.settings);
         break;
       case 10:
+        return const Icon(Icons.info_outline);
+        break;
+      case 11:
         return const Icon(Icons.question_answer_outlined);
         break;
       default:
@@ -1101,7 +1109,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider.basic.userApiKey;
-    final dynamic prof = await TornApiCaller.ownBasic(savedKey).getProfileBasic;
+    final dynamic prof = await TornApiCaller().getProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof

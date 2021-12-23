@@ -697,16 +697,15 @@ class _LootPageState extends State<LootPage> {
   }
 
   Future<bool> _updateWithTornApi(int tsNow) async {
+    int apiSuccess = 0;
     try {
       for (var id in _npcIds) {
         // Get each target from our static list from Torn
-        var tornTarget = await TornApiCaller.target(
-          _userProvider.basic.userApiKey,
-          id.toString(),
-        ).getTarget;
+        var tornTarget = await TornApiCaller().getTarget(playerId: id.toString());
 
         var newNpcLoot = LootModel();
         if (tornTarget is TargetModel) {
+          apiSuccess++;
           _dbLootInfo.forEach((dbId, dbHospOut) {
             // Look for our tornTarget
             if (dbId == id) {
@@ -768,6 +767,9 @@ class _LootPageState extends State<LootPage> {
         }
       }
     } catch (e) {
+      return false;
+    }
+    if (apiSuccess == 0) {
       return false;
     }
     return true;

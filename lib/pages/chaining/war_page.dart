@@ -16,7 +16,6 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
@@ -39,12 +38,10 @@ class WarOptions {
 }
 
 class WarPage extends StatefulWidget {
-  final String userKey;
   //final Function tabCallback;
 
   const WarPage({
     Key key,
-    @required this.userKey,
     //@required this.tabCallback,
   }) : super(key: key);
 
@@ -171,7 +168,6 @@ class _WarPageState extends State<WarPage> {
           if (w.showChainWidget)
             ChainWidget(
               key: _chainWidgetKey,
-              userKey: widget.userKey,
               alwaysDarkBackground: false,
               callBackOptions: _callBackChainOptions,
             ),
@@ -506,7 +502,6 @@ class AddFactionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
     final targets = context.read<TargetsProvider>().allTargets; // To retrieve existing notes and FF/R
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -620,7 +615,7 @@ class AddFactionDialog extends StatelessWidget {
 
                         // If an user ID was inserted, we need to transform it first
                         if (warController.addFromUserId) {
-                          dynamic target = await TornApiCaller.target(apiKey, inputId).getTarget;
+                          dynamic target = await TornApiCaller().getTarget(playerId: inputId);
                           String convertError = "";
                           if (target is TargetModel) {
                             inputId = target.faction.factionId.toString();

@@ -3,7 +3,6 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -1228,6 +1227,8 @@ class _WarCardState extends State<WarCard> {
       Color refillColor = Colors.orange;
       int enhancementComparison = 0;
       Color enhancementColor = _themeProvider.mainText;
+      int cansComparison = 0;
+      Color cansColor = Colors.orange;
       Color sslColor = Colors.green;
       bool sslProb = true;
       int ecstasy = 0;
@@ -1277,6 +1278,20 @@ class _WarCardState extends State<WarCard> {
         style: TextStyle(color: enhancementColor, fontSize: 11),
       );
 
+      // CANS
+      int otherCans = _member.memberCans;
+      int myCans = _member.myCans;
+      cansComparison = otherCans - myCans;
+      if (cansComparison < 0) {
+        cansColor = Colors.green;
+      } else if (cansComparison > 0) {
+        cansColor = Colors.red;
+      }
+      Text cansText = Text(
+        "C",
+        style: TextStyle(color: cansColor, fontSize: 11),
+      );
+
       /// SSL
       /// If (xan + esc) > 150, SSL is blank;
       /// if (esc + xan) < 150 & LSD < 50, SSL is green;
@@ -1308,6 +1323,8 @@ class _WarCardState extends State<WarCard> {
       additional.add(refillText);
       additional.add(SizedBox(width: 5));
       additional.add(enhancementText);
+      additional.add(SizedBox(width: 5));
+      additional.add(cansText);
       additional.add(SizedBox(width: 5));
       additional.add(sslWidget);
       additional.add(SizedBox(width: 5));
@@ -1345,6 +1362,8 @@ class _WarCardState extends State<WarCard> {
                 refillColor,
                 enhancementComparison,
                 enhancementColor,
+                cansComparison,
+                cansColor,
                 sslColor,
                 sslProb,
                 _member,
@@ -1530,7 +1549,6 @@ class _WarCardState extends State<WarCard> {
             attackNotesList: attackNotes,
             attackNotesColorList: attacksNotesColor,
             attacksCallback: _updateSeveralTargets,
-            userKey: _userProvider.basic.userApiKey,
             war: true,
             showNotes: await Prefs().getShowTargetsNotes(),
             showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
@@ -1583,6 +1601,8 @@ class _WarCardState extends State<WarCard> {
     Color refillColor,
     int enhancementCompare,
     Color enhancementColor,
+    int cansCompare,
+    Color cansColor,
     Color sslColor,
     bool sslProb,
     Member member,
@@ -1647,6 +1667,27 @@ class _WarCardState extends State<WarCard> {
           child: Text(
             "$enhancementRelative",
             style: TextStyle(color: enhancementColor, fontSize: 14),
+          ),
+        ),
+      ],
+    );
+
+    String cansRelative = "SAME as you";
+    if (cansCompare > 0) {
+      cansRelative = "${cansCompare.abs()} MORE than you";
+    } else if (cansCompare < 0) {
+      cansRelative = "${cansCompare.abs()} LESS than you";
+    }
+    Widget cansWidget = Row(
+      children: [
+        Text(
+          "> Cans: ",
+          style: TextStyle(fontSize: 14),
+        ),
+        Flexible(
+          child: Text(
+            "$cansRelative",
+            style: TextStyle(color: cansColor, fontSize: 14),
           ),
         ),
       ],
@@ -1763,6 +1804,10 @@ class _WarCardState extends State<WarCard> {
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
               child: enhancementWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),
+              child: cansWidget,
             ),
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4, bottom: 0),

@@ -45,7 +45,7 @@ class UserDetailsProvider extends ChangeNotifier {
         // NOTE: calling basic to make things faster
         // Basic includes:
         // + Battle stats for TAC
-        var apiVerify = await TornApiCaller.ownBasic(basic.userApiKey).getProfileBasic;
+        var apiVerify = await TornApiCaller().getProfileBasic();
 
         if (apiVerify is OwnProfileBasic) {
           // Reassign from saved user, as these don't come with the API

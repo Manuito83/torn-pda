@@ -29,6 +29,7 @@ dependencies:
   cloud_functions: ^3.0.5
   cookie_jar: ^3.0.1
   cupertino_icons: ^1.0.2
+  dio: ^4.0.4
   device_info: ^2.0.0
   dotted_border: ^2.0.0
   easy_rich_text: ^0.5.3
@@ -52,7 +53,7 @@ dependencies:
   flutter_speed_dial: ^4.0.0-dev.1
   get: ^4.3.8
   html: ^0.15.0
-  http: ^0.13.2
+  http: ^0.13.4
   lint: ^1.5.3
   ## flutter pub run import_sorter:main
   import_sorter: ^4.5.0
@@ -112,6 +113,7 @@ flutter:
     - images/icons/inventory/
     - images/icons/home/
     - images/icons/status/
+    - images/icons/rarity/
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/

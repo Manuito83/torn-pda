@@ -126,7 +126,7 @@ export const alertsGroup = {
           .where("active", "==", true)
           .where("alertsEnabled", "==", true)
           .where("platform", "==", "android")
-          .where("level", "<", 40)
+          .where("level", "<", 42)
           .get();
 
         const subscribers = response.docs.map((d) => d.data());
@@ -191,7 +191,7 @@ export const alertsGroup = {
           .where("active", "==", true)
           .where("alertsEnabled", "==", true)
           .where("platform", "==", "android")
-          .where("level", ">=", 40)
+          .where("level", ">=", 42)
           .get();
 
         const subscribers = response.docs.map((d) => d.data());
