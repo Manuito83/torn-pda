@@ -192,8 +192,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                               expanded: _quickItemsActive
                                   ? QuickItemsWidget(
                                       webViewController: _webViewController,
-                                      appBarTop: _settingsProvider.appBarTop,
-                                      browserDialog: false,
                                       webviewType: 'attacks',
                                     )
                                   : SizedBox.shrink(),
@@ -232,8 +230,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                               expanded: _quickItemsActive
                                   ? QuickItemsWidget(
                                       webViewController: _webViewController,
-                                      appBarTop: _settingsProvider.appBarTop,
-                                      browserDialog: false,
                                       webviewType: 'attacks',
                                     )
                                   : SizedBox.shrink(),

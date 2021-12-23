@@ -38,6 +38,15 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.3
+    var v2_6_3 = ChangeLogItem();
+    v2_6_3.main.version = 'Torn PDA v2.6.3';
+    v2_6_3.main.date = '15 JAN 2022';
+    String feat2_6_3_1 = "Quick items and crimes can now also be configured from the quick browser";
+    String feat2_6_3_2 = "Fixed several reported issues";
+    v2_6_3.features.add(feat2_6_3_1);
+    v2_6_3.features.add(feat2_6_3_2);
+
     // VERSION 2.6.2
     var v2_6_2 = ChangeLogItem();
     v2_6_2.main.version = 'Torn PDA v2.6.2';
@@ -990,6 +999,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_3);
     itemList.add(v2_6_2);
     itemList.add(v2_6_1);
     itemList.add(v2_6_0);

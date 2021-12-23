@@ -24,7 +24,6 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
-import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
@@ -623,10 +622,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           )
         else
           const SizedBox.shrink(),
+        // Profile attack
+        _profileAttackWidget,
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
-        _profileAttackWidget,
         if (_settingsProvider.appBarTop)
           ExpandablePanel(
             theme: const ExpandableThemeData(
@@ -640,8 +640,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _crimesActive
                 ? CrimesWidget(
                     controller: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                   )
                 : const SizedBox.shrink(),
           )
@@ -663,8 +661,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                     webviewType: 'inapp',
                   )
                 : const SizedBox.shrink(),
@@ -735,7 +731,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
                   }
                   */
-                  
 
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
@@ -1110,8 +1105,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _crimesActive
                 ? CrimesWidget(
                     controller: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                   )
                 : const SizedBox.shrink(),
           )
@@ -1130,8 +1123,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                     webviewType: 'inapp',
                   )
                 : const SizedBox.shrink(),
@@ -1360,9 +1351,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         actions: <Widget>[
           _travelHomeIcon(),
-          _crimesInfoIcon(),
-          _crimesMenuIcon(),
-          _quickItemsMenuIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
           _vaultOptionsIcon(),
@@ -1855,61 +1843,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _crimesController.expanded = true;
         _crimesActive = true;
       });
-    }
-  }
-
-  Widget _crimesInfoIcon() {
-    if (_crimesActive) {
-      return IconButton(
-        icon: const Icon(Icons.info_outline),
-        onPressed: () {
-          BotToast.showText(
-            text: 'If you need more information about a crime, maintain the '
-                'quick crime button pressed for a few seconds and a tooltip '
-                'will be shown!',
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.grey[700],
-            duration: const Duration(seconds: 8),
-            contentPadding: const EdgeInsets.all(10),
-          );
-        },
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
-  }
-
-  Widget _crimesMenuIcon() {
-    if (_crimesActive) {
-      return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
-        openBuilder: (BuildContext context, VoidCallback _) {
-          return CrimesOptions();
-        },
-        closedElevation: 0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(56 / 2),
-          ),
-        ),
-        closedColor: Colors.transparent,
-        closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return const Padding(
-            padding: EdgeInsets.only(right: 5),
-            child: SizedBox(
-              height: 20,
-              width: 20,
-              child: Icon(MdiIcons.fingerprint, color: Colors.white),
-            ),
-          );
-        },
-      );
-    } else {
-      return const SizedBox.shrink();
     }
   }
 
@@ -2503,37 +2436,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Widget _quickItemsMenuIcon() {
-    if (_quickItemsActive) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 5),
-        child: OpenContainer(
-          transitionDuration: const Duration(milliseconds: 500),
-          transitionType: ContainerTransitionType.fadeThrough,
-          openBuilder: (BuildContext context, VoidCallback _) {
-            return QuickItemsOptions();
-          },
-          closedElevation: 0,
-          closedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(56 / 2),
-            ),
-          ),
-          closedColor: Colors.transparent,
-          closedBuilder: (BuildContext context, VoidCallback openContainer) {
-            return SizedBox(
-              height: 20,
-              width: 20,
-              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
-            );
-          },
-        ),
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
-  }
-
   // ASSESS PROFILES
   Future _assessProfileAttack() async {
     if (mounted) {
@@ -2863,32 +2765,32 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
-                        child: GestureDetector(
-                          child: Text(
-                            "Copy link",
-                            style: TextStyle(
-                              fontSize: 12,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                      child: GestureDetector(
+                        child: Text(
+                          "Copy link",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () {
+                          var open = url.toString() ?? src;
+                          Clipboard.setData(ClipboardData(text: open));
+                          BotToast.showText(
+                            text: "Link copied to the clipboard: ${open}",
+                            textStyle: TextStyle(
+                              fontSize: 14,
                               color: Colors.white,
                             ),
-                          ),
-                          onTap: () {
-                            var open = url.toString()?? src;
-                            Clipboard.setData(ClipboardData(text: open));
-                            BotToast.showText(
-                              text: "Link copied to the clipboard: ${open}",
-                              textStyle: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              contentColor: Colors.grey[700],
-                              duration: Duration(seconds: 2),
-                              contentPadding: EdgeInsets.all(10),
-                            );
-                          },
-                        ),
+                            contentColor: Colors.grey[700],
+                            duration: Duration(seconds: 2),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                        },
                       ),
+                    ),
                     if (src != null)
                       Column(
                         children: [

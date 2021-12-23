@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'package:animations/animations.dart';
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -9,18 +11,14 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class CrimesWidget extends StatefulWidget {
   final InAppWebViewController controller;
-  final bool appBarTop;
-  final bool browserDialog;
 
   CrimesWidget({
+    Key key,
     @required this.controller,
-    @required this.appBarTop,
-    @required this.browserDialog,
-  });
+  }) : super(key: key);
 
   @override
   _CrimesWidgetState createState() => _CrimesWidgetState();
@@ -39,14 +37,33 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     _crimesProvider = Provider.of<CrimesProvider>(context, listen: true);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: Align(
-        alignment: Alignment.center,
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 5,
-          runSpacing: -10,
-          children: _crimeButtons(),
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints.loose(Size.fromHeight(
+                      (MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
+                  3),
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 5,
+                    runSpacing: -10,
+                    children: _crimeButtons(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_crimesProvider.activeCrimesList.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: _settingsIcon(),
+            ),
+        ],
       ),
     );
   }
@@ -105,17 +122,6 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     }
 
     if (myList.isEmpty) {
-      String appBarPosition = "above";
-      if (!widget.appBarTop) {
-        appBarPosition = "below";
-      }
-
-      String explanation =
-          "Use the fingerprint icon $appBarPosition to configure quick crimes";
-      if (widget.browserDialog) {
-        explanation = "Use the full browser to configure your quick crimes";
-      }
-
       myList.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
@@ -123,33 +129,13 @@ class _CrimesWidgetState extends State<CrimesWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                explanation,
+                "Configure your preferred quick crimes",
                 style: TextStyle(
                   color: Colors.orangeAccent,
                   fontSize: 12,
                 ),
               ),
-              if (widget.browserDialog)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: GestureDetector(
-                    onTap: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return BrowserExplanationDialog();
-                        },
-                      );
-                    },
-                    child: Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: Colors.orangeAccent,
-                    ),
-                  ),
-                )
-              else
-                SizedBox.shrink(),
+              _settingsIcon(),
             ],
           ),
         ),
@@ -157,5 +143,35 @@ class _CrimesWidgetState extends State<CrimesWidget> {
     }
 
     return myList;
+  }
+
+  Widget _settingsIcon() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return CrimesOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(Icons.settings, size: 16, color: Colors.orange),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
