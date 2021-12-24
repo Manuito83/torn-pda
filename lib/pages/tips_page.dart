@@ -303,7 +303,7 @@ class _TipsPageState extends State<TipsPage> {
       ExpandableTip(
         headerValue: "Restore previous browsing session",
         expandedValue: "You can restore your previous browsing session, including the first tab, active tab and "
-        "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
+            "type of browser (quick or full) by long-pressing the 'T' menu floating button in the Profile section.",
       ),
     );
     tips.add(
@@ -578,9 +578,11 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "How are stats calculated?",
-        expandedValue: "If your faction maintains a list of spies in YATA, Torn PDA will retrieve it (at intervals "
-            "not shorter than an hour) and show exact stats in the cards (please bear in mind that you need to have "
-            "API Access [AA] permission for this, ask your faction leader about it!)."
+        expandedValue:
+            "If your faction maintains a list of spies in YATA or Torn Stats, Torn PDA will retrieve it (at intervals "
+            "not shorter than an hour) and show exact stats in the cards. Please bear in mind that you might need to have "
+            "special permissions in YATA or Torn Stats in order for this to work (ask your faction leader about it!)."
+            "\n\nYou can switch between YATA and Torn Stats as your source of spies in Settings."
             "\n\nIf exact stats can't be obtained, then Torn PDA will calculate approximate stats whenever a target is "
             "updated (individually or as part of a global update).",
       ),

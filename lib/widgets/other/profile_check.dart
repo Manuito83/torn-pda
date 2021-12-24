@@ -10,6 +10,7 @@ import 'package:expandable/expandable.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/tornstats/tornstats_spy_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
@@ -28,6 +29,11 @@ import 'package:torn_pda/utils/timestamp_ago.dart';
 enum ProfileCheckType {
   profile,
   attack,
+}
+
+enum SpiesSource {
+  yata,
+  tornStats,
 }
 
 class ProfileAttackCheckWidget extends StatefulWidget {
@@ -498,32 +504,71 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // 2 is only if spies
 
     if (_settingsProvider.profileStatsEnabled == "0" || _settingsProvider.profileStatsEnabled == "2") {
-      var spyModel = YataSpyModel();
-      var spyFoundInYata = false;
+      int strength = 0;
+      int defense = 0;
+      int speed = 0;
+      int dexterity = 0;
+      int total = 0;
+      int timestamp = 0;
+      String name = "";
+      String factionName = "";
+      bool spyFound = false;
+      SpiesSource spiesSource;
+
       try {
-        String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
-        var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
-        if (resp.statusCode == 200) {
-          var spyJson = json.decode(resp.body);
-          var spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
-          if (spiedStats != null) {
-            spyModel = yataSpyModelFromJson(json.encode(spiedStats));
-            spyFoundInYata = true;
+        if (_settingsProvider.spiesSource == SpiesSource.yata) {
+          String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
+          var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
+          if (resp.statusCode == 200) {
+            var spyJson = json.decode(resp.body);
+            var spiedStats = spyJson["spies"]["${otherProfile.playerId}"];
+            if (spiedStats != null) {
+              var spyModel = yataSpyModelFromJson(json.encode(spiedStats));
+              spiesSource = SpiesSource.yata;
+              strength = spyModel.strength;
+              defense = spyModel.defense;
+              speed = spyModel.speed;
+              dexterity = spyModel.dexterity;
+              total = spyModel.total;
+              timestamp = spyModel.update;
+              name = spyModel.targetName;
+              factionName = spyModel.targetFactionName;
+              spyFound = true;
+            }
+          }
+        } else {
+          String tornStatsURL =
+              'https://www.tornstats.com/api/v1/${_userDetails.basic.userApiKey}/spy/${otherProfile.playerId}';
+          var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 5));
+          if (resp.statusCode == 200) {
+            TornStatsSpyModel spyJson = tornStatsSpyModelFromJson(resp.body);
+            if (spyJson != null) {
+              if (!spyJson.message.contains("ERROR") && !spyJson.spy.message.contains("not found")) {
+                spiesSource = SpiesSource.tornStats;
+                strength = spyJson.spy.strength;
+                defense = spyJson.spy.defense;
+                speed = spyJson.spy.speed;
+                dexterity = spyJson.spy.dexterity;
+                total = spyJson.spy.total;
+                timestamp = spyJson.spy.timestamp;
+                spyFound = true;
+              }
+            }
           }
         }
       } catch (e) {
-        // Won't get YATA details
+        // Won't get spies details
       }
 
-      if (spyFoundInYata) {
+      if (spyFound) {
         // Stats spans
         var statsSpans = <TextSpan>[];
         // STR
         var strColor = Colors.white;
-        if (spyModel.strength != -1) {
-          if (_userDetails.basic.strength >= spyModel.strength) {
+        if (strength != -1) {
+          if (_userDetails.basic.strength >= strength) {
             strColor = Colors.green;
-          } else if (_userDetails.basic.strength * 1.15 > spyModel.strength) {
+          } else if (_userDetails.basic.strength * 1.15 > strength) {
             strColor = Colors.orange;
           } else {
             strColor = Colors.red;
@@ -536,7 +581,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(spyModel.strength)}",
+              text: "${formatBigNumbers(strength)}",
               style: TextStyle(color: strColor, fontSize: 11),
             ),
           );
@@ -556,10 +601,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
         // SPD
         var spdColor = Colors.white;
-        if (spyModel.speed != -1) {
-          if (_userDetails.basic.speed >= spyModel.speed) {
+        if (speed != -1) {
+          if (_userDetails.basic.speed >= speed) {
             spdColor = Colors.green;
-          } else if (_userDetails.basic.speed * 1.15 > spyModel.speed) {
+          } else if (_userDetails.basic.speed * 1.15 > speed) {
             spdColor = Colors.orange;
           } else {
             spdColor = Colors.red;
@@ -572,7 +617,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(spyModel.speed)}",
+              text: "${formatBigNumbers(speed)}",
               style: TextStyle(color: spdColor, fontSize: 11),
             ),
           );
@@ -592,10 +637,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
         // DEF
         var defColor = Colors.white;
-        if (spyModel.defense != -1) {
-          if (_userDetails.basic.defense >= spyModel.defense) {
+        if (defense != -1) {
+          if (_userDetails.basic.defense >= defense) {
             defColor = Colors.green;
-          } else if (_userDetails.basic.defense * 1.15 > spyModel.defense) {
+          } else if (_userDetails.basic.defense * 1.15 > defense) {
             defColor = Colors.orange;
           } else {
             defColor = Colors.red;
@@ -608,7 +653,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(spyModel.defense)}",
+              text: "${formatBigNumbers(defense)}",
               style: TextStyle(color: defColor, fontSize: 11),
             ),
           );
@@ -628,10 +673,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
         // DEX
         var dexColor = Colors.white;
-        if (spyModel.dexterity != -1) {
-          if (_userDetails.basic.dexterity >= spyModel.dexterity) {
+        if (dexterity != -1) {
+          if (_userDetails.basic.dexterity >= dexterity) {
             dexColor = Colors.green;
-          } else if (_userDetails.basic.dexterity * 1.15 > spyModel.dexterity) {
+          } else if (_userDetails.basic.dexterity * 1.15 > dexterity) {
             dexColor = Colors.orange;
           } else {
             dexColor = Colors.red;
@@ -644,7 +689,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
           statsSpans.add(
             TextSpan(
-              text: "${formatBigNumbers(spyModel.dexterity)}",
+              text: "${formatBigNumbers(dexterity)}",
               style: TextStyle(color: dexColor, fontSize: 11),
             ),
           );
@@ -685,11 +730,11 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
 
         Color infoColorStats = Colors.white;
-        if (spyModel.total != -1) {
+        if (total != -1) {
           infoColorStats = Colors.red;
-          if (_userDetails.basic.total >= spyModel.total) {
+          if (_userDetails.basic.total >= total) {
             infoColorStats = Colors.green;
-          } else if (_userDetails.basic.total * 1.15 > spyModel.total) {
+          } else if (_userDetails.basic.total * 1.15 > total) {
             infoColorStats = Colors.orange;
           }
         }
@@ -702,7 +747,9 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Image.asset('images/icons/yata_logo.png', height: 18),
+                Image.asset(
+                    spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+                    height: 18),
                 SizedBox(width: 8),
                 Flexible(
                   child: Row(
@@ -725,7 +772,17 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             size: 18,
                           ),
                           onTap: () {
-                            _showSpiedDetailsDialog(spyModel);
+                            _showSpiedDetailsDialog(
+                              strength: strength,
+                              defense: defense,
+                              speed: speed,
+                              dexterity: dexterity,
+                              total: total,
+                              name: name,
+                              factionName: factionName,
+                              update: timestamp,
+                              spiesSource: spiesSource,
+                            );
                           },
                         ),
                       ),
@@ -736,7 +793,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             ),
           ),
         );
-      } else if (!spyFoundInYata && _settingsProvider.profileStatsEnabled == "0") {
+      } else if (!spyFound && _settingsProvider.profileStatsEnabled == "0") {
         // Even if we have no YATA spy, but we want to show estimated stats
         var npcs = [4, 10, 15, 17, 19, 20];
         String estimatedStats = "";
@@ -970,14 +1027,24 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
   }
 
-  void _showSpiedDetailsDialog(YataSpyModel spyModel) {
+  void _showSpiedDetailsDialog({
+    @required int strength,
+    @required int defense,
+    @required int speed,
+    @required int dexterity,
+    @required int total,
+    @required int update,
+    @required String name,
+    @required String factionName,
+    @required SpiesSource spiesSource,
+  }) {
     String lastUpdated = "";
-    if (spyModel.update != 0) {
-      lastUpdated = readTimestamp(spyModel.update);
+    if (update != 0) {
+      lastUpdated = readTimestamp(update);
     }
 
     Widget strWidget;
-    if (spyModel.strength == -1) {
+    if (strength == -1) {
       strWidget = Text(
         "Strength: unknown",
         style: TextStyle(fontSize: 12),
@@ -985,7 +1052,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var strDiff = "";
       Color strColor;
-      var result = _userDetails.basic.strength - spyModel.strength;
+      var result = _userDetails.basic.strength - strength;
       if (result == 0) {
         strDiff = "Same as you";
         strColor = Colors.orange;
@@ -1001,7 +1068,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Strength: ${formatBigNumbers(spyModel.strength)}",
+            "Strength: ${formatBigNumbers(strength)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1013,7 +1080,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
 
     Widget spdWidget;
-    if (spyModel.speed == -1) {
+    if (speed == -1) {
       spdWidget = Text(
         "Speed: unknown",
         style: TextStyle(fontSize: 12),
@@ -1021,7 +1088,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var spdDiff = "";
       Color spdColor;
-      var result = _userDetails.basic.speed - spyModel.speed;
+      var result = _userDetails.basic.speed - speed;
       if (result == 0) {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
@@ -1037,7 +1104,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Speed: ${formatBigNumbers(spyModel.speed)}",
+            "Speed: ${formatBigNumbers(speed)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1049,7 +1116,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
 
     Widget defWidget;
-    if (spyModel.defense == -1) {
+    if (defense == -1) {
       defWidget = Text(
         "Defense: unknown",
         style: TextStyle(fontSize: 12),
@@ -1057,7 +1124,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var defDiff = "";
       Color defColor;
-      var result = _userDetails.basic.defense - spyModel.defense;
+      var result = _userDetails.basic.defense - defense;
       if (result == 0) {
         defDiff = "Same as you";
         defColor = Colors.orange;
@@ -1073,7 +1140,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Defense: ${formatBigNumbers(spyModel.defense)}",
+            "Defense: ${formatBigNumbers(defense)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1085,7 +1152,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
 
     Widget dexWidget;
-    if (spyModel.dexterity == -1) {
+    if (dexterity == -1) {
       dexWidget = Text(
         "Dexterity: unknown",
         style: TextStyle(fontSize: 12),
@@ -1093,7 +1160,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var dexDiff = "";
       Color dexColor;
-      var result = _userDetails.basic.dexterity - spyModel.dexterity;
+      var result = _userDetails.basic.dexterity - dexterity;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -1109,7 +1176,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dexterity: ${formatBigNumbers(spyModel.dexterity)}",
+            "Dexterity: ${formatBigNumbers(dexterity)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
@@ -1121,7 +1188,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
 
     Widget totalWidget;
-    if (spyModel.total == -1) {
+    if (total == -1) {
       totalWidget = Text(
         "TOTAL: unknown",
         style: TextStyle(fontSize: 12),
@@ -1129,7 +1196,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       var totalDiff = "";
       Color totalColor;
-      var result = _userDetails.basic.total - spyModel.total;
+      var result = _userDetails.basic.total - total;
       if (result == 0) {
         totalDiff = "Same as you";
         totalColor = Colors.orange;
@@ -1145,12 +1212,31 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "TOTAL: ${formatBigNumbers(spyModel.total)}",
+            "TOTAL: ${formatBigNumbers(total)}",
             style: TextStyle(fontSize: 12),
           ),
           Text(
             totalDiff,
             style: TextStyle(fontSize: 12, color: totalColor),
+          ),
+        ],
+      );
+    }
+
+    Widget sourceWidget = SizedBox.shrink();
+    if (spiesSource != null) {
+      sourceWidget = Row(
+        children: [
+          Text(
+            "Source: ",
+            style: TextStyle(fontSize: 12),
+          ),
+          SizedBox(
+            height: 16,
+            width: 16,
+            child: Image.asset(
+              spiesSource == SpiesSource.yata ? 'images/icons/yata_logo.png' : 'images/icons/tornstats_logo.png',
+            ),
           ),
         ],
       );
@@ -1186,16 +1272,16 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       ),
       toastBuilder: (cancelFunc) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(spyModel.targetName),
+        title: name.isNotEmpty ? Text(name) : Text("Spied stats"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (spyModel.targetFactionName != "0")
+            if (factionName != "0" && factionName.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(4),
                 child: Text(
-                  "Faction: ${spyModel.targetFactionName}",
+                  "Faction: ${factionName}",
                   style: TextStyle(fontSize: 12),
                 ),
               ),
@@ -1226,6 +1312,10 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
             Padding(
               padding: const EdgeInsets.only(top: 20, left: 4),
               child: totalWidget,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 20, left: 4),
+              child: sourceWidget,
             ),
           ],
         ),

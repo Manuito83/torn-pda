@@ -43,9 +43,9 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.6.2';
-const String androidVersion = '165';
-const String iosVersion = '175';
+const String appVersion = '2.6.3';
+const String androidVersion = '166';
+const String iosVersion = '176';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
