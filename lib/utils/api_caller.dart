@@ -21,6 +21,7 @@ import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
+import 'package:torn_pda/models/perks/user_perks_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
@@ -67,6 +68,7 @@ enum ApiSelection {
   userStocks,
   tornStocks,
   marketItem,
+  perks,
 }
 
 class ApiError {
@@ -522,6 +524,23 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> getUserPerks() async {
+    dynamic apiResult;
+    await _apiCall(apiSelection: ApiSelection.perks).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return UserPerksModel.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, details: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _apiCall({
     @required ApiSelection apiSelection,
     String prefix = "",
@@ -604,6 +623,9 @@ class TornApiCaller {
         break;
       case ApiSelection.marketItem:
         url += 'market/$prefix?selections=bazaar,itemmarket';
+        break;
+              case ApiSelection.perks:
+        url += 'user/$prefix?selections=perks';
         break;
     }
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';

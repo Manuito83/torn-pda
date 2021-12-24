@@ -24,7 +24,6 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
-import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -40,6 +39,7 @@ import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
+import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
 import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
@@ -103,6 +103,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _crimesActive = false;
   final _crimesController = ExpandableController();
 
+  Widget _gymExpandable = SizedBox.shrink();
+
   var _tradesFullActive = false;
   var _tradesIconActive = false;
   Widget _tradesExpandable = const SizedBox.shrink();
@@ -152,6 +154,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
   bool _crimesTriggered = false;
+  bool _gymTriggered = false;
   bool _quickItemsTriggered = false;
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
@@ -667,6 +670,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           )
         else
           const SizedBox.shrink(),
+        // Gym widget
+        _gymExpandable,
         // Trades widget
         _tradesExpandable,
         // Vault widget
@@ -1483,6 +1488,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool anySectionTriggered = false;
     bool getItems = false;
     bool getCrimes = false;
+    bool getGym = false;
     bool getCity = false;
     bool getTrades = false;
     bool getVault = false;
@@ -1500,6 +1506,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         (!_currentUrl.contains('crimes.php') && _crimesTriggered)) {
       anySectionTriggered = true;
       getCrimes = true;
+    }
+
+    if ((_currentUrl.contains('gym.php') && !_gymTriggered) || (!_currentUrl.contains('gym.php') && _gymTriggered)) {
+      anySectionTriggered = true;
+      getGym = true;
     }
 
     if ((_currentUrl.contains('city.php') && !_cityTriggered) ||
@@ -1556,6 +1567,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
       if (getItems) _assessQuickItems(pageTitle);
       if (getCrimes) _assessCrimes(pageTitle);
+      if (getGym) _assessGym(pageTitle);
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
       if (getVault) _assessVault(doc: doc, pageTitle: pageTitle);
@@ -1568,12 +1580,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void _resetSectionsWithWidgets() {
     if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
+      _quickItemsTriggered = false;
+      _gymTriggered = false;
+      _vaultTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
+    } else if (_currentUrl.contains('gym.php') && _gymTriggered) {
+      _crimesTriggered = false;
       _quickItemsTriggered = false;
       _vaultTriggered = false;
       _cityTriggered = false;
@@ -1582,6 +1604,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains('properties.php') && _vaultTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
@@ -1589,6 +1612,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains('city.php') && _cityTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
@@ -1596,6 +1620,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains("trade.php") && _tradesTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
@@ -1603,6 +1628,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains("torn.com/profiles.php?XID=") && _profileTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
@@ -1610,6 +1636,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") && _attackTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
@@ -1617,6 +1644,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _profileTriggered = false;
     } else {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
@@ -1842,6 +1870,30 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       setState(() {
         _crimesController.expanded = true;
         _crimesActive = true;
+      });
+    }
+  }
+
+  // GYM
+  Future _assessGym(String pageTitle) async {
+    if (mounted) {
+      if (!pageTitle.contains('gym')) {
+        setState(() {
+          _gymTriggered = false;
+          _gymExpandable = const SizedBox.shrink();
+        });
+        return;
+      }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      if (_gymTriggered) {
+        return;
+      }
+      _gymTriggered = true;
+
+      setState(() {
+        _gymExpandable = GymWidget();
       });
     }
   }

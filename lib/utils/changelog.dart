@@ -42,10 +42,12 @@ class _ChangeLogState extends State<ChangeLog> {
     var v2_6_3 = ChangeLogItem();
     v2_6_3.main.version = 'Torn PDA v2.6.3';
     v2_6_3.main.date = '15 JAN 2022';
-    String feat2_6_3_1 = "Quick items and crimes can now also be configured from the quick browser";
-    String feat2_6_3_2 = "Fixed several reported issues";
+    String feat2_6_3_1 = "Added steadfast information to the gym";
+    String feat2_6_3_2 = "Quick items and crimes can now also be configured from the quick browser";
+    String feat2_6_3_3 = "Fixed several reported issues";
     v2_6_3.features.add(feat2_6_3_1);
     v2_6_3.features.add(feat2_6_3_2);
+    v2_6_3.features.add(feat2_6_3_3);
 
     // VERSION 2.6.2
     var v2_6_2 = ChangeLogItem();
