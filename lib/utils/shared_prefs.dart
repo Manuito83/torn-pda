@@ -25,6 +25,7 @@ class Prefs {
   final String _kTornStatsSpies = "pda_tornStatsSpies";
   final String _kTornStatsSpiesTime = "pda_tornStatsSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
+  final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
@@ -1775,6 +1776,19 @@ class Prefs {
   Future<bool> setJailModel(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kJailModel, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR RANKED WARD
+  /// -----------------------------
+  Future<bool> getRankedWarsInMenu() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRankedWarsInMenu) ?? false;
+  }
+
+  Future<bool> setRankedWarsInMenu(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRankedWarsInMenu, value);
   }
 
   /// -----------------------------

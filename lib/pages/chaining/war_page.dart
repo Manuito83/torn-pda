@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
+import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -176,7 +177,7 @@ class _WarPageState extends State<WarPage> {
                   child: WarTargetsList(warController: w),
                 )
               : WarTargetsList(warController: w),
-          SizedBox(height: 50),
+          if (_settingsProvider.appBarTop) SizedBox(height: 50),
         ],
       );
     });
@@ -401,7 +402,11 @@ class _WarPageState extends State<WarPage> {
               );
             }).toList();
           },
-        )
+        ),
+        IconButton(
+          icon: Icon(MdiIcons.earth),
+          onPressed: () => Get.to(() => RankedWarsPage()),
+        ),
       ],
     );
   }

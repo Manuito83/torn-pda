@@ -33,7 +33,7 @@ class FactionModel {
 
   int id;
   String name;
-  String tag;
+  dynamic tag;
   int leader;
   int coLeader;
   int respect;

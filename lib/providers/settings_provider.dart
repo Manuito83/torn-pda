@@ -392,6 +392,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _rankedWarsInMenu = false;
+  bool get rankedWarsInMenu => _rankedWarsInMenu;
+  set changeRankedWarsInMenu(bool choice) {
+    _rankedWarsInMenu = choice;
+    Prefs().setRankedWarsInMenu(_rankedWarsInMenu);
+    notifyListeners();
+  }
+
   var _stockExchangeInMenu = false;
   bool get stockExchangeInMenu => _stockExchangeInMenu;
   set changeStockExchangeInMenu(bool choice) {
@@ -582,6 +590,8 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
+
+    _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
