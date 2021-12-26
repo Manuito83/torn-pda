@@ -73,11 +73,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
               ),
             ),
           ),
-          if (_itemsProvider.activeQuickItems.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: _settingsIcon(),
-            ),
         ],
       ),
     );

@@ -57,11 +57,6 @@ class _CrimesWidgetState extends State<CrimesWidget> {
               ),
             ),
           ),
-          if (_crimesProvider.activeCrimesList.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: _settingsIcon(),
-            ),
         ],
       ),
     );

@@ -24,6 +24,8 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
+import 'package:torn_pda/pages/crimes/crimes_options.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -578,6 +580,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _travelHomeIcon(),
+                  _crimesMenuIcon(),
+                  _quickItemsMenuIcon(),
                   if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -1355,6 +1359,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         actions: <Widget>[
+          _crimesMenuIcon(),
+          _quickItemsMenuIcon(),
           _travelHomeIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
@@ -1871,6 +1877,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _crimesController.expanded = true;
         _crimesActive = true;
       });
+    }
+  }
+
+  Widget _crimesMenuIcon() {
+    if (_crimesActive) {
+      return OpenContainer(
+        transitionDuration: const Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return CrimesOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: 2),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(MdiIcons.fingerprint, color: widget.dialog ? _themeProvider.mainText : Colors.white),
+            ),
+          );
+        },
+      );
+    } else {
+      return const SizedBox.shrink();
     }
   }
 
@@ -2485,6 +2522,35 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _quickItemsController.expanded = true;
         _quickItemsActive = true;
       });
+    }
+  }
+
+  Widget _quickItemsMenuIcon() {
+    if (_quickItemsActive) {
+      return OpenContainer(
+        transitionDuration: const Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return QuickItemsOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return SizedBox(
+            height: 20,
+            width: 20,
+            child: Image.asset('images/icons/quick_items.png',
+                color: widget.dialog ? _themeProvider.mainText : Colors.white),
+          );
+        },
+      );
+    } else {
+      return const SizedBox.shrink();
     }
   }
 
