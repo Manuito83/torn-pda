@@ -478,16 +478,16 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
       let tornMessageId = "";
 
       if (newMessages === 1) {
-        notificationTitle = "You have a new message from " + newMessagesSenders[0];
+        notificationTitle = "Message from " + newMessagesSenders[0];
         notificationSubtitle = `Subject: "${newMessagesSubjects[0]}"`;
         tornMessageId = knownMessages[0];
       }
       else if (newMessages > 1 && newMessagesSenders.length === 1) {
-        notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders[0]}`;
+        notificationTitle = `${newMessages} new messages from ${newMessagesSenders[0]}`;
         notificationSubtitle = `Subjects: "${newMessagesSubjects.join('", "')}"`;
       }
       else if (newMessages > 1 && newMessagesSenders.length > 1) {
-        notificationTitle = `You have ${newMessages} new messages from ${newMessagesSenders.join(", ")}`;
+        notificationTitle = `${newMessages} new messages from ${newMessagesSenders.join(", ")}`;
         notificationSubtitle = `Subjects: "${newMessagesSubjects.join('", "')}"`;
       }
 
