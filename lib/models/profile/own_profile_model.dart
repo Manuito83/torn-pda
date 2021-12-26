@@ -625,7 +625,11 @@ class TornIcons {
     this.icon17,
     this.icon18,
     this.icon20,
+    this.icon29,
     this.icon30,
+    this.icon31,
+    this.icon32,
+    this.icon33,
     this.icon37,
     this.icon39,
     this.icon40,
@@ -670,7 +674,11 @@ class TornIcons {
   String icon17;
   String icon18;
   String icon20;
+  String icon29;
   String icon30;
+  String icon31;
+  String icon32;
+  String icon33;
   String icon37;
   String icon39;
   String icon40;
@@ -715,7 +723,11 @@ class TornIcons {
         icon17: json["icon17"] == null ? null : json["icon17"],
         icon18: json["icon18"] == null ? null : json["icon18"],
         icon20: json["icon20"] == null ? null : json["icon20"],
+        icon29: json["icon29"] == null ? null : json["icon29"],
         icon30: json["icon30"] == null ? null : json["icon30"],
+        icon31: json["icon31"] == null ? null : json["icon31"],
+        icon32: json["icon32"] == null ? null : json["icon32"],
+        icon33: json["icon33"] == null ? null : json["icon33"],
         icon37: json["icon37"] == null ? null : json["icon37"],
         icon39: json["icon39"] == null ? null : json["icon39"],
         icon40: json["icon40"] == null ? null : json["icon40"],
@@ -761,7 +773,11 @@ class TornIcons {
         "icon17": icon17 == null ? null : icon17,
         "icon18": icon18 == null ? null : icon18,
         "icon20": icon20 == null ? null : icon20,
+        "icon29": icon29 == null ? null : icon29,
         "icon30": icon30 == null ? null : icon30,
+        "icon31": icon31 == null ? null : icon31,
+        "icon32": icon32 == null ? null : icon32,
+        "icon33": icon33 == null ? null : icon33,
         "icon37": icon37 == null ? null : icon37,
         "icon39": icon39 == null ? null : icon39,
         "icon40": icon40 == null ? null : icon40,
