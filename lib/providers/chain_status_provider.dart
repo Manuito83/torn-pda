@@ -1789,9 +1789,10 @@ class ChainStatusProvider extends ChangeNotifier {
   /// Deactivates status when the widget is out of view, the watcher is not being used and we are no longer chaining
   /// Does not apply to cooldown
   void tryToDeactivateStatus() {
-    if (!widgetVisible &&
-        !watcherActive &&
-        ((chainModel.chain.current == 0 && chainModel.chain.timeout == 0) || _chainModel.chain.cooldown > 0)) {
+    if (chainModel == null ||
+        (!widgetVisible &&
+            !watcherActive &&
+            ((chainModel.chain.current == 0 && chainModel.chain.timeout == 0) || _chainModel.chain.cooldown > 0))) {
       deactivateStatus();
     }
   }
