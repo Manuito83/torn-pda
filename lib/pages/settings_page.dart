@@ -16,6 +16,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:vibration/vibration.dart';
 
 // Project imports:
@@ -428,6 +429,50 @@ class _SettingsPageState extends State<SettingsPage> {
                       )
                     else
                       SizedBox.shrink(),
+                    Divider(),
+                    SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'SPIES',
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              "Spies source",
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 20),
+                          ),
+                          Flexible(
+                            flex: 2,
+                            child: _spiesSourceDropdown(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Choose the source of spied stats. This affects the stats shown when you visit a profile '
+                        'in the browser, as well as those shown in the War section (Chaining)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15),
                     Divider(),
                     SizedBox(height: 5),
                     Row(
@@ -1338,6 +1383,49 @@ class _SettingsPageState extends State<SettingsPage> {
             Vibration.vibrate(pattern: [0, 400, 400, 600, 400, 800, 400, 1000]);
           }
         }
+      },
+    );
+  }
+
+  DropdownButton _spiesSourceDropdown() {
+    return DropdownButton<SpiesSource>(
+      value: _settingsProvider.spiesSource,
+      items: [
+        DropdownMenuItem(
+          value: SpiesSource.yata,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "YATA",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: SpiesSource.tornStats,
+          child: SizedBox(
+            width: 85,
+            child: Text(
+              "Torn Stats",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          if (value == SpiesSource.yata) {
+            _settingsProvider.changeSpiesSource = SpiesSource.yata;
+          } else {
+            _settingsProvider.changeSpiesSource = SpiesSource.tornStats;
+          }
+        });
       },
     );
   }

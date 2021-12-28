@@ -228,6 +228,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   ChainModel _chainModel;
 
+  
+
   var _eventsExpController = ExpandableController();
   var _messagesExpController = ExpandableController();
   var _basicInfoExpController = ExpandableController();
@@ -1089,7 +1091,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ],
                   ),
                   BazaarStatusCard(
-                    bazaarModel: _miscModel.bazaar,
+                    // Careful, in this card we mixed sync with async items, so the miscModel can still be null
+                    bazaarModel: _miscModel?.bazaar,  
                     launchBrowser: _launchBrowser,
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
@@ -4308,7 +4311,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // As part of MiscCardInfo()
     //  - (sync) Education, money and skills with miscInfo call
     //  - (async) OC Crimes (both types) with AA call or from events
-    // Separately
     //  - (async) Bazaar
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();

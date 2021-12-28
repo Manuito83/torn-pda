@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chaining/attack_full_model.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
+import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/education_model.dart';
 import 'package:torn_pda/models/faction/faction_crimes_model.dart';
@@ -21,6 +22,7 @@ import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/market/market_item_model.dart';
+import 'package:torn_pda/models/perks/user_perks_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
@@ -67,6 +69,8 @@ enum ApiSelection {
   userStocks,
   tornStocks,
   marketItem,
+  perks,
+  rankedWars,
 }
 
 class ApiError {
@@ -142,29 +146,6 @@ class ApiError {
 }
 
 class TornApiCaller {
-  /*
-  TornApiCaller.travel(this.apiKey);
-  TornApiCaller.ownBasic(this.apiKey);
-  TornApiCaller.ownExtended(this.apiKey, this.limit);
-  TornApiCaller.ownPersonalStats(this.apiKey);
-  TornApiCaller.ownMisc(this.apiKey);
-  TornApiCaller.bazaar(this.apiKey);
-  TornApiCaller.otherProfile(this.apiKey, this.queryId);
-  TornApiCaller.target(this.apiKey, this.queryId);
-  TornApiCaller.attacks(this.apiKey);
-  TornApiCaller.chain(this.apiKey);
-  TornApiCaller.bars(this.apiKey);
-  TornApiCaller.items(this.apiKey);
-  TornApiCaller.inventory(this.apiKey);
-  TornApiCaller.education(this.apiKey);
-  TornApiCaller.faction(this.apiKey, this.queryId);
-  TornApiCaller.factionCrimes(this.apiKey);
-  TornApiCaller.friends(this.apiKey, this.queryId);
-  TornApiCaller.property(this.apiKey, this.queryId);
-  TornApiCaller.stockmarket(this.apiKey);
-  TornApiCaller.marketItem(this.apiKey, this.queryId);
-  */
-
   Future<dynamic> getTravel() async {
     dynamic apiResult;
     await _apiCall(apiSelection: ApiSelection.travel).then((value) {
@@ -522,6 +503,40 @@ class TornApiCaller {
     }
   }
 
+  Future<dynamic> getUserPerks() async {
+    dynamic apiResult;
+    await _apiCall(apiSelection: ApiSelection.perks).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return UserPerksModel.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, details: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
+  Future<dynamic> getRankedWars() async {
+    dynamic apiResult;
+    await _apiCall(apiSelection: ApiSelection.rankedWars).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return RankedWarsModel.fromJson(apiResult);
+      } catch (e, trace) {
+        FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, details: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
   Future<dynamic> _apiCall({
     @required ApiSelection apiSelection,
     String prefix = "",
@@ -536,7 +551,7 @@ class TornApiCaller {
       apiKey = user.apiKey;
     }
 
-    String url = 'https://api.torn.com/';
+    String url = 'https://api.torn.com:443/';
 
     switch (apiSelection) {
       case ApiSelection.travel:
@@ -604,6 +619,12 @@ class TornApiCaller {
         break;
       case ApiSelection.marketItem:
         url += 'market/$prefix?selections=bazaar,itemmarket';
+        break;
+      case ApiSelection.perks:
+        url += 'user/$prefix?selections=perks';
+        break;
+      case ApiSelection.rankedWars:
+        url += 'torn/?selections=rankedwars';
         break;
     }
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';

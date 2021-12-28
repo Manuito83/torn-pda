@@ -2,31 +2,28 @@
 import 'dart:async';
 
 // Flutter imports:
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:torn_pda/widgets/webviews/explanation_dialog.dart';
 
 class QuickItemsWidget extends StatefulWidget {
   final String webviewType;
   final InAppWebViewController inAppWebViewController;
   final WebViewController webViewController;
-  final bool appBarTop;
-  final bool browserDialog;
 
   QuickItemsWidget({
     @required this.webviewType,
     this.inAppWebViewController,
     this.webViewController,
-    this.appBarTop,
-    this.browserDialog,
   });
 
   @override
@@ -41,8 +38,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
   @override
   void initState() {
     super.initState();
-    _inventoryRefreshTimer = new Timer.periodic(
-        Duration(seconds: 40), (Timer t) => _refreshInventory());
+    _inventoryRefreshTimer = new Timer.periodic(Duration(seconds: 40), (Timer t) => _refreshInventory());
   }
 
   @override
@@ -56,25 +52,28 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     _itemsProvider = context.watch<QuickItemsProvider>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
-      child: ConstrainedBox(
-        constraints: BoxConstraints.loose(Size.fromHeight(
-                (MediaQuery.of(context).size.height -
-                    kToolbarHeight -
-                    AppBar().preferredSize.height)) /
-            3),
-        child: Scrollbar(
-          child: SingleChildScrollView(
-            child: Align(
-              alignment: Alignment.center,
-              child: Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 5,
-                runSpacing: -10,
-                children: _itemButtons(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: ConstrainedBox(
+              constraints: BoxConstraints.loose(Size.fromHeight(
+                      (MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
+                  3),
+              child: Scrollbar(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 5,
+                    runSpacing: -10,
+                    children: _itemButtons(),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -144,18 +143,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     }
 
     if (myList.isEmpty) {
-      String appBarPosition = "above";
-      if (!widget.appBarTop) {
-        appBarPosition = "below";
-      }
-
-      String explanation =
-          "Use the box icon $appBarPosition to configure quick items";
-      if (widget.browserDialog) {
-        explanation =
-            "Use the full browser to configure quick items";
-      }
-
       myList.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
@@ -163,33 +150,13 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                explanation,
+                "Configure your preferred quick items",
                 style: TextStyle(
                   color: Colors.orangeAccent,
                   fontSize: 12,
                 ),
               ),
-              if (widget.browserDialog)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: GestureDetector(
-                    onTap: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return BrowserExplanationDialog();
-                        },
-                      );
-                    },
-                    child: Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: Colors.orangeAccent,
-                    ),
-                  ),
-                )
-              else
-                SizedBox.shrink(),
+              _settingsIcon(),
             ],
           ),
         ),
@@ -227,5 +194,35 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
 
   _refreshInventory() {
     _itemsProvider.updateInventoryQuantities(fullUpdate: false);
+  }
+
+  Widget _settingsIcon() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: OpenContainer(
+        transitionDuration: Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return QuickItemsOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
+          ),
+        ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: Icon(Icons.settings, size: 16, color: Colors.orange),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

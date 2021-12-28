@@ -199,7 +199,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       children: [
                         Flexible(
                           child: Text(
-                            "If 'all stats' is selected, you will be shown either spied stats (supported by YATA) or estimated stats "
+                            "If 'all stats' is selected, you will be shown either spied stats (supported by YATA and Torn Stats) or estimated stats "
                             "(which might be inaccurate) if the former can't be found. Alternatively, select only spied stats or hide all stats entirely.",
                             style: TextStyle(
                               color: Colors.grey[600],

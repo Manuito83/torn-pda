@@ -45,6 +45,7 @@ dependencies:
   fl_chart: ^0.36.0
   flutter_app_badger: ^1.2.0
   flutter_colorpicker: ^0.6.0
+  flutter_icons: ^1.1.0
   flutter_inappwebview:
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git

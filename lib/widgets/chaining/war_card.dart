@@ -20,6 +20,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -1082,6 +1083,27 @@ class _WarCardState extends State<WarCard> {
         );
       }
 
+      Widget sourceWidget = SizedBox.shrink();
+      if (widget.memberModel.spiesSource.isNotEmpty) {
+        sourceWidget = Row(
+          children: [
+            Text(
+              "Source: ",
+              style: TextStyle(fontSize: 12),
+            ),
+            SizedBox(
+              height: 16,
+              width: 16,
+              child: Image.asset(
+                widget.memberModel.spiesSource == SpiesSource.yata
+                    ? 'images/icons/yata_logo.png'
+                    : 'images/icons/tornstats_logo.png',
+              ),
+            ),
+          ],
+        );
+      }
+
       BotToast.showAnimationWidget(
         clickClose: false,
         allowClick: false,
@@ -1152,6 +1174,10 @@ class _WarCardState extends State<WarCard> {
               Padding(
                 padding: const EdgeInsets.only(top: 20, left: 4),
                 child: totalWidget,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 20, left: 4),
+                child: sourceWidget,
               ),
             ],
           ),

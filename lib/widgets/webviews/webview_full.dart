@@ -41,6 +41,7 @@ import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
+import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
 import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
@@ -104,6 +105,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _crimesActive = false;
   final _crimesController = ExpandableController();
 
+  Widget _gymExpandable = SizedBox.shrink();
+
   var _tradesFullActive = false;
   var _tradesIconActive = false;
   Widget _tradesExpandable = const SizedBox.shrink();
@@ -153,6 +156,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
   bool _crimesTriggered = false;
+  bool _gymTriggered = false;
   bool _quickItemsTriggered = false;
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
@@ -576,6 +580,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   _travelHomeIcon(),
+                  _crimesMenuIcon(),
+                  _quickItemsMenuIcon(),
                   if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -623,10 +629,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           )
         else
           const SizedBox.shrink(),
+        // Profile attack
+        _profileAttackWidget,
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
-        _profileAttackWidget,
         if (_settingsProvider.appBarTop)
           ExpandablePanel(
             theme: const ExpandableThemeData(
@@ -640,8 +647,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _crimesActive
                 ? CrimesWidget(
                     controller: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                   )
                 : const SizedBox.shrink(),
           )
@@ -663,14 +668,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                     webviewType: 'inapp',
                   )
                 : const SizedBox.shrink(),
           )
         else
           const SizedBox.shrink(),
+        // Gym widget
+        _gymExpandable,
         // Trades widget
         _tradesExpandable,
         // Vault widget
@@ -735,7 +740,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
                   }
                   */
-                  
 
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
@@ -1110,8 +1114,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _crimesActive
                 ? CrimesWidget(
                     controller: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                   )
                 : const SizedBox.shrink(),
           )
@@ -1130,8 +1132,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    appBarTop: _settingsProvider.appBarTop,
-                    browserDialog: widget.dialog,
                     webviewType: 'inapp',
                   )
                 : const SizedBox.shrink(),
@@ -1359,10 +1359,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ),
         ),
         actions: <Widget>[
-          _travelHomeIcon(),
-          _crimesInfoIcon(),
           _crimesMenuIcon(),
           _quickItemsMenuIcon(),
+          _travelHomeIcon(),
           _vaultsPopUpIcon(),
           _tradesMenuIcon(),
           _vaultOptionsIcon(),
@@ -1495,6 +1494,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool anySectionTriggered = false;
     bool getItems = false;
     bool getCrimes = false;
+    bool getGym = false;
     bool getCity = false;
     bool getTrades = false;
     bool getVault = false;
@@ -1512,6 +1512,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         (!_currentUrl.contains('crimes.php') && _crimesTriggered)) {
       anySectionTriggered = true;
       getCrimes = true;
+    }
+
+    if ((_currentUrl.contains('gym.php') && !_gymTriggered) || (!_currentUrl.contains('gym.php') && _gymTriggered)) {
+      anySectionTriggered = true;
+      getGym = true;
     }
 
     if ((_currentUrl.contains('city.php') && !_cityTriggered) ||
@@ -1568,6 +1573,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
       if (getItems) _assessQuickItems(pageTitle);
       if (getCrimes) _assessCrimes(pageTitle);
+      if (getGym) _assessGym(pageTitle);
       if (getCity) _assessCity(doc, pageTitle);
       if (getTrades) _decideIfCallTrades(doc: doc, pageTitle: pageTitle);
       if (getVault) _assessVault(doc: doc, pageTitle: pageTitle);
@@ -1580,12 +1586,22 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void _resetSectionsWithWidgets() {
     if (_currentUrl.contains('item.php') && _quickItemsTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
     } else if (_currentUrl.contains('crimes.php') && _crimesTriggered) {
+      _quickItemsTriggered = false;
+      _gymTriggered = false;
+      _vaultTriggered = false;
+      _cityTriggered = false;
+      _tradesTriggered = false;
+      _profileTriggered = false;
+      _attackTriggered = false;
+    } else if (_currentUrl.contains('gym.php') && _gymTriggered) {
+      _crimesTriggered = false;
       _quickItemsTriggered = false;
       _vaultTriggered = false;
       _cityTriggered = false;
@@ -1594,6 +1610,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains('properties.php') && _vaultTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
       _tradesTriggered = false;
@@ -1601,6 +1618,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains('city.php') && _cityTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
@@ -1608,6 +1626,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains("trade.php") && _tradesTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
@@ -1615,6 +1634,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains("torn.com/profiles.php?XID=") && _profileTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
@@ -1622,6 +1642,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _attackTriggered = false;
     } else if (_currentUrl.contains("loader.php?sid=attack&user2ID=") && _attackTriggered) {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _tradesTriggered = false;
@@ -1629,6 +1650,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _profileTriggered = false;
     } else {
       _crimesTriggered = false;
+      _gymTriggered = false;
       _vaultTriggered = false;
       _quickItemsTriggered = false;
       _cityTriggered = false;
@@ -1858,30 +1880,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  Widget _crimesInfoIcon() {
-    if (_crimesActive) {
-      return IconButton(
-        icon: const Icon(Icons.info_outline),
-        onPressed: () {
-          BotToast.showText(
-            text: 'If you need more information about a crime, maintain the '
-                'quick crime button pressed for a few seconds and a tooltip '
-                'will be shown!',
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.grey[700],
-            duration: const Duration(seconds: 8),
-            contentPadding: const EdgeInsets.all(10),
-          );
-        },
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
-  }
-
   Widget _crimesMenuIcon() {
     if (_crimesActive) {
       return OpenContainer(
@@ -1898,18 +1896,42 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
         closedColor: Colors.transparent,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
-          return const Padding(
-            padding: EdgeInsets.only(right: 5),
+          return Padding(
+            padding: EdgeInsets.only(bottom: 2),
             child: SizedBox(
               height: 20,
               width: 20,
-              child: Icon(MdiIcons.fingerprint, color: Colors.white),
+              child: Icon(MdiIcons.fingerprint, color: widget.dialog ? _themeProvider.mainText : Colors.white),
             ),
           );
         },
       );
     } else {
       return const SizedBox.shrink();
+    }
+  }
+
+  // GYM
+  Future _assessGym(String pageTitle) async {
+    if (mounted) {
+      if (!pageTitle.contains('gym')) {
+        setState(() {
+          _gymTriggered = false;
+          _gymExpandable = const SizedBox.shrink();
+        });
+        return;
+      }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      if (_gymTriggered) {
+        return;
+      }
+      _gymTriggered = true;
+
+      setState(() {
+        _gymExpandable = GymWidget();
+      });
     }
   }
 
@@ -2505,29 +2527,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _quickItemsMenuIcon() {
     if (_quickItemsActive) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 5),
-        child: OpenContainer(
-          transitionDuration: const Duration(milliseconds: 500),
-          transitionType: ContainerTransitionType.fadeThrough,
-          openBuilder: (BuildContext context, VoidCallback _) {
-            return QuickItemsOptions();
-          },
-          closedElevation: 0,
-          closedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(56 / 2),
-            ),
+      return OpenContainer(
+        transitionDuration: const Duration(milliseconds: 500),
+        transitionType: ContainerTransitionType.fadeThrough,
+        openBuilder: (BuildContext context, VoidCallback _) {
+          return QuickItemsOptions();
+        },
+        closedElevation: 0,
+        closedShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(56 / 2),
           ),
-          closedColor: Colors.transparent,
-          closedBuilder: (BuildContext context, VoidCallback openContainer) {
-            return SizedBox(
-              height: 20,
-              width: 20,
-              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
-            );
-          },
         ),
+        closedColor: Colors.transparent,
+        closedBuilder: (BuildContext context, VoidCallback openContainer) {
+          return SizedBox(
+            height: 20,
+            width: 20,
+            child: Image.asset('images/icons/quick_items.png',
+                color: widget.dialog ? _themeProvider.mainText : Colors.white),
+          );
+        },
       );
     } else {
       return const SizedBox.shrink();
@@ -2863,32 +2883,32 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
-                        child: GestureDetector(
-                          child: Text(
-                            "Copy link",
-                            style: TextStyle(
-                              fontSize: 12,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                      child: GestureDetector(
+                        child: Text(
+                          "Copy link",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                          ),
+                        ),
+                        onTap: () {
+                          var open = url.toString() ?? src;
+                          Clipboard.setData(ClipboardData(text: open));
+                          BotToast.showText(
+                            text: "Link copied to the clipboard: ${open}",
+                            textStyle: TextStyle(
+                              fontSize: 14,
                               color: Colors.white,
                             ),
-                          ),
-                          onTap: () {
-                            var open = url.toString()?? src;
-                            Clipboard.setData(ClipboardData(text: open));
-                            BotToast.showText(
-                              text: "Link copied to the clipboard: ${open}",
-                              textStyle: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              contentColor: Colors.grey[700],
-                              duration: Duration(seconds: 2),
-                              contentPadding: EdgeInsets.all(10),
-                            );
-                          },
-                        ),
+                            contentColor: Colors.grey[700],
+                            duration: Duration(seconds: 2),
+                            contentPadding: EdgeInsets.all(10),
+                          );
+                        },
                       ),
+                    ),
                     if (src != null)
                       Column(
                         children: [

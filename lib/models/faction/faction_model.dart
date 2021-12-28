@@ -33,7 +33,7 @@ class FactionModel {
 
   int id;
   String name;
-  String tag;
+  dynamic tag;
   int leader;
   int coLeader;
   int respect;
@@ -100,6 +100,7 @@ class Member {
     this.personalNoteColor,
     this.hidden,
     this.statsEstimated,
+    this.spiesSource,
     this.statsExactTotal,
     this.statsExactTotalKnown,
     this.statsExactUpdated,
@@ -149,6 +150,7 @@ class Member {
   String personalNoteColor = "";
   bool hidden = false;
   String statsEstimated = "";
+  String spiesSource = "yata";
   int statsExactTotal = -1;
   int statsExactTotalKnown = -1;
   int statsExactUpdated = 0;
@@ -198,6 +200,7 @@ class Member {
         personalNoteColor: json["personalNoteColor"] ?? "",
         hidden: json["hidden"] ?? false,
         statsEstimated: json["statsEstimated"] ?? "",
+        spiesSource: json["spiesSource"] ?? "yata",
         statsExactTotal: json["statsExactTotal"] ?? -1,
         statsExactTotalKnown: json["statsExactTotalKnown"] ?? -1,
         statsExactUpdated: json["statsExactUpdated"] ?? 0,
@@ -244,6 +247,7 @@ class Member {
         "personalNoteColor": personalNoteColor,
         "hidden": hidden,
         "statsEstimated": statsEstimated,
+        "spiesSource": spiesSource,
         "statsExactTotal": statsExactTotal,
         "statsExactTotalKnown": statsExactTotalKnown,
         "statsExactUpdated": statsExactUpdated,

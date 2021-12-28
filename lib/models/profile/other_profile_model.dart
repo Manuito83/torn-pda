@@ -259,7 +259,7 @@ class Job {
   factory Job.fromJson(Map<String, dynamic> json) => Job(
     position: json["position"] == null ? null : json["position"],
     companyId: json["company_id"] == null ? null : json["company_id"],
-    companyName: json["company_name"] == null ? null : json["company_name"],
+    companyName: json["company_name"] == null ? null : json["company_name"].toString(),
     companyType: json["company_type"] == null ? null : json["company_type"],
   );
 

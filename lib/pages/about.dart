@@ -420,7 +420,24 @@ class _AboutPageState extends State<AboutPage> {
                               },
                           ),
                           TextSpan(
-                            text: ' for the resources and support offered by YATA.',
+                            text: ' and ',
+                            style: DefaultTextStyle.of(context).style,
+                          ),
+                          TextSpan(
+                            text: 'IceBlueFire',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                var url = 'https://www.torn.com/profiles.php?XID=776';
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
+                              },
+                          ),
+                          TextSpan(
+                            text: ' for the resources and support offered by YATA and Torn Stats respectively.',
                             style: DefaultTextStyle.of(context).style,
                           ),
                         ],

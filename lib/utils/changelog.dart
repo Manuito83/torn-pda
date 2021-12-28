@@ -38,6 +38,23 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.3
+    var v2_6_3 = ChangeLogItem();
+    v2_6_3.main.version = 'Torn PDA v2.6.3';
+    v2_6_3.main.date = '01 JAN 2022';
+    String feat2_6_3_1 = "Added Ranked Wars section (Chaining - Wars)";
+    String feat2_6_3_2 = "Added steadfast information to the gym";
+    String feat2_6_3_3 = "Added status icons for banks, vault and loan (filter icons in Profile options)";
+    String feat2_6_3_4 = "You can now switch between YATA and Torn Stats as your source of spied stats (Settings)";
+    String feat2_6_3_5 = "Quick items and crimes can now also be configured from the quick browser";
+    String feat2_6_3_6 = "Fixed several reported issues";
+    v2_6_3.features.add(feat2_6_3_1);
+    v2_6_3.features.add(feat2_6_3_2);
+    v2_6_3.features.add(feat2_6_3_3);
+    v2_6_3.features.add(feat2_6_3_4);
+    v2_6_3.features.add(feat2_6_3_5);
+    v2_6_3.features.add(feat2_6_3_6);
+
     // VERSION 2.6.2
     var v2_6_2 = ChangeLogItem();
     v2_6_2.main.version = 'Torn PDA v2.6.2';
@@ -990,6 +1007,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_3);
     itemList.add(v2_6_2);
     itemList.add(v2_6_1);
     itemList.add(v2_6_0);

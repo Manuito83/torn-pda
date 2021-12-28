@@ -226,7 +226,7 @@ class Job {
   factory Job.fromJson(Map<String, dynamic> json) => Job(
         position: json["position"],
         companyId: json["company_id"],
-        companyName: json["company_name"],
+        companyName: json["company_name"].toString(),
       );
 
   Map<String, dynamic> toJson() => {

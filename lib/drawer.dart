@@ -6,6 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +23,7 @@ import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/pages/awards_page.dart';
+import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
 import 'package:torn_pda/pages/items_page.dart';
@@ -53,8 +55,8 @@ class DrawerPage extends StatefulWidget {
 }
 
 class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
-  final int _settingsPosition = 9;
-  final int _aboutPosition = 10;
+  final int _settingsPosition = 10;
+  final int _aboutPosition = 11;
   var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -67,6 +69,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     "Friends",
     "Awards",
     "Items",
+    "Ranked Wars",
     "Stock Market",
     "Alerts",
     "Settings",
@@ -899,6 +902,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         if (_settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
           continue;
         }
+        if (!_settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
+          continue;
+        }
         if (!_settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
           continue;
         }
@@ -959,18 +965,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return ItemsPage();
         break;
       case 7:
-        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
+        return RankedWarsPage(calledFromMenu: true);
         break;
       case 8:
-        return AlertsSettings(_onChangeStockMarketInMenu);
+        return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
         break;
       case 9:
-        return SettingsPage(changeUID: changeUID);
+        return AlertsSettings(_onChangeStockMarketInMenu);
         break;
       case 10:
-        return AboutPage(uid: _userUID);
+        return SettingsPage(changeUID: changeUID);
         break;
       case 11:
+        return AboutPage(uid: _userUID);
+        break;
+      case 12:
         return TipsPage();
         break;
 
@@ -1003,18 +1012,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return const Icon(MdiIcons.packageVariantClosed);
         break;
       case 7:
-        return const Icon(MdiIcons.bankTransfer);
+        return const Icon(MaterialCommunityIcons.sword_cross);
         break;
       case 8:
-        return const Icon(Icons.notifications_active);
+        return const Icon(MdiIcons.bankTransfer);
         break;
       case 9:
-        return const Icon(Icons.settings);
+        return const Icon(Icons.notifications_active);
         break;
       case 10:
-        return const Icon(Icons.info_outline);
+        return const Icon(Icons.settings);
         break;
       case 11:
+        return const Icon(Icons.info_outline);
+        break;
+      case 12:
         return const Icon(Icons.question_answer_outlined);
         break;
       default:

@@ -20,9 +20,12 @@ class Prefs {
   final String _kWarFactions = "pda_warFactions";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
-  final String _kWarSpies = "pda_warSpies";
-  final String _kWarSpiesTime = "pda_warSpiesTime";
+  final String _kYataSpies = "pda_yataSpies";
+  final String _kYataSpiesTime = "pda_yataSpiesTime";
+  final String _kTornStatsSpies = "pda_tornStatsSpies";
+  final String _kTornStatsSpiesTime = "pda_tornStatsSpiesTime";
   final String _kWarIntegrityCheckTime = "pda_warIntegrityCheckTime";
+  final String _kRankedWarsInMenu = "pda_rankedWarsInMenu";
   // Other
   final String _kChainingCurrentPage = "pda_chainingCurrentPage";
   final String _kTargetSkipping = "pda_targetSkipping";
@@ -56,6 +59,7 @@ class Prefs {
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kShowDateInClockString = "pda_showDateInClockString"; // changed from bool to string
   final String _kAppBarPosition = "pda_AppBarPosition";
+  final String _kSpiesSource = "pda_SpiesSource";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
   final String _kLifeBarOption = "pda_LifeBarOption";
   final String _kTravelNotificationTitle = "pda_travelNotificationTitle";
@@ -304,24 +308,44 @@ class Prefs {
     return prefs.setString(_kWarMembersSort, value);
   }
 
-  Future<List<String>> getWarSpies() async {
+  Future<List<String>> getYataSpies() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kWarSpies) ?? [];
+    return prefs.getStringList(_kYataSpies) ?? [];
   }
 
-  Future<bool> setWarSpies(List<String> value) async {
+  Future<bool> setYataSpies(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kWarSpies, value);
+    return prefs.setStringList(_kYataSpies, value);
   }
 
-  Future<int> getWarSpiesTime() async {
+  Future<int> getYataSpiesTime() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kWarSpiesTime) ?? 0;
+    return prefs.getInt(_kYataSpiesTime) ?? 0;
   }
 
-  Future<bool> setWarSpiesTime(int value) async {
+  Future<bool> setYataSpiesTime(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kWarSpiesTime, value);
+    return prefs.setInt(_kYataSpiesTime, value);
+  }
+
+  Future<String> getTornStatsSpies() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornStatsSpies) ?? "";
+  }
+
+  Future<bool> setTornStatsSpies(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornStatsSpies, value);
+  }
+
+  Future<int> getTornStatsSpiesTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTornStatsSpiesTime) ?? 0;
+  }
+
+  Future<bool> setTornStatsSpiesTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTornStatsSpiesTime, value);
   }
 
   Future<int> getWarIntegrityCheckTime() async {
@@ -664,6 +688,19 @@ class Prefs {
   Future<bool> setShowDateInClock(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kShowDateInClockString, value);
+  }
+
+  /// ----------------------------
+  /// Methods for spies source
+  /// ----------------------------
+  Future<String> getSpiesSource() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kSpiesSource) ?? 'yata';
+  }
+
+  Future<bool> setSpiesSource(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kSpiesSource, value);
   }
 
   /// ----------------------------
@@ -1739,6 +1776,19 @@ class Prefs {
   Future<bool> setJailModel(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kJailModel, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR RANKED WARD
+  /// -----------------------------
+  Future<bool> getRankedWarsInMenu() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRankedWarsInMenu) ?? false;
+  }
+
+  Future<bool> setRankedWarsInMenu(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRankedWarsInMenu, value);
   }
 
   /// -----------------------------

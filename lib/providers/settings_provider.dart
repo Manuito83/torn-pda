@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/other/profile_check.dart';
 
 enum BrowserSetting {
   app,
@@ -134,6 +135,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeShowDateInClock(String value) {
     _showDateInClock = value;
     Prefs().setShowDateInClock(value);
+    notifyListeners();
+  }
+
+  SpiesSource _spiesSource = SpiesSource.yata;
+  SpiesSource get spiesSource => _spiesSource;
+  set changeSpiesSource(SpiesSource value) {
+    _spiesSource = value;
+    _spiesSource == SpiesSource.yata ? Prefs().setSpiesSource('yata') : Prefs().setSpiesSource('tornstats');
     notifyListeners();
   }
 
@@ -383,6 +392,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _rankedWarsInMenu = false;
+  bool get rankedWarsInMenu => _rankedWarsInMenu;
+  set changeRankedWarsInMenu(bool choice) {
+    _rankedWarsInMenu = choice;
+    Prefs().setRankedWarsInMenu(_rankedWarsInMenu);
+    notifyListeners();
+  }
+
   var _stockExchangeInMenu = false;
   bool get stockExchangeInMenu => _stockExchangeInMenu;
   set changeStockExchangeInMenu(bool choice) {
@@ -546,6 +563,13 @@ class SettingsProvider extends ChangeNotifier {
         break;
     }
 
+    String spiesSourceSaved = await Prefs().getSpiesSource();
+    if (spiesSourceSaved == "yata") {
+      _spiesSource = SpiesSource.yata;
+    } else {
+      _spiesSource = SpiesSource.tornStats;
+    }
+
     _showDateInClock = await Prefs().getShowDateInClock();
 
     String restoredAppBar = await Prefs().getAppBarPosition();
@@ -566,6 +590,8 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
+
+    _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
 
