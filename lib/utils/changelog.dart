@@ -38,6 +38,19 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.4
+    var v2_6_4 = ChangeLogItem();
+    v2_6_4.main.version = 'Torn PDA v2.6.4';
+    v2_6_4.main.date = '15 JAN 2022';
+    String feat2_6_4_1 = "Stock market: added direct access to the stock market in Torn";
+    String feat2_6_4_2 = "Shortcuts: updated Bookies link (needs to be readded)";
+    String feat2_6_4_3 = "Items: fixed owned items not correctly filtering on launch";
+    String feat2_6_4_4 = "Spies: fixed some Torn Stats spied stats not showing for some players";
+    v2_6_4.features.add(feat2_6_4_1);
+    v2_6_4.features.add(feat2_6_4_2);
+    v2_6_4.features.add(feat2_6_4_3);
+    v2_6_4.features.add(feat2_6_4_4);
+
     // VERSION 2.6.3
     var v2_6_3 = ChangeLogItem();
     v2_6_3.main.version = 'Torn PDA v2.6.3';
@@ -1007,6 +1020,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_4);
     itemList.add(v2_6_3);
     itemList.add(v2_6_2);
     itemList.add(v2_6_1);
