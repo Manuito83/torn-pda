@@ -155,7 +155,7 @@ class Spy {
   String playerFaction;
   double targetScore;
   double yourScore;
-  int fairFightBonus;
+  double fairFightBonus;
   String difference;
   int timestamp;
   dynamic strength;
@@ -179,7 +179,7 @@ class Spy {
         playerFaction: json["player_faction"] == null ? null : json["player_faction"],
         targetScore: json["target_score"] == null ? null : json["target_score"].toDouble(),
         yourScore: json["your_score"] == null ? null : json["your_score"].toDouble(),
-        fairFightBonus: json["fair_fight_bonus"] == null ? null : json["fair_fight_bonus"],
+        fairFightBonus: json["fair_fight_bonus"] == null ? null : json["fair_fight_bonus"].toDouble(),
         difference: json["difference"] == null ? null : json["difference"],
         timestamp: json["timestamp"] == null ? null : json["timestamp"],
         strength: json["strength"] == null
