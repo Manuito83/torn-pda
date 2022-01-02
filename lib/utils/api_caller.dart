@@ -632,7 +632,7 @@ class TornApiCaller {
     try {
       final response = await Dio(
         BaseOptions(
-          connectTimeout: 10000,
+          connectTimeout: 15000,
           receiveTimeout: 10000,
           contentType: 'application/json',
         ),
