@@ -551,7 +551,7 @@ class TornApiCaller {
       apiKey = user.apiKey;
     }
 
-    String url = 'https://api.torn.com:443/';
+    String url = 'http://api.torn.com/';
 
     switch (apiSelection) {
       case ApiSelection.travel:
