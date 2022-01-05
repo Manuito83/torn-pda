@@ -23,7 +23,7 @@ import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_filters_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_in_model.dart';
 import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
-import 'package:torn_pda/private/tac_config.dart';
+//import 'package:torn_pda/private/tac_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -660,7 +660,7 @@ class _TacPageState extends State<TacPage> {
     if (_tacFilters.useOptimal) optimal = 1;
 
     var url = 'https://tornattackcentral.eu/pdaintegration.php?'
-        'password=${TacConfig.password}'
+        //'password=${TacConfig.password}'
         '&userid=${_userProvider.basic.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
         '&optimal=$optimal'

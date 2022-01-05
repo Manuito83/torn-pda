@@ -46,10 +46,12 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_4_2 = "Shortcuts: updated Bookies link (needs to be readded)";
     String feat2_6_4_3 = "Items: fixed owned items not correctly filtering on launch";
     String feat2_6_4_4 = "Spies: fixed some Torn Stats spied stats not showing for some players";
+    String feat2_6_4_5 = "Browser: fixed custom URL browsing";
     v2_6_4.features.add(feat2_6_4_1);
     v2_6_4.features.add(feat2_6_4_2);
     v2_6_4.features.add(feat2_6_4_3);
     v2_6_4.features.add(feat2_6_4_4);
+    v2_6_4.features.add(feat2_6_4_5);
 
     // VERSION 2.6.3
     var v2_6_3 = ChangeLogItem();

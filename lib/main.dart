@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 // Useful for functions debugging
 // ignore: unused_import
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:dart_ping_ios/dart_ping_ios.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -44,8 +45,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '2.6.4';
-const String androidVersion = '170';
-const String iosVersion = '180';
+const String androidVersion = '171';
+const String iosVersion = '181';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics();
 
@@ -98,7 +99,13 @@ Future<void> main() async {
   // Pass all uncaught errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
-  HttpOverrides.global = MyHttpOverrides();
+  // TODO: remove class?
+  //HttpOverrides.global = MyHttpOverrides();
+
+  // Needs to register plugin for iOS
+  if (Platform.isIOS) {
+    DartPingIOS.register();
+  }
 
   runApp(
     MultiProvider(

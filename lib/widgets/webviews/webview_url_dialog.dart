@@ -473,7 +473,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
       String url = _customURLController.text.toLowerCase().replaceAll(" ", "");
-      if (!url.contains("https://") || !url.contains("http://")) {
+      if (!url.contains("https://") && !url.contains("http://")) {
         url = 'https://' + url;
       } else if (url.contains("http://")) {
         url = url.replaceAll("http://", "https://");

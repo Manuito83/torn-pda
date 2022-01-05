@@ -4,6 +4,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:dart_ping/dart_ping.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -49,6 +50,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _userToLoad = false;
   bool _apiError = false;
   String _errorReason = '';
+  String _errorDetails = '';
   bool _apiIsLoading = false;
   OwnProfileBasic _userProfile;
 
@@ -605,6 +607,89 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 15),
+                    Divider(),
+                    SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'TROUBLESHOOTING',
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Flexible(
+                            child: Text(
+                              "Test API",
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left: 20),
+                          ),
+                          ElevatedButton(
+                            child: Text("PING"),
+                            onPressed: () async {
+                              BotToast.showText(
+                                text: "Please wait...",
+                                textStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: Colors.blue,
+                                duration: Duration(seconds: 1),
+                                contentPadding: EdgeInsets.all(10),
+                              );
+                              final ping = Ping('api.torn.com', count: 4);
+                              ping.stream.listen((event) {
+                                if (event.summary != null || event.error != null) {
+                                  String message = "";
+                                  if (event.error != null) {
+                                    message = "CONNECTION PROBLEM\n\n${event.error}";
+                                  } else {
+                                    if (event.summary.transmitted == event.summary.received) {
+                                      message = "SUCCESS\n\n${event.summary}";
+                                    } else {
+                                      message = "CONNECTION PROBLEM\n\n${event.summary}";
+                                    }
+                                  }
+
+                                  BotToast.showText(
+                                    clickClose: true,
+                                    text: message,
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.blue,
+                                    duration: Duration(seconds: 10),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        "In case that you are facing connection problems, this will ping Torn's API and show whether "
+                        "it is reachable from your device. If it isn't, it might be because of your DNS servers (you "
+                        "can try switching from WiFi to data)",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
                     SizedBox(height: 50),
                   ],
                 ),
@@ -907,6 +992,18 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             Text("Error: $_errorReason"),
+            if (_errorDetails.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(
+                  "$_errorDetails",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
           ],
         ),
       );
@@ -1515,6 +1612,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _userToLoad = false;
           _apiError = true;
           _errorReason = myProfile.errorReason;
+          _errorDetails = myProfile.errorDetails;
           _expandableController.expanded = true;
         });
         // We'll only remove the user if the key is invalid, otherwise we
