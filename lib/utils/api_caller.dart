@@ -633,7 +633,7 @@ class TornApiCaller {
     try {
       final response = await Dio(
         BaseOptions(
-          receiveTimeout: 15000,
+          receiveTimeout: 30000,
         ),
       ).get(url);
 
