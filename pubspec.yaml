@@ -118,6 +118,7 @@ flutter:
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/
+    - userscripts/TornPDA_API.js
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
