@@ -101,6 +101,8 @@ Future<void> main() async {
 
   // TODO: remove class?
   //HttpOverrides.global = MyHttpOverrides();
+  ByteData data = await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+  SecurityContext.defaultContext.setTrustedCertificatesBytes(data.buffer.asUint8List());
 
   // Needs to register plugin for iOS
   if (Platform.isIOS) {
