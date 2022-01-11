@@ -5,6 +5,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -34,11 +35,19 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _apiSource;
+
   UnmodifiableListView<UserScript> getContinuousSources({
     @required String apiKey,
   }) {
     var scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
+      // Add the userscript api first so that it's available to other user scripts
+      scriptList.add(UserScript(
+        groupName: "__TornPDA_API__",
+        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        source: _apiSource
+      ));
       for (var script in _userScriptList) {
         if (script.enabled && script.urls.isEmpty) {
           scriptList.add(
@@ -254,6 +263,8 @@ class UserScriptsProvider extends ChangeNotifier {
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
       var savedScripts = await Prefs().getUserScriptsList();
       var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
+      _apiSource = await rootBundle.loadString('userscripts/TornPDA_API.js');
+
 
       // NULL returned if we installed the app, so we add example scripts
       if (savedScripts == null) {

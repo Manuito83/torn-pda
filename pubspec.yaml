@@ -120,6 +120,7 @@ flutter:
     - images/torn_items/small/
     - images/npcs/
     - sounds/alerts/
+    - userscripts/TornPDA_API.js
     - assets/ca/
 
   # An image asset can refer to one or more resolution-specific "variants", see
