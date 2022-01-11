@@ -33,7 +33,7 @@ abstract class TipTextBuilder {
     this.headerValue,
     this.isExpanded,
   });
-  
+
   String headerValue;
   bool isExpanded;
 
@@ -50,11 +50,8 @@ abstract class TipTextBuilder {
 }
 
 class ExpandableTip extends TipTextBuilder {
-  ExpandableTip({
-    this.expandedValue,
-    String headerValue,
-    bool isExpanded = false
-  }) : super(headerValue: headerValue, isExpanded: isExpanded);
+  ExpandableTip({this.expandedValue, String headerValue, bool isExpanded = false})
+      : super(headerValue: headerValue, isExpanded: isExpanded);
 
   String expandedValue;
 
@@ -70,12 +67,9 @@ class ExpandableTip extends TipTextBuilder {
 }
 
 class ComplexExpandableTip extends TipTextBuilder {
-  ComplexExpandableTip({
-    Text buildExpandedText(),
-    String headerValue,
-    bool isExpanded = false
-    }) : super(headerValue: headerValue, isExpanded: isExpanded) {
-      this._buildExpandedTextFn = buildExpandedText;
+  ComplexExpandableTip({Text buildExpandedText(), String headerValue, bool isExpanded = false})
+      : super(headerValue: headerValue, isExpanded: isExpanded) {
+    this._buildExpandedTextFn = buildExpandedText;
   }
 
   Function _buildExpandedTextFn;
@@ -266,15 +260,11 @@ class _TipsPageState extends State<TipsPage> {
         return ExpansionPanel(
           canTapOnHeader: true,
           headerBuilder: (BuildContext context, bool isExpanded) {
-            return ListTile(
-              title: tip.buildHeaderText()
-            );
+            return ListTile(title: tip.buildHeaderText());
           },
           body: Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 15),
-            child: ListTile(
-              title: tip.buildExpandedText()
-            ),
+            child: ListTile(title: tip.buildExpandedText()),
           ),
           isExpanded: tip.isExpanded,
         );
@@ -726,28 +716,36 @@ class _TipsPageState extends State<TipsPage> {
     var tips = <TipTextBuilder>[];
     tips.add(
       ComplexExpandableTip(
-        headerValue: "Userscript Development",
+        headerValue: "Userscripts development",
         buildExpandedText: () {
           return Text.rich(
-            TextSpan(text: "Torn PDA has a JavaScript API that allows userscripts to access "
-                               "API keys and make cross-origin http requests. ", 
+            TextSpan(
+              text: "You can use custom userscripts with Torn PDA. For more information, please visit the "
+                  "userscripts section in Settings & Advanced Browser Settings.\n\n"
+                  "Make sure to read carefully the disclaimer, "
+                  "instructions and limitations in case you would like to install new userscripts.\n\n"
+                  "There is a list of several userscripts examples at ",
               style: TextStyle(
                 fontSize: 13,
               ),
               children: [
                 TextSpan(
-                  text: "Check it out at Github",
+                  text: "our Github repository",
                   style: TextStyle(
                     decoration: TextDecoration.underline,
                   ),
-                  recognizer: TapGestureRecognizer()..onTap = () async {
-                    const String scriptApiUrl = "https://github.com/Manuito83/torn-pda/tree/master/userscripts";
-                    if (await canLaunch(scriptApiUrl)) {
-                      launch(scriptApiUrl);
-                    }
-                  },
-                )
-              ]
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      const String scriptApiUrl = "https://github.com/Manuito83/torn-pda/tree/master/userscripts";
+                      if (await canLaunch(scriptApiUrl)) {
+                        launch(scriptApiUrl);
+                      }
+                    },
+                ),
+                TextSpan(
+                  text: ".",
+                ),
+              ],
             ),
           );
         },
