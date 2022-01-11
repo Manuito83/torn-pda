@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 // Package imports:
 import 'package:dio/dio.dart';
@@ -632,9 +633,7 @@ class TornApiCaller {
     try {
       final response = await Dio(
         BaseOptions(
-          connectTimeout: 10000,
-          receiveTimeout: 10000,
-          contentType: 'application/json',
+          receiveTimeout: 30000,
         ),
       ).get(url);
 
@@ -662,11 +661,13 @@ class TornApiCaller {
     } catch (e) {
       log("API CATCH [$e]");
       // Analytics limits at 100 chars
+      String platform = Platform.isAndroid ? "a" : "i";
+      String versionError = "$appVersion$platform $e";
       analytics.logEvent(
         name: 'api_error',
         parameters: {
           'type': 'exception',
-          'error': e.toString().length > 99 ? e.toString().substring(0, 99) : e.toString(),
+          'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
         },
       );
       // We limit to a bit more here (it will be shown to the user)

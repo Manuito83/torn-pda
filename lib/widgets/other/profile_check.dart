@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:convert';
+import 'dart:developer';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -558,6 +559,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
       } catch (e) {
         // Won't get spies details
+        log("Spy details failed: $e");
       }
 
       if (spyFound) {

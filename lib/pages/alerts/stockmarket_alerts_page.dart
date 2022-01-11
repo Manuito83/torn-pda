@@ -1,6 +1,7 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
@@ -35,9 +37,9 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   var _stockList = <StockMarketStock>[];
 
-  UserDetailsProvider _userP;
   SettingsProvider _settingsP;
   ThemeProvider _themeP;
+  WebViewProvider _webViewProvider;
 
   double _totalValue = 0;
   double _totalProfit = 0;
@@ -49,7 +51,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   void initState() {
     super.initState();
     _settingsP = Provider.of<SettingsProvider>(context, listen: false);
-    _userP = Provider.of<UserDetailsProvider>(context, listen: false);
+    _webViewProvider = context.read<WebViewProvider>();
     if (!widget.calledFromMenu) _fbUser = widget.fbUser; // We are NOT getting updated stocks every time
     _stocksInitialised = _initialiseStocks();
     analytics.setCurrentScreen(screenName: 'stockMarket');
@@ -182,6 +184,18 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
         },
       ),
       actions: [
+        GestureDetector(
+          child: Icon(
+            MdiIcons.openInApp,
+          ),
+          onTap: () {
+            _launchBrowser(dialog: true);
+          },
+          onLongPress: () {
+            _launchBrowser(dialog: false);
+          },
+        ),
+        SizedBox(width: 5),
         IconButton(
           icon: Icon(
             Icons.settings,
@@ -195,7 +209,7 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               },
             );
           },
-        )
+        ),
       ],
     );
   }
@@ -332,6 +346,15 @@ class _StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     // Sort by acronym, then by owned status
     _stockList.sort((a, b) => a.acronym.compareTo(b.acronym));
     _stockList.sort((a, b) => b.owned.compareTo(a.owned));
+  }
+
+  void _launchBrowser({@required dialog}) {
+    String url = "https://www.torn.com/page.php?sid=stocks";
+    _webViewProvider.openBrowserPreference(
+      context: context,
+      url: url,
+      useDialog: dialog,
+    );
   }
 
   Future<bool> _willPopCallback() async {

@@ -81,6 +81,7 @@ class QuickItemsProvider extends ChangeNotifier {
   void decreaseInventory(QuickItem item) {
     if (item.inventory > 0) {
       item.inventory--;
+      _saveListAfterChanges();
       notifyListeners();
     }
   }
