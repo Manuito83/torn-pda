@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -631,11 +632,13 @@ class TornApiCaller {
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';
 
     try {
-      final response = await Dio(
-        BaseOptions(
-          receiveTimeout: 30000,
-        ),
-      ).get(url);
+      Dio dio = Dio(BaseOptions(receiveTimeout: 30000));
+      (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+        return client;
+      };
+
+      final response = await dio.get(url);
 
       if (response.statusCode == 200) {
         // Check if json is responding with errors
