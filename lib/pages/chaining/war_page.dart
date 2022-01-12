@@ -18,9 +18,12 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
+import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
+import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 
 class WarOptions {
   String description;
@@ -33,6 +36,12 @@ class WarOptions {
         break;
       case "Hidden targets":
         iconData = Icons.undo_outlined;
+        break;
+      case "Nuke revive":
+        // Own icon in widget
+        break;
+              case "UHC revive":
+        // Own icon in widget
         break;
     }
   }
@@ -64,6 +73,7 @@ class _WarPageState extends State<WarPage> {
   WarController _w;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
+  WebViewProvider _webViewProvider;
 
   bool _quickUpdateActive = false;
 
@@ -85,12 +95,15 @@ class _WarPageState extends State<WarPage> {
   final _popupOptionsChoices = <WarOptions>[
     WarOptions(description: "Toggle chain widget"),
     WarOptions(description: "Hidden targets"),
+    WarOptions(description: "Nuke revive"),
+    WarOptions(description: "UHC revive"),
   ];
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _webViewProvider = context.read<WebViewProvider>();
   }
 
   @override
@@ -383,13 +396,46 @@ class _WarPageState extends State<WarPage> {
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);
                 break;
+              case "Nuke revive":
+                // Gesture not activated
+                break;
             }
           },
           itemBuilder: (BuildContext context) {
             return _popupOptionsChoices.map((WarOptions choice) {
+              // Don't return hidden members option if there is none
               if (choice.description.contains("Hidden") && _w.getHiddenMembersNumber() == 0) {
                 return null;
               }
+              // Nuke revive
+              if (choice.description.contains("Nuke")) {
+                if (!_w.nukeReviveActive) {
+                  return null;
+                }
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: NukeReviveButton(
+                    themeProvider: _themeProvider,
+                    settingsProvider: _settingsProvider,
+                    webViewProvider: _webViewProvider,
+                  ),
+                );
+              }
+              // UHC revive
+              if (choice.description.contains("UHC")) {
+                if (!_w.uhcReviveActive) {
+                  return null;
+                }
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: UhcReviveButton(
+                    themeProvider: _themeProvider,
+                    settingsProvider: _settingsProvider,
+                    webViewProvider: _webViewProvider,
+                  ),
+                );
+              }
+              // Everything else
               return PopupMenuItem<WarOptions>(
                 value: choice,
                 child: Row(

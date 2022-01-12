@@ -45,10 +45,11 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_4_1 = "Stock market: added direct access to the stock market in Torn";
     String feat2_6_4_2 = "Shortcuts: updated Bookies link (needs to be readded)";
     String feat2_6_4_3 = "Userscripts: added JavaScript API to allow cross-origin http requests [by Knoxby]";
-    String feat2_6_4_4 = "Items: fixed owned items not correctly filtering on launch";
-    String feat2_6_4_5 = "Quick items: fixed incorrect inventory quantities on launch";
-    String feat2_6_4_6 = "Spies: fixed some Torn Stats spied stats not showing for some players";
-    String feat2_6_4_7 = "Browser: fixed custom URL browsing";
+    String feat2_6_4_4 = "War: reviving services are now accessible in the War page (Settings)";
+    String feat2_6_4_5 = "Items: fixed owned items not correctly filtering on launch";
+    String feat2_6_4_6 = "Quick items: fixed incorrect inventory quantities on launch";
+    String feat2_6_4_7 = "Spies: fixed some Torn Stats spied stats not showing for some players";
+    String feat2_6_4_8 = "Browser: fixed custom URL browsing";
     v2_6_4.features.add(feat2_6_4_1);
     v2_6_4.features.add(feat2_6_4_2);
     v2_6_4.features.add(feat2_6_4_3);
@@ -56,6 +57,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_4.features.add(feat2_6_4_5);
     v2_6_4.features.add(feat2_6_4_6);
     v2_6_4.features.add(feat2_6_4_7);
+    v2_6_4.features.add(feat2_6_4_8);
 
     // VERSION 2.6.3
     var v2_6_3 = ChangeLogItem();
