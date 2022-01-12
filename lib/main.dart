@@ -48,7 +48,7 @@ const String appVersion = '2.6.4';
 const String androidVersion = '173';
 const String iosVersion = '183';
 
-final FirebaseAnalytics analytics = FirebaseAnalytics();
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 

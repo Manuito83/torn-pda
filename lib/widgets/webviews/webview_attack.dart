@@ -255,7 +255,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     String hlMap = '[ { name: "${_userProv.basic.name}", highlight: "$background", sender: "$senderColor" } ]';
 
     if (_settingsProvider.highlightChat) {
-      _webViewController.evaluateJavascript(
+      _webViewController.runJavascript(
         chatHighlightJS(highlightMap: hlMap),
       );
     }
@@ -263,7 +263,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   void _hideChat() {
     if (_chatRemovalEnabled && _chatRemovalActive) {
-      _webViewController.evaluateJavascript(removeChatOnLoadStartJS());
+      _webViewController.runJavascript(removeChatOnLoadStartJS());
     }
   }
 
@@ -420,7 +420,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         child: GestureDetector(
           child: Icon(MdiIcons.chatOutline),
           onTap: () async {
-            _webViewController.evaluateJavascript(removeChatJS());
+            _webViewController.runJavascript(removeChatJS());
             Prefs().setChatRemovalActive(true);
             setState(() {
               _chatRemovalActive = true;
@@ -437,7 +437,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
             color: Colors.orange[500],
           ),
           onTap: () async {
-            _webViewController.evaluateJavascript(restoreChatJS());
+            _webViewController.runJavascript(restoreChatJS());
             Prefs().setChatRemovalActive(false);
             setState(() {
               _chatRemovalActive = false;
@@ -928,7 +928,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       */
 
       var quickItemsProvider = context.read<QuickItemsProvider>();
-      var key = _userProv.basic.userApiKey;
       quickItemsProvider.loadItems();
 
       setState(() {

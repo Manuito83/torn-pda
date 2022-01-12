@@ -177,7 +177,7 @@ Future showNotificationBoth(Map payload, int notId) async {
       android: AndroidNotificationDetails(
         channelId,
         channelName,
-        channelDescription,
+        channelDescription: channelDescription,
         styleInformation: BigTextStyleInformation(''),
         priority: Priority.high,
         visibility: NotificationVisibility.public,
@@ -299,7 +299,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts travel ${modifier.channelIdModifier} s',
       'Alerts travel ${modifier.channelIdModifier} s',
-      'Automatic alerts for travel',
+      description: 'Automatic alerts for travel',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
@@ -312,7 +312,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts restocks ${modifier.channelIdModifier}',
       'Alerts restocks ${modifier.channelIdModifier}',
-      'Automatic alerts for foreign restocks',
+      description: 'Automatic alerts for foreign restocks',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -325,7 +325,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual travel ${modifier.channelIdModifier} s',
       'Manual travel ${modifier.channelIdModifier} s',
-      'Manual notifications for travel',
+      description: 'Manual notifications for travel',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
@@ -338,7 +338,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual flight departure ${modifier.channelIdModifier} s',
       'Manual flight departure ${modifier.channelIdModifier} s',
-      'Manual notifications for delayed flight departure',
+      description: 'Manual notifications for delayed flight departure',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
@@ -351,7 +351,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts energy ${modifier.channelIdModifier}',
       'Alerts energy ${modifier.channelIdModifier}',
-      'Automatic alerts for energy',
+      description: 'Automatic alerts for energy',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -364,7 +364,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual energy ${modifier.channelIdModifier}',
       'Manual energy ${modifier.channelIdModifier}',
-      'Manual notifications for energy',
+      description: 'Manual notifications for energy',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -377,7 +377,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts nerve ${modifier.channelIdModifier}',
       'Alerts nerve ${modifier.channelIdModifier}',
-      'Automatic alerts for nerve',
+      description: 'Automatic alerts for nerve',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -390,7 +390,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual nerve ${modifier.channelIdModifier}',
       'Manual nerve ${modifier.channelIdModifier}',
-      'Manual notifications for nerve',
+      description: 'Manual notifications for nerve',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -403,7 +403,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts hospital ${modifier.channelIdModifier}',
       'Alerts hospital ${modifier.channelIdModifier}',
-      'Automatic alerts for hospital',
+      description: 'Automatic alerts for hospital',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -416,7 +416,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual hospital ${modifier.channelIdModifier}',
       'Manual hospital ${modifier.channelIdModifier}',
-      'Manual notifications for hospital',
+      description: 'Manual notifications for hospital',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -429,7 +429,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual jail ${modifier.channelIdModifier}',
       'Manual jail ${modifier.channelIdModifier}',
-      'Manual notifications for jail',
+      description: 'Manual notifications for jail',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -442,7 +442,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts drugs ${modifier.channelIdModifier}',
       'Alerts drugs ${modifier.channelIdModifier}',
-      'Automatic alerts for drugs',
+      description: 'Automatic alerts for drugs',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -455,7 +455,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual drugs ${modifier.channelIdModifier}',
       'Manual drugs ${modifier.channelIdModifier}',
-      'Manual notifications for drugs',
+      description: 'Manual notifications for drugs',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -468,7 +468,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts racing ${modifier.channelIdModifier}',
       'Alerts racing ${modifier.channelIdModifier}',
-      'Automatic alerts for racing',
+      description: 'Automatic alerts for racing',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -481,7 +481,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts messages ${modifier.channelIdModifier}',
       'Alerts messages ${modifier.channelIdModifier}',
-      'Automatic alerts for messages',
+      description: 'Automatic alerts for messages',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -494,7 +494,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts events ${modifier.channelIdModifier}',
       'Alerts events ${modifier.channelIdModifier}',
-      'Automatic alerts for events',
+      description: 'Automatic alerts for events',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -507,7 +507,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts trades ${modifier.channelIdModifier}',
       'Alerts trades ${modifier.channelIdModifier}',
-      'Automatic alerts for trades',
+      description: 'Automatic alerts for trades',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -520,7 +520,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual loot ${modifier.channelIdModifier}',
       'Manual loot ${modifier.channelIdModifier}',
-      'Manual notifications for loot',
+      description: 'Manual notifications for loot',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -533,7 +533,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual life ${modifier.channelIdModifier}',
       'Manual life ${modifier.channelIdModifier}',
-      'Manual notifications for life',
+      description: 'Manual notifications for life',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -546,7 +546,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual medical ${modifier.channelIdModifier}',
       'Manual medical ${modifier.channelIdModifier}',
-      'Manual notifications for medical',
+      description: 'Manual notifications for medical',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -559,7 +559,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual booster ${modifier.channelIdModifier}',
       'Manual booster ${modifier.channelIdModifier}',
-      'Manual notifications for booster',
+      description: 'Manual notifications for booster',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -572,7 +572,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts stale user ${modifier.channelIdModifier}',
       'Alerts stale user ${modifier.channelIdModifier}',
-      'Automatic alerts for inactivity',
+      description: 'Automatic alerts for inactivity',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -585,7 +585,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts refills ${modifier.channelIdModifier}',
       'Alerts refills ${modifier.channelIdModifier}',
-      'Automatic alerts for refills',
+      description: 'Automatic alerts for refills',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -598,7 +598,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts stocks ${modifier.channelIdModifier}',
       'Alerts stocks ${modifier.channelIdModifier}',
-      'Automatic alerts for stocks',
+      description: 'Automatic alerts for stocks',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -611,7 +611,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Alerts assists ${modifier.channelIdModifier} s',
       'Alerts assists ${modifier.channelIdModifier} s',
-      'Automatic alerts for assists',
+      description: 'Automatic alerts for assists',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
@@ -624,7 +624,7 @@ Future configureNotificationChannels({String mod = ""}) async {
     AndroidNotificationChannel(
       'Manual chain ${modifier.channelIdModifier}',
       'Manual chain ${modifier.channelIdModifier}',
-      'Manual notifications for chain',
+      description: 'Manual notifications for chain',
       importance: Importance.max,
       sound: RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

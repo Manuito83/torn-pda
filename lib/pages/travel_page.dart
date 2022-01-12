@@ -3,8 +3,6 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -421,7 +419,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
     return SpeedDial(
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.Up : SpeedDialDirection.Left,
+          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       elevation: 2,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
@@ -875,7 +873,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'Manual travel ${modifier.channelIdModifier} s',
       'Manual travel ${modifier.channelIdModifier} s',
-      'Manual notifications for travel',
+      channelDescription: 'Manual notifications for travel',
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_travel',

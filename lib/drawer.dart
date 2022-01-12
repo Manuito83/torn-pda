@@ -84,7 +84,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   WebViewProvider _webViewProvider;
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FirebaseAnalytics analytics = FirebaseAnalytics();
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   StreamSubscription _deepLinkSub;
   DateTime _deepLinkSubTriggeredTime;

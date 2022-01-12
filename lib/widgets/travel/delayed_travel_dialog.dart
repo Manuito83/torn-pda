@@ -337,7 +337,7 @@ class _DelayedTravelDialogState extends State<DelayedTravelDialog> {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       "$channelTitle ${modifier.channelIdModifier}",
       "$channelSubtitle ${modifier.channelIdModifier}",
-      channelDescription,
+      channelDescription: channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_travel',
