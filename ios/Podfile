@@ -1,10 +1,6 @@
 # Uncomment this line to define a global platform for your project
 platform :ios, '10.0'
 
-# Override Firebase SDK Version
-# Remove based on https://github.com/bharat-biradar/Google-Ml-Kit-plugin/issues/27#issuecomment-847121759
-$FirebaseSDKVersion = '7.11.0'
-
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -38,7 +34,8 @@ target 'Runner' do
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   # This line needs to be updated with the version or commented out (in which case build will take longer, but nothing else)
-  pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '7.11.0'
+  # Version at https://github.com/invertase/firestore-ios-sdk-frameworks
+  pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '8.10.0'
 end
 
 post_install do |installer|
