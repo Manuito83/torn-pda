@@ -38,6 +38,27 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.4
+    var v2_6_4 = ChangeLogItem();
+    v2_6_4.main.version = 'Torn PDA v2.6.4';
+    v2_6_4.main.date = '16 JAN 2022';
+    String feat2_6_4_1 = "Stock market: added direct access to the stock market in Torn";
+    String feat2_6_4_2 = "Shortcuts: updated Bookies link (needs to be readded)";
+    String feat2_6_4_3 = "Userscripts: added JavaScript API to allow cross-origin http requests [by Knoxby]";
+    String feat2_6_4_4 = "War: reviving services are now accessible in the War page (Settings)";
+    String feat2_6_4_5 = "Items: fixed owned items not correctly filtering on launch";
+    String feat2_6_4_6 = "Quick items: fixed incorrect inventory quantities on launch";
+    String feat2_6_4_7 = "Spies: fixed some Torn Stats spied stats not showing for some players";
+    String feat2_6_4_8 = "Browser: fixed custom URL browsing";
+    v2_6_4.features.add(feat2_6_4_1);
+    v2_6_4.features.add(feat2_6_4_2);
+    v2_6_4.features.add(feat2_6_4_3);
+    v2_6_4.features.add(feat2_6_4_4);
+    v2_6_4.features.add(feat2_6_4_5);
+    v2_6_4.features.add(feat2_6_4_6);
+    v2_6_4.features.add(feat2_6_4_7);
+    v2_6_4.features.add(feat2_6_4_8);
+
     // VERSION 2.6.3
     var v2_6_3 = ChangeLogItem();
     v2_6_3.main.version = 'Torn PDA v2.6.3';
@@ -78,7 +99,7 @@ class _ChangeLogState extends State<ChangeLog> {
         "with link preview, consider disabling it)";
     String feat2_6_1_6 = "Browser: restore the previous browsing session, including browser type and active tab, "
         "by long-pressing the T menu floating icon in the Profile section";
-    String feat2_6_1_7 = "Browser: you can now choose the colour of the tabs hide bar";    
+    String feat2_6_1_7 = "Browser: you can now choose the colour of the tabs hide bar";
     String feat2_6_1_8 = "Profile: properly separated jail from hospital manual notifications";
     String feat2_6_1_9 = "Fixed incorrect spied stats total and dexterity comparison";
     String feat2_6_1_10 = "Fixed life sorting for war targets";
@@ -1007,6 +1028,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_4);
     itemList.add(v2_6_3);
     itemList.add(v2_6_2);
     itemList.add(v2_6_1);

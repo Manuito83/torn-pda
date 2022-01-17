@@ -5,8 +5,6 @@
 // Dart imports:
 import 'dart:convert';
 
-import 'package:torn_pda/models/profile/other_profile_model.dart';
-
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
 

@@ -130,7 +130,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
               var js = quickItemsJS(item: item.number.toString());
 
               if (widget.webviewType == "attacks") {
-                widget.webViewController.evaluateJavascript(js);
+                widget.webViewController.runJavascript(js);
               } else {
                 await widget.inAppWebViewController.evaluateJavascript(source: js);
               }

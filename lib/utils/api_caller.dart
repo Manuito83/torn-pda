@@ -1,8 +1,10 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 // Package imports:
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -630,13 +632,13 @@ class TornApiCaller {
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';
 
     try {
-      final response = await Dio(
-        BaseOptions(
-          connectTimeout: 10000,
-          receiveTimeout: 10000,
-          contentType: 'application/json',
-        ),
-      ).get(url);
+      Dio dio = Dio(BaseOptions(receiveTimeout: 30000));
+      (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+        return client;
+      };
+
+      final response = await dio.get(url);
 
       if (response.statusCode == 200) {
         // Check if json is responding with errors
@@ -662,11 +664,13 @@ class TornApiCaller {
     } catch (e) {
       log("API CATCH [$e]");
       // Analytics limits at 100 chars
+      String platform = Platform.isAndroid ? "a" : "i";
+      String versionError = "$appVersion$platform $e";
       analytics.logEvent(
         name: 'api_error',
         parameters: {
           'type': 'exception',
-          'error': e.toString().length > 99 ? e.toString().substring(0, 99) : e.toString(),
+          'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
         },
       );
       // We limit to a bit more here (it will be shown to the user)

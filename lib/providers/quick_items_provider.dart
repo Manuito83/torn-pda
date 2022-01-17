@@ -16,16 +16,13 @@ class QuickItemsProvider extends ChangeNotifier {
   bool _itemSuccess = false;
 
   var _activeQuickItemsList = <QuickItem>[];
-  UnmodifiableListView<QuickItem> get activeQuickItems =>
-      UnmodifiableListView(_activeQuickItemsList);
+  UnmodifiableListView<QuickItem> get activeQuickItems => UnmodifiableListView(_activeQuickItemsList);
 
   var _fullQuickItemsList = <QuickItem>[];
-  UnmodifiableListView<QuickItem> get fullQuickItems =>
-      UnmodifiableListView(_fullQuickItemsList);
+  UnmodifiableListView<QuickItem> get fullQuickItems => UnmodifiableListView(_fullQuickItemsList);
 
   String _currentSearchFilter = '';
   String get searchFilter => _currentSearchFilter;
-
 
   var _quickItemTypes = [
     ItemType.ALCOHOL,
@@ -73,14 +70,12 @@ class QuickItemsProvider extends ChangeNotifier {
     _activeQuickItemsList.add(newItem);
     _saveListAfterChanges();
     notifyListeners();
-
-    _saveListAfterChanges();
-    notifyListeners();
   }
 
   void decreaseInventory(QuickItem item) {
     if (item.inventory > 0) {
       item.inventory--;
+      _saveListAfterChanges();
       notifyListeners();
     }
   }
@@ -209,6 +204,7 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       }
 
+      _saveListAfterChanges();
       notifyListeners();
       return true;
     }

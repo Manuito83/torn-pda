@@ -498,6 +498,10 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       _allCategories[key] = amount.toString();
     });
 
+    // Reset saved filters
+    _hiddenCategories = await Prefs().getHiddenItemsCategories();
+    _filterOwnedItems = await Prefs().getShowOnlyOwnedItems();
+
     // Sort them for the first time
     String savedSort = await Prefs().getItemsSort();
     ItemsSort itemSort = ItemsSort();
@@ -536,11 +540,9 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         itemSort.type = ItemsSortType.circulationDes;
         break;
     }
+    
+    // Build all
     _sortAndRebuildItemsCards(itemSort, initialLoad: true);
-
-    // Reset saved filters
-    _hiddenCategories = await Prefs().getHiddenItemsCategories();
-    _filterOwnedItems = await Prefs().getShowOnlyOwnedItems();
   }
 
   Widget _errorMain() {

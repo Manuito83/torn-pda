@@ -938,10 +938,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Casino: Bookie"
         ..nickname = "Bookie"
-        ..url = "https://www.torn.com/bookies.php"
+        ..url = "https://www.torn.com/page.php?sid=bookie#/popular"
         ..originalName = "Casino: Bookie"
         ..originalNickname = "Bookie"
-        ..originalUrl = "https://www.torn.com/bookies.php"
+        ..originalUrl = "https://www.torn.com/page.php?sid=bookie#/popular"
         ..iconUrl = "images/icons/map/casino.png"
         ..color = Colors.green[200],
       Shortcut()

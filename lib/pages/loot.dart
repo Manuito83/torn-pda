@@ -22,7 +22,6 @@ import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -45,7 +44,7 @@ class _LootPageState extends State<LootPage> {
   var _npcIds = <String>[];
   var _filterOutIds = <String>[];
 
-  final databaseReference = FirebaseDatabase.instance.reference();
+  final databaseReference = FirebaseDatabase.instance.ref();
 
   Map<String, LootModel> _mainLootInfo = Map<String, LootModel>();
   Map<String, int> _dbLootInfo = Map<String, int>();
@@ -53,7 +52,6 @@ class _LootPageState extends State<LootPage> {
   bool _apiSuccess = false;
 
   SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
   ThemeProvider _themeProvider;
 
   bool _firstLoad = true;
@@ -75,7 +73,6 @@ class _LootPageState extends State<LootPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
     analytics.setCurrentScreen(screenName: 'loot');
     _tickerUpdateTimes = new Timer.periodic(Duration(seconds: 1), (Timer t) => _getLoot());
@@ -680,12 +677,12 @@ class _LootPageState extends State<LootPage> {
   Future<bool> _fetchDatabase() async {
     try {
       // Get current NPCs
-      String dbNpcsResult = (await FirebaseDatabase.instance.reference().child("loot/npcs").once()).value;
+      String dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value;
       _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
       // Get their hospital out times
       Map<dynamic, dynamic> dbHopsResult =
-          (await FirebaseDatabase.instance.reference().child("loot/hospital").once()).value;
+          (await FirebaseDatabase.instance.ref().child("loot/hospital").once()).snapshot.value;
       dbHopsResult.forEach((key, value) {
         _dbLootInfo[key.toString()] = value;
       });
@@ -865,7 +862,7 @@ class _LootPageState extends State<LootPage> {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       "$channelTitle ${modifier.channelIdModifier}",
       "$channelSubtitle ${modifier.channelIdModifier}",
-      channelDescription,
+      channelDescription: channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: 'notification_loot',

@@ -13,7 +13,6 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 
 class ChainWidgetOptions extends StatefulWidget {
@@ -1083,7 +1082,6 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final apiKey = context.read<UserDetailsProvider>().basic.userApiKey;
     _chainProvider = Provider.of<ChainStatusProvider>(context, listen: true);
 
     return AlertDialog(

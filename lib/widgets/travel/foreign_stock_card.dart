@@ -870,34 +870,39 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       var firestoreData = await firestore.getStockInformation(_codeName);
 
       // Chart date
-      var firestoreMap = firestoreData.data()['periodicMap'].map((k, v) => MapEntry(int.parse(k), v));
+      var responseMap = firestoreData.get('periodicMap');
+      Map<int, int> firestoreMap = new Map<int, int>();
+      responseMap.forEach((key, value) {
+        firestoreMap.putIfAbsent(int.parse(key), () => value);
+      });
 
       _periodicMap = SplayTreeMap<int, int>.from(firestoreMap, (a, b) => a.compareTo(b));
 
       // RESTOCK AVERAGE AND RELIABILITY
-      List restock = firestoreData.data()['restockElapsed'].toList();
-      if (restock.length > 0) {
+      var restockList = firestoreData.get('restockElapsed');
+
+      if (restockList.length > 0) {
         var sum = 0;
-        for (var res in restock) sum += res;
-        _averageTimeToRestock = sum ~/ restock.length;
+        for (var res in restockList) sum += res;
+        _averageTimeToRestock = sum ~/ restockList.length;
 
         var twentyPercent = _averageTimeToRestock * 0.2;
         var insideTenPercentAverage = 0;
-        for (var res in restock) {
+        for (var res in restockList) {
           if ((_averageTimeToRestock + twentyPercent > res) && (_averageTimeToRestock - twentyPercent < res)) {
             insideTenPercentAverage++;
           }
         }
         // We need a minimum number of restocks to give credibility
-        if (restock.length > 5) {
-          _restockReliability = insideTenPercentAverage * 100 ~/ restock.length;
+        if (restockList.length > 5) {
+          _restockReliability = insideTenPercentAverage * 100 ~/ restockList.length;
         } else {
           _restockReliability = 0;
         }
       }
 
       // TIMES TO RESTOCK
-      var lastEmpty = firestoreData.data()['lastEmpty'];
+      var lastEmpty = firestoreData.get('lastEmpty');
       var lastEmptyDateTime = DateTime.fromMillisecondsSinceEpoch(lastEmpty * 1000);
       _projectedRestockDateTime = lastEmptyDateTime.add(Duration(seconds: _averageTimeToRestock));
 
@@ -931,6 +936,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         _footerSuccessful = true;
       });
     } catch (e) {
+      print(e);
       setState(() {
         _footerSuccessful = false;
       });

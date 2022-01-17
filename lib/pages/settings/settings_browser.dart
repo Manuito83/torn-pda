@@ -1003,7 +1003,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   _settingsProvider.changeTabsHideBarColor = color.value;
                 });
               },
-              showLabel: true,
               pickerAreaHeightPercent: 0.8,
             ),
           ),
@@ -1037,7 +1036,6 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   pickerColor = color;
                 });
               },
-              showLabel: true,
               pickerAreaHeightPercent: 0.8,
             ),
           ),

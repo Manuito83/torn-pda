@@ -2,6 +2,7 @@
 import 'dart:io';
 
 // Flutter imports:
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,6 +12,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum TipClass {
   general,
@@ -23,18 +25,59 @@ enum TipClass {
   chainingWar,
   trading,
   deepLinks,
+  userScripts,
 }
 
-class ExpandableTip {
-  ExpandableTip({
-    this.expandedValue,
+abstract class TipTextBuilder {
+  TipTextBuilder({
     this.headerValue,
-    this.isExpanded = false,
+    this.isExpanded,
   });
 
-  String expandedValue;
   String headerValue;
   bool isExpanded;
+
+  Text buildExpandedText();
+
+  Text buildHeaderText() {
+    return Text(
+      headerValue,
+      style: TextStyle(
+        fontSize: 15,
+      ),
+    );
+  }
+}
+
+class ExpandableTip extends TipTextBuilder {
+  ExpandableTip({this.expandedValue, String headerValue, bool isExpanded = false})
+      : super(headerValue: headerValue, isExpanded: isExpanded);
+
+  String expandedValue;
+
+  @override
+  Text buildExpandedText() {
+    return Text(
+      expandedValue,
+      style: TextStyle(
+        fontSize: 13,
+      ),
+    );
+  }
+}
+
+class ComplexExpandableTip extends TipTextBuilder {
+  ComplexExpandableTip({Text buildExpandedText(), String headerValue, bool isExpanded = false})
+      : super(headerValue: headerValue, isExpanded: isExpanded) {
+    this._buildExpandedTextFn = buildExpandedText;
+  }
+
+  Function _buildExpandedTextFn;
+
+  @override
+  Text buildExpandedText() {
+    return this._buildExpandedTextFn();
+  }
 }
 
 class TipsPage extends StatefulWidget {
@@ -45,16 +88,17 @@ class TipsPage extends StatefulWidget {
 class _TipsPageState extends State<TipsPage> {
   SettingsProvider _settingsProvider;
 
-  var _generalTipList = <ExpandableTip>[];
-  var _browserGeneralTipList = <ExpandableTip>[];
-  var _browserTabsTipList = <ExpandableTip>[];
-  var _travelTipsList = <ExpandableTip>[];
-  var _profileTipsList = <ExpandableTip>[];
-  var _factionCommunicationTipsList = <ExpandableTip>[];
-  var _chainingTipsList = <ExpandableTip>[];
-  var _chainingWarTipsList = <ExpandableTip>[];
-  var _tradingTipsList = <ExpandableTip>[];
-  var _deepLinksTipsList = <ExpandableTip>[];
+  var _generalTipList = <TipTextBuilder>[];
+  var _browserGeneralTipList = <TipTextBuilder>[];
+  var _browserTabsTipList = <TipTextBuilder>[];
+  var _travelTipsList = <TipTextBuilder>[];
+  var _profileTipsList = <TipTextBuilder>[];
+  var _factionCommunicationTipsList = <TipTextBuilder>[];
+  var _chainingTipsList = <TipTextBuilder>[];
+  var _chainingWarTipsList = <TipTextBuilder>[];
+  var _tradingTipsList = <TipTextBuilder>[];
+  var _deepLinksTipsList = <TipTextBuilder>[];
+  var _userScriptsTipsList = <TipTextBuilder>[];
 
   @override
   void initState() {
@@ -69,6 +113,7 @@ class _TipsPageState extends State<TipsPage> {
     _chainingWarTipsList = buildChainingWarTips();
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
+    _userScriptsTipsList = buildUserScriptsTipsList();
 
     analytics.setCurrentScreen(screenName: 'tips');
   }
@@ -138,6 +183,10 @@ class _TipsPageState extends State<TipsPage> {
               Text("APP LINKS"),
               SizedBox(height: 10),
               tipsPanels(TipClass.deepLinks),
+              SizedBox(height: 25),
+              Text("USERSCRIPTS"),
+              SizedBox(height: 10),
+              tipsPanels(TipClass.userScripts),
               SizedBox(height: 60),
             ],
           ),
@@ -163,7 +212,7 @@ class _TipsPageState extends State<TipsPage> {
   }
 
   Widget tipsPanels(TipClass tipClass) {
-    var listToShow = <ExpandableTip>[];
+    var listToShow = <TipTextBuilder>[];
     switch (tipClass) {
       case TipClass.general:
         listToShow = _generalTipList;
@@ -195,6 +244,9 @@ class _TipsPageState extends State<TipsPage> {
       case TipClass.deepLinks:
         listToShow = _deepLinksTipsList;
         break;
+      case TipClass.userScripts:
+        listToShow = _userScriptsTipsList;
+        break;
     }
 
     return ExpansionPanelList(
@@ -204,29 +256,15 @@ class _TipsPageState extends State<TipsPage> {
           listToShow[index].isExpanded = !isExpanded;
         });
       },
-      children: listToShow.map<ExpansionPanel>((ExpandableTip tip) {
+      children: listToShow.map<ExpansionPanel>((TipTextBuilder tip) {
         return ExpansionPanel(
           canTapOnHeader: true,
           headerBuilder: (BuildContext context, bool isExpanded) {
-            return ListTile(
-              title: Text(
-                tip.headerValue,
-                style: TextStyle(
-                  fontSize: 15,
-                ),
-              ),
-            );
+            return ListTile(title: tip.buildHeaderText());
           },
           body: Padding(
             padding: const EdgeInsets.fromLTRB(8, 0, 8, 15),
-            child: ListTile(
-              title: Text(
-                tip.expandedValue,
-                style: TextStyle(
-                  fontSize: 13,
-                ),
-              ),
-            ),
+            child: ListTile(title: tip.buildExpandedText()),
           ),
           isExpanded: tip.isExpanded,
         );
@@ -669,6 +707,48 @@ class _TipsPageState extends State<TipsPage> {
             "of the application with the following scheme 'tornpda://', where the rest of the URL remains unchanged."
             "\n\nExample: 'tornpda://www.torn.com/gym.php' should be recognized as a valid URL and open Torn PDA with "
             "a browser pointing to the gym.",
+      ),
+    );
+    return tips;
+  }
+
+  List<TipTextBuilder> buildUserScriptsTipsList() {
+    var tips = <TipTextBuilder>[];
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "Userscripts development",
+        buildExpandedText: () {
+          return Text.rich(
+            TextSpan(
+              text: "You can use custom userscripts with Torn PDA. For more information, please visit the "
+                  "userscripts section in Settings & Advanced Browser Settings.\n\n"
+                  "Make sure to read carefully the disclaimer, "
+                  "instructions and limitations in case you would like to install new userscripts.\n\n"
+                  "There is a list of several userscripts examples at ",
+              style: TextStyle(
+                fontSize: 13,
+              ),
+              children: [
+                TextSpan(
+                  text: "our Github repository",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      const String scriptApiUrl = "https://github.com/Manuito83/torn-pda/tree/master/userscripts";
+                      if (await canLaunch(scriptApiUrl)) {
+                        launch(scriptApiUrl);
+                      }
+                    },
+                ),
+                TextSpan(
+                  text: ".",
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
     return tips;

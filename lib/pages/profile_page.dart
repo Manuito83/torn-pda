@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:android_intent/android_intent.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:bubble_showcase/bubble_showcase.dart';
-import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -28,9 +26,10 @@ import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
+import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
+import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
@@ -46,8 +45,6 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/external/nuke_revive.dart';
-import 'package:torn_pda/utils/external/uhc_revive.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -227,8 +224,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _dedicatedTravelCard = false;
 
   ChainModel _chainModel;
-
-  
 
   var _eventsExpController = ExpandableController();
   var _messagesExpController = ExpandableController();
@@ -906,7 +901,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           descriptionText += '- ${_user.status.details}';
         }
 
-        // Causing player ID (jailed of hospitalised the user)
+        // Causing player ID (jailed of hospitalized the user)
         RegExp expHtml = RegExp(r"<[^>]*>");
         var matches = expHtml.allMatches(descriptionText).map((m) => m[0]);
         String causingId = '';
@@ -1001,56 +996,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    Widget nukeRevive() {
-      if (_user.status.state == 'Hospital' && _nukeReviveActive) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                child: GestureDetector(
-                  child: Image.asset('images/icons/nuke-revive.png', width: 24),
-                  onTap: () {
-                    _openNukeReviveDialog(context);
-                  },
-                ),
-              ),
-              SizedBox(width: 10),
-              Flexible(child: Text("Request a revive (Nuke)")),
-            ],
-          ),
-        );
-      } else {
-        return SizedBox.shrink();
-      }
-    }
-
-    Widget uhcRevive() {
-      if (_user.status.state == 'Hospital' && _uhcReviveActive) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                child: GestureDetector(
-                  child: Image.asset('images/icons/uhc_revive.png', width: 24),
-                  onTap: () {
-                    _openUhcReviveDialog(context);
-                  },
-                ),
-              ),
-              SizedBox(width: 10),
-              Flexible(child: Text("Request a revive (UHC)")),
-            ],
-          ),
-        );
-      } else {
-        return SizedBox.shrink();
-      }
-    }
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
@@ -1092,13 +1037,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                   BazaarStatusCard(
                     // Careful, in this card we mixed sync with async items, so the miscModel can still be null
-                    bazaarModel: _miscModel?.bazaar,  
+                    bazaarModel: _miscModel?.bazaar,
                     launchBrowser: _launchBrowser,
                   ),
                   if (!_dedicatedTravelCard) _travelWidget(),
                   descriptionWidget(),
-                  nukeRevive(),
-                  uhcRevive(),
+                  if (_user.status.state == 'Hospital' && _nukeReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: NukeReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
+                  if (_user.status.state == 'Hospital' && _uhcReviveActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 13, top: 10),
+                      child: UhcReviveButton(
+                        themeProvider: _themeProvider,
+                        user: _user,
+                        webViewProvider: _webViewProvider,
+                        settingsProvider: _settingsProvider,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -4429,7 +4392,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         void calculateSimpleReadiness() {
           if (simpleTime.isBefore(DateTime.now())) {
             simpleReady = true;
-            simpleString = "A faction organised crime might be ready!";
+            simpleString = "A faction organized crime might be ready!";
           } else {
             var formattedTime = TimeFormatter(
               inputTime: simpleTime,
@@ -4520,7 +4483,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return SpeedDial(
       animationSpeed: 150,
       direction:
-          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.Up : SpeedDialDirection.Left,
+          MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       backgroundColor: Colors.transparent,
       overlayColor: Colors.transparent,
       child: Container(
@@ -4850,7 +4813,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       channelTitle,
       channelSubtitle,
-      channelDescription,
+      channelDescription: channelDescription,
       priority: Priority.high,
       visibility: NotificationVisibility.public,
       icon: notificationIconAndroid,
@@ -5667,377 +5630,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _checkIfNotificationsAreCurrent();
   }
 
-  Future<void> _openNukeReviveDialog(BuildContext _) {
-    return showDialog<void>(
-      context: _,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  "REQUEST A REVIVE FROM NUKE",
-                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Flexible(
-                          child: EasyRichText(
-                            "Nuke is a premium Torn reviving service consisting in more than "
-                            "300 revivers. You can find more information in the forums or "
-                            "in the Central Hospital Discord server.",
-                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                            patternList: [
-                              EasyRichTextPattern(
-                                targetString: 'forums',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    _launchBrowser(
-                                      url: 'https://www.torn.com/forums.php#/p=threads&f=14&t=16160853&b=0&a=0',
-                                      dialogRequested: true,
-                                    );
-                                  },
-                              ),
-                              EasyRichTextPattern(
-                                targetString: 'Central Hospital',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    var url = 'https://discord.gg/qSHjTXx';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Each revive must be paid directly to the reviver (unless under a "
-                            "contract with Nuke) and costs \$1 million or 1 Xanax.",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Please keep in mind if you don't pay for the requested revive, "
-                            "you risk getting blocked from Nuke!",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text("Medic!"),
-                              onPressed: () async {
-                                var nuke = NukeRevive(
-                                  playerId: _user.playerId.toString(),
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerLocation: _user.travel.destination,
-                                );
-                                nuke.callMedic().then((value) {
-                                  if (value.isNotEmpty) {
-                                    BotToast.showText(
-                                      text: value,
-                                      textStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.green[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  } else {
-                                    BotToast.showText(
-                                      text: 'There was an error contacting Nuke, try again later '
-                                          'or contact them through Central Hospital\'s Discord '
-                                          'server!',
-                                      textStyle: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                      ),
-                                      contentColor: Colors.red[800],
-                                      duration: Duration(seconds: 5),
-                                      contentPadding: EdgeInsets.all(10),
-                                    );
-                                  }
-                                });
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            TextButton(
-                              child: Text("Cancel"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.background,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Image.asset(
-                          'images/icons/nuke-revive.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _openUhcReviveDialog(BuildContext _) {
-    return showDialog<void>(
-      context: _,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                    ),
-                    margin: EdgeInsets.only(top: 15),
-                    decoration: new BoxDecoration(
-                      color: _themeProvider.background,
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: const Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // To make the card compact
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  "REQUEST A REVIVE FROM UHC",
-                                  style: TextStyle(fontSize: 11, color: _themeProvider.mainText),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Flexible(
-                          child: EasyRichText(
-                            "Universal Health Care (UHC for short) is a revive alliance consisting "
-                            "of factions. You can find more information in the forums or "
-                            "in the UHC Discord server.",
-                            defaultStyle: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                            patternList: [
-                              EasyRichTextPattern(
-                                targetString: 'forums',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    _launchBrowser(
-                                      url: 'https://www.torn.com/forums.php#/p=threads&f=67&t=16192913&b=0&a=0',
-                                      dialogRequested: true,
-                                    );
-                                  },
-                              ),
-                              EasyRichTextPattern(
-                                targetString: 'UHC Discord',
-                                style: TextStyle(color: Colors.blue),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () async {
-                                    var url = 'https://discord.gg/JJprTpb';
-                                    if (await canLaunch(url)) {
-                                      await launch(url, forceSafariVC: false);
-                                    }
-                                  },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Each revive must be paid directly to the reviver and costs "
-                            "\$1 million or 1 Xanax. There are special prices for faction contracts "
-                            "(more information in the forums).",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        Flexible(
-                          child: Text(
-                            "Please keep in mind if you don't pay for the requested revive, "
-                            "you risk getting blocked from UHC!",
-                            style: TextStyle(fontSize: 13, color: _themeProvider.mainText),
-                          ),
-                        ),
-                        SizedBox(height: 15),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            TextButton(
-                              child: Text("Medic!"),
-                              onPressed: () async {
-                                var uhc = UhcRevive(
-                                  playerId: _user.playerId,
-                                  playerName: _user.name,
-                                  playerFaction: _user.faction.factionName,
-                                  playerFactionId: _user.faction.factionId,
-                                );
-
-                                uhc.callMedic().then((value) {
-                                  var resultString = "";
-                                  var resultColor = Colors.transparent;
-
-                                  if (value == "200") {
-                                    resultString = "Request received by UHC!\n\n"
-                                        "Please pay your reviver "
-                                        "1 Xanax or \$1M";
-                                    resultColor = Colors.green[800];
-                                  } else if (value == "error") {
-                                    resultString = "There was an error contacting UHC, try again later"
-                                        "or contact them through UHC\'s Discord"
-                                        "server!";
-                                    resultColor = Colors.red[800];
-                                  } else {
-                                    resultString = value;
-                                    resultColor = Colors.red[800];
-                                  }
-
-                                  BotToast.showText(
-                                    text: resultString,
-                                    textStyle: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: resultColor,
-                                    duration: Duration(seconds: 5),
-                                    contentPadding: EdgeInsets.all(10),
-                                  );
-                                });
-
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            TextButton(
-                              child: Text("Cancel"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.background,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
-                      radius: 22,
-                      child: SizedBox(
-                        height: 34,
-                        width: 34,
-                        child: Image.asset(
-                          'images/icons/uhc_revive.png',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _openWalletDialog() {
+    Future<void> _openWalletDialog() {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,

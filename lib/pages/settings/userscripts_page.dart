@@ -674,6 +674,42 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     fontSize: 13,
                   ),
                 ),
+                SizedBox(height: 25),
+                Text(
+                  "CROSS-ORIGIN REQUESTS (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn limits cross-origin requests via the content-security-policy header. In order to "
+                        "allow other APIs to be called from within the browser (though an userscript), Torn PDA "
+                        "incorporates its own JavasScript API.\n\n"
+                        "For more information regarding GET and POST calls, please visit the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "JavasScript API implementation",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String scriptApiUrl =
+                                "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_API.js";
+                            if (await canLaunch(scriptApiUrl)) {
+                              launch(scriptApiUrl);
+                            }
+                          },
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

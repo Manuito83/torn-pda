@@ -465,6 +465,38 @@ class _AboutPageState extends State<AboutPage> {
                     'Torn Tools or DocTorn.'),
               ),
             ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(30, 0, 30, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  Flexible(
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'The JavaScript API for cross-origin http requests (see userscripts section) has '
+                            'been developed by ',
+                        style: DefaultTextStyle.of(context).style,
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: 'Knoxby',
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () async {
+                                var url = 'https://www.torn.com/profiles.php?XID=2503189';
+                                await context.read<WebViewProvider>().openBrowserPreference(
+                                      context: context,
+                                      url: url,
+                                      useDialog: _settingsProvider.useQuickBrowser,
+                                    );
+                              },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             SizedBox(height: 60),
           ],
         ),

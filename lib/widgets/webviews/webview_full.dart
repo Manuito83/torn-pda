@@ -717,6 +717,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       },
                     );
                   }
+
+                  _addScriptApiHandlers(webView);
                 },
                 shouldOverrideUrlLoading: (c, request) async {
                   if (request.request.url.toString().contains("http://")) {
@@ -1169,6 +1171,42 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  void _addScriptApiHandlers(InAppWebViewController webView) {
+    webView.addJavaScriptHandler(
+      handlerName: 'PDA_httpGet',
+      callback: (args) async {
+        http.Response resp = await http.get(Uri.parse(args[0]));
+        return _makeScriptApiResponse(resp);
+      },
+    );
+
+    webView.addJavaScriptHandler(
+      handlerName: 'PDA_httpPost',
+      callback: (args) async {
+        Object body = args[2];
+        if (body is Map<String, dynamic>) {
+          body = Map<String, String>.from(body);
+        }
+        http.Response resp = await http.post(
+          Uri.parse(args[0]), 
+          headers: Map<String, String>.from(args[1]),
+          body: body
+        );
+        return _makeScriptApiResponse(resp);
+      },
+    );
+  }
+
+  Map<String, dynamic> _makeScriptApiResponse(http.Response resp) {
+    // Create a return value that mimics GM_xmlHttpRequest()
+    return {
+      'status': resp.statusCode,
+      'statusText': resp.reasonPhrase,
+      'responseText': resp.body,
+      'responseHeaders': resp.headers.keys.map((key) =>  '${key}: ${resp.headers[key]}').join("\r\n")
+    };
   }
 
   void _reportUrlVisit(Uri uri, {bool reportTitle = false}) {

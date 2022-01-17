@@ -50,6 +50,9 @@ class WarController extends GetxController {
   DateTime _lastTornStatsSpiesDownload;
   TornStatsSpiesModel _tornStatsSpies = TornStatsSpiesModel();
 
+  bool nukeReviveActive = false;
+  bool uhcReviveActive = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -584,6 +587,9 @@ class WarController extends GetxController {
     });
 
     showChainWidget = await Prefs().getShowChainWidgetInWars();
+
+    nukeReviveActive = await Prefs().getUseNukeRevive();
+    uhcReviveActive = await Prefs().getUseUhcRevive();
 
     // Get sorting
     String targetSort = await Prefs().getWarMembersSort();
