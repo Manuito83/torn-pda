@@ -472,10 +472,10 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
 
   void onCustomURLSubmitted() {
     if (_customURLKey.currentState.validate()) {
-      String url = _customURLController.text.toLowerCase().replaceAll(" ", "");
-      if (!url.contains("https://") && !url.contains("http://")) {
+      String url = _customURLController.text.replaceAll(" ", "");
+      if (!url.toLowerCase().contains("https://") && !url.toLowerCase().contains("http://")) {
         url = 'https://' + url;
-      } else if (url.contains("http://")) {
+      } else if (url.toLowerCase().contains("http://")) {
         url = url.replaceAll("http://", "https://");
       }
 

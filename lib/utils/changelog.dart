@@ -38,6 +38,13 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.5
+    var v2_6_5 = ChangeLogItem();
+    v2_6_5.main.version = 'Torn PDA v2.6.5';
+    v2_6_5.main.date = '01 FEB 2022';
+    String feat2_6_5_1 = "Browser: fixed custom URLs with mixed letter case not working";
+    v2_6_5.features.add(feat2_6_5_1);
+
     // VERSION 2.6.4
     var v2_6_4 = ChangeLogItem();
     v2_6_4.main.version = 'Torn PDA v2.6.4';
@@ -1028,6 +1035,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_5);
     itemList.add(v2_6_4);
     itemList.add(v2_6_3);
     itemList.add(v2_6_2);
