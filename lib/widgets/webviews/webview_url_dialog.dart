@@ -556,7 +556,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 ),
                                 textCapitalization: TextCapitalization.sentences,
                                 controller: _customShortcutNameController,
-                                maxLength: 20,
+                                maxLength: 30,
                                 maxLines: 1,
                                 decoration: InputDecoration(
                                   counterText: "",

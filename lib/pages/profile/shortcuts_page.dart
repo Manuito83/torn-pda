@@ -680,7 +680,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                                 ),
                                 textCapitalization: TextCapitalization.sentences,
                                 controller: _customNameController,
-                                maxLength: 20,
+                                maxLength: 30,
                                 maxLines: 1,
                                 decoration: InputDecoration(
                                   counterText: "",
