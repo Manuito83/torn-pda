@@ -11,6 +11,7 @@ import 'package:expandable/expandable.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spy_model.dart';
 
 // Project imports:
@@ -19,9 +20,11 @@ import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -62,11 +65,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
   SettingsProvider _settingsProvider;
 
+  TargetsProvider _targetsProvider;
   UserDetailsProvider _userDetails;
   var _expandableController = ExpandableController();
 
   Widget _statsWidget; // Has to be null at the beginning
   Widget _errorDetailsWidget = SizedBox.shrink();
+
+  bool _addButtonActive = true;
 
   var _isTornPda = false;
   var _isPartner = false;
@@ -100,6 +106,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
   @override
   Widget build(BuildContext context) {
+    _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     return FutureBuilder(
       future: _checkedPerson,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -126,61 +133,62 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Widget mainWidgetBox() {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        if (_statsWidget != null)
+          Row(
             children: [
-              if (_statsWidget != null) _statsWidget,
-              if (_networthWidgetEnabled) _networthWidget,
-              if (_isTornPda) _tornPdaWidget,
-              // Container so that the background color can be changed for certain widgets
-              Container(
-                color: _backgroundColor,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
-                  child: Column(
-                    children: [
-                      if (_isPartner)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _partnerWidget,
-                        ),
-                      if (_isFriend)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _friendsWidget,
-                        ),
-                      if (_isOwnFaction || _isOwnPlayer)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _playerOrFactionWidget,
-                        ),
-                      if (_isFriendlyFaction)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _friendlyFactionWidget,
-                        ),
-                      if (_isWorkColleague)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: _workColleagueWidget,
-                        ),
-                      if (_isWorkColleague ||
-                          _isFriendlyFaction ||
-                          _isFriendlyFaction ||
-                          _isFriend ||
-                          _isOwnFaction ||
-                          _isPartner ||
-                          _isOwnPlayer)
-                        SizedBox(height: 2)
-                    ],
-                  ),
-                ),
+              Expanded(
+                child: _statsWidget,
               ),
+              _addRemoveTargetIcon(),
             ],
+          ),
+        if (_networthWidgetEnabled) _networthWidget,
+        if (_isTornPda) _tornPdaWidget,
+        // Container so that the background color can be changed for certain widgets
+        Container(
+          color: _backgroundColor,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+            child: Column(
+              children: [
+                if (_isPartner)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _partnerWidget,
+                  ),
+                if (_isFriend)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _friendsWidget,
+                  ),
+                if (_isOwnFaction || _isOwnPlayer)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _playerOrFactionWidget,
+                  ),
+                if (_isFriendlyFaction)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _friendlyFactionWidget,
+                  ),
+                if (_isWorkColleague)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _workColleagueWidget,
+                  ),
+                if (_isWorkColleague ||
+                    _isFriendlyFaction ||
+                    _isFriendlyFaction ||
+                    _isFriend ||
+                    _isOwnFaction ||
+                    _isPartner ||
+                    _isOwnPlayer)
+                  SizedBox(height: 2)
+              ],
+            ),
           ),
         ),
       ],
@@ -744,7 +752,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
+            padding: EdgeInsets.fromLTRB(15, 4, 8, 4),
             child: Row(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -959,34 +967,38 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         _statsWidget = Container(
           color: Colors.grey[900],
           child: Padding(
-            padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
+            padding: EdgeInsets.fromLTRB(15, 4, 8, 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      npc ? "" : "(EST)",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        npc ? "" : "(EST)",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      estimatedStats,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
+                      SizedBox(width: 5),
+                      Text(
+                        estimatedStats,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontStyle: estimatedStats == "(EST) UNK" ? FontStyle.italic : FontStyle.normal,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 5),
-                    if (!npc)
-                      Row(
-                        children: additional,
-                      ),
-                  ],
+                      SizedBox(width: 5),
+                      if (!npc)
+                        Expanded(
+                          child: Wrap(
+                            children: additional,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 if (!npc) onlineStatus,
                 if (!npc)
@@ -1027,6 +1039,100 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         setState(() {});
       }
     }
+  }
+
+  Widget _addRemoveTargetIcon() {
+    bool targetExists = false;
+    Color targetExistsColor = Colors.green;
+    TargetModel target = TargetModel();
+    for (TargetModel t in _targetsProvider.allTargets) {
+      if (t.playerId == widget.profileId) {
+        targetExists = true;
+        targetExistsColor = Colors.red;
+        target = t;
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: GestureDetector(
+        child: _addButtonActive
+            ? targetExists
+                ? Icon(
+                    Icons.remove_circle_outline,
+                    color: targetExistsColor,
+                    size: 18,
+                  )
+                : Icon(
+                    Icons.add_circle_outline,
+                    color: targetExistsColor,
+                    size: 18,
+                  )
+            : SizedBox(
+                height: 15,
+                width: 15,
+                child: CircularProgressIndicator(),
+              ),
+        onTap: () async {
+          setState(() {
+            _addButtonActive = false;
+          });
+
+          if (targetExists) {
+            _targetsProvider.deleteTarget(target);
+            BotToast.showText(
+              clickClose: true,
+              text: HtmlParser.fix('Removed from Torn PDA targets!'),
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange[900],
+              duration: Duration(seconds: 3),
+              contentPadding: EdgeInsets.all(10),
+            );
+          } else {
+            dynamic attacks = await _targetsProvider.getAttacks();
+            AddTargetResult tryAddTarget = await _targetsProvider.addTarget(
+              targetId: widget.profileId.toString(),
+              attacks: attacks,
+            );
+            if (tryAddTarget.success) {
+              BotToast.showText(
+                clickClose: true,
+                text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
+                    'main targets list in Torn PDA!'),
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.green[700],
+                duration: Duration(seconds: 3),
+                contentPadding: EdgeInsets.all(10),
+              );
+            } else if (!tryAddTarget.success) {
+              BotToast.showText(
+                clickClose: true,
+                text: HtmlParser.fix('Error adding ${widget.profileId}. ${tryAddTarget.errorReason}'),
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.red[900],
+                duration: Duration(seconds: 4),
+                contentPadding: EdgeInsets.all(10),
+              );
+            }
+          }
+
+          if (mounted) {
+            setState(() {
+              _addButtonActive = true;
+            });
+          }
+        },
+      ),
+    );
   }
 
   void _showSpiedDetailsDialog({
