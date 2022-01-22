@@ -7,6 +7,8 @@ enum ItemsSortType {
   ownedAsc,
   valueDes,
   valueAsc,
+  totalValueDes,
+  totalValueAsc,
   circulationDes,
   circulationAsc,
   idDes,
@@ -42,6 +44,12 @@ class ItemsSort {
         break;
       case ItemsSortType.valueAsc:
         description = 'Sort by value (asc)';
+        break;
+      case ItemsSortType.totalValueDes:
+        description = 'Sort by total value (des)';
+        break;
+      case ItemsSortType.totalValueAsc:
+        description = 'Sort by total value (asc)';
         break;
       case ItemsSortType.circulationDes:
         description = 'Sort by circulation (des)';
