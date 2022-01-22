@@ -40,7 +40,7 @@ class WarOptions {
       case "Nuke revive":
         // Own icon in widget
         break;
-              case "UHC revive":
+      case "UHC revive":
         // Own icon in widget
         break;
     }
@@ -643,7 +643,7 @@ class AddFactionDialog extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16.0),
-              Expanded(
+              Flexible(
                 child: factionCards(),
               ),
               const SizedBox(height: 16.0),
@@ -792,7 +792,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
       );
     }
-    return ListView(children: factionCards);
+    return ListView(shrinkWrap: true, children: factionCards);
   }
 }
 
@@ -834,10 +834,11 @@ class HiddenMembersDialog extends StatelessWidget {
               style: TextStyle(fontSize: 14),
             ),
             SizedBox(height: 20),
-            ListView(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              children: hiddenCards,
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: hiddenCards,
+              ),
             ),
           ],
         ),
