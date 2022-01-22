@@ -44,7 +44,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_5.main.date = '05 FEB 2022';
     String feat2_6_5_1 = "Chaining: targets can now be added or removed from user profiles in Torn";
     String feat2_6_5_2 = "Items: total owned value is now shown and sortable";
-    String feat2_6_5_3 = "Shortcuts: increased allowed name length (helpful if using a small font)";
+    String feat2_6_5_3 = "Shortcuts: increased allowable name length (helpful if using a small font)";
     String feat2_6_5_4 = "War: fixed hidden targets' scroll";
     String feat2_6_5_5 = "Browser: fixed custom URLs with mixed letter case not working";
     v2_6_5.features.add(feat2_6_5_1);
