@@ -202,6 +202,40 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                         child: WebView(
                           initialUrl: _initialUrl,
                           javascriptMode: JavascriptMode.unrestricted,
+                          javascriptChannels: Set.from([
+                            JavascriptChannel(
+                              name: 'loadoutChangeHandler',
+                              onMessageReceived: (JavascriptMessage message) async {
+                                if (message.message.contains("equippedSet")) {
+                                  final regex = RegExp(r'"equippedSet":(\d)');
+                                  final match = regex.firstMatch(message.message);
+                                  final loadout = match.group(1);
+                                  _webViewController.reload();
+                                  BotToast.showText(
+                                    text: "Loadout $loadout activated!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.blue[600],
+                                    duration: Duration(seconds: 1),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                } else {
+                                  BotToast.showText(
+                                    text: "There was a problem activating the loadout, are you already using it?",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.red[600],
+                                    duration: Duration(seconds: 2),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                }
+                              },
+                            )
+                          ]),
                           onWebViewCreated: (WebViewController c) {
                             _webViewController = c;
                           },
@@ -526,8 +560,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user =
-                await TornApiCaller().getTarget(playerId: _userProv.basic.playerId.toString());
+            var user = await TornApiCaller().getTarget(playerId: _userProv.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -638,8 +671,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        var nextTarget =
-            await TornApiCaller().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -651,8 +683,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status.color == "blue") {
-            var user =
-                await TornApiCaller().getTarget(playerId: _userProv.basic.playerId.toString());
+            var user = await TornApiCaller().getTarget(playerId: _userProv.basic.playerId.toString());
             if (user is TargetModel) {
               if (user.status.description != nextTarget.status.description) {
                 targetsSkipped++;
@@ -723,8 +754,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     // from the API
     else {
       if (widget.showOnlineFactionWarning) {
-        var nextTarget =
-            await TornApiCaller().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction.factionName;

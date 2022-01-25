@@ -141,6 +141,8 @@ class QuickItemsProvider extends ChangeNotifier {
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
+
+      // Add Torn items
       allTornItems.items.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type) ||
             _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
@@ -164,6 +166,27 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       });
       _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
+
+      // Insert loadouts at the beginning after sorting
+      for (int i = 0; i < 3; i++) {
+        var savedActive = false;
+        for (var saved in _activeQuickItemsList) {
+          if (saved.name == "Loadout ${i}") {
+            savedActive = true;
+            break;
+          }
+        }
+
+        _fullQuickItemsList.insert(
+          i,
+          QuickItem()
+            ..name = "Loadout ${i + 1}"
+            ..description = "Activated loadout ${i + 1}"
+            ..number = 0
+            ..active = savedActive,
+        );
+      }
+
       return true;
     }
     return false;

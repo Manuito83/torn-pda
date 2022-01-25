@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,7 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
@@ -158,7 +160,8 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           var spyModel = YataSpyModel();
                           var spyFoundInYata = false;
                           try {
-                            String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=$apiKey';
+                            UserController _u = Get.put(UserController());
+                            String yataURL = 'https://yata.yt/api/v1/spy/$attackId?key=${_u.alternativeYataKey}';
                             var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
                             if (resp.statusCode == 200) {
                               var spyJson = json.decode(resp.body);

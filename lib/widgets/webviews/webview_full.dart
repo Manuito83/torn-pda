@@ -718,6 +718,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     );
                   }
 
+                  _addLoadoutChangeHandler(webView);
+
                   _addScriptApiHandlers(webView);
                 },
                 shouldOverrideUrlLoading: (c, request) async {
@@ -1189,12 +1191,48 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (body is Map<String, dynamic>) {
           body = Map<String, String>.from(body);
         }
-        http.Response resp = await http.post(
-          Uri.parse(args[0]), 
-          headers: Map<String, String>.from(args[1]),
-          body: body
-        );
+        http.Response resp =
+            await http.post(Uri.parse(args[0]), headers: Map<String, String>.from(args[1]), body: body);
         return _makeScriptApiResponse(resp);
+      },
+    );
+  }
+
+  void _addLoadoutChangeHandler(InAppWebViewController webView) {
+    webView.addJavaScriptHandler(
+      handlerName: 'loadoutChangeHandler',
+      callback: (args) async {
+        if (args.isNotEmpty) {
+          String message = args[0];
+          if (message.contains("equippedSet")) {
+            final regex = RegExp(r'"equippedSet":(\d)');
+            final match = regex.firstMatch(message);
+            final loadout = match.group(1);
+            reload();
+            BotToast.showText(
+              text: "Loadout $loadout activated!",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue[600],
+              duration: Duration(seconds: 1),
+              contentPadding: EdgeInsets.all(10),
+            );
+            return;
+          }
+        }
+
+        BotToast.showText(
+          text: "There was a problem activating the loadout, are you already using it?",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[600],
+          duration: Duration(seconds: 2),
+          contentPadding: EdgeInsets.all(10),
+        );
       },
     );
   }
@@ -1205,7 +1243,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       'status': resp.statusCode,
       'statusText': resp.reasonPhrase,
       'responseText': resp.body,
-      'responseHeaders': resp.headers.keys.map((key) =>  '${key}: ${resp.headers[key]}').join("\r\n")
+      'responseHeaders': resp.headers.keys.map((key) => '${key}: ${resp.headers[key]}').join("\r\n")
     };
   }
 

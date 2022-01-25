@@ -724,7 +724,7 @@ class WarController extends GetxController {
 
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
-      String yataURL = 'https://yata.yt/api/v1/spies/?key=${apiKey}';
+      String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
       var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 2));
       if (resp.statusCode == 200) {
         dynamic spiesJson = json.decode(resp.body);
@@ -754,7 +754,7 @@ class WarController extends GetxController {
     }
 
     try {
-      String tornStatsURL = 'https://www.tornstats.com/api/v1/$apiKey/faction/spies';
+      String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
       var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
       if (resp.statusCode == 200) {
         TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);

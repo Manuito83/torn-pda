@@ -193,6 +193,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
         builder: (context, itemsProvider, child) {
           var activeItems = <Widget>[];
           for (var item in itemsProvider.activeQuickItems) {
+            bool isLoadout = (item.name.contains("Loadout"));
             activeItems.add(
               Slidable(
                 key: UniqueKey(),
@@ -209,69 +210,76 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                 ],
                 child: Container(
                   height: 60,
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.all(2),
-                            child: Image.asset(
-                              'images/torn_items/small/${item.number}_small.png',
-                              width: 35,
-                              height: 35,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: isLoadout ? 20 : 0),
+                    child: Card(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.all(2),
+                              child: Image.asset(
+                                isLoadout
+                                    ? 'images/icons/loadout.png'
+                                    : 'images/torn_items/small/${item.number}_small.png',
+                                width: isLoadout ? 25 : 35,
+                                height: isLoadout ? 25 : 35,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          Flexible(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Flexible(
-                                  child: Row(
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          item.name,
-                                          style: TextStyle(fontSize: 13),
+                            SizedBox(width: 10),
+                            Flexible(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Flexible(
+                                    child: Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            item.name,
+                                            style: TextStyle(fontSize: 13),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  "(inv: x${item.inventory})",
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ],
+                                  if (!isLoadout)
+                                    Text(
+                                      "(inv: x${item.inventory})",
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () {
-                              BotToast.showText(
-                                text: '${item.name}\n\n${item.description}\n\n'
-                                    'You have ${item.inventory} in your inventory',
-                                textStyle: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
+                            SizedBox(width: 10),
+                            if (!isLoadout)
+                              GestureDetector(
+                                onTap: () {
+                                  BotToast.showText(
+                                    text: '${item.name}\n\n${item.description}\n\n'
+                                        'You have ${item.inventory} in your inventory',
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.green[800],
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                },
+                                child: Icon(
+                                  Icons.info_outline,
+                                  size: 19,
                                 ),
-                                contentColor: Colors.green[800],
-                                duration: Duration(seconds: 5),
-                                contentPadding: EdgeInsets.all(10),
-                              );
-                            },
-                            child: Icon(
-                              Icons.info_outline,
-                              size: 19,
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Icon(Icons.reorder),
-                          SizedBox(width: 10),
-                        ],
+                              ),
+                            SizedBox(width: 10),
+                            Icon(Icons.reorder),
+                            SizedBox(width: 10),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -331,6 +339,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               var allQuickItems = <Widget>[];
               for (var item in itemsProvider.fullQuickItems) {
                 if (item.name.toLowerCase().contains(_itemsProvider.searchFilter.toLowerCase())) {
+                  bool isLoadout = (item.name.contains("Loadout"));
                   allQuickItems.add(
                     // Don't show those that are active
                     !item.active
@@ -339,88 +348,95 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                             duration: Duration(milliseconds: 300),
                             child: Container(
                               height: 60,
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.all(2),
-                                        child: Image.asset(
-                                          'images/torn_items/small/${item.number}_small.png',
-                                          width: 35,
-                                          height: 35,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: isLoadout ? 20 : 0),
+                                child: Card(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                    child: Row(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.all(2),
+                                          child: Image.asset(
+                                            isLoadout
+                                                ? 'images/icons/loadout.png'
+                                                : 'images/torn_items/small/${item.number}_small.png',
+                                            width: isLoadout ? 25 : 35,
+                                            height: isLoadout ? 25 : 35,
+                                          ),
                                         ),
-                                      ),
-                                      SizedBox(width: 10),
-                                      Flexible(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Flexible(
-                                              child: Row(
-                                                children: [
-                                                  Flexible(
-                                                    child: Text(
-                                                      item.name,
-                                                      style: TextStyle(fontSize: 13),
+                                        SizedBox(width: 10),
+                                        Flexible(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Flexible(
+                                                child: Row(
+                                                  children: [
+                                                    Flexible(
+                                                      child: Text(
+                                                        item.name,
+                                                        style: TextStyle(fontSize: 13),
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            Text(
-                                              "(inv: x${item.inventory})",
-                                              style: TextStyle(fontSize: 10),
-                                            ),
-                                          ],
+                                              if (!isLoadout)
+                                                Text(
+                                                  "(inv: x${item.inventory})",
+                                                  style: TextStyle(fontSize: 10),
+                                                ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          BotToast.showText(
-                                            text: '${item.name}\n\n${item.description}\n\n'
-                                                'You have ${item.inventory} in your inventory',
-                                            textStyle: TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.white,
+                                        if (!isLoadout)
+                                          GestureDetector(
+                                            onTap: () {
+                                              BotToast.showText(
+                                                text: '${item.name}\n\n${item.description}\n\n'
+                                                    'You have ${item.inventory} in your inventory',
+                                                textStyle: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.white,
+                                                ),
+                                                contentColor: Colors.green[800],
+                                                duration: Duration(seconds: 5),
+                                                contentPadding: EdgeInsets.all(10),
+                                              );
+                                            },
+                                            child: Icon(
+                                              Icons.info_outline,
+                                              size: 19,
                                             ),
-                                            contentColor: Colors.green[800],
-                                            duration: Duration(seconds: 5),
-                                            contentPadding: EdgeInsets.all(10),
-                                          );
-                                        },
-                                        child: Icon(
-                                          Icons.info_outline,
-                                          size: 19,
+                                          ),
+                                        TextButton(
+                                          onPressed: !item.visible
+                                              // Avoid double press
+                                              ? null
+                                              : () async {
+                                                  // Start animation
+                                                  setState(() {
+                                                    item.visible = false;
+                                                  });
+
+                                                  await Future.delayed(Duration(milliseconds: 300));
+
+                                                  setState(() {
+                                                    itemsProvider.activateQuickItem(item);
+                                                  });
+
+                                                  // Reset visibility after animation
+                                                  item.visible = true;
+                                                },
+                                          child: Text(
+                                            'ADD',
+                                            style: TextStyle(color: Colors.green[500]),
+                                          ),
                                         ),
-                                      ),
-                                      TextButton(
-                                        onPressed: !item.visible
-                                            // Avoid double press
-                                            ? null
-                                            : () async {
-                                                // Start animation
-                                                setState(() {
-                                                  item.visible = false;
-                                                });
-
-                                                await Future.delayed(Duration(milliseconds: 300));
-
-                                                setState(() {
-                                                  itemsProvider.activateQuickItem(item);
-                                                });
-
-                                                // Reset visibility after animation
-                                                item.visible = true;
-                                              },
-                                        child: Text(
-                                          'ADD',
-                                          style: TextStyle(color: Colors.green[500]),
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

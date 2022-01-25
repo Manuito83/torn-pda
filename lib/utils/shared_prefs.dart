@@ -175,6 +175,12 @@ class Prefs {
   // ShowCases (with flutter_showcaseview)
   final String _kShowCases = "pda_showCases";
 
+  // Alternative keys
+  final String _kAlternativeYataKeyEnabled = "pda_alternativeYataKeyEnabled";
+  final String _kAlternativeYataKey = "pda_alternativeYataKey";
+  final String _kAlternativeTornStatsKeyEnabled = "pda_alternativeTornStatsKeyEnabled";
+  final String _kAlternativeTornStatsKey = "pda_alternativeTornStatsKey";
+
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
   final String _kTACEnabled = "pda_tacEnabled";
@@ -1651,6 +1657,52 @@ class Prefs {
   Future<bool> setHighlightColor(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kHighlightColor, value);
+  }
+
+  /// -------------------
+  /// ALTERNATIVE KEYS
+  /// -------------------
+
+  // YATA
+  Future<bool> getAlternativeYataKeyEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAlternativeYataKeyEnabled) ?? false;
+  }
+
+  Future<bool> setAlternativeYataKeyEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAlternativeYataKeyEnabled, value);
+  }
+
+  Future<String> getAlternativeYataKey() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAlternativeYataKey) ?? "";
+  }
+
+  Future<bool> setAlternativeYataKey(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAlternativeYataKey, value);
+  }
+
+  // TORN STATS
+  Future<bool> getAlternativeTornStatsKeyEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAlternativeTornStatsKeyEnabled) ?? false;
+  }
+
+  Future<bool> setAlternativeTornStatsKeyEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAlternativeTornStatsKeyEnabled, value);
+  }
+
+  Future<String> getAlternativeTornStatsKey() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAlternativeTornStatsKey) ?? "";
+  }
+
+  Future<bool> setAlternativeTornStatsKey(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAlternativeTornStatsKey, value);
   }
 
   /// -------------------

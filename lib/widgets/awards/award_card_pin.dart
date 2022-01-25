@@ -79,7 +79,6 @@ class _AwardCardPinState extends State<AwardCardPin> {
                           });
 
                           var result = await _pinProvider.removePinned(
-                            _userProvider.basic.userApiKey,
                             widget.award,
                           );
 

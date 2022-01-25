@@ -3,6 +3,7 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:animations/animations.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -82,23 +83,28 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     var myList = <Widget>[];
 
     for (var item in _itemsProvider.activeQuickItems) {
-      Color itemColor;
+      bool isLoadout = (item.name.contains("Loadout"));
+
+      Color qtyColor;
       if (item.inventory == 0) {
-        itemColor = Colors.orange[300];
+        qtyColor = Colors.orange[300];
       } else {
-        itemColor = Colors.green[300];
+        qtyColor = Colors.green[300];
       }
 
-      double fontSize = 12;
+      double qtyFontSize = 12;
       var itemQty = item.inventory.toString();
-      if (item.inventory > 999 && item.inventory < 100000) {
-        itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
-      } else if (item.inventory >= 100000) {
-        itemQty = "∞";
+      if (!isLoadout) {
+        if (item.inventory > 999 && item.inventory < 100000) {
+          itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
+        } else if (item.inventory >= 100000) {
+          itemQty = "∞";
+        }
+        if (item.inventory >= 10000 && item.inventory < 100000) {
+          qtyFontSize = 11;
+        }
       }
-      if (item.inventory >= 10000 && item.inventory < 100000) {
-        fontSize = 11;
-      }
+
       myList.add(
         Tooltip(
           message: '${item.name}\n\n${item.description}',
@@ -108,34 +114,47 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            avatar: CircleAvatar(
-              child: Text(
-                itemQty,
-                style: TextStyle(
-                  fontSize: fontSize,
-                  color: itemColor,
-                ),
-              ),
-            ),
-            label: item.name.split(' ').length > 1
-                ? _splitName(item.name)
-                : Text(
-                    item.name,
-                    softWrap: true,
-                    overflow: TextOverflow.clip,
-                    maxLines: 2,
-                    style: TextStyle(fontSize: 11),
+            side: isLoadout ? BorderSide(color: Colors.blue) : null,
+            avatar: isLoadout
+                ? null
+                : CircleAvatar(
+                    child: Text(
+                      itemQty,
+                      style: TextStyle(
+                        fontSize: qtyFontSize,
+                        color: qtyColor,
+                      ),
+                    ),
                   ),
+            label: isLoadout
+                ? Text(item.name.replaceAll("Loadout", "L").replaceAll(" ", ""))
+                : item.name.split(' ').length > 1
+                    ? _splitName(item.name)
+                    : Text(
+                        item.name,
+                        softWrap: true,
+                        overflow: TextOverflow.clip,
+                        maxLines: 2,
+                        style: TextStyle(fontSize: 11),
+                      ),
             onPressed: () async {
-              var js = quickItemsJS(item: item.number.toString());
-
-              if (widget.webviewType == "attacks") {
-                widget.webViewController.runJavascript(js);
+              if (isLoadout) {
+                if (widget.webviewType == "attacks") {
+                  var js = changeLoadOutJS(item: item.name.split(" ")[1], attackWebview: true);
+                  widget.webViewController.runJavascript(js);
+                } else {
+                  var js = changeLoadOutJS(item: item.name.split(" ")[1], attackWebview: false);
+                  await widget.inAppWebViewController.evaluateJavascript(source: js);
+                }
               } else {
-                await widget.inAppWebViewController.evaluateJavascript(source: js);
+                var js = quickItemsJS(item: item.number.toString());
+                if (widget.webviewType == "attacks") {
+                  widget.webViewController.runJavascript(js);
+                } else {
+                  await widget.inAppWebViewController.evaluateJavascript(source: js);
+                }
+                _itemsProvider.decreaseInventory(item);
               }
-
-              _itemsProvider.decreaseInventory(item);
             },
           ),
         ),

@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/awards/awards_model.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class AwardCard extends StatefulWidget {
@@ -27,15 +26,8 @@ class AwardCard extends StatefulWidget {
 class _AwardCardState extends State<AwardCard> {
   ThemeProvider _themeProvider;
   AwardsProvider _pinProvider;
-  UserDetailsProvider _userProvider;
 
   bool _pinActive = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +47,7 @@ class _AwardCardState extends State<AwardCard> {
         award.type == "Honor" ? award.image : Text(award.name.trim()),
         Row(
           children: [
-            if (award.doubleMerit != null ||
-                award.tripleMerit != null ||
-                award.nextCrime != null)
+            if (award.doubleMerit != null || award.tripleMerit != null || award.nextCrime != null)
               GestureDetector(
                 onTap: () {
                   String special = "";
@@ -108,10 +98,7 @@ class _AwardCardState extends State<AwardCard> {
 
                           // If the award is pinned, try to unpin
                           if (_pinProvider.pinnedNames.contains(award.name)) {
-                            var result = await _pinProvider.removePinned(
-                              _userProvider.basic.userApiKey,
-                              award,
-                            );
+                            var result = await _pinProvider.removePinned(award);
 
                             if (result) {
                               // Callback to rebuild widget list
@@ -126,13 +113,11 @@ class _AwardCardState extends State<AwardCard> {
                             // If the award is not pinned, pin it
                           } else {
                             if (_pinProvider.pinnedAwards.length >= 3) {
-                              resultString =
-                                  "Could not pin ${award.name}! Only 3 "
+                              resultString = "Could not pin ${award.name}! Only 3 "
                                   "pinned awards are allowed!";
                               resultColor = Colors.red[700];
                             } else {
                               var result = await _pinProvider.addPinned(
-                                _userProvider.basic.userApiKey,
                                 award,
                               );
 
@@ -210,8 +195,7 @@ class _AwardCardState extends State<AwardCard> {
 
     Widget commentIconRow = SizedBox.shrink();
     if (award.comment != null && award.comment.trim() != "") {
-      award.comment = HtmlParser.fix(
-          award.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
+      award.comment = HtmlParser.fix(award.comment.replaceAll("<br>", "\n").replaceAll("  ", ""));
       commentIconRow = Row(
         children: [
           SizedBox(width: 4),
@@ -253,9 +237,7 @@ class _AwardCardState extends State<AwardCard> {
                     "$achievedPercentage%",
                     style: TextStyle(
                       fontSize: 12,
-                      color: achievedPercentage == 100
-                          ? Colors.green
-                          : _themeProvider.mainText,
+                      color: achievedPercentage == 100 ? Colors.green : _themeProvider.mainText,
                     ),
                   ),
                   Text(
@@ -279,8 +261,7 @@ class _AwardCardState extends State<AwardCard> {
                               )
                             : Text(
                                 " - ${(DateFormat('yyyy-MM-dd').format(
-                                  DateTime.fromMillisecondsSinceEpoch(
-                                      award.dateAwarded.round() * 1000),
+                                  DateTime.fromMillisecondsSinceEpoch(award.dateAwarded.round() * 1000),
                                 ))}",
                                 style: TextStyle(
                                   fontSize: 12,
@@ -306,8 +287,7 @@ class _AwardCardState extends State<AwardCard> {
                   GestureDetector(
                     onTap: () {
                       BotToast.showText(
-                        text:
-                            "Circulation: ${decimalFormat.format(award.circulation)}\n\n "
+                        text: "Circulation: ${decimalFormat.format(award.circulation)}\n\n "
                             "Rarity: ${award.rarity}\n\n"
                             "Score: ${rarityFormat.format(award.rScore)}%",
                         textStyle: TextStyle(

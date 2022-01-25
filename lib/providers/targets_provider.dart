@@ -5,6 +5,7 @@ import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Package imports:
 import 'package:http/http.dart' as http;
@@ -18,6 +19,7 @@ import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -576,8 +578,9 @@ class TargetsProvider extends ChangeNotifier {
   // YATA SYNC
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
+      UserController _u = Get.put(UserController());
       var response = await http.get(
-        Uri.parse('https://yata.yt/api/v1/targets/export/?key=$_userKey'),
+        Uri.parse('https://yata.yt/api/v1/targets/export/?key=${_u.alternativeYataKey}'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

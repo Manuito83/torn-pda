@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +23,7 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -64,6 +66,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   bool _errorToShow = false;
 
   SettingsProvider _settingsProvider;
+  UserController _u = Get.put(UserController());
 
   TargetsProvider _targetsProvider;
   UserDetailsProvider _userDetails;
@@ -526,7 +529,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       try {
         if (_settingsProvider.spiesSource == SpiesSource.yata) {
-          String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_userDetails.basic.userApiKey}';
+          String yataURL = 'https://yata.yt/api/v1/spy/${otherProfile.playerId}?key=${_u.alternativeYataKey}';
           var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 5));
           if (resp.statusCode == 200) {
             var spyJson = json.decode(resp.body);
@@ -547,7 +550,7 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           }
         } else {
           String tornStatsURL =
-              'https://www.tornstats.com/api/v1/${_userDetails.basic.userApiKey}/spy/${otherProfile.playerId}';
+              'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/spy/${otherProfile.playerId}';
           var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 5));
           if (resp.statusCode == 200) {
             TornStatsSpyModel spyJson = tornStatsSpyModelFromJson(resp.body);

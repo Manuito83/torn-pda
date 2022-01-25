@@ -17,6 +17,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:vibration/vibration.dart';
 
@@ -600,6 +601,51 @@ class _SettingsPageState extends State<SettingsPage> {
                         "your configuration. Dictates how to proceed when the app detects a back button "
                         "press or swipe that would otherwise close the app. "
                         "If you choose 'ask', a dialog will be shown next time",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    Divider(),
+                    SizedBox(height: 5),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'EXTERNAL PARTNERS',
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            "Alternative API keys",
+                          ),
+                          IconButton(
+                              icon: Icon(Icons.keyboard_arrow_right_outlined),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) => AlternativeKeysPage(),
+                                  ),
+                                );
+                              }),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        "Use this section to configure alternative API keys for the external partners that "
+                        "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
+                        "won't be able to check for errors and certain sections might stop working",
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 12,

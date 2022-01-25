@@ -42,16 +42,20 @@ class _ChangeLogState extends State<ChangeLog> {
     var v2_6_5 = ChangeLogItem();
     v2_6_5.main.version = 'Torn PDA v2.6.5';
     v2_6_5.main.date = '05 FEB 2022';
-    String feat2_6_5_1 = "Chaining: targets can now be added or removed from user profiles in Torn";
-    String feat2_6_5_2 = "Items: total owned value is now shown and sortable";
-    String feat2_6_5_3 = "Shortcuts: increased allowable name length (helpful if using a small font)";
-    String feat2_6_5_4 = "War: fixed hidden targets' scroll";
-    String feat2_6_5_5 = "Browser: fixed custom URLs with mixed letter case not working";
+    String feat2_6_5_1 = "Loadouts can now be activated from the quick items widget";
+    String feat2_6_5_2 = "Settings: added support for alternative API keys for YATA and Torn Stats";
+    String feat2_6_5_3 = "Chaining: targets can now be added or removed from user profiles in Torn";
+    String feat2_6_5_4 = "Items: total owned value is now shown and sortable";
+    String feat2_6_5_5 = "Shortcuts: increased allowable name length (helpful if using a small font)";
+    String feat2_6_5_6 = "War: fixed hidden targets' dialog scroll";
+    String feat2_6_5_7 = "Browser: fixed browsing to custom URLs with mixed letter case";
     v2_6_5.features.add(feat2_6_5_1);
     v2_6_5.features.add(feat2_6_5_2);
     v2_6_5.features.add(feat2_6_5_3);
     v2_6_5.features.add(feat2_6_5_4);
     v2_6_5.features.add(feat2_6_5_5);
+    v2_6_5.features.add(feat2_6_5_6);
+    v2_6_5.features.add(feat2_6_5_7);
 
     // VERSION 2.6.4
     var v2_6_4 = ChangeLogItem();
