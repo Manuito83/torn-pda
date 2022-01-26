@@ -24,6 +24,9 @@ class QuickItemsProvider extends ChangeNotifier {
   String _currentSearchFilter = '';
   String get searchFilter => _currentSearchFilter;
 
+  int _numberOfLoadoutsToShow = 3;
+  int get numberOfLoadoutsToShow => _numberOfLoadoutsToShow;
+
   var _quickItemTypes = [
     ItemType.ALCOHOL,
     ItemType.BOOSTER,
@@ -63,6 +66,8 @@ class QuickItemsProvider extends ChangeNotifier {
     for (var rawItem in savedActives) {
       _activeQuickItemsList.add(quickItemFromJson(rawItem));
     }
+
+    _numberOfLoadoutsToShow = await Prefs().getNumberOfLoadouts();
   }
 
   void activateQuickItem(QuickItem newItem) {
@@ -118,6 +123,24 @@ class QuickItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNumberOfLoadoutsToShow(int number) {
+    _numberOfLoadoutsToShow = number;
+    Prefs().setNumberOfLoadouts(number);
+    notifyListeners();
+  }
+
+  void changeLoadoutName(QuickItem loadout, String name) {
+    if (!loadout.isLoadout) return;
+    for (QuickItem item in _activeQuickItemsList) {
+      if (loadout.loadoutNumber == item.loadoutNumber) {
+        item.loadoutName = name;
+        break;
+      }
+    }
+    _saveListAfterChanges();
+    notifyListeners();
+  }
+
   void _saveListAfterChanges() {
     var saveList = <String>[];
 
@@ -168,10 +191,10 @@ class QuickItemsProvider extends ChangeNotifier {
       _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
 
       // Insert loadouts at the beginning after sorting
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 9; i++) {
         var savedActive = false;
         for (var saved in _activeQuickItemsList) {
-          if (saved.name == "Loadout ${i}") {
+          if (saved.isLoadout && saved.loadoutNumber == i + 1) {
             savedActive = true;
             break;
           }
@@ -181,9 +204,12 @@ class QuickItemsProvider extends ChangeNotifier {
           i,
           QuickItem()
             ..name = "Loadout ${i + 1}"
-            ..description = "Activated loadout ${i + 1}"
+            ..description = "Activates loadout ${i + 1}"
             ..number = 0
-            ..active = savedActive,
+            ..active = savedActive
+            ..isLoadout = true
+            ..loadoutNumber = i + 1
+            ..loadoutName = "Loadout ${i + 1}",
         );
       }
 

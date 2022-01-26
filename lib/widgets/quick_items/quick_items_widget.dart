@@ -83,7 +83,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     var myList = <Widget>[];
 
     for (var item in _itemsProvider.activeQuickItems) {
-      bool isLoadout = (item.name.contains("Loadout"));
 
       Color qtyColor;
       if (item.inventory == 0) {
@@ -94,7 +93,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
 
       double qtyFontSize = 12;
       var itemQty = item.inventory.toString();
-      if (!isLoadout) {
+      if (!item.isLoadout) {
         if (item.inventory > 999 && item.inventory < 100000) {
           itemQty = "${(item.inventory / 1000).truncate().toStringAsFixed(0)}K";
         } else if (item.inventory >= 100000) {
@@ -114,8 +113,8 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            side: isLoadout ? BorderSide(color: Colors.blue) : null,
-            avatar: isLoadout
+            side: item.isLoadout ? BorderSide(color: Colors.blue) : null,
+            avatar: item.isLoadout
                 ? null
                 : CircleAvatar(
                     child: Text(
@@ -126,8 +125,8 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                       ),
                     ),
                   ),
-            label: isLoadout
-                ? Text(item.name.replaceAll("Loadout", "L").replaceAll(" ", ""))
+            label: item.isLoadout
+                ? Text(item.loadoutName)
                 : item.name.split(' ').length > 1
                     ? _splitName(item.name)
                     : Text(
@@ -138,7 +137,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                         style: TextStyle(fontSize: 11),
                       ),
             onPressed: () async {
-              if (isLoadout) {
+              if (item.isLoadout) {
                 if (widget.webviewType == "attacks") {
                   var js = changeLoadOutJS(item: item.name.split(" ")[1], attackWebview: true);
                   widget.webViewController.runJavascript(js);
