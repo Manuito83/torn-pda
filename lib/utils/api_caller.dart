@@ -632,7 +632,7 @@ class TornApiCaller {
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';
 
     try {
-      Dio dio = Dio(BaseOptions(receiveTimeout: 30000));
+      Dio dio = Dio(BaseOptions(connectTimeout: 30000, receiveTimeout: 30000));
       (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
         client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
         return client;
