@@ -50,6 +50,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_5_6 = "War: fixed hidden targets' dialog scroll";
     String feat2_6_5_7 = "Bazaar: fixed auto price script";
     String feat2_6_5_8 = "Browser: fixed browsing to custom URLs with mixed letter case";
+    String feat2_6_5_9 = "Browser: saving an image to the library should no longer crash the app";
     v2_6_5.features.add(feat2_6_5_1);
     v2_6_5.features.add(feat2_6_5_2);
     v2_6_5.features.add(feat2_6_5_3);
@@ -58,6 +59,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_5.features.add(feat2_6_5_6);
     v2_6_5.features.add(feat2_6_5_7);
     v2_6_5.features.add(feat2_6_5_8);
+    if (Platform.isIOS) v2_6_5.features.add(feat2_6_5_9);
 
     // VERSION 2.6.4
     var v2_6_4 = ChangeLogItem();
