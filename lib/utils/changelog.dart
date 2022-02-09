@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.5
     var v2_6_5 = ChangeLogItem();
     v2_6_5.main.version = 'Torn PDA v2.6.5';
-    v2_6_5.main.date = '10 FEB 2022';
+    v2_6_5.main.date = '❤ 14 FEB 2022 ❤';
     String feat2_6_5_1 = "Loadouts can now be activated from the quick items widget";
     String feat2_6_5_2 = "Settings: added support for alternative API keys for YATA and Torn Stats";
     String feat2_6_5_3 = "Chaining: targets can now be added or removed from user profiles in Torn";
