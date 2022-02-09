@@ -769,7 +769,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             );
           } else {
             return Container(
-              color: Colors.black,
+              color: _themeProvider.background,
               child: SafeArea(
                 top: _settingsProvider.appBarTop || true,
                 child: const Center(
