@@ -11,9 +11,12 @@
 
         // Set the theme of the Activity that directly follows your splash screen.
         <item name="postSplashScreenTheme">@style/NormalTheme</item>
+        
+        <item name="android:forceDarkAllowed">false</item>
     </style>
 
     <style name="NormalTheme" parent="Theme.MaterialComponents.NoActionBar">
         <item name="android:windowBackground">@drawable/normal_background_theme</item>
+        <item name="android:forceDarkAllowed">false</item>
     </style>
 </resources>
