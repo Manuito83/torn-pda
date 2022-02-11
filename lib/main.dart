@@ -201,6 +201,7 @@ class _MyAppState extends State<MyApp> {
               navigatorObservers: [BotToastNavigatorObserver()],
               title: 'Torn PDA',
               debugShowCheckedModeBanner: false,
+              themeMode: ThemeMode.light,
               theme: ThemeData(
                 appBarTheme: AppBarTheme(
                   systemOverlayStyle: SystemUiOverlayStyle.light,

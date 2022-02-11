@@ -15,7 +15,7 @@
         <item name="android:forceDarkAllowed">false</item>
     </style>
 
-    <style name="NormalTheme" parent="Theme.MaterialComponents.NoActionBar">
+    <style name="NormalTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="android:windowBackground">@drawable/normal_background_theme</item>
         <item name="android:forceDarkAllowed">false</item>
     </style>
