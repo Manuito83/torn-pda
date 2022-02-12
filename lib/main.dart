@@ -44,9 +44,9 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.6.4';
-const String androidVersion = '174';
-const String iosVersion = '184';
+const String appVersion = '2.6.5';
+const String androidVersion = '183';
+const String iosVersion = '190';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -201,6 +201,7 @@ class _MyAppState extends State<MyApp> {
               navigatorObservers: [BotToastNavigatorObserver()],
               title: 'Torn PDA',
               debugShowCheckedModeBanner: false,
+              themeMode: ThemeMode.light,
               theme: ThemeData(
                 appBarTheme: AppBarTheme(
                   systemOverlayStyle: SystemUiOverlayStyle.light,

@@ -1,0 +1,3 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <color name="main_background">#AAABAA</color>
+</selector>

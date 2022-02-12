@@ -9,8 +9,8 @@ class AwardsProvider extends ChangeNotifier {
   var pinnedAwards = <Award>[];
   var pinnedNames = <String>[];
 
-  Future<bool> addPinned (String apiKey, Award newPin) async {
-    var result = await YataComm.getPin(apiKey, newPin.awardKey);
+  Future<bool> addPinned (Award newPin) async {
+    var result = await YataComm.getPin(newPin.awardKey);
     if (result is YataError) {
       return false;
     }
@@ -28,8 +28,8 @@ class AwardsProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> removePinned (String apiKey, Award removedPin) async {
-    var result = await YataComm.getPin(apiKey, removedPin.awardKey);
+  Future<bool> removePinned (Award removedPin) async {
+    var result = await YataComm.getPin(removedPin.awardKey);
     if (result is YataError) {
       return false;
     }

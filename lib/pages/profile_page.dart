@@ -876,7 +876,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ),
                 ),
                 Text(
-                  'TAP OPTIONS BUTTON TO CONFIGURE',
+                  'Tap the settings icon to configure',
                   style: TextStyle(
                     color: Colors.orange[900],
                     fontStyle: FontStyle.italic,
@@ -3268,13 +3268,13 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 4),
               _jobPoints(),
               SizedBox(height: 8),
-              SelectableText('Battle: ${decimalFormat.format(_miscModel.total)}'),
+              SelectableText('Battle Stats: ${decimalFormat.format(_miscModel.total)}'),
               SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
                     child: SelectableText(
-                      'Battle (effective): ${decimalFormat.format(totalEffective)}',
+                      'Battle Stats (effective): ${decimalFormat.format(totalEffective)}',
                     ),
                   ),
                   if (totalEffectiveModifier < 0)
@@ -3992,7 +3992,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           Flexible(
             child: RichText(
               text: TextSpan(
-                text: "Your education in ",
+                text: "Your course: ",
                 style: DefaultTextStyle.of(context).style,
                 children: <TextSpan>[
                   TextSpan(
@@ -4003,7 +4003,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     ),
                     */
                   ),
-                  TextSpan(text: " will end in "),
+                  TextSpan(text: ", will end in "),
                   TextSpan(
                     text: "$expiryString",
                     style: TextStyle(color: expiryColor),

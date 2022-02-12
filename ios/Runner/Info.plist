@@ -50,6 +50,8 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Allows Torn PDA to save images to your library (only write permission)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

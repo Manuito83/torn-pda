@@ -138,6 +138,7 @@ class ChainStatusProvider extends ChangeNotifier {
   Timer _tickerCallChainApi;
 
   Future activateStatus() async {
+    if (_statusActive) return;
     _statusActive = true;
     await getChainStatus();
     await getEnergy();

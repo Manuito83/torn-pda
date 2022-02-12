@@ -24,6 +24,9 @@ class QuickItemsProvider extends ChangeNotifier {
   String _currentSearchFilter = '';
   String get searchFilter => _currentSearchFilter;
 
+  int _numberOfLoadoutsToShow = 3;
+  int get numberOfLoadoutsToShow => _numberOfLoadoutsToShow;
+
   var _quickItemTypes = [
     ItemType.ALCOHOL,
     ItemType.BOOSTER,
@@ -61,8 +64,19 @@ class QuickItemsProvider extends ChangeNotifier {
   Future _loadSaveActiveItems() async {
     var savedActives = await Prefs().getQuickItemsList();
     for (var rawItem in savedActives) {
-      _activeQuickItemsList.add(quickItemFromJson(rawItem));
+      QuickItem activeItem = quickItemFromJson(rawItem);
+
+      // Adds necessary fields (if missing) after loadouts where introduced in v2.6.5
+      if (activeItem.isLoadout == null) {
+        activeItem.isLoadout = false;
+        activeItem.loadoutName = "";
+        activeItem.loadoutNumber = -1;
+      }
+
+      _activeQuickItemsList.add(activeItem);
     }
+
+    _numberOfLoadoutsToShow = await Prefs().getNumberOfLoadouts();
   }
 
   void activateQuickItem(QuickItem newItem) {
@@ -118,6 +132,24 @@ class QuickItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNumberOfLoadoutsToShow(int number) {
+    _numberOfLoadoutsToShow = number;
+    Prefs().setNumberOfLoadouts(number);
+    notifyListeners();
+  }
+
+  void changeLoadoutName(QuickItem loadout, String name) {
+    if (!loadout.isLoadout) return;
+    for (QuickItem item in _activeQuickItemsList) {
+      if (loadout.loadoutNumber == item.loadoutNumber) {
+        item.loadoutName = name;
+        break;
+      }
+    }
+    _saveListAfterChanges();
+    notifyListeners();
+  }
+
   void _saveListAfterChanges() {
     var saveList = <String>[];
 
@@ -141,6 +173,8 @@ class QuickItemsProvider extends ChangeNotifier {
     if (allTornItems is ItemsModel) {
       // Clears lists in case there are successive calls from the webview
       _fullQuickItemsList.clear();
+
+      // Add Torn items
       allTornItems.items.forEach((itemNumber, itemProperties) {
         if (_quickItemTypes.contains(itemProperties.type) ||
             _quickItemExceptions.contains(itemProperties.name.toLowerCase())) {
@@ -164,6 +198,30 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       });
       _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
+
+      // Insert loadouts at the beginning after sorting
+      for (int i = 0; i < 9; i++) {
+        var savedActive = false;
+        for (var saved in _activeQuickItemsList) {
+          if (saved.isLoadout && saved.loadoutNumber == i + 1) {
+            savedActive = true;
+            break;
+          }
+        }
+
+        _fullQuickItemsList.insert(
+          i,
+          QuickItem()
+            ..name = "Loadout ${i + 1}"
+            ..description = "Activates loadout ${i + 1}"
+            ..number = 0
+            ..active = savedActive
+            ..isLoadout = true
+            ..loadoutNumber = i + 1
+            ..loadoutName = "Loadout ${i + 1}",
+        );
+      }
+
       return true;
     }
     return false;

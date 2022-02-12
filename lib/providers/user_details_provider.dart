@@ -16,6 +16,16 @@ class UserDetailsProvider extends ChangeNotifier {
   void setUserDetails({@required OwnProfileBasic userDetails}) {
     basic = userDetails;
     _u.apiKey = basic.userApiKey;
+
+    // If other keys are empty (upon app first use, set them to the same one as the app)
+    // Ensure this does not happen in other setUserDetails calls (e.g. when reloading API key)
+    if (!_u.alternativeYataKeyEnabled && _u.alternativeYataKey.isEmpty) {
+      _u.alternativeYataKey = basic.userApiKey;
+    }
+    if (!_u.alternativeTornStatsKeyEnabled && _u.alternativeTornStatsKey.isEmpty) {
+      _u.alternativeTornStatsKey = basic.userApiKey;
+    }
+
     Prefs().setOwnDetails(ownProfileBasicToJson(basic));
     notifyListeners();
   }
@@ -37,7 +47,23 @@ class UserDetailsProvider extends ChangeNotifier {
 
       // Set API key in the controller, in case API is down
       _u.apiKey = basic.userApiKey;
-      
+
+      bool alternativeYataKey = await Prefs().getAlternativeYataKeyEnabled();
+      if (alternativeYataKey) {
+        _u.alternativeYataKeyEnabled = true;
+        _u.alternativeYataKey = await Prefs().getAlternativeYataKey();
+      } else {
+        _u.alternativeYataKey = basic.userApiKey;
+      }
+
+      bool alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKeyEnabled();
+      if (alternativeTornStatsKey) {
+        _u.alternativeTornStatsKeyEnabled = true;
+        _u.alternativeTornStatsKey = await Prefs().getAlternativeTornStatsKey();
+      } else {
+        _u.alternativeTornStatsKey = basic.userApiKey;
+      }
+
       // Check if we have a valid API Key
       if (basic.userApiKeyValid) {
         // Call the API again to get the latest details (e.g. in case the
@@ -56,9 +82,6 @@ class UserDetailsProvider extends ChangeNotifier {
           basic = apiVerify;
 
           Prefs().setOwnDetails(ownProfileBasicToJson(basic));
-          
-          // Update API key
-          _u.apiKey = basic.userApiKey;
         }
       }
     }

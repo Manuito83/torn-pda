@@ -111,6 +111,7 @@ let bazaarObserver = new MutationObserver((mutations) => {
 });
 
 let wrapper = document.querySelector('#react-root');
+if (!wrapper) wrapper = document.querySelector('#bazaarRoot');
 
 try {
 	bazaarObserver.observe(wrapper, { subtree: true, childList: true });

@@ -162,6 +162,11 @@ class _ItemCardState extends State<ItemCard> {
                                     widget.inventorySuccess ? "inv: x${widget.item.inventoryOwned}" : "inv: error",
                                     style: TextStyle(fontSize: 9),
                                   ),
+                                  if (widget.item.totalValue > 0)
+                                    Text(
+                                      "\$${formatBigNumbers(widget.item.totalValue)}",
+                                      style: TextStyle(fontSize: 9),
+                                    ),
                                 ],
                               ),
                               onTap: () async {

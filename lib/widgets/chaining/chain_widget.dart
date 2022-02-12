@@ -274,9 +274,11 @@ class _ChainWidgetState extends State<ChainWidget> {
   }
 
   void _callBackChainOptions() {
-    setState(() {
-      widget.callBackOptions();
-    });
+    if (widget.callBackOptions != null) {
+      setState(() {
+        widget.callBackOptions();
+      });
+    }
   }
 
   var lastReported = WatchDefcon.red1;

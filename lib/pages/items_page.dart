@@ -70,6 +70,8 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     ItemsSort(type: ItemsSortType.ownedDes),
     ItemsSort(type: ItemsSortType.valueAsc),
     ItemsSort(type: ItemsSortType.valueDes),
+    ItemsSort(type: ItemsSortType.totalValueAsc),
+    ItemsSort(type: ItemsSortType.totalValueDes),
     ItemsSort(type: ItemsSortType.circulationAsc),
     ItemsSort(type: ItemsSortType.circulationDes),
     ItemsSort(type: ItemsSortType.idAsc),
@@ -480,6 +482,10 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         _inventorySuccess = true;
       }
 
+      if (details.inventoryOwned > 0) {
+        details.totalValue = details.inventoryOwned * details.marketValue;
+      }
+
       // Populate categories
       if (!_allCategories.containsKey(details.type.name)) {
         _allCategories.addAll({details.type.name: ""});
@@ -527,6 +533,12 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       case 'valueDes':
         itemSort.type = ItemsSortType.valueDes;
         break;
+      case 'totalValueAsc':
+        itemSort.type = ItemsSortType.totalValueAsc;
+        break;
+      case 'totalValueDes':
+        itemSort.type = ItemsSortType.totalValueDes;
+        break;
       case 'ownedAsc':
         itemSort.type = ItemsSortType.ownedAsc;
         break;
@@ -540,7 +552,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
         itemSort.type = ItemsSortType.circulationDes;
         break;
     }
-    
+
     // Build all
     _sortAndRebuildItemsCards(itemSort, initialLoad: true);
   }
@@ -616,6 +628,20 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           _pinnedItems.sort((a, b) => a.marketValue.compareTo(b.marketValue));
         });
         sortToSave = 'valueAsc';
+        break;
+      case ItemsSortType.totalValueDes:
+        setState(() {
+          _allItems.sort((a, b) => b.totalValue.compareTo(a.totalValue));
+          _pinnedItems.sort((a, b) => b.totalValue.compareTo(a.totalValue));
+        });
+        sortToSave = 'totalValueDes';
+        break;
+      case ItemsSortType.totalValueAsc:
+        setState(() {
+          _allItems.sort((a, b) => a.totalValue.compareTo(b.totalValue));
+          _pinnedItems.sort((a, b) => a.totalValue.compareTo(b.totalValue));
+        });
+        sortToSave = 'totalValueAsc';
         break;
       case ItemsSortType.ownedDes:
         setState(() {

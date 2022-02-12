@@ -661,6 +661,30 @@ String quickItemsJS({@required String item}) {
   ''';
 }
 
+String changeLoadOutJS({@required String item, @required bool attackWebview}) {
+  return '''
+    var action = 'https://www.torn.com/page.php?sid=itemsLoadouts&step=changeLoadout&setID=${item}';
+    
+    ajaxWrapper({
+      url: action,
+      type: 'GET',
+      oncomplete: function(resp) {
+        if (${attackWebview}) {
+          window.loadoutChangeHandler.postMessage(resp.responseText);
+        } else {
+          window.flutter_inappwebview.callHandler('loadoutChangeHandler', resp.responseText);
+        }
+      },
+      onerror: function(e) {
+        console.error(e)
+      }
+    });
+
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}
+
 String chatHighlightJS({@required String highlightMap}) {
   return '''
     // Credit: Torn Tools
