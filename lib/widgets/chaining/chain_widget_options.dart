@@ -42,9 +42,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
-              ? Colors.blueGrey
-                : _themeProvider.basicBackground
-            : _themeProvider.basicBackground,
+                ? Colors.blueGrey
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,

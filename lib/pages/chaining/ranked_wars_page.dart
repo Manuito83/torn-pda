@@ -59,10 +59,10 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                         preferredSize: Size.fromHeight(kToolbarHeight),
                         child: new Container(
                           color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.of(context).orientation == Orientation.portrait
-              ? Colors.blueGrey
-                : _themeProvider.basicBackground
-            : _themeProvider.basicBackground,
+                              ? MediaQuery.of(context).orientation == Orientation.portrait
+                                  ? Colors.blueGrey
+                                  : _themeProvider.canvas
+                              : _themeProvider.canvas,
                           child: new SafeArea(
                             child: Column(
                               children: <Widget>[
