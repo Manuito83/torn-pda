@@ -63,10 +63,10 @@ class _FriendsBackupPageState extends State<FriendsBackupPage> {
     _importHintStyle = _themeProvider.mainText;
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
+          ? MediaQuery.of(context).orientation == Orientation.portrait
           ? Colors.blueGrey
-          : _themeProvider.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Color(0xFF0C0C0C),
+          : _themeProvider.basicBackground
+          : _themeProvider.basicBackground,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
