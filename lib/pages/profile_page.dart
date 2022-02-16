@@ -330,7 +330,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -356,7 +356,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       ),
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: FutureBuilder(
           future: _apiFetched,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {

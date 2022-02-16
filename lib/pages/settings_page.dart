@@ -96,7 +96,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -106,7 +106,7 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: FutureBuilder(
           future: _preferencesRestored,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {

@@ -95,7 +95,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
-            backgroundColor: _themeProvider.basicBackground,
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -106,7 +106,7 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
             body: Builder(
               builder: (BuildContext context) {
                 return Container(
-                  color: _themeProvider.basicBackground,
+                  color: _themeProvider.canvas,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),

@@ -161,7 +161,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
-          backgroundColor: _themeProvider.basicBackground,
+          backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(

@@ -90,7 +90,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -100,7 +100,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: Center(
           child: SingleChildScrollView(
             child: FutureBuilder(

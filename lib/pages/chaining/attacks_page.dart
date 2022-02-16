@@ -59,7 +59,7 @@ class _AttacksPageState extends State<AttacksPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -69,7 +69,7 @@ class _AttacksPageState extends State<AttacksPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),

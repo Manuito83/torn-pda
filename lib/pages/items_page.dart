@@ -99,7 +99,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -109,7 +109,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: Stack(
           children: [
             FutureBuilder(

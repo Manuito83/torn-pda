@@ -129,7 +129,7 @@ class _WarPageState extends State<WarPage> {
           });
         }
         return Scaffold(
-          backgroundColor: _themeProvider.basicBackground,
+          backgroundColor: _themeProvider.canvas,
           drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
           bottomNavigationBar: !_settingsProvider.appBarTop

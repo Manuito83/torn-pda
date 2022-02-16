@@ -102,7 +102,7 @@ class _AwardsPageState extends State<AwardsPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -111,7 +111,7 @@ class _AwardsPageState extends State<AwardsPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: Stack(
           alignment: Alignment.topCenter,
           children: <Widget>[

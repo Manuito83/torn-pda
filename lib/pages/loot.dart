@@ -88,7 +88,7 @@ class _LootPageState extends State<LootPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -97,7 +97,7 @@ class _LootPageState extends State<LootPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: FutureBuilder(
           future: _getInitialLootInformation,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {

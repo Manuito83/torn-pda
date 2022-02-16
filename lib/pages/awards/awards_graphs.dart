@@ -58,7 +58,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
-            backgroundColor: _themeProvider.basicBackground,
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -67,7 +67,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
                   )
                 : null,
             body: Container(
-              color: _themeProvider.basicBackground,
+              color: _themeProvider.canvas,
               child: Padding(
                 padding: const EdgeInsets.all(30),
                 child: Column(

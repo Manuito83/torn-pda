@@ -53,7 +53,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -62,7 +62,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: FutureBuilder(
           future: _firestoreProfileReceived,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {

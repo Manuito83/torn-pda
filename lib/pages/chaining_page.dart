@@ -53,7 +53,7 @@ class _ChainingPageState extends State<ChainingPage> {
     final bool isThemeLight = _themeProvider.currentTheme == AppTheme.light || false;
     final double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       extendBody: true,
       body: FutureBuilder(
         future: _preferencesLoaded,

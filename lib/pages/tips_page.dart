@@ -126,7 +126,7 @@ class _TipsPageState extends State<TipsPage> {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -136,7 +136,7 @@ class _TipsPageState extends State<TipsPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(20),

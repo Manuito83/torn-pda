@@ -755,7 +755,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                   key: _scaffoldKey,
                   body: _getPages(),
                   drawer: Drawer(
-                    backgroundColor: _themeProvider.basicBackground,
+                    backgroundColor: _themeProvider.canvas,
                     elevation: 2, // This avoids shadow over SafeArea
                     child: ListView(
                       padding: EdgeInsets.zero,

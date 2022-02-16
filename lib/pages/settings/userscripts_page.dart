@@ -61,13 +61,13 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider.basicBackground
-            : _themeProvider.basicBackground,
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
-            backgroundColor: _themeProvider.basicBackground,
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -76,7 +76,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   )
                 : null,
             body: Container(
-              color: _themeProvider.basicBackground,
+              color: _themeProvider.canvas,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),

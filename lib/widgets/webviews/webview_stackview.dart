@@ -91,7 +91,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         child: ShowCaseWidget(
           builder: Builder(
             builder: (_) => Scaffold(
-              backgroundColor: _themeProvider.basicBackground,
+              backgroundColor: _themeProvider.canvas,
               body: FutureBuilder(
                 future: providerInitialised,
                 builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {

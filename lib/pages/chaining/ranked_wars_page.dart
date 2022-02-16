@@ -52,7 +52,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
             return DefaultTabController(
               length: 3,
               child: Scaffold(
-                backgroundColor: _themeProvider.basicBackground,
+                backgroundColor: _themeProvider.canvas,
                 appBar: _settingsProvider.appBarTop
                     ? buildAppBarSuccess(context)
                     : new PreferredSize(
@@ -86,7 +86,7 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                       )
                     : null,
                 body: Container(
-                  color: _themeProvider.basicBackground,
+                  color: _themeProvider.canvas,
                   child: Column(
                     children: [
                       Expanded(
@@ -105,14 +105,14 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
             );
           } else {
             return Scaffold(
-              backgroundColor: _themeProvider.basicBackground,
+              backgroundColor: _themeProvider.canvas,
               appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-              body: Container(color: _themeProvider.basicBackground, child: _fetchError()),
+              body: Container(color: _themeProvider.canvas, child: _fetchError()),
             );
           }
         } else {
           return Scaffold(
-            backgroundColor: _themeProvider.basicBackground,
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
             body: Container(
                 color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,

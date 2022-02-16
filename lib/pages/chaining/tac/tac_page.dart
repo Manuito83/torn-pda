@@ -114,7 +114,7 @@ class _TacPageState extends State<TacPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
-      backgroundColor: _themeProvider.basicBackground,
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -124,7 +124,7 @@ class _TacPageState extends State<TacPage> {
             )
           : null,
       body: Container(
-        color: _themeProvider.basicBackground,
+        color: _themeProvider.canvas,
         child: FutureBuilder(
             future: _preferencesLoaded,
             builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {

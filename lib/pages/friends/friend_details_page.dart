@@ -50,7 +50,7 @@ class _FriendDetailsPageState extends State<FriendDetailsPage> {
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
-          backgroundColor: _themeProvider.basicBackground,
+          backgroundColor: _themeProvider.canvas,
           drawer: Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop

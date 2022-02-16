@@ -11,7 +11,7 @@ enum AppTheme {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  Color basicBackground;
+  Color canvas;
   Color secondBackground;
   Color mainText;
   Color buttonText;
@@ -33,7 +33,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   // COLORS ##LIGHT##
-  var _colorBasicBackgroundLIGHT = Colors.white;
+  var _canvasBackgroundLIGHT = Colors.grey[50];
   var _colorBackgroundLIGHT = Colors.grey[200];
   var _colorMainTextLIGHT = Colors.black;
   var _colorButtonTextLIGHT = Colors.white;
@@ -42,7 +42,7 @@ class ThemeProvider extends ChangeNotifier {
   var _colorStatusBarLIGHT = Colors.blueGrey;
 
   // COLORS ##DARK##
-  var _colorBasicBackgroundDARK = Colors.grey[900];
+  var _canvasBackgroundDARK = Colors.grey[900];
   var _colorBackgroundDARK = Colors.grey[800];
   var _colorMainTextDARK = Colors.grey[50];
   var _colorButtonTextDARK = Colors.grey[200];
@@ -51,7 +51,7 @@ class ThemeProvider extends ChangeNotifier {
   var _colorStatusBarDARK = Colors.grey[900];
 
   // COLORS ##EXTRA DARK##
-  var _colorBasicBackgroundExtraDARK = Colors.black;
+  var _canvasBackgroundExtraDARK = Colors.black;
   var _colorBackgroundExtraDARK = Color(0xFF0C0C0C);
   var _colorMainTextExtraDARK = Colors.grey[50];
   var _colorButtonTextExtraDARK = Colors.grey[200];
@@ -62,7 +62,7 @@ class ThemeProvider extends ChangeNotifier {
   void _getColors() {
     switch (_currentTheme) {
       case AppTheme.light:
-        basicBackground = _colorBasicBackgroundLIGHT;
+        canvas = _canvasBackgroundLIGHT;
         secondBackground = _colorBackgroundLIGHT;
         mainText = _colorMainTextLIGHT;
         buttonText = _colorButtonTextLIGHT;
@@ -71,7 +71,7 @@ class ThemeProvider extends ChangeNotifier {
         statusBar = _colorStatusBarLIGHT;
         break;
       case AppTheme.dark:
-        basicBackground = _colorBasicBackgroundDARK;
+        canvas = _canvasBackgroundDARK;
         secondBackground = _colorBackgroundDARK;
         mainText = _colorMainTextDARK;
         buttonText = _colorButtonTextDARK;
@@ -80,7 +80,7 @@ class ThemeProvider extends ChangeNotifier {
         statusBar = _colorStatusBarDARK;
         break;
       case AppTheme.extraDark:
-        basicBackground = _colorBasicBackgroundExtraDARK;
+        canvas = _canvasBackgroundExtraDARK;
         secondBackground = _colorBackgroundExtraDARK;
         mainText = _colorMainTextExtraDARK;
         buttonText = _colorButtonTextExtraDARK;

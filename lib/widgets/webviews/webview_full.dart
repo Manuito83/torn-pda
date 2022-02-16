@@ -381,7 +381,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       child: SafeArea(
         top: _settingsProvider.appBarTop || true,
         child: Scaffold(
-            backgroundColor: _themeProvider.basicBackground,
+            backgroundColor: _themeProvider.canvas,
           appBar: widget.dialog
               // Show appBar only if we are not showing the webView in a dialog
               ? null
