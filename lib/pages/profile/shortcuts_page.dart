@@ -45,7 +45,9 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
                 : Colors.grey[900]
-            : Colors.grey[900],
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[900]
+                : Colors.black,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
@@ -58,6 +60,7 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
                   )
                 : null,
             body: Container(
+              color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
