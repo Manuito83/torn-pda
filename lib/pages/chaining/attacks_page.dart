@@ -59,6 +59,7 @@ class _AttacksPageState extends State<AttacksPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.basicBackground,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -67,55 +68,58 @@ class _AttacksPageState extends State<AttacksPage> {
               child: buildAppBar(),
             )
           : null,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-        child: Column(
-          children: <Widget>[
-            Form(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                    child: Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                labelText: "Search",
-                                prefixIcon: Icon(Icons.search),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(12.0),
+      body: Container(
+        color: _themeProvider.basicBackground,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+          child: Column(
+            children: <Widget>[
+              Form(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                      child: Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  labelText: "Search",
+                                  prefixIcon: Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(12.0),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: _filterText,
-            ),
-            Flexible(
-              child: Consumer<AttacksProvider>(
-                builder: (context, attacksProvider, child) => AttacksList(
-                  attacks: attacksProvider.allAttacks,
+                  ],
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: _filterText,
+              ),
+              Flexible(
+                child: Consumer<AttacksProvider>(
+                  builder: (context, attacksProvider, child) => AttacksList(
+                    attacks: attacksProvider.allAttacks,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

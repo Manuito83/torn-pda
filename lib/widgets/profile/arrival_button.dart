@@ -74,7 +74,7 @@ class _ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateM
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
                   primary: widget.themeProvider.currentTheme == AppTheme.dark
-                      ? widget.themeProvider.background
+                      ? widget.themeProvider.secondBackground
                       : Colors.white,
                   side: BorderSide(
                     width: _resizableController.value * 8,

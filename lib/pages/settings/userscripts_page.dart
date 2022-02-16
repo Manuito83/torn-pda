@@ -61,12 +61,13 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.basicBackground
+            : _themeProvider.basicBackground,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.basicBackground,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -74,86 +75,89 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: Column(
-                children: <Widget>[
-                  SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(width: 2, color: Colors.blueGrey),
-                              ),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: _themeProvider.mainText,
-                          ),
-                          onPressed: () {
-                            _showAddDialog(context);
-                          },
-                        ),
-                      ),
-                      SizedBox(width: 15),
-                      ButtonTheme(
-                        minWidth: 1.0,
-                        child: ElevatedButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.background),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: BorderSide(
-                                  width: 2,
-                                  color: Colors.blueGrey,
+            body: Container(
+              color: _themeProvider.basicBackground,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 15),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(width: 2, color: Colors.blueGrey),
                                 ),
                               ),
                             ),
+                            child: Icon(
+                              Icons.add,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              _showAddDialog(context);
+                            },
                           ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: _themeProvider.mainText,
+                        ),
+                        SizedBox(width: 15),
+                        ButtonTheme(
+                          minWidth: 1.0,
+                          child: ElevatedButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(_themeProvider.secondBackground),
+                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    width: 2,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: _themeProvider.mainText,
+                            ),
+                            onPressed: () {
+                              _openWipeDialog();
+                            },
                           ),
-                          onPressed: () {
-                            _openWipeDialog();
-                          },
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Preexisting scripts might require modifications to work with Torn PDA. '
+                        'Please ensure that you use scripts responsibly and '
+                        'understand the hazards. Tap the exclamation mark for more information.',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Preexisting scripts might require modifications to work with Torn PDA. '
-                      'Please ensure that you use scripts responsibly and '
-                      'understand the hazards. Tap the exclamation mark for more information.',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
+                    ),
+                    SizedBox(height: 10),
+                    Flexible(
+                      child: Consumer<UserScriptsProvider>(
+                        builder: (context, settingsProvider, child) => scriptsCards(),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 10),
-                  Flexible(
-                    child: Consumer<UserScriptsProvider>(
-                      builder: (context, settingsProvider, child) => scriptsCards(),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -383,7 +387,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -445,9 +449,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -489,7 +493,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ),
                     margin: EdgeInsets.only(top: 15),
                     decoration: new BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -537,9 +541,9 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

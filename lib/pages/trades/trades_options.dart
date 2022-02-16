@@ -52,12 +52,13 @@ class _TradesOptionsState extends State<TradesOptions> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.basicBackground
+            : _themeProvider.basicBackground,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.basicBackground,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -67,130 +68,133 @@ class _TradesOptionsState extends State<TradesOptions> {
                 : null,
             body: Builder(
               builder: (BuildContext context) {
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                  child: FutureBuilder(
-                    future: _preferencesLoaded,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        return SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              SizedBox(height: 10),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Text("Use trade calculator"),
-                                    Switch(
-                                      value: _tradeCalculatorEnabled,
-                                      onChanged: (value) {
-                                        Prefs().setTradeCalculatorEnabled(value);
-                                        setState(() {
-                                          _tradeCalculatorEnabled = value;
-                                        });
-                                      },
-                                      activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'Consider deactivating the trade calculator if it impacts '
-                                  'performance or you just simply would not prefer to use it',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
+                return Container(
+                  color: _themeProvider.basicBackground,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                    child: FutureBuilder(
+                      future: _preferencesLoaded,
+                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                SizedBox(height: 10),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Use trade calculator"),
+                                      Switch(
+                                        value: _tradeCalculatorEnabled,
+                                        onChanged: (value) {
+                                          Prefs().setTradeCalculatorEnabled(value);
+                                          setState(() {
+                                            _tradeCalculatorEnabled = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: 20),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Row(
-                                      children: [
-                                        Image(
-                                          image: AssetImage('images/icons/awh_logo.png'),
-                                          width: 35,
-                                          color: Colors.orange,
-                                          fit: BoxFit.fill,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Text("Arson Warehouse"),
-                                      ],
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'Consider deactivating the trade calculator if it impacts '
+                                    'performance or you just simply would not prefer to use it',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
                                     ),
-                                    awhSwitch(),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If you are a professional trader and have your own price list in '
-                                  'the Arson Warehouse, you can activate a quick access icon in the '
-                                  'Trade Calculator icon here',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: 20),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: <Widget>[
-                                    Row(
-                                      children: [
-                                        SizedBox(width: 8),
-                                        Image(
-                                          image: AssetImage('images/icons/torntrader_logo.png'),
-                                          width: 25,
-                                          color: ttColor,
-                                          fit: BoxFit.fill,
-                                        ),
-                                        SizedBox(width: 10),
-                                        Text("Torn Trader"),
-                                      ],
-                                    ),
-                                    tornTraderSwitch(),
-                                  ],
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 15),
-                                child: Text(
-                                  'If you are a professional trader and have an account with Torn '
-                                  'Trader, you can activate the sync functionality here',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
+                                SizedBox(height: 20),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Row(
+                                        children: [
+                                          Image(
+                                            image: AssetImage('images/icons/awh_logo.png'),
+                                            width: 35,
+                                            color: Colors.orange,
+                                            fit: BoxFit.fill,
+                                          ),
+                                          SizedBox(width: 10),
+                                          Text("Arson Warehouse"),
+                                        ],
+                                      ),
+                                      awhSwitch(),
+                                    ],
                                   ),
                                 ),
-                              ),
-                              SizedBox(height: 50),
-                            ],
-                          ),
-                        );
-                      } else {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-                    },
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'If you are a professional trader and have your own price list in '
+                                    'the Arson Warehouse, you can activate a quick access icon in the '
+                                    'Trade Calculator icon here',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 20),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Row(
+                                        children: [
+                                          SizedBox(width: 8),
+                                          Image(
+                                            image: AssetImage('images/icons/torntrader_logo.png'),
+                                            width: 25,
+                                            color: ttColor,
+                                            fit: BoxFit.fill,
+                                          ),
+                                          SizedBox(width: 10),
+                                          Text("Torn Trader"),
+                                        ],
+                                      ),
+                                      tornTraderSwitch(),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'If you are a professional trader and have an account with Torn '
+                                    'Trader, you can activate the sync functionality here',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 50),
+                              ],
+                            ),
+                          );
+                        } else {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                      },
+                    ),
                   ),
                 );
               },

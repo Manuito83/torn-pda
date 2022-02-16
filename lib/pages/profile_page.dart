@@ -330,6 +330,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _shortcutsProv = Provider.of<ShortcutsProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.basicBackground,
       drawer: new Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -355,6 +356,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ],
       ),
       body: Container(
+        color: _themeProvider.basicBackground,
         child: FutureBuilder(
           future: _apiFetched,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -1191,7 +1193,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.background : Colors.white,
+                  primary:
+                      _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.secondBackground : Colors.white,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
@@ -1308,7 +1311,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.background : Colors.white,
+                  primary: _themeProvider.cardColor,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
@@ -2665,6 +2668,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return Card(
       child: ExpandablePanel(
         controller: _eventsExpController,
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         header: Padding(
           padding: const EdgeInsets.all(15.0),
           child: Row(
@@ -2942,6 +2946,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         controller: _messagesExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
@@ -3218,6 +3223,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         controller: _basicInfoExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
@@ -4187,6 +4193,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Card(
       child: ExpandablePanel(
+        theme: ExpandableThemeData(iconColor: _themeProvider.mainText),
         controller: _networthExpController,
         header: Padding(
           padding: const EdgeInsets.all(15.0),
@@ -5630,7 +5637,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _checkIfNotificationsAreCurrent();
   }
 
-    Future<void> _openWalletDialog() {
+  Future<void> _openWalletDialog() {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -5654,7 +5661,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       margin: EdgeInsets.only(top: 15),
                       decoration: new BoxDecoration(
-                        color: _themeProvider.background,
+                        color: _themeProvider.secondBackground,
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
@@ -5767,9 +5774,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,
@@ -5814,7 +5821,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                       margin: EdgeInsets.only(top: 15),
                       decoration: new BoxDecoration(
-                        color: _themeProvider.background,
+                        color: _themeProvider.secondBackground,
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
@@ -5895,9 +5902,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

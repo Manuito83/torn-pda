@@ -154,11 +154,14 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+          backgroundColor: _themeProvider.basicBackground,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -166,53 +169,94 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                   child: buildAppBar(),
                 )
               : null,
-          body: Stack(
-            alignment: Alignment.topCenter,
-            children: <Widget>[
-              FutureBuilder(
-                future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiSuccess) {
-                      return BubbleShowcase(
-                        // KEEP THIS UNIQUE
-                        bubbleShowcaseId: 'foreign_stock_showcase',
-                        // WILL SHOW IF VERSION CHANGED
-                        bubbleShowcaseVersion: 2,
-                        showCloseButton: false,
-                        doNotReopenOnClose: true,
-                        bubbleSlides: [
-                          AbsoluteBubbleSlide(
-                            positionCalculator: (size) => Position(
-                              top: 0,
-                              right: size.width,
-                              bottom: size.height,
-                              left: size.width,
-                            ),
-                            child: RelativeBubbleSlideChild(
-                              direction: AxisDirection.right,
-                              widget: Padding(
-                                padding: const EdgeInsets.only(right: 75),
-                                child: SpeechBubble(
-                                  width: 200,
-                                  nipLocation: NipLocation.RIGHT,
-                                  color: Colors.blue,
-                                  child: Padding(
-                                    padding: EdgeInsets.all(10),
-                                    child: Text(
-                                      'Did you know?\n\n'
-                                      'Click any flag to go directly to the travel agency and '
-                                      'get a check on how much money you need for that particular '
-                                      'item (based on your preset capacity)!',
-                                      style: TextStyle(color: Colors.white),
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: <Widget>[
+                FutureBuilder(
+                  future: _apiCalled,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_apiSuccess) {
+                        return BubbleShowcase(
+                          // KEEP THIS UNIQUE
+                          bubbleShowcaseId: 'foreign_stock_showcase',
+                          // WILL SHOW IF VERSION CHANGED
+                          bubbleShowcaseVersion: 2,
+                          showCloseButton: false,
+                          doNotReopenOnClose: true,
+                          bubbleSlides: [
+                            AbsoluteBubbleSlide(
+                              positionCalculator: (size) => Position(
+                                top: 0,
+                                right: size.width,
+                                bottom: size.height,
+                                left: size.width,
+                              ),
+                              child: RelativeBubbleSlideChild(
+                                direction: AxisDirection.right,
+                                widget: Padding(
+                                  padding: const EdgeInsets.only(right: 75),
+                                  child: SpeechBubble(
+                                    width: 200,
+                                    nipLocation: NipLocation.RIGHT,
+                                    color: Colors.blue,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Text(
+                                        'Did you know?\n\n'
+                                        'Click any flag to go directly to the travel agency and '
+                                        'get a check on how much money you need for that particular '
+                                        'item (based on your preset capacity)!',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
+                          ],
+                          child: SmartRefresher(
+                            enablePullDown: true,
+                            header: WaterDropMaterialHeader(
+                              backgroundColor: Theme.of(context).primaryColor,
+                            ),
+                            controller: _refreshController,
+                            onRefresh: _onRefresh,
+                            child: ListView(
+                              children: _stockItems(),
+                            ),
                           ),
-                        ],
-                        child: SmartRefresher(
+                        );
+                      } else {
+                        var errorTiles = <Widget>[];
+                        errorTiles.add(
+                          Center(
+                            child: Column(
+                              children: [
+                                Image.asset(
+                                  'images/icons/airplane.png',
+                                  height: 100,
+                                ),
+                                SizedBox(height: 15),
+                                Text(
+                                  'OOPS!',
+                                  style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                                  child: Text(
+                                    'There was an error getting the information, please '
+                                    'try again later or pull to refresh!',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+
+                        return SmartRefresher(
                           enablePullDown: true,
                           header: WaterDropMaterialHeader(
                             backgroundColor: Theme.of(context).primaryColor,
@@ -220,132 +264,94 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
                           controller: _refreshController,
                           onRefresh: _onRefresh,
                           child: ListView(
-                            children: _stockItems(),
-                          ),
-                        ),
-                      );
-                    } else {
-                      var errorTiles = <Widget>[];
-                      errorTiles.add(
-                        Center(
-                          child: Column(
                             children: [
-                              Image.asset(
-                                'images/icons/airplane.png',
-                                height: 100,
-                              ),
-                              SizedBox(height: 15),
-                              Text(
-                                'OOPS!',
-                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                                child: Text(
-                                  'There was an error getting the information, please '
-                                  'try again later or pull to refresh!',
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height / 2,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: errorTiles,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      );
-
-                      return SmartRefresher(
-                        enablePullDown: true,
-                        header: WaterDropMaterialHeader(
-                          backgroundColor: Theme.of(context).primaryColor,
-                        ),
-                        controller: _refreshController,
-                        onRefresh: _onRefresh,
-                        child: ListView(
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height / 2,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: errorTiles,
-                              ),
-                            ),
+                        );
+                      }
+                    } else {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text('Fetching data...'),
+                            SizedBox(height: 30),
+                            CircularProgressIndicator(),
                           ],
                         ),
                       );
                     }
-                  } else {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text('Fetching data...'),
-                          SizedBox(height: 30),
-                          CircularProgressIndicator(),
-                        ],
-                      ),
-                    );
-                  }
-                },
-              ),
+                  },
+                ),
 
-              // Sliding panel
-              FutureBuilder(
-                future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiSuccess) {
-                      return SlidingUpPanel(
-                        controller: _pc,
-                        maxHeight: _panelHeightOpen,
-                        minHeight: _panelHeightClosed,
-                        renderPanelSheet: false,
-                        backdropEnabled: true,
-                        parallaxEnabled: true,
-                        parallaxOffset: .5,
-                        panelBuilder: (sc) => _bottomPanel(sc),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(18.0),
-                          topRight: Radius.circular(18.0),
-                        ),
-                        onPanelSlide: (double pos) => setState(() {
-                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                        }),
-                      );
+                // Sliding panel
+                FutureBuilder(
+                  future: _apiCalled,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_apiSuccess) {
+                        return SlidingUpPanel(
+                          controller: _pc,
+                          maxHeight: _panelHeightOpen,
+                          minHeight: _panelHeightClosed,
+                          renderPanelSheet: false,
+                          backdropEnabled: true,
+                          parallaxEnabled: true,
+                          parallaxOffset: .5,
+                          panelBuilder: (sc) => _bottomPanel(sc),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(18.0),
+                            topRight: Radius.circular(18.0),
+                          ),
+                          onPanelSlide: (double pos) => setState(() {
+                            _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                          }),
+                        );
+                      } else {
+                        return SizedBox.shrink();
+                      }
                     } else {
                       return SizedBox.shrink();
                     }
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                },
-              ),
+                  },
+                ),
 
-              // FAB
-              FutureBuilder(
-                future: _apiCalled,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiSuccess) {
-                      return Positioned(
-                        right: 35.0,
-                        bottom: _fabHeight,
-                        child: FloatingActionButton.extended(
-                          icon: Icon(Icons.filter_list),
-                          label: Text("Filter"),
-                          elevation: 4,
-                          onPressed: () {
-                            _pc.isPanelOpen ? _pc.close() : _pc.open();
-                          },
-                          backgroundColor: Colors.orange,
-                        ),
-                      );
+                // FAB
+                FutureBuilder(
+                  future: _apiCalled,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_apiSuccess) {
+                        return Positioned(
+                          right: 35.0,
+                          bottom: _fabHeight,
+                          child: FloatingActionButton.extended(
+                            icon: Icon(Icons.filter_list),
+                            label: Text("Filter"),
+                            elevation: 4,
+                            onPressed: () {
+                              _pc.isPanelOpen ? _pc.close() : _pc.open();
+                            },
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      } else {
+                        return SizedBox.shrink();
+                      }
                     } else {
                       return SizedBox.shrink();
                     }
-                  } else {
-                    return SizedBox.shrink();
-                  }
-                },
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -402,7 +408,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider.background,
+          color: _themeProvider.secondBackground,
           borderRadius: BorderRadius.all(Radius.circular(24.0)),
           boxShadow: [
             BoxShadow(

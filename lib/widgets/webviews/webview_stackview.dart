@@ -82,13 +82,16 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: ShowCaseWidget(
           builder: Builder(
             builder: (_) => Scaffold(
+              backgroundColor: _themeProvider.basicBackground,
               body: FutureBuilder(
                 future: providerInitialised,
                 builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
@@ -223,7 +226,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         );
       },
       child: Container(
-        color: _webViewProvider.currentTab == 0 ? _themeProvider.navSelected : Colors.transparent,
+        color: _webViewProvider.currentTab == 0
+            ? _themeProvider.navSelected
+            : _themeProvider.currentTheme == AppTheme.extraDark
+                ? Colors.black
+                : Colors.transparent,
         child: Row(
           children: [
             Padding(
@@ -286,7 +293,11 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             }
           },
           child: Container(
-            color: _webViewProvider.currentTab == i ? _themeProvider.navSelected : Colors.transparent,
+            color: _webViewProvider.currentTab == i
+                ? _themeProvider.navSelected
+                : _themeProvider.currentTheme == AppTheme.extraDark
+                    ? Colors.black
+                    : Colors.transparent,
             child: Row(
               children: [
                 Padding(
@@ -328,6 +339,8 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     }
 
     return Showcase(
+      textColor: _themeProvider.mainText,
+      showcaseBackgroundColor: _themeProvider.secondBackground,
       key: _showcaseTabsGeneral,
       title: 'Tab bar',
       description: "\nYou've opened your first tab; remember you can close tabs (except for the first one) by double "
@@ -338,6 +351,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       child: Container(
         height: 40,
         decoration: new BoxDecoration(
+          color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
           border: Border(
             top: BorderSide(
               color: Colors.grey,

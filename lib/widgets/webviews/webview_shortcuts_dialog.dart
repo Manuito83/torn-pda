@@ -43,7 +43,7 @@ class _WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0.0,
-      backgroundColor: _themeProvider.background,
+      backgroundColor: _themeProvider.secondBackground,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

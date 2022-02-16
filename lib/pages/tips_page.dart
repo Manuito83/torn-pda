@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 enum TipClass {
@@ -87,6 +88,7 @@ class TipsPage extends StatefulWidget {
 
 class _TipsPageState extends State<TipsPage> {
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   var _generalTipList = <TipTextBuilder>[];
   var _browserGeneralTipList = <TipTextBuilder>[];
@@ -121,7 +123,10 @@ class _TipsPageState extends State<TipsPage> {
   @override
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+
     return Scaffold(
+      backgroundColor: _themeProvider.basicBackground,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -130,65 +135,68 @@ class _TipsPageState extends State<TipsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                "Frequently asked questions and tips",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+      body: Container(
+        color: _themeProvider.basicBackground,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  "Frequently asked questions and tips",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: 25),
-              Text("GENERAL"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.general),
-              SizedBox(height: 25),
-              Text("BROWSER - GENERAL"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.browserGeneral),
-              SizedBox(height: 25),
-              Text("BROWSER - TABS"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.browserTabs),
-              SizedBox(height: 25),
-              Text("TRAVEL SECTION"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.travel),
-              SizedBox(height: 25),
-              Text("PROFILE SECTION"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.profile),
-              SizedBox(height: 25),
-              Text("FACTION COMMUNICATION"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.factionCommunication),
-              SizedBox(height: 25),
-              Text("CHAINING - GENERAL"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.chaining),
-              SizedBox(height: 25),
-              Text("CHAINING - WAR"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.chainingWar),
-              SizedBox(height: 25),
-              Text("TRADING"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.trading),
-              SizedBox(height: 25),
-              Text("APP LINKS"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.deepLinks),
-              SizedBox(height: 25),
-              Text("USERSCRIPTS"),
-              SizedBox(height: 10),
-              tipsPanels(TipClass.userScripts),
-              SizedBox(height: 60),
-            ],
+                SizedBox(height: 25),
+                Text("GENERAL"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.general),
+                SizedBox(height: 25),
+                Text("BROWSER - GENERAL"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.browserGeneral),
+                SizedBox(height: 25),
+                Text("BROWSER - TABS"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.browserTabs),
+                SizedBox(height: 25),
+                Text("TRAVEL SECTION"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.travel),
+                SizedBox(height: 25),
+                Text("PROFILE SECTION"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.profile),
+                SizedBox(height: 25),
+                Text("FACTION COMMUNICATION"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.factionCommunication),
+                SizedBox(height: 25),
+                Text("CHAINING - GENERAL"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.chaining),
+                SizedBox(height: 25),
+                Text("CHAINING - WAR"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.chainingWar),
+                SizedBox(height: 25),
+                Text("TRADING"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.trading),
+                SizedBox(height: 25),
+                Text("APP LINKS"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.deepLinks),
+                SizedBox(height: 25),
+                Text("USERSCRIPTS"),
+                SizedBox(height: 10),
+                tipsPanels(TipClass.userScripts),
+                SizedBox(height: 60),
+              ],
+            ),
           ),
         ),
       ),

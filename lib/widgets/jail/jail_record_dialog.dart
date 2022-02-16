@@ -41,7 +41,7 @@ class JailRecordDialog extends StatelessWidget {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: themeProvider.background,
+                  color: themeProvider.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -140,9 +140,9 @@ class JailRecordDialog extends StatelessWidget {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: themeProvider.background,
+                backgroundColor: themeProvider.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: themeProvider.background,
+                  backgroundColor: themeProvider.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,

@@ -90,6 +90,7 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.basicBackground,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -98,22 +99,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               child: buildAppBar(),
             )
           : null,
-      body: Center(
-        child: SingleChildScrollView(
-          child: FutureBuilder(
-            future: _finishedLoadingPreferences,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return Column(
-                  children: _travelMain(),
-                );
-              } else {
-                return Padding(
-                  padding: EdgeInsets.all(10),
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
+      body: Container(
+        color: _themeProvider.basicBackground,
+        child: Center(
+          child: SingleChildScrollView(
+            child: FutureBuilder(
+              future: _finishedLoadingPreferences,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Column(
+                    children: _travelMain(),
+                  );
+                } else {
+                  return Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
+            ),
           ),
         ),
       ),

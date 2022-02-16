@@ -68,7 +68,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -276,7 +276,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
             right: 16,
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: _themeProvider.background,
+              backgroundColor: _themeProvider.secondBackground,
               child: CircleAvatar(
                 backgroundColor: _themeProvider.mainText,
                 radius: 22,
@@ -285,7 +285,7 @@ class _VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                   width: 28,
                   child: Icon(
                     MdiIcons.safeSquareOutline,
-                    color: _themeProvider.background,
+                    color: _themeProvider.secondBackground,
                   ),
                 ),
               ),

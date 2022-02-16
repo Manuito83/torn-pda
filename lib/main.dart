@@ -44,7 +44,7 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.6.5';
+const String appVersion = '2.6.6';
 const String androidVersion = '183';
 const String iosVersion = '190';
 
@@ -184,7 +184,7 @@ class _MyAppState extends State<MyApp> {
 
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+        statusBarColor: _themeProvider.statusBar,
         statusBarBrightness: Brightness.dark,
         statusBarIconBrightness: Brightness.light,
       ),
@@ -201,11 +201,11 @@ class _MyAppState extends State<MyApp> {
               navigatorObservers: [BotToastNavigatorObserver()],
               title: 'Torn PDA',
               debugShowCheckedModeBanner: false,
-              themeMode: ThemeMode.light,
               theme: ThemeData(
+                cardColor: _themeProvider.cardColor,
                 appBarTheme: AppBarTheme(
                   systemOverlayStyle: SystemUiOverlayStyle.light,
-                  color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                  color: _themeProvider.statusBar,
                 ),
                 primarySwatch: Colors.blueGrey,
                 visualDensity: VisualDensity.adaptivePlatformDensity,

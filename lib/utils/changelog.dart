@@ -38,6 +38,18 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.6.6
+    var v2_6_6 = ChangeLogItem();
+    v2_6_6.main.version = 'Torn PDA v2.6.6';
+    v2_6_6.main.date = '25 FEB 2022';
+    String feat2_6_6_1 = "Added a darker and spookier theme";
+    String feat2_6_6_2 = "Fixed dark theme issues";
+    String feat2_6_6_3 = "Fixed the Sports Shop shortcut";
+    v2_6_6.features.add(feat2_6_6_1);
+    v2_6_6.features.add(feat2_6_6_2);
+    v2_6_6.features.add(feat2_6_6_3);
+    if (Platform.isAndroid) v2_6_6.features.add(feat2_6_6_1);
+
     // VERSION 2.6.5
     var v2_6_5 = ChangeLogItem();
     v2_6_5.main.version = 'Torn PDA v2.6.5';
@@ -1051,6 +1063,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_6_6);
     itemList.add(v2_6_5);
     itemList.add(v2_6_4);
     itemList.add(v2_6_3);

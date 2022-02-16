@@ -246,7 +246,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       options: PullToRefreshOptions(
         color: Colors.orange[800],
         size: AndroidPullToRefreshSize.DEFAULT,
-        backgroundColor: _themeProvider.background,
+        backgroundColor: _themeProvider.secondBackground,
         enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
         slingshotDistance: 150,
         distanceToTriggerSync: 150,
@@ -375,10 +375,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop || true,
         child: Scaffold(
+            backgroundColor: _themeProvider.basicBackground,
           appBar: widget.dialog
               // Show appBar only if we are not showing the webView in a dialog
               ? null
@@ -396,7 +399,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   : null,
           body: Container(
             // Background color for all browser widgets
-            color: Colors.grey[900],
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
             child: widget.dialog
                 ? Column(
                     children: [
@@ -414,7 +417,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _quickBrowserBottomBar() {
     if (_findInPageActive) {
       return Container(
-        color: _themeProvider.background,
+        color: _themeProvider.secondBackground,
         child: Row(
           children: [
             IconButton(
@@ -504,7 +507,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     return Container(
-      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.background,
+      color: _themeProvider.currentTheme == AppTheme.light ? Colors.white : _themeProvider.secondBackground,
       height: 38,
       child: GestureDetector(
         onLongPress: () => _openUrlDialog(),

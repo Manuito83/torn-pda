@@ -1798,7 +1798,7 @@ class _WarCardState extends State<WarCard> {
       toastBuilder: (cancelFunc) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         title: Text(member.name),
-        backgroundColor: _themeProvider.background,
+        backgroundColor: _themeProvider.secondBackground,
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

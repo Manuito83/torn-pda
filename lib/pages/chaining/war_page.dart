@@ -129,6 +129,7 @@ class _WarPageState extends State<WarPage> {
           });
         }
         return Scaffold(
+          backgroundColor: _themeProvider.basicBackground,
           drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
@@ -137,14 +138,17 @@ class _WarPageState extends State<WarPage> {
                   child: buildAppBar(_),
                 )
               : null,
-          body: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-            child: MediaQuery.of(context).orientation == Orientation.portrait
-                ? _mainColumn()
-                : SingleChildScrollView(
-                    child: _mainColumn(),
-                  ),
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: MediaQuery.of(context).orientation == Orientation.portrait
+                  ? _mainColumn()
+                  : SingleChildScrollView(
+                      child: _mainColumn(),
+                    ),
+            ),
           ),
         );
       }),
@@ -219,7 +223,7 @@ class _WarPageState extends State<WarPage> {
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.background,
+          showcaseBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
           contentPadding: EdgeInsets.all(20),
           child: IconButton(
@@ -242,7 +246,7 @@ class _WarPageState extends State<WarPage> {
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.background,
+          showcaseBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
           contentPadding: EdgeInsets.all(20),
           child: Padding(
@@ -570,7 +574,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
         margin: const EdgeInsets.only(top: 30),
         decoration: BoxDecoration(
-          color: themeProvider.background,
+          color: themeProvider.secondBackground,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
@@ -811,7 +815,7 @@ class HiddenMembersDialog extends StatelessWidget {
     final List<Member> hiddenMembers = warController.getHiddenMembersDetails();
     List<Widget> hiddenCards = buildCards(hiddenMembers, context);
     return AlertDialog(
-      backgroundColor: themeProvider.background,
+      backgroundColor: themeProvider.secondBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),

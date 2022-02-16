@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
@@ -38,6 +39,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
   Future _firestoreProfileReceived;
 
   SettingsProvider _settingsProvider;
+  ThemeProvider _themeProvider;
 
   @override
   void initState() {
@@ -49,7 +51,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
 
   @override
   Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Scaffold(
+      backgroundColor: _themeProvider.basicBackground,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -57,491 +61,494 @@ class _AlertsSettingsState extends State<AlertsSettings> {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-        future: _firestoreProfileReceived,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.data is FirebaseUserModel) {
-              if (_firebaseUserModel == null) {
-                // We don't use the snapshot data any longer if we have updated the model after a reset
-                _firebaseUserModel = snapshot.data as FirebaseUserModel;
-              }
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Text(
-                        "Alerts are automatic notifications that you only "
-                        "need to activate once. However, you will normally be notified "
-                        "earlier than with manual notifications; also, notifications might be delayed "
-                        "due to network status or device throttling.",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.travelNotification ?? false,
-                        title: const Text("Travel"),
-                        subtitle: const Text(
-                          "Get notified just before you arrive",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
+      body: Container(
+        color: _themeProvider.basicBackground,
+        child: FutureBuilder(
+          future: _firestoreProfileReceived,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.data is FirebaseUserModel) {
+                if (_firebaseUserModel == null) {
+                  // We don't use the snapshot data any longer if we have updated the model after a reset
+                  _firebaseUserModel = snapshot.data as FirebaseUserModel;
+                }
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Text(
+                          "Alerts are automatic notifications that you only "
+                          "need to activate once. However, you will normally be notified "
+                          "earlier than with manual notifications; also, notifications might be delayed "
+                          "due to network status or device throttling.",
+                          style: TextStyle(fontSize: 12),
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.travelNotification = value;
-                          });
-                          firestore.subscribeToTravelNotification(value);
-                        },
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.foreignRestockNotification ?? false,
-                        title: const Text("Foreign stocks"),
-                        subtitle: const Text(
-                          "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
-                          "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.foreignRestockNotification = value;
-                          });
-                          firestore.subscribeToForeignRestockNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.energyNotification ?? false,
-                        title: const Text("Energy full"),
-                        subtitle: const Text(
-                          "Get notified once you reach full energy",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.energyNotification = value;
-                          });
-                          firestore.subscribeToEnergyNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.nerveNotification ?? false,
-                        title: const Text("Nerve full"),
-                        subtitle: const Text(
-                          "Get notified once you reach full nerve",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.nerveNotification = value;
-                          });
-                          firestore.subscribeToNerveNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.hospitalNotification ?? false,
-                        title: const Text("Hospital admission and release"),
-                        subtitle: const Text(
-                          "If you are offline, you'll be notified if you are "
-                          "hospitalised, revived or out of hospital",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.hospitalNotification = value;
-                          });
-                          firestore.subscribeToHospitalNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.drugsNotification ?? false,
-                        title: const Text("Drugs cooldown"),
-                        subtitle: const Text(
-                          "Get notified when your drugs cooldown "
-                          "has expired",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.drugsNotification = value;
-                          });
-                          firestore.subscribeToDrugsNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.racingNotification ?? false,
-                        title: const Text("Racing"),
-                        subtitle: const Text(
-                          "Get notified when you cross the finish line",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.racingNotification = value;
-                          });
-                          firestore.subscribeToRacingNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.messagesNotification ?? false,
-                        title: const Text("Messages"),
-                        subtitle: const Text(
-                          "Get notified when you receive new messages",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.messagesNotification = value;
-                          });
-                          firestore.subscribeToMessagesNotification(value);
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.eventsNotification ?? false,
-                        title: const Text("Events"),
-                        subtitle: const Text(
-                          "Get notified when you receive new events",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.eventsNotification = value;
-                          });
-                          firestore.subscribeToEventsNotification(value);
-                        },
-                      ),
-                    ),
-                    if (_firebaseUserModel?.eventsNotification)
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            const Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Filter out events",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontStyle: FontStyle.italic,
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.travelNotification ?? false,
+                          title: const Text("Travel"),
+                          subtitle: const Text(
+                            "Get notified just before you arrive",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.travelNotification = value;
+                            });
+                            firestore.subscribeToTravelNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.foreignRestockNotification ?? false,
+                          title: const Text("Foreign stocks"),
+                          subtitle: const Text(
+                            "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
+                            "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.foreignRestockNotification = value;
+                            });
+                            firestore.subscribeToForeignRestockNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.energyNotification ?? false,
+                          title: const Text("Energy full"),
+                          subtitle: const Text(
+                            "Get notified once you reach full energy",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.energyNotification = value;
+                            });
+                            firestore.subscribeToEnergyNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.nerveNotification ?? false,
+                          title: const Text("Nerve full"),
+                          subtitle: const Text(
+                            "Get notified once you reach full nerve",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.nerveNotification = value;
+                            });
+                            firestore.subscribeToNerveNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.hospitalNotification ?? false,
+                          title: const Text("Hospital admission and release"),
+                          subtitle: const Text(
+                            "If you are offline, you'll be notified if you are "
+                            "hospitalised, revived or out of hospital",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.hospitalNotification = value;
+                            });
+                            firestore.subscribeToHospitalNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.drugsNotification ?? false,
+                          title: const Text("Drugs cooldown"),
+                          subtitle: const Text(
+                            "Get notified when your drugs cooldown "
+                            "has expired",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.drugsNotification = value;
+                            });
+                            firestore.subscribeToDrugsNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.racingNotification ?? false,
+                          title: const Text("Racing"),
+                          subtitle: const Text(
+                            "Get notified when you cross the finish line",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.racingNotification = value;
+                            });
+                            firestore.subscribeToRacingNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.messagesNotification ?? false,
+                          title: const Text("Messages"),
+                          subtitle: const Text(
+                            "Get notified when you receive new messages",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.messagesNotification = value;
+                            });
+                            firestore.subscribeToMessagesNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.eventsNotification ?? false,
+                          title: const Text("Events"),
+                          subtitle: const Text(
+                            "Get notified when you receive new events",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.eventsNotification = value;
+                            });
+                            firestore.subscribeToEventsNotification(value);
+                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel?.eventsNotification)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              const Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Filter out events",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                 ),
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return EventsFilterDialog(
-                                      userModel: _firebaseUserModel,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.refillsNotification ?? false,
-                        title: const Text("Refills"),
-                        subtitle: const Text(
-                          "Get notified if you still have unused refills",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.refillsNotification = value;
-                          });
-                          firestore.subscribeToRefillsNotification(value);
-                        },
-                      ),
-                    ),
-                    if (_firebaseUserModel?.refillsNotification)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            const Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Time",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                            DropdownButton<int>(
-                              value: _firebaseUserModel?.refillsTime,
-                              items: [
-                                DropdownMenuItem(
-                                  value: 18,
-                                  child: SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      "18:00 TCT",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 19,
-                                  child: SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      "19:00 TCT",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 20,
-                                  child: SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      "20:00 TCT",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 21,
-                                  child: SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      "21:00 TCT",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 22,
-                                  child: SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      "22:00 TCT",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 23,
-                                  child: SizedBox(
-                                    width: 80,
-                                    child: Text(
-                                      "23:00 TCT",
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) async {
-                                setState(() {
-                                  _firebaseUserModel?.refillsTime = value;
-                                });
-                                firestore.setRefillTime(value);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (_firebaseUserModel?.refillsNotification)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            const Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Text(
-                                "Choose refills",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return RefillsRequestedDialog(
-                                      userModel: _firebaseUserModel,
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 15, 0),
-                      child: ListTile(
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text("Stock market gain/loss"),
-                            GestureDetector(
-                              child: const Icon(Icons.keyboard_arrow_right_outlined),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) {
-                                      return StockMarketAlertsPage(
-                                        fbUser: _firebaseUserModel,
-                                        calledFromMenu: false,
-                                        stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
+                              IconButton(
+                                icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return EventsFilterDialog(
+                                        userModel: _firebaseUserModel,
                                       );
                                     },
-                                  ),
-                                );
-                              },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.refillsNotification ?? false,
+                          title: const Text("Refills"),
+                          subtitle: const Text(
+                            "Get notified if you still have unused refills",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
                             ),
-                          ],
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.refillsNotification = value;
+                            });
+                            firestore.subscribeToRefillsNotification(value);
+                          },
                         ),
-                        subtitle: const Text(
-                          "Configure price gain/loss alerts for any traded company",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
+                      ),
+                      if (_firebaseUserModel?.refillsNotification)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              const Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Time",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              DropdownButton<int>(
+                                value: _firebaseUserModel?.refillsTime,
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 18,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "18:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 19,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "19:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 20,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "20:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 21,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "21:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 22,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "22:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 23,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "23:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) async {
+                                  setState(() {
+                                    _firebaseUserModel?.refillsTime = value;
+                                  });
+                                  firestore.setRefillTime(value);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (_firebaseUserModel?.refillsNotification)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              const Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Choose refills",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return RefillsRequestedDialog(
+                                        userModel: _firebaseUserModel,
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 15, 0),
+                        child: ListTile(
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Stock market gain/loss"),
+                              GestureDetector(
+                                child: const Icon(Icons.keyboard_arrow_right_outlined),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return StockMarketAlertsPage(
+                                          fbUser: _firebaseUserModel,
+                                          calledFromMenu: false,
+                                          stockMarketInMenuCallback: widget.stockMarketInMenuCallback,
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                          subtitle: const Text(
+                            "Configure price gain/loss alerts for any traded company",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                      child: CheckboxListTile(
-                        checkColor: Colors.white,
-                        activeColor: Colors.blueGrey,
-                        value: _firebaseUserModel.factionAssistMessage ?? false,
-                        title: const Text("Faction assist messages"),
-                        subtitle: const Text(
-                          "Receive attack assist messages manually triggered by your faction mates",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.factionAssistMessage ?? false,
+                          title: const Text("Faction assist messages"),
+                          subtitle: const Text(
+                            "Receive attack assist messages manually triggered by your faction mates",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.factionAssistMessage = value;
+                            });
+                            firestore.toggleFactionAssistMessage(value);
+                          },
                         ),
-                        onChanged: (value) {
-                          setState(() {
-                            _firebaseUserModel?.factionAssistMessage = value;
-                          });
-                          firestore.toggleFactionAssistMessage(value);
-                        },
                       ),
-                    ),
-                    const SizedBox(height: 60),
-                  ],
-                ),
-              );
+                      const SizedBox(height: 60),
+                    ],
+                  ),
+                );
+              } else {
+                return _connectError();
+              }
             } else {
-              return _connectError();
+              return const Center(child: CircularProgressIndicator());
             }
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
+          },
+        ),
       ),
     );
   }

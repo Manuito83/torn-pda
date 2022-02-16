@@ -40,11 +40,16 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     return WillPopScope(
       onWillPop: _willPopCallback,
       child: Container(
-        color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.blueGrey
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[900]
+                : Color(0xFF0C0C0C),
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.basicBackground,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -884,7 +889,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -938,9 +943,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -982,7 +987,7 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1036,9 +1041,9 @@ class _ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
@@ -1100,7 +1105,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
           ),
           margin: const EdgeInsets.only(top: 30),
           decoration: BoxDecoration(
-            color: widget.themeProvider.background,
+            color: widget.themeProvider.secondBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [
               BoxShadow(

@@ -46,6 +46,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/app_exit_dialog.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:uni_links/uni_links.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 import 'main.dart';
 
@@ -742,26 +743,26 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
               color: _themeProvider.currentTheme == AppTheme.light
                   ? MediaQuery.of(context).orientation == Orientation.portrait
                       ? Colors.blueGrey
-                      : Colors.grey[900]
-                  : Colors.grey[900],
+                      : _themeProvider.currentTheme == AppTheme.dark
+                          ? Colors.grey[900]
+                          : Color(0xFF0C0C0C)
+                  : _themeProvider.currentTheme == AppTheme.dark
+                      ? Colors.grey[900]
+                      : Color(0xFF0C0C0C),
               child: SafeArea(
                 top: !_settingsProvider.appBarTop || false,
                 child: Scaffold(
                   key: _scaffoldKey,
                   body: _getPages(),
                   drawer: Drawer(
+                    backgroundColor: _themeProvider.basicBackground,
                     elevation: 2, // This avoids shadow over SafeArea
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: _themeProvider.currentTheme == AppTheme.light ? Colors.grey[100] : Colors.transparent,
-                          backgroundBlendMode: BlendMode.multiply),
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: <Widget>[
-                          _getDrawerHeader(),
-                          _getDrawerItems(),
-                        ],
-                      ),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: <Widget>[
+                        _getDrawerHeader(),
+                        _getDrawerItems(),
+                      ],
                     ),
                   ),
                 ),
@@ -769,7 +770,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
             );
           } else {
             return Container(
-              color: _themeProvider.background,
+              color: _themeProvider.secondBackground,
               child: SafeArea(
                 top: _settingsProvider.appBarTop || true,
                 child: const Center(
@@ -813,31 +814,71 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                 children: [
                   Row(
                     children: <Widget>[
-                      Text(
-                        _themeProvider.currentTheme == AppTheme.light ? 'Light' : 'Dark',
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.only(left: 10),
-                      ),
-                      Switch(
-                        value: _themeProvider.currentTheme == AppTheme.dark || false,
-                        onChanged: (bool value) {
-                          if (value) {
-                            _themeProvider.changeTheme = AppTheme.dark;
-                          } else {
-                            _themeProvider.changeTheme = AppTheme.light;
-                          }
-                          setState(() {
-                            SystemChrome.setSystemUIOverlayStyle(
-                              SystemUiOverlayStyle(
-                                statusBarColor:
-                                    _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-                                statusBarBrightness: Brightness.dark,
-                                statusBarIconBrightness: Brightness.light,
-                              ),
-                            );
-                          });
-                        },
+                      SizedBox(
+                        height: 30,
+                        child: ToggleSwitch(
+                          customWidths: [35, 35, 35],
+                          iconSize: 15,
+                          borderWidth: 1,
+                          cornerRadius: 5,
+                          borderColor:
+                              _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+                          initialLabelIndex: _themeProvider.currentTheme == AppTheme.light
+                              ? 0
+                              : _themeProvider.currentTheme == AppTheme.dark
+                                  ? 1
+                                  : 2,
+                          activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                              ? [Colors.blueGrey]
+                              : _themeProvider.currentTheme == AppTheme.dark
+                                  ? [Colors.blueGrey]
+                                  : [Colors.blueGrey[900]],
+                          activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                              ? Colors.white
+                              : _themeProvider.currentTheme == AppTheme.dark
+                                  ? Colors.grey[800]
+                                  : Colors.black,
+                          inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                          totalSwitches: 3,
+                          animate: true,
+                          animationDuration: 500,
+                          icons: [
+                            FontAwesome.sun_o,
+                            FontAwesome.moon_o,
+                            MdiIcons.ghost,
+                          ],
+                          onToggle: (index) {
+                            if (index == 0) {
+                              _themeProvider.changeTheme = AppTheme.light;
+                            } else if (index == 1) {
+                              _themeProvider.changeTheme = AppTheme.dark;
+                            } else {
+                              if (_themeProvider.currentTheme != AppTheme.extraDark) {
+                                BotToast.showText(
+                                  text: "Spooky...!",
+                                  textStyle: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                  contentColor: Color(0xFF0C0C0C),
+                                  duration: const Duration(seconds: 2),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
+                              }
+                              _themeProvider.changeTheme = AppTheme.extraDark;
+                            }
+                            setState(() {
+                              SystemChrome.setSystemUIOverlayStyle(
+                                SystemUiOverlayStyle(
+                                  statusBarColor: _themeProvider.statusBar,
+                                  statusBarBrightness: Brightness.dark,
+                                  statusBarIconBrightness: Brightness.light,
+                                ),
+                              );
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -911,7 +952,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
 
         // Adding divider just before SETTINGS
         if (i == _settingsPosition) {
-          drawerOptions.add(const Divider());
+          drawerOptions.add(
+            Divider(),
+          );
         }
         drawerOptions.add(
           ListTileTheme(
@@ -1264,7 +1307,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -1332,9 +1375,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,
