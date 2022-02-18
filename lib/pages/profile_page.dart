@@ -1193,8 +1193,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary:
-                      _themeProvider.currentTheme == AppTheme.dark ? _themeProvider.secondBackground : Colors.white,
+                  primary: _themeProvider.cardColor,
                   side: BorderSide(
                     width: 2.0,
                     color: Colors.blueGrey,
