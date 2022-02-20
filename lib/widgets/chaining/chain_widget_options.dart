@@ -1247,7 +1247,7 @@ class _AddChainTargetDialogState extends State<AddChainTargetDialog> {
             ),
             Flexible(
               child: Card(
-                color: widget.themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: widget.themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(

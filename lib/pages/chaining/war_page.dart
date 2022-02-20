@@ -774,7 +774,7 @@ class AddFactionDialog extends StatelessWidget {
             SizedBox(width: 5),
             Flexible(
               child: Card(
-                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -876,7 +876,7 @@ class HiddenMembersDialog extends StatelessWidget {
             ),
             Expanded(
               child: Card(
-                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
                   child: Column(

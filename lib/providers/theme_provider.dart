@@ -48,7 +48,7 @@ class ThemeProvider extends ChangeNotifier {
   var _colorButtonTextDARK = Colors.grey[200];
   var _colorNavSelectedDARK = Colors.blueGrey[600];
   var _colorCardDARK = Colors.grey[800];
-  var _colorStatusBarDARK = Colors.grey[900];
+  var _colorStatusBarDARK = Color.fromARGB(255, 37, 37, 37);
 
   // COLORS ##EXTRA DARK##
   var _canvasBackgroundExtraDARK = Colors.black;

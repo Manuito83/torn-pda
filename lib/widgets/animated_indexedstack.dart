@@ -59,6 +59,11 @@ class _AnimatedIndexedStackState extends State<AnimatedIndexedStack> with Single
   @override
   Widget build(BuildContext context) {
     try {
+      if (_index == null || widget.children == null || widget.children[_index] == null) {
+        // Throw
+        throw ("Forced IndexedStack throw!");
+      }
+
       return AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {

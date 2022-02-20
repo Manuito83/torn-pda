@@ -868,6 +868,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
                                   statusBarColor: _themeProvider.statusBar,
+                                  systemNavigationBarColor: _themeProvider.statusBar,
                                   statusBarBrightness: Brightness.dark,
                                   statusBarIconBrightness: Brightness.light,
                                 ),

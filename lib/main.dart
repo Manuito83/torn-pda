@@ -45,8 +45,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
 const String appVersion = '2.6.6';
-const String androidVersion = '187';
-const String iosVersion = '194';
+const String androidVersion = '188';
+const String iosVersion = '195';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -185,6 +185,7 @@ class _MyAppState extends State<MyApp> {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor: _themeProvider.statusBar,
         statusBarBrightness: Brightness.dark,
         statusBarIconBrightness: Brightness.light,
       ),

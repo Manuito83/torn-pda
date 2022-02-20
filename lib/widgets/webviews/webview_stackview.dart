@@ -170,13 +170,14 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     BotToast.showText(
       clickClose: true,
       crossPage: true,
-      text: "Something went wrong, please try again :(",
+      text: "Something went wrong, please try again. "
+          "If tabs are stuck, consider resetting the browser cache in Settings.",
       textStyle: TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.deepOrangeAccent,
-      duration: Duration(seconds: 2),
+      duration: Duration(seconds: 4),
       contentPadding: EdgeInsets.all(10),
     );
 
