@@ -138,6 +138,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     // ENDS QUICK ACTIONS
 
     WidgetsBinding.instance.addObserver(this);
+
     _allowSectionsWithoutKey = [
       _settingsPosition,
       _aboutPosition,
@@ -239,6 +240,29 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _deepLinkSub.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    setState(() {
+      // Note: orientation here is taken BEFORE the change
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(
+          statusBarColor: _themeProvider.statusBar,
+          systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+              ? _themeProvider.statusBar
+              : Colors.transparent,
+          systemNavigationBarIconBrightness:
+              MediaQuery.of(context).orientation == Orientation.landscape // Going portrait
+                  ? Brightness.light
+                  : _themeProvider.currentTheme == AppTheme.light
+                      ? Brightness.dark
+                      : Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          statusBarIconBrightness: Brightness.light,
+        ),
+      );
+    });
   }
 
   @override
@@ -868,7 +892,15 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
                               SystemChrome.setSystemUIOverlayStyle(
                                 SystemUiOverlayStyle(
                                   statusBarColor: _themeProvider.statusBar,
-                                  systemNavigationBarColor: _themeProvider.statusBar,
+                                  systemNavigationBarColor: MediaQuery.of(context).orientation == Orientation.landscape
+                                      ? _themeProvider.canvas
+                                      : _themeProvider.statusBar,
+                                  systemNavigationBarIconBrightness:
+                                      MediaQuery.of(context).orientation == Orientation.landscape
+                                          ? _themeProvider.currentTheme == AppTheme.light
+                                              ? Brightness.dark
+                                              : Brightness.light
+                                          : Brightness.light,
                                   statusBarBrightness: Brightness.dark,
                                   statusBarIconBrightness: Brightness.light,
                                 ),

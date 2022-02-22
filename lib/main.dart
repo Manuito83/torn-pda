@@ -173,6 +173,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  ThemeProvider _themeProvider;
+
   @override
   void initState() {
     super.initState();
@@ -180,18 +182,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: _themeProvider.statusBar,
-        systemNavigationBarColor: _themeProvider.statusBar,
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    return MediaQuery(
+    MediaQuery mq = MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
         textDirection: TextDirection.ltr,
@@ -219,6 +212,23 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor:
+            mq.data.orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: mq.data.orientation == Orientation.landscape
+            ? _themeProvider.currentTheme == AppTheme.light
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+
+    return mq;
   }
 }
 
