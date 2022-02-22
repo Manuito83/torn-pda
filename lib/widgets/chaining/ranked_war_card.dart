@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 
 enum RankedWarStatus {
   active,
@@ -100,7 +101,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
                       child: Column(
                         children: [
                           Text(
-                            _factions[0].name,
+                            HtmlParser.fix(_factions[0].name),
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                           Text(
@@ -135,7 +136,7 @@ class _RankedWarCardState extends State<RankedWarCard> {
                       child: Column(
                         children: [
                           Text(
-                            _factions[1].name,
+                            HtmlParser.fix(_factions[1].name),
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                           Text(
@@ -223,9 +224,9 @@ class _RankedWarCardState extends State<RankedWarCard> {
   Widget _winner() {
     String winner = "";
     if (widget.rankedWar.war.winner.toString() == _factionsIds[0]) {
-      winner = _factions[0].name;
+      winner = HtmlParser.fix(_factions[0].name);
     } else {
-      winner = _factions[1].name;
+      winner = HtmlParser.fix(_factions[1].name);
     }
 
     return Row(

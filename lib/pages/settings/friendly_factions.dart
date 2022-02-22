@@ -14,6 +14,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
@@ -159,7 +160,7 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(fact.name),
+                    Text(HtmlParser.fix(fact.name)),
                     Text(
                       "[${fact.id}]",
                       style: TextStyle(

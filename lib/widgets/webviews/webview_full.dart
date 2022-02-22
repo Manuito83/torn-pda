@@ -223,6 +223,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       crossPlatform: InAppWebViewOptions(
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
+        cacheEnabled: false,
         useOnLoadResource: true,
         useShouldOverrideUrlLoading: true,
         javaScriptCanOpenWindowsAutomatically: true,
@@ -235,6 +236,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
         supportMultipleWindows: true,
+        cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
@@ -273,9 +275,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused) {
-        webView.pauseTimers();
+        webView?.pauseTimers();
       } else {
-        webView.resumeTimers();
+        webView?.resumeTimers();
       }
     }
   }
@@ -381,7 +383,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       child: SafeArea(
         top: _settingsProvider.appBarTop || true,
         child: Scaffold(
-            backgroundColor: _themeProvider.canvas,
+          backgroundColor: _themeProvider.canvas,
           appBar: widget.dialog
               // Show appBar only if we are not showing the webView in a dialog
               ? null

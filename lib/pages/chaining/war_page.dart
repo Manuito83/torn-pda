@@ -20,6 +20,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
@@ -780,7 +781,7 @@ class AddFactionDialog extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        faction.name,
+                        HtmlParser.fix(faction.name),
                         textAlign: TextAlign.center,
                       ),
                       Text(
