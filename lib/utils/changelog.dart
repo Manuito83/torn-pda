@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.6
     var v2_6_6 = ChangeLogItem();
     v2_6_6.main.version = 'Torn PDA v2.6.6';
-    v2_6_6.main.date = '27 FEB 2022';
+    v2_6_6.main.date = '28 FEB 2022';
     String feat2_6_6_1 = "Added a darker and spookier theme";
     String feat2_6_6_2 = "War targets can now be sorted by last online time";
     String feat2_6_6_3 = "Added icons and misc info for donator and subscriber status";
