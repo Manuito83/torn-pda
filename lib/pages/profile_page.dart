@@ -3723,6 +3723,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool bankActive = false;
     bool educationActive = false;
     bool propertyActive = false;
+    bool donatorActive = false;
 
     // DEBUG ******************************
     //_user.icons.icon57 = "Test addiction -" + " long string " * 6;
@@ -4048,6 +4049,31 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       propertyActive = true;
     }
 
+    // DONATOR
+    Widget donatorWidget = SizedBox.shrink();
+    if (_user.icons.icon3 != null || _user.icons.icon4 != null) {
+      showMisc = true;
+      donatorActive = true;
+      String donatorString;
+      if (_user.icons.icon4 != null) {
+        donatorString = _user.icons.icon4.replaceAll("Subscriber - Donator status:", "Donator:");
+        donatorString = donatorString.replaceAll("Donator status:", "Donator:");
+      }
+
+      donatorWidget = Row(
+        children: <Widget>[
+          Icon(MdiIcons.starOutline),
+          SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              donatorString,
+              style: DefaultTextStyle.of(context).style,
+            ),
+          ),
+        ],
+      );
+    }
+
     if (!showMisc) {
       return SizedBox.shrink();
     } else {
@@ -4098,6 +4124,11 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Padding(
                     padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
                     child: _rentedPropertiesWidget,
+                  ),
+                if (donatorActive)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                    child: donatorWidget,
                   ),
               ],
             ),

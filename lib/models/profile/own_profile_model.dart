@@ -618,6 +618,8 @@ class Travel {
 
 class TornIcons {
   TornIcons({
+    this.icon3,
+    this.icon4,
     this.icon12,
     this.icon13,
     this.icon15,
@@ -667,6 +669,8 @@ class TornIcons {
     this.icon86,
   });
 
+  String icon3;
+  String icon4;
   String icon12;
   String icon13;
   String icon15;
@@ -716,6 +720,8 @@ class TornIcons {
   String icon86;
 
   factory TornIcons.fromJson(Map<String, dynamic> json) => TornIcons(
+        icon3: json["icon3"] == null ? null : json["icon3"],
+        icon4: json["icon4"] == null ? null : json["icon4"],
         icon12: json["icon12"] == null ? null : json["icon12"],
         icon13: json["icon13"] == null ? null : json["icon13"],
         icon15: json["icon15"] == null ? null : json["icon15"],
@@ -766,6 +772,8 @@ class TornIcons {
       );
 
   Map<String, dynamic> toJson() => {
+        "icon3": icon3 == null ? null : icon3,
+        "icon4": icon4 == null ? null : icon4,
         "icon12": icon12 == null ? null : icon12,
         "icon13": icon13 == null ? null : icon13,
         "icon15": icon15 == null ? null : icon15,
