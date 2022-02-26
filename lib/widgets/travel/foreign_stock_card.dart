@@ -1315,7 +1315,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                       ),
                       margin: EdgeInsets.only(top: 15),
                       decoration: new BoxDecoration(
-                        color: _themeProvider.background,
+                        color: _themeProvider.secondBackground,
                         shape: BoxShape.rectangle,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
@@ -1467,9 +1467,9 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: SizedBox(
                         height: 34,

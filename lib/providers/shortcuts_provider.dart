@@ -1218,10 +1218,10 @@ class ShortcutsProvider extends ChangeNotifier {
       Shortcut()
         ..name = "Nikeh Sports Shop"
         ..nickname = "Sports Shop"
-        ..url = "https://www.torn.com/shops.php?step=pharmacy"
+        ..url = "https://www.torn.com/shops.php?step=nikeh"
         ..originalName = "Nikeh Sports Shop"
         ..originalNickname = "Sports Shop"
-        ..originalUrl = "https://www.torn.com/shops.php?step=pharmacy"
+        ..originalUrl = "https://www.torn.com/shops.php?step=nikeh"
         ..iconUrl = "images/icons/map/sports_shop.png"
         ..color = Colors.green[700],
       Shortcut()

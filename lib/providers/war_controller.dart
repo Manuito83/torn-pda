@@ -203,8 +203,8 @@ class WarController extends GetxController {
           member.memberRefill = updatedTarget.personalstats.refills;
           member.myRefill = ownStatsSuccess.personalstats.refills;
           member.memberEnhancement = updatedTarget.personalstats.statenhancersused;
-          member.memberCans = updatedTarget.personalstats.cantaken;
-          member.myCans = ownStatsSuccess.personalstats.cantaken;
+          member.memberCans = updatedTarget.personalstats.energydrinkused;
+          member.myCans = ownStatsSuccess.personalstats.energydrinkused;
           member.myEnhancement = ownStatsSuccess.personalstats.statenhancersused;
           member.memberEcstasy = updatedTarget.personalstats.exttaken;
           member.memberLsd = updatedTarget.personalstats.lsdtaken;
@@ -609,17 +609,35 @@ class WarController extends GetxController {
       case 'respectAsc':
         currentSort = WarSortType.respectAsc;
         break;
+      case 'nameDes':
+        currentSort = WarSortType.nameDes;
+        break;
+      case 'nameAsc':
+        currentSort = WarSortType.nameAsc;
+        break;
+      case 'lifeDes':
+        currentSort = WarSortType.lifeDes;
+        break;
+      case 'lifeAsc':
+        currentSort = WarSortType.lifeAsc;
+        break;
       case 'statsDes':
         currentSort = WarSortType.statsDes;
         break;
       case 'statsAsc':
         currentSort = WarSortType.statsDes;
         break;
-      case 'nameDes':
-        currentSort = WarSortType.nameDes;
+      case 'onlineDes':
+        currentSort = WarSortType.onlineDes;
         break;
-      case 'nameAsc':
-        currentSort = WarSortType.nameAsc;
+      case 'onlineAsc':
+        currentSort = WarSortType.onlineAsc;
+        break;
+      case 'colorDes':
+        currentSort = WarSortType.colorDes;
+        break;
+      case 'colorAsc':
+        currentSort = WarSortType.colorAsc;
         break;
     }
 
@@ -684,6 +702,12 @@ class WarController extends GetxController {
         break;
       case WarSortType.statsAsc:
         sortToSave = 'statsAsc';
+        break;
+      case WarSortType.onlineDes:
+        sortToSave = 'onlineDes';
+        break;
+      case WarSortType.onlineAsc:
+        sortToSave = 'onlineAsc';
         break;
       case WarSortType.colorDes:
         sortToSave = 'colorDes';

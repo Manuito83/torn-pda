@@ -52,12 +52,17 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
             return DefaultTabController(
               length: 3,
               child: Scaffold(
+                backgroundColor: _themeProvider.canvas,
                 appBar: _settingsProvider.appBarTop
                     ? buildAppBarSuccess(context)
                     : new PreferredSize(
                         preferredSize: Size.fromHeight(kToolbarHeight),
                         child: new Container(
-                          color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                          color: _themeProvider.currentTheme == AppTheme.light
+                              ? MediaQuery.of(context).orientation == Orientation.portrait
+                                  ? Colors.blueGrey
+                                  : _themeProvider.canvas
+                              : _themeProvider.canvas,
                           child: new SafeArea(
                             child: Column(
                               children: <Widget>[
@@ -80,31 +85,38 @@ class _RankedWarsPageState extends State<RankedWarsPage> {
                         child: buildAppBarSuccess(context),
                       )
                     : null,
-                body: Column(
-                  children: [
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          _tabActive(),
-                          _tabUpcoming(),
-                          _tabFinished(),
-                        ],
+                body: Container(
+                  color: _themeProvider.canvas,
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            _tabActive(),
+                            _tabUpcoming(),
+                            _tabFinished(),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
           } else {
             return Scaffold(
+              backgroundColor: _themeProvider.canvas,
               appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-              body: _fetchError(),
+              body: Container(color: _themeProvider.canvas, child: _fetchError()),
             );
           }
         } else {
           return Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBarError(context) : null,
-            body: Center(child: CircularProgressIndicator()),
+            body: Container(
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+                child: Center(child: CircularProgressIndicator())),
           );
         }
       },

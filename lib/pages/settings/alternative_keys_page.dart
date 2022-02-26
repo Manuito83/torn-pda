@@ -48,12 +48,13 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -61,21 +62,24 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(height: 15),
-                    _yataKey(),
-                    SizedBox(height: 15),
-                    Divider(),
-                    SizedBox(height: 15),
-                    _tornStatsKey(),
-                    SizedBox(height: 15),
-                    SizedBox(height: 40),
-                  ],
+            body: Container(
+              color: _themeProvider.canvas,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: 15),
+                      _yataKey(),
+                      SizedBox(height: 15),
+                      Divider(),
+                      SizedBox(height: 15),
+                      _tornStatsKey(),
+                      SizedBox(height: 15),
+                      SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),

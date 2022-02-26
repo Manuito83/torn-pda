@@ -114,6 +114,7 @@ class _TacPageState extends State<TacPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -122,23 +123,26 @@ class _TacPageState extends State<TacPage> {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-          future: _preferencesLoaded,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                child: MediaQuery.of(context).orientation == Orientation.portrait
-                    ? _mainColumn()
-                    : SingleChildScrollView(
-                        child: _mainColumn(),
-                      ),
-              );
-            } else {
-              return Center(child: CircularProgressIndicator());
-            }
-          }),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: FutureBuilder(
+            future: _preferencesLoaded,
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                  child: MediaQuery.of(context).orientation == Orientation.portrait
+                      ? _mainColumn()
+                      : SingleChildScrollView(
+                          child: _mainColumn(),
+                        ),
+                );
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            }),
+      ),
     );
   }
 

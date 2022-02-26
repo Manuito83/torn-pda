@@ -20,6 +20,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
@@ -88,6 +89,8 @@ class _WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.lifeAsc),
     WarSort(type: WarSortType.statsDes),
     WarSort(type: WarSortType.statsAsc),
+    WarSort(type: WarSortType.onlineDes),
+    WarSort(type: WarSortType.onlineAsc),
     WarSort(type: WarSortType.colorAsc),
     WarSort(type: WarSortType.colorDes),
   ];
@@ -129,6 +132,7 @@ class _WarPageState extends State<WarPage> {
           });
         }
         return Scaffold(
+          backgroundColor: _themeProvider.canvas,
           drawer: const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
@@ -137,14 +141,17 @@ class _WarPageState extends State<WarPage> {
                   child: buildAppBar(_),
                 )
               : null,
-          body: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-            child: MediaQuery.of(context).orientation == Orientation.portrait
-                ? _mainColumn()
-                : SingleChildScrollView(
-                    child: _mainColumn(),
-                  ),
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: MediaQuery.of(context).orientation == Orientation.portrait
+                  ? _mainColumn()
+                  : SingleChildScrollView(
+                      child: _mainColumn(),
+                    ),
+            ),
           ),
         );
       }),
@@ -219,7 +226,7 @@ class _WarPageState extends State<WarPage> {
               "ID (look for the 'person' icon)."
               "\n\nMake sure to have a look at the Tips section in the main menu for more information and tricks!",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.background,
+          showcaseBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
           contentPadding: EdgeInsets.all(20),
           child: IconButton(
@@ -242,7 +249,7 @@ class _WarPageState extends State<WarPage> {
               "A long-press will start a slower but full update of all targets.\n\n"
               "Alternatively, you can update targets individually.",
           textColor: _themeProvider.mainText,
-          showcaseBackgroundColor: _themeProvider.background,
+          showcaseBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: TextStyle(fontSize: 13),
           contentPadding: EdgeInsets.all(20),
           child: Padding(
@@ -521,6 +528,12 @@ class _WarPageState extends State<WarPage> {
       case WarSortType.statsAsc:
         _w.sortTargets(WarSortType.statsAsc);
         break;
+      case WarSortType.onlineDes:
+        _w.sortTargets(WarSortType.onlineDes);
+        break;
+      case WarSortType.onlineAsc:
+        _w.sortTargets(WarSortType.onlineAsc);
+        break;
       case WarSortType.colorDes:
         _w.sortTargets(WarSortType.colorDes);
         break;
@@ -570,7 +583,7 @@ class AddFactionDialog extends StatelessWidget {
         ),
         margin: const EdgeInsets.only(top: 30),
         decoration: BoxDecoration(
-          color: themeProvider.background,
+          color: themeProvider.secondBackground,
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [
             BoxShadow(
@@ -762,13 +775,13 @@ class AddFactionDialog extends StatelessWidget {
             SizedBox(width: 5),
             Flexible(
               child: Card(
-                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
                     children: [
                       Text(
-                        faction.name,
+                        HtmlParser.fix(faction.name),
                         textAlign: TextAlign.center,
                       ),
                       Text(
@@ -811,7 +824,7 @@ class HiddenMembersDialog extends StatelessWidget {
     final List<Member> hiddenMembers = warController.getHiddenMembersDetails();
     List<Widget> hiddenCards = buildCards(hiddenMembers, context);
     return AlertDialog(
-      backgroundColor: themeProvider.background,
+      backgroundColor: themeProvider.secondBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -864,7 +877,7 @@ class HiddenMembersDialog extends StatelessWidget {
             ),
             Expanded(
               child: Card(
-                color: themeProvider.currentTheme == AppTheme.dark ? Colors.grey[700] : Colors.white,
+                color: themeProvider.cardColor,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
                   child: Column(
@@ -989,6 +1002,12 @@ class WarTargetsList extends StatelessWidget {
         break;
       case WarSortType.statsAsc:
         filteredCards.sort((a, b) => a.memberModel.statsSort.compareTo(b.memberModel.statsSort));
+        break;
+      case WarSortType.onlineDes:
+        filteredCards.sort((a, b) => b.memberModel.lastAction.timestamp.compareTo(a.memberModel.lastAction.timestamp));
+        break;
+      case WarSortType.onlineAsc:
+        filteredCards.sort((a, b) => a.memberModel.lastAction.timestamp.compareTo(b.memberModel.lastAction.timestamp));
         break;
       case WarSortType.colorDes:
         filteredCards.sort((a, b) =>

@@ -42,11 +42,14 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+          backgroundColor: _themeProvider.canvas,
           drawer: Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
@@ -55,72 +58,75 @@ class _YataTargetsDistributionState extends State<YataTargetsDistribution> {
                   child: buildAppBar(),
                 )
               : null,
-          body: SingleChildScrollView(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: <Widget>[
-                    Text(
-                      'TARGETS ONLY IN YATA',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: SingleChildScrollView(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        'TARGETS ONLY IN YATA',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '(CAN BE IMPORTED)',
-                      style: TextStyle(
-                        fontSize: 11,
+                      Text(
+                        '(CAN BE IMPORTED)',
+                        style: TextStyle(
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Column(
-                      children: _returnTargetsOnlyInYata(),
-                    ),
-                    SizedBox(height: 10),
-                    Divider(),
-                    SizedBox(height: 10),
-                    Text(
-                      'COMMON TARGETS',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                      SizedBox(height: 10),
+                      Column(
+                        children: _returnTargetsOnlyInYata(),
                       ),
-                    ),
-                    Text(
-                      '(ONLY NOTES UPDATED)',
-                      style: TextStyle(
-                        fontSize: 11,
+                      SizedBox(height: 10),
+                      Divider(),
+                      SizedBox(height: 10),
+                      Text(
+                        'COMMON TARGETS',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Column(
-                      children: _returnTargetsBothSides(),
-                    ),
-                    SizedBox(height: 10),
-                    Divider(),
-                    SizedBox(height: 10),
-                    Text(
-                      'TARGETS ONLY IN TORN PDA',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        '(ONLY NOTES UPDATED)',
+                        style: TextStyle(
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '(CAN BE EXPORTED)',
-                      style: TextStyle(
-                        fontSize: 11,
+                      SizedBox(height: 10),
+                      Column(
+                        children: _returnTargetsBothSides(),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    Column(
-                      children: _returnTargetsOnlyInTornPDA(),
-                    ),
-                    SizedBox(height: 10),
-                    SizedBox(height: 50),
-                  ],
+                      SizedBox(height: 10),
+                      Divider(),
+                      SizedBox(height: 10),
+                      Text(
+                        'TARGETS ONLY IN TORN PDA',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '(CAN BE EXPORTED)',
+                        style: TextStyle(
+                          fontSize: 11,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Column(
+                        children: _returnTargetsOnlyInTornPDA(),
+                      ),
+                      SizedBox(height: 10),
+                      SizedBox(height: 50),
+                    ],
+                  ),
                 ),
               ),
             ),

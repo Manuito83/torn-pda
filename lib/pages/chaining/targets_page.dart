@@ -123,6 +123,7 @@ class _TargetsPageState extends State<TargetsPage> {
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -131,14 +132,17 @@ class _TargetsPageState extends State<TargetsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-        child: MediaQuery.of(context).orientation == Orientation.portrait
-            ? _mainColumn()
-            : SingleChildScrollView(
-                child: _mainColumn(),
-              ),
+      body: Container(
+        color: _themeProvider.canvas,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: MediaQuery.of(context).orientation == Orientation.portrait
+              ? _mainColumn()
+              : SingleChildScrollView(
+                  child: _mainColumn(),
+                ),
+        ),
       ),
     );
   }
@@ -155,7 +159,7 @@ class _TargetsPageState extends State<TargetsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.background,
+                  primary: _themeProvider.secondBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -177,7 +181,7 @@ class _TargetsPageState extends State<TargetsPage> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   elevation: 2,
-                  primary: _themeProvider.background,
+                  primary: _themeProvider.secondBackground,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                     side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -442,7 +446,7 @@ class _TargetsPageState extends State<TargetsPage> {
                     ),
                     margin: const EdgeInsets.only(top: 30),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -537,7 +541,7 @@ class _TargetsPageState extends State<TargetsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.mainText,
                       radius: 22,
@@ -546,7 +550,7 @@ class _TargetsPageState extends State<TargetsPage> {
                         width: 28,
                         child: Image.asset(
                           'images/icons/ic_target_account_black_48dp.png',
-                          color: _themeProvider.background,
+                          color: _themeProvider.secondBackground,
                         ),
                       ),
                     ),
@@ -782,7 +786,7 @@ class _TargetsPageState extends State<TargetsPage> {
                     ),
                     margin: const EdgeInsets.only(top: 15),
                     decoration: BoxDecoration(
-                      color: _themeProvider.background,
+                      color: _themeProvider.secondBackground,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(
@@ -844,9 +848,9 @@ class _TargetsPageState extends State<TargetsPage> {
                   right: 16,
                   child: CircleAvatar(
                     radius: 26,
-                    backgroundColor: _themeProvider.background,
+                    backgroundColor: _themeProvider.secondBackground,
                     child: CircleAvatar(
-                      backgroundColor: _themeProvider.background,
+                      backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
                       child: const SizedBox(
                         height: 34,

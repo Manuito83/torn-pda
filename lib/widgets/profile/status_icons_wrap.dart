@@ -5,6 +5,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 
 // ! Add new icons to the model as well
 final allowedIcons = <String, Map<String, String>>{
+  "icon3": {"url": "https://www.torn.com/donator.php?", "name": "Donator"},
+  "icon4": {"url": "https://www.torn.com/donator.php?", "name": "Subscriber"},
   "icon12": {"url": "", "name": "Low life"},
   // Needs to add ID
   "icon13": {"url": "https://www.torn.com/bounties.php?userID=", "name": "Bounty"},

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class BounceTabBar extends StatefulWidget {
-  final Color backgroundColor;
+  final ThemeProvider themeProvider;
   final List<Widget> items;
   final ValueChanged<int> onTabChanged;
   final int initialIndex;
@@ -10,7 +11,7 @@ class BounceTabBar extends StatefulWidget {
 
   const BounceTabBar({
     Key key,
-    this.backgroundColor = Colors.blueGrey,
+    this.themeProvider,
     @required this.items,
     @required this.onTabChanged,
     this.initialIndex = 0,
@@ -109,7 +110,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
             child: Container(
               width: currentWidth,
               decoration: BoxDecoration(
-                color: widget.backgroundColor,
+                color: widget.themeProvider.statusBar,
                 borderRadius: BorderRadius.vertical(
                   top: widget.locationTop ? Radius.zero : Radius.circular(20),
                   bottom: widget.locationTop ? Radius.circular(20) : Radius.zero,
@@ -123,7 +124,7 @@ class _BounceTabBarState extends State<BounceTabBar> with SingleTickerProviderSt
                     final child = widget.items[index];
                     final innerWidget = CircleAvatar(
                       radius: 25.0,
-                      backgroundColor: widget.backgroundColor,
+                      backgroundColor: widget.themeProvider.statusBar,
                       child: child,
                     );
                     if (index == _currentIndex) {

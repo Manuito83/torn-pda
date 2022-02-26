@@ -99,6 +99,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       drawer: Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
@@ -107,95 +108,98 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               child: buildAppBar(),
             )
           : null,
-      body: Stack(
-        children: [
-          FutureBuilder(
-            future: _loadedApiItems,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_itemsSuccess) {
-                  return _itemsMain();
-                }
-                return _errorMain();
-              } else {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-            },
-          ),
-
-          // Sliding panel
-          FutureBuilder(
-            future: _loadedApiItems,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_itemsSuccess) {
-                  return SlidingUpPanel(
-                      controller: _pc,
-                      maxHeight: _panelHeightOpen,
-                      minHeight: _panelHeightClosed,
-                      renderPanelSheet: false,
-                      backdropEnabled: true,
-                      isDraggable: false,
-                      parallaxEnabled: false,
-                      parallaxOffset: .0,
-                      panelBuilder: (sc) => _bottomPanel(sc),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(18.0),
-                        topRight: Radius.circular(18.0),
-                      ),
-                      onPanelClosed: () {
-                        _filterPhysics = NeverScrollableScrollPhysics();
-                      },
-                      onPanelOpened: () {
-                        _filterPhysics = AlwaysScrollableScrollPhysics();
-                      },
-                      onPanelSlide: (double pos) {
-                        setState(() {
-                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                        });
-                      });
+      body: Container(
+        color: _themeProvider.canvas,
+        child: Stack(
+          children: [
+            FutureBuilder(
+              future: _loadedApiItems,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_itemsSuccess) {
+                    return _itemsMain();
+                  }
+                  return _errorMain();
                 } else {
-                  return SizedBox.shrink();
-                }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-
-          // FAB
-          FutureBuilder(
-            future: _loadedApiItems,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_itemsSuccess) {
-                  return Positioned(
-                    right: 35.0,
-                    bottom: _fabHeight,
-                    child: FloatingActionButton.extended(
-                      icon: Icon(Icons.filter_list),
-                      label: Text("Filter"),
-                      elevation: 4,
-                      onPressed: () {
-                        _pc.isPanelOpen ? _pc.close() : _pc.open();
-                      },
-                      backgroundColor: Colors.orange,
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: CircularProgressIndicator(),
                     ),
                   );
+                }
+              },
+            ),
+
+            // Sliding panel
+            FutureBuilder(
+              future: _loadedApiItems,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_itemsSuccess) {
+                    return SlidingUpPanel(
+                        controller: _pc,
+                        maxHeight: _panelHeightOpen,
+                        minHeight: _panelHeightClosed,
+                        renderPanelSheet: false,
+                        backdropEnabled: true,
+                        isDraggable: false,
+                        parallaxEnabled: false,
+                        parallaxOffset: .0,
+                        panelBuilder: (sc) => _bottomPanel(sc),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(18.0),
+                          topRight: Radius.circular(18.0),
+                        ),
+                        onPanelClosed: () {
+                          _filterPhysics = NeverScrollableScrollPhysics();
+                        },
+                        onPanelOpened: () {
+                          _filterPhysics = AlwaysScrollableScrollPhysics();
+                        },
+                        onPanelSlide: (double pos) {
+                          setState(() {
+                            _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                          });
+                        });
+                  } else {
+                    return SizedBox.shrink();
+                  }
                 } else {
                   return SizedBox.shrink();
                 }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-        ],
+              },
+            ),
+
+            // FAB
+            FutureBuilder(
+              future: _loadedApiItems,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_itemsSuccess) {
+                    return Positioned(
+                      right: 35.0,
+                      bottom: _fabHeight,
+                      child: FloatingActionButton.extended(
+                        icon: Icon(Icons.filter_list),
+                        label: Text("Filter"),
+                        elevation: 4,
+                        onPressed: () {
+                          _pc.isPanelOpen ? _pc.close() : _pc.open();
+                        },
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  } else {
+                    return SizedBox.shrink();
+                  }
+                } else {
+                  return SizedBox.shrink();
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -293,7 +297,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       physics: _filterPhysics,
       child: Container(
         decoration: BoxDecoration(
-            color: _themeProvider.background,
+            color: _themeProvider.secondBackground,
             borderRadius: BorderRadius.all(Radius.circular(20.0)),
             boxShadow: [
               BoxShadow(

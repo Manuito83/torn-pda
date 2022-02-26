@@ -88,6 +88,7 @@ class _LootPageState extends State<LootPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -95,49 +96,52 @@ class _LootPageState extends State<LootPage> {
               child: buildAppBar(),
             )
           : null,
-      body: FutureBuilder(
-        future: _getInitialLootInformation,
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_apiSuccess) {
-              return RefreshIndicator(
-                onRefresh: () async {
-                  await _getLoot();
-                  await Future.delayed(Duration(seconds: 1));
-                },
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      if (activeNpcsFiltered())
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
-                          child: Text(
-                            "Some NPCs are filtered out",
-                            style: TextStyle(
-                              color: Colors.orange[900],
-                              fontSize: 12,
+      body: Container(
+        color: _themeProvider.canvas,
+        child: FutureBuilder(
+          future: _getInitialLootInformation,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_apiSuccess) {
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await _getLoot();
+                    await Future.delayed(Duration(seconds: 1));
+                  },
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        if (activeNpcsFiltered())
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+                            child: Text(
+                              "Some NPCs are filtered out",
+                              style: TextStyle(
+                                color: Colors.orange[900],
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        )
-                      else
-                        SizedBox.shrink(),
-                      Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: _returnNpcCards(),
-                      ),
-                      SizedBox(height: 20),
-                    ],
+                          )
+                        else
+                          SizedBox.shrink(),
+                        Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: _returnNpcCards(),
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    ),
                   ),
-                ),
-              );
+                );
+              } else {
+                return _connectError();
+              }
             } else {
-              return _connectError();
+              return Center(child: CircularProgressIndicator());
             }
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
-        },
+          },
+        ),
       ),
     );
   }

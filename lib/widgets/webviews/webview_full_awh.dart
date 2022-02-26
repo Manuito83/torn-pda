@@ -23,7 +23,7 @@ class WebViewFullAwh extends StatefulWidget {
   final Function awhMessageCallback;
 
   WebViewFullAwh({
-    @required this.customUrl ,
+    @required this.customUrl,
     @required this.customTitle,
     @required this.sellerName,
     @required this.sellerId,
@@ -84,11 +84,14 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
           ? MediaQuery.of(context).orientation == Orientation.portrait
               ? Colors.blueGrey
               : Colors.grey[900]
-          : Colors.grey[900],
+          : _themeProvider.currentTheme == AppTheme.dark
+              ? Colors.grey[900]
+              : Colors.black,
       child: SafeArea(
         top: _settingsProvider.appBarTop ? false : true,
         bottom: true,
         child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -98,7 +101,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
               : null,
           body: Container(
             // Background color for all browser widgets
-            color: Colors.grey[900],
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
             child: mainWebViewColumn(),
           ),
         ),
@@ -128,44 +131,45 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
             onWebViewCreated: (c) {
               webView = c;
               // For Arson Warehouse
-              webView.addJavaScriptHandler(handlerName: 'copyToClipboard', callback: (args) {
-                if (args.length > 0) {
-                  // Copy custom message or total
-                  String toastMessage = "";
-                  if (args[1] == "total") {
-                    toastMessage = "Total of \$${args[0]} copied to the clipboard!";
-                    Clipboard.setData(ClipboardData(text: args[0]));
-                  } else if (args[1] == "message") {
-                    if (widget.sellerId > 0) {
-                      toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
-                      Clipboard.setData(ClipboardData(text: args[0]));
-                      widget.awhMessageCallback();
-                    } else {
-                      toastMessage = "Message copied to the clipboard!";
-                      Clipboard.setData(ClipboardData(text: args[0]));
-                    }
-                  }
+              webView.addJavaScriptHandler(
+                  handlerName: 'copyToClipboard',
+                  callback: (args) {
+                    if (args.length > 0) {
+                      // Copy custom message or total
+                      String toastMessage = "";
+                      if (args[1] == "total") {
+                        toastMessage = "Total of \$${args[0]} copied to the clipboard!";
+                        Clipboard.setData(ClipboardData(text: args[0]));
+                      } else if (args[1] == "message") {
+                        if (widget.sellerId > 0) {
+                          toastMessage = "Message copied, close this window to message ${widget.sellerName}!";
+                          Clipboard.setData(ClipboardData(text: args[0]));
+                          widget.awhMessageCallback();
+                        } else {
+                          toastMessage = "Message copied to the clipboard!";
+                          Clipboard.setData(ClipboardData(text: args[0]));
+                        }
+                      }
 
-                  BotToast.showText(
-                    text: toastMessage,
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.green[800],
-                    duration: Duration(seconds: 2),
-                    contentPadding: EdgeInsets.all(10),
-                  );
-                }
-              });
+                      BotToast.showText(
+                        text: toastMessage,
+                        textStyle: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.green[800],
+                        duration: Duration(seconds: 2),
+                        contentPadding: EdgeInsets.all(10),
+                      );
+                    }
+                  });
             },
             onCreateWindow: (c, request) {
               // Allows IOS to open links with target=_blank
               webView.loadUrl(urlRequest: request.request);
               return;
             },
-            onLoadStart: (c, uri) async {
-            },
+            onLoadStart: (c, uri) async {},
             onProgressChanged: (c, progress) async {
               if (mounted) {
                 setState(() {
@@ -173,8 +177,7 @@ class _WebViewFullAwhState extends State<WebViewFullAwh> {
                 });
               }
             },
-            onLoadStop: (c, uri) async {
-            },
+            onLoadStop: (c, uri) async {},
           ),
         ),
         // Widgets that go at the bottom if we have changes appbar to bottom

@@ -14,7 +14,6 @@ import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
@@ -54,6 +53,7 @@ class _ChainingPageState extends State<ChainingPage> {
     final bool isThemeLight = _themeProvider.currentTheme == AppTheme.light || false;
     final double padding = _isAppBarTop ? 0 : kBottomNavigationBarHeight;
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       extendBody: true,
       body: FutureBuilder(
         future: _preferencesLoaded,
@@ -68,9 +68,9 @@ class _ChainingPageState extends State<ChainingPage> {
                     duration: 200,
                     children: <Widget>[
                       TargetsPage(
-                        // Used to add or remove TAC tab
-                        //tabCallback: _tabCallback,
-                      ),
+                          // Used to add or remove TAC tab
+                          //tabCallback: _tabCallback,
+                          ),
                       AttacksPage(),
                       WarPage(),
                       /*
@@ -94,7 +94,7 @@ class _ChainingPageState extends State<ChainingPage> {
                             });
                             handleSectionChange(index);
                           },
-                          backgroundColor: isThemeLight ? Colors.blueGrey : Colors.grey[900],
+                          themeProvider: _themeProvider,
                           items: [
                             Image.asset(
                               'images/icons/ic_target_account_black_48dp.png',
@@ -138,7 +138,7 @@ class _ChainingPageState extends State<ChainingPage> {
                       });
                       handleSectionChange(index);
                     },
-                    backgroundColor: isThemeLight ? Colors.blueGrey : Colors.grey[900],
+                    themeProvider: _themeProvider,
                     items: [
                       Image.asset(
                         'images/icons/ic_target_account_black_48dp.png',

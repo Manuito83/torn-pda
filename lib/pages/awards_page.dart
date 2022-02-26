@@ -102,6 +102,7 @@ class _AwardsPageState extends State<AwardsPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return Scaffold(
+      backgroundColor: _themeProvider.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -109,102 +110,105 @@ class _AwardsPageState extends State<AwardsPage> {
               child: buildAppBar(),
             )
           : null,
-      body: Stack(
-        alignment: Alignment.topCenter,
-        children: <Widget>[
-          // Main body
-          FutureBuilder(
-            future: _getAwardsPayload,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiSuccess) {
-                  return Scrollbar(
+      body: Container(
+        color: _themeProvider.canvas,
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: <Widget>[
+            // Main body
+            FutureBuilder(
+              future: _getAwardsPayload,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiSuccess) {
+                    return Scrollbar(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: _awardsListView(),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return _connectError();
+                  }
+                } else {
+                  return Center(
                     child: Column(
-                      children: [
-                        Expanded(
-                          child: _awardsListView(),
-                        ),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text('Calling YATA...'),
+                        SizedBox(height: 30),
+                        FlippingYata(),
                       ],
                     ),
                   );
-                } else {
-                  return _connectError();
                 }
-              } else {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text('Calling YATA...'),
-                      SizedBox(height: 30),
-                      FlippingYata(),
-                    ],
-                  ),
-                );
-              }
-            },
-          ),
+              },
+            ),
 
-          // Sliding panel
-          FutureBuilder(
-            future: _getAwardsPayload,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiSuccess) {
-                  return SlidingUpPanel(
-                    controller: _pc,
-                    maxHeight: _panelHeightOpen,
-                    minHeight: _panelHeightClosed,
-                    renderPanelSheet: false,
-                    backdropEnabled: true,
-                    parallaxEnabled: true,
-                    parallaxOffset: .5,
-                    panelBuilder: (sc) => _bottomPanel(sc),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(18.0),
-                      topRight: Radius.circular(18.0),
-                    ),
-                    onPanelSlide: (double pos) => setState(() {
-                      _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                    }),
-                  );
+            // Sliding panel
+            FutureBuilder(
+              future: _getAwardsPayload,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiSuccess) {
+                    return SlidingUpPanel(
+                      controller: _pc,
+                      maxHeight: _panelHeightOpen,
+                      minHeight: _panelHeightClosed,
+                      renderPanelSheet: false,
+                      backdropEnabled: true,
+                      parallaxEnabled: true,
+                      parallaxOffset: .5,
+                      panelBuilder: (sc) => _bottomPanel(sc),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(18.0),
+                        topRight: Radius.circular(18.0),
+                      ),
+                      onPanelSlide: (double pos) => setState(() {
+                        _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
+                      }),
+                    );
+                  } else {
+                    return SizedBox.shrink();
+                  }
                 } else {
                   return SizedBox.shrink();
                 }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
+              },
+            ),
 
-          // FAB
-          FutureBuilder(
-            future: _getAwardsPayload,
-            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (_apiSuccess) {
-                  return Positioned(
-                    right: 35.0,
-                    bottom: _fabHeight,
-                    child: FloatingActionButton.extended(
-                      icon: Icon(Icons.filter_list),
-                      label: Text("Filter"),
-                      elevation: 4,
-                      onPressed: () {
-                        _pc.isPanelOpen ? _pc.close() : _pc.open();
-                      },
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
+            // FAB
+            FutureBuilder(
+              future: _getAwardsPayload,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiSuccess) {
+                    return Positioned(
+                      right: 35.0,
+                      bottom: _fabHeight,
+                      child: FloatingActionButton.extended(
+                        icon: Icon(Icons.filter_list),
+                        label: Text("Filter"),
+                        elevation: 4,
+                        onPressed: () {
+                          _pc.isPanelOpen ? _pc.close() : _pc.open();
+                        },
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  } else {
+                    return SizedBox.shrink();
+                  }
                 } else {
                   return SizedBox.shrink();
                 }
-              } else {
-                return SizedBox.shrink();
-              }
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -311,7 +315,7 @@ class _AwardsPageState extends State<AwardsPage> {
   Widget _bottomPanel(ScrollController sc) {
     return Container(
       decoration: BoxDecoration(
-          color: _themeProvider.background,
+          color: _themeProvider.secondBackground,
           borderRadius: BorderRadius.all(Radius.circular(24.0)),
           boxShadow: [
             BoxShadow(

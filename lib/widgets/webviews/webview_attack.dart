@@ -142,12 +142,13 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -159,7 +160,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
               builder: (BuildContext context) {
                 return Container(
                   // Background color for all browser widgets
-                  color: Colors.grey[900],
+                  color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
                   child: Column(
                     children: [
                       ExpandablePanel(

@@ -55,12 +55,13 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.of(context).orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : Colors.grey[900],
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
         child: SafeArea(
           top: _settingsProvider.appBarTop ? false : true,
           bottom: true,
           child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(
@@ -68,64 +69,67 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: buildAppBar(),
                   )
                 : null,
-            body: FutureBuilder(
-              future: _preferencesRestored,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          SizedBox(height: 15),
-                          _general(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 15),
-                          _tabs(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _userScripts(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _chat(context),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _travel(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _gym(),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _profile(),
-                          if (Platform.isIOS)
-                            Column(
-                              children: [
-                                SizedBox(height: 15),
-                                Divider(),
-                                SizedBox(height: 10),
-                                _linkPreview(),
-                              ],
-                            ),
-                          SizedBox(height: 15),
-                          Divider(),
-                          SizedBox(height: 10),
-                          _maintenance(),
-                          SizedBox(height: 40),
-                        ],
+            body: Container(
+              color: _themeProvider.canvas,
+              child: FutureBuilder(
+                future: _preferencesRestored,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            SizedBox(height: 15),
+                            _general(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 15),
+                            _tabs(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _userScripts(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _chat(context),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _travel(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _gym(),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _profile(),
+                            if (Platform.isIOS)
+                              Column(
+                                children: [
+                                  SizedBox(height: 15),
+                                  Divider(),
+                                  SizedBox(height: 10),
+                                  _linkPreview(),
+                                ],
+                              ),
+                            SizedBox(height: 15),
+                            Divider(),
+                            SizedBox(height: 10),
+                            _maintenance(),
+                            SizedBox(height: 40),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
+                    );
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                },
+              ),
             ),
           ),
         ),

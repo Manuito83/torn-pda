@@ -888,8 +888,8 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
 
           // CANS
-          int otherCans = otherProfile.personalstats.cantaken;
-          int myCans = own.personalstats.cantaken;
+          int otherCans = otherProfile.personalstats.energydrinkused;
+          int myCans = own.personalstats.energydrinkused;
           cansComparison = otherCans - myCans;
           if (cansComparison < 0) {
             cansColor = Colors.green;

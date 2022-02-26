@@ -34,7 +34,7 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
                 ),
                 margin: EdgeInsets.only(top: 15),
                 decoration: new BoxDecoration(
-                  color: widget.themeProvider.background,
+                  color: widget.themeProvider.secondBackground,
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
@@ -101,9 +101,9 @@ class _LoadoutsNumberDialogState extends State<LoadoutsNumberDialog> {
               right: 16,
               child: CircleAvatar(
                 radius: 26,
-                backgroundColor: widget.themeProvider.background,
+                backgroundColor: widget.themeProvider.secondBackground,
                 child: CircleAvatar(
-                  backgroundColor: widget.themeProvider.background,
+                  backgroundColor: widget.themeProvider.secondBackground,
                   radius: 22,
                   child: SizedBox(
                     height: 34,

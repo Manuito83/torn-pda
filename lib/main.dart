@@ -44,9 +44,9 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.6.5';
-const String androidVersion = '183';
-const String iosVersion = '190';
+const String appVersion = '2.6.6';
+const String androidVersion = '190';
+const String iosVersion = '197';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -173,6 +173,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  ThemeProvider _themeProvider;
+
   @override
   void initState() {
     super.initState();
@@ -180,17 +182,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
 
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
-        statusBarBrightness: Brightness.dark,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    return MediaQuery(
+    MediaQuery mq = MediaQuery(
       data: MediaQueryData.fromWindow(ui.window),
       child: Directionality(
         textDirection: TextDirection.ltr,
@@ -201,11 +195,11 @@ class _MyAppState extends State<MyApp> {
               navigatorObservers: [BotToastNavigatorObserver()],
               title: 'Torn PDA',
               debugShowCheckedModeBanner: false,
-              themeMode: ThemeMode.light,
               theme: ThemeData(
+                cardColor: _themeProvider.cardColor,
                 appBarTheme: AppBarTheme(
                   systemOverlayStyle: SystemUiOverlayStyle.light,
-                  color: _themeProvider.currentTheme == AppTheme.light ? Colors.blueGrey : Colors.grey[900],
+                  color: _themeProvider.statusBar,
                 ),
                 primarySwatch: Colors.blueGrey,
                 visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -218,6 +212,23 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: _themeProvider.statusBar,
+        systemNavigationBarColor:
+            mq.data.orientation == Orientation.landscape ? _themeProvider.canvas : _themeProvider.statusBar,
+        systemNavigationBarIconBrightness: mq.data.orientation == Orientation.landscape
+            ? _themeProvider.currentTheme == AppTheme.light
+                ? Brightness.dark
+                : Brightness.light
+            : Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
+
+    return mq;
   }
 }
 

@@ -19,12 +19,10 @@ class TravelNotificationTextDialog extends StatefulWidget {
   });
 
   @override
-  _TravelNotificationTextDialogState createState() =>
-      _TravelNotificationTextDialogState();
+  _TravelNotificationTextDialogState createState() => _TravelNotificationTextDialogState();
 }
 
-class _TravelNotificationTextDialogState
-    extends State<TravelNotificationTextDialog> {
+class _TravelNotificationTextDialogState extends State<TravelNotificationTextDialog> {
   ThemeProvider _themeProvider;
 
   final _notificationTitleController = new TextEditingController();
@@ -55,7 +53,7 @@ class _TravelNotificationTextDialogState
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
-                color: _themeProvider.background,
+                color: _themeProvider.secondBackground,
                 shape: BoxShape.rectangle,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
@@ -129,12 +127,8 @@ class _TravelNotificationTextDialogState
                               // Copy controller's text to local variable
                               // early and delete the global, so that text
                               // does not appear again in case of failure
-                              Prefs()
-                                  .setTravelNotificationTitle(
-                                      _notificationTitleController.text);
-                              Prefs()
-                                  .setTravelNotificationBody(
-                                      _notificationBodyController.text);
+                              Prefs().setTravelNotificationTitle(_notificationTitleController.text);
+                              Prefs().setTravelNotificationBody(_notificationBodyController.text);
 
                               BotToast.showText(
                                 text: "Notification details changed!",
@@ -169,7 +163,7 @@ class _TravelNotificationTextDialogState
             right: 16,
             child: CircleAvatar(
               radius: 26,
-              backgroundColor: _themeProvider.background,
+              backgroundColor: _themeProvider.secondBackground,
               child: CircleAvatar(
                 backgroundColor: _themeProvider.mainText,
                 radius: 22,
@@ -178,7 +172,7 @@ class _TravelNotificationTextDialogState
                   width: 28,
                   child: Icon(
                     Icons.textsms,
-                    color: _themeProvider.background,
+                    color: _themeProvider.secondBackground,
                   ),
                 ),
               ),
