@@ -4219,6 +4219,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 color: v.value < 0 ? Colors.red : Colors.green,
               ),
             ),
+            if (v.key == "points" && _miscModel != null && _miscModel.points > 0)
+              Text(
+                "  (@\$${moneyFormat.format((v.value.round()) / _miscModel.points)})",
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
           ],
         ),
       );
