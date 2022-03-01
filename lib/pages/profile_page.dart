@@ -4055,7 +4055,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       showMisc = true;
       donatorActive = true;
       String donatorString;
-      if (_user.icons.icon4 != null) {
+
+      if (_user.icons.icon3 != null) {
+        donatorString = _user.icons.icon3;
+      } else if (_user.icons.icon4 != null) {
         donatorString = _user.icons.icon4.replaceAll("Subscriber - Donator status:", "Donator:");
         donatorString = donatorString.replaceAll("Donator status:", "Donator:");
       }
