@@ -431,7 +431,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     var url = await _webViewController.currentUrl();
     return showDialog<void>(
       context: context,
-      barrierDismissible: true, // user must tap button!
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _currentPageTitle,

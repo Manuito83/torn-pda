@@ -76,6 +76,13 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setClearBrowserCacheNextOpportunity(_clearCacheNextOpportunity);
   }
 
+  var _androidBrowserScale = 0;
+  int get androidBrowserScale => _androidBrowserScale;
+  set setAndroidBrowserScale(int scale) {
+    _androidBrowserScale = scale;
+    Prefs().setAndroidBrowserScale(_androidBrowserScale);
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
@@ -495,6 +502,8 @@ class SettingsProvider extends ChangeNotifier {
     _testBrowserActive = await Prefs().getTestBrowserActive();
 
     _clearCacheNextOpportunity = await Prefs().getClearBrowserCacheNextOpportunity();
+
+    _androidBrowserScale = await Prefs().getAndroidBrowserScale();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 

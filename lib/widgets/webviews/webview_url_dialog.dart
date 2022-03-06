@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -390,6 +391,62 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Navigator.of(context).pop();
                             widget.callFindInPage();
                           },
+                        ),
+                      ),
+                    if (widget.inAppWebview != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Column(
+                          children: [
+                            Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'ZOOM',
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Text('Adjust zoom', style: TextStyle(fontSize: 12)),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        if (newOptions.android.initialScale == 0) {
+                                          newOptions.android.initialScale = 100;
+                                        } else if (newOptions.android.initialScale < 350) {
+                                          newOptions.android.initialScale += 5;
+                                        } else {
+                                          newOptions.android.initialScale = 100;
+                                        }
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Text('Reset zoom', style: TextStyle(fontSize: 12)),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        newOptions.android.initialScale = 0;
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = 0;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     if (widget.inAppWebview != null)
