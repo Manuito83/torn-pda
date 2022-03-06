@@ -393,7 +393,7 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           },
                         ),
                       ),
-                    if (widget.inAppWebview != null)
+                    if (widget.inAppWebview != null && Platform.isAndroid)
                       Padding(
                         padding: const EdgeInsets.only(top: 5),
                         child: Column(
