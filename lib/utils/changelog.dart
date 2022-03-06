@@ -47,7 +47,7 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_6_7_3 = "Fixed donator status in the misc card";
     String feat2_6_7_4 = "Fixed webview background transparency";
     v2_6_7.features.add(feat2_6_7_1);
-    v2_6_7.features.add(feat2_6_7_2);
+    if (Platform.isAndroid) v2_6_7.features.add(feat2_6_7_2);
     v2_6_7.features.add(feat2_6_7_3);
     v2_6_7.features.add(feat2_6_7_4);
 
