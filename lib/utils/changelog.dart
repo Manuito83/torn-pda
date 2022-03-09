@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();
     v2_6_7.main.version = 'Torn PDA v2.6.7';
-    v2_6_7.main.date = '28 MAR 2022';
+    v2_6_7.main.date = '12 MAR 2022';
     String feat2_6_7_1 = "Added points' market value in the networth card";
     String feat2_6_7_2 = "Browser scale can now be changed (browser bar options)";
     String feat2_6_7_3 = "Fixed donator status in the misc card";

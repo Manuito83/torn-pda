@@ -408,21 +408,19 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 ),
                               ],
                             ),
-                            Column(
+                            Row(
                               children: [
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Text('Adjust zoom', style: TextStyle(fontSize: 12)),
+                                    child: Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
                                         if (newOptions.android.initialScale == 0) {
                                           newOptions.android.initialScale = 100;
-                                        } else if (newOptions.android.initialScale < 350) {
+                                        } else if (newOptions.android.initialScale < 300) {
                                           newOptions.android.initialScale += 5;
-                                        } else {
-                                          newOptions.android.initialScale = 100;
                                         }
                                         widget.inAppWebview.setOptions(options: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
@@ -430,16 +428,36 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     },
                                   ),
                                 ),
+                                SizedBox(width: 4),
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Text('Reset zoom', style: TextStyle(fontSize: 12)),
+                                    child: Icon(MdiIcons.refresh),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
                                         newOptions.android.initialScale = 0;
                                         widget.inAppWebview.setOptions(options: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = 0;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.minus),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        if (newOptions.android.initialScale == 0) {
+                                          newOptions.android.initialScale = 300;
+                                        } else if (newOptions.android.initialScale > 100) {
+                                          newOptions.android.initialScale -= 5;
+                                        }
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
                                       }
                                     },
                                   ),
