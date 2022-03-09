@@ -116,6 +116,15 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                   _linkPreview(),
                                 ],
                               ),
+                              if (Platform.isIOS)
+                              Column(
+                                children: [
+                                  SizedBox(height: 15),
+                                  Divider(),
+                                  SizedBox(height: 10),
+                                  _pinchGesture(),
+                                ],
+                              ),
                             SizedBox(height: 15),
                             Divider(),
                             SizedBox(height: 10),
@@ -412,6 +421,45 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column _pinchGesture() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'GESTURES',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text("Zoom in/out pinch gestures"),
+                  Switch(
+                    value: _settingsProvider.iosBrowserPinch,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.setIosBrowserPinch = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
             ),
           ],

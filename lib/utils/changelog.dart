@@ -44,12 +44,14 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_6_7.main.date = '12 MAR 2022';
     String feat2_6_7_1 = "Added points' market value in the networth card";
     String feat2_6_7_2 = "Browser scale can now be changed (browser bar options)";
-    String feat2_6_7_3 = "Fixed donator status in the misc card";
-    String feat2_6_7_4 = "Fixed webview background transparency";
+    String feat2_6_7_3 = "Browser now accepts pinch gestures for zoom (disabled by default)";
+    String feat2_6_7_4 = "Fixed donator status in the misc card";
+    String feat2_6_7_5 = "Fixed webview background transparency";
     v2_6_7.features.add(feat2_6_7_1);
     if (Platform.isAndroid) v2_6_7.features.add(feat2_6_7_2);
-    v2_6_7.features.add(feat2_6_7_3);
+    if (Platform.isIOS) v2_6_7.features.add(feat2_6_7_3);
     v2_6_7.features.add(feat2_6_7_4);
+    v2_6_7.features.add(feat2_6_7_5);
 
     // VERSION 2.6.6
     var v2_6_6 = ChangeLogItem();

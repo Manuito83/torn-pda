@@ -245,6 +245,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
         disableLongPressContextMenuOnLinks: true,
+        ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
       ),
     );
 
