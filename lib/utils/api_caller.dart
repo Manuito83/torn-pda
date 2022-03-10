@@ -408,7 +408,7 @@ class TornApiCaller {
     await _apiCall(apiSelection: ApiSelection.factionCrimes).then((value) {
       apiResult = value;
     });
-    if (apiResult is! ApiError) {
+    if (apiResult is! ApiError && apiResult != null) {
       try {
         return FactionCrimesModel.fromJson(apiResult);
       } catch (e, trace) {

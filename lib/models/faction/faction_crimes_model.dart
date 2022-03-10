@@ -21,7 +21,7 @@ class FactionCrimesModel {
   factory FactionCrimesModel.fromJson(Map<String, dynamic> json) {
     try {
       return FactionCrimesModel(
-        crimes: json["crimes"] == null
+        crimes: json.isEmpty || json["crimes"] == null
             ? null
             : Map.from(json["crimes"]).map((k, v) => MapEntry<String, Crime>(k, Crime.fromJson(v))),
       );
