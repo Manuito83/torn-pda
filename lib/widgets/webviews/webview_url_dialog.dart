@@ -413,14 +413,14 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.plus),
+                                    child: Icon(MdiIcons.minus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
                                         if (newOptions.android.initialScale == 0) {
-                                          newOptions.android.initialScale = 100;
-                                        } else if (newOptions.android.initialScale < 300) {
-                                          newOptions.android.initialScale += 5;
+                                          newOptions.android.initialScale = 350;
+                                        } else if (newOptions.android.initialScale > 100) {
+                                          newOptions.android.initialScale -= 5;
                                         }
                                         widget.inAppWebview.setOptions(options: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
@@ -447,14 +447,14 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.minus),
+                                    child: Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
                                         if (newOptions.android.initialScale == 0) {
-                                          newOptions.android.initialScale = 300;
-                                        } else if (newOptions.android.initialScale > 100) {
-                                          newOptions.android.initialScale -= 5;
+                                          newOptions.android.initialScale = 100;
+                                        } else if (newOptions.android.initialScale < 350) {
+                                          newOptions.android.initialScale += 5;
                                         }
                                         widget.inAppWebview.setOptions(options: newOptions);
                                         _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
