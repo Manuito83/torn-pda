@@ -53,6 +53,8 @@ class Prefs {
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
+  final String _kAndroidBrowserScale = "pda_androidBrowserScale";
+  final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
@@ -636,6 +638,26 @@ class Prefs {
   Future<bool> setClearBrowserCacheNextOpportunity(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kClearBrowserCacheNextOpportunity, value);
+  }
+
+  Future<int> getAndroidBrowserScale() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kAndroidBrowserScale) ?? 0;
+  }
+
+  Future<bool> setAndroidBrowserScale(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kAndroidBrowserScale, value);
+  }
+
+  Future<bool> getIosBrowserPinch() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kIosBrowserPinch) ?? false;
+  }
+
+  Future<bool> setIosBrowserPinch(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kIosBrowserPinch, value);
   }
 
   /// ----------------------------

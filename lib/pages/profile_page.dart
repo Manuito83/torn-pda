@@ -4055,7 +4055,10 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       showMisc = true;
       donatorActive = true;
       String donatorString;
-      if (_user.icons.icon4 != null) {
+
+      if (_user.icons.icon3 != null) {
+        donatorString = _user.icons.icon3;
+      } else if (_user.icons.icon4 != null) {
         donatorString = _user.icons.icon4.replaceAll("Subscriber - Donator status:", "Donator:");
         donatorString = donatorString.replaceAll("Donator status:", "Donator:");
       }
@@ -4216,6 +4219,14 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 color: v.value < 0 ? Colors.red : Colors.green,
               ),
             ),
+            if (v.key == "points" && _miscModel != null && _miscModel.points > 0)
+              Text(
+                "  (@\$${moneyFormat.format((v.value.round()) / _miscModel.points)})",
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
           ],
         ),
       );

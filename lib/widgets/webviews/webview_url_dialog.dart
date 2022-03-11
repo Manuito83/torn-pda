@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -390,6 +391,80 @@ class _WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Navigator.of(context).pop();
                             widget.callFindInPage();
                           },
+                        ),
+                      ),
+                    if (widget.inAppWebview != null && Platform.isAndroid)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: Column(
+                          children: [
+                            Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'ZOOM',
+                                  style: TextStyle(fontSize: 8),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.minus),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        if (newOptions.android.initialScale == 0) {
+                                          newOptions.android.initialScale = 350;
+                                        } else if (newOptions.android.initialScale > 100) {
+                                          newOptions.android.initialScale -= 5;
+                                        }
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.refresh),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        newOptions.android.initialScale = 0;
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = 0;
+                                      }
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 5),
+                                  child: ElevatedButton(
+                                    child: Icon(MdiIcons.plus),
+                                    onPressed: () async {
+                                      if (Platform.isAndroid) {
+                                        InAppWebViewGroupOptions newOptions = await widget.inAppWebview.getOptions();
+                                        if (newOptions.android.initialScale == 0) {
+                                          newOptions.android.initialScale = 100;
+                                        } else if (newOptions.android.initialScale < 350) {
+                                          newOptions.android.initialScale += 5;
+                                        }
+                                        widget.inAppWebview.setOptions(options: newOptions);
+                                        _settingsProvider.setAndroidBrowserScale = newOptions.android.initialScale;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     if (widget.inAppWebview != null)

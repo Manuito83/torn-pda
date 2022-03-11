@@ -93,6 +93,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   InAppWebViewController webView;
   var _initialWebViewOptions = InAppWebViewGroupOptions();
 
+  bool _firstLoad = true;
+
   URLRequest _initialUrl;
   String _pageTitle = "";
   String _currentUrl = '';
@@ -183,7 +185,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   int _scrollY = 0;
   int _scrollX = 0;
 
-  double progress = 0;
+  double _progress = 0;
 
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
@@ -237,10 +239,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         useHybridComposition: true,
         supportMultipleWindows: true,
         cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
+        initialScale: _settingsProvider.androidBrowserScale,
+        useWideViewPort: false,
       ),
       ios: IOSInAppWebViewOptions(
         allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
         disableLongPressContextMenuOnLinks: true,
+        ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
       ),
     );
 
@@ -624,9 +629,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (_settingsProvider.loadBarBrowser)
           SizedBox(
             height: 2,
-            child: progress < 1.0
+            child: _progress < 1.0
                 ? LinearProgressIndicator(
-                    value: progress,
+                    value: _progress,
                     backgroundColor: Colors.blueGrey[100],
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.deepOrange[300]),
                   )
@@ -702,7 +707,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 pullToRefreshController: _pullToRefreshController,
                 initialOptions: _initialWebViewOptions,
                 // EVENTS
-                onWebViewCreated: (c) {
+                onWebViewCreated: (c) async {
                   webView = c;
                   _terminalProvider.terminal = "Terminal";
 
@@ -767,6 +772,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onLoadStart: (c, uri) async {
                   if (!mounted) return;
 
+                  // Ensure that transparent background is set to false after first load
+                  if (_firstLoad) {
+                    InAppWebViewGroupOptions newOptions = await webView.getOptions();
+                    newOptions.crossPlatform.transparentBackground = false;
+                    webView.setOptions(options: newOptions);
+                    _firstLoad = false;
+                  }
+
                   try {
                     _currentUrl = uri.toString();
 
@@ -805,7 +818,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                     if (mounted) {
                       setState(() {
-                        this.progress = progress / 100;
+                        this._progress = progress / 100;
                       });
                     }
 
@@ -2787,7 +2800,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final url = await webView.getUrl();
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _pageTitle,
