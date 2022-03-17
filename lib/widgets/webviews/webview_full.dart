@@ -772,12 +772,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onLoadStart: (c, uri) async {
                   if (!mounted) return;
 
-                  // Ensure that transparent background is set to false after first load
-                  if (_firstLoad) {
-                    InAppWebViewGroupOptions newOptions = await webView.getOptions();
-                    newOptions.crossPlatform.transparentBackground = false;
-                    webView.setOptions(options: newOptions);
-                    _firstLoad = false;
+                  if (Platform.isAndroid) {
+                    _revertTransparentBackground();
                   }
 
                   try {
@@ -840,6 +836,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 onLoadStop: (c, uri) async {
                   if (!mounted) return;
 
+                  // Ensure that transparent background is set to false after first load
+                  // In iOS we do it after load stop, otherwise a white flash is trigger in any case
+                  if (Platform.isIOS) {
+                    _revertTransparentBackground();
+                  }
+                                    
                   try {
                     _currentUrl = uri.toString();
 
@@ -2955,6 +2957,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future<bool> _willPopCallback() async {
     _tryGoBack();
     return false;
+  }
+
+  void _revertTransparentBackground() async {
+    if (_firstLoad) {
+      InAppWebViewGroupOptions newOptions = await webView.getOptions();
+      newOptions.crossPlatform.transparentBackground = false;
+      webView.setOptions(options: newOptions);
+      _firstLoad = false;
+    }
   }
 
   void _showLongPressCard(String src, Uri url) {
