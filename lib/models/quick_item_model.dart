@@ -20,6 +20,7 @@ class QuickItem {
     this.isLoadout = false,
     this.loadoutNumber = -1,
     this.loadoutName = "",
+    this.isPoints = false,
   });
 
   bool active;
@@ -31,6 +32,7 @@ class QuickItem {
   bool isLoadout;
   int loadoutNumber;
   String loadoutName;
+  bool isPoints;
 
   factory QuickItem.fromJson(Map<String, dynamic> json) => QuickItem(
         active: json["active"] == null ? null : json["active"],
@@ -42,6 +44,7 @@ class QuickItem {
         isLoadout: json["isLoadout"] == null ? null : json["isLoadout"],
         loadoutNumber: json["loadoutNumber"] == null ? null : json["loadoutNumber"],
         loadoutName: json["loadoutName"] == null ? null : json["loadoutName"],
+        isPoints: json["isPoints"] == null ? false : json["isPoints"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -54,5 +57,6 @@ class QuickItem {
         "isLoadout": isLoadout == null ? null : isLoadout,
         "loadoutNumber": loadoutNumber == null ? null : loadoutNumber,
         "loadoutName": loadoutName == null ? null : loadoutName,
+        "isPoints": isPoints == null ? false : isPoints,
       };
 }

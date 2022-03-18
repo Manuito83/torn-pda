@@ -143,6 +143,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _localChatRemovalActive = false;
 
   var _quickItemsActive = false;
+  var _quickItemsFaction = false;
   final _quickItemsController = ExpandableController();
 
   Widget _jailExpandable = const SizedBox.shrink();
@@ -679,6 +680,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
                     webviewType: 'inapp',
+                    faction: _quickItemsFaction,
                   )
                 : const SizedBox.shrink(),
           )
@@ -841,7 +843,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   if (Platform.isIOS) {
                     _revertTransparentBackground();
                   }
-                                    
+
                   try {
                     _currentUrl = uri.toString();
 
@@ -1157,6 +1159,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
                     webviewType: 'inapp',
+                    faction: _quickItemsFaction,
                   )
                 : const SizedBox.shrink(),
           )
@@ -1599,7 +1602,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool getJail = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
-        (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
+        (!_currentUrl.contains('item.php') && _quickItemsTriggered) ||
+        (_currentUrl.contains('factions.php') && _currentUrl.contains('tab=armoury') && !_quickItemsTriggered) ||
+        (!_currentUrl.contains('factions.php') && _currentUrl.contains('tab=armoury') && _quickItemsTriggered)) {
       anySectionTriggered = true;
       getItems = true;
     }
@@ -2595,7 +2600,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // QUICK ITEMS
   Future _assessQuickItems(String pageTitle) async {
     if (mounted) {
-      if (!pageTitle.contains('items')) {
+      if (!pageTitle.contains('items') && !pageTitle.contains('faction')) {
         setState(() {
           _quickItemsController.expanded = false;
           _quickItemsActive = false;
@@ -2617,6 +2622,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       setState(() {
         _quickItemsController.expanded = true;
         _quickItemsActive = true;
+        _quickItemsFaction = pageTitle.contains('faction');
       });
     }
   }

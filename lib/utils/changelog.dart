@@ -38,6 +38,15 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.7.0
+    var v2_7_0 = ChangeLogItem();
+    v2_7_0.main.version = 'Torn PDA v2.7.0';
+    v2_7_0.main.date = '10 APR 2022';
+    String feat2_7_0_1 = "Added quick items in faction armoury";
+    String feat2_7_0_2 = "Corrected white flash when using browser with dark themes";
+    v2_7_0.features.add(feat2_7_0_1);
+    v2_7_0.features.add(feat2_7_0_2);
+
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();
     v2_6_7.main.version = 'Torn PDA v2.6.7';

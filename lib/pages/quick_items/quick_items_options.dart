@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 
@@ -227,7 +228,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                 child: Container(
                   height: 60,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                    padding: EdgeInsets.symmetric(horizontal: item.isLoadout || item.isPoints ? 20 : 0),
                     child: Card(
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
@@ -236,13 +237,21 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                           children: [
                             Padding(
                               padding: EdgeInsets.all(2),
-                              child: Image.asset(
-                                item.isLoadout
-                                    ? 'images/icons/loadout.png'
-                                    : 'images/torn_items/small/${item.number}_small.png',
-                                width: item.isLoadout ? 25 : 35,
-                                height: item.isLoadout ? 25 : 35,
-                              ),
+                              child: item.isPoints
+                                  ? SizedBox(
+                                      width: 25,
+                                      child: Icon(
+                                        MdiIcons.alphaPCircleOutline,
+                                        color: Colors.blueAccent,
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      item.isLoadout
+                                          ? 'images/icons/loadout.png'
+                                          : 'images/torn_items/small/${item.number}_small.png',
+                                      width: item.isLoadout ? 25 : 35,
+                                      height: item.isLoadout ? 25 : 35,
+                                    ),
                             ),
                             SizedBox(width: 10),
                             Flexible(
@@ -262,7 +271,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       ],
                                     ),
                                   ),
-                                  if (!item.isLoadout)
+                                  if (!item.isLoadout && !item.isPoints)
                                     Text(
                                       "(inv: x${item.inventory})",
                                       style: TextStyle(fontSize: 10),
@@ -271,7 +280,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                               ),
                             ),
                             SizedBox(width: 10),
-                            if (!item.isLoadout)
+                            if (!item.isLoadout && !item.isPoints)
                               GestureDetector(
                                 onTap: () {
                                   BotToast.showText(
@@ -291,7 +300,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                   size: 19,
                                 ),
                               )
-                            else
+                            else if (item.isLoadout)
                               GestureDetector(
                                 onTap: () {
                                   _openLoadoutsNameDialog(item);
@@ -376,7 +385,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                       child: Container(
                         height: 60,
                         child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: item.isLoadout ? 20 : 0),
+                          padding: EdgeInsets.symmetric(horizontal: item.isLoadout || item.isPoints ? 20 : 0),
                           child: Card(
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -384,13 +393,21 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                 children: [
                                   Padding(
                                     padding: EdgeInsets.all(2),
-                                    child: Image.asset(
-                                      item.isLoadout
-                                          ? 'images/icons/loadout.png'
-                                          : 'images/torn_items/small/${item.number}_small.png',
-                                      width: item.isLoadout ? 25 : 35,
-                                      height: item.isLoadout ? 25 : 35,
-                                    ),
+                                    child: item.isPoints
+                                        ? SizedBox(
+                                            width: 25,
+                                            child: Icon(
+                                              MdiIcons.alphaPCircleOutline,
+                                              color: Colors.blueAccent,
+                                            ),
+                                          )
+                                        : Image.asset(
+                                            item.isLoadout
+                                                ? 'images/icons/loadout.png'
+                                                : 'images/torn_items/small/${item.number}_small.png',
+                                            width: item.isLoadout ? 25 : 35,
+                                            height: item.isLoadout ? 25 : 35,
+                                          ),
                                   ),
                                   SizedBox(width: 10),
                                   Flexible(
@@ -410,7 +427,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                             ],
                                           ),
                                         ),
-                                        if (!item.isLoadout)
+                                        if (!item.isLoadout && !item.isPoints)
                                           Text(
                                             "(inv: x${item.inventory})",
                                             style: TextStyle(fontSize: 10),
@@ -418,7 +435,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       ],
                                     ),
                                   ),
-                                  if (!item.isLoadout)
+                                  if (!item.isLoadout && !item.isPoints)
                                     GestureDetector(
                                       onTap: () {
                                         BotToast.showText(

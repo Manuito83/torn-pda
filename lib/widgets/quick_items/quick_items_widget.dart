@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -20,9 +21,11 @@ class QuickItemsWidget extends StatefulWidget {
   final String webviewType;
   final InAppWebViewController inAppWebViewController;
   final WebViewController webViewController;
+  final bool faction;
 
   QuickItemsWidget({
     @required this.webviewType,
+    @required this.faction,
     this.inAppWebViewController,
     this.webViewController,
   });
@@ -83,6 +86,8 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
     var myList = <Widget>[];
 
     for (var item in _itemsProvider.activeQuickItems) {
+      if (item.isLoadout && widget.faction) continue;
+      if (item.isPoints && !widget.faction) continue;
 
       Color qtyColor;
       if (item.inventory == 0) {
@@ -104,6 +109,8 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         }
       }
 
+      item.name = item.name.replaceAll("Blood Bag : ", "Blood: ");
+
       myList.add(
         Tooltip(
           message: '${item.name}\n\n${item.description}',
@@ -113,29 +120,50 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            side: item.isLoadout ? BorderSide(color: Colors.blue) : null,
+            side: item.isLoadout || item.isPoints ? BorderSide(color: Colors.blue) : null,
             avatar: item.isLoadout
                 ? null
-                : CircleAvatar(
-                    child: Text(
-                      itemQty,
-                      style: TextStyle(
-                        fontSize: qtyFontSize,
-                        color: qtyColor,
+                : widget.faction
+                    ? item.isPoints
+                        ? Icon(
+                            MdiIcons.alphaPCircleOutline,
+                            color: Colors.blueAccent,
+                          )
+                        : CircleAvatar(
+                            child: Image.asset(
+                              'images/icons/faction.png',
+                              width: 12,
+                              color: Colors.white,
+                            ),
+                          )
+                    : CircleAvatar(
+                        child: Text(
+                          itemQty,
+                          style: TextStyle(
+                            fontSize: qtyFontSize,
+                            color: qtyColor,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
             label: item.isLoadout
-                ? Text(item.loadoutName)
-                : item.name.split(' ').length > 1
-                    ? _splitName(item.name)
-                    : Text(
-                        item.name,
-                        softWrap: true,
-                        overflow: TextOverflow.clip,
-                        maxLines: 2,
+                ? Text(
+                    item.loadoutName,
+                    style: TextStyle(fontSize: 11),
+                  )
+                : item.isPoints
+                    ? Text(
+                        "Refill",
                         style: TextStyle(fontSize: 11),
-                      ),
+                      )
+                    : item.name.split(' ').length > 1
+                        ? _splitName(item.name)
+                        : Text(
+                            item.name,
+                            softWrap: true,
+                            overflow: TextOverflow.clip,
+                            maxLines: 2,
+                            style: TextStyle(fontSize: 11),
+                          ),
             onPressed: () async {
               if (item.isLoadout) {
                 if (widget.webviewType == "attacks") {
@@ -146,7 +174,7 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                   await widget.inAppWebViewController.evaluateJavascript(source: js);
                 }
               } else {
-                var js = quickItemsJS(item: item.number.toString());
+                var js = quickItemsJS(item: item.number.toString(), faction: widget.faction, refill: item.isPoints);
                 if (widget.webviewType == "attacks") {
                   widget.webViewController.runJavascript(js);
                 } else {

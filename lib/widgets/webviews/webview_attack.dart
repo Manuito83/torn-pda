@@ -99,6 +99,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   // NOT APPLICABLE UNLESS USING ON PROGRESS
   // bool _quickItemsTriggered = false;
   var _quickItemsActive = false;
+  var _quickItemsFaction = false;
   var _quickItemsController = ExpandableController();
 
   Widget _profileAttackWidget = SizedBox.shrink();
@@ -194,6 +195,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                                   ? QuickItemsWidget(
                                       webViewController: _webViewController,
                                       webviewType: 'attacks',
+                                      faction: _quickItemsFaction,
                                     )
                                   : SizedBox.shrink(),
                             )
@@ -266,6 +268,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                                   ? QuickItemsWidget(
                                       webViewController: _webViewController,
                                       webviewType: 'attacks',
+                                      faction: _quickItemsFaction,
                                     )
                                   : SizedBox.shrink(),
                             )
@@ -933,7 +936,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
   Future _assessQuickItems(String pageUrl) async {
     if (mounted) {
       //var pageTitle = (await _getPageTitle(document)).toLowerCase();
-      if (!pageUrl.contains('item.php')) {
+      if (!pageUrl.contains('item.php') && !pageUrl.contains('tab=armoury')) {
         setState(() {
           _quickItemsController.expanded = false;
           _quickItemsActive = false;
@@ -944,7 +947,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       }
 
       var title = await _webViewController.getTitle();
-      if (!title.contains('Items')) {
+      if (!title.contains('Items') && !title.contains('Faction')) {
         return;
       }
 
@@ -964,6 +967,7 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
       setState(() {
         _quickItemsController.expanded = true;
         _quickItemsActive = true;
+        _quickItemsFaction = title.contains('Faction');
       });
     }
   }

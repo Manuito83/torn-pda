@@ -553,7 +553,7 @@ String restoreChatJS() {
   ''';
 }
 
-String quickItemsJS({@required String item}) {
+String quickItemsJS({@required String item, bool faction = false, bool refill = false}) {
   return '''
     // Credit Torn Tools
     
@@ -614,25 +614,72 @@ String quickItemsJS({@required String item}) {
       return url;
     }
     
-    var url = "https://www.torn.com/" + addRFC("item.php");
-      
-    ajaxWrapper({
-      url: url,
-      type: 'POST',
-      data: 'step=actionForm&id=$item&action=use',
-      oncomplete: function(resp) {
-      var response = resp.responseText;
-      var topBox = document.querySelector('.content-title');
-      topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
-      resultBox = document.querySelector('.resultBox');
-      resultBox.style.display = "block";
-      resultBox.innerHTML = response;
-      resultBox.querySelector(`a[data-item='$item`).click();
-      },
-      onerror: function(e) {
-      console.error(e)
+    var url = "";
+    if (!$refill) {
+      url = "https://www.torn.com/" + addRFC("item.php");
+    } else {
+      url = "https://www.torn.com/" + addRFC("factions.php");
+    }
+    
+
+    if (!$faction) {
+      ajaxWrapper({
+        url: url,
+        type: 'POST',
+        data: 'step=actionForm&id=$item&action=use',
+        oncomplete: function(resp) {
+          var response = resp.responseText;
+          var topBox = document.querySelector('.content-title');
+          topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+          resultBox = document.querySelector('.resultBox');
+          resultBox.style.display = "block";
+          resultBox.innerHTML = response;
+          resultBox.querySelector(`a[data-item='$item`).click();
+        },
+        onerror: function(e) {
+          console.error(e)
+        }
+      });
+    } else {
+      if (!$refill) {
+        ajaxWrapper({
+          url: url,
+          type: 'POST',
+          data: 'step=useItem&itemID=$item&fac=1',
+          oncomplete: function(resp) {
+            var response = JSON.parse(resp.responseText);
+            var topBox = document.querySelector('.content-title');
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+            resultBox = document.querySelector('.resultBox');
+            resultBox.style.display = "block";
+            resultBox.innerHTML = response.text.replace("This item has already been used", "Not available");
+          },
+          onerror: function(e) {
+            console.error(e)
+          }
+        });
+      } else {
+        ajaxWrapper({
+          url: url,
+          type: 'POST',
+          data: 'step=armouryRefillEnergy',
+          oncomplete: function(resp) {
+            console.log(resp.responseText);
+            
+            var response = JSON.parse(resp.responseText);
+            var topBox = document.querySelector('.content-title');
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+            resultBox = document.querySelector('.resultBox');
+            resultBox.style.display = "block";
+            resultBox.innerHTML = response.text;
+          },
+          onerror: function(e) {
+            console.error(e)
+          }
+        });
       }
-    });
+    }
+    
     
     // Get rid of the resultBox on close
     document.addEventListener("click", (event) => {
