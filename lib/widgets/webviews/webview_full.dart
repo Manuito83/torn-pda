@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
@@ -143,8 +144,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   var _localChatRemovalActive = false;
 
   var _quickItemsActive = false;
-  var _quickItemsFaction = false;
+  var _quickItemsFactionActive = false;
   final _quickItemsController = ExpandableController();
+  final _quickItemsFactionController = ExpandableController();
+  DateTime _quickItemsFactionOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
   Widget _jailExpandable = const SizedBox.shrink();
   DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
@@ -161,6 +164,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _crimesTriggered = false;
   bool _gymTriggered = false;
   bool _quickItemsTriggered = false;
+  bool _quickItemsFactionTriggered = false;  // Only in onLoadResource
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
   bool _vaultTriggered = false;
@@ -680,7 +684,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
                     webviewType: 'inapp',
-                    faction: _quickItemsFaction,
+                    faction: false,
+                  )
+                : const SizedBox.shrink(),
+          )
+        else
+          const SizedBox.shrink(),
+        if (_settingsProvider.appBarTop)
+          ExpandablePanel(
+            theme: const ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: const SizedBox.shrink(),
+            controller: _quickItemsFactionController,
+            header: const SizedBox.shrink(),
+            expanded: _quickItemsFactionActive
+                ? QuickItemsWidget(
+                    inAppWebViewController: webView,
+                    webviewType: 'inapp',
+                    faction: true,
                   )
                 : const SizedBox.shrink(),
           )
@@ -1039,6 +1063,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         _assessJail(document);
                       }
                     }
+
+                    // Quick items armoury tab (faction)
+                    if (resource.initiatorType == "xmlhttprequest" && 
+                        resource.url.toString().contains("factions.php") || 
+                          (!resource.url.toString().contains("factions.php") && _quickItemsFactionTriggered)) {
+                      
+                      // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                      // the webView to freeze for a bit
+                      if (_quickItemsFactionOnResourceTriggerTime != null 
+                        && DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime).inSeconds < 1) { 
+                        return; 
+                      }
+                      
+                      _quickItemsFactionOnResourceTriggerTime = DateTime.now();
+                      
+                      // We are not reporting the URL if we change tabs 
+                      // (it does not work on desktop either)
+                      var uri = (await webView.getUrl());
+                      _currentUrl = uri.toString();
+                      
+                      if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
+                        _assessFactionQuickItems();
+                      } else if (!_currentUrl.contains('tab=armoury') && _quickItemsFactionTriggered) {
+                        _assessFactionQuickItems(deactivate: true);
+                      }
+                    }
+
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -1159,7 +1210,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
                     webviewType: 'inapp',
-                    faction: _quickItemsFaction,
+                    faction: false,
+                  )
+                : const SizedBox.shrink(),
+          )
+        else
+          const SizedBox.shrink(),
+        if (!_settingsProvider.appBarTop)
+          ExpandablePanel(
+            theme: const ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: const SizedBox.shrink(),
+            controller: _quickItemsFactionController,
+            header: const SizedBox.shrink(),
+            expanded: _quickItemsFactionActive
+                ? QuickItemsWidget(
+                    inAppWebViewController: webView,
+                    webviewType: 'inapp',
+                    faction: true,
                   )
                 : const SizedBox.shrink(),
           )
@@ -1602,9 +1673,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool getJail = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
-        (!_currentUrl.contains('item.php') && _quickItemsTriggered) ||
-        (_currentUrl.contains('factions.php') && _currentUrl.contains('tab=armoury') && !_quickItemsTriggered) ||
-        (!_currentUrl.contains('factions.php') && _currentUrl.contains('tab=armoury') && _quickItemsTriggered)) {
+        (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
       anySectionTriggered = true;
       getItems = true;
     }
@@ -2600,10 +2669,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // QUICK ITEMS
   Future _assessQuickItems(String pageTitle) async {
     if (mounted) {
-      if (!pageTitle.contains('items') && !pageTitle.contains('faction')) {
+      if (!pageTitle.contains('items')) {
         setState(() {
           _quickItemsController.expanded = false;
           _quickItemsActive = false;
+          _quickItemsTriggered = false;
         });
         return;
       }
@@ -2622,7 +2692,36 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       setState(() {
         _quickItemsController.expanded = true;
         _quickItemsActive = true;
-        _quickItemsFaction = pageTitle.contains('faction');
+      });
+    }
+  }
+
+  // QUICK ITEMS
+  Future _assessFactionQuickItems({bool deactivate = false}) async {
+    if (mounted) {
+      if (deactivate) {
+        setState(() {
+          _quickItemsFactionController.expanded = false;
+          _quickItemsFactionActive = false;
+          _quickItemsFactionTriggered = false;
+        });   
+        return;
+      }
+
+      // Stops any successive calls once we are sure that the section is the
+      // correct one. onLoadStop will reset this for the future.
+      // Otherwise we would call the API every time onProgressChanged ticks
+      if (_quickItemsFactionTriggered) {
+        return;
+      }
+      _quickItemsFactionTriggered = true;
+
+      final quickItemsProvider = context.read<QuickItemsProvider>();
+      quickItemsProvider.loadItems();
+
+      setState(() {
+        _quickItemsFactionController.expanded = true;
+        _quickItemsFactionActive = true;
       });
     }
   }
