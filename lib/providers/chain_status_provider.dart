@@ -15,7 +15,7 @@ import 'package:torn_pda/utils/notification.dart';
 
 // Project imports:
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/webviews/webview_attack.dart';
+import 'package:torn_pda/widgets/webviews/webview_panic.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -407,7 +407,7 @@ class ChainStatusProvider extends ChangeNotifier {
                 attackNotesList.add('');
               }
               Get.to(
-                TornWebViewAttack(
+                WebViewPanic(
                   attackIdList: attacksIds,
                   attackNameList: attacksNames,
                   attackNotesColorList: attackNotesColorList,

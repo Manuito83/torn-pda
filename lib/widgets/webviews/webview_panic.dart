@@ -1,4 +1,3 @@
-/*
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
@@ -8,7 +7,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -18,9 +16,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
-import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -29,10 +25,9 @@ import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
-import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
-class TornWebViewAttack extends StatefulWidget {
+class WebViewPanic extends StatefulWidget {
   final List<String> attackIdList;
   final List<String> attackNameList;
   final List<String> attackNotesList;
@@ -46,7 +41,7 @@ class TornWebViewAttack extends StatefulWidget {
 
   /// [attackIdList] and [attackNameList] make sense for attacks series
   /// [attacksCallback] is used to update the targets card when we go back
-  TornWebViewAttack({
+  WebViewPanic({
     @required this.attackIdList,
     @required this.attackNameList,
     @required this.attackNotesList,
@@ -60,10 +55,10 @@ class TornWebViewAttack extends StatefulWidget {
   });
 
   @override
-  _TornWebViewAttackState createState() => _TornWebViewAttackState();
+  _WebViewPanicState createState() => _WebViewPanicState();
 }
 
-class _TornWebViewAttackState extends State<TornWebViewAttack> {
+class _WebViewPanicState extends State<WebViewPanic> {
   WebViewController _webViewController;
 
   UserDetailsProvider _userProv;
@@ -96,12 +91,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     HealingPages(description: "Personal"),
     HealingPages(description: "Faction"),
   ];
-
-  // NOT APPLICABLE UNLESS USING ON PROGRESS
-  // bool _quickItemsTriggered = false;
-  var _quickItemsActive = false;
-  var _quickItemsFaction = false;
-  var _quickItemsController = ExpandableController();
 
   Widget _profileAttackWidget = SizedBox.shrink();
   var _lastProfileVisited = "";
@@ -179,28 +168,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                           alwaysDarkBackground: true,
                         ),
                       ),
-                      // Quick items widget. NOTE: this one will open at the bottom if
-                      // appBar is at the bottom, so it's duplicated below the actual
-                      // webView widget
-                      _settingsProvider.appBarTop
-                          ? ExpandablePanel(
-                              theme: ExpandableThemeData(
-                                hasIcon: false,
-                                tapBodyToCollapse: false,
-                                tapHeaderToExpand: false,
-                              ),
-                              collapsed: SizedBox.shrink(),
-                              controller: _quickItemsController,
-                              header: SizedBox.shrink(),
-                              expanded: _quickItemsActive
-                                  ? QuickItemsWidget(
-                                      webViewController: _webViewController,
-                                      webviewType: 'attacks',
-                                      faction: _quickItemsFaction,
-                                    )
-                                  : SizedBox.shrink(),
-                            )
-                          : SizedBox.shrink(),
                       _profileAttackWidget,
                       Expanded(
                         child: WebView(
@@ -250,30 +217,10 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
                           onPageFinished: (page) {
                             _hideChat();
                             _highlightChat(page);
-                            _assessQuickItems(page);
                           },
                           gestureNavigationEnabled: true,
                         ),
                       ),
-                      !_settingsProvider.appBarTop
-                          ? ExpandablePanel(
-                              theme: ExpandableThemeData(
-                                hasIcon: false,
-                                tapBodyToCollapse: false,
-                                tapHeaderToExpand: false,
-                              ),
-                              collapsed: SizedBox.shrink(),
-                              controller: _quickItemsController,
-                              header: SizedBox.shrink(),
-                              expanded: _quickItemsActive
-                                  ? QuickItemsWidget(
-                                      webViewController: _webViewController,
-                                      webviewType: 'attacks',
-                                      faction: _quickItemsFaction,
-                                    )
-                                  : SizedBox.shrink(),
-                            )
-                          : SizedBox.shrink(),
                     ],
                   ),
                 );
@@ -449,8 +396,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
 
   List<Widget> _actionButtons() {
     List<Widget> myButtons = [];
-
-    myButtons.add(_quickItemsMenuIcon());
 
     Widget hideChatIcon = SizedBox.shrink();
     if (!_chatRemovalActive && _chatRemovalEnabled) {
@@ -933,77 +878,6 @@ class _TornWebViewAttackState extends State<TornWebViewAttack> {
     );
   }
 
-  // QUICK ITEMS
-  Future _assessQuickItems(String pageUrl) async {
-    if (mounted) {
-      //var pageTitle = (await _getPageTitle(document)).toLowerCase();
-      if (!pageUrl.contains('item.php') && !pageUrl.contains('tab=armoury')) {
-        setState(() {
-          _quickItemsController.expanded = false;
-          _quickItemsActive = false;
-          // NOT APPLICABLE UNLESS USING ON PROGRESS
-          // _quickItemsTriggered = false;
-        });
-        return;
-      }
-
-      var title = await _webViewController.getTitle();
-      if (!title.contains('Items') && !title.contains('Faction')) {
-        return;
-      }
-
-      /* NOT APPLICABLE UNLESS USING ON PROGRESS
-      // Stops any successive calls once we are sure that the section is the
-      // correct one. onPageFinished will reset this for the future.
-      // Otherwise we would call the API every time onProgressChanged ticks
-      if (_quickItemsTriggered) {
-        return;
-      }
-      _quickItemsTriggered = true;
-      */
-
-      var quickItemsProvider = context.read<QuickItemsProvider>();
-      quickItemsProvider.loadItems();
-
-      setState(() {
-        _quickItemsController.expanded = true;
-        _quickItemsActive = true;
-        _quickItemsFaction = title.contains('Faction');
-      });
-    }
-  }
-
-  Widget _quickItemsMenuIcon() {
-    if (_quickItemsActive) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 5),
-        child: OpenContainer(
-          transitionDuration: Duration(milliseconds: 500),
-          transitionType: ContainerTransitionType.fadeThrough,
-          openBuilder: (BuildContext context, VoidCallback _) {
-            return QuickItemsOptions();
-          },
-          closedElevation: 0,
-          closedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(56 / 2),
-            ),
-          ),
-          closedColor: Colors.transparent,
-          closedBuilder: (BuildContext context, VoidCallback openContainer) {
-            return SizedBox(
-              height: 20,
-              width: 20,
-              child: Image.asset('images/icons/quick_items.png', color: Colors.white),
-            );
-          },
-        ),
-      );
-    } else {
-      return SizedBox.shrink();
-    }
-  }
-
   // ASSESS PROFILES
   Future _assessProfileAttack(String page) async {
     if (mounted) {
@@ -1094,4 +968,3 @@ class HealingPages {
     }
   }
 }
-*/
