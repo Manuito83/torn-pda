@@ -11,16 +11,25 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
   final bool dialog;
   final bool recallLastSession;
 
+  // Chaining
+  final bool isChainingBrowser;
+  final ChainingPayload chainingPayload;
+
   const WebViewStackView({
     this.initUrl = "https://www.torn.com",
     this.dialog = false,
     this.recallLastSession = false,
+
+    // Chaining
+    this.isChainingBrowser = false,
+    this.chainingPayload,
     Key key,
   }) : super(key: key);
 
@@ -69,6 +78,8 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       initUrl: widget.initUrl,
       dialog: widget.dialog,
       recallLastSession: widget.recallLastSession,
+      isChainingBrowser: widget.isChainingBrowser,
+      chainingPayload: widget.chainingPayload,
     );
   }
 
@@ -207,21 +218,28 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
         _webViewProvider.activateTab(0);
       },
       onLongPress: () {
-        _webViewProvider.addTab(
-          url: _webViewProvider.tabList[0].currentUrl,
-          chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
-          historyBack: _webViewProvider.tabList[0].historyBack,
-          historyForward: _webViewProvider.tabList[0].historyForward,
-        );
+        String message = "Added duplicated tab!";
+        Color messageColor = Colors.blue;
+        if (_webViewProvider.tabList[0].isChainingBrowser) {
+          message = "Chaining tabs can't be duplicated!";
+          messageColor = Colors.orange;
+        } else {
+          _webViewProvider.addTab(
+            url: _webViewProvider.tabList[0].currentUrl,
+            chatRemovalActive: _webViewProvider.tabList[0].chatRemovalActiveTab,
+            historyBack: _webViewProvider.tabList[0].historyBack,
+            historyForward: _webViewProvider.tabList[0].historyForward,
+          );
+        }
 
         BotToast.showText(
           crossPage: false,
-          text: "Added duplicated tab!",
+          text: message,
           textStyle: TextStyle(
             fontSize: 14,
             color: Colors.white,
           ),
-          contentColor: Colors.blue,
+          contentColor: messageColor,
           duration: Duration(seconds: 1),
           contentPadding: EdgeInsets.all(10),
         );
@@ -445,7 +463,9 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     var url = _webViewProvider.tabList[i].currentUrl;
 
     // Find some icons manually first, as they might trigger errors with shortcuts
-    if (url.contains("sid=attack&user2ID=2225097")) {
+    if (_webViewProvider.tabList[i].isChainingBrowser) {
+      return Icon(MdiIcons.linkVariant, color: Colors.red);
+    } else if (url.contains("sid=attack&user2ID=2225097")) {
       return Icon(MdiIcons.pistol, color: Colors.pink);
     } else if (url.contains("sid=attack&user2ID=")) {
       return Icon(Icons.person);

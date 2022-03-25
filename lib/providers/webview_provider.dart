@@ -5,6 +5,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_dialog.dart';
 
 // Package imports:
@@ -23,6 +24,7 @@ class TabDetails {
   bool chatRemovalActiveTab = false;
   List<String> historyBack = <String>[];
   List<String> historyForward = <String>[];
+  bool isChainingBrowser = false;
 }
 
 class WebViewProvider extends ChangeNotifier {
@@ -48,7 +50,13 @@ class WebViewProvider extends ChangeNotifier {
   bool _secondaryInitialised = false;
 
   /// [recallLastSession] should be used to open a browser session where we left it last time
-  Future initialiseMain({@required String initUrl, bool dialog = false, bool recallLastSession = false}) async {
+  Future initialiseMain({
+    @required String initUrl,
+    bool dialog = false,
+    bool recallLastSession = false,
+    bool isChainingBrowser = false,
+    ChainingPayload chainingPayload,
+  }) async {
     _useDialog = dialog;
 
     chatRemovalEnabledGlobal = await Prefs().getChatRemovalEnabled();
@@ -77,7 +85,12 @@ class WebViewProvider extends ChangeNotifier {
         await addTab(url: "https://www.torn.com", chatRemovalActive: chatRemovalActiveGlobal);
       }
     } else {
-      await addTab(url: url, chatRemovalActive: chatRemovalActiveGlobal);
+      await addTab(
+        url: url,
+        chatRemovalActive: chatRemovalActiveGlobal,
+        isChainingBrowser: isChainingBrowser,
+        chainingPayload: chainingPayload,
+      );
     }
     _currentTab = 0;
   }
@@ -123,6 +136,8 @@ class WebViewProvider extends ChangeNotifier {
     bool chatRemovalActive,
     List<String> historyBack,
     List<String> historyForward,
+    bool isChainingBrowser = false,
+    ChainingPayload chainingPayload,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     var key = GlobalKey<WebViewFullState>();
@@ -135,12 +150,15 @@ class WebViewProvider extends ChangeNotifier {
           dialog: _useDialog,
           useTabs: true,
           chatRemovalActive: chatRemovalActive,
+          isChainingBrowser: isChainingBrowser,
+          chainingPayload: chainingPayload,
         )
         ..pageTitle = pageTitle
         ..currentUrl = url
         ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
-        ..historyForward = historyForward ?? <String>[],
+        ..historyForward = historyForward ?? <String>[]
+        ..isChainingBrowser = isChainingBrowser,
     );
     notifyListeners();
     _callAssessMethods();
@@ -409,12 +427,21 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void cancelChainingBrowser() {
+    var tab = _tabList[_currentTab];
+    tab.isChainingBrowser = false;
+    notifyListeners();
+  }
+
   Future openBrowserPreference({
     @required BuildContext context,
     @required String url,
     @required bool useDialog,
     bool awaitable = false,
     bool recallLastSession = false,
+    // Chaining
+    final bool isChainingBrowser = false,
+    final ChainingPayload chainingPayload,
   }) async {
     var browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
@@ -425,21 +452,39 @@ class WebViewProvider extends ChangeNotifier {
         // Otherwise, we attend to user preferences on browser type
         if (useDialog) {
           if (awaitable) {
-            await openBrowserDialog(context, url, recallLastSession: recallLastSession);
+            await openBrowserDialog(
+              context,
+              url,
+              recallLastSession: recallLastSession,
+            );
           } else {
-            openBrowserDialog(context, url, recallLastSession: recallLastSession);
+            openBrowserDialog(
+              context,
+              url,
+              recallLastSession: recallLastSession,
+            );
           }
         } else {
           if (awaitable) {
             await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: url, recallLastSession: recallLastSession),
+                builder: (BuildContext context) => WebViewStackView(
+                  initUrl: url,
+                  recallLastSession: recallLastSession,
+                  isChainingBrowser: isChainingBrowser,
+                  chainingPayload: chainingPayload,
+                ),
               ),
             );
           } else {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (BuildContext context) => WebViewStackView(initUrl: url, recallLastSession: recallLastSession),
+                builder: (BuildContext context) => WebViewStackView(
+                  initUrl: url,
+                  recallLastSession: recallLastSession,
+                  isChainingBrowser: isChainingBrowser,
+                  chainingPayload: chainingPayload,
+                ),
               ),
             );
           }

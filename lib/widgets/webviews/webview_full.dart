@@ -13,6 +13,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
@@ -29,17 +31,21 @@ import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
+import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
@@ -48,9 +54,26 @@ import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:torn_pda/widgets/quick_items/quick_items_widget.dart';
 import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+class HealingPages {
+  String description;
+  String url;
+
+  HealingPages({this.description}) {
+    switch (description) {
+      case "Personal":
+        url = 'https://www.torn.com/item.php#medical-items';
+        break;
+      case "Faction":
+        url = 'https://www.torn.com/factions.php?step=your#/tab=armoury&start=0&sub=medical';
+        break;
+    }
+  }
+}
 
 class VaultsOptions {
   String description;
@@ -76,6 +99,10 @@ class WebViewFull extends StatefulWidget {
   final bool chatRemovalActive;
   final GlobalKey<WebViewFullState> key;
 
+  // Chaining
+  final bool isChainingBrowser;
+  final ChainingPayload chainingPayload;
+
   const WebViewFull({
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
@@ -84,6 +111,10 @@ class WebViewFull extends StatefulWidget {
     this.useTabs = false,
     this.chatRemovalActive = false,
     this.key,
+
+    // Chaining
+    this.isChainingBrowser = false,
+    this.chainingPayload,
   }) : super(key: key);
 
   @override
@@ -164,7 +195,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _crimesTriggered = false;
   bool _gymTriggered = false;
   bool _quickItemsTriggered = false;
-  bool _quickItemsFactionTriggered = false;  // Only in onLoadResource
+  bool _quickItemsFactionTriggered = false; // Only in onLoadResource
   bool _cityTriggered = false;
   bool _tradesTriggered = false;
   bool _vaultTriggered = false;
@@ -208,6 +239,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _omitTabHistory = false;
 
+  // Chaining configuration
+  bool _isChainingBrowser = false;
+  final _chainingAidPopupChoices = <HealingPages>[
+    HealingPages(description: "Personal"),
+    HealingPages(description: "Faction"),
+  ];
+  final _chainWidgetController = ExpandableController();
+  final _chainWidgetKey = GlobalKey();
+  ChainStatusProvider _chainStatusProvider;
+  TargetsProvider _targetsProvider;
+  final _w = Get.put(WarController());
+  int _attackNumber = 0;
+  String _factionName = "";
+  int _lastOnline = 0;
+  bool _nextButtonPressed = false;
+  // Chaining configuration ends
+
   @override
   void initState() {
     super.initState();
@@ -219,8 +267,30 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _clearCacheFirstOpportunity = _settingsProvider.getClearCacheNextOpportunityAndReset;
 
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+
     _initialUrl = URLRequest(url: Uri.parse(widget.customUrl));
-    _pageTitle = widget.customTitle;
+
+    if (widget.isChainingBrowser) {
+      _isChainingBrowser = true;
+      String title = widget.chainingPayload.attackNameList[0];
+      _pageTitle = title;
+      // Decide if voluntarily skipping first target (always when it's a panic target)
+      _assessFirstTargetsOnLaunch();
+      _chainStatusProvider = context.read<ChainStatusProvider>();
+      if (_chainStatusProvider.watcherActive) {
+        _chainWidgetController.expanded = true;
+      }
+      _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+      if (widget.chainingPayload.war) {
+        _w.lastAttackedTargets.clear();
+        _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[0]);
+      } else {
+        _targetsProvider.lastAttackedTargets.clear();
+        _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[0]);
+      }
+    } else {
+      _pageTitle = widget.customTitle;
+    }
 
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
@@ -277,6 +347,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void dispose() {
     webView = null;
     _findController.dispose();
+    _chainWidgetController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -646,6 +717,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           const SizedBox.shrink(),
         // Profile attack
         _profileAttackWidget,
+        ExpandablePanel(
+          theme: ExpandableThemeData(
+            hasIcon: false,
+            tapBodyToCollapse: false,
+            tapHeaderToExpand: false,
+          ),
+          collapsed: SizedBox.shrink(),
+          controller: _chainWidgetController,
+          header: SizedBox.shrink(),
+          expanded: ChainWidget(
+            key: _chainWidgetKey,
+            alwaysDarkBackground: true,
+          ),
+        ),
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
@@ -878,7 +963,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     final document = parse(html);
 
                     // Force to show title
-                    _pageTitle = await _getPageTitle(document, showTitle: true);
+                    if (!_isChainingBrowser) {
+                      _pageTitle = await _getPageTitle(document, showTitle: true);
+                    }
 
                     if (widget.useTabs) {
                       _reportUrlVisit(uri, reportTitle: true);
@@ -1065,31 +1152,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
 
                     // Quick items armoury tab (faction)
-                    if (resource.initiatorType == "xmlhttprequest" && 
-                        resource.url.toString().contains("factions.php") || 
-                          (!resource.url.toString().contains("factions.php") && _quickItemsFactionTriggered)) {
-                      
+                    if (resource.initiatorType == "xmlhttprequest" &&
+                            resource.url.toString().contains("factions.php") ||
+                        (!resource.url.toString().contains("factions.php") && _quickItemsFactionTriggered)) {
                       // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                       // the webView to freeze for a bit
-                      if (_quickItemsFactionOnResourceTriggerTime != null 
-                        && DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime).inSeconds < 1) { 
-                        return; 
+                      if (_quickItemsFactionOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime).inSeconds < 1) {
+                        return;
                       }
-                      
+
                       _quickItemsFactionOnResourceTriggerTime = DateTime.now();
-                      
-                      // We are not reporting the URL if we change tabs 
+
+                      // We are not reporting the URL if we change tabs
                       // (it does not work on desktop either)
                       var uri = (await webView.getUrl());
                       _currentUrl = uri.toString();
-                      
+
                       if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
                         _assessFactionQuickItems();
                       } else if (!_currentUrl.contains('tab=armoury') && _quickItemsFactionTriggered) {
                         _assessFactionQuickItems(deactivate: true);
                       }
                     }
-
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -1435,35 +1520,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ],
             ),
           ),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                _findPreviousText = _findController.text;
-                _findAll();
-                _findFocus.unfocus();
-              },
-            ),
-            if (_findFirstSubmitted)
-              Row(
-                children: [
+          actions: _isChainingBrowser
+              ? _chainingActionButtons()
+              : <Widget>[
                   IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_up),
+                    icon: const Icon(Icons.search),
                     onPressed: () {
-                      _findNext(forward: false);
+                      _findPreviousText = _findController.text;
+                      _findAll();
                       _findFocus.unfocus();
                     },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    onPressed: () {
-                      _findNext(forward: true);
-                      _findFocus.unfocus();
-                    },
-                  ),
+                  if (_findFirstSubmitted)
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.keyboard_arrow_up),
+                          onPressed: () {
+                            _findNext(forward: false);
+                            _findFocus.unfocus();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          onPressed: () {
+                            _findNext(forward: true);
+                            _findFocus.unfocus();
+                          },
+                        ),
+                      ],
+                    )
                 ],
-              )
-          ],
         ),
       );
     }
@@ -1528,48 +1615,54 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             ),
           ),
         ),
-        actions: <Widget>[
-          _crimesMenuIcon(),
-          _quickItemsMenuIcon(),
-          _travelHomeIcon(),
-          _vaultsPopUpIcon(),
-          _tradesMenuIcon(),
-          _vaultOptionsIcon(),
-          _cityMenuIcon(),
-          _bazaarFillIcon(),
-          if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
-                ? Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      splashColor: Colors.orange,
-                      child: const Icon(Icons.refresh),
-                      onTap: () async {
-                        _scrollX = await webView.getScrollX();
-                        _scrollY = await webView.getScrollY();
-                        await reload();
-                        _scrollAfterLoad = true;
-
-                        BotToast.showText(
-                          text: "Reloading...",
-                          textStyle: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          contentColor: Colors.grey[600],
-                          duration: const Duration(seconds: 1),
-                          contentPadding: const EdgeInsets.all(10),
-                        );
-                      },
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          )
-        ],
+        actions: _isChainingBrowser
+            ? _chainingActionButtons()
+            : <Widget>[
+                _crimesMenuIcon(),
+                _quickItemsMenuIcon(),
+                _travelHomeIcon(),
+                _vaultsPopUpIcon(),
+                _tradesMenuIcon(),
+                _vaultOptionsIcon(),
+                _cityMenuIcon(),
+                _bazaarFillIcon(),
+                if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
+                _reloadIcon(),
+              ],
       ),
+    );
+  }
+
+  Widget _reloadIcon() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.pull
+          ? Material(
+              color: Colors.transparent,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                splashColor: Colors.orange,
+                child: const Icon(Icons.refresh),
+                onTap: () async {
+                  _scrollX = await webView.getScrollX();
+                  _scrollY = await webView.getScrollY();
+                  await reload();
+                  _scrollAfterLoad = true;
+
+                  BotToast.showText(
+                    text: "Reloading...",
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.grey[600],
+                    duration: const Duration(seconds: 1),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                },
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -1831,13 +1924,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _assessBackButtonBehavior() async {
-    // If we are NOT moving to a place with a vault, we show an X and close upon button press
-    if (!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
-        !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
-        !_currentUrl.contains('companies.php#/option=funds')) {
+    // We show an X and close upon button press if
+    //   - we are not moving to a place with a vault; or
+    //   - we are not moving to items/armoury with an active chaining browser
+    if ((!_currentUrl.contains('properties.php#/p=options&tab=vault') &&
+            !_currentUrl.contains('factions.php?step=your#/tab=armoury&start=0&sub=donate') &&
+            !_currentUrl.contains('companies.php#/option=funds')) &&
+        (!_currentUrl.contains('items.php') && !_currentUrl.contains('factions.php') && !_isChainingBrowser)) {
       _backButtonPopsContext = true;
     }
-    // However, if we are in a place with a vault AND we come from Trades, we'll change
+    // However, if we come from Trades, we'll also change
     // the back button behavior to ensure we are returning to Trades
     else {
       final history = await webView.getCopyBackForwardList();
@@ -2704,7 +2800,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           _quickItemsFactionController.expanded = false;
           _quickItemsFactionActive = false;
           _quickItemsFactionTriggered = false;
-        });   
+        });
         return;
       }
 
@@ -3194,6 +3290,461 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Chaining menu
+  List<Widget> _chainingActionButtons() {
+    List<Widget> myButtons = [];
+
+    myButtons.add(_quickItemsMenuIcon());
+
+    Widget hideChatIcon = _webViewProvider.chatRemovalEnabledGlobal ? _hideChatIcon() : SizedBox.shrink();
+    myButtons.add(hideChatIcon);
+
+    myButtons.add(_reloadIcon());
+
+    myButtons.add(
+      GestureDetector(
+        child: Icon(MdiIcons.linkVariant),
+        onTap: () {
+          _chainWidgetController.expanded
+              ? _chainWidgetController.expanded = false
+              : _chainWidgetController.expanded = true;
+        },
+      ),
+    );
+
+    myButtons.add(_medicalActionButton());
+
+    if (_attackNumber < widget.chainingPayload.attackIdList.length - 1) {
+      myButtons.add(_nextAttackActionButton());
+    } else {
+      myButtons.add(_endAttackButton());
+    }
+
+    return myButtons;
+  }
+
+  Widget _nextAttackActionButton() {
+    return IconButton(
+      icon: Icon(Icons.skip_next),
+      onPressed: _nextButtonPressed ? null : () => _launchNextAttack(),
+    );
+  }
+
+  Widget _endAttackButton() {
+    return IconButton(
+      icon: Icon(MdiIcons.stop),
+      onPressed: () {
+        setState(() {
+          _isChainingBrowser = false;
+          _webViewProvider.cancelChainingBrowser();
+        });
+      },
+    );
+  }
+
+  Widget _medicalActionButton() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: PopupMenuButton<HealingPages>(
+        icon: Icon(Icons.healing),
+        onSelected: _openHealingPage,
+        itemBuilder: (BuildContext context) {
+          return _chainingAidPopupChoices.map((HealingPages choice) {
+            return PopupMenuItem<HealingPages>(
+              value: choice,
+              child: Text(choice.description),
+            );
+          }).toList();
+        },
+      ),
+    );
+  }
+
+  void _openHealingPage(HealingPages choice) async {
+    String goBackTitle = _pageTitle;
+    // Check if the proper page loads (e.g. if we have started an attack, it won't let us change to another page!).
+    // Note: this is something that can't be done from one target to another,
+    // but only between different sections (not sure why).
+    await _loadUrl('${choice.url}');
+    await Future.delayed(const Duration(seconds: 1), () {});
+    if (goBackTitle != _currentUrl) {
+      setState(() {
+        _pageTitle = 'Items';
+        _backButtonPopsContext = false;
+      });
+    }
+  }
+
+  void _assessFirstTargetsOnLaunch() async {
+    if (widget.chainingPayload.panic ||
+        (_settingsProvider.targetSkippingAll && _settingsProvider.targetSkippingFirst)) {
+      // Counters for target skipping
+      int targetsSkipped = 0;
+      var originalPosition = _attackNumber;
+      bool reachedEnd = false;
+      var skippedNames = [];
+
+      // We'll skip maximum of 3 targets
+      for (var i = 0; i < 3; i++) {
+        // Get the status of our next target
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[i]);
+
+        if (nextTarget is TargetModel) {
+          // If in hospital or jail (even in a different country), we skip
+          if (nextTarget.status.color == "red") {
+            targetsSkipped++;
+            skippedNames.add(nextTarget.name);
+            _attackNumber++;
+          }
+          // If flying, we need to see if he is in a different country (if we are in the same
+          // place, we can attack him)
+          else if (nextTarget.status.color == "blue") {
+            var user = await TornApiCaller().getTarget(playerId: _userProvider.basic.playerId.toString());
+            if (user is TargetModel) {
+              if (user.status.description != nextTarget.status.description) {
+                targetsSkipped++;
+                skippedNames.add(nextTarget.name);
+                _attackNumber++;
+              }
+            }
+          }
+          // If we found a good target, we break here. But before, we gather
+          // some more details if option is enabled
+          else {
+            if (widget.chainingPayload.showOnlineFactionWarning) {
+              _factionName = nextTarget.faction.factionName;
+              _lastOnline = nextTarget.lastAction.timestamp;
+            }
+            break;
+          }
+          // If after looping we are over the target limit, it means we have reached the end
+          // in which case we reset the position to the last target we attacked, and break
+          if (_attackNumber >= widget.chainingPayload.attackIdList.length) {
+            _attackNumber = originalPosition;
+            reachedEnd = true;
+            break;
+          }
+        }
+        // If there is an error getting a target, don't skip
+        else {
+          _factionName = "";
+          _lastOnline = 0;
+          break;
+        }
+      }
+
+      if (targetsSkipped > 0 && !reachedEnd) {
+        BotToast.showText(
+          text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+              "country",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+
+        var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+        if (!mounted) return;
+        await _loadUrl('$nextBaseUrl${widget.chainingPayload.attackIdList[_attackNumber]}');
+        if (widget.chainingPayload.war) {
+          _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+        } else {
+          _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+        }
+
+        setState(() {
+          _pageTitle = '${widget.chainingPayload.attackNameList[_attackNumber]}';
+        });
+
+        // Show note for next target
+        if (widget.chainingPayload.showNotes) {
+          _showNoteToast();
+        }
+
+        return;
+      }
+
+      if (targetsSkipped > 0 && reachedEnd) {
+        BotToast.showText(
+          text: "No more targets, all remaining are either in jail, hospital or in a different "
+              "country (${skippedNames.join(", ")})",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+
+        return;
+      }
+    }
+
+    // This will show the note of the first target, if applicable
+    if (widget.chainingPayload.showNotes) {
+      if (widget.chainingPayload.showOnlineFactionWarning) {
+        var nextTarget = await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[0]);
+        if (nextTarget is TargetModel) {
+          _factionName = nextTarget.faction.factionName;
+          _lastOnline = nextTarget.lastAction.timestamp;
+        }
+      }
+      _showNoteToast();
+    }
+  }
+
+  /// Not to be used right after launch
+  void _launchNextAttack() async {
+    var nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
+    // Turn button grey
+    setState(() {
+      _nextButtonPressed = true;
+    });
+
+    if (widget.chainingPayload.panic || _settingsProvider.targetSkippingAll) {
+      // Counters for target skipping
+      int targetsSkipped = 0;
+      var originalPosition = _attackNumber;
+      bool reachedEnd = false;
+      var skippedNames = [];
+
+      // We'll skip maximum of 3 targets
+      for (var i = 0; i < 3; i++) {
+        // Get the status of our next target
+        var nextTarget =
+            await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+
+        if (nextTarget is TargetModel) {
+          // If in hospital or jail (even in a different country), we skip
+          if (nextTarget.status.color == "red") {
+            targetsSkipped++;
+            skippedNames.add(nextTarget.name);
+            _attackNumber++;
+          }
+          // If flying, we need to see if he is in a different country (if we are in the same
+          // place, we can attack him)
+          else if (nextTarget.status.color == "blue") {
+            var user = await TornApiCaller().getTarget(playerId: _userProvider.basic.playerId.toString());
+            if (user is TargetModel) {
+              if (user.status.description != nextTarget.status.description) {
+                targetsSkipped++;
+                skippedNames.add(nextTarget.name);
+                _attackNumber++;
+              }
+            }
+          }
+          // If we found a good target, we break here. But before, we gather
+          // some more details if option is enabled
+          else {
+            if (widget.chainingPayload.showOnlineFactionWarning) {
+              _factionName = nextTarget.faction.factionName;
+              _lastOnline = nextTarget.lastAction.timestamp;
+            }
+            break;
+          }
+          // If after looping we are over the target limit, it means we have reached the end
+          // in which case we reset the position to the last target we attacked, and break
+          if (_attackNumber >= widget.chainingPayload.attackIdList.length - 1) {
+            _attackNumber = originalPosition;
+            reachedEnd = true;
+            break;
+          }
+        }
+        // If there is an error getting a target, don't skip
+        else {
+          _factionName = "";
+          _lastOnline = 0;
+          break;
+        }
+      }
+
+      if (targetsSkipped > 0 && !reachedEnd) {
+        BotToast.showText(
+          text: "Skipped ${skippedNames.join(", ")}, either in jail, hospital or in a different "
+              "country",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+      }
+
+      if (targetsSkipped > 0 && reachedEnd) {
+        BotToast.showText(
+          text: "No more targets, all remaining are either in jail, hospital or in a different "
+              "country (${skippedNames.join(", ")})",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.grey[600],
+          duration: Duration(seconds: 5),
+          contentPadding: EdgeInsets.all(10),
+        );
+
+        setState(() {
+          _nextButtonPressed = false;
+        });
+        return;
+      }
+    }
+    // If skipping is disabled but notes are not, we still get information
+    // from the API
+    else {
+      if (widget.chainingPayload.showOnlineFactionWarning) {
+        var nextTarget =
+            await TornApiCaller().getTarget(playerId: widget.chainingPayload.attackIdList[_attackNumber + 1]);
+
+        if (nextTarget is TargetModel) {
+          _factionName = nextTarget.faction.factionName;
+          _lastOnline = nextTarget.lastAction.timestamp;
+        } else {
+          _factionName = "";
+          _lastOnline = 0;
+        }
+      }
+    }
+
+    _attackNumber++;
+    if (!mounted) return;
+    await _loadUrl('$nextBaseUrl${widget.chainingPayload.attackIdList[_attackNumber]}');
+    if (widget.chainingPayload.war) {
+      _w.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+    } else {
+      _targetsProvider.lastAttackedTargets.add(widget.chainingPayload.attackIdList[_attackNumber]);
+    }
+    setState(() {
+      _pageTitle = '${widget.chainingPayload.attackNameList[_attackNumber]}';
+    });
+    _backButtonPopsContext = true;
+
+    // Turn button back to usable
+    setState(() {
+      _nextButtonPressed = false;
+    });
+
+    // Show note for next target
+    if (widget.chainingPayload.showNotes) {
+      _showNoteToast();
+    }
+  }
+
+  /// Use [onlyOne] when we want to get rid of several notes (e.g. to skip the very first target(s)
+  /// without showing the notes for the ones skipped)
+  void _showNoteToast() {
+    Color cardColor;
+    switch (widget.chainingPayload.attackNotesColorList[_attackNumber]) {
+      case 'z':
+        cardColor = Colors.grey[700];
+        break;
+      case 'green':
+        cardColor = Colors.green[900];
+        break;
+      case 'orange':
+        cardColor = Colors.orange[900];
+        break;
+      case 'red':
+        cardColor = Colors.red[900];
+        break;
+      default:
+        cardColor = Colors.grey[700];
+    }
+
+    String extraInfo = "";
+    if (_lastOnline > 0 && !widget.chainingPayload.war) {
+      var now = DateTime.now();
+      var lastOnlineDiff = now.difference(DateTime.fromMillisecondsSinceEpoch(_lastOnline * 1000));
+      if (lastOnlineDiff.inDays < 7) {
+        if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty) {
+          extraInfo += "\n\n";
+        }
+        if (lastOnlineDiff.inHours < 1) {
+          extraInfo += "Online less than an hour ago!";
+        } else if (lastOnlineDiff.inHours == 1) {
+          extraInfo += "Online 1 hour ago!";
+        } else if (lastOnlineDiff.inHours > 1 && lastOnlineDiff.inHours < 24) {
+          extraInfo += "Online ${lastOnlineDiff.inHours} hours ago!";
+        } else if (lastOnlineDiff.inDays == 1) {
+          extraInfo += "Online yesterday!";
+        } else if (lastOnlineDiff.inDays > 1) {
+          extraInfo += "Online ${lastOnlineDiff.inDays} days ago!";
+        }
+        if (_factionName != "None" && _factionName != "") {
+          extraInfo += "\nBelongs to faction $_factionName";
+        }
+      }
+    }
+
+    // Do nothing if note is empty
+    if (widget.chainingPayload.attackNotesList[_attackNumber].isEmpty &&
+        !widget.chainingPayload.showBlankNotes &&
+        extraInfo.isEmpty) {
+      return;
+    }
+
+    BotToast.showCustomText(
+      onlyOne: false,
+      clickClose: true,
+      ignoreContentClick: true,
+      duration: Duration(seconds: 5),
+      toastBuilder: (textCancel) => Align(
+        alignment: Alignment(0, 0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Card(
+            color: cardColor,
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          MdiIcons.notebookOutline,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        SizedBox(width: 5),
+                        Text(
+                          'Note for ${widget.chainingPayload.attackNameList[_attackNumber]}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  if (widget.chainingPayload.attackNotesList[_attackNumber].isNotEmpty) SizedBox(height: 12),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          '${widget.chainingPayload.attackNotesList[_attackNumber]}$extraInfo',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
