@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:math';
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
@@ -1206,16 +1207,31 @@ class _WarCardState extends State<WarCard> {
           (_userProvider.basic.total <= _member.statsExactTotalKnown + _member.statsExactTotalKnown * 0.1)) {
         exactColor = Colors.orange[700];
       }
+
+      int totalToShow = 0;
+      if (_member.statsExactTotal != -1) {
+        // TornStats adds all 4 stats into total if total is unknown, but then rounds. So it might happen that the
+        // total sum is actually higher than the one calculated and rounded by TS
+        totalToShow = max(_member.statsExactTotal, _member.statsExactTotalKnown);
+      } else {
+        totalToShow = _member.statsExactTotalKnown;
+      }
+
+      bool someStatUnknown = false;
+      if (_member.statsStr == -1 || _member.statsDef == -1 || _member.statsDex == -1 || _member.statsSpd == -1) {
+        someStatUnknown = true;
+      }
+
       return Row(
         children: [
           Text(
-            "${formatBigNumbers(_member.statsExactTotalKnown)}",
+            "${formatBigNumbers(totalToShow)}",
             style: TextStyle(
               fontSize: 12,
               color: exactColor,
             ),
           ),
-          if (_member.statsExactTotalKnown != _member.statsExactTotal)
+          if (someStatUnknown)
             Padding(
               padding: const EdgeInsets.only(left: 2),
               child: Text(

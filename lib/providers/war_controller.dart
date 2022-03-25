@@ -653,8 +653,10 @@ class WarController extends GetxController {
       _lastYataSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
     } else {
       String savedTornStatsSpies = await Prefs().getTornStatsSpies();
-      _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
-      _lastTornStatsSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getTornStatsSpiesTime());
+      if (savedTornStatsSpies.isNotEmpty) {
+        _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
+        _lastTornStatsSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getTornStatsSpiesTime());
+      }
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -896,5 +898,4 @@ class WarController extends GetxController {
       }
     }
   }
-
 }
