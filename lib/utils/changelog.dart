@@ -43,7 +43,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_7_0.main.version = 'Torn PDA v2.7.0';
     v2_7_0.main.date = '10 APR 2022';
     String feat2_7_0_1 = "Added quick items in faction armoury";
-    String feat2_7_0_2 = "The chaining browser now opens as a tab and has access to all widgets";
+    String feat2_7_0_2 = "The chaining browser now opens as a tab and incorporates all widgets";
     String feat2_7_0_3 = "Corrected white flash when using browser with dark themes";
     v2_7_0.features.add(feat2_7_0_1);
     v2_7_0.features.add(feat2_7_0_2);
