@@ -45,13 +45,17 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_7_0_1 = "Browser: added quick items widget in faction armoury";
     String feat2_7_0_2 = "Chaining: the browser now opens as a tab and incorporates all widgets";
     String feat2_7_0_3 = "Alerts: increased time options for refills";
-    String feat2_7_0_4 = "Fixed white flash when using browser with dark themes";
-    String feat2_7_0_5 = "Fixed issues with war targets cards and total stats calculation";
+    String feat2_7_0_4 = "Travel: added -/+ buttons to items capacity for easier selection";
+    String feat2_7_0_5 = "Fixed white flash when using browser with dark themes";
+    String feat2_7_0_6 = "Fixed issues with war targets cards and total stats calculation";
+    String feat2_7_0_7 = "Fixed several other minor reported issues";
     v2_7_0.features.add(feat2_7_0_1);
     v2_7_0.features.add(feat2_7_0_2);
     v2_7_0.features.add(feat2_7_0_3);
     v2_7_0.features.add(feat2_7_0_4);
     v2_7_0.features.add(feat2_7_0_5);
+    v2_7_0.features.add(feat2_7_0_6);
+    v2_7_0.features.add(feat2_7_0_7);
 
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();

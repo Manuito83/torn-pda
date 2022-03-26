@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -55,8 +56,8 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
               padding: EdgeInsets.only(
                 top: 45,
                 bottom: 16,
-                left: 25,
-                right: 25,
+                left: 15,
+                right: 15,
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
@@ -145,8 +146,37 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                           _callBackValues();
                         },
                       ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () {
+                              if (_capacity > 1) {
+                                setState(() {
+                                  _capacity--;
+                                });
+                                _callBackValues();
+                              }
+                            },
+                            child: Icon(MdiIcons.minus),
+                          ),
+                          SizedBox(width: 10),
+                          OutlinedButton(
+                            onPressed: () {
+                              if (_capacity < 44) {
+                                setState(() {
+                                  _capacity++;
+                                });
+                                _callBackValues();
+                              }
+                            },
+                            child: Icon(MdiIcons.plus),
+                          ),
+                        ],
+                      )
                     ],
                   ),
+                  SizedBox(height: 5),
                   Text(
                     'Affects profit per hour calculation',
                     style: TextStyle(
