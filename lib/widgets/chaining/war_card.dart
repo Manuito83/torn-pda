@@ -1100,7 +1100,7 @@ class _WarCardState extends State<WarCard> {
               height: 16,
               width: 16,
               child: Image.asset(
-                widget.memberModel.spiesSource == SpiesSource.yata
+                widget.memberModel.spiesSource == "yata"
                     ? 'images/icons/yata_logo.png'
                     : 'images/icons/tornstats_logo.png',
               ),
