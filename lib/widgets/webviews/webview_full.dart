@@ -32,6 +32,7 @@ import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -768,7 +769,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    webviewType: 'inapp',
                     faction: false,
                   )
                 : const SizedBox.shrink(),
@@ -788,7 +788,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsFactionActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    webviewType: 'inapp',
                     faction: true,
                   )
                 : const SizedBox.shrink(),
@@ -1294,7 +1293,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    webviewType: 'inapp',
                     faction: false,
                   )
                 : const SizedBox.shrink(),
@@ -1314,7 +1312,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             expanded: _quickItemsFactionActive
                 ? QuickItemsWidget(
                     inAppWebViewController: webView,
-                    webviewType: 'inapp',
                     faction: true,
                   )
                 : const SizedBox.shrink(),
@@ -2812,8 +2809,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
       _quickItemsFactionTriggered = true;
 
-      final quickItemsProvider = context.read<QuickItemsProvider>();
-      quickItemsProvider.loadItems();
+      final quickItemsProviderFaction = context.read<QuickItemsProviderFaction>();
+      quickItemsProviderFaction.loadItems();
 
       setState(() {
         _quickItemsFactionController.expanded = true;
@@ -2823,12 +2820,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Widget _quickItemsMenuIcon() {
-    if (_quickItemsActive) {
+    if (_quickItemsActive || _quickItemsFactionActive) {
       return OpenContainer(
         transitionDuration: const Duration(milliseconds: 500),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
-          return QuickItemsOptions();
+          return QuickItemsOptions(
+            isFaction: _quickItemsFactionActive,
+          );
         },
         closedElevation: 0,
         closedShape: const RoundedRectangleBorder(

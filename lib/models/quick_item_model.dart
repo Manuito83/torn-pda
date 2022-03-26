@@ -41,9 +41,9 @@ class QuickItem {
         name: json["name"] == null ? null : json["name"],
         description: json["description"] == null ? null : json["description"],
         inventory: json["inventory"] == null ? null : json["inventory"],
-        isLoadout: json["isLoadout"] == null ? null : json["isLoadout"],
-        loadoutNumber: json["loadoutNumber"] == null ? null : json["loadoutNumber"],
-        loadoutName: json["loadoutName"] == null ? null : json["loadoutName"],
+        isLoadout: json["isLoadout"] == null ? false : json["isLoadout"],
+        loadoutNumber: json["loadoutNumber"] == -1 ? null : json["loadoutNumber"],
+        loadoutName: json["loadoutName"] == "" ? null : json["loadoutName"],
         isPoints: json["isPoints"] == null ? false : json["isPoints"],
       );
 

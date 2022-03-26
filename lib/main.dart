@@ -29,6 +29,7 @@ import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -142,6 +143,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<QuickItemsProvider>(
           create: (context) => QuickItemsProvider(),
+        ),
+        ChangeNotifierProvider<QuickItemsProviderFaction>(
+          create: (context) => QuickItemsProviderFaction(),
         ),
         ChangeNotifierProvider<TradesProvider>(
           create: (context) => TradesProvider(),

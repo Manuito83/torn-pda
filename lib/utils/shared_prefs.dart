@@ -128,6 +128,7 @@ class Prefs {
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kQuickItemsList = "pda_quickItemsList";
+  final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
@@ -1449,6 +1450,16 @@ class Prefs {
   Future<bool> setQuickItemsList(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kQuickItemsList, value);
+  }
+
+  Future<List<String>> getQuickItemsListFaction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kQuickItemsListFaction) ?? <String>[];
+  }
+
+  Future<bool> setQuickItemsListFaction(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kQuickItemsListFaction, value);
   }
 
   Future<int> getNumberOfLoadouts() async {

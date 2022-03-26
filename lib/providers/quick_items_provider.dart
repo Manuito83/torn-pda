@@ -65,14 +65,6 @@ class QuickItemsProvider extends ChangeNotifier {
     var savedActives = await Prefs().getQuickItemsList();
     for (var rawItem in savedActives) {
       QuickItem activeItem = quickItemFromJson(rawItem);
-
-      // Adds necessary fields (if missing) after loadouts where introduced in v2.6.5
-      if (activeItem.isLoadout == null) {
-        activeItem.isLoadout = false;
-        activeItem.loadoutName = "";
-        activeItem.loadoutNumber = -1;
-      }
-
       _activeQuickItemsList.add(activeItem);
     }
 
@@ -198,25 +190,6 @@ class QuickItemsProvider extends ChangeNotifier {
         }
       });
       _fullQuickItemsList.sort((a, b) => a.name.compareTo(b.name));
-
-      // Insert points
-      var savedActive = false;
-      for (var saved in _activeQuickItemsList) {
-        if (saved.isPoints) {
-          savedActive = true;
-          break;
-        }
-      }
-
-      _fullQuickItemsList.insert(
-        0,
-        QuickItem()
-          ..name = "Faction points refill"
-          ..description = "Refills energy with faction points"
-          ..number = 0
-          ..active = savedActive
-          ..isPoints = true,
-      );
 
       // Insert loadouts at the beginning after sorting
       for (int i = 0; i < 9; i++) {
