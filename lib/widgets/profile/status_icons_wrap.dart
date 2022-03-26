@@ -104,6 +104,8 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
             }
           }
 
+          //details = "Bank Investment - Current bank investment worth 194,587,366 - 0 hours, 16 minutes and 57 seconds";
+
           if (!skip) {
             final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
             iconList.add(
@@ -111,7 +113,7 @@ class _StatusIconsWrapState extends State<StatusIconsWrap> {
                 child: icon,
                 onTap: () {
                   BotToast.showText(
-                    text: details.replaceAll("0 days, 0 hours, ", "").replaceAll("0 days, ", ""),
+                    text: details.replaceAll(" 0 days, 0 hours, ", " ").replaceAll(" 0 days, ", " "),
                     textStyle: TextStyle(
                       fontSize: 14,
                       color: Colors.white,
