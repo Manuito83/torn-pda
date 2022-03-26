@@ -80,6 +80,7 @@ class Prefs {
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kShowForeignInventory = "pda_showForeignInventory";
   final String _kShowArrivalTime = "pda_showArrivalTime";
+  final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
   final String _kActiveRestocks = "pda_activeRestocks";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
@@ -958,6 +959,16 @@ class Prefs {
   Future<bool> setShowArrivalTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowArrivalTime, value);
+  }
+
+  Future<bool> getShowBarsCooldownAnalysis() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowBarsCooldownAnalysis) ?? true;
+  }
+
+  Future<bool> setShowBarsCooldownAnalysis(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowBarsCooldownAnalysis, value);
   }
 
   Future<String> getTravelTicket() async {

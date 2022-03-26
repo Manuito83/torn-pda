@@ -16,6 +16,7 @@ class StocksOptionsDialog extends StatefulWidget {
   final Function callBack;
   final bool inventoryEnabled;
   final bool showArrivalTime;
+  final bool showBarsCooldownAnalysis;
   final SettingsProvider settingsProvider;
 
   StocksOptionsDialog({
@@ -23,6 +24,7 @@ class StocksOptionsDialog extends StatefulWidget {
     @required this.callBack,
     @required this.inventoryEnabled,
     @required this.showArrivalTime,
+    @required this.showBarsCooldownAnalysis,
     @required this.settingsProvider,
   });
 
@@ -36,6 +38,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   int _capacity;
   bool _inventoryEnabled;
   bool _showArrivalTime;
+  bool _barsCooldownAnalysis;
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
     _capacity = widget.capacity;
     _inventoryEnabled = widget.inventoryEnabled;
     _showArrivalTime = widget.showArrivalTime;
+    _barsCooldownAnalysis = widget.showBarsCooldownAnalysis;
   }
 
   @override
@@ -56,8 +60,8 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
               padding: EdgeInsets.only(
                 top: 45,
                 bottom: 16,
-                left: 15,
-                right: 15,
+                left: 25,
+                right: 25,
               ),
               margin: EdgeInsets.only(top: 30),
               decoration: new BoxDecoration(
@@ -115,6 +119,30 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
                         onChanged: (value) {
                           setState(() {
                             _showArrivalTime = value;
+                          });
+                          _callBackValues();
+                        },
+                        activeTrackColor: Colors.lightGreenAccent,
+                        activeColor: Colors.green,
+                      ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          "Bars/cooldown analysis",
+                          style: TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      Switch(
+                        value: _barsCooldownAnalysis,
+                        onChanged: (value) {
+                          setState(() {
+                            _barsCooldownAnalysis = value;
                           });
                           _callBackValues();
                         },
@@ -317,9 +345,10 @@ class _StocksOptionsDialogState extends State<StocksOptionsDialog> {
   }
 
   void _callBackValues() {
-    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime);
+    widget.callBack(_capacity, _inventoryEnabled, _showArrivalTime, _barsCooldownAnalysis);
     Prefs().setStockCapacity(_capacity);
     Prefs().setShowForeignInventory(_inventoryEnabled);
     Prefs().setShowArrivalTime(_showArrivalTime);
+    Prefs().setShowBarsCooldownAnalysis(_barsCooldownAnalysis);
   }
 }

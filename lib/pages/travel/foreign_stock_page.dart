@@ -18,6 +18,8 @@ import 'package:speech_bubble/speech_bubble.dart';
 // Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
+import 'package:torn_pda/models/profile/own_profile_misc.dart';
+import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
 import 'package:torn_pda/models/travel/travel_model.dart';
@@ -77,8 +79,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
 
   bool _inventoryEnabled = true;
   bool _showArrivalTime = true;
+  bool _showBarsCooldownAnalysis = true;
   InventoryModel _inventory;
-  TravelModel _travelModel;
+  //OwnProfileExtended _travelModel;
+  OwnProfileExtended _profile;
   int _capacity;
 
   final _filteredTypes = List<bool>.filled(4, true, growable: false);
@@ -758,14 +762,15 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
           capacity: _capacity,
           inventoryEnabled: _inventoryEnabled,
           showArrivalTime: _showArrivalTime,
-          moneyOnHand: _travelModel.moneyOnhand,
+          showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
+          profile: _profile,
           flagPressedCallback: _onFlagPressed,
           requestMoneyRefresh: _refreshMoney,
           ticket: _settingsProvider.travelTicket,
           activeRestocks: _activeRestocks,
-          travellingTimeStamp: _travelModel.timeStamp,
-          travellingCountry: _returnCountryName(_travelModel.destination),
-          travellingCountryFullName: _travelModel.destination,
+          travellingTimeStamp: _profile.travel.timestamp,
+          travellingCountry: _returnCountryName(_profile.travel.destination),
+          travellingCountryFullName: _profile.travel.destination,
           key: UniqueKey(),
         ),
       );
@@ -799,7 +804,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
       }
 
       Future profileMisc() async {
-        _travelModel = await TornApiCaller().getTravel();
+        _profile = await TornApiCaller().getProfileExtended();
       }
 
       // Get all APIs at the same time
@@ -1165,6 +1170,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     _capacity = await Prefs().getStockCapacity();
     _inventoryEnabled = await Prefs().getShowForeignInventory();
     _showArrivalTime = await Prefs().getShowArrivalTime();
+    _showBarsCooldownAnalysis = await Prefs().getShowBarsCooldownAnalysis();
 
     _activeRestocks = await json.decode(await Prefs().getActiveRestocks());
   }
@@ -1186,6 +1192,7 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
               callBack: _onStocksOptionsChanged,
               inventoryEnabled: _inventoryEnabled,
               showArrivalTime: _showArrivalTime,
+              showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
               settingsProvider: _settingsProvider,
             ),
           ),
@@ -1194,11 +1201,13 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  void _onStocksOptionsChanged(int newCapacity, bool inventoryEnabled, bool showArrivalTime) {
+  void _onStocksOptionsChanged(
+      int newCapacity, bool inventoryEnabled, bool showArrivalTime, bool showBarsCooldownAnalysis) {
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;
       _showArrivalTime = showArrivalTime;
+      _showBarsCooldownAnalysis = showBarsCooldownAnalysis;
     });
   }
 
@@ -1281,10 +1290,10 @@ class _ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   _refreshMoney() async {
-    var travelModel = await TornApiCaller().getTravel();
-    if (travelModel is TravelModel && mounted) {
+    var profileModel = await TornApiCaller().getProfileExtended(limit: 3);
+    if (profileModel is OwnProfileExtended && mounted) {
       setState(() {
-        _travelModel = travelModel;
+        _profile = profileModel;
       });
     }
   }

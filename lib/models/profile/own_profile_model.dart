@@ -28,6 +28,7 @@ class OwnProfileExtended {
     this.name,
     this.propertyId,
     this.serverTime,
+    this.moneyOnHand,
     this.life,
     this.status,
     this.job,
@@ -64,6 +65,7 @@ class OwnProfileExtended {
   String name;
   int propertyId;
   int serverTime;
+  int moneyOnHand;
   Life life;
   Status status;
   Job job;
@@ -101,6 +103,7 @@ class OwnProfileExtended {
       name: json["name"] == null ? null : json["name"],
       propertyId: json["property_id"] == null ? null : json["property_id"],
       serverTime: json["server_time"] == null ? null : json["server_time"],
+      moneyOnHand: json["money_onhand"] == null ? 0 : json["money_onhand"],
       life: json["life"] == null ? null : Life.fromJson(json["life"]),
       status: json["status"] == null ? null : Status.fromJson(json["status"]),
       job: json["job"] == null ? null : Job.fromJson(json["job"]),
@@ -148,6 +151,7 @@ class OwnProfileExtended {
         "name": name == null ? null : name,
         "property_id": propertyId == null ? null : propertyId,
         "server_time": serverTime == null ? null : serverTime,
+        "money_onhand": moneyOnHand == null ? null : moneyOnHand,
         "life": life == null ? null : life.toJson(),
         "status": status == null ? null : status.toJson(),
         "job": job == null ? null : job.toJson(),
