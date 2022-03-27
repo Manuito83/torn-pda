@@ -114,8 +114,6 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
         }
       }
 
-      item.name = item.name.replaceAll("Blood Bag : ", "Blood: ");
-
       myList.add(
         Tooltip(
           message: '${item.name}\n\n${item.description}',
@@ -161,9 +159,9 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                         style: TextStyle(fontSize: 11),
                       )
                     : item.name.split(' ').length > 1
-                        ? _splitName(item.name)
+                        ? _splitName(item.name.replaceAll("Blood Bag : ", "Blood: "))
                         : Text(
-                            item.name,
+                            item.name.replaceAll("Blood Bag : ", "Blood: "),
                             softWrap: true,
                             overflow: TextOverflow.clip,
                             maxLines: 2,
