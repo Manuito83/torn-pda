@@ -177,7 +177,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
     return AppBar(
       //brightness: Brightness.dark, // For downgrade to Flutter 2.2.3
       elevation: _settingsProvider.appBarTop ? 2 : 0,
-      title: Text("Quick items"),
+      title: widget.isFaction ? Text("Quick faction items") : Text("Quick items"),
       leading: new IconButton(
         icon: new Icon(Icons.arrow_back),
         onPressed: () {
@@ -488,7 +488,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               builder: (context, itemsProviderFaction, child) {
                 var allQuickItems = <Widget>[];
                 for (var item in itemsProviderFaction.fullQuickItemsFaction) {
-                  if (item.name.toLowerCase().contains(_itemsProvider.searchFilter.toLowerCase())) {
+                  if (item.name.toLowerCase().contains(_itemsProviderFaction.searchFilter.toLowerCase())) {
                     if (item.active) {
                       continue;
                     }
