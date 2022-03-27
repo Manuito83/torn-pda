@@ -1162,11 +1162,16 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
 
     // DELAYED DEPARTURE
     if (_delayedDepartureTime.isAfter(DateTime.now())) {
+      String whenToTravel = "delayed departure: ${_timeFormatter(_delayedDepartureTime)}";
+      if (_delayedDepartureTime.difference(DateTime.now()).inHours > 24) {
+        whenToTravel += " on ${_dateFormatter(_delayedDepartureTime)}";
+      }
+
       affected.add(
         Padding(
           padding: const EdgeInsets.only(top: 10),
           child: Text(
-            "Bars/cooldowns (delayed departure):",
+            "Bars/cooldowns ($whenToTravel):",
             style: TextStyle(
               fontSize: 12,
             ),
@@ -1312,9 +1317,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       padding: const EdgeInsets.only(top: 10),
       child: Row(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: affected,
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: affected,
+            ),
           ),
         ],
       ),
