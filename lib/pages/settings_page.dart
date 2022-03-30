@@ -271,6 +271,23 @@ class _SettingsPageState extends State<SettingsPage> {
                           ],
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 20, top: 0, right: 20, bottom: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Flexible(
+                              child: Text(
+                                "Seconds in clock",
+                              ),
+                            ),
+                            Flexible(
+                              flex: 2,
+                              child: _secondsInClockDropdown(),
+                            ),
+                          ],
+                        ),
+                      ),
                       SizedBox(height: 15),
                       // TODO: this is conditional now because it only affects Android.
                       // In the future it might be needed to show always the Divider and
@@ -1442,6 +1459,45 @@ class _SettingsPageState extends State<SettingsPage> {
       onChanged: (value) {
         setState(() {
           _settingsProvider.changeShowDateInClock = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _secondsInClockDropdown() {
+    return DropdownButton<bool>(
+      value: _settingsProvider.showSecondsInClock,
+      items: [
+        DropdownMenuItem(
+          value: true,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Show",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: false,
+          child: SizedBox(
+            width: 60,
+            child: Text(
+              "Hide",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.changeShowSecondsInClock = value;
         });
       },
     );

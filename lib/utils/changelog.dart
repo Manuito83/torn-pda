@@ -47,9 +47,10 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_7_0_3 = "Alerts: increased time options for refills";
     String feat2_7_0_4 = "Travel: foreign stock cards now include bars and cooldown analysis";
     String feat2_7_0_5 = "Travel: added -/+ buttons to items capacity for easier selection";
-    String feat2_7_0_6 = "Fixed white flash when using browser with dark themes";
-    String feat2_7_0_7 = "Fixed issues with war targets cards and total stats calculation";
-    String feat2_7_0_8 = "Fixed several other minor reported issues";
+    String feat2_7_0_6 = "Added seconds to TCT clock (can be disabled)";
+    String feat2_7_0_7 = "Fixed white flash when using browser with dark themes";
+    String feat2_7_0_8 = "Fixed issues with war targets cards and total stats calculation";
+    String feat2_7_0_9 = "Fixed several other minor reported issues";
     v2_7_0.features.add(feat2_7_0_1);
     v2_7_0.features.add(feat2_7_0_2);
     v2_7_0.features.add(feat2_7_0_3);
@@ -58,6 +59,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_7_0.features.add(feat2_7_0_6);
     v2_7_0.features.add(feat2_7_0_7);
     v2_7_0.features.add(feat2_7_0_8);
+    v2_7_0.features.add(feat2_7_0_9);
 
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();

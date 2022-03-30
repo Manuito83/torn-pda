@@ -60,6 +60,7 @@ class Prefs {
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kShowDateInClockString = "pda_showDateInClockString"; // changed from bool to string
+  final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
@@ -719,6 +720,16 @@ class Prefs {
   Future<bool> setShowDateInClock(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kShowDateInClockString, value);
+  }
+
+  Future<bool> getShowSecondsInClock() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowSecondsInClock) ?? true;
+  }
+
+  Future<bool> setShowSecondsInClock(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowSecondsInClock, value);
   }
 
   /// ----------------------------

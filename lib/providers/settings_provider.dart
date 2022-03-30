@@ -152,6 +152,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showSecondsInClock = true;
+  bool get showSecondsInClock => _showSecondsInClock;
+  set changeShowSecondsInClock(bool value) {
+    _showSecondsInClock = value;
+    Prefs().setShowSecondsInClock(value);
+    notifyListeners();
+  }
+
   SpiesSource _spiesSource = SpiesSource.yata;
   SpiesSource get spiesSource => _spiesSource;
   set changeSpiesSource(SpiesSource value) {
@@ -589,6 +597,7 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _showDateInClock = await Prefs().getShowDateInClock();
+    _showSecondsInClock = await Prefs().getShowSecondsInClock();
 
     String restoredAppBar = await Prefs().getAppBarPosition();
     restoredAppBar == 'top' ? _appBarTop = true : _appBarTop = false;
