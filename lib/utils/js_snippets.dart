@@ -554,9 +554,42 @@ String restoreChatJS() {
 }
 
 String quickItemsJS({@required String item, bool faction = false, bool refill = false}) {
+  String timeRegex = r'/<span class="counter-wrap" data-time="([0-9]+)"><\/span>/';
+
   return '''
     // Credit Torn Tools
     
+    // Fixed time string for faction armoury replies
+    function fixTime(str) {
+      let regexp = $timeRegex;
+      let match = str.match(regexp);
+
+      if (match === null) {
+        console.log("null");
+        return "";
+      }
+
+      let secondsToAdd = match[1];
+
+      function secondsToHms(d) {
+          d = Number(d);
+          var h = Math.floor(d / 3600);
+          var m = Math.floor(d % 3600 / 60);
+          var s = Math.floor(d % 3600 % 60);
+
+          var hDisplay = minTwoDigits(h) + ":";
+          var mDisplay = minTwoDigits(m) + ":";
+          var sDisplay = minTwoDigits(s);
+          return hDisplay + mDisplay + sDisplay; 
+      }
+
+      function minTwoDigits(n) {
+        return (n < 10 ? '0' : '') + n;
+      }
+
+      return(str.replace(/<span class="counter-wrap".*span>/, secondsToHms(secondsToAdd)));
+    }
+
     // Add style for result box
     function addStyle(styleString) {
       const style = document.createElement('style');
@@ -652,7 +685,14 @@ String quickItemsJS({@required String item, bool faction = false, bool refill = 
             topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
             resultBox = document.querySelector('.resultBox');
             resultBox.style.display = "block";
-            resultBox.innerHTML = response.text.replace("This item has already been used", "Not available");
+            response.text = response.text.replace("This item has already been used", "Not available");
+            
+            let fixResult = fixTime(response.text);
+            if (fixResult === "") {
+              resultBox.innerHTML = response.text;
+            } else {
+              resultBox.innerHTML = fixResult;
+            }
           },
           onerror: function(e) {
             console.error(e)
