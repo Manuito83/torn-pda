@@ -187,6 +187,12 @@ class Prefs {
   final String _kAlternativeTornStatsKeyEnabled = "pda_alternativeTornStatsKeyEnabled";
   final String _kAlternativeTornStatsKey = "pda_alternativeTornStatsKey";
 
+  // TornStats stats chart configuration
+  final String _kTornStatsChartSave = "pda_tornStatsChartSave";
+  final String _kTornStatsChartDateTime = "pda_tornStatsChartDateTime";
+  final String _kTornStatsChartEnabled = "pda_tornStatsChartEnabled";
+  final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
+
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
   final String _kTACEnabled = "pda_tacEnabled";
@@ -1769,6 +1775,51 @@ class Prefs {
   Future<bool> setAlternativeTornStatsKey(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAlternativeTornStatsKey, value);
+  }
+
+
+  /// ---------------------
+  /// TORNSTATS STATS CHART
+  /// ---------------------
+
+  Future<String> getTornStatsChartSave() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornStatsChartSave) ?? "";
+  }
+
+  Future<bool> setTornStatsChartSave(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornStatsChartSave, value);
+  }
+  
+  Future<int> getTornStatsChartDateTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTornStatsChartDateTime) ?? 0;
+  }
+
+  Future<bool> setTornStatsChartDateTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTornStatsChartDateTime, value);
+  }
+
+  Future<bool> getTornStatsChartEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornStatsChartEnabled) ?? true;
+  }
+
+  Future<bool> setTornStatsChartEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornStatsChartEnabled, value);
+  }
+
+  Future<bool> getTornStatsChartInCollapsedMiscCard() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornStatsChartInCollapsedMiscCard) ?? true;
+  }
+
+  Future<bool> setTornStatsChartInCollapsedMiscCard(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornStatsChartInCollapsedMiscCard, value);
   }
 
   /// -------------------

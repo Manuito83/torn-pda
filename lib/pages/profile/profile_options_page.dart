@@ -616,6 +616,85 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
+                                      'TORNSTATS CHART',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      Text("Show stats chart"),
+                                      Switch(
+                                        value: _settingsProvider.tornStatsChartEnabled,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.setTornStatsChartEnabled = value;
+                                            if (!value) {
+                                              _settingsProvider.setTornStatsChartDateTime = 0;
+                                            }
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    "Show TornStats's stats chart in the Basic Info card. Stats are updated every "
+                                    "24 hours. If there is an issue, you can try to force a manual update by "
+                                    "switching this option off and back to on",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                if (_settingsProvider.tornStatsChartEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        Text("Show with card collapsed"),
+                                        Switch(
+                                          value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
+                                            });
+                                          },
+                                          activeTrackColor: Colors.lightGreenAccent,
+                                          activeColor: Colors.green,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    "Show stats chart also when the Basic Info card is collapsed (it will be "
+                                    "always available with the card expanded",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 15),
+                                Divider(),
+                                SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
                                       'EXPANDABLE PANELS',
                                       style: TextStyle(fontSize: 10),
                                     ),

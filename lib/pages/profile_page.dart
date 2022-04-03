@@ -13,6 +13,7 @@ import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
@@ -21,15 +22,19 @@ import 'package:share/share.dart';
 import 'package:speech_bubble/speech_bubble.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
 import 'package:torn_pda/widgets/profile/bazaar_status.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
+import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
+import 'package:http/http.dart' as http;
 
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
@@ -132,6 +137,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   UserDetailsProvider _userProv;
   ShortcutsProvider _shortcutsProv;
   WebViewProvider _webViewProvider;
+  UserController _u = Get.put(UserController());
 
   int _travelNotificationAhead;
   int _travelAlarmAhead;
@@ -256,6 +262,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _sharedEffTotal = "";
   var _sharedJobPoints = "";
 
+  StatsChartTornStats _statsChartModel;
+  Future _statsChartDataFetched;
+
   @override
   void initState() {
     super.initState();
@@ -318,6 +327,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         // We get miscellaneous information when we open the app for those cases where users
         // stay with the app on the background for hours/days and only use the Profile section
         _getMiscCardInfo();
+        _getStatsChart();
       }
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
@@ -699,6 +709,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             // to appear unless we call them directly
             if (newOptions.oCrimesReactivated) {
               _getFactionCrimes();
+            }
+            if (_settingsProvider.tornStatsChartDateTime == 0) {
+              _getStatsChart();
             }
           },
         )
@@ -3298,7 +3311,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     )
                 ],
               ),
-              SizedBox(height: 8),
+              if (_settingsProvider.tornStatsChartEnabled && _settingsProvider.tornStatsChartInCollapsedMiscCard)
+                FutureBuilder(
+                  future: _statsChartDataFetched,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_statsChartModel?.data != null) {
+                        return Column(
+                          children: [
+                            SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset('images/icons/tornstats_logo.png', width: 12),
+                                SizedBox(width: 5),
+                                Text('STATS CHART', style: TextStyle(fontSize: 8)),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            SizedBox(
+                              height: 200,
+                              child: StatsChart(
+                                statsData: _statsChartModel,
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                          ],
+                        );
+                      }
+                    }
+                    return SizedBox(height: 8);
+                  },
+                )
+              else
+                SizedBox(height: 8),
               SelectableText('MAN: ${decimalFormat.format(_miscModel.manualLabor)}'),
               SelectableText('INT: ${decimalFormat.format(_miscModel.intelligence)}'),
               SelectableText('END: ${decimalFormat.format(_miscModel.endurance)}'),
@@ -3446,7 +3492,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              if (_settingsProvider.tornStatsChartEnabled)
+                FutureBuilder(
+                  future: _statsChartDataFetched,
+                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (_statsChartModel?.data != null) {
+                        return Column(
+                          children: [
+                            SizedBox(height: 40),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Image.asset('images/icons/tornstats_logo.png', width: 12),
+                                SizedBox(width: 5),
+                                Text('STATS CHART', style: TextStyle(fontSize: 8)),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            SizedBox(
+                              height: 200,
+                              child: StatsChart(
+                                statsData: _statsChartModel,
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                          ],
+                        );
+                      }
+                    }
+                    return SizedBox(height: 20);
+                  },
+                )
+              else
+                SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.only(bottom: 5),
                 child: Row(
@@ -4325,6 +4404,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //  - (async) Bazaar
     if (_apiGoodData && !_miscApiFetchedOnce) {
       await _getMiscCardInfo();
+      _statsChartDataFetched = _getStatsChart();
     }
 
     _retrievePendingNotifications();
@@ -4362,6 +4442,40 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // If something fails, we simple don't show the MISC section
+    }
+  }
+
+  Future _getStatsChart() async {
+    try {
+      if (!_settingsProvider.tornStatsChartEnabled) return;
+
+      DateTime lastFetched = DateTime.fromMillisecondsSinceEpoch(_settingsProvider.tornStatsChartDateTime);
+
+      if (DateTime.now().difference(lastFetched).inHours < 26) {
+        var savedChart = await Prefs().getTornStatsChartSave();
+        if (savedChart.isNotEmpty) {
+          setState(() {
+            _statsChartModel = statsChartTornStatsFromJson(savedChart);
+          });
+          return;
+        }
+      }
+
+      String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/battlestats/graph';
+      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
+      if (resp.statusCode == 200) {
+        StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
+        if (statsJson != null && !statsJson.message.contains("ERROR")) {
+          setState(() {
+            _statsChartModel = statsJson;
+          });
+
+          Prefs().setTornStatsChartSave(resp.body);
+          _settingsProvider.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
+        }
+      }
+    } catch (e) {
+      // Returns null
     }
   }
 

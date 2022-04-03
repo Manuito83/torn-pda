@@ -491,6 +491,30 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _tornStatsChartDateTime = 0;
+  int get tornStatsChartDateTime => _tornStatsChartDateTime;
+  set setTornStatsChartDateTime(int timeStamp) {
+    Prefs().setTornStatsChartDateTime(timeStamp);
+    _tornStatsChartDateTime = timeStamp;
+    notifyListeners();
+  }
+
+  var _tornStatsChartEnabled = true;
+  bool get tornStatsChartEnabled => _tornStatsChartEnabled;
+  set setTornStatsChartEnabled(bool value) {
+    _tornStatsChartEnabled = value;
+    Prefs().setTornStatsChartEnabled(tornStatsChartEnabled);
+    notifyListeners();
+  }
+
+  var _tornStatsChartInCollapsedMiscCard = true;
+  bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
+  set setTornStatsChartInCollapsedMiscCard(bool value) {
+    _tornStatsChartInCollapsedMiscCard = value;
+    Prefs().setTornStatsChartEnabled(tornStatsChartInCollapsedMiscCard);
+    notifyListeners();
+  }
+
   int _lastAppUse = 0;
   int get lastAppUse => _lastAppUse;
   set updateLastUsed(int timeStamp) {
@@ -644,6 +668,10 @@ class SettingsProvider extends ChangeNotifier {
 
     _targetSkippingAll = await Prefs().getTargetSkippingAll();
     _targetSkippingFirst = await Prefs().getTargetSkippingFirst();
+
+    _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
+    _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
+    _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
 
     notifyListeners();
   }

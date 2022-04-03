@@ -41,16 +41,17 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.7.0
     var v2_7_0 = ChangeLogItem();
     v2_7_0.main.version = 'Torn PDA v2.7.0';
-    v2_7_0.main.date = '10 APR 2022';
+    v2_7_0.main.date = '25 APR 2022';
     String feat2_7_0_1 = "Browser: added quick items widget in faction armoury";
     String feat2_7_0_2 = "Chaining: the browser now opens as a tab and incorporates all widgets";
-    String feat2_7_0_3 = "Alerts: increased time options for refills";
-    String feat2_7_0_4 = "Travel: foreign stock cards now include bars and cooldown analysis";
-    String feat2_7_0_5 = "Travel: added -/+ buttons to items capacity for easier selection";
-    String feat2_7_0_6 = "Added seconds to TCT clock (can be disabled)";
-    String feat2_7_0_7 = "Fixed white flash when using browser with dark themes";
-    String feat2_7_0_8 = "Fixed issues with war targets cards and total stats calculation";
-    String feat2_7_0_9 = "Fixed several other minor reported issues";
+    String feat2_7_0_3 = "Profile: added TornStats chart in the Basic Info card (can be disabled)";
+    String feat2_7_0_4 = "Alerts: increased time options for refills";
+    String feat2_7_0_5 = "Travel: foreign stock cards now include bars and cooldown analysis";
+    String feat2_7_0_6 = "Travel: added -/+ buttons to items capacity for easier selection";
+    String feat2_7_0_7 = "Added seconds to TCT clock (can be disabled)";
+    String feat2_7_0_8 = "Fixed white flash when using browser with dark themes";
+    String feat2_7_0_9 = "Fixed issues with war targets cards and total stats calculation";
+    String feat2_7_0_10 = "Fixed several other minor reported issues";
     v2_7_0.features.add(feat2_7_0_1);
     v2_7_0.features.add(feat2_7_0_2);
     v2_7_0.features.add(feat2_7_0_3);
@@ -60,6 +61,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_7_0.features.add(feat2_7_0_7);
     v2_7_0.features.add(feat2_7_0_8);
     v2_7_0.features.add(feat2_7_0_9);
+    v2_7_0.features.add(feat2_7_0_10);
 
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();

@@ -2,6 +2,7 @@
 import "dart:collection";
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -381,6 +382,7 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
                       width: 600,
                       child: LineChart(_mainChartData()),
                     ),
+                    SizedBox(height: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 60 : 40),
                     Text(
                       // Only include more than 0 per hour and
                       (_depletionTrendPerSecond * 3600).floor() > 0 && _depletionTrendPerSecond < 86400
@@ -1397,56 +1399,94 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
       ),
       titlesData: FlTitlesData(
         show: true,
-        bottomTitles: SideTitles(
-          rotateAngle: -70,
-          showTitles: true,
-          interval: _periodicMap.length > 12 ? _periodicMap.length / 12 : null,
-          reservedSize: 20,
-          margin: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 45 : 30,
-          getTextStyles: (xValue) {
-            if (xValue.toInt() >= _periodicMap.length) {
-              xValue = xValue - 1;
-            }
-            var date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
-            var difference = DateTime.now().difference(date).inHours;
-
-            Color myColor = Colors.transparent;
-            if (difference < 24) {
-              myColor = Colors.green;
-            } else {
-              myColor = Colors.blue;
-            }
-            return TextStyle(
-              color: myColor,
-              fontSize: 10,
-            );
-          },
-          getTitles: (xValue) {
-            if (xValue.toInt() >= _periodicMap.length) {
-              xValue = xValue - 1;
-            }
-            var date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
-            return _timeFormatter(date);
-          },
-        ),
-        leftTitles: SideTitles(
-          showTitles: true,
-          interval: interval,
-          reservedSize: 10,
-          margin: 12,
-          getTextStyles: (value) => TextStyle(
-            color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
-            fontSize: 10,
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: false,
           ),
-          getTitles: (yValue) {
-            if (maxY > 1000) {
-              return "${(yValue / 1000).truncate().toStringAsFixed(0)}K";
-            }
-            return yValue.floor().toString();
-          },
+        ),
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: false,
+          ),
+        ),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: _periodicMap.length > 12 ? _periodicMap.length / 12 : null,
+            reservedSize: 20,
+            getTitlesWidget: (xValue, titleMeta) {
+              if (xValue.toInt() >= _periodicMap.length) {
+                xValue = xValue - 1;
+              }
+              var date = DateTime.fromMillisecondsSinceEpoch(timestamps[xValue.toInt()] * 1000);
+
+              // Style
+              TextStyle myStyle;
+              if (xValue.toInt() >= _periodicMap.length) {
+                xValue = xValue - 1;
+              }
+              var difference = DateTime.now().difference(date).inHours;
+
+              Color myColor = Colors.transparent;
+              if (difference < 24) {
+                myColor = Colors.green;
+              } else {
+                myColor = Colors.blue;
+              }
+              myStyle = TextStyle(
+                color: myColor,
+                fontSize: 10,
+              );
+
+              final degrees = -70;
+              final radians = degrees * pi / 180;
+
+              return Transform.rotate(
+                angle: radians,
+                child: SizedBox(
+                  width: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 120 : 80,
+                  child: Text(
+                    _timeFormatter(date),
+                    style: myStyle,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: interval,
+            reservedSize: 20,
+            getTitlesWidget: (yValue, titleMeta) {
+              if (maxY > 1000) {
+                return Text(
+                  "${(yValue / 1000).truncate().toStringAsFixed(0)}K",
+                  style: TextStyle(
+                    color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
+                    fontSize: 10,
+                  ),
+                );
+              }
+              return Text(
+                yValue.floor().toString(),
+                style: TextStyle(
+                  color: _themeProvider.currentTheme == AppTheme.dark ? Colors.blueGrey : const Color(0xff67727d),
+                  fontSize: 10,
+                ),
+              );
+            },
+          ),
         ),
       ),
-      borderData: FlBorderData(show: true, border: Border.all(color: const Color(0xff37434d), width: 1)),
+      borderData: FlBorderData(
+        show: true,
+        border: Border.all(
+          color: const Color(0xff37434d),
+          width: 1,
+        ),
+      ),
       minX: 0,
       maxX: _periodicMap.length.toDouble(),
       minY: 0,
@@ -1455,15 +1495,11 @@ class _ForeignStockCardState extends State<ForeignStockCard> {
         LineChartBarData(
           spots: spots,
           isCurved: false,
-          colors: gradientColors,
+          gradient: LinearGradient(colors: gradientColors),
           barWidth: 1.5,
           isStrokeCapRound: true,
           dotData: FlDotData(
             show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            colors: gradientColors.map((color) => color.withOpacity(0.3)).toList(),
           ),
         ),
       ],

@@ -787,7 +787,6 @@ class WarController extends GetxController {
       var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
       if (resp.statusCode == 200) {
         TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
-        print(spyJson);
         if (spyJson != null && !spyJson.message.contains("Error")) {
           _lastTornStatsSpiesDownload = DateTime.now();
           _tornStatsSpies = spyJson;
@@ -797,7 +796,6 @@ class WarController extends GetxController {
       }
     } catch (e) {
       // Returns null
-      print(e);
     }
     return _tornStatsSpies = null;
   }
