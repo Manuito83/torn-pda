@@ -100,56 +100,36 @@ class StatsChart extends StatelessWidget {
             tooltipBgColor: Colors.blueGrey.withOpacity(1),
             getTooltipItems: (value) {
               var tooltips = <LineTooltipItem>[];
-              int stat = 1;
-              int total = 0;
-              for (var spot in value) {
-                // Get time
-                var ts = 0;
-                var timesList = [];
-                _timestamps.forEach((e) => timesList.add("${e}"));
-                var x = spot.x.toInt();
-                if (x > timesList.length) {
-                  x = timesList.length;
-                }
-                ts = int.parse(timesList[x]);
-                var date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-                DateFormat formatter = DateFormat('d LLL');
 
-                String statLine = "";
-                if (stat == 1) {
-                  statLine = "STR";
-                } else if (stat == 2) {
-                  statLine = "SPD";
-                } else if (stat == 3) {
-                  statLine = "DEF";
-                } else if (stat == 4) {
-                  statLine = "DEX";
-                }
+              NumberFormat f = NumberFormat("###,###", "en_US");
 
-                var f = NumberFormat("###,###", "en_US");
-                int statValue = spot.y.toInt();
-                statLine += " ${f.format(statValue)}";
-                total += statValue;
-
-                String tooltip = "";
-                if (stat == 1) {
-                  tooltip = "${formatter.format(date)}\n\n$statLine";
-                } else if (stat == 4) {
-                  tooltip = "$statLine\n\nTotal ${f.format(total)}";
-                } else {
-                  tooltip = statLine;
-                }
-
-                LineTooltipItem thisItem = LineTooltipItem(
-                  tooltip,
-                  TextStyle(
-                    fontSize: 10,
-                  ),
-                );
-                tooltips.add(thisItem);
-
-                stat++;
+              // Get time comparing position in x with timestamps
+              var ts = 0;
+              var timesList = [];
+              _timestamps.forEach((e) => timesList.add("${e}"));
+              var x = value[0].x.toInt();
+              if (x > timesList.length) {
+                x = timesList.length;
               }
+              ts = int.parse(timesList[x]);
+              var date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+              DateFormat formatter = DateFormat('d LLL yyyy');
+
+              // The first line (STR) will be preceded by date
+              String strLine = "${formatter.format(date)}";
+
+              // Configure the last line to show totals
+              double total = 0;
+              for (var stat in value) {
+                total += stat.y;
+              }
+              String dexLine = "TOTAL ${f.format(total.toInt())}";
+
+              // Values come unsorted, we sort them here to our liking
+              tooltips.add(LineTooltipItem("$strLine\n\nSTR: ${f.format(value[1].y)}", TextStyle(fontSize: 10)));
+              tooltips.add(LineTooltipItem("DEF: ${f.format(value[0].y)}", TextStyle(fontSize: 10)));
+              tooltips.add(LineTooltipItem("SPD: ${f.format(value[2].y)}", TextStyle(fontSize: 10)));
+              tooltips.add(LineTooltipItem("DEX: ${f.format(value[3].y)}\n\n$dexLine", TextStyle(fontSize: 10)));
 
               return tooltips;
             }),
