@@ -657,37 +657,41 @@ class _ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   ),
                                 ),
                                 if (_settingsProvider.tornStatsChartEnabled)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Text("Show with card collapsed"),
-                                        Switch(
-                                          value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
-                                            });
-                                          },
-                                          activeTrackColor: Colors.lightGreenAccent,
-                                          activeColor: Colors.green,
+                                  Column(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: <Widget>[
+                                            Text("Show with card collapsed"),
+                                            Switch(
+                                              value: _settingsProvider.tornStatsChartInCollapsedMiscCard,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _settingsProvider.setTornStatsChartInCollapsedMiscCard = value;
+                                                });
+                                              },
+                                              activeTrackColor: Colors.lightGreenAccent,
+                                              activeColor: Colors.green,
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                                        child: Text(
+                                          "Show stats chart also when the Basic Info card is collapsed (it will be "
+                                          "always available with the card expanded",
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Text(
-                                    "Show stats chart also when the Basic Info card is collapsed (it will be "
-                                    "always available with the card expanded",
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                ),
                                 SizedBox(height: 15),
                                 Divider(),
                                 SizedBox(height: 5),

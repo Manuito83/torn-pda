@@ -17,12 +17,12 @@ class UserDetailsProvider extends ChangeNotifier {
     basic = userDetails;
     _u.apiKey = basic.userApiKey;
 
-    // If other keys are empty (upon app first use, set them to the same one as the app)
+    // If other keys are disabled
     // Ensure this does not happen in other setUserDetails calls (e.g. when reloading API key)
-    if (!_u.alternativeYataKeyEnabled && _u.alternativeYataKey.isEmpty) {
+    if (!_u.alternativeYataKeyEnabled) {
       _u.alternativeYataKey = basic.userApiKey;
     }
-    if (!_u.alternativeTornStatsKeyEnabled && _u.alternativeTornStatsKey.isEmpty) {
+    if (!_u.alternativeTornStatsKeyEnabled) {
       _u.alternativeTornStatsKey = basic.userApiKey;
     }
 

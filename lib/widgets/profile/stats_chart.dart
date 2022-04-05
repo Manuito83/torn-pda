@@ -100,6 +100,7 @@ class StatsChart extends StatelessWidget {
             tooltipBgColor: Colors.blueGrey.withOpacity(1),
             getTooltipItems: (value) {
               var tooltips = <LineTooltipItem>[];
+              int thisX = value[0].x.toInt();
 
               NumberFormat f = NumberFormat("###,###", "en_US");
 
@@ -107,11 +108,10 @@ class StatsChart extends StatelessWidget {
               var ts = 0;
               var timesList = [];
               _timestamps.forEach((e) => timesList.add("${e}"));
-              var x = value[0].x.toInt();
-              if (x > timesList.length) {
-                x = timesList.length;
+              if (thisX > timesList.length) {
+                thisX = timesList.length;
               }
-              ts = int.parse(timesList[x]);
+              ts = int.parse(timesList[thisX]);
               var date = DateTime.fromMillisecondsSinceEpoch(ts * 1000);
               DateFormat formatter = DateFormat('d LLL yyyy');
 
@@ -126,10 +126,22 @@ class StatsChart extends StatelessWidget {
               String dexLine = "TOTAL ${f.format(total.toInt())}";
 
               // Values come unsorted, we sort them here to our liking
-              tooltips.add(LineTooltipItem("$strLine\n\nSTR: ${f.format(value[1].y)}", TextStyle(fontSize: 10)));
-              tooltips.add(LineTooltipItem("DEF: ${f.format(value[0].y)}", TextStyle(fontSize: 10)));
-              tooltips.add(LineTooltipItem("SPD: ${f.format(value[2].y)}", TextStyle(fontSize: 10)));
-              tooltips.add(LineTooltipItem("DEX: ${f.format(value[3].y)}\n\n$dexLine", TextStyle(fontSize: 10)));
+              tooltips.add(LineTooltipItem(
+                "$strLine\n\nSTR: ${f.format(statsData.data[thisX].strength)}",
+                TextStyle(fontSize: 10),
+              ));
+              tooltips.add(LineTooltipItem(
+                "DEF: ${f.format(statsData.data[thisX].defense)}",
+                TextStyle(fontSize: 10),
+              ));
+              tooltips.add(LineTooltipItem(
+                "SPD: ${f.format(statsData.data[thisX].speed)}",
+                TextStyle(fontSize: 10),
+              ));
+              tooltips.add(LineTooltipItem(
+                "DEX: ${f.format(statsData.data[thisX].dexterity)}\n\n$dexLine",
+                TextStyle(fontSize: 10),
+              ));
 
               return tooltips;
             }),
