@@ -56,6 +56,8 @@ class WarController extends GetxController {
 
   List<String> lastAttackedTargets = [];
 
+  bool toggleAddUserActive = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -754,7 +756,7 @@ class WarController extends GetxController {
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
       String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
-      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 2));
+      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
       if (resp.statusCode == 200) {
         dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {
@@ -784,7 +786,7 @@ class WarController extends GetxController {
 
     try {
       String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
-      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
+      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 10));
       if (resp.statusCode == 200) {
         TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
         if (spyJson != null && !spyJson.message.contains("Error")) {
@@ -796,6 +798,7 @@ class WarController extends GetxController {
       }
     } catch (e) {
       // Returns null
+      print(e);
     }
     return _tornStatsSpies = null;
   }
@@ -807,6 +810,11 @@ class WarController extends GetxController {
 
   void toggleAddFromUserId() {
     addFromUserId = !addFromUserId;
+    update();
+  }
+
+    void setAddUserActive(bool active) {
+    toggleAddUserActive = active;
     update();
   }
 

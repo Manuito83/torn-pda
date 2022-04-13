@@ -277,6 +277,18 @@ class _WarPageState extends State<WarPage> {
                               _quickUpdateActive = true;
                             });
 
+                            BotToast.showText(
+                              clickClose: true,
+                              text: "Fetching information, please wait...",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[700],
+                              duration: const Duration(seconds: 3),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+
                             int updatedMembers = await _w.updateAllMembersEasy();
 
                             String message = "";
@@ -656,6 +668,11 @@ class AddFactionDialog extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16.0),
+              if (warController.toggleAddUserActive)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 5),
+                  child: CircularProgressIndicator(),
+                ),
               Flexible(
                 child: factionCards(),
               ),
@@ -667,6 +684,20 @@ class AddFactionDialog extends StatelessWidget {
                     child: const Text("Add"),
                     onPressed: () async {
                       if (addFormKey.currentState.validate()) {
+                        warController.setAddUserActive(true);
+
+                        BotToast.showText(
+                          clickClose: true,
+                          text: "Fetching information, please wait...",
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.grey[700],
+                          duration: const Duration(seconds: 3),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+
                         FocusScopeNode currentFocus = FocusScope.of(context);
                         if (!currentFocus.hasPrimaryFocus) {
                           currentFocus.unfocus();
@@ -702,6 +733,7 @@ class AddFactionDialog extends StatelessWidget {
                               duration: const Duration(seconds: 3),
                               contentPadding: const EdgeInsets.all(10),
                             );
+                            warController.setAddUserActive(false);
                             return;
                           }
                         }
@@ -736,6 +768,7 @@ class AddFactionDialog extends StatelessWidget {
                           duration: Duration(seconds: time),
                           contentPadding: const EdgeInsets.all(10),
                         );
+                        warController.setAddUserActive(false);
                       }
                     },
                   ),
