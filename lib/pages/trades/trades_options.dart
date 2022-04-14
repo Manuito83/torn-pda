@@ -150,7 +150,6 @@ class _TradesOptionsState extends State<TradesOptions> {
                                   ),
                                 ),
                                 SizedBox(height: 20),
-                                /*
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
@@ -185,7 +184,6 @@ class _TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                */
                                 SizedBox(height: 50),
                               ],
                             ),
