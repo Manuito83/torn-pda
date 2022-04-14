@@ -175,7 +175,7 @@ class Prefs {
   final String _kHideTabs = "pda_hideTabs";
   // Items
   final String _kItemsSort = "pda_itemssSort";
-  final String _kShowOnlyOwnedItems = "pda_showOnlyOwnedItems";
+  final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
   // ShowCases (with flutter_showcaseview)
@@ -1655,14 +1655,14 @@ class Prefs {
     return prefs.setString(_kItemsSort, value);
   }
 
-  Future<bool> getShowOnlyOwnedItems() async {
+  Future<int> getOnlyOwnedItemsFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowOnlyOwnedItems) ?? false;
+    return prefs.getInt(_kOnlyOwnedItemsFilter) ?? 0;
   }
 
-  Future<bool> setShowOnlyOwnedItems(bool value) async {
+  Future<bool> setOnlyOwnedItemsFilter(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowOnlyOwnedItems, value);
+    return prefs.setInt(_kOnlyOwnedItemsFilter, value);
   }
 
   Future<List<String>> getHiddenItemsCategories() async {
