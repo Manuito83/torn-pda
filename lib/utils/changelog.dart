@@ -52,9 +52,10 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_7_0_8 = "Travel: added -/+ buttons to items capacity for easier selection";
     String feat2_7_0_9 = "Added seconds to TCT clock (can be disabled)";
     String feat2_7_0_10 = "Items can now also be filtered by owned/not owned";
-    String feat2_7_0_11 = "Fixed white flash when using browser with dark themes";
-    String feat2_7_0_12 = "Fixed issues with war targets cards and total stats calculation";
-    String feat2_7_0_13 = "Fixed several other minor reported issues";
+    String feat2_7_0_11 = "Torn Trader disabled (no longer maintained by provider)";
+    String feat2_7_0_12 = "Fixed white flash when using browser with dark themes";
+    String feat2_7_0_13 = "Fixed issues with war targets cards and total stats calculation";
+    String feat2_7_0_14 = "Fixed several other minor reported issues";
     v2_7_0.features.add(feat2_7_0_1);
     v2_7_0.features.add(feat2_7_0_2);
     v2_7_0.features.add(feat2_7_0_3);
@@ -68,6 +69,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_7_0.features.add(feat2_7_0_11);
     v2_7_0.features.add(feat2_7_0_12);
     v2_7_0.features.add(feat2_7_0_13);
+    v2_7_0.features.add(feat2_7_0_14);
 
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();
