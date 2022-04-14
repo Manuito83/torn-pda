@@ -301,7 +301,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       crossPlatform: InAppWebViewOptions(
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
-        cacheEnabled: false,
+        //cacheEnabled: false,
         useOnLoadResource: true,
         useShouldOverrideUrlLoading: true,
         javaScriptCanOpenWindowsAutomatically: true,
@@ -314,7 +314,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
         supportMultipleWindows: true,
-        cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
+        //cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
         initialScale: _settingsProvider.androidBrowserScale,
         useWideViewPort: false,
       ),
