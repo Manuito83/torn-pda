@@ -668,6 +668,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 children: [
                   _travelHomeIcon(),
                   _crimesMenuIcon(),
+                  _cityMenuIcon(),
                   _quickItemsMenuIcon(),
                   if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
                   Padding(
