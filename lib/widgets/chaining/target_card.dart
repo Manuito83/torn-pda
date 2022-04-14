@@ -209,11 +209,31 @@ class _TargetCardState extends State<TargetCard> {
                           children: <Widget>[
                             GestureDetector(
                               onTap: () {
-                                _startAttack();
+                                if (_target.status.state.contains("Federal") ||
+                                    _target.status.state.contains("Fallen")) {
+                                  BotToast.showText(
+                                    text: "This player is "
+                                        "${_target.status.state.replaceAll("Federal", "in federal jail").toLowerCase()}"
+                                        " and cannot be attacked!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.red,
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                } else {
+                                  _startAttack();
+                                }
                               },
                               child: Row(
                                 children: [
-                                  _attackIcon(),
+                                  if (_target.status.state.contains("Federal") ||
+                                      _target.status.state.contains("Fallen"))
+                                    Icon(MdiIcons.graveStone, size: 18)
+                                  else
+                                    _attackIcon(),
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 5),
                                   ),

@@ -995,8 +995,10 @@ class WarTargetsList extends StatelessWidget {
 
     List<WarCard> filteredCards = <WarCard>[];
 
-    for (var thisMember in members) {
-      if (!thisMember.hidden)
+    for (Member thisMember in members) {
+      if (!thisMember.hidden &&
+          !thisMember.status.state.contains("Federal") &&
+          !thisMember.status.state.contains("Fallen"))
         filteredCards.add(
           WarCard(
             key: UniqueKey(),
