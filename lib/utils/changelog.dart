@@ -41,7 +41,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.7.0
     var v2_7_0 = ChangeLogItem();
     v2_7_0.main.version = 'Torn PDA v2.7.0';
-    v2_7_0.main.date = '30 APR 2022';
+    v2_7_0.main.date = '22 APR 2022';
     String feat2_7_0_1 = "Browser: added quick items widget in faction armoury";
     String feat2_7_0_2 = "Chaining: the browser now opens as a tab and incorporates all widgets";
     String feat2_7_0_3 = "Chaining: fallen and fedded players are now hidden";
