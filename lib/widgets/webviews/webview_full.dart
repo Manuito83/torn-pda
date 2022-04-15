@@ -670,6 +670,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   _crimesMenuIcon(),
                   _cityMenuIcon(),
                   _quickItemsMenuIcon(),
+                  _vaultsPopUpIcon(),
+                  _tradesMenuIcon(),
+                  _vaultOptionsIcon(),
                   if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -1622,8 +1625,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _vaultsPopUpIcon(),
                 _tradesMenuIcon(),
                 _vaultOptionsIcon(),
-                _cityMenuIcon(),
                 _bazaarFillIcon(),
+                _cityMenuIcon(),
                 if (_webViewProvider.chatRemovalEnabledGlobal) _hideChatIcon() else const SizedBox.shrink(),
                 _reloadIcon(),
               ],
