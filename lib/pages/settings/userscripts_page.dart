@@ -575,7 +575,7 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
     return AlertDialog(
       title: Text("DISCLAIMER"),
       content: Scrollbar(
-        isAlwaysShown: true,
+        thumbVisibility: true,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.only(right: 12),

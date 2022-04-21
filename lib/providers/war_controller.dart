@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';

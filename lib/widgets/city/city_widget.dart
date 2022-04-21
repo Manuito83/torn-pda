@@ -85,7 +85,7 @@ class _CityWidgetState extends State<CityWidget> {
               3),
           child: Scrollbar(
             controller: _scrollController,
-            isAlwaysShown: true,
+            thumbVisibility: true,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 5),
               child: SingleChildScrollView(

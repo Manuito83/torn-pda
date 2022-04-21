@@ -199,7 +199,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                       3),
               child: Scrollbar(
                 controller: _scrollController,
-                isAlwaysShown: true,
+                thumbVisibility: true,
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   child: Row(
