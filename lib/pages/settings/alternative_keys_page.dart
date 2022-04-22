@@ -142,6 +142,9 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                         style: TextStyle(fontSize: 12),
                         maxLength: 16,
                         onChanged: (key) {
+                          if (key.isEmpty) {
+                            key = w.apiKey;
+                          }
                           w.alternativeYataKey = key;
                           Prefs().setAlternativeYataKey(key);
                         },
@@ -209,6 +212,9 @@ class _AlternativeKeysPageState extends State<AlternativeKeysPage> {
                         style: TextStyle(fontSize: 12),
                         maxLength: 16,
                         onChanged: (key) {
+                          if (key.isEmpty) {
+                            key = w.apiKey;
+                          }
                           w.alternativeTornStatsKey = key;
                           Prefs().setAlternativeTornStatsKey(key);
                         },

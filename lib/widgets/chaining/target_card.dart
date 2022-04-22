@@ -8,13 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -25,7 +26,6 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 import '../notes_dialog.dart';
 
 class TargetCard extends StatefulWidget {
@@ -45,6 +45,7 @@ class _TargetCardState extends State<TargetCard> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ChainStatusProvider _chainProvider;
+  WebViewProvider _webViewProvider;
 
   Timer _updatedTicker;
   Timer _lifeTicker;
@@ -56,6 +57,7 @@ class _TargetCardState extends State<TargetCard> {
   @override
   void initState() {
     super.initState();
+    _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
@@ -207,11 +209,31 @@ class _TargetCardState extends State<TargetCard> {
                           children: <Widget>[
                             GestureDetector(
                               onTap: () {
-                                _startAttack();
+                                if (_target.status.state.contains("Federal") ||
+                                    _target.status.state.contains("Fallen")) {
+                                  BotToast.showText(
+                                    text: "This player is "
+                                        "${_target.status.state.replaceAll("Federal", "in federal jail").toLowerCase()}"
+                                        " and cannot be attacked!",
+                                    textStyle: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.red,
+                                    duration: Duration(seconds: 5),
+                                    contentPadding: EdgeInsets.all(10),
+                                  );
+                                } else {
+                                  _startAttack();
+                                }
                               },
                               child: Row(
                                 children: [
-                                  _attackIcon(),
+                                  if (_target.status.state.contains("Federal") ||
+                                      _target.status.state.contains("Fallen"))
+                                    Icon(MdiIcons.graveStone, size: 18)
+                                  else
+                                    _attackIcon(),
                                   Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 5),
                                   ),
@@ -852,23 +874,6 @@ class _TargetCardState extends State<TargetCard> {
     }
   }
 
-  void _updateSeveralTargets(List<String> attackedIds) async {
-    BotToast.showText(
-      text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.grey[800],
-      duration: Duration(seconds: 4),
-      contentPadding: EdgeInsets.all(10),
-    );
-
-    await Future.delayed(Duration(seconds: 15));
-    if (!mounted) return;
-    await _targetsProvider.updateTargetsAfterAttacks(targetsIds: attackedIds);
-  }
-
   void _timerUpdateInformation() {
     _returnLastUpdated();
     if (mounted) {
@@ -958,18 +963,42 @@ class _TargetCardState extends State<TargetCard> {
           attacksNotesColor.add(tar.personalNoteColor);
         }
 
-        Get.to(
-          TornWebViewAttack(
-            attackIdList: attacksIds,
-            attackNameList: attacksNames,
-            attackNotesList: attackNotes,
-            attackNotesColorList: attacksNotesColor,
-            attacksCallback: _updateSeveralTargets,
-            showNotes: await Prefs().getShowTargetsNotes(),
-            showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
-            showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
-          ),
+        bool showNotes = await Prefs().getShowTargetsNotes();
+        bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+        bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+
+        await _webViewProvider.openBrowserPreference(
+          awaitable: true,
+          context: context,
+          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          useDialog: false,
+          recallLastSession: false,
+          isChainingBrowser: true,
+          chainingPayload: ChainingPayload()
+            ..attackIdList = attacksIds
+            ..attackNameList = attacksNames
+            ..attackNotesList = attackNotes
+            ..attackNotesColorList = attacksNotesColor
+            ..showNotes = showNotes
+            ..showBlankNotes = showBlankNotes
+            ..showOnlineFactionWarning = showOnlineFactionWarning,
         );
+
+        if (_targetsProvider.lastAttackedTargets.length > 0) {
+          BotToast.showText(
+            text: '${_targetsProvider.lastAttackedTargets.length} attacked targets will auto update in a few seconds!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+
+          _targetsProvider.updateTargetsAfterAttacks();
+        }
+
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid='

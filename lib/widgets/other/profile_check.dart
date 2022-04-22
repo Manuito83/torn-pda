@@ -140,13 +140,16 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_statsWidget != null)
-          Row(
-            children: [
-              Expanded(
-                child: _statsWidget,
-              ),
-              _addRemoveTargetIcon(),
-            ],
+          Container(
+            color: Colors.grey[900],
+            child: Row(
+              children: [
+                Expanded(
+                  child: _statsWidget,
+                ),
+                _addRemoveTargetIcon(),
+              ],
+            ),
           ),
         if (_networthWidgetEnabled) _networthWidget,
         if (_isTornPda) _tornPdaWidget,

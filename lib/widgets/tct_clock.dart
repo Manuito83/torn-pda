@@ -37,10 +37,10 @@ class _TctClockState extends State<TctClock> {
     DateFormat formatter;
     switch (timePrefs) {
       case TimeFormatSetting.h24:
-        formatter = DateFormat('HH:mm');
+        formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss' : 'HH:mm');
         break;
       case TimeFormatSetting.h12:
-        formatter = DateFormat('hh:mm a');
+        formatter = DateFormat(settingsProvider.showSecondsInClock ? 'HH:mm:ss a' : 'HH:mm a');
         break;
     }
 
@@ -49,7 +49,7 @@ class _TctClockState extends State<TctClock> {
       children: <Widget>[
         Text(
           formatter.format(_currentTctTime),
-          style: TextStyle(fontSize: 14),
+          style: TextStyle(fontSize: settingsProvider.showSecondsInClock ? 12 : 14),
         ),
         Text(
           'TCT',
@@ -71,5 +71,4 @@ class _TctClockState extends State<TctClock> {
       _currentTctTime = DateTime.now().toUtc();
     });
   }
-
 }

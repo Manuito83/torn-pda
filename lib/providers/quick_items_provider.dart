@@ -65,14 +65,6 @@ class QuickItemsProvider extends ChangeNotifier {
     var savedActives = await Prefs().getQuickItemsList();
     for (var rawItem in savedActives) {
       QuickItem activeItem = quickItemFromJson(rawItem);
-
-      // Adds necessary fields (if missing) after loadouts where introduced in v2.6.5
-      if (activeItem.isLoadout == null) {
-        activeItem.isLoadout = false;
-        activeItem.loadoutName = "";
-        activeItem.loadoutNumber = -1;
-      }
-
       _activeQuickItemsList.add(activeItem);
     }
 

@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:math';
 
 // Flutter imports:
 import 'package:dotted_border/dotted_border.dart';
@@ -16,11 +17,12 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
-import 'package:torn_pda/widgets/other/profile_check.dart';
+import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
@@ -29,7 +31,6 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
-import 'package:torn_pda/widgets/webviews/webview_attack.dart';
 import '../notes_dialog.dart';
 
 class WarCard extends StatefulWidget {
@@ -51,6 +52,7 @@ class _WarCardState extends State<WarCard> {
   SettingsProvider _settingsProvider;
   UserDetailsProvider _userProvider;
   ChainStatusProvider _chainProvider;
+  WebViewProvider _webViewProvider;
 
   Timer _updatedTicker;
   Timer _lifeTicker;
@@ -66,6 +68,7 @@ class _WarCardState extends State<WarCard> {
   @override
   void initState() {
     super.initState();
+    _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = new Timer.periodic(Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
@@ -1095,7 +1098,7 @@ class _WarCardState extends State<WarCard> {
               height: 16,
               width: 16,
               child: Image.asset(
-                widget.memberModel.spiesSource == SpiesSource.yata
+                widget.memberModel.spiesSource == "yata"
                     ? 'images/icons/yata_logo.png'
                     : 'images/icons/tornstats_logo.png',
               ),
@@ -1202,16 +1205,31 @@ class _WarCardState extends State<WarCard> {
           (_userProvider.basic.total <= _member.statsExactTotalKnown + _member.statsExactTotalKnown * 0.1)) {
         exactColor = Colors.orange[700];
       }
+
+      int totalToShow = 0;
+      if (_member.statsExactTotal != -1) {
+        // TornStats adds all 4 stats into total if total is unknown, but then rounds. So it might happen that the
+        // total sum is actually higher than the one calculated and rounded by TS
+        totalToShow = max(_member.statsExactTotal, _member.statsExactTotalKnown);
+      } else {
+        totalToShow = _member.statsExactTotalKnown;
+      }
+
+      bool someStatUnknown = false;
+      if (_member.statsStr == -1 || _member.statsDef == -1 || _member.statsDex == -1 || _member.statsSpd == -1) {
+        someStatUnknown = true;
+      }
+
       return Row(
         children: [
           Text(
-            "${formatBigNumbers(_member.statsExactTotalKnown)}",
+            "${formatBigNumbers(totalToShow)}",
             style: TextStyle(
               fontSize: 12,
               color: exactColor,
             ),
           ),
-          if (_member.statsExactTotalKnown != _member.statsExactTotal)
+          if (someStatUnknown)
             Padding(
               padding: const EdgeInsets.only(left: 2),
               child: Text(
@@ -1469,22 +1487,6 @@ class _WarCardState extends State<WarCard> {
     );
   }
 
-  void _updateSeveralTargets(List<String> attackedIds) async {
-    BotToast.showText(
-      clickClose: true,
-      text: '${attackedIds.length} attacked targets will auto update in a few seconds!',
-      textStyle: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.grey[800],
-      duration: Duration(seconds: 4),
-      contentPadding: EdgeInsets.all(10),
-    );
-
-    _w.updateSomeMembersAfterAttack(attackedIds);
-  }
-
   void _timerUpdateInformation() {
     _returnLastUpdated();
     if (mounted) {
@@ -1568,19 +1570,44 @@ class _WarCardState extends State<WarCard> {
           attackNotes.add(tar.personalNote);
           attacksNotesColor.add(tar.personalNoteColor);
         }
-        Get.to(
-          TornWebViewAttack(
-            attackIdList: attacksIds,
-            attackNameList: attacksNames,
-            attackNotesList: attackNotes,
-            attackNotesColorList: attacksNotesColor,
-            attacksCallback: _updateSeveralTargets,
-            war: true,
-            showNotes: await Prefs().getShowTargetsNotes(),
-            showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
-            showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
-          ),
+
+        bool showNotes = await Prefs().getShowTargetsNotes();
+        bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+        bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+
+        await _webViewProvider.openBrowserPreference(
+          awaitable: true,
+          context: context,
+          url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
+          useDialog: false,
+          recallLastSession: false,
+          isChainingBrowser: true,
+          chainingPayload: ChainingPayload()
+            ..war = true
+            ..attackIdList = attacksIds
+            ..attackNameList = attacksNames
+            ..attackNotesList = attackNotes
+            ..attackNotesColorList = attacksNotesColor
+            ..showNotes = showNotes
+            ..showBlankNotes = showBlankNotes
+            ..showOnlineFactionWarning = showOnlineFactionWarning,
         );
+
+        if (_w.lastAttackedTargets.length > 0) {
+          BotToast.showText(
+            text: '${_w.lastAttackedTargets.length} attacked targets will auto update in a few seconds!',
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[800],
+            duration: Duration(seconds: 4),
+            contentPadding: EdgeInsets.all(10),
+          );
+
+          _w.updateSomeMembersAfterAttack();
+        }
+
         break;
       case BrowserSetting.external:
         var url = 'https://www.torn.com/loader.php?sid=attack&user2ID=${_member.memberId}';

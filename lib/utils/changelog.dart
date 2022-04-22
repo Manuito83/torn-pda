@@ -38,6 +38,39 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
+    // VERSION 2.7.0
+    var v2_7_0 = ChangeLogItem();
+    v2_7_0.main.version = 'Torn PDA v2.7.0';
+    v2_7_0.main.date = '22 APR 2022';
+    String feat2_7_0_1 = "Browser: added quick items widget in faction armoury";
+    String feat2_7_0_2 = "Chaining: the browser now opens as a tab and incorporates all widgets";
+    String feat2_7_0_3 = "Chaining: fallen and fedded players are now hidden";
+    String feat2_7_0_4 = "War: added quick target filter for online status";
+    String feat2_7_0_5 = "Profile: added TornStats chart in the Basic Info card (can be disabled)";
+    String feat2_7_0_6 = "Alerts: increased time options for refills";
+    String feat2_7_0_7 = "Travel: foreign stock cards now include bars and cooldown analysis";
+    String feat2_7_0_8 = "Travel: added -/+ buttons to items capacity for easier selection";
+    String feat2_7_0_9 = "Added seconds to TCT clock (can be disabled)";
+    String feat2_7_0_10 = "Items can now also be filtered by owned/not owned";
+    String feat2_7_0_11 = "Trades: fixed connection with Torn Trader";
+    String feat2_7_0_12 = "Fixed white flash when using browser with dark themes";
+    String feat2_7_0_13 = "Fixed issues with war targets cards and total stats calculation";
+    String feat2_7_0_14 = "Fixed several other minor reported issues";
+    v2_7_0.features.add(feat2_7_0_1);
+    v2_7_0.features.add(feat2_7_0_2);
+    v2_7_0.features.add(feat2_7_0_3);
+    v2_7_0.features.add(feat2_7_0_4);
+    v2_7_0.features.add(feat2_7_0_5);
+    v2_7_0.features.add(feat2_7_0_6);
+    v2_7_0.features.add(feat2_7_0_7);
+    v2_7_0.features.add(feat2_7_0_8);
+    v2_7_0.features.add(feat2_7_0_9);
+    v2_7_0.features.add(feat2_7_0_10);
+    v2_7_0.features.add(feat2_7_0_11);
+    v2_7_0.features.add(feat2_7_0_12);
+    v2_7_0.features.add(feat2_7_0_13);
+    v2_7_0.features.add(feat2_7_0_14);
+
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();
     v2_6_7.main.version = 'Torn PDA v2.6.7';
@@ -1081,6 +1114,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_7_0);
     itemList.add(v2_6_7);
     itemList.add(v2_6_6);
     itemList.add(v2_6_5);
@@ -1150,7 +1184,7 @@ class _ChangeLogState extends State<ChangeLog> {
               Flexible(
                 child: Scrollbar(
                   controller: _scrollController,
-                  isAlwaysShown: true,
+                  thumbVisibility: true,
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     child: Container(

@@ -360,6 +360,32 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                 value: _firebaseUserModel?.refillsTime,
                                 items: [
                                   DropdownMenuItem(
+                                    value: 16,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "16:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 17,
+                                    child: SizedBox(
+                                      width: 80,
+                                      child: Text(
+                                        "17:00 TCT",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
                                     value: 18,
                                     child: SizedBox(
                                       width: 80,

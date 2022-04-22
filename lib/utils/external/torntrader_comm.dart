@@ -6,6 +6,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_auth.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_in.dart';
 import 'package:torn_pda/models/trades/torntrader/torntrader_out.dart';
+import 'package:torn_pda/models/trades/trade_item_model.dart';
 
 class TornTraderComm {
   static Future<TornTraderAuthModel> checkIfUserExists(int user) async {
@@ -25,7 +26,7 @@ class TornTraderComm {
     return authModel;
   }
 
-  static Future<TornTraderInModel> submitItems(sellerItems, sellerName, tradeId, buyerId) async {
+  static Future<TornTraderInModel> submitItems(List<TradeItem> sellerItems, sellerName, tradeId, buyerId) async {
     var inModel = TornTraderInModel();
 
     var authModel = await checkIfUserExists(buyerId);
@@ -49,7 +50,7 @@ class TornTraderComm {
 
     for (var product in sellerItems) {
       var item = TtOutItem(
-        name: product.playerName,
+        name: product.name,
         quantity: product.quantity,
         id: product.id,
       );

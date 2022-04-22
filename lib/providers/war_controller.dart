@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -52,6 +51,10 @@ class WarController extends GetxController {
 
   bool nukeReviveActive = false;
   bool uhcReviveActive = false;
+
+  List<String> lastAttackedTargets = [];
+
+  bool toggleAddUserActive = false;
 
   @override
   void onInit() {
@@ -370,7 +373,7 @@ class WarController extends GetxController {
     return numberUpdated;
   }
 
-  Future updateSomeMembersAfterAttack(List<String> attackedMembers) async {
+  Future updateSomeMembersAfterAttack() async {
     await Future.delayed(Duration(seconds: 15));
     dynamic allAttacksSuccess = await getAllAttacks();
     dynamic ownStatsSuccess = await getOwnStats();
@@ -382,7 +385,7 @@ class WarController extends GetxController {
     // which might happen even if we stop the update
     List<FactionModel> thisFactions = List.from(factions);
 
-    for (String id in attackedMembers) {
+    for (String id in lastAttackedTargets) {
       for (FactionModel f in thisFactions) {
         if (_stopUpdate) {
           _stopUpdate = false;
@@ -398,7 +401,7 @@ class WarController extends GetxController {
             ownStats: ownStatsSuccess,
           );
 
-          if (attackedMembers.length > 60) {
+          if (lastAttackedTargets.length > 60) {
             await Future.delayed(Duration(seconds: 1));
           }
           break;
@@ -650,8 +653,10 @@ class WarController extends GetxController {
       _lastYataSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getYataSpiesTime());
     } else {
       String savedTornStatsSpies = await Prefs().getTornStatsSpies();
-      _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
-      _lastTornStatsSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getTornStatsSpiesTime());
+      if (savedTornStatsSpies.isNotEmpty) {
+        _tornStatsSpies = tornStatsSpiesModelFromJson(savedTornStatsSpies);
+        _lastTornStatsSpiesDownload = DateTime.fromMillisecondsSinceEpoch(await Prefs().getTornStatsSpiesTime());
+      }
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -749,7 +754,7 @@ class WarController extends GetxController {
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
       String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
-      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 2));
+      var resp = await http.get(Uri.parse(yataURL)).timeout(Duration(seconds: 10));
       if (resp.statusCode == 200) {
         dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {
@@ -779,10 +784,9 @@ class WarController extends GetxController {
 
     try {
       String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
-      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 2));
+      var resp = await http.get(Uri.parse(tornStatsURL)).timeout(Duration(seconds: 10));
       if (resp.statusCode == 200) {
         TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
-        print(spyJson);
         if (spyJson != null && !spyJson.message.contains("Error")) {
           _lastTornStatsSpiesDownload = DateTime.now();
           _tornStatsSpies = spyJson;
@@ -804,6 +808,11 @@ class WarController extends GetxController {
 
   void toggleAddFromUserId() {
     addFromUserId = !addFromUserId;
+    update();
+  }
+
+    void setAddUserActive(bool active) {
+    toggleAddUserActive = active;
     update();
   }
 

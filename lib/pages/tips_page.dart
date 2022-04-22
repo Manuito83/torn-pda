@@ -548,7 +548,9 @@ class _TipsPageState extends State<TipsPage> {
             "the first available (non blue/red) one. Think about using easy/quick targets.\n\n"
             "This can be specially useful when chain watching while asleep, working, etc.\n\n"
             "Remember you need to leave Torn PDA open, "
-            "with the screen active, for the Panic Mode to work as well.",
+            "with the screen active, for the Panic Mode to work as well.\n\n"
+            "NOTE: the browser used by Panic Mode does not contain any of the features (widgets, etc.) "
+            "of the standard browser, as it is designed to load as quickly as possible.",
       ),
     );
     tips.add(

@@ -56,6 +56,8 @@ class TargetsProvider extends ChangeNotifier {
 
   String _userKey = '';
 
+  List<String> lastAttackedTargets = [];
+
   OwnProfileBasic _userDetails;
   TargetsProvider(this._userDetails) {
     restorePreferences();
@@ -300,14 +302,16 @@ class TargetsProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> updateTargetsAfterAttacks({@required List<String> targetsIds}) async {
+  Future<void> updateTargetsAfterAttacks() async {
+    await Future.delayed(Duration(seconds: 15));
+
     // Get attacks full to use later
     dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
     for (var tar in _targets) {
-      for (var i = 0; i < targetsIds.length; i++) {
-        if (tar.playerId.toString() == targetsIds[i]) {
+      for (var i = 0; i < lastAttackedTargets.length; i++) {
+        if (tar.playerId.toString() == lastAttackedTargets[i]) {
           tar.isUpdating = true;
           notifyListeners();
           try {
@@ -336,7 +340,7 @@ class TargetsProvider extends ChangeNotifier {
             tar.isUpdating = false;
             _updateResultAnimation(tar, false);
           }
-          if (targetsIds.length > 40) {
+          if (lastAttackedTargets.length > 40) {
             await Future.delayed(const Duration(seconds: 1), () {});
           }
         }

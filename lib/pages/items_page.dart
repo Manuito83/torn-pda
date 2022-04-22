@@ -9,6 +9,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items/items_sort.dart';
@@ -55,7 +56,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
   String _errorMessage = "";
 
   // Filters
-  bool _filterOwnedItems = false;
+  int _ownedItemsFilter = 0;
   List<String> _hiddenCategories = <String>[];
   Map<String, String> _allCategories = Map<String, String>();
 
@@ -352,49 +353,108 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
-                  Row(
-                    children: [
-                      Text("Only owned"),
-                      Switch(
-                        value: _filterOwnedItems,
-                        onChanged: (value) {
-                          Prefs().setShowOnlyOwnedItems(value);
-                          _filterOwnedItems = value;
-                          _rebuildItemsCards();
-                        },
-                        activeTrackColor: Colors.lightGreenAccent,
-                        activeColor: Colors.green,
-                      ),
-                    ],
+                  SizedBox(
+                    width: 150,
+                    height: 40,
+                    child: Column(
+                      children: [
+                        if (_ownedItemsFilter == 1)
+                          Text(
+                            "ONLY OWNED ITEMS",
+                            style: TextStyle(fontSize: 10),
+                          )
+                        else if (_ownedItemsFilter == 2)
+                          Text(
+                            "ONLY ITEMS NOT OWNED",
+                            style: TextStyle(fontSize: 10),
+                          )
+                        else
+                          (SizedBox(
+                            height: 12,
+                          )),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 5),
+                          child: SizedBox(
+                            height: 25,
+                            child: ToggleSwitch(
+                              customWidths: [35, 35],
+                              iconSize: 15,
+                              borderWidth: 1,
+                              cornerRadius: 5,
+                              doubleTapDisable: true,
+                              borderColor: _themeProvider.currentTheme == AppTheme.light
+                                  ? [Colors.blueGrey]
+                                  : [Colors.grey[900]],
+                              initialLabelIndex: _ownedItemsFilter == 0
+                                  ? null
+                                  : _ownedItemsFilter == 1
+                                      ? 0
+                                      : 1,
+                              activeBgColor: _themeProvider.currentTheme == AppTheme.light
+                                  ? [Colors.blueGrey]
+                                  : _themeProvider.currentTheme == AppTheme.dark
+                                      ? [Colors.blueGrey]
+                                      : [Colors.blueGrey[900]],
+                              activeFgColor:
+                                  _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                              inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+                                  ? Colors.white
+                                  : _themeProvider.currentTheme == AppTheme.dark
+                                      ? Colors.grey[800]
+                                      : Colors.black,
+                              inactiveFgColor:
+                                  _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+                              totalSwitches: 2,
+                              animate: true,
+                              animationDuration: 500,
+                              icons: [Icons.check, Icons.close],
+                              onToggle: (index) async {
+                                if (index == null) {
+                                  _ownedItemsFilter = 0;
+                                } else if (index == 0) {
+                                  _ownedItemsFilter = 1;
+                                } else if (index == 1) {
+                                  _ownedItemsFilter = 2;
+                                }
+                                _rebuildItemsCards();
+                              },
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
                   ),
-                  RawChip(
-                    showCheckmark: true,
-                    selected: _hiddenCategories.isEmpty ? true : false,
-                    side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
-                    avatar: CircleAvatar(
-                      backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
-                    ),
-                    label: Text(
-                      "ALL",
-                      style: TextStyle(
-                        fontSize: 12,
+                  SizedBox(
+                    width: 150,
+                    child: RawChip(
+                      showCheckmark: true,
+                      selected: _hiddenCategories.isEmpty ? true : false,
+                      side: BorderSide(color: _hiddenCategories.isEmpty ? Colors.green : Colors.grey[600], width: 1.5),
+                      avatar: CircleAvatar(
+                        backgroundColor: _hiddenCategories.isEmpty ? Colors.green : Colors.grey,
                       ),
-                    ),
-                    selectedColor: Colors.transparent,
-                    disabledColor: Colors.grey,
-                    onSelected: (bool isSelected) {
-                      if (isSelected) {
-                        _hiddenCategories.clear();
-                      } else {
-                        var fullList = [];
-                        for (var cat in _allCategories.keys) {
-                          fullList.add(cat);
+                      label: Text(
+                        "ALL",
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                      selectedColor: Colors.transparent,
+                      disabledColor: Colors.grey,
+                      onSelected: (bool isSelected) {
+                        if (isSelected) {
+                          _hiddenCategories.clear();
+                        } else {
+                          var fullList = [];
+                          for (var cat in _allCategories.keys) {
+                            fullList.add(cat);
+                          }
+                          _hiddenCategories = List<String>.from(fullList);
                         }
-                        _hiddenCategories = List<String>.from(fullList);
-                      }
-                      Prefs().setHiddenItemsCategories(_hiddenCategories);
-                      _rebuildItemsCards();
-                    },
+                        Prefs().setHiddenItemsCategories(_hiddenCategories);
+                        _rebuildItemsCards();
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -510,7 +570,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
     // Reset saved filters
     _hiddenCategories = await Prefs().getHiddenItemsCategories();
-    _filterOwnedItems = await Prefs().getShowOnlyOwnedItems();
+    _ownedItemsFilter = await Prefs().getOnlyOwnedItemsFilter();
 
     // Sort them for the first time
     String savedSort = await Prefs().getItemsSort();
@@ -764,7 +824,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
       bool inCategoryFilter = !_hiddenCategories.contains(item.type.name);
       bool owned = true;
-      if (_filterOwnedItems && item.inventoryOwned == 0) {
+      if (_ownedItemsFilter == 1 && item.inventoryOwned == 0) {
         owned = false;
       }
 

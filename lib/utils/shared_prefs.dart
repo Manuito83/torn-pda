@@ -60,6 +60,7 @@ class Prefs {
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
   final String _kDefaultTimeZone = "pda_defaultTimeZone";
   final String _kShowDateInClockString = "pda_showDateInClockString"; // changed from bool to string
+  final String _kShowSecondsInClock = "pda_showSecondsInClock";
   final String _kAppBarPosition = "pda_AppBarPosition";
   final String _kSpiesSource = "pda_SpiesSource";
   final String _kProfileSectionOrder = "pda_ProfileSectionOrder";
@@ -80,6 +81,7 @@ class Prefs {
   final String _kStockCapacity = "pda_stockCapacity";
   final String _kShowForeignInventory = "pda_showForeignInventory";
   final String _kShowArrivalTime = "pda_showArrivalTime";
+  final String _kShowBarsCooldownAnalysis = "pda_showBarsCooldownAnalysis";
   final String _kTravelTicket = "pda_travelTicket";
   final String _kActiveRestocks = "pda_activeRestocks";
   final String _kCountriesAlphabeticalFilter = "pda_countriesAlphabeticalFilter";
@@ -128,6 +130,7 @@ class Prefs {
   final String _kExpandNetworth = "pda_ExpandNetworth";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kQuickItemsList = "pda_quickItemsList";
+  final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
@@ -172,7 +175,7 @@ class Prefs {
   final String _kHideTabs = "pda_hideTabs";
   // Items
   final String _kItemsSort = "pda_itemssSort";
-  final String _kShowOnlyOwnedItems = "pda_showOnlyOwnedItems";
+  final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
   final String _kHiddenItemsCategories = "pda_hiddenItemsCategories";
   final String _kPinnedItems = "pda_pinnedItems";
   // ShowCases (with flutter_showcaseview)
@@ -183,6 +186,12 @@ class Prefs {
   final String _kAlternativeYataKey = "pda_alternativeYataKey";
   final String _kAlternativeTornStatsKeyEnabled = "pda_alternativeTornStatsKeyEnabled";
   final String _kAlternativeTornStatsKey = "pda_alternativeTornStatsKey";
+
+  // TornStats stats chart configuration
+  final String _kTornStatsChartSave = "pda_tornStatsChartSave";
+  final String _kTornStatsChartDateTime = "pda_tornStatsChartDateTime";
+  final String _kTornStatsChartEnabled = "pda_tornStatsChartEnabled";
+  final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -719,6 +728,16 @@ class Prefs {
     return prefs.setString(_kShowDateInClockString, value);
   }
 
+  Future<bool> getShowSecondsInClock() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowSecondsInClock) ?? true;
+  }
+
+  Future<bool> setShowSecondsInClock(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowSecondsInClock, value);
+  }
+
   /// ----------------------------
   /// Methods for spies source
   /// ----------------------------
@@ -957,6 +976,16 @@ class Prefs {
   Future<bool> setShowArrivalTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowArrivalTime, value);
+  }
+
+  Future<bool> getShowBarsCooldownAnalysis() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowBarsCooldownAnalysis) ?? true;
+  }
+
+  Future<bool> setShowBarsCooldownAnalysis(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowBarsCooldownAnalysis, value);
   }
 
   Future<String> getTravelTicket() async {
@@ -1451,6 +1480,16 @@ class Prefs {
     return prefs.setStringList(_kQuickItemsList, value);
   }
 
+  Future<List<String>> getQuickItemsListFaction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kQuickItemsListFaction) ?? <String>[];
+  }
+
+  Future<bool> setQuickItemsListFaction(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kQuickItemsListFaction, value);
+  }
+
   Future<int> getNumberOfLoadouts() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kQuickItemsLoadoutsNumber) ?? 3;
@@ -1616,14 +1655,14 @@ class Prefs {
     return prefs.setString(_kItemsSort, value);
   }
 
-  Future<bool> getShowOnlyOwnedItems() async {
+  Future<int> getOnlyOwnedItemsFilter() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowOnlyOwnedItems) ?? false;
+    return prefs.getInt(_kOnlyOwnedItemsFilter) ?? 0;
   }
 
-  Future<bool> setShowOnlyOwnedItems(bool value) async {
+  Future<bool> setOnlyOwnedItemsFilter(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowOnlyOwnedItems, value);
+    return prefs.setInt(_kOnlyOwnedItemsFilter, value);
   }
 
   Future<List<String>> getHiddenItemsCategories() async {
@@ -1736,6 +1775,51 @@ class Prefs {
   Future<bool> setAlternativeTornStatsKey(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAlternativeTornStatsKey, value);
+  }
+
+
+  /// ---------------------
+  /// TORNSTATS STATS CHART
+  /// ---------------------
+
+  Future<String> getTornStatsChartSave() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornStatsChartSave) ?? "";
+  }
+
+  Future<bool> setTornStatsChartSave(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornStatsChartSave, value);
+  }
+  
+  Future<int> getTornStatsChartDateTime() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTornStatsChartDateTime) ?? 0;
+  }
+
+  Future<bool> setTornStatsChartDateTime(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTornStatsChartDateTime, value);
+  }
+
+  Future<bool> getTornStatsChartEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornStatsChartEnabled) ?? true;
+  }
+
+  Future<bool> setTornStatsChartEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornStatsChartEnabled, value);
+  }
+
+  Future<bool> getTornStatsChartInCollapsedMiscCard() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTornStatsChartInCollapsedMiscCard) ?? true;
+  }
+
+  Future<bool> setTornStatsChartInCollapsedMiscCard(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTornStatsChartInCollapsedMiscCard, value);
   }
 
   /// -------------------

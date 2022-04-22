@@ -553,10 +553,43 @@ String restoreChatJS() {
   ''';
 }
 
-String quickItemsJS({@required String item}) {
+String quickItemsJS({@required String item, bool faction = false, bool refill = false}) {
+  String timeRegex = r'/<span class="counter-wrap" data-time="([0-9]+)"><\/span>/';
+
   return '''
     // Credit Torn Tools
     
+    // Fixed time string for faction armoury replies
+    function fixTime(str) {
+      let regexp = $timeRegex;
+      let match = str.match(regexp);
+
+      if (match === null) {
+        console.log("null");
+        return "";
+      }
+
+      let secondsToAdd = match[1];
+
+      function secondsToHms(d) {
+          d = Number(d);
+          var h = Math.floor(d / 3600);
+          var m = Math.floor(d % 3600 / 60);
+          var s = Math.floor(d % 3600 % 60);
+
+          var hDisplay = minTwoDigits(h) + ":";
+          var mDisplay = minTwoDigits(m) + ":";
+          var sDisplay = minTwoDigits(s);
+          return hDisplay + mDisplay + sDisplay; 
+      }
+
+      function minTwoDigits(n) {
+        return (n < 10 ? '0' : '') + n;
+      }
+
+      return(str.replace(/<span class="counter-wrap".*span>/, secondsToHms(secondsToAdd)));
+    }
+
     // Add style for result box
     function addStyle(styleString) {
       const style = document.createElement('style');
@@ -614,25 +647,79 @@ String quickItemsJS({@required String item}) {
       return url;
     }
     
-    var url = "https://www.torn.com/" + addRFC("item.php");
-      
-    ajaxWrapper({
-      url: url,
-      type: 'POST',
-      data: 'step=actionForm&id=$item&action=use',
-      oncomplete: function(resp) {
-      var response = resp.responseText;
-      var topBox = document.querySelector('.content-title');
-      topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
-      resultBox = document.querySelector('.resultBox');
-      resultBox.style.display = "block";
-      resultBox.innerHTML = response;
-      resultBox.querySelector(`a[data-item='$item`).click();
-      },
-      onerror: function(e) {
-      console.error(e)
+    var url = "";
+    if (!$refill) {
+      url = "https://www.torn.com/" + addRFC("item.php");
+    } else {
+      url = "https://www.torn.com/" + addRFC("factions.php");
+    }
+    
+
+    if (!$faction) {
+      ajaxWrapper({
+        url: url,
+        type: 'POST',
+        data: 'step=actionForm&id=$item&action=use',
+        oncomplete: function(resp) {
+          var response = resp.responseText;
+          var topBox = document.querySelector('.content-title');
+          topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+          resultBox = document.querySelector('.resultBox');
+          resultBox.style.display = "block";
+          resultBox.innerHTML = response;
+          resultBox.querySelector(`a[data-item='$item`).click();
+        },
+        onerror: function(e) {
+          console.error(e)
+        }
+      });
+    } else {
+      if (!$refill) {
+        ajaxWrapper({
+          url: url,
+          type: 'POST',
+          data: 'step=useItem&itemID=$item&fac=1',
+          oncomplete: function(resp) {
+            var response = JSON.parse(resp.responseText);
+            var topBox = document.querySelector('.content-title');
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+            resultBox = document.querySelector('.resultBox');
+            resultBox.style.display = "block";
+            response.text = response.text.replace("This item has already been used", "Not available");
+            
+            let fixResult = fixTime(response.text);
+            if (fixResult === "") {
+              resultBox.innerHTML = response.text;
+            } else {
+              resultBox.innerHTML = fixResult;
+            }
+          },
+          onerror: function(e) {
+            console.error(e)
+          }
+        });
+      } else {
+        ajaxWrapper({
+          url: url,
+          type: 'POST',
+          data: 'step=armouryRefillEnergy',
+          oncomplete: function(resp) {
+            console.log(resp.responseText);
+            
+            var response = JSON.parse(resp.responseText);
+            var topBox = document.querySelector('.content-title');
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+            resultBox = document.querySelector('.resultBox');
+            resultBox.style.display = "block";
+            resultBox.innerHTML = response.text;
+          },
+          onerror: function(e) {
+            console.error(e)
+          }
+        });
       }
-    });
+    }
+    
     
     // Get rid of the resultBox on close
     document.addEventListener("click", (event) => {

@@ -29,6 +29,7 @@ import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -40,13 +41,12 @@ import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.6.7';
-const String androidVersion = '193';
-const String iosVersion = '201';
+const String appVersion = '2.7.0';
+const String androidVersion = '206';
+const String iosVersion = '213';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -142,6 +142,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider<QuickItemsProvider>(
           create: (context) => QuickItemsProvider(),
+        ),
+        ChangeNotifierProvider<QuickItemsProviderFaction>(
+          create: (context) => QuickItemsProviderFaction(),
         ),
         ChangeNotifierProvider<TradesProvider>(
           create: (context) => TradesProvider(),
