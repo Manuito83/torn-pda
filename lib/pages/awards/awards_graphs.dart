@@ -188,7 +188,7 @@ class _AwardsGraphsState extends State<AwardsGraphs> {
         touchExtraThreshold: EdgeInsets.only(top: 30),
         touchCallback: (flTouchEvent, barTouchResponse) {
           setState(() {
-            if (barTouchResponse.spot != null &&
+            if (barTouchResponse?.spot != null &&
                 barTouchResponse is! PointerUpEvent &&
                 barTouchResponse is! PointerExitEvent) {
               _touchedIndex = barTouchResponse.spot.touchedBarGroupIndex;
