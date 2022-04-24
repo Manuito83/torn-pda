@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/other/profile_check.dart';
 import 'package:vibration/vibration.dart';
 
@@ -1079,7 +1080,7 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     } else if (_myCurrentKey == '') {
       return Padding(
-        padding: EdgeInsetsDirectional.fromSTEB(30, 30, 30, 0),
+        padding: EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
         child: Column(
           children: <Widget>[
             Text(
@@ -1089,6 +1090,47 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
+            ),
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 10),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "\nYou can get your API key in the Torn website by taping your profile picture (upper right corner)"
+                        " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
+                      ),
+                      RichText(
+                        text: TextSpan(
+                          style: DefaultTextStyle.of(context).style,
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: 'Tap here',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () async {
+                                  var url = 'https://www.torn.com/preferences.php#tab=api';
+                                  await context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        useDialog: _settingsProvider.useQuickBrowser,
+                                      );
+                                },
+                            ),
+                            TextSpan(
+                              text: ' to be redirected',
+                              style: DefaultTextStyle.of(context).style,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             Text('\nIn any case, please make sure to '
                 'follow Torn\'s staff recommendations on how to protect your key '

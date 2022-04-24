@@ -1215,13 +1215,16 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   }
 
   Future<void> _handleChangelog() async {
-    final String savedVersion = await Prefs().getAppVersion();
-    if (savedVersion != appVersion) {
-      Prefs().setAppVersion(appVersion);
+    final String savedCompilation = await Prefs().getAppCompilation();
+
+    String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+
+    if (savedCompilation != currentCompilation) {
+      Prefs().setAppCompilation(currentCompilation);
 
       // Exceptions were we don't show a changelog
       /*
-      if (savedVersion == '1.6.0') {
+      if (savedVersion == 'xxx') {
         return;
       }
       */

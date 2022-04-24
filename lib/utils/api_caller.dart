@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -632,7 +633,14 @@ class TornApiCaller {
     url += '&key=$apiKey&comment=PDA-App&limit=$limit';
 
     try {
-      Dio dio = Dio(BaseOptions(connectTimeout: 30000, receiveTimeout: 30000));
+      Dio dio = Dio(
+        BaseOptions(
+          connectTimeout: 30000,
+          receiveTimeout: 30000,
+          responseType: ResponseType.plain,
+        ),
+      );
+
       (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (HttpClient client) {
         client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
         return client;
@@ -640,42 +648,63 @@ class TornApiCaller {
 
       final response = await dio.get(url);
 
-      if (response.statusCode == 200) {
-        // Check if json is responding with errors
-        if (response.data['error'] != null) {
-          return ApiError(errorId: response.data['error']['code']);
+      // ERROR HANDLING 1: verify whether API reply has a correct JSON structure
+      dynamic jsonResponse;
+      try {
+        jsonResponse = json.decode(response.data);
+      } catch (e) {
+        log("API REPLY ERROR [$e]");
+        // Analytics limits at 100 chars
+        String platform = Platform.isAndroid ? "a" : "i";
+        String versionError = "$appVersion$platform $e";
+        analytics.logEvent(
+          name: 'api_reply_error',
+          parameters: {
+            'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
+          },
+        );
+        // We limit to a bit more here (it will be shown to the user)
+        String error = response == null ? "null" : response.data.toString();
+        return ApiError(
+            errorId: 0, details: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]");
+      }
+
+      // ERROR HANDLING 2: JSON is correct, but the API is reporting an error from JSON
+      if (jsonResponse.isNotEmpty && response.statusCode == 200) {
+        if (jsonResponse['error'] != null) {
+          return ApiError(errorId: jsonResponse['error']['code']);
         }
         // Otherwise, return a good json response
-        return response.data;
+        return jsonResponse;
       } else {
         log("Api code ${response.statusCode}: ${response.data}");
         analytics.logEvent(
-          name: 'api_error',
+          name: 'api_status_error',
           parameters: {
-            'type': 'status',
             'status_code': response.statusCode,
-            'response_body': response.data.length > 99 ? response.data.substring(0, 99) : response.data,
+            'response_body': jsonResponse.length > 99 ? jsonResponse.substring(0, 99) : jsonResponse,
           },
         );
-        return ApiError(errorId: 0, details: "API STATUS CODE\n[${response.statusCode}: ${response.data}]");
+        return ApiError(errorId: 0, details: "API STATUS ERROR\n[${response.statusCode}: ${response.data}]");
       }
     } on TimeoutException catch (_) {
       return ApiError(errorId: 100);
     } catch (e) {
-      log("API CATCH [$e]");
+      // ERROR HANDLING 3: exception from http call
+      
+      log("API CALL ERROR [$e]");
       // Analytics limits at 100 chars
       String platform = Platform.isAndroid ? "a" : "i";
       String versionError = "$appVersion$platform $e";
       analytics.logEvent(
-        name: 'api_error',
+        name: 'api_call_error',
         parameters: {
-          'type': 'exception',
           'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
         },
       );
       // We limit to a bit more here (it will be shown to the user)
       String error = e.toString();
-      return ApiError(errorId: 0, details: "API CATCH\n[${error.length > 300 ? error.substring(0, 300) : e}]");
+      return ApiError(errorId: 0, details: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : e}]");
     }
   }
 }

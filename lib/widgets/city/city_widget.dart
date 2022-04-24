@@ -78,14 +78,12 @@ class _CityWidgetState extends State<CityWidget> {
           ),
         ),
         expanded: ConstrainedBox(
-          constraints: BoxConstraints.loose(Size.fromHeight(
-                  (MediaQuery.of(context).size.height -
-                      kToolbarHeight -
-                      AppBar().preferredSize.height)) /
-              3),
+          constraints: BoxConstraints.loose(
+              Size.fromHeight((MediaQuery.of(context).size.height - kToolbarHeight - AppBar().preferredSize.height)) /
+                  3),
           child: Scrollbar(
             controller: _scrollController,
-            thumbVisibility: true,
+            isAlwaysShown: true,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 5),
               child: SingleChildScrollView(

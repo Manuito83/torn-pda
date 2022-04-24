@@ -211,12 +211,12 @@ class Prefs {
   /// ----------------------------
   /// Methods for app version
   /// ----------------------------
-  Future<String> getAppVersion() async {
+  Future<String> getAppCompilation() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kAppVersion) ?? "";
   }
 
-  Future<bool> setAppVersion(String value) async {
+  Future<bool> setAppCompilation(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kAppVersion, value);
   }

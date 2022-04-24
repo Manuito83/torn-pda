@@ -199,7 +199,7 @@ class _TradesWidgetState extends State<TradesWidget> {
                       3),
               child: Scrollbar(
                 controller: _scrollController,
-                thumbVisibility: true,
+                isAlwaysShown: true,
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   child: Row(
@@ -962,5 +962,4 @@ class _TradesWidgetState extends State<TradesWidget> {
   void _backFromAwhWithMessage() async {
     await widget.webView.evaluateJavascript(source: "chat.r(${_tradesProv.container.sellerId})");
   }
-
 }
