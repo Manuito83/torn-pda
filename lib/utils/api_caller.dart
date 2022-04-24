@@ -665,6 +665,11 @@ class TornApiCaller {
         );
         // We limit to a bit more here (it will be shown to the user)
         String error = response == null ? "null" : response.data.toString();
+        if (error.isEmpty) {
+          error = "Torn API is returning an empty string, please try again in a while. You can check "
+              "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
+              "a request with your API key";
+        }
         return ApiError(
             errorId: 0, details: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]");
       }
@@ -691,7 +696,7 @@ class TornApiCaller {
       return ApiError(errorId: 100);
     } catch (e) {
       // ERROR HANDLING 3: exception from http call
-      
+
       log("API CALL ERROR [$e]");
       // Analytics limits at 100 chars
       String platform = Platform.isAndroid ? "a" : "i";
