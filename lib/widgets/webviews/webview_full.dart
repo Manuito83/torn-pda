@@ -970,6 +970,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
 
                     if (widget.useTabs) {
+                      print(uri.toString());
                       _reportUrlVisit(uri, reportTitle: true);
                       // Report title will only be used from onLoadStop, since onResourceLoad might trigger
                       // it too early (before it has changed)
@@ -1427,6 +1428,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _reportUrlVisit(Uri uri, {bool reportTitle = false}) {
+    // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
+    // when returning from a bazaar and go straight to the market, not allowing to return to the item search
+    if (uri.toString().contains("imarket.php#/")) {
+      RegExp expHtml = RegExp(r"imarket\.php#\/[0-9||.]+$");
+      var matches = expHtml.allMatches(uri.toString()).map((m) => m[0]);
+      if (matches.length > 0) {
+        return;
+      }
+    }
+
     // For certain URLs (e.g. forums in iOS) we might be reporting this twice. Once from onLoadStop and again
     // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough
     // to prevent adding extra pages to history (when it's the first page loading, it's only omitted once).
