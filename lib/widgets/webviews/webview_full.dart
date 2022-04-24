@@ -189,6 +189,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _urlTriggerTime;
   DateTime _profileTriggerTime;
   DateTime _searchTriggerTime;
+  DateTime _bazaarTriggerTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -970,7 +971,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
 
                     if (widget.useTabs) {
-                      print(uri.toString());
                       _reportUrlVisit(uri, reportTitle: true);
                       // Report title will only be used from onLoadStop, since onResourceLoad might trigger
                       // it too early (before it has changed)
@@ -1042,6 +1042,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         }
                         _searchTriggerTime = DateTime.now();
                         var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
+                    }
+
+                    /// Same for bazaar, so that we go back to the same item search
+                    if (widget.useTabs && Platform.isIOS) {
+                      
+                      if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("imarket.php")) {
+                        // Trigger once
+                        if (_bazaarTriggerTime != null && (DateTime.now().difference(_bazaarTriggerTime).inSeconds) < 1) {
+                          return;
+                        }
+                        _bazaarTriggerTime = DateTime.now();
+                        var uri = (await webView.getUrl());
+                        print(uri.toString());
                         _reportUrlVisit(uri);
                       }
                     }
