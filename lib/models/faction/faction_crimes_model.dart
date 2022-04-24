@@ -21,13 +21,14 @@ class FactionCrimesModel {
   factory FactionCrimesModel.fromJson(Map<String, dynamic> json) {
     try {
       return FactionCrimesModel(
-        crimes: json.isEmpty || json["crimes"] == null
+        crimes: json == null || json.isEmpty || json["crimes"] == null
             ? null
             : Map.from(json["crimes"]).map((k, v) => MapEntry<String, Crime>(k, Crime.fromJson(v))),
       );
     } catch (e) {
+      String response = json == null ? null : json['crimes'];
       FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
-      FirebaseCrashlytics.instance.recordError("Response: ${json['crimes']}", null);
+      FirebaseCrashlytics.instance.recordError("Response: ${response}", null);
       return null;
     }
   }

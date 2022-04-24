@@ -4484,7 +4484,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       var factionCrimes = await TornApiCaller().getFactionCrimes();
 
       // OPTION 1 - Check if we have faction access
-      if (factionCrimes is FactionCrimesModel) {
+      if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
         String complexString = "";
         DateTime complexTime = DateTime.now();
 
@@ -4545,7 +4545,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       // OPTION 2 - Could indicate that we have no AA access, so we are looking for events!
-      if (factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
+      if (factionCrimes == null || factionCrimes is ApiError || _ocFinalStringLong.isEmpty) {
         bool simpleExists = false;
         DateTime simpleTime = DateTime.now();
         String simpleString = "";
