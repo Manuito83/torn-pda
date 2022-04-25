@@ -39,11 +39,15 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // VERSION 2.7.0 && 2.7.1 due to hotfix
+    // Build 217 - 25/04/2022
+    // Android on v2.7.2 (hotfix 2)
+    // iOS on v2.7.1 (hotfix 1)
+
+    // VERSION 2.7.0 && 2.7.1 && 2.7.2 due to hotfix
     var v2_7_0 = ChangeLogItem();
     v2_7_0.showInfoLine = true; // REMOVE for others
-    v2_7_0.infoString = "Hotfix for stability issues after v2.7.0 release"; // REMOVE for others
-    v2_7_0.version = 'Torn PDA v2.7.1';
+    if (Platform.isAndroid) v2_7_0.infoString = "Hotfix 2 for stability issues still reported after release of v2.7.1";
+    v2_7_0.version = 'Torn PDA v2.7.2';
     v2_7_0.date = '25 APR 2022';
     String feat2_7_0_1 = "Browser: added quick items widget in faction armoury";
     String feat2_7_0_2 = "Chaining: the browser now opens as a tab and incorporates all widgets";
