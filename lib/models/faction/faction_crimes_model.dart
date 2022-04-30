@@ -26,7 +26,7 @@ class FactionCrimesModel {
             : Map.from(json["crimes"]).map((k, v) => MapEntry<String, Crime>(k, Crime.fromJson(v))),
       );
     } catch (e) {
-      String response = json == null ? null : json['crimes'];
+      var response = json == null ? null : json['crimes'];
       FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
       FirebaseCrashlytics.instance.recordError("Response: ${response}", null);
       return null;
