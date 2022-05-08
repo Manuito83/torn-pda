@@ -1162,7 +1162,6 @@ function drawPresetBar() {
       edited: false,
       source: source,
     );
-
   }
 
   static UserScriptModel _specialGymRatios() {
@@ -1508,7 +1507,6 @@ function gymLoaded() {
       edited: false,
       source: source,
     );
-
   }
 
   static UserScriptModel _companyStocksOrderExample() {
@@ -1636,7 +1634,6 @@ if (document.querySelector(".stock-list-wrap")) {
       edited: false,
       source: source,
     );
-
   }
 
   static UserScriptModel _companyActivity() {
@@ -1709,6 +1706,5 @@ if (document.querySelector(".stock-list-wrap")) {
       edited: false,
       source: source,
     );
-
   }
 }

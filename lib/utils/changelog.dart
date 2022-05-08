@@ -85,18 +85,18 @@ class _ChangeLogState extends State<ChangeLog> {
 
     // VERSION 2.6.7
     var v2_6_7 = ChangeLogItem();
-    v2_8_0.version = 'Torn PDA v2.6.7';
-    v2_8_0.date = '12 MAR 2022';
+    v2_6_7.version = 'Torn PDA v2.6.7';
+    v2_6_7.date = '12 MAR 2022';
     String feat2_6_7_1 = "Added points' market value in the networth card";
     String feat2_6_7_2 = "Browser scale can now be changed (browser bar options)";
     String feat2_6_7_3 = "Browser now accepts pinch gestures for zoom (disabled by default)";
     String feat2_6_7_4 = "Fixed donator status in the misc card";
     String feat2_6_7_5 = "Fixed webview background transparency";
-    v2_8_0.features.add(feat2_8_0_1);
-    if (Platform.isAndroid) v2_8_0.features.add(feat2_6_7_2);
-    if (Platform.isIOS) v2_8_0.features.add(feat2_6_7_3);
-    v2_8_0.features.add(feat2_6_7_4);
-    v2_8_0.features.add(feat2_6_7_5);
+    v2_6_7.features.add(feat2_6_7_1);
+    if (Platform.isAndroid) v2_6_7.features.add(feat2_6_7_2);
+    if (Platform.isIOS) v2_6_7.features.add(feat2_6_7_3);
+    v2_6_7.features.add(feat2_6_7_4);
+    v2_6_7.features.add(feat2_6_7_5);
 
     // VERSION 2.6.6
     var v2_6_6 = ChangeLogItem();
@@ -1128,7 +1128,7 @@ class _ChangeLogState extends State<ChangeLog> {
     // NEED TO ADD HERE!
     itemList.add(v2_8_0);
     itemList.add(v2_7_0);
-    itemList.add(v2_8_0);
+    itemList.add(v2_6_7);
     itemList.add(v2_6_6);
     itemList.add(v2_6_5);
     itemList.add(v2_6_4);
