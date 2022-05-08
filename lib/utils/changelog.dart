@@ -46,6 +46,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_8_0.version = 'Torn PDA v2.8.0';
     v2_8_0.date = '15 MAY 2022';
     String feat2_8_0_1 = "Added NPC Loot automatic alerts";
+    String feat2_8_0_2 = "Quick items: divided faction refills in energy and nerve (needs to readd)";
     v2_8_0.features.add(feat2_8_0_1);
 
     // VERSION 2.7.0 && 2.7.1 && 2.7.2 due to hotfix
