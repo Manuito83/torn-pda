@@ -648,45 +648,48 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               child: Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: GestureDetector(
-                  child: Column(
-                    children: [
-                      Text(
-                        "CLOSE",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _themeProvider.mainText,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 15,
-                        child: Divider(
-                          height: 3,
-                          thickness: 1,
-                          color: _themeProvider.mainText,
-                        ),
-                      ),
-                      if (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
-                          _userProvider.basic.faction.factionId != 0)
+                  child: Container(
+                    color: Colors.transparent, // Background to extend the buttons detection area
+                    child: Column(
+                      children: [
                         Text(
-                          "ASSIST",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 7,
-                          ),
-                        )
-                      else
-                        Text(
-                          "OPTIONS",
+                          "CLOSE",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: _themeProvider.mainText,
-                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
                           ),
                         ),
-                    ],
+                        SizedBox(
+                          width: 15,
+                          child: Divider(
+                            height: 3,
+                            thickness: 1,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                        if (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
+                            _userProvider.basic.faction.factionId != 0)
+                          Text(
+                            "ASSIST",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 7,
+                            ),
+                          )
+                        else
+                          Text(
+                            "OPTIONS",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _themeProvider.mainText,
+                              fontSize: 7,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                   onTap: () {
                     Navigator.of(context).pop();
