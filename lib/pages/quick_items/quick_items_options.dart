@@ -246,7 +246,7 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                   child: Container(
                     height: 60,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: item.isPoints ? 20 : 0),
+                      padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
                       child: Card(
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
@@ -255,12 +255,12 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                             children: [
                               Padding(
                                 padding: EdgeInsets.all(2),
-                                child: item.isPoints
+                                child: item.isEnergyPoints || item.isNervePoints
                                     ? SizedBox(
                                         width: 25,
                                         child: Icon(
                                           MdiIcons.alphaPCircleOutline,
-                                          color: Colors.blueAccent,
+                                          color: item.isEnergyPoints ? Colors.green : Colors.red,
                                         ),
                                       )
                                     : Image.asset(
@@ -500,7 +500,8 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                         child: Container(
                           height: 60,
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: item.isPoints ? 20 : 0),
+                            padding:
+                                EdgeInsets.symmetric(horizontal: item.isEnergyPoints || item.isNervePoints ? 20 : 0),
                             child: Card(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -508,12 +509,12 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
                                   children: [
                                     Padding(
                                       padding: EdgeInsets.all(2),
-                                      child: item.isPoints
+                                      child: item.isEnergyPoints || item.isNervePoints
                                           ? SizedBox(
                                               width: 25,
                                               child: Icon(
                                                 MdiIcons.alphaPCircleOutline,
-                                                color: Colors.blueAccent,
+                                                color: item.isEnergyPoints ? Colors.green : Colors.red,
                                               ),
                                             )
                                           : Image.asset(

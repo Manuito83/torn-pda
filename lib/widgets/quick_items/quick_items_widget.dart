@@ -123,14 +123,14 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
           decoration: BoxDecoration(color: Colors.grey[700]),
           child: ActionChip(
             elevation: 3,
-            side: item.isLoadout || item.isPoints ? BorderSide(color: Colors.blue) : null,
+            side: item.isLoadout || item.isEnergyPoints || item.isNervePoints ? BorderSide(color: Colors.blue) : null,
             avatar: item.isLoadout
                 ? null
                 : widget.faction
-                    ? item.isPoints
+                    ? item.isEnergyPoints || item.isNervePoints
                         ? Icon(
                             MdiIcons.alphaPCircleOutline,
-                            color: Colors.blueAccent,
+                            color: item.isEnergyPoints ? Colors.green : Colors.red,
                           )
                         : CircleAvatar(
                             child: Image.asset(
@@ -153,9 +153,9 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                     item.loadoutName,
                     style: TextStyle(fontSize: 11),
                   )
-                : item.isPoints
+                : item.isEnergyPoints || item.isNervePoints
                     ? Text(
-                        "Refill",
+                        item.isEnergyPoints ? "E Refill" : "N Refill",
                         style: TextStyle(fontSize: 11),
                       )
                     : item.name.split(' ').length > 1
@@ -172,7 +172,12 @@ class _QuickItemsWidgetState extends State<QuickItemsWidget> {
                 var js = changeLoadOutJS(item: item.name.split(" ")[1], attackWebview: false);
                 await widget.inAppWebViewController.evaluateJavascript(source: js);
               } else {
-                var js = quickItemsJS(item: item.number.toString(), faction: widget.faction, refill: item.isPoints);
+                var js = quickItemsJS(
+                  item: item.number.toString(),
+                  faction: widget.faction,
+                  eRefill: item.isEnergyPoints,
+                  nRefill: item.isNervePoints,
+                );
                 await widget.inAppWebViewController.evaluateJavascript(source: js);
                 if (!widget.faction) {
                   _itemsProvider.decreaseInventory(item);

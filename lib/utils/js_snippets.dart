@@ -565,7 +565,7 @@ String restoreChatJS() {
   ''';
 }
 
-String quickItemsJS({@required String item, bool faction = false, bool refill = false}) {
+String quickItemsJS({@required String item, bool faction = false, bool eRefill = false, bool nRefill = false}) {
   String timeRegex = r'/<span class="counter-wrap" data-time="([0-9]+)"><\/span>/';
 
   return '''
@@ -660,7 +660,7 @@ String quickItemsJS({@required String item, bool faction = false, bool refill = 
     }
     
     var url = "";
-    if (!$refill) {
+    if (!$eRefill && !$nRefill) {
       url = "https://www.torn.com/" + addRFC("item.php");
     } else {
       url = "https://www.torn.com/" + addRFC("factions.php");
@@ -686,7 +686,7 @@ String quickItemsJS({@required String item, bool faction = false, bool refill = 
         }
       });
     } else {
-      if (!$refill) {
+      if (!$eRefill && !$nRefill) {
         ajaxWrapper({
           url: url,
           type: 'POST',
@@ -711,10 +711,12 @@ String quickItemsJS({@required String item, bool faction = false, bool refill = 
           }
         });
       } else {
+        let step = $eRefill ? "step=armouryRefillEnergy" : "step=armouryRefillNerve";
+
         ajaxWrapper({
           url: url,
           type: 'POST',
-          data: 'step=armouryRefillEnergy',
+          data: step,
           oncomplete: function(resp) {
             console.log(resp.responseText);
             
@@ -723,7 +725,11 @@ String quickItemsJS({@required String item, bool faction = false, bool refill = 
             topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
             resultBox = document.querySelector('.resultBox');
             resultBox.style.display = "block";
-            resultBox.innerHTML = response.text;
+            if (response.success === false) {
+              resultBox.innerHTML = response.message;
+            } else {
+              resultBox.innerHTML = response.text;
+            }
           },
           onerror: function(e) {
             console.error(e)
