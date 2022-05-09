@@ -226,7 +226,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel.racingNotification ?? false,
+                          value: _firebaseUserModel.lootAlerts.isNotEmpty ?? false,
                           title: const Text("Loot"),
                           subtitle: const Text(
                             "Get notified when an NPC is about to reach level 4 or 5 (between 5 and 6 "
@@ -246,6 +246,9 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                                 );
                               },
                             );
+                            setState(() {
+                              // Refresh lootAlerts (check or uncheck box)
+                            });
                           },
                         ),
                       ),

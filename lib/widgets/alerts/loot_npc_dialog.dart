@@ -183,16 +183,6 @@ class NpcAlertConfigLine extends StatefulWidget {
 }
 
 class _NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
-  bool _level4 = false;
-  bool _level5 = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _level4 = widget.npcAlertModel.level4;
-    _level5 = widget.npcAlertModel.level5;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
