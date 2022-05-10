@@ -1407,6 +1407,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
+    // API HANDLERS
     webView.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
       callback: (args) async {
@@ -1425,6 +1426,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         http.Response resp =
             await http.post(Uri.parse(args[0]), headers: Map<String, String>.from(args[1]), body: body);
         return _makeScriptApiResponse(resp);
+      },
+    );
+
+    // JS HANDLER
+    webView.addJavaScriptHandler(
+      handlerName: 'PDA_evaluateJavascript',
+      callback: (args) async {
+        webView.evaluateJavascript(source: args[0]);
+        return;
       },
     );
   }

@@ -48,11 +48,14 @@ class _ChangeLogState extends State<ChangeLog> {
     String feat2_8_0_1 = "Added NPC Loot automatic alerts";
     String feat2_8_0_2 = "Quick items: divided faction refills in energy and nerve (need to be re-added)";
     String feat2_8_0_3 = "Browser: Player Profile now includes Bazaar information (if net worth checks are enabled)";
-    String feat2_8_0_4 = "Removed TornCAT Player Filter from default userscripts (discontinued by its developer)";
+    String feat2_8_0_4 = "Userscripts: added handler to evaluate javascript code passed to the app "
+        "(advanced - more details in the userscripts section)";
+    String feat2_8_0_5 = "Removed TornCAT Player Filter from default userscripts (discontinued by its developer)";
     v2_8_0.features.add(feat2_8_0_1);
     v2_8_0.features.add(feat2_8_0_2);
     v2_8_0.features.add(feat2_8_0_3);
     v2_8_0.features.add(feat2_8_0_4);
+    v2_8_0.features.add(feat2_8_0_5);
 
     // VERSION 2.7.0 && 2.7.1 && 2.7.2 due to hotfix
     var v2_7_0 = ChangeLogItem();
