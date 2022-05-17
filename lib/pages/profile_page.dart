@@ -3337,15 +3337,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         return Column(
                           children: [
                             SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('images/icons/tornstats_logo.png', width: 12),
-                                SizedBox(width: 5),
-                                Text('STATS CHART', style: TextStyle(fontSize: 8)),
-                              ],
-                            ),
-                            SizedBox(height: 5),
                             SizedBox(
                               height: 200,
                               child: StatsChart(
@@ -3518,15 +3509,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         return Column(
                           children: [
                             SizedBox(height: 40),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('images/icons/tornstats_logo.png', width: 12),
-                                SizedBox(width: 5),
-                                Text('STATS CHART', style: TextStyle(fontSize: 8)),
-                              ],
-                            ),
-                            SizedBox(height: 5),
                             SizedBox(
                               height: 200,
                               child: StatsChart(
