@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 222 - 09/05/2022
+    // Build 223 - 17/05/2022
 
     // VERSION 2.8.0
     var v2_8_0 = ChangeLogItem();
     v2_8_0.version = 'Torn PDA v2.8.0';
-    v2_8_0.date = '16 MAY 2022';
+    v2_8_0.date = '20 MAY 2022';
     String feat2_8_0_1 = "Added NPC Loot automatic alerts";
     String feat2_8_0_2 = "Quick items: divided faction refills in energy and nerve (need to be re-added)";
     String feat2_8_0_3 = "Browser: Player Profile now includes Bazaar information (if net worth checks are enabled)";

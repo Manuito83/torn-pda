@@ -232,17 +232,19 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               activeItems.add(
                 Slidable(
                   key: UniqueKey(),
-                  actionPane: SlidableDrawerActionPane(),
-                  actionExtentRatio: 0.25,
-                  actions: <Widget>[
-                    IconSlideAction(
-                      color: Colors.red,
-                      icon: Icons.remove_circle_outline_outlined,
-                      onTap: () {
-                        itemsProviderFaction.deactivateQuickItem(item);
-                      },
-                    ),
-                  ],
+                  startActionPane: ActionPane(
+                    motion: const ScrollMotion(),
+                    extentRatio: 0.25,
+                    children: [
+                      SlidableAction(
+                        backgroundColor: Colors.red,
+                        icon: Icons.remove_circle_outline_outlined,
+                        onPressed: (context) {
+                          itemsProviderFaction.deactivateQuickItem(item);
+                        },
+                      ),
+                    ],
+                  ),
                   child: Container(
                     height: 60,
                     child: Padding(
@@ -335,17 +337,19 @@ class _QuickItemsOptionsState extends State<QuickItemsOptions> {
               activeItems.add(
                 Slidable(
                   key: UniqueKey(),
-                  actionPane: SlidableDrawerActionPane(),
-                  actionExtentRatio: 0.25,
-                  actions: <Widget>[
-                    IconSlideAction(
-                      color: Colors.red,
-                      icon: Icons.remove_circle_outline_outlined,
-                      onTap: () {
-                        _itemsProvider.deactivateQuickItem(item);
-                      },
-                    ),
-                  ],
+                  startActionPane: ActionPane(
+                    motion: const ScrollMotion(),
+                    extentRatio: 0.25,
+                    children: [
+                      SlidableAction(
+                        backgroundColor: Colors.red,
+                        icon: Icons.remove_circle_outline_outlined,
+                        onPressed: (context) {
+                          _itemsProvider.deactivateQuickItem(item);
+                        },
+                      ),
+                    ],
+                  ),
                   child: Container(
                     height: 60,
                     child: Padding(

@@ -417,6 +417,7 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                                   _ownedItemsFilter = 2;
                                 }
                                 _rebuildItemsCards();
+                                Prefs().setOnlyOwnedItemsFilter(_ownedItemsFilter);
                               },
                             ),
                           ),
@@ -767,20 +768,22 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       for (Item thisPinned in _pinnedItems) {
         pinnedCards.add(
           Slidable(
-            actionPane: SlidableDrawerActionPane(),
-            actionExtentRatio: 0.25,
-            actions: <Widget>[
-              IconSlideAction(
-                caption: 'Unpin',
-                color: Colors.green,
-                icon: MdiIcons.pinOff,
-                onTap: () {
-                  _pinnedItems.remove(thisPinned);
-                  _savePinnedItems();
-                  _sortAndRebuildItemsCards(_currentSort);
-                },
-              ),
-            ],
+            startActionPane: ActionPane(
+              motion: const ScrollMotion(),
+              extentRatio: 0.25,
+              children: <Widget>[
+                SlidableAction(
+                  label: 'Unpin',
+                  backgroundColor: Colors.green,
+                  icon: MdiIcons.pinOff,
+                  onPressed: (context) {
+                    _pinnedItems.remove(thisPinned);
+                    _savePinnedItems();
+                    _sortAndRebuildItemsCards(_currentSort);
+                  },
+                ),
+              ],
+            ),
             child: ItemCard(
               item: thisPinned,
               settingsProvider: _settingsProvider,
@@ -833,20 +836,22 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
       if (inSearch && inCategoryFilter && owned && isNotPinned) {
         newList.add(
           Slidable(
-            actionPane: SlidableDrawerActionPane(),
-            actionExtentRatio: 0.25,
-            actions: <Widget>[
-              IconSlideAction(
-                caption: 'Pin',
-                color: Colors.blue,
-                icon: MdiIcons.pinOutline,
-                onTap: () {
-                  _pinnedItems.add(item);
-                  _savePinnedItems();
-                  _sortAndRebuildItemsCards(_currentSort);
-                },
-              ),
-            ],
+            startActionPane: ActionPane(
+              motion: const ScrollMotion(),
+              extentRatio: 0.25,
+              children: <Widget>[
+                SlidableAction(
+                  label: 'Pin',
+                  backgroundColor: Colors.blue,
+                  icon: MdiIcons.pinOutline,
+                  onPressed: (context) {
+                    _pinnedItems.add(item);
+                    _savePinnedItems();
+                    _sortAndRebuildItemsCards(_currentSort);
+                  },
+                ),
+              ],
+            ),
             child: ItemCard(
               item: item,
               settingsProvider: _settingsProvider,

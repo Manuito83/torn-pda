@@ -166,6 +166,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 ),
                               ),
                               LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -209,6 +211,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                           return Column(
                             children: <Widget>[
                               LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 16,
@@ -227,6 +231,8 @@ class _ChainWidgetState extends State<ChainWidget> {
                                 padding: EdgeInsets.symmetric(vertical: 2),
                               ),
                               LinearPercentIndicator(
+                                padding: null,
+                                barRadius: Radius.circular(10),
                                 alignment: MainAxisAlignment.center,
                                 width: 150,
                                 lineHeight: 3,

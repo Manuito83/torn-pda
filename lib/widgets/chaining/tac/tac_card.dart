@@ -360,6 +360,8 @@ class _TacCardState extends State<TacCard> {
             style: TextStyle(fontSize: 12),
           ),
           LinearPercentIndicator(
+                    padding: null,
+                              barRadius: Radius.circular(10),
             width: 100,
             lineHeight: 12,
             progressColor: lifeBarColor,

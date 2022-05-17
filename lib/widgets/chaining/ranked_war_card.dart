@@ -203,6 +203,8 @@ class _RankedWarCardState extends State<RankedWarCard> {
           ),
         ),
         LinearPercentIndicator(
+          padding: null,
+          barRadius: Radius.circular(10),
           alignment: MainAxisAlignment.center,
           width: 150,
           lineHeight: 12,

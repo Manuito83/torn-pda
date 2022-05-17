@@ -425,15 +425,16 @@ String addOthersBazaarFillButtonsJS() {
             line-height: 15px;
             bottom: 0;
             left: 10px;
-            font-size: 10.5px;
+            font-size: 11px;
             }
           `);
           
           // Brings existing buy button a little up
           addStyle(`
-            .buy___1OagD {
+            button[class^="buy___"] {
             padding-bottom: 20px !important;
-            font-size: 12px !important;
+            font-size: 11px !important;
+			      text-transform: uppercase;
             }
           `);
         

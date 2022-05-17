@@ -162,6 +162,8 @@ class _TargetDetailsPageState extends State<TargetDetailsPage> {
           child: Text('Life'),
         ),
         LinearPercentIndicator(
+          padding: null,
+          barRadius: Radius.circular(10),
           width: 150,
           lineHeight: 18,
           progressColor: Colors.blue,
