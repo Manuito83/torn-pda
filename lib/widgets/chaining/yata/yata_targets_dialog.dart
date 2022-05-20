@@ -270,6 +270,8 @@ class _YataTargetsDialogState extends State<YataTargetsDialog> {
         ),
         SizedBox(height: 18),
         LinearPercentIndicator(
+          padding: null,
+          barRadius: Radius.circular(10),
           alignment: MainAxisAlignment.center,
           width: 200,
           lineHeight: 16,

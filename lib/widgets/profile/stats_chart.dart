@@ -19,7 +19,66 @@ class StatsChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     LineChartData lineChartData = buildData();
-    return LineChart(lineChartData);
+    return Column(
+      children: [
+        _legend(),
+        SizedBox(height: 5),
+        Flexible(child: LineChart(lineChartData)),
+      ],
+    );
+  }
+
+  Row _legend() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset('images/icons/tornstats_logo.png', width: 12),
+        SizedBox(width: 5),
+        Text('STATS', style: TextStyle(fontSize: 8)),
+        SizedBox(width: 20),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Text(' STR', style: TextStyle(fontSize: 7)),
+        SizedBox(width: 6),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: Colors.orange,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Text(' DEF', style: TextStyle(fontSize: 7)),
+        SizedBox(width: 6),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: Colors.red,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Text(' SPD', style: TextStyle(fontSize: 7)),
+        SizedBox(width: 6),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: Colors.green,
+            shape: BoxShape.circle,
+          ),
+        ),
+        Text(' DEX', style: TextStyle(fontSize: 7)),
+        SizedBox(width: 6),
+        Text('', style: TextStyle(fontSize: 8)),
+      ],
+    );
   }
 
   LineChartData buildData() {

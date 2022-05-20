@@ -20,7 +20,8 @@ class QuickItem {
     this.isLoadout = false,
     this.loadoutNumber = -1,
     this.loadoutName = "",
-    this.isPoints = false,
+    this.isEnergyPoints = false,
+    this.isNervePoints = false,
   });
 
   bool active;
@@ -32,7 +33,8 @@ class QuickItem {
   bool isLoadout;
   int loadoutNumber;
   String loadoutName;
-  bool isPoints;
+  bool isEnergyPoints;
+  bool isNervePoints;
 
   factory QuickItem.fromJson(Map<String, dynamic> json) => QuickItem(
         active: json["active"] == null ? null : json["active"],
@@ -44,7 +46,8 @@ class QuickItem {
         isLoadout: json["isLoadout"] == null ? false : json["isLoadout"],
         loadoutNumber: json["loadoutNumber"] == -1 ? null : json["loadoutNumber"],
         loadoutName: json["loadoutName"] == "" ? null : json["loadoutName"],
-        isPoints: json["isPoints"] == null ? false : json["isPoints"],
+        isEnergyPoints: json["isEnergyPoints"] == null ? false : json["isEnergyPoints"],
+        isNervePoints: json["isNervePoints"] == null ? false : json["isNervePoints"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -57,6 +60,7 @@ class QuickItem {
         "isLoadout": isLoadout == null ? null : isLoadout,
         "loadoutNumber": loadoutNumber == null ? null : loadoutNumber,
         "loadoutName": loadoutName == null ? null : loadoutName,
-        "isPoints": isPoints == null ? false : isPoints,
+        "isEnergyPoints": isEnergyPoints == null ? false : isEnergyPoints,
+        "isNervePoints": isNervePoints == null ? false : isNervePoints,
       };
 }

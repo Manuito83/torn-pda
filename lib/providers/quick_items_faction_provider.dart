@@ -53,11 +53,19 @@ class QuickItemsProviderFaction extends ChangeNotifier {
 
   Future _loadSaveActiveItems() async {
     var savedActives = await Prefs().getQuickItemsListFaction();
+    bool oldPoints = false;
     for (var rawItem in savedActives) {
       QuickItem activeItem = quickItemFromJson(rawItem);
+      if (activeItem.name == "Faction points refill") {
+        oldPoints = true;
+        continue;
+      }
       _activeQuickItemsListFaction.add(activeItem);
     }
-
+    // v2.8.0 divides points in energy and nerve
+    if (oldPoints) {
+      _saveListAfterChanges();
+    }
   }
 
   void activateQuickItem(QuickItem newItem) {
@@ -167,28 +175,41 @@ class QuickItemsProviderFaction extends ChangeNotifier {
       });
       _fullQuickItemsListFaction.sort((a, b) => a.name.compareTo(b.name));
 
-      // Insert points
-      var savedActive = false;
+      // Insert energy points
+      var savedEnergyActive = false;
+      var savedNerveActive = false;
+
       for (var saved in _activeQuickItemsListFaction) {
-        if (saved.isPoints) {
-          savedActive = true;
-          break;
+        if (saved.isEnergyPoints) {
+          savedEnergyActive = true;
+        }
+        if (saved.isNervePoints) {
+          savedEnergyActive = true;
         }
       }
 
       _fullQuickItemsListFaction.insert(
         0,
         QuickItem()
-          ..name = "Faction points refill"
+          ..name = "Faction energy refill"
           ..description = "Refills energy with faction points"
           ..number = 0
-          ..active = savedActive
-          ..isPoints = true,
+          ..active = savedEnergyActive
+          ..isEnergyPoints = true,
+      );
+
+      _fullQuickItemsListFaction.insert(
+        1,
+        QuickItem()
+          ..name = "Faction nerve refill"
+          ..description = "Refills nerve with faction points"
+          ..number = 0
+          ..active = savedNerveActive
+          ..isNervePoints = true,
       );
 
       return true;
     }
     return false;
   }
-  
 }

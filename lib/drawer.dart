@@ -406,6 +406,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool refills = false;
     bool stockMarket = false;
     bool assists = false;
+    bool loot = false;
 
     var channel = '';
     var messageId = '';
@@ -453,6 +454,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       stockMarket = true;
     } else if (channel.contains("Alerts assists")) {
       assists = true;
+    } else if (channel.contains("Alerts loot")) {
+      loot = true;
     }
 
     if (travel) {
@@ -576,6 +579,9 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         duration: const Duration(seconds: 10),
         contentPadding: const EdgeInsets.all(10),
       );
+    } else if (loot) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
     }
 
     if (launchBrowser) {
@@ -739,6 +745,10 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
           duration: const Duration(seconds: 10),
           contentPadding: const EdgeInsets.all(10),
         );
+      } else if (payload.contains('lootId:')) {
+        launchBrowser = true;
+        final assistId = payload.split(':');
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=${assistId[1]}";
       }
 
       if (launchBrowser) {

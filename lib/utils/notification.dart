@@ -156,16 +156,20 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts assists';
     channelName = 'Alerts assists';
     channelDescription = 'Automatic alerts for assists';
+  } else if (channel.contains("Alerts loot")) {
+    notificationIcon = "notification_loot";
+    notificationColor = Colors.red;
+    onTapPayload += 'lootId:$assistId';
+    channelId = 'Alerts loot';
+    channelName = 'Alerts loot';
+    channelDescription = 'Automatic alerts for loot';
   }
 
   if (Platform.isAndroid) {
     var modifier = await getNotificationChannelsModifiers();
 
     // Add s for custom sounds
-    if (channelId.contains("travel")) {
-      channelId = "$channelId ${modifier.channelIdModifier} s";
-      channelName = "$channelName ${modifier.channelIdModifier} s";
-    } else if (channelId.contains("assists")) {
+    if (channelId.contains("travel") || channelId.contains("assists") || channelId.contains("loot")) {
       channelId = "$channelId ${modifier.channelIdModifier} s";
       channelName = "$channelName ${modifier.channelIdModifier} s";
     } else {
@@ -217,6 +221,14 @@ Future showNotificationBoth(Map payload, int notId) async {
         ),
       );
     } else if (channelName.contains("assists")) {
+      platformChannelSpecifics = NotificationDetails(
+        android: null,
+        iOS: IOSNotificationDetails(
+          presentSound: true,
+          sound: 'sword_clash.aiff',
+        ),
+      );
+    } else if (channelName.contains("loot")) {
       platformChannelSpecifics = NotificationDetails(
         android: null,
         iOS: IOSNotificationDetails(
@@ -518,11 +530,24 @@ Future configureNotificationChannels({String mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
+      'Alerts loot ${modifier.channelIdModifier} s',
+      'Alerts loot ${modifier.channelIdModifier} s',
+      description: 'Automatic alerts for loot',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('sword_clash'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
       'Manual loot ${modifier.channelIdModifier}',
       'Manual loot ${modifier.channelIdModifier}',
       description: 'Manual notifications for loot',
       importance: Importance.max,
-      sound: RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: RawResourceAndroidNotificationSound('sword_clash'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),

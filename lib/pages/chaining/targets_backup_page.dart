@@ -281,6 +281,8 @@ class _TargetsBackupPageState extends State<TargetsBackupPage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
       child: LinearPercentIndicator(
+        padding: null,
+        barRadius: Radius.circular(10),
         alignment: MainAxisAlignment.center,
         width: 200,
         lineHeight: 16,

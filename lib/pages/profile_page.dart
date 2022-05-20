@@ -1102,7 +1102,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user.status.state == 'Traveling') {
       var startTime = _user.travel.departed;
       var endTime = _user.travel.timestamp;
-      var arrivalSeconds = endTime - startTime;
+      var totalTravelTimeSeconds = endTime - startTime;
 
       var dateTimeArrival = DateTime.fromMillisecondsSinceEpoch(_user.travel.timestamp * 1000);
       var timeDifference = dateTimeArrival.difference(DateTime.now());
@@ -1116,6 +1116,9 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timeZoneSetting: _settingsProvider.currentTimeZone,
       ).formatHour;
 
+      double percentage = _getTravelPercentage(totalTravelTimeSeconds);
+      String ballAssetLocation = _flagBallAsset();
+
       return Padding(
         padding: const EdgeInsets.only(top: 10),
         child: Column(
@@ -1123,46 +1126,52 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onLongPress: () => _launchBrowser(url: 'https://www.torn.com', dialogRequested: false),
-                  onTap: () {
-                    _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
-                  },
-                  child: LinearPercentIndicator(
-                    isRTL: _user.travel.destination == "Torn" ? true : false,
-                    center: Text(
-                      diff,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    widgetIndicator: Opacity(
-                      // Make icon transparent when about to pass over text
-                      opacity: _getTravelPercentage(arrivalSeconds) < 0.2 || _getTravelPercentage(arrivalSeconds) > 0.7
-                          ? 1
-                          : 0.3,
-                      child: Padding(
-                        padding: _user.travel.destination == "Torn"
-                            ? const EdgeInsets.only(top: 6, right: 6)
-                            : const EdgeInsets.only(top: 6, left: 10),
-                        child: RotatedBox(
-                          quarterTurns: _user.travel.destination == "Torn" ? 3 : 1,
-                          child: Icon(
-                            Icons.airplanemode_active,
-                            color: Colors.blue[900],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onLongPress: () => _launchBrowser(url: 'https://www.torn.com', dialogRequested: false),
+                      onTap: () {
+                        _launchBrowser(url: 'https://www.torn.com', dialogRequested: true);
+                      },
+                      child: LinearPercentIndicator(
+                        padding: null,
+                        barRadius: Radius.circular(10),
+                        isRTL: _user.travel.destination == "Torn" ? true : false,
+                        center: Text(
+                          diff,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        widgetIndicator: Padding(
+                          padding: _user.travel.destination == "Torn"
+                              ? const EdgeInsets.only(top: 7, left: 15)
+                              : const EdgeInsets.only(top: 7, right: 15),
+                          child: Opacity(
+                            // Make icon transparent when about to pass over text
+                            opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
+                            child: _user.travel.destination == "Torn"
+                                ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
+                                : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
+                          ),
+                        ),
+                        animateFromLastPercent: true,
+                        animation: true,
+                        width: 180,
+                        lineHeight: 18,
+                        progressColor: Colors.blue[200],
+                        backgroundColor: Colors.grey,
+                        percent: percentage,
                       ),
                     ),
-                    animateFromLastPercent: true,
-                    animation: true,
-                    width: 180,
-                    lineHeight: 18,
-                    progressColor: Colors.blue[200],
-                    backgroundColor: Colors.grey,
-                    percent: _getTravelPercentage(arrivalSeconds),
-                  ),
+                    if (ballAssetLocation.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Image.asset(ballAssetLocation, height: 22),
+                      ),
+                  ],
                 ),
                 if (!_dedicatedTravelCard) _notificationIcon(ProfileNotification.travel),
               ],
@@ -1578,6 +1587,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               _launchBrowser(url: 'https://www.torn.com/gym.php', dialogRequested: true);
                             },
                             child: LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.green,
@@ -1643,6 +1654,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               _launchBrowser(url: 'https://www.torn.com/crimes.php#/step=main', dialogRequested: true);
                             },
                             child: LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.redAccent,
@@ -1688,6 +1701,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           _launchBrowser(url: 'https://www.torn.com/item.php#candy-items', dialogRequested: true);
                         },
                         child: LinearPercentIndicator(
+                          padding: null,
+                          barRadius: Radius.circular(10),
                           width: 150,
                           lineHeight: 20,
                           progressColor: Colors.amber,
@@ -1758,6 +1773,8 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               }
                             },
                             child: LinearPercentIndicator(
+                              padding: null,
+                              barRadius: Radius.circular(10),
                               width: 150,
                               lineHeight: 20,
                               progressColor: Colors.blue,
@@ -3320,15 +3337,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         return Column(
                           children: [
                             SizedBox(height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('images/icons/tornstats_logo.png', width: 12),
-                                SizedBox(width: 5),
-                                Text('STATS CHART', style: TextStyle(fontSize: 8)),
-                              ],
-                            ),
-                            SizedBox(height: 5),
                             SizedBox(
                               height: 200,
                               child: StatsChart(
@@ -3501,15 +3509,6 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         return Column(
                           children: [
                             SizedBox(height: 40),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('images/icons/tornstats_logo.png', width: 12),
-                                SizedBox(width: 5),
-                                Text('STATS CHART', style: TextStyle(fontSize: 8)),
-                              ],
-                            ),
-                            SizedBox(height: 5),
                             SizedBox(
                               height: 200,
                               child: StatsChart(
@@ -4643,7 +4642,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SpeedDial buildSpeedDial() {
     return SpeedDial(
-      animationSpeed: 150,
+      animationDuration: Duration(milliseconds: 150),
       direction:
           MediaQuery.of(context).orientation == Orientation.portrait ? SpeedDialDirection.up : SpeedDialDirection.left,
       backgroundColor: Colors.transparent,
@@ -6219,6 +6218,71 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       height: 30,
       width: 40,
     );
+  }
+
+  String _flagBallAsset() {
+    switch (_user.travel.destination) {
+      case "Torn":
+        if (_user.status.description.contains("to Torn from Argentina"))
+          return 'images/flags/ball/ball_argentina.png';
+        else if (_user.status.description.contains("to Torn from Canada"))
+          return 'images/flags/ball/ball_canada.png';
+        else if (_user.status.description.contains("to Torn from Cayman Islands"))
+          return 'images/flags/ball/ball_cayman.png';
+        else if (_user.status.description.contains("to Torn from China"))
+          return 'images/flags/ball/ball_china.png';
+        else if (_user.status.description.contains("to Torn from Hawaii"))
+          return 'images/flags/ball/ball_hawaii.png';
+        else if (_user.status.description.contains("to Torn from Japan"))
+          return 'images/flags/ball/ball_japan.png';
+        else if (_user.status.description.contains("to Torn from Mexico"))
+          return 'images/flags/ball/ball_mexico.png';
+        else if (_user.status.description.contains("to Torn from South Africa"))
+          return 'images/flags/ball/ball_south-africa.png';
+        else if (_user.status.description.contains("to Torn from Switzerland"))
+          return 'images/flags/ball/ball_switzerland.png';
+        else if (_user.status.description.contains("to Torn from UAE"))
+          return 'images/flags/ball/ball_uae.png';
+        else if (_user.status.description.contains("to Torn from United Kingdom"))
+          return 'images/flags/ball/ball_uk.png';
+        else
+          return '';
+        break;
+      case "Argentina":
+        return 'images/flags/ball/ball_argentina.png';
+        break;
+      case "Canada":
+        return 'images/flags/ball/ball_canada.png';
+        break;
+      case "Cayman Islands":
+        return 'images/flags/ball/ball_cayman.png';
+        break;
+      case "China":
+        return 'images/flags/ball/ball_china.png';
+        break;
+      case "Hawaii":
+        return 'images/flags/ball/ball_hawaii.png';
+        break;
+      case "Japan":
+        return 'images/flags/ball/ball_japan.png';
+        break;
+      case "Mexico":
+        return 'images/flags/ball/ball_mexico.png';
+        break;
+      case "South Africa":
+        return 'images/flags/ball/ball_south-africa.png';
+        break;
+      case "Switzerland":
+        return 'images/flags/ball/ball_switzerland.png';
+        break;
+      case "UAE":
+        return 'images/flags/ball/ball_uae.png';
+        break;
+      case "United Kingdom":
+        return 'images/flags/ball/ball_uk.png';
+        break;
+    }
+    return '';
   }
 
   List<Widget> _returnSections() {

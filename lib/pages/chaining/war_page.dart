@@ -594,7 +594,7 @@ class _WarPageState extends State<WarPage> {
     if (allMembers == 0) {
       message = "No targets to update!";
       messageColor = Colors.orange[700];
-    } else if (updatedMembers > 0 && updatedMembers == allMembers) {
+    } else if (updatedMembers > 0 && updatedMembers >= allMembers) {
       message = 'Successfully updated $updatedMembers war targets!\n\n'
           'A quick update was performed (only stats, state and online status).';
     } else if (updatedMembers > 0 && updatedMembers < allMembers) {

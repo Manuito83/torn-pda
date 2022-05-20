@@ -10,6 +10,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool energyLastCheckFull = true;
   bool nerveNotification = false;
   bool nerveLastCheckFull = true;
+  List lootAlerts = [];
   bool hospitalNotification = false;
   bool drugsNotification = false;
   bool drugsInfluence = false;
@@ -49,6 +50,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
       "nerveLastCheckFull": nerveLastCheckFull,
+      "lootAlerts": lootAlerts,
       "hospitalNotification": hospitalNotification,
       "drugsNotification": drugsNotification,
       "drugsInfluence": drugsInfluence,
@@ -74,6 +76,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false
       ..nerveLastCheckFull = data["nerveLastCheckFull"] ?? false
+      ..lootAlerts = data["lootAlerts"] ?? []
       ..hospitalNotification = data["hospitalNotification"] ?? false
       ..drugsNotification = data["drugsNotification"] ?? false
       ..drugsInfluence = data["drugsInfluence"] ?? false

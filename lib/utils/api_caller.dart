@@ -576,7 +576,7 @@ class TornApiCaller {
         url += 'user/?selections=bazaar';
         break;
       case ApiSelection.otherProfile:
-        url += 'user/$prefix?selections=profile,crimes,personalstats';
+        url += 'user/$prefix?selections=profile,crimes,personalstats,bazaar';
         break;
       case ApiSelection.target:
         url += 'user/$prefix?selections=profile,discord';

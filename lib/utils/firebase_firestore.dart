@@ -5,6 +5,7 @@ import 'dart:io';
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -268,5 +269,25 @@ class _FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({
       "factionAssistMessage": active,
     });
+  }
+
+  Future<void> toggleNpcAlert({
+    @required String id,
+    @required int level,
+    @required bool active,
+  }) async {
+    if (active) {
+      if (!_firebaseUserModel.lootAlerts.contains("$id:$level")) {
+        _firebaseUserModel.lootAlerts.add("$id:$level");
+        await _firestore.collection("players").doc(_uid).update({
+          "lootAlerts": _firebaseUserModel.lootAlerts,
+        });
+      }
+    } else {
+      _firebaseUserModel.lootAlerts.remove("$id:$level");
+      await _firestore.collection("players").doc(_uid).update({
+        "lootAlerts": _firebaseUserModel.lootAlerts,
+      });
+    }
   }
 }

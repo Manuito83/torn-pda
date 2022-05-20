@@ -183,28 +183,34 @@ class _ShortcutsPageState extends State<ShortcutsPage> {
             activeShortcuts.add(
               Slidable(
                 key: UniqueKey(),
-                actionPane: SlidableDrawerActionPane(),
-                actionExtentRatio: 0.25,
-                actions: <Widget>[
-                  IconSlideAction(
-                    color: Colors.red,
-                    icon: Icons.remove_circle_outline_outlined,
-                    onTap: () {
-                      _shortcutsProvider.deactivateShortcut(short);
-                    },
-                  ),
-                ],
-                secondaryActions: <Widget>[
-                  IconSlideAction(
-                    color: Colors.blue,
-                    icon: Icons.edit,
-                    onTap: () {
-                      _customNameController.text = short.nickname;
-                      _customURLController.text = short.url;
-                      _openEditDialog(short);
-                    },
-                  ),
-                ],
+                startActionPane: ActionPane(
+                  motion: const ScrollMotion(),
+                  extentRatio: 0.25,
+                  children: [
+                    SlidableAction(
+                      backgroundColor: Colors.red,
+                      icon: Icons.remove_circle_outline_outlined,
+                      onPressed: (context) {
+                        _shortcutsProvider.deactivateShortcut(short);
+                      },
+                    ),
+                  ],
+                ),
+                endActionPane: ActionPane(
+                  motion: const ScrollMotion(),
+                  extentRatio: 0.25,
+                  children: [
+                    SlidableAction(
+                      backgroundColor: Colors.blue,
+                      icon: Icons.edit,
+                      onPressed: (context) {
+                        _customNameController.text = short.nickname;
+                        _customURLController.text = short.url;
+                        _openEditDialog(short);
+                      },
+                    ),
+                  ],
+                ),
                 child: Container(
                   height: 50,
                   child: Card(

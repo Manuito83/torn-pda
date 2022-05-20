@@ -463,12 +463,18 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       }
 
       if (_networthWidgetEnabled) {
+        int bazaar = 0;
+        if (otherProfile.bazaar.isNotEmpty) {
+          for (var b in otherProfile.bazaar) {
+            bazaar += b.marketPrice * b.quantity;
+          }
+        }
+
         _networthWidget = Container(
           color: Colors.grey[900],
           child: Padding(
             padding: EdgeInsets.fromLTRB(15, 4, 15, 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Icon(
                   MdiIcons.currencyUsdCircleOutline,
@@ -485,6 +491,30 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                     ),
                   ),
                 ),
+                if (bazaar > 0)
+                  Flexible(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 30),
+                        Image.asset(
+                          "images/icons/inventory/bazaar.png",
+                          color: Colors.green,
+                          width: 14,
+                        ),
+                        SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            "${formatBigNumbers(bazaar)}",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

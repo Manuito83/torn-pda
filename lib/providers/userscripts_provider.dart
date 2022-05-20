@@ -35,19 +35,43 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _apiSource;
+  String _handlerReady;
+  String _handlerApi;
+  String _handlerEvaluateJavascript;
 
   UnmodifiableListView<UserScript> getContinuousSources({
     @required String apiKey,
   }) {
     var scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
-      // Add the userscript api first so that it's available to other user scripts
-      scriptList.add(UserScript(
-        groupName: "__TornPDA_API__",
-        injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-        source: _apiSource
-      ));
+      // Add the main event to let other handlers that the platform is ready
+      scriptList.add(
+        UserScript(
+          groupName: "__TornPDA_ReadyEvent__",
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+          source: _handlerReady,
+        ),
+      );
+
+      // Add the userscript API first so that it's available to other scripts
+      scriptList.add(
+        UserScript(
+          groupName: "__TornPDA_API__",
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+          source: _handlerApi,
+        ),
+      );
+
+      // Add evaluateJavascript handler
+      scriptList.add(
+        UserScript(
+          groupName: "__TornPDA_EvaluateJavascript__",
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+          source: _handlerEvaluateJavascript,
+        ),
+      );
+
+      // Then add the rest of scripts
       for (var script in _userScriptList) {
         if (script.enabled && script.urls.isEmpty) {
           scriptList.add(
@@ -263,8 +287,10 @@ class UserScriptsProvider extends ChangeNotifier {
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
       var savedScripts = await Prefs().getUserScriptsList();
       var exampleScripts = List<UserScriptModel>.from(ScriptsExamples.getScriptsExamples());
-      _apiSource = await rootBundle.loadString('userscripts/TornPDA_API.js');
 
+      _handlerReady = await rootBundle.loadString('userscripts/TornPDA_Ready.js');
+      _handlerApi = await rootBundle.loadString('userscripts/TornPDA_API.js');
+      _handlerEvaluateJavascript = await rootBundle.loadString('userscripts/TornPDA_EvaluateJavascript.js');
 
       // NULL returned if we installed the app, so we add example scripts
       if (savedScripts == null) {
@@ -302,7 +328,9 @@ class UserScriptsProvider extends ChangeNotifier {
               if (!script.edited) {
                 // If the script has not been edited, find the example script and see if we need to update the source
                 for (var example in exampleScripts) {
-                  if (script.exampleCode == example.exampleCode && script.version != null && script.version < example.version) {
+                  if (script.exampleCode == example.exampleCode &&
+                      script.version != null &&
+                      script.version < example.version) {
                     script.source = example.source;
                     script.version = example.version;
                     updates = true;

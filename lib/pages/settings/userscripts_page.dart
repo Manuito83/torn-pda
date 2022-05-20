@@ -714,6 +714,43 @@ class _UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                 ),
+                SizedBox(height: 25),
+                Text(
+                  "JAVASCRIPT HANDLER (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Torn limits the use of the eval() function in javascript via the content-security-policy "
+                        "header. In order to allow the execution of javascript code retrieved at runtime by userscripts, "
+                        " Torn PDA incorporates a handler through which source code can be passed which is then "
+                        "evaluated directly from the app.\n\n"
+                        "For more information, please visit the ",
+                    style: TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "EvaluateJavascript Handler implementation",
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String scriptApiUrl =
+                                "https://github.com/Manuito83/torn-pda/tree/master/userscripts/TornPDA_EvaluateJavascript.js";
+                            if (await canLaunch(scriptApiUrl)) {
+                              launch(scriptApiUrl);
+                            }
+                          },
+                      ),
+                      TextSpan(
+                        text: ".",
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

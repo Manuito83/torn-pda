@@ -19,6 +19,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
+import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
 
 import '../main.dart';
@@ -183,7 +184,7 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                           title: const Text("Hospital admission and release"),
                           subtitle: const Text(
                             "If you are offline, you'll be notified if you are "
-                            "hospitalised, revived or out of hospital",
+                            "hospitalized, revived or out of hospital",
                             style: TextStyle(
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
@@ -217,6 +218,37 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               _firebaseUserModel?.drugsNotification = value;
                             });
                             firestore.subscribeToDrugsNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.lootAlerts.isNotEmpty ?? false,
+                          title: const Text("Loot"),
+                          subtitle: const Text(
+                            "Get notified when an NPC is about to reach level 4 or 5 (between 5 and 6 "
+                            "minutes in advance)",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) async {
+                            await showDialog(
+                              context: context,
+                              barrierDismissible: true,
+                              builder: (BuildContext context) {
+                                return LootAlertsDialog(
+                                  userModel: _firebaseUserModel,
+                                );
+                              },
+                            );
+                            setState(() {
+                              // Refresh lootAlerts (check or uncheck box)
+                            });
                           },
                         ),
                       ),

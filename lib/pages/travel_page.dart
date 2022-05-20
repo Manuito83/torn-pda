@@ -616,12 +616,14 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         // Calculations for travel bar
         var startTime = _travelModel.departed;
         var endTime = _travelModel.timeStamp;
-        var totalSeconds = endTime - startTime;
+        var totalTravelTimeSeconds = endTime - startTime;
         var dateTimeArrival = _travelModel.timeArrival;
         var timeDifference = dateTimeArrival.difference(DateTime.now());
         String twoDigits(int n) => n.toString().padLeft(2, "0");
         String twoDigitMinutes = twoDigits(timeDifference.inMinutes.remainder(60));
         String diff = '${twoDigits(timeDifference.inHours)}h ${twoDigitMinutes}m';
+
+        double percentage = _getTravelPercentage(totalTravelTimeSeconds);
 
         return <Widget>[
           Padding(
@@ -669,6 +671,8 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   _updateInformation();
                 },
                 child: LinearPercentIndicator(
+                  padding: null,
+                  barRadius: Radius.circular(10),
                   isRTL: _travelModel.destination == "Torn" ? true : false,
                   center: Text(
                     diff,
@@ -677,30 +681,25 @@ class _TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  widgetIndicator: Opacity(
-                    // Make icon transparent when about to pass over text
-                    opacity:
-                        _getTravelPercentage(totalSeconds) < 0.2 || _getTravelPercentage(totalSeconds) > 0.7 ? 1 : 0.3,
-                    child: Padding(
-                      padding: _travelModel.destination == "Torn"
-                          ? const EdgeInsets.only(top: 6, right: 6)
-                          : const EdgeInsets.only(top: 6, left: 10),
-                      child: RotatedBox(
-                        quarterTurns: _travelModel.destination == "Torn" ? 3 : 1,
-                        child: Icon(
-                          Icons.airplanemode_active,
-                          color: Colors.blue[900],
-                        ),
-                      ),
+                  widgetIndicator: Padding(
+                    padding: _travelModel.destination == "Torn"
+                        ? const EdgeInsets.only(top: 7, left: 15)
+                        : const EdgeInsets.only(top: 7, right: 15),
+                    child: Opacity(
+                      // Make icon transparent when about to pass over text
+                      opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
+                      child: _travelModel.destination == "Torn"
+                          ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
+                          : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
                     ),
                   ),
                   animateFromLastPercent: true,
                   animation: true,
-                  width: 200,
+                  width: 180,
                   lineHeight: 18,
                   progressColor: Colors.blue[200],
                   backgroundColor: Colors.grey,
-                  percent: _getTravelPercentage(totalSeconds),
+                  percent: percentage,
                 ),
               ),
             ],

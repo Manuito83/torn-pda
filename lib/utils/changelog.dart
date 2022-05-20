@@ -39,9 +39,23 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 217 - 25/04/2022
-    // Android on v2.7.2 (hotfix 2)
-    // iOS on v2.7.1 (hotfix 1)
+    // Build 224 - 17/05/2022
+
+    // VERSION 2.8.0
+    var v2_8_0 = ChangeLogItem();
+    v2_8_0.version = 'Torn PDA v2.8.0';
+    v2_8_0.date = '22 MAY 2022';
+    String feat2_8_0_1 = "Added NPC Loot automatic alerts";
+    String feat2_8_0_2 = "Quick items: divided faction refills in energy and nerve (need to be re-added)";
+    String feat2_8_0_3 = "Browser: Player Profile now includes Bazaar information (if net worth checks are enabled)";
+    String feat2_8_0_4 = "Userscripts: added handler to evaluate javascript code passed to the app "
+        "(advanced - more details in the userscripts section)";
+    String feat2_8_0_5 = "Removed TornCAT Player Filter from default userscripts (discontinued by its developer)";
+    v2_8_0.features.add(feat2_8_0_1);
+    v2_8_0.features.add(feat2_8_0_2);
+    v2_8_0.features.add(feat2_8_0_3);
+    v2_8_0.features.add(feat2_8_0_4);
+    v2_8_0.features.add(feat2_8_0_5);
 
     // VERSION 2.7.0 && 2.7.1 && 2.7.2 due to hotfix
     var v2_7_0 = ChangeLogItem();
@@ -1121,6 +1135,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_8_0);
     itemList.add(v2_7_0);
     itemList.add(v2_6_7);
     itemList.add(v2_6_6);

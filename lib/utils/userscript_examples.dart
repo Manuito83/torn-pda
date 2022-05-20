@@ -5,7 +5,7 @@ class ScriptsExamples {
   static List<UserScriptModel> getScriptsExamples() {
     var exampleList = <UserScriptModel>[];
     exampleList.add(_bazaarExample());
-    exampleList.add(_playerFiltersExample());
+    //exampleList.add(_playerFiltersExample());
     exampleList.add(_racingPresetsExample());
     exampleList.add(_specialGymRatios());
     exampleList.add(_companyStocksOrderExample());
@@ -163,6 +163,7 @@ try {
     );
   }
 
+  /*
   static UserScriptModel _playerFiltersExample() {
     var source = r"""// ==UserScript==
 // @name         TornCAT Faction Player Filters
@@ -1037,6 +1038,7 @@ GM_addStyle(styles);""";
       source: source,
     );
   }
+  */
 
   static UserScriptModel _racingPresetsExample() {
     var source = r"""// ==UserScript==
@@ -1162,7 +1164,6 @@ function drawPresetBar() {
       edited: false,
       source: source,
     );
-
   }
 
   static UserScriptModel _specialGymRatios() {
@@ -1508,7 +1509,6 @@ function gymLoaded() {
       edited: false,
       source: source,
     );
-
   }
 
   static UserScriptModel _companyStocksOrderExample() {
@@ -1636,7 +1636,6 @@ if (document.querySelector(".stock-list-wrap")) {
       edited: false,
       source: source,
     );
-
   }
 
   static UserScriptModel _companyActivity() {
@@ -1709,6 +1708,5 @@ if (document.querySelector(".stock-list-wrap")) {
       edited: false,
       source: source,
     );
-
   }
 }

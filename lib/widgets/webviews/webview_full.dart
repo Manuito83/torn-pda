@@ -646,14 +646,49 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.only(top: 8),
                 child: GestureDetector(
-                  child: Text(
-                    "Close",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _themeProvider.mainText,
-                      fontWeight: FontWeight.bold,
+                  child: Container(
+                    color: Colors.transparent, // Background to extend the buttons detection area
+                    child: Column(
+                      children: [
+                        Text(
+                          "CLOSE",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _themeProvider.mainText,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 15,
+                          child: Divider(
+                            height: 3,
+                            thickness: 1,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                        if (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
+                            _userProvider.basic.faction.factionId != 0)
+                          Text(
+                            "ASSIST",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 7,
+                            ),
+                          )
+                        else
+                          Text(
+                            "OPTIONS",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _themeProvider.mainText,
+                              fontSize: 7,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   onTap: () {
@@ -1048,10 +1083,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                     /// Same for bazaar, so that we go back to the same item search
                     if (widget.useTabs && Platform.isIOS) {
-                      
-                      if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("imarket.php")) {
+                      if (resource.initiatorType == "xmlhttprequest" &&
+                          resource.url.toString().contains("imarket.php")) {
                         // Trigger once
-                        if (_bazaarTriggerTime != null && (DateTime.now().difference(_bazaarTriggerTime).inSeconds) < 1) {
+                        if (_bazaarTriggerTime != null &&
+                            (DateTime.now().difference(_bazaarTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _bazaarTriggerTime = DateTime.now();
@@ -1371,6 +1407,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
+    // API HANDLERS
     webView.addJavaScriptHandler(
       handlerName: 'PDA_httpGet',
       callback: (args) async {
@@ -1389,6 +1426,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         http.Response resp =
             await http.post(Uri.parse(args[0]), headers: Map<String, String>.from(args[1]), body: body);
         return _makeScriptApiResponse(resp);
+      },
+    );
+
+    // JS HANDLER
+    webView.addJavaScriptHandler(
+      handlerName: 'PDA_evaluateJavascript',
+      callback: (args) async {
+        webView.evaluateJavascript(source: args[0]);
+        return;
       },
     );
   }
