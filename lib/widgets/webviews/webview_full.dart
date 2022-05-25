@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Package imports:
@@ -124,6 +125,8 @@ class WebViewFull extends StatefulWidget {
 class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   InAppWebViewController webView;
   var _initialWebViewOptions = InAppWebViewGroupOptions();
+
+  int _loadTimeMill = 0;
 
   bool _firstLoad = true;
 
@@ -919,6 +922,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   return true;
                 },
                 onLoadStart: (c, uri) async {
+                  _loadTimeMill = DateTime.now().millisecondsSinceEpoch;
+
                   if (!mounted) return;
 
                   if (Platform.isAndroid) {
@@ -1031,6 +1036,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
                   }
+
+                  log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
                 },
                 onLoadResource: (c, resource) async {
                   if (!mounted) return;
