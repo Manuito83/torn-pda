@@ -358,6 +358,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
     }
 
     return Showcase(
+      disableAnimation: true,
       textColor: _themeProvider.mainText,
       showcaseBackgroundColor: _themeProvider.secondBackground,
       key: _showcaseTabsGeneral,

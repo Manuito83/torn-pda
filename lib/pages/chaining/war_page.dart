@@ -359,6 +359,7 @@ class _WarPageState extends State<WarPage> {
       ),
       actions: <Widget>[
         Showcase(
+          disableAnimation: true,
           key: _showCaseAddFaction,
           title: 'Welcome to War!',
           description: "\nThe first thing you'll want to do is to add an enemy faction to your list. You can do so by "
@@ -383,6 +384,7 @@ class _WarPageState extends State<WarPage> {
           ),
         ),
         Showcase(
+          disableAnimation: true,
           key: _showCaseUpdate,
           title: 'Updating targets!',
           description: "\nThere are a couple of ways to update war targets.\n\nWith a short tap, you can perform "
