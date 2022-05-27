@@ -21,6 +21,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
@@ -74,6 +75,10 @@ class _WarPageState extends State<WarPage> {
 
   int _offlineSelector = 0;
 
+  bool _okayFilterActive = false;
+
+  bool _countryFilterActive = false;
+
   WarController _w;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
@@ -123,7 +128,11 @@ class _WarPageState extends State<WarPage> {
 
   @override
   Widget build(BuildContext context) {
-    _w = Get.put(WarController());
+    if (_w == null) {
+      _w = Get.put(WarController());
+      _performQuickUpdate(firstTime: true);
+    }
+
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return ShowCaseWidget(
       builder: Builder(builder: (_) {
@@ -198,132 +207,13 @@ class _WarPageState extends State<WarPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                height: 25,
-                child: ToggleSwitch(
-                  customWidths: [35, 35],
-                  iconSize: 15,
-                  borderWidth: 1,
-                  cornerRadius: 5,
-                  doubleTapDisable: true,
-                  borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
-                  initialLabelIndex: _offlineSelector == 0
-                      ? null
-                      : _offlineSelector == 1
-                          ? 0
-                          : 1,
-                  activeBgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? [Colors.blueGrey]
-                      : _themeProvider.currentTheme == AppTheme.dark
-                          ? [Colors.blueGrey]
-                          : [Colors.blueGrey[900]],
-                  activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                  inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? Colors.white
-                      : _themeProvider.currentTheme == AppTheme.dark
-                          ? Colors.grey[800]
-                          : Colors.black,
-                  inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                  totalSwitches: 2,
-                  animate: true,
-                  animationDuration: 500,
-                  icons: [Icons.person, Icons.bed],
-                  onToggle: (index) async {
-                    await _performQuickUpdate();
-
-                    int affected = 0;
-                    int total = 0;
-                    String message;
-                    if (index == null) {
-                      setState(() {
-                        _offlineSelector = 0;
-                      });
-                      _w.factions.forEach((faction) {
-                        if (!faction.hidden) {
-                          faction.members.forEach((key, value) {
-                            total++;
-                          });
-                        }
-                      });
-                      message = "Showing all targets ($total)";
-                    } else if (index == 0) {
-                      setState(() {
-                        _offlineSelector = 1;
-                      });
-                      _w.factions.forEach((faction) {
-                        if (!faction.hidden) {
-                          faction.members.forEach((key, value) {
-                            total++;
-                            if (value.lastAction.status == "Online" || value.lastAction.status == "Idle") {
-                              affected++;
-                            }
-                          });
-                        }
-                      });
-                      message = "Showing only online/idle targets ($affected/$total)";
-                    } else if (index == 1) {
-                      setState(() {
-                        _offlineSelector = 2;
-                      });
-                      _w.factions.forEach((faction) {
-                        if (!faction.hidden) {
-                          faction.members.forEach((key, value) {
-                            total++;
-                            if (value.lastAction.status == "Offline") {
-                              affected++;
-                            }
-                          });
-                        }
-                      });
-                      message = "Showing only offline targets ($affected/$total)";
-                    }
-
-                    BotToast.showText(
-                      clickClose: true,
-                      text: message,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: Colors.grey[700],
-                      duration: const Duration(seconds: 3),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  },
-                ),
-              ),
+              _onlineFilter(),
               SizedBox(width: 10),
-              SizedBox(
-                height: 25,
-                child: ToggleSwitch(
-                  customWidths: [35, 35],
-                  iconSize: 15,
-                  borderWidth: 1,
-                  cornerRadius: 5,
-                  doubleTapDisable: true,
-                  borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
-                  initialLabelIndex: !w.showChainWidget ? null : 0,
-                  activeBgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? [Colors.blueGrey]
-                      : _themeProvider.currentTheme == AppTheme.dark
-                          ? [Colors.blueGrey]
-                          : [Colors.blueGrey[900]],
-                  activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                  inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
-                      ? Colors.white
-                      : _themeProvider.currentTheme == AppTheme.dark
-                          ? Colors.grey[800]
-                          : Colors.black,
-                  inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-                  totalSwitches: 1,
-                  animate: true,
-                  animationDuration: 500,
-                  icons: [MdiIcons.linkVariant],
-                  onToggle: (index) async {
-                    _w.toggleChainWidget();
-                  },
-                ),
-              ),
+              _okayFilter(w),
+              SizedBox(width: 10),
+              _countryFilter(w),
+              SizedBox(width: 10),
+              _chainWidgetToggler(w),
             ],
           ),
           if (context.orientation == Orientation.portrait)
@@ -331,17 +221,287 @@ class _WarPageState extends State<WarPage> {
               child: WarTargetsList(
                 warController: w,
                 offlineSelector: _offlineSelector,
+                okayFilterActive: _okayFilterActive,
+                countryFilterActive: _countryFilterActive,
               ),
             )
           else
             WarTargetsList(
               warController: w,
               offlineSelector: _offlineSelector,
+              okayFilterActive: _okayFilterActive,
+              countryFilterActive: _countryFilterActive,
             ),
           if (_settingsProvider.appBarTop) SizedBox(height: 50),
         ],
       );
     });
+  }
+
+  Widget _onlineFilter() {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32, 32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: _offlineSelector == 0
+            ? null
+            : _offlineSelector == 1
+                ? 0
+                : 1,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 2,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            Icons.circle,
+            color: Colors.green,
+            size: 12,
+          ),
+          Icon(
+            Icons.circle,
+            color: Colors.red,
+            size: 12,
+          )
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            setState(() {
+              _offlineSelector = 0;
+            });
+            _w.activeFilters.removeWhere((element) => element == "online/idle");
+            _w.activeFilters.removeWhere((element) => element == "offline");
+          } else if (index == 0) {
+            setState(() {
+              _offlineSelector = 1;
+            });
+            _w.activeFilters.add("online/idle");
+            _w.activeFilters.removeWhere((element) => element == "offline");
+          } else if (index == 1) {
+            setState(() {
+              _offlineSelector = 2;
+            });
+            _w.activeFilters.add("offline");
+            _w.activeFilters.removeWhere((element) => element == "online/idle");
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _okayFilter(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !_okayFilterActive ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.accountCheckOutline,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            setState(() {
+              _okayFilterActive = false;
+              _w.activeFilters.removeWhere((element) => element == "okay");
+            });
+          } else {
+            setState(() {
+              _okayFilterActive = true;
+              _w.activeFilters.add("okay");
+            });
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _countryFilter(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !_countryFilterActive ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.earth,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          await _performQuickUpdate();
+
+          if (index == null) {
+            setState(() {
+              _countryFilterActive = false;
+              _w.activeFilters.removeWhere((element) => element == "same country");
+            });
+          } else {
+            setState(() {
+              _countryFilterActive = true;
+              _w.activeFilters.add("same country");
+            });
+          }
+
+          String message;
+
+          if (_w.activeFilters.isEmpty) {
+            message = "Showing all targets";
+          } else {
+            message = "Filters: ${_w.activeFilters.join(", ")}";
+          }
+
+          BotToast.showText(
+            clickClose: true,
+            text: message,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.grey[700],
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _chainWidgetToggler(WarController w) {
+    return SizedBox(
+      height: 25,
+      child: ToggleSwitch(
+        customWidths: [32],
+        borderWidth: 1,
+        cornerRadius: 5,
+        doubleTapDisable: true,
+        borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
+        initialLabelIndex: !w.showChainWidget ? null : 0,
+        activeBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? [Colors.blueGrey]
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? [Colors.blueGrey]
+                : [Colors.blueGrey[900]],
+        activeFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        inactiveBgColor: _themeProvider.currentTheme == AppTheme.light
+            ? Colors.white
+            : _themeProvider.currentTheme == AppTheme.dark
+                ? Colors.grey[800]
+                : Colors.black,
+        inactiveFgColor: _themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
+        totalSwitches: 1,
+        animate: true,
+        animationDuration: 500,
+        customIcons: [
+          Icon(
+            MdiIcons.linkVariant,
+            size: 12,
+          ),
+        ],
+        onToggle: (index) async {
+          _w.toggleChainWidget();
+        },
+      ),
+    );
   }
 
   AppBar buildAppBar(BuildContext _) {
@@ -569,22 +729,24 @@ class _WarPageState extends State<WarPage> {
     );
   }
 
-  Future<void> _performQuickUpdate() async {
+  Future<void> _performQuickUpdate({bool firstTime = false}) async {
     setState(() {
       _quickUpdateActive = true;
     });
 
-    BotToast.showText(
-      clickClose: true,
-      text: "Fetching information, please wait...",
-      textStyle: const TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-      contentColor: Colors.grey[700],
-      duration: const Duration(seconds: 3),
-      contentPadding: const EdgeInsets.all(10),
-    );
+    if (mounted && !firstTime) {
+      BotToast.showText(
+        clickClose: true,
+        text: "Fetching information, please wait...",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.grey[700],
+        duration: const Duration(seconds: 3),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
 
     int updatedMembers = await _w.updateAllMembersEasy();
 
@@ -593,7 +755,10 @@ class _WarPageState extends State<WarPage> {
     // Count all members
     int allMembers = _w.orderedCardsDetails.length;
 
-    if (allMembers == 0) {
+    if (allMembers == -1) {
+      message = "There was a problem getting information from the API, please try again later!";
+      messageColor = Colors.orange[700];
+    } else if (allMembers == 0) {
       message = "No targets to update!";
       messageColor = Colors.orange[700];
     } else if (updatedMembers > 0 && updatedMembers >= allMembers) {
@@ -605,7 +770,7 @@ class _WarPageState extends State<WarPage> {
       messageColor = Colors.orange[700];
     }
 
-    if (mounted) {
+    if (mounted && !firstTime) {
       BotToast.showText(
         clickClose: true,
         text: message,
@@ -1107,10 +1272,17 @@ class HiddenMembersDialog extends StatelessWidget {
 }
 
 class WarTargetsList extends StatelessWidget {
-  WarTargetsList({@required this.warController, @required this.offlineSelector});
+  WarTargetsList({
+    @required this.warController,
+    @required this.offlineSelector,
+    @required this.okayFilterActive,
+    @required this.countryFilterActive,
+  });
 
   final WarController warController;
   final int offlineSelector;
+  final bool okayFilterActive;
+  final bool countryFilterActive;
 
   @override
   Widget build(BuildContext context) {
@@ -1147,9 +1319,23 @@ class WarTargetsList extends StatelessWidget {
     for (Member thisMember in members) {
       if (thisMember.hidden) continue;
       if (thisMember.status.state.contains("Federal") && thisMember.status.state.contains("Fallen")) continue;
+
       if ((thisMember.lastAction.status.contains("Online") || thisMember.lastAction.status.contains("Idle")) &&
-          offlineSelector == 2) continue;
-      if ((thisMember.lastAction.status.contains("Offline") && offlineSelector == 1)) continue;
+          offlineSelector == 2) {
+        continue;
+      }
+
+      if ((thisMember.lastAction.status.contains("Offline") && offlineSelector == 1)) {
+        continue;
+      }
+
+      if (okayFilterActive && thisMember.status.color == "red") {
+        continue;
+      }
+
+      if (countryFilterActive && countryCheck(thisMember.status) != warController.playerLocation) {
+        continue;
+      }
 
       filteredCards.add(
         WarCard(

@@ -8,9 +8,11 @@ import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/api_caller.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -55,6 +57,10 @@ class WarController extends GetxController {
   List<String> lastAttackedTargets = [];
 
   bool toggleAddUserActive = false;
+
+  String playerLocation = "";
+
+  List<String> activeFilters = [];
 
   @override
   void onInit() {
@@ -329,10 +335,18 @@ class WarController extends GetxController {
 
     int numberUpdated = 0;
 
+    // Get player's current location
+    final apiPlayer = await TornApiCaller().getProfileBasic();
+    if (apiPlayer is ApiError) {
+      return -1;
+    }
+    final profile = apiPlayer as OwnProfileBasic;
+    playerLocation = countryCheck(profile.status);
+
     for (FactionModel f in factions) {
       final apiResult = await TornApiCaller().getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
-        return 0;
+        return -1;
       }
       final apiFaction = apiResult as FactionModel;
 
@@ -350,7 +364,7 @@ class WarController extends GetxController {
           });
 
           f.members[apiMemberId].lastUpdated = updatedTime;
-          f.members[apiMemberId].status = apiMember.status;
+          f.members[apiMemberId] = apiMember;
 
           _assignSpiedStats(allSpiesSuccess, f.members[apiMemberId]);
 
@@ -811,7 +825,7 @@ class WarController extends GetxController {
     update();
   }
 
-    void setAddUserActive(bool active) {
+  void setAddUserActive(bool active) {
     toggleAddUserActive = active;
     update();
   }

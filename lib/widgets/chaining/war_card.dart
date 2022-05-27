@@ -767,6 +767,10 @@ class _WarCardState extends State<WarCard> {
       _lifeTicker?.cancel();
     }
 
+    if (_member.status.state == "Traveling" || _member.status.state == "Abroad") {
+      lifeBarColor = Colors.blue[300];
+    }
+
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
     double lifePercentage;
