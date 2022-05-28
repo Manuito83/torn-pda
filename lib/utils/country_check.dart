@@ -6,7 +6,7 @@ String countryCheck(Status status) {
   try {
     // Visiting
     if (status.state == "Abroad") {
-      return status.description.split("In ")[0];
+      return status.description.split("In ")[1];
     }
 
     // Travelling
@@ -14,14 +14,14 @@ String countryCheck(Status status) {
       if (status.description.contains("Returning to Torn")) {
         return "Torn";
       }
-      return status.description.split("Traveling to ")[0];
+      return status.description.split("Traveling to ")[1];
     }
 
     // Abroad hospital
     if (status.state == "Hospital") {
       if (status.description.contains("In a Swiss hospital")) {
         return "Switzerland";
-      } else if (status.description.contains("In a Emirati hospital")) {
+      } else if (status.description.contains("In an Emirati hospital")) {
         return "UAE";
       } else if (status.description.contains("In a British hospital")) {
         return "United Kingdom";
@@ -29,7 +29,7 @@ String countryCheck(Status status) {
         return "China";
       } else if (status.description.contains("In a South African hospital")) {
         return "South Africa";
-      } else if (status.description.contains("In a Argentinian hospital")) {
+      } else if (status.description.contains("In an Argentinian hospital")) {
         return "Argentina";
       } else if (status.description.contains("In a Caymanian hospital")) {
         return "Cayman Islands";
