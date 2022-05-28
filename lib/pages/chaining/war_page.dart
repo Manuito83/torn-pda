@@ -73,12 +73,6 @@ class _WarPageState extends State<WarPage> {
 
   final _chainWidgetKey = GlobalKey();
 
-  int _offlineSelector = 0;
-
-  bool _okayFilterActive = false;
-
-  bool _countryFilterActive = false;
-
   WarController _w;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
@@ -220,17 +214,17 @@ class _WarPageState extends State<WarPage> {
             Flexible(
               child: WarTargetsList(
                 warController: w,
-                offlineSelector: _offlineSelector,
-                okayFilterActive: _okayFilterActive,
-                countryFilterActive: _countryFilterActive,
+                offlineSelector: w.onlineFilter,
+                okayFilterActive: w.okayFilter,
+                countryFilterActive: w.countryFilter,
               ),
             )
           else
             WarTargetsList(
               warController: w,
-              offlineSelector: _offlineSelector,
-              okayFilterActive: _okayFilterActive,
-              countryFilterActive: _countryFilterActive,
+              offlineSelector: w.onlineFilter,
+              okayFilterActive: w.okayFilter,
+              countryFilterActive: w.countryFilter,
             ),
           if (_settingsProvider.appBarTop) SizedBox(height: 50),
         ],
@@ -247,9 +241,9 @@ class _WarPageState extends State<WarPage> {
         cornerRadius: 5,
         doubleTapDisable: true,
         borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
-        initialLabelIndex: _offlineSelector == 0
+        initialLabelIndex: _w.onlineFilter == 0
             ? null
-            : _offlineSelector == 1
+            : _w.onlineFilter == 1
                 ? 0
                 : 1,
         activeBgColor: _themeProvider.currentTheme == AppTheme.light
@@ -283,23 +277,11 @@ class _WarPageState extends State<WarPage> {
           await _performQuickUpdate();
 
           if (index == null) {
-            setState(() {
-              _offlineSelector = 0;
-            });
-            _w.activeFilters.removeWhere((element) => element == "online/idle");
-            _w.activeFilters.removeWhere((element) => element == "offline");
+            _w.setOnlineFilter(0);
           } else if (index == 0) {
-            setState(() {
-              _offlineSelector = 1;
-            });
-            _w.activeFilters.add("online/idle");
-            _w.activeFilters.removeWhere((element) => element == "offline");
+            _w.setOnlineFilter(1);
           } else if (index == 1) {
-            setState(() {
-              _offlineSelector = 2;
-            });
-            _w.activeFilters.add("offline");
-            _w.activeFilters.removeWhere((element) => element == "online/idle");
+            _w.setOnlineFilter(2);
           }
 
           String message;
@@ -335,7 +317,7 @@ class _WarPageState extends State<WarPage> {
         cornerRadius: 5,
         doubleTapDisable: true,
         borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
-        initialLabelIndex: !_okayFilterActive ? null : 0,
+        initialLabelIndex: !w.okayFilter ? null : 0,
         activeBgColor: _themeProvider.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
             : _themeProvider.currentTheme == AppTheme.dark
@@ -361,15 +343,9 @@ class _WarPageState extends State<WarPage> {
           await _performQuickUpdate();
 
           if (index == null) {
-            setState(() {
-              _okayFilterActive = false;
-              _w.activeFilters.removeWhere((element) => element == "okay");
-            });
+            _w.setOkayFilterActive(false);
           } else {
-            setState(() {
-              _okayFilterActive = true;
-              _w.activeFilters.add("okay");
-            });
+            _w.setOkayFilterActive(true);
           }
 
           String message;
@@ -405,7 +381,7 @@ class _WarPageState extends State<WarPage> {
         cornerRadius: 5,
         doubleTapDisable: true,
         borderColor: _themeProvider.currentTheme == AppTheme.light ? [Colors.blueGrey] : [Colors.grey[900]],
-        initialLabelIndex: !_countryFilterActive ? null : 0,
+        initialLabelIndex: !w.countryFilter ? null : 0,
         activeBgColor: _themeProvider.currentTheme == AppTheme.light
             ? [Colors.blueGrey]
             : _themeProvider.currentTheme == AppTheme.dark
@@ -431,15 +407,9 @@ class _WarPageState extends State<WarPage> {
           await _performQuickUpdate();
 
           if (index == null) {
-            setState(() {
-              _countryFilterActive = false;
-              _w.activeFilters.removeWhere((element) => element == "same country");
-            });
+            w.setCountryFilterActive(false);
           } else {
-            setState(() {
-              _countryFilterActive = true;
-              _w.activeFilters.add("same country");
-            });
+            w.setCountryFilterActive(true);
           }
 
           String message;

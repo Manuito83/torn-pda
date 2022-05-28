@@ -31,8 +31,14 @@ class WarController extends GetxController {
 
   List<FactionModel> factions = <FactionModel>[];
   List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
-  bool showChainWidget = true;
   WarSortType currentSort;
+
+  // Filters
+  List<String> activeFilters = [];
+  int onlineFilter = 0;
+  bool okayFilter = false;
+  bool countryFilter = false;
+  bool showChainWidget = true;
 
   bool updating = false;
   bool _stopUpdate = false;
@@ -59,8 +65,6 @@ class WarController extends GetxController {
   bool toggleAddUserActive = false;
 
   String playerLocation = "";
-
-  List<String> activeFilters = [];
 
   @override
   void onInit() {
@@ -594,6 +598,44 @@ class WarController extends GetxController {
     update();
   }
 
+  void setOnlineFilter(int i) {
+    onlineFilter = i;
+    if (i == 0) {
+      activeFilters.removeWhere((element) => element == "online/idle");
+      activeFilters.removeWhere((element) => element == "offline");
+    } else if (i == 1) {
+      activeFilters.add("online/idle");
+      activeFilters.removeWhere((element) => element == "offline");
+    } else if (i == 2) {
+      activeFilters.add("offline");
+      activeFilters.removeWhere((element) => element == "online/idle");
+    }
+    savePreferences();
+    update();
+  }
+
+  void setOkayFilterActive(bool value) {
+    okayFilter = value;
+    if (!value) {
+      activeFilters.removeWhere((element) => element == "okay");
+    } else {
+      activeFilters.add("okay");
+    }
+    savePreferences();
+    update();
+  }
+
+  void setCountryFilterActive(bool value) {
+    countryFilter = value;
+    if (!value) {
+      activeFilters.removeWhere((element) => element == "same country");
+    } else {
+      activeFilters.add("same country");
+    }
+    savePreferences();
+    update();
+  }
+
   Future initialise() async {
     String spiesSource = await Prefs().getSpiesSource();
     spiesSource == "yata" ? _spiesSource = SpiesSource.yata : _spiesSource = SpiesSource.tornStats;
@@ -603,6 +645,10 @@ class WarController extends GetxController {
       factions.add(factionModelFromJson(element));
     });
 
+    activeFilters = await Prefs().getFilterListInWars();
+    onlineFilter = await Prefs().getOnlineFilterInWars();
+    okayFilter = await Prefs().getOkayFilterInWars();
+    countryFilter = await Prefs().getCountryFilterInWars();
     showChainWidget = await Prefs().getShowChainWidgetInWars();
 
     nukeReviveActive = await Prefs().getUseNukeRevive();
@@ -687,6 +733,10 @@ class WarController extends GetxController {
     });
     Prefs().setWarFactions(factionList);
 
+    Prefs().setFilterListInWars(activeFilters);
+    Prefs().setOnlineFilterInWars(onlineFilter);
+    Prefs().setOkayFilterInWars(okayFilter);
+    Prefs().setCountryFilterInWars(countryFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
 
     // Save sorting

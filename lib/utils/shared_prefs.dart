@@ -18,6 +18,10 @@ class Prefs {
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
   // War targets
   final String _kWarFactions = "pda_warFactions";
+  final String _kFilterListInWars = "pda_filterListInWars";
+  final String _kOnlineFilterInWars = "pda_onlineFilterInWars";
+  final String _kOkayFilterInWars = "pda_okayFilterInWars";
+  final String _kCountryFilterInWars = "pda_countryFilterInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
   final String _kYataSpies = "pda_yataSpies";
@@ -304,6 +308,46 @@ class Prefs {
   Future<bool> setWarFactions(List<String> value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setStringList(_kWarFactions, value);
+  }
+
+  Future<List<String>> getFilterListInWars() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kFilterListInWars) ?? [];
+  }
+
+  Future<bool> setFilterListInWars(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kFilterListInWars, value);
+  }
+
+  Future<int> getOnlineFilterInWars() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kOnlineFilterInWars) ?? 0;
+  }
+
+  Future<bool> setOnlineFilterInWars(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kOnlineFilterInWars, value);
+  }
+
+  Future<bool> getOkayFilterInWars() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kOkayFilterInWars) ?? false;
+  }
+
+  Future<bool> setOkayFilterInWars(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kOkayFilterInWars, value);
+  }
+
+  Future<bool> getCountryFilterInWars() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kCountryFilterInWars) ?? false;
+  }
+
+  Future<bool> setCountryFilterInWars(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kCountryFilterInWars, value);
   }
 
   Future<bool> getShowChainWidgetInWars() async {
@@ -1777,7 +1821,6 @@ class Prefs {
     return prefs.setString(_kAlternativeTornStatsKey, value);
   }
 
-
   /// ---------------------
   /// TORNSTATS STATS CHART
   /// ---------------------
@@ -1791,7 +1834,7 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kTornStatsChartSave, value);
   }
-  
+
   Future<int> getTornStatsChartDateTime() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kTornStatsChartDateTime) ?? 0;
