@@ -2099,11 +2099,6 @@ class Prefs {
     return prefs.setBool(_kUseTabsHideFeature, value);
   }
 
-  Future<bool> getUseTabsIcons() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseTabsIcons) ?? true;
-  }
-
   Future<bool> setTabsHideBarColor(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kTabsHideBarColor, value);
@@ -2112,6 +2107,11 @@ class Prefs {
   Future<int> getTabsHideBarColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
+  }
+
+  Future<bool> getUseTabsIcons() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kUseTabsIcons) ?? true;
   }
 
   Future<bool> setUseTabsIcons(bool value) async {
