@@ -39,24 +39,26 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 225 - 28/05/2022
+    // Build 226 - 01/06/2022
 
-    // VERSION 2.8.0
+    // VERSION 2.8.1
     var v2_8_1 = ChangeLogItem();
     v2_8_1.version = 'Torn PDA v2.8.1';
-    v2_8_1.date = '10 JUN 2022';
-    String feat2_8_1_1 = "War: targets in a different country can now be filtered out";
-    String feat2_8_1_2 = "War: red (not-okay) targets can now be filtered out";
-    String feat2_8_1_3 = "War: factions can now be added from the Ranked Wars list";
-    String feat2_8_1_4 = "War: added persistence to filters";
-    String feat2_8_1_5 = "Fixed targets hospitalized in another country not showing as abroad";
-    String feat2_8_1_6 = "Fixed issue when sorting war targets by life";
+    v2_8_1.date = '06 JUN 2022';
+    String feat2_8_1_1 = "Browser: added Bounties filter widget";
+    String feat2_8_1_2 = "War: targets in a different country can now be filtered out";
+    String feat2_8_1_3 = "War: red (not-okay) targets can now be filtered out";
+    String feat2_8_1_4 = "War: factions can now be added from the Ranked Wars list";
+    String feat2_8_1_5 = "War: added persistence to filters";
+    String feat2_8_1_6 = "Fixed targets hospitalized in another country not showing as abroad";
+    String feat2_8_1_7 = "Fixed issue when sorting war targets by life";
     v2_8_1.features.add(feat2_8_1_1);
     v2_8_1.features.add(feat2_8_1_2);
     v2_8_1.features.add(feat2_8_1_3);
     v2_8_1.features.add(feat2_8_1_4);
     v2_8_1.features.add(feat2_8_1_5);
     v2_8_1.features.add(feat2_8_1_6);
+    v2_8_1.features.add(feat2_8_1_7);
 
     // VERSION 2.8.0
     var v2_8_0 = ChangeLogItem();

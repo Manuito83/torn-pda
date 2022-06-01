@@ -20,6 +20,7 @@ import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_bubble/speech_bubble.dart';
+import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
@@ -46,6 +47,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
@@ -186,6 +188,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _jailExpandable = const SizedBox.shrink();
   DateTime _jailOnResourceTriggerTime; // Null check afterwards (avoid false positives)
   JailModel _jailModel;
+
+  Widget _bountiesExpandable = const SizedBox.shrink();
+  DateTime _bountiesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+  BountiesModel _bountiesModel;
 
   DateTime _forumsTriggerTime;
   DateTime _hospitalTriggerTime;
@@ -846,6 +852,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _cityExpandable,
         // Jail widget
         _jailExpandable,
+        // Bounties widget
+        _bountiesExpandable,
         // Actual WebView
         Expanded(
           child: Stack(
@@ -1209,6 +1217,42 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       }
                       if (query.isNotEmpty) {
                         _assessJail(document);
+                      }
+                    }
+
+                    // Bounties for initialization and live transactions
+                    if (resource.url.toString().contains("bounties.php")) {
+                      // Trigger once
+                      if (_bountiesOnResourceTriggerTime != null &&
+                          DateTime.now().difference(_bountiesOnResourceTriggerTime).inMilliseconds < 500) {
+                        return;
+                      }
+                      _bountiesOnResourceTriggerTime = DateTime.now();
+
+                      // iOS needs URL report in jail pages
+                      if (Platform.isIOS) {
+                        var uri = (await webView.getUrl());
+                        _reportUrlVisit(uri);
+                      }
+
+                      final html = await webView.getHtml();
+                      dom.Document document = parse(html);
+
+                      List<dom.Element> query;
+                      for (var i = 0; i < 2; i++) {
+                        if (!mounted) break;
+                        query = document.querySelectorAll(".bounties-list > li");
+                        if (query.isNotEmpty) {
+                          break;
+                        } else {
+                          await Future.delayed(const Duration(seconds: 1));
+                          if (!mounted) break;
+                          final updatedHtml = await webView.getHtml();
+                          document = parse(updatedHtml);
+                        }
+                      }
+                      if (query.isNotEmpty) {
+                        _assessBounties(document);
                       }
                     }
 
@@ -1843,6 +1887,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool getProfile = false;
     bool getAttack = false;
     bool getJail = false;
+    bool getBounties = false;
 
     if ((_currentUrl.contains('item.php') && !_quickItemsTriggered) ||
         (!_currentUrl.contains('item.php') && _quickItemsTriggered)) {
@@ -1888,6 +1933,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       getJail = true;
     }
 
+    if (!_currentUrl.contains("bounties.php") && (_bountiesExpandable is BountiesWidget)) {
+      // This is different to the others, here we call only so that bounties is deactivated
+      _bountiesExpandable = const SizedBox.shrink();
+    } else if (_currentUrl.contains("bounties.php") && (_bountiesExpandable is! BountiesWidget)) {
+      // Note: bounties is also in onResource. This will make sure bounties activates correctly
+      // in some devices
+      getBounties = true;
+    }
+
     if (_settingsProvider.extraPlayerInformation) {
       const profileUrl = 'torn.com/profiles.php?XID=';
       if ((!_currentUrl.contains(profileUrl) && _profileTriggered) ||
@@ -1922,6 +1976,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       if (getProfile) _assessProfileAttack();
       if (getAttack) _assessProfileAttack();
       if (getJail) _assessJail(doc);
+      if (getBounties) _assessBounties(doc);
     }
   }
 
@@ -3197,6 +3252,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         scoreMax: _jailModel.scoreMax,
         bailTicked: _jailModel.bailTicked,
         bustTicked: _jailModel.bustTicked,
+      ),
+    );
+  }
+
+  // BOUNTIES
+  void _assessBounties(dom.Document doc) {
+    // If it's the first time we enter (we have no bountiesModel) or if we are reentering (expandable is empty), we call
+    // the widget and get values from shared preferences.
+    if (_bountiesModel == null || _bountiesExpandable is! BountiesWidget) {
+      setState(() {
+        _bountiesExpandable = BountiesWidget(
+          webview: webView,
+          fireScriptCallback: _fireBountiesScriptCallback,
+        );
+      });
+    }
+    // Otherwise, we are changing pages or reloading. We just need to fire the script. Any changes in the script
+    // while the widget is shown will be handled by the callback (which also triggers the script)
+    else {
+      _fireBountiesScriptCallback(_bountiesModel);
+    }
+  }
+
+  void _fireBountiesScriptCallback(BountiesModel bountiesModel) {
+    if (bountiesModel == null) return;
+
+    _bountiesModel = bountiesModel;
+    webView.evaluateJavascript(
+      source: bountiesJS(
+        levelMax: _bountiesModel.levelMax,
+        removeRed: _bountiesModel.removeRed,
       ),
     );
   }

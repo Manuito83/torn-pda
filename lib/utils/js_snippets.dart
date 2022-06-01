@@ -1079,3 +1079,71 @@ String MiniProfiles() {
     123;
   ''';
 }
+
+String bountiesJS({
+  @required int levelMax,
+  @required bool removeRed,
+}) {
+  return '''
+    // Credit to TornTools for implementation logic
+    var doc = window.document;
+
+    function modifyBounties() {
+      // FILTERS
+      for (var player of doc.querySelectorAll(".bounties-list > li:not(.clear)")) {
+      var shouldHide = false;
+
+      var level = player.querySelector(".level").innerText.replace("Level", "").replace("LEVEL", "").replace(":", "").trim();
+      if (level > $levelMax) {
+        shouldHide = true;
+      }
+      
+      var foundRed = player.querySelector(".t-red");
+      if ($removeRed && foundRed) {
+        shouldHide = true;
+      }
+      
+      // Hide users
+      if (shouldHide) {
+        player.hidden = true;
+      } else {
+        player.hidden = false;
+      }
+      }
+    
+    }
+
+    modifyBounties();
+
+    // Listener for page change
+    var intervalRepetitions = 0;
+    var listener = function (event) {
+      if (event.target.classList && !event.target.classList.contains("gallery-wrapper")
+        && hasParent(event.target, { class: "gallery-wrapper" })) {
+      return new Promise((resolve) => {
+        let checker = setInterval(() => {
+        if (doc.querySelector(".bounties-list > li")) {
+          modifyBounties();
+          return clearInterval(checker);
+        }
+        if (++intervalRepetitions === 20) {
+          return clearInterval(checker);
+        }
+        }, 300);
+      });
+      }
+    }
+
+    // Save variable in a persistent object so that we only add the listener once
+    // event if we fire the script several times (removing the listener won't work)
+    var savedFound = doc.querySelector(".pdaListener") !== null;
+    if (!savedFound) {
+      var save = doc.querySelector(".content-wrapper");
+      save.classList.add("pdaListener");
+      doc.addEventListener("click", listener, true);
+    }
+
+    // Return to avoid iOS WKErrorDomain
+    123;
+  ''';
+}

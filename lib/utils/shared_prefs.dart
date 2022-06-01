@@ -161,6 +161,8 @@ class Prefs {
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
   // Jail
   final String _kJailModel = "pda_jailOptions";
+  // Bounties
+  final String _kBountiesModel = "pda_bountiesOptions";
   // Data notification received for stock market
   final String _kDataStockMarket = "pda_dataStockMarket";
   final String _kStockExchangeInMenu = "pda_stockExchangeInMenu";
@@ -1988,6 +1990,19 @@ class Prefs {
   Future<bool> setJailModel(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kJailModel, value);
+  }
+
+  /// -----------------------------
+  /// METHODS FOR BOUNTIES
+  /// -----------------------------
+  Future<String> getBountiesModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kBountiesModel) ?? "";
+  }
+
+  Future<bool> setBountiesModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kBountiesModel, value);
   }
 
   /// -----------------------------
