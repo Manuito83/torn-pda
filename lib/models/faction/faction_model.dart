@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import '../profile/own_profile_basic.dart';
+
 FactionModel factionModelFromJson(String str) => FactionModel.fromJson(json.decode(str));
 String factionModelToJson(FactionModel data) => json.encode(data.toJson());
 
@@ -298,38 +300,6 @@ class LastAction {
         "status": status,
         "timestamp": timestamp,
         "relative": relative,
-      };
-}
-
-class Status {
-  Status({
-    this.description,
-    this.details,
-    this.state,
-    this.color,
-    this.until,
-  });
-
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
-
-  factory Status.fromJson(Map<String, dynamic> json) => Status(
-        description: json["description"],
-        details: json["details"],
-        state: json["state"],
-        color: json["color"],
-        until: json["until"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "description": description,
-        "details": details,
-        "state": state,
-        "color": color,
-        "until": until,
       };
 }
 

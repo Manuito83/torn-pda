@@ -47,7 +47,6 @@ class _FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
           bottom: true,
           child: Scaffold(
             backgroundColor: _themeProvider.canvas,
-            drawer: new Drawer(),
             appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
             bottomNavigationBar: !_settingsProvider.appBarTop
                 ? SizedBox(

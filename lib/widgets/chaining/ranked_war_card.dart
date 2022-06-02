@@ -1,7 +1,9 @@
 // Dart imports:
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 
@@ -14,6 +16,9 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+
+import '../../providers/targets_provider.dart';
+import '../../providers/war_controller.dart';
 
 enum RankedWarStatus {
   active,
@@ -49,6 +54,10 @@ class _RankedWarCardState extends State<RankedWarCard> {
   String _titleString = "";
   String _finishedString = "";
 
+  WarController _w = Get.put(WarController());
+  bool _factionLeftAdded = false;
+  bool _factionRightAdded = false;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +70,8 @@ class _RankedWarCardState extends State<RankedWarCard> {
     });
 
     _getTimeString();
+    _checkFactionLeftAdded();
+    _checkFactionRightAdded();
   }
 
   @override
@@ -89,7 +100,22 @@ class _RankedWarCardState extends State<RankedWarCard> {
             Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(10, 5, 10, 0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  if (_factionLeftAdded)
+                    GestureDetector(
+                      child: Icon(Icons.remove_circle_outline, color: Colors.red),
+                      onTap: () async {
+                        removeFaction(left: true);
+                      },
+                    )
+                  else
+                    GestureDetector(
+                      child: Icon(Icons.add_circle_outline, color: Colors.green),
+                      onTap: () async {
+                        await addFaction(left: true);
+                      },
+                    ),
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -160,6 +186,20 @@ class _RankedWarCardState extends State<RankedWarCard> {
                       ),
                     ),
                   ),
+                  if (_factionRightAdded)
+                    GestureDetector(
+                      child: Icon(Icons.remove_circle_outline, color: Colors.red),
+                      onTap: () async {
+                        removeFaction(left: false);
+                      },
+                    )
+                  else
+                    GestureDetector(
+                      child: Icon(Icons.add_circle_outline, color: Colors.green),
+                      onTap: () async {
+                        await addFaction(left: false);
+                      },
+                    ),
                 ],
               ),
             ),
@@ -187,6 +227,67 @@ class _RankedWarCardState extends State<RankedWarCard> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> addFaction({bool left}) async {
+    int side = left ? 0 : 1;
+
+    final targets = context.read<TargetsProvider>().allTargets;
+    final addFactionResult = await _w.addFaction(_factionsIds[side], targets);
+
+    Color messageColor = Colors.green;
+    if (addFactionResult.isEmpty || addFactionResult == "error_existing") {
+      messageColor = Colors.orange[700];
+    }
+
+    int time = 5;
+    String message = 'Added $addFactionResult [${_factionsIds[side]}]!'
+        '\n\nUpdate members/global to get more information (life, stats).';
+
+    if (addFactionResult.isEmpty) {
+      message = 'Error adding ${_factionsIds[side]}';
+      time = 3;
+    } else if (addFactionResult == "error_existing") {
+      message = 'Faction ${_factionsIds[side]} is already in the list!';
+      time = 3;
+    } else {
+      setState(() {
+        left ? _factionLeftAdded = true : _factionRightAdded = true;
+      });
+    }
+
+    BotToast.showText(
+      clickClose: true,
+      text: HtmlParser.fix(message),
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: messageColor,
+      duration: Duration(seconds: time),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  void removeFaction({bool left}) {
+    int side = left ? 0 : 1;
+
+    _w.removeFaction(int.parse(_factionsIds[0]));
+    setState(() {
+      left ? _factionLeftAdded = false : _factionRightAdded = false;
+    });
+
+    BotToast.showText(
+      clickClose: true,
+      text: HtmlParser.fix("Removed ${_factions[side].name} from War page!"),
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.green,
+      duration: Duration(seconds: 3),
+      contentPadding: const EdgeInsets.all(10),
     );
   }
 
@@ -287,6 +388,26 @@ class _RankedWarCardState extends State<RankedWarCard> {
       _titleString +=
           "War #${widget.warId}, started on ${dateFormatter.format(dateStart)} @ ${hourFormatter.format(dateStart)}";
       _finishedString = "Finished on ${dateFormatter.format(dateEnd)} @ ${hourFormatter.format(dateEnd)}";
+    }
+  }
+
+  _checkFactionLeftAdded() {
+    for (var f in _w.factions) {
+      if (f.id.toString() == _factionsIds[0]) {
+        setState(() {
+          _factionLeftAdded = true;
+        });
+      }
+    }
+  }
+
+  _checkFactionRightAdded() {
+    for (var f in _w.factions) {
+      if (f.id.toString() == _factionsIds[1]) {
+        setState(() {
+          _factionRightAdded = true;
+        });
+      }
     }
   }
 }

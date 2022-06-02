@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import 'own_profile_basic.dart';
+
 OwnProfileExtended ownProfileExtendedFromJson(String str) => OwnProfileExtended.fromJson(json.decode(str));
 
 String ownProfileExtendedToJson(OwnProfileExtended data) => json.encode(data.toJson());
@@ -557,38 +559,6 @@ class States {
   Map<String, dynamic> toJson() => {
         "hospital_timestamp": hospitalTimestamp == null ? null : hospitalTimestamp,
         "jail_timestamp": jailTimestamp == null ? null : jailTimestamp,
-      };
-}
-
-class Status {
-  Status({
-    this.description,
-    this.details,
-    this.state,
-    this.color,
-    this.until,
-  });
-
-  String description;
-  String details;
-  String state;
-  String color;
-  int until;
-
-  factory Status.fromJson(Map<String, dynamic> json) => Status(
-        description: json["description"] == null ? null : json["description"],
-        details: json["details"] == null ? null : json["details"],
-        state: json["state"] == null ? null : json["state"],
-        color: json["color"] == null ? null : json["color"],
-        until: json["until"] == null ? null : json["until"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "description": description == null ? null : description,
-        "details": details == null ? null : details,
-        "state": state == null ? null : state,
-        "color": color == null ? null : color,
-        "until": until == null ? null : until,
       };
 }
 

@@ -26,6 +26,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import '../../utils/country_check.dart';
 import '../notes_dialog.dart';
 
 class TargetCard extends StatefulWidget {
@@ -713,8 +714,10 @@ class _TargetCardState extends State<TargetCard> {
   }
 
   Widget _travelIcon() {
-    if (_target.status.color == "blue") {
-      var destination = _target.status.description;
+    var country = countryCheck(_target.status);
+
+    if (_target.status.color == "blue" || (country != "Torn" && _target.status.color == "red")) {
+      var destination = _target.status.color == "blue" ? _target.status.description : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';

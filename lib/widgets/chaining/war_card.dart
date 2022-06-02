@@ -18,6 +18,7 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -767,6 +768,10 @@ class _WarCardState extends State<WarCard> {
       _lifeTicker?.cancel();
     }
 
+    if (_member.status.state == "Traveling" || _member.status.state == "Abroad") {
+      lifeBarColor = Colors.blue[300];
+    }
+
     // Found players in federal jail with a higher life than their maximum. Correct it if it's the
     // case to avoid issues with percentage bar
     double lifePercentage;
@@ -807,8 +812,10 @@ class _WarCardState extends State<WarCard> {
   }
 
   Widget _travelIcon() {
-    if (_member.status.color == "blue") {
-      var destination = _member.status.description;
+    var country = countryCheck(_member.status);
+
+    if (_member.status.color == "blue" || (country != "Torn" && _member.status.color == "red")) {
+      var destination = _member.status.color == "blue" ? _member.status.description : country;
       var flag = '';
       if (destination.contains('Japan')) {
         flag = 'images/flags/stock/japan.png';
