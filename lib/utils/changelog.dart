@@ -39,26 +39,27 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 226 - 01/06/2022
+    // Build 227 - 03/06/2022
 
-    // VERSION 2.8.1
-    var v2_8_1 = ChangeLogItem();
-    v2_8_1.version = 'Torn PDA v2.8.1';
-    v2_8_1.date = '06 JUN 2022';
-    String feat2_8_1_1 = "Browser: added Bounties filter widget";
-    String feat2_8_1_2 = "War: targets in a different country can now be filtered out";
-    String feat2_8_1_3 = "War: red (not-okay) targets can now be filtered out";
-    String feat2_8_1_4 = "War: factions can now be added from the Ranked Wars list";
-    String feat2_8_1_5 = "War: added persistence to filters";
-    String feat2_8_1_6 = "Fixed targets hospitalized in another country not showing as abroad";
-    String feat2_8_1_7 = "Fixed issue when sorting war targets by life";
-    v2_8_1.features.add(feat2_8_1_1);
-    v2_8_1.features.add(feat2_8_1_2);
-    v2_8_1.features.add(feat2_8_1_3);
-    v2_8_1.features.add(feat2_8_1_4);
-    v2_8_1.features.add(feat2_8_1_5);
-    v2_8_1.features.add(feat2_8_1_6);
-    v2_8_1.features.add(feat2_8_1_7);
+    // VERSION 2.8.2 (over v2.8.1)
+    var v2_8_2 = ChangeLogItem();
+    v2_8_2.version = 'Torn PDA v2.8.2';
+    v2_8_2.date = '06 JUN 2022';
+    v2_8_2.infoString = "Hotfix for war targets' data persistence";
+    String feat2_8_2_1 = "Browser: added Bounties filter widget";
+    String feat2_8_2_2 = "War: targets in a different country can now be filtered out";
+    String feat2_8_2_3 = "War: red (not-okay) targets can now be filtered out";
+    String feat2_8_2_4 = "War: factions can now be added from the Ranked Wars list";
+    String feat2_8_2_5 = "War: added persistence to filters";
+    String feat2_8_2_6 = "Fixed targets hospitalized in another country not showing as abroad";
+    String feat2_8_2_7 = "Fixed issue when sorting war targets by life";
+    v2_8_2.features.add(feat2_8_2_1);
+    v2_8_2.features.add(feat2_8_2_2);
+    v2_8_2.features.add(feat2_8_2_3);
+    v2_8_2.features.add(feat2_8_2_4);
+    v2_8_2.features.add(feat2_8_2_5);
+    v2_8_2.features.add(feat2_8_2_6);
+    v2_8_2.features.add(feat2_8_2_7);
 
     // VERSION 2.8.0
     var v2_8_0 = ChangeLogItem();
@@ -1154,7 +1155,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v2_8_1);
+    itemList.add(v2_8_2);
     itemList.add(v2_8_0);
     itemList.add(v2_7_0);
     itemList.add(v2_6_7);

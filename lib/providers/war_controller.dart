@@ -184,6 +184,9 @@ class WarController extends GetxController {
     try {
       dynamic updatedTarget = await TornApiCaller().getOtherProfile(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
+        member.name = updatedTarget.name;
+        member.level = updatedTarget.level;
+        member.position = updatedTarget.faction.position;
         member.overrideEasyLife = true;
         member.lifeMaximum = updatedTarget.life.maximum;
         member.lifeCurrent = updatedTarget.life.current;
@@ -193,6 +196,7 @@ class WarController extends GetxController {
         member.status.state = updatedTarget.status.state;
         member.status.until = updatedTarget.status.until;
         member.status.color = updatedTarget.status.color;
+
         member.lastUpdated = DateTime.now();
         if (allAttacksSuccess is AttackModel) {
           _getRespectFF(allAttacksSuccess, member, oldRespect: member.respectGain, oldFF: member.fairFight);
@@ -367,8 +371,13 @@ class WarController extends GetxController {
             update();
           });
 
+          // Update only what's necessary (most info does not come from API)
           f.members[apiMemberId].lastUpdated = updatedTime;
-          f.members[apiMemberId] = apiMember;
+          f.members[apiMemberId].status = apiMember.status;
+          f.members[apiMemberId].lastAction = apiMember.lastAction;
+          f.members[apiMemberId].level = apiMember.level;
+          f.members[apiMemberId].position = apiMember.position;
+          f.members[apiMemberId].name = apiMember.name;
 
           _assignSpiedStats(allSpiesSuccess, f.members[apiMemberId]);
 
@@ -752,19 +761,19 @@ class WarController extends GetxController {
         sortToSave = 'respectDes';
         break;
       case WarSortType.respectAsc:
-        sortToSave = 'respectDes';
+        sortToSave = 'respectAsc';
         break;
       case WarSortType.nameDes:
         sortToSave = 'nameDes';
         break;
       case WarSortType.nameAsc:
-        sortToSave = 'nameDes';
+        sortToSave = 'nameAsc';
         break;
       case WarSortType.lifeDes:
-        sortToSave = 'nameDes';
+        sortToSave = 'lifeDes';
         break;
       case WarSortType.lifeAsc:
-        sortToSave = 'nameDes';
+        sortToSave = 'lifeAsc';
         break;
       case WarSortType.statsDes:
         sortToSave = 'statsDes';
