@@ -1107,7 +1107,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         }
                         _bazaarTriggerTime = DateTime.now();
                         var uri = (await webView.getUrl());
-                        print(uri.toString());
                         _reportUrlVisit(uri);
                       }
                     }
