@@ -826,14 +826,15 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           item.id.toString().toLowerCase().contains(_currentSearchFilter);
 
       bool inCategoryFilter = !_hiddenCategories.contains(item.type.name);
-      bool owned = true;
-      if (_ownedItemsFilter == 1 && item.inventoryOwned == 0) {
-        owned = false;
+      bool ownPass = true;
+
+      if ((_ownedItemsFilter == 1 && item.inventoryOwned == 0) || (_ownedItemsFilter == 2 && item.inventoryOwned > 0)) {
+        ownPass = false;
       }
 
       bool isNotPinned = !_pinnedItems.contains(item);
 
-      if (inSearch && inCategoryFilter && owned && isNotPinned) {
+      if (inSearch && inCategoryFilter && ownPass && isNotPinned) {
         newList.add(
           Slidable(
             startActionPane: ActionPane(
