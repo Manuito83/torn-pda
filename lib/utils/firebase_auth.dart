@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 final firebaseAuth = _AuthService();
 
 class _AuthService {
-
   final _firebaseAuth = FirebaseAuth.instance;
 
   Future signInAnon() async {
@@ -36,5 +35,4 @@ class _AuthService {
   Future currentUser() async {
     return _firebaseAuth.currentUser;
   }
-
 }

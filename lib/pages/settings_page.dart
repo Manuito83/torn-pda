@@ -1747,15 +1747,32 @@ class _SettingsPageState extends State<SettingsPage> {
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
-          User mFirebaseUser = await firebaseAuth.signInAnon();
-          firestore.setUID(mFirebaseUser.uid);
+          var user = await firebaseAuth.getUID();
+          // Only sign in if there is currently no user registered (to avoid duplicates)
+          if (user == null || (user is User && user.uid.isEmpty)) {
+            User mFirebaseUser = await firebaseAuth.signInAnon();
+            firestore.setUID(mFirebaseUser.uid);
+            // Returns UID to Drawer so that it can be passed to settings
+            widget.changeUID(mFirebaseUser.uid);
+            // Warn user about the possibility of a new UID being regenerated
+            BotToast.showText(
+              clickClose: true,
+              text: "A problem was found with your user. Please visit the Alerts page and ensure that your alerts "
+                  "are properly setup!",
+              textStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: Duration(seconds: 6),
+              contentPadding: EdgeInsets.all(10),
+            );
+          }
           await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
           if (Platform.isAndroid) {
             firestore.setVibrationPattern(_vibrationValue);
           }
-          // Returns UID to Drawer so that it can be passed to settings
-          widget.changeUID(mFirebaseUser.uid);
         }
       } else if (myProfile is ApiError) {
         setState(() {

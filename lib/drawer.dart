@@ -1165,8 +1165,24 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Firestore get auth and init
       final user = await firebaseAuth.currentUser();
       if (user == null) {
+        // Upload information to Firebase (this includes the token)
+        final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
+        firestore.setUID(mFirebaseUser.uid);
         _updateFirebaseDetails();
-        _userUID = "";
+        _userUID = mFirebaseUser.uid;
+        // Warn user about the possibility of a new UID being regenerated
+        BotToast.showText(
+          clickClose: true,
+          text: "A problem was found with your user. Please visit the Alerts page and ensure that your alerts "
+              "are properly setup!",
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: Colors.blue,
+          duration: Duration(seconds: 6),
+          contentPadding: EdgeInsets.all(10),
+        );
       } else {
         final uid = await firebaseAuth.getUID();
         firestore.setUID(uid as String);
@@ -1210,9 +1226,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         ..userApiKey = savedKey
         ..userApiKeyValid = true;
 
-      // Upload information to Firebase (this includes the token)
-      final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
-      firestore.setUID(mFirebaseUser.uid);
       await firestore.uploadUsersProfileDetail(prof, userTriggered: true);
     }
 

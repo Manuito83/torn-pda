@@ -35,7 +35,15 @@ class _FirestoreHelper {
     _alreadyUploaded = true;
 
     final platform = Platform.isAndroid ? "android" : "ios";
-    final token = await _messaging.getToken();
+
+    // Generate or replace token if it already exists
+    // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
+    String token = "";
+    String currentToken = await _messaging.getToken();
+    if (currentToken.isNotEmpty) {
+      await FirebaseMessaging.instance.deleteToken();
+    }
+    token = await FirebaseMessaging.instance.getToken();
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
     // Otherwise, an empty object will be returned

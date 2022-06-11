@@ -765,8 +765,6 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                   ..userApiKey = savedKey
                   ..userApiKeyValid = true;
 
-                final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
-                firestore.setUID(mFirebaseUser.uid);
                 FirebaseUserModel fb = await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
                 setState(() {
                   _firebaseUserModel = fb;
