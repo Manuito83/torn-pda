@@ -43,7 +43,7 @@ class _FirestoreHelper {
     if (currentToken.isNotEmpty) {
       await FirebaseMessaging.instance.deleteToken();
     }
-    token = await FirebaseMessaging.instance.getToken();
+    token = await _messaging.getToken();
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
     // Otherwise, an empty object will be returned
