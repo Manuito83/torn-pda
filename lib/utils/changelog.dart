@@ -46,7 +46,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v2_8_3.version = 'Torn PDA v2.8.3';
     v2_8_3.date = '18 JUN 2022';
     String feat2_8_3_1 = "Items: fixed owned items filtering";
-    String feat2_8_3_2 = "Browser: improved issues stability in some devices";
+    String feat2_8_3_2 = "Browser: improved stability issues in some devices";
     v2_8_3.features.add(feat2_8_3_1);
     v2_8_3.features.add(feat2_8_3_2);
 
