@@ -33,6 +33,12 @@ class _AuthService {
   }
 
   Future currentUser() async {
-    return _firebaseAuth.currentUser;
+    var user = _firebaseAuth.currentUser;
+    if (user == null) {
+      // Some users reported issues with currentUsers not getting initialised
+      await Future.delayed(Duration(seconds: 2));
+      user = _firebaseAuth.currentUser;
+    }
+    return user;
   }
 }

@@ -1130,21 +1130,6 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
 
-    // Change device preferences
-    final allowRotation = _settingsProvider.allowScreenRotation;
-    if (allowRotation) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
-    }
-
     // Set up UserScriptsProvider so that user preferences are applied
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferences();
@@ -1192,6 +1177,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)
       _updateLastActiveTime();
+    }
+
+    // Change device preferences
+    final allowRotation = _settingsProvider.allowScreenRotation;
+    if (allowRotation) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
     }
   }
 
