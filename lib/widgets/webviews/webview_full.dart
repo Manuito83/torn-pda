@@ -941,24 +941,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   try {
                     _currentUrl = uri.toString();
 
-                    // Userscripts
-                    UserScriptChanges changes = _userScriptsProvider.getCondSources(
-                      url: uri.toString(),
-                      apiKey: _userProvider.basic.userApiKey,
-                    );
-                    if (Platform.isAndroid) {
-                      // Not supported on iOS
-                      for (var group in changes.scriptsToRemove) {
-                        c.removeUserScriptsByGroupName(groupName: group);
-                      }
-                    }
-                    await c.addUserScripts(userScripts: changes.scriptsToAdd);
-
-                    _hideChat();
-
                     final html = await webView.getHtml();
-                    final document = parse(html);
-                    _assessGeneral(document);
+
+                    if (!html.contains("Checking your browser before accessing")) {
+                      // Filter out Cloudflare from analysis
+
+                      // Userscripts
+                      UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                        url: uri.toString(),
+                        apiKey: _userProvider.basic.userApiKey,
+                      );
+                      if (Platform.isAndroid) {
+                        // Not supported on iOS
+                        for (var group in changes.scriptsToRemove) {
+                          c.removeUserScriptsByGroupName(groupName: group);
+                        }
+                      }
+                      await c.addUserScripts(userScripts: changes.scriptsToAdd);
+
+                      _hideChat();
+
+                      final document = parse(html);
+                      _assessGeneral(document);
+                    }
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -1455,6 +1460,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       ],
     );
   }
+
+  // CloudFlare debug (to ba called in OnLoadTop)
+  /*
+  Future<void> _deleteCookie() async {
+    CookieManager cookieManager = CookieManager.instance();
+    List<Cookie> cookies = await cookieManager.getCookies(url: Uri.parse("https://www.torn.com"));
+    await cookieManager.deleteCookie(url: Uri.parse("https://www.torn.com"), name: "cf_clearance");
+  }
+  */
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
     // API HANDLERS
