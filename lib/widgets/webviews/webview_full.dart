@@ -3292,13 +3292,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _loadUrl(url);
   }
 
-  void pauseTimers() {
+  void pauseWebview() {
     if (Platform.isAndroid) {
       webView?.android?.pause();
     }
   }
 
-  void resumeTimers() {
+  void resumeWebview() {
     if (Platform.isAndroid) {
       webView?.android?.resume();
     }
