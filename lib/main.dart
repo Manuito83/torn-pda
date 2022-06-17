@@ -44,9 +44,9 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.8.3';
-const String androidCompilation = '234';
-const String iosCompilation = '234';
+const String appVersion = '2.8.4';
+const String androidCompilation = '235';
+const String iosCompilation = '235';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 

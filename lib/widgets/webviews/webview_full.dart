@@ -259,12 +259,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _chainWidgetKey = GlobalKey();
   ChainStatusProvider _chainStatusProvider;
   TargetsProvider _targetsProvider;
-  final _w = Get.put(WarController());
+  WarController _w;
   int _attackNumber = 0;
   String _factionName = "";
   int _lastOnline = 0;
   bool _nextButtonPressed = false;
   // Chaining configuration ends
+
+  bool _cloudFlareReloadedOnce = false;
 
   @override
   void initState() {
@@ -282,6 +284,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     if (widget.isChainingBrowser) {
       _isChainingBrowser = true;
+      _w = Get.put(WarController());
       String title = widget.chainingPayload.attackNameList[0];
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
@@ -766,20 +769,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           const SizedBox.shrink(),
         // Profile attack
         _profileAttackWidget,
-        ExpandablePanel(
-          theme: ExpandableThemeData(
-            hasIcon: false,
-            tapBodyToCollapse: false,
-            tapHeaderToExpand: false,
+        if (widget.isChainingBrowser)
+          ExpandablePanel(
+            theme: ExpandableThemeData(
+              hasIcon: false,
+              tapBodyToCollapse: false,
+              tapHeaderToExpand: false,
+            ),
+            collapsed: SizedBox.shrink(),
+            controller: _chainWidgetController,
+            header: SizedBox.shrink(),
+            expanded: ChainWidget(
+              key: _chainWidgetKey,
+              alwaysDarkBackground: true,
+            ),
           ),
-          collapsed: SizedBox.shrink(),
-          controller: _chainWidgetController,
-          header: SizedBox.shrink(),
-          expanded: ChainWidget(
-            key: _chainWidgetKey,
-            alwaysDarkBackground: true,
-          ),
-        ),
         // Crimes widget. NOTE: this one will open at the bottom if
         // appBar is at the bottom, so it's duplicated below the actual
         // webView widget
@@ -943,27 +947,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                     final html = await webView.getHtml();
 
-                    if (!html.contains("Checking your browser before accessing")) {
-                      // Filter out Cloudflare from analysis
-
-                      // Userscripts
-                      UserScriptChanges changes = _userScriptsProvider.getCondSources(
-                        url: uri.toString(),
-                        apiKey: _userProvider.basic.userApiKey,
-                      );
-                      if (Platform.isAndroid) {
-                        // Not supported on iOS
-                        for (var group in changes.scriptsToRemove) {
-                          c.removeUserScriptsByGroupName(groupName: group);
-                        }
-                      }
-                      await c.addUserScripts(userScripts: changes.scriptsToAdd);
-
-                      _hideChat();
-
-                      final document = parse(html);
-                      _assessGeneral(document);
+                    // Reload Cloudflare once if longer than 6 seconds
+                    if (html.contains("Checking your browser") && !_cloudFlareReloadedOnce) {
+                      log("CloudFlare on start!");
+                      _cloudFlareForceReload();
                     }
+
+                    // Userscripts
+                    UserScriptChanges changes = _userScriptsProvider.getCondSources(
+                      url: uri.toString(),
+                      apiKey: _userProvider.basic.userApiKey,
+                    );
+                    if (Platform.isAndroid) {
+                      // Not supported on iOS
+                      for (var group in changes.scriptsToRemove) {
+                        c.removeUserScriptsByGroupName(groupName: group);
+                      }
+                    }
+                    await c.addUserScripts(userScripts: changes.scriptsToAdd);
+
+                    _hideChat();
+
+                    final document = parse(html);
+                    _assessGeneral(document);
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
@@ -1050,6 +1056,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // the checks performed in this method
                   }
 
+                  //_deleteCookie(); // DEBUG!
                   log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
                 },
                 onLoadResource: (c, resource) async {
@@ -1462,13 +1469,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // CloudFlare debug (to ba called in OnLoadTop)
-  /*
+
   Future<void> _deleteCookie() async {
     CookieManager cookieManager = CookieManager.instance();
     List<Cookie> cookies = await cookieManager.getCookies(url: Uri.parse("https://www.torn.com"));
     await cookieManager.deleteCookie(url: Uri.parse("https://www.torn.com"), name: "cf_clearance");
   }
-  */
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
     // API HANDLERS
@@ -1744,6 +1750,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     child: Text(
                       _pageTitle,
                       overflow: TextOverflow.fade,
+                      style: TextStyle(fontSize: 16),
                     ),
                   ),
                 ],
@@ -3928,5 +3935,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  void _cloudFlareForceReload() async {
+    // Reload Cloudflare if still present after 6 seconds
+    await Future.delayed(Duration(seconds: 6));
+    if (!mounted) return;
+    var html = await webView.getHtml();
+    if (html.contains("Please allow up to 5 seconds")) {
+      _cloudFlareReloadedOnce = true;
+      reload();
+      log("Reloading CloudFlare!");
+    }
+    // Try again and warn user
+    await Future.delayed(Duration(seconds: 5));
+    if (!mounted) return;
+    html = await webView.getHtml();
+    if (html.contains("Please allow up to 5 seconds")) {
+      reload();
+      log("Reloading CloudFlare x 2!");
+      BotToast.showText(
+        clickClose: true,
+        text: "There seems to be an issue with the CloudFlare redirect, trying to reload!"
+            "\n\nIf it still does not work, please consider reopening the browser.",
+        textStyle: TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.blue[600],
+        duration: Duration(seconds: 6),
+        contentPadding: EdgeInsets.all(10),
+      );
+    }
   }
 }

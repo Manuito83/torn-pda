@@ -39,16 +39,17 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 234 - 15/06/2022
+    // Build 235 - 17/06/2022
 
-    // VERSION 2.8.3
-    var v2_8_3 = ChangeLogItem();
-    v2_8_3.version = 'Torn PDA v2.8.3';
-    v2_8_3.date = '18 JUN 2022';
-    String feat2_8_3_1 = "Items: fixed owned items filtering";
-    String feat2_8_3_2 = "Browser: improved stability issues in some devices";
-    v2_8_3.features.add(feat2_8_3_1);
-    v2_8_3.features.add(feat2_8_3_2);
+    // VERSION 2.8.4 (over 2.8.3)
+    var v2_8_4 = ChangeLogItem();
+    v2_8_4.version = 'Torn PDA v2.8.4';
+    v2_8_4.date = '18 JUN 2022';
+    v2_8_4.infoString = "Hotfix for some user scripts not loading at start";
+    String feat2_8_4_1 = "Items: fixed owned items filtering";
+    String feat2_8_4_2 = "Browser: improved stability issues in some devices";
+    v2_8_4.features.add(feat2_8_4_1);
+    v2_8_4.features.add(feat2_8_4_2);
 
     // VERSION 2.8.2 (over v2.8.1)
     var v2_8_2 = ChangeLogItem();
@@ -1164,7 +1165,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v2_8_3);
+    itemList.add(v2_8_4);
     itemList.add(v2_8_2);
     itemList.add(v2_8_0);
     itemList.add(v2_7_0);
