@@ -905,20 +905,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 },
                 onCreateWindow: (c, request) async {
                   if (!mounted) return true;
-
-                  // Not required any longer with inAppWebView PR #1042
-                  // (otherwise, two tabs will open)
-                  /*
-                  if (Platform.isAndroid) {
-                    // Prevent MiniProfiles from opening images (error in inAppWebView)
-                    // we will use a handler instead.
-                    if (request.request.url.toString().contains("awardimages.torn.com") ||
-                        request.request.url.toString().contains("factiontags.torn.com")) {
-                      return false;
-                    }
-                  }
-                  */
-
                   // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
                   // to open a window, a new tab is created but we can't see it and looks like a glitch)
                   if ((widget.dialog && !_settingsProvider.useTabsBrowserDialog) ||
@@ -948,7 +934,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     final html = await webView.getHtml();
 
                     // Reload Cloudflare once if longer than 6 seconds
-                    if (html.contains("Checking your browser") && !_cloudFlareReloadedOnce) {
+                    if (html.contains("Please allow up to 5 seconds")) {
                       log("CloudFlare on start!");
                       _cloudFlareForceReload();
                     }
@@ -1043,20 +1029,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       webView.scrollTo(x: _scrollX, y: _scrollY, animated: false);
                       _scrollAfterLoad = false;
                     }
-
-                    // Not required any longer with inAppWebView PR #1042
-                    // (otherwise, two tabs will open)
-                    /*
-                    if (Platform.isAndroid) {
-                      webView.evaluateJavascript(source: MiniProfiles());
-                    }
-                    */
                   } catch (e) {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
                   }
 
+                  // Removes CloudFlare cookie
                   //_deleteCookie(); // DEBUG!
+
                   log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
                 },
                 onLoadResource: (c, resource) async {
@@ -3938,34 +3918,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _cloudFlareForceReload() async {
-    // Reload Cloudflare if still present after 6 seconds
-    await Future.delayed(Duration(seconds: 6));
-    if (!mounted) return;
+    // Reload Cloudflare if still present after 5 seconds
+    await Future.delayed(Duration(seconds: 5));
+    if (!mounted || _cloudFlareReloadedOnce) return;
     var html = await webView.getHtml();
     if (html.contains("Please allow up to 5 seconds")) {
       _cloudFlareReloadedOnce = true;
-      reload();
       log("Reloading CloudFlare!");
-    }
-    // Try again and warn user
-    await Future.delayed(Duration(seconds: 5));
-    if (!mounted) return;
-    html = await webView.getHtml();
-    if (html.contains("Please allow up to 5 seconds")) {
       reload();
-      log("Reloading CloudFlare x 2!");
-      BotToast.showText(
-        clickClose: true,
-        text: "There seems to be an issue with the CloudFlare redirect, trying to reload!"
-            "\n\nIf it still does not work, please consider reopening the browser.",
-        textStyle: TextStyle(
-          fontSize: 14,
-          color: Colors.white,
-        ),
-        contentColor: Colors.blue[600],
-        duration: Duration(seconds: 6),
-        contentPadding: EdgeInsets.all(10),
-      );
     }
   }
 }
