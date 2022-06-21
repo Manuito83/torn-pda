@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -100,6 +101,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   bool _forceFireUserReload = false;
 
   String _userUID = "";
+  bool _drawerUserChecked = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -1148,31 +1150,40 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       _activeDrawerIndex = int.parse(defaultSection);
 
       // Firestore get auth and init
-      final user = await firebaseAuth.currentUser();
-      if (user == null) {
-        // Upload information to Firebase (this includes the token)
-        final User mFirebaseUser = await firebaseAuth.signInAnon() as User;
-        firestore.setUID(mFirebaseUser.uid);
-        _updateFirebaseDetails();
-        _userUID = mFirebaseUser.uid;
-        // Warn user about the possibility of a new UID being regenerated
-        BotToast.showText(
-          clickClose: true,
-          text: "A problem was found with your user. Please visit the Alerts page and ensure that your alerts "
-              "are properly setup!",
-          textStyle: TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.blue,
-          duration: Duration(seconds: 6),
-          contentPadding: EdgeInsets.all(10),
-        );
-      } else {
-        final uid = await firebaseAuth.getUID();
-        firestore.setUID(uid as String);
-        _userUID = uid as String;
-      }
+      FirebaseAuth.instance.authStateChanges().listen((User user) async {
+        // Only execute once, otherwise we risk creating users in a row below
+        if (_drawerUserChecked) return;
+        _drawerUserChecked = true;
+
+        if (user == null) {
+          log("Drawer: Firebase user is null, signing in!");
+          // Upload information to Firebase (this includes the token)
+          final User newAnonUser = await firebaseAuth.signInAnon() as User;
+          firestore.setUID(newAnonUser.uid);
+          _updateFirebaseDetails();
+          _userUID = newAnonUser.uid;
+
+          // Warn user about the possibility of a new UID being regenerated
+          // We should not arrive here under normal circumstances, as null users are redirected to Settings
+          BotToast.showText(
+            clickClose: true,
+            text: "A problem was found with your user.\n\n"
+                "Please visit the Alerts page and ensure that your alerts are properly setup!",
+            textStyle: TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue,
+            duration: Duration(seconds: 6),
+            contentPadding: EdgeInsets.all(10),
+          );
+        } else {
+          final existingUid = user.uid;
+          log("Drawer: Firebase user ID $existingUid");
+          firestore.setUID(existingUid);
+          _userUID = existingUid;
+        }
+      });
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
       // since some people might leave the app opened for weeks in the background)

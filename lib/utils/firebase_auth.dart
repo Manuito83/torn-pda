@@ -18,8 +18,7 @@ class _AuthService {
   }
 
   Future signOut() async {
-    var user = _firebaseAuth.currentUser;
-    user.delete();
+    await FirebaseAuth.instance.signOut();
   }
 
   Future getUID() async {
@@ -30,15 +29,5 @@ class _AuthService {
       print(e.toString());
       return null;
     }
-  }
-
-  Future currentUser() async {
-    var user = _firebaseAuth.currentUser;
-    if (user == null) {
-      // Some users reported issues with currentUsers not getting initialised
-      await Future.delayed(Duration(seconds: 2));
-      user = _firebaseAuth.currentUser;
-    }
-    return user;
   }
 }

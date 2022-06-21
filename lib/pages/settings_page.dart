@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
@@ -1754,22 +1755,11 @@ class _SettingsPageState extends State<SettingsPage> {
             firestore.setUID(mFirebaseUser.uid);
             // Returns UID to Drawer so that it can be passed to settings
             widget.changeUID(mFirebaseUser.uid);
-            if (reload) {
-              // Warn user about the possibility of a new UID being regenerated only if reloading
-              BotToast.showText(
-                clickClose: true,
-                text: "A problem was found with your user. Please visit the Alerts page and ensure that your alerts "
-                    "are properly setup!",
-                textStyle: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.blue,
-                duration: Duration(seconds: 6),
-                contentPadding: EdgeInsets.all(10),
-              );
-            }
+            log("Settings: signed in with UID ${mFirebaseUser.uid}");
+          } else {
+            log("Settings: existing user UID ${user}");
           }
+
           await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
           await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
           if (Platform.isAndroid) {
