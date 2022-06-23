@@ -32,6 +32,7 @@ import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
+import 'package:torn_pda/private/webview_config.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -266,8 +267,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _nextButtonPressed = false;
   // Chaining configuration ends
 
-  bool _cloudFlareReloadedOnce = false;
-
   @override
   void initState() {
     super.initState();
@@ -313,10 +312,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       crossPlatform: InAppWebViewOptions(
         transparentBackground: true,
         clearCache: _clearCacheFirstOpportunity,
-        //cacheEnabled: false,
         useOnLoadResource: true,
         useShouldOverrideUrlLoading: true,
         javaScriptCanOpenWindowsAutomatically: true,
+        userAgent:
+            "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36 com.manuito.tornpda ${WebviewConfig.agent}",
 
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
@@ -326,7 +327,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       android: AndroidInAppWebViewOptions(
         useHybridComposition: true,
         supportMultipleWindows: true,
-        //cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
         initialScale: _settingsProvider.androidBrowserScale,
         useWideViewPort: false,
       ),
@@ -920,6 +920,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   return true;
                 },
                 onLoadStart: (c, uri) async {
+                  log("Start URL: ${uri}}");
+
                   _loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
                   if (!mounted) return;
@@ -932,12 +934,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     _currentUrl = uri.toString();
 
                     final html = await webView.getHtml();
-
-                    // Reload Cloudflare once if longer than 6 seconds
-                    if (html.contains("Please allow up to 5 seconds")) {
-                      log("CloudFlare on start!");
-                      _cloudFlareForceReload();
-                    }
 
                     // Userscripts
                     UserScriptChanges changes = _userScriptsProvider.getCondSources(
@@ -1033,9 +1029,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
                     // the checks performed in this method
                   }
-
-                  // Removes CloudFlare cookie
-                  //_deleteCookie(); // DEBUG!
 
                   log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
                 },
@@ -1167,7 +1160,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       } else {
                         // If it's triggered, it's because we are inside and we performed an operation
                         // (deposit or withdrawal). In this case, we need to give a couple of seconds
-                        // so that the new html elements appear and we can analyse them
+                        // so that the new html elements appear and we can analyze them
                         Future.delayed(const Duration(seconds: 2)).then((value) async {
                           // Reset _vaultTriggered so that we can call _assessVault() again
                           _reassessVault();
@@ -1446,14 +1439,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
-  }
-
-  // CloudFlare debug (to ba called in OnLoadTop)
-
-  Future<void> _deleteCookie() async {
-    CookieManager cookieManager = CookieManager.instance();
-    List<Cookie> cookies = await cookieManager.getCookies(url: Uri.parse("https://www.torn.com"));
-    await cookieManager.deleteCookie(url: Uri.parse("https://www.torn.com"), name: "cf_clearance");
   }
 
   void _addScriptApiHandlers(InAppWebViewController webView) {
@@ -3446,8 +3431,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         ),
                         onTap: () async {
                           var open = url.toString() ?? src;
-                          if (await canLaunch(open)) {
-                            await launch(open, forceSafariVC: false);
+                          if (await canLaunchUrl(Uri.parse(open))) {
+                            await launchUrl(Uri.parse(open));
                           }
                         },
                       ),
@@ -3915,17 +3900,5 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-
-  void _cloudFlareForceReload() async {
-    // Reload Cloudflare if still present after 5 seconds
-    await Future.delayed(Duration(seconds: 5));
-    if (!mounted || _cloudFlareReloadedOnce) return;
-    var html = await webView.getHtml();
-    if (html.contains("Please allow up to 5 seconds")) {
-      _cloudFlareReloadedOnce = true;
-      log("Reloading CloudFlare!");
-      reload();
-    }
   }
 }
