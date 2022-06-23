@@ -292,8 +292,6 @@ export const alertsTestGroup = {
 async function sendNotificationForProfile(subscriber: any, foreignStocks: any, stockMarket: any): Promise<any> {
   const promises: Promise<any>[] = [];
 
-  let tokenError = false;
-
   try {
 
     const userStats = await getUsersStat(subscriber.apiKey);
@@ -337,9 +335,8 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
 
     // If users uninstall without removing API Key, this error will trigger
     // because the token is not known. In this case, stale the user
-    // We allow up to 10 tries
+    // We allow up to 10 tries (will be reverted by the app later)
     if (e.toString().includes("Requested entity was not found")) {
-      tokenError = true;
       if (subscriber.tokenErrors !== undefined) {
         let errors = subscriber.tokenErrors + 1;
         if (errors >= 10) {
