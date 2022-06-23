@@ -292,6 +292,8 @@ export const alertsTestGroup = {
 async function sendNotificationForProfile(subscriber: any, foreignStocks: any, stockMarket: any): Promise<any> {
   const promises: Promise<any>[] = [];
 
+  let tokenError = false;
+
   try {
 
     const userStats = await getUsersStat(subscriber.apiKey);
@@ -335,18 +337,41 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
 
     // If users uninstall without removing API Key, this error will trigger
     // because the token is not known. In this case, stale the user
+    // We allow up to 10 tries
     if (e.toString().includes("Requested entity was not found")) {
-      await admin
-        .firestore()
-        .collection("players")
-        .doc(subscriber.uid)
-        .update({
-          active: false,
-        });
-      functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid}`);
+      tokenError = true;
+      if (subscriber.tokenErrors !== undefined) {
+        let errors = subscriber.tokenErrors + 1;
+        if (errors >= 10) {
+          await admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update({
+              active: false,
+              tokenErrors: errors
+            });
+          functions.logger.warn(`Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid} after ${errors} token errors`);
+        } else {
+          await admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update({
+              tokenErrors: errors,
+            });
+        }
+      } else {
+        await admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            tokenErrors: 1,
+          });
+      }
     }
   }
-
 }
 
 // Helper function to calculate estimated billing amount, commented because cloud functions wouldnt allow to deploy

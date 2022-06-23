@@ -70,6 +70,7 @@ class _FirestoreHelper {
 
         // This is a unique identifier to identify this user and target notification
         "token": token,
+        "tokenErrors": 0,
       },
       SetOptions(merge: true),
     );
