@@ -315,10 +315,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         useOnLoadResource: true,
         useShouldOverrideUrlLoading: true,
         javaScriptCanOpenWindowsAutomatically: true,
-        userAgent:
-            "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36 ${WebviewConfig.agent}",
-
+        userAgent: Platform.isAndroid
+            ? "Mozilla/5.0 (Linux; Android 9; LG-H870 Build/PKQ1.190522.001) AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Version/4.0 Chrome/83.0.4103.106 Mobile Safari/537.36 ${WebviewConfig.agent}"
+            : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+                
         /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
         /// hospital timer, company applications, etc. There is a but on iOS if we activate it
         /// and deactivate it dynamically, where onLoadResource stops triggering!
