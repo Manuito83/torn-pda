@@ -10,8 +10,10 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/tabs_excess_dialog.dart';
 
 class WebViewStackView extends StatefulWidget {
   final String initUrl;
@@ -443,6 +445,17 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                     if (!_settingsProvider.showCases.contains("tabs_general")) {
                       ShowCaseWidget.of(_).startShowCase([_showcaseTabsGeneral]);
                       _settingsProvider.addShowCase = "tabs_general";
+                    }
+
+                    if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
+                      Prefs().setExcessTabsAlerted(true);
+                      return showDialog<void>(
+                        context: _,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return const TabsExcessDialog();
+                        },
+                      );
                     }
                   },
                   onLongPress: () {

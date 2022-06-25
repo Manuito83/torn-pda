@@ -52,6 +52,7 @@ class Prefs {
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
+  final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
   final String _kOnAppExit = "pda_onAppExit";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
@@ -836,6 +837,20 @@ class Prefs {
   Future<bool> setIosAllowLinkPreview(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kIosAllowLinkPreview, value);
+  }
+
+  /// ----------------------------
+  /// Methods for excess tabs dialog persistence
+  /// ----------------------------
+
+  Future<bool> getExcessTabsAlerted() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kExcessTabsAlerted) ?? false;
+  }
+
+  Future<bool> setExcessTabsAlerted(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kExcessTabsAlerted, value);
   }
 
   /// ----------------------------
