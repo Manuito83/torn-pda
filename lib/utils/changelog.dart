@@ -39,12 +39,12 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 238 - 24/06/2022
+    // Build 238 - 25/06/2022
 
     // VERSION 2.8.5
     var v2_8_5 = ChangeLogItem();
     v2_8_5.version = 'Torn PDA v2.8.5';
-    v2_8_5.date = '28 JUN 2022';
+    v2_8_5.date = '30 JUN 2022';
     String feat2_8_5_1 = "Fixed user stale check and alerts persistence";
     v2_8_5.features.add(feat2_8_5_1);
 
