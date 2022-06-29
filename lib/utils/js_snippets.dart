@@ -958,10 +958,13 @@ String jailJS({
           shouldHide = true;
         }
         if (shouldHide) {
-          player.hidden = true;
+          //player.hidden = true; // Not allowed with new user agent on iOS
+          player.style.display = "none"; 
         } else {
-          player.hidden = false;
+          //player.hidden = false; // Not allowed with new user agent on iOS
+          player.style.display = ""; 
         }
+
       }
 
       // BAIL
