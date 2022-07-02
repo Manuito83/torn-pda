@@ -39,15 +39,15 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 241 - 29/06/2022
+    // Build 242 - 02/07/2022
 
-    // VERSION 2.8.6 (over 2.8.6)
-    var v2_8_6 = ChangeLogItem();
-    v2_8_6.version = 'Torn PDA v2.8.6';
-    v2_8_6.date = '30 JUN 2022';
-    v2_8_6.infoString = "Hotfix for jail widget issues in some devices";
-    String feat2_8_6_1 = "Fixed user stale check and alerts persistence";
-    v2_8_6.features.add(feat2_8_6_1);
+    // VERSION 2.8.7 (over 2.8.6)
+    var v2_8_7 = ChangeLogItem();
+    v2_8_7.version = 'Torn PDA v2.8.7';
+    v2_8_7.date = '03 JUL 2022';
+    v2_8_7.infoString = "Hotfix 2 for jail widget issues in some devices";
+    String feat2_8_7_1 = "Fixed user stale check and alerts persistence";
+    v2_8_7.features.add(feat2_8_7_1);
 
     // VERSION 2.8.4 (over 2.8.3)
     var v2_8_4 = ChangeLogItem();
@@ -1173,7 +1173,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
-    itemList.add(v2_8_6);
+    itemList.add(v2_8_7);
     itemList.add(v2_8_4);
     itemList.add(v2_8_2);
     itemList.add(v2_8_0);

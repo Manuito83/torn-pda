@@ -1031,7 +1031,27 @@ String jailJS({
       }
     }
 
-    modifyJail();
+    // Sleep and wait for elements to load
+    async function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function waitForElementsAndRun() {
+      // CAUTION: returning 1 when still no users loaded
+      if (doc.querySelectorAll(".users-list > li").length <= 1) {
+        console.log("Waiting for jail (short)");
+        await sleep(300);
+        if (doc.querySelectorAll(".users-list > li").length <= 1) {
+          console.log("Waiting for jail (long)");
+          await sleep(1000);
+        }
+      } 
+
+      modifyJail();
+    }
+    
+    waitForElementsAndRun();
+
 
     // Listener for page change
     var intervalRepetitions = 0;
