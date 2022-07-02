@@ -180,6 +180,7 @@ class Prefs {
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kHideTabs = "pda_hideTabs";
+  final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
   // Items
   final String _kItemsSort = "pda_itemssSort";
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
@@ -2157,6 +2158,16 @@ class Prefs {
   Future<bool> setHideTabs(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kHideTabs, value);
+  }
+
+  Future<bool> getReminderAboutHideTabFeature() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kReminderAboutHideTabFeature) ?? false;
+  }
+
+  Future<bool> setReminderAboutHideTabFeature(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kReminderAboutHideTabFeature, value);
   }
 
   /// ----------------------------

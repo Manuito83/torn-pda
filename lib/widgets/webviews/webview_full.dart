@@ -60,6 +60,7 @@ import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -612,6 +613,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsBrowserDialog
             ? (DragEndDetails details) async {
                 _webViewProvider.toggleHideTabs();
+                if (await Prefs().getReminderAboutHideTabFeature() == false) {
+                  Prefs().setReminderAboutHideTabFeature(true);
+                  return showDialog<void>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (BuildContext context) {
+                      return const TabsHideReminderDialog();
+                    },
+                  );
+                }
               }
             : null,
         child: Row(
@@ -1671,6 +1682,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsFullBrowser
           ? (DragEndDetails details) async {
               _webViewProvider.toggleHideTabs();
+              if (await Prefs().getReminderAboutHideTabFeature() == false) {
+                Prefs().setReminderAboutHideTabFeature(true);
+                return showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const TabsHideReminderDialog();
+                  },
+                );
+              }
             }
           : null,
       genericAppBar: AppBar(
