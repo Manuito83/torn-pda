@@ -3455,7 +3455,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         onTap: () async {
                           var open = url.toString() ?? src;
                           if (await canLaunchUrl(Uri.parse(open))) {
-                            await launchUrl(Uri.parse(open));
+                            await launchUrl(Uri.parse(open), mode: LaunchMode.externalApplication);
                           }
                         },
                       ),
