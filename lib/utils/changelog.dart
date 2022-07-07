@@ -44,9 +44,15 @@ class _ChangeLogState extends State<ChangeLog> {
     // VERSION 2.8.8
     var v2_8_8 = ChangeLogItem();
     v2_8_8.version = 'Torn PDA v2.8.8';
-    v2_8_8.date = '08 JUL 2022';
-    String feat2_8_8_1 = "Fixed external browser option in web contextual menu";
+    v2_8_8.date = '10 JUL 2022';
+    String feat2_8_8_1 = "Items: fixed section loading";
+    String feat2_8_8_2 = "Items: correctly accounts for items in the display cabinet";
+    String feat2_8_8_3 = "Browser: fixed external browser option in web contextual menu";
+    String feat2_8_8_4 = "Browser: fixed occasional freezes in some devices";
     v2_8_8.features.add(feat2_8_8_1);
+    v2_8_8.features.add(feat2_8_8_2);
+    v2_8_8.features.add(feat2_8_8_3);
+    v2_8_8.features.add(feat2_8_8_4);
 
     // VERSION 2.8.7 (over 2.8.6)
     var v2_8_7 = ChangeLogItem();

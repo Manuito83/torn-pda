@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -537,14 +538,38 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
       // Inventory details
       if (apiInventory is InventoryModel) {
-        InventoryModel inv = apiInventory;
-        // Bazaar
-        Inventory bazaar = inv.inventory.firstWhere((i) => i.id.toString() == id, orElse: () => null);
-        bazaar == null ? details.inventoryOwned = 0 : details.inventoryOwned = bazaar.quantity;
-        // Cabinet
-        DisplayCabinet cabinet = inv.display.firstWhere((i) => i.id.toString() == id, orElse: () => null);
-        cabinet == null ? details.inventoryOwned += 0 : details.inventoryOwned += cabinet.quantity;
-        _inventorySuccess = true;
+        InventoryModel invModel = apiInventory;
+
+        try {
+          // Bazaar
+          InventoryItem invItem = invModel.inventory.firstWhere((i) => i.id.toString() == id, orElse: () => null);
+          if (invItem == null) {
+            details.inventoryOwned = 0;
+          } else {
+            if (invItem.uid != null) {
+              // This item is unique (does not have an quantity), but there can be other similar in our possession
+              details.inventoryOwned = invModel.inventory.where((i) => i.id.toString() == id).length;
+            } else {
+              details.inventoryOwned = invItem.quantity;
+            }
+          }
+
+          // Cabinet
+          DisplayCabinet cabinetItem = invModel.display.firstWhere((i) => i.id.toString() == id, orElse: () => null);
+          if (cabinetItem != null) {
+            if (cabinetItem.uid != null) {
+              // This item is unique (does not have an quantity), but there can be other similar in our possession
+              // So we add all similar ones we can find in our inventory
+              details.inventoryOwned += invModel.display.where((i) => i.id.toString() == id).length;
+            } else {
+              details.inventoryOwned += cabinetItem.quantity;
+            }
+          }
+
+          _inventorySuccess = true;
+        } catch (e) {
+          log(e);
+        }
       }
 
       if (details.inventoryOwned > 0) {
