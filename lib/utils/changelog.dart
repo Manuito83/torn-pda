@@ -39,7 +39,14 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build XXX - 06/07/2022
+    // Build 246 - 21/07/2022
+
+    // VERSION 2.8.9
+    var v2_8_9 = ChangeLogItem();
+    v2_8_9.version = 'Torn PDA v2.8.9';
+    v2_8_9.date = '01 AUG 2022';
+    String feat2_8_9_1 = "Fixes targets export to YATA when using an alternative API key";
+    v2_8_9.features.add(feat2_8_9_1);
 
     // VERSION 2.8.8
     var v2_8_8 = ChangeLogItem();
@@ -1186,6 +1193,7 @@ class _ChangeLogState extends State<ChangeLog> {
     v1_3_0.features.add(feat1_3_0_4);
 
     // NEED TO ADD HERE!
+    itemList.add(v2_8_9);
     itemList.add(v2_8_8);
     itemList.add(v2_8_7);
     itemList.add(v2_8_4);

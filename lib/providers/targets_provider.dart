@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
@@ -46,6 +47,8 @@ class TargetsProvider extends ChangeNotifier {
 
   List<TargetModel> _oldTargetsList = [];
 
+  UserController _u = Get.put(UserController());
+
   String _currentWordFilter = '';
   String get currentWordFilter => _currentWordFilter;
 
@@ -54,12 +57,9 @@ class TargetsProvider extends ChangeNotifier {
 
   TargetSortType _currentSort;
 
-  String _userKey = '';
-
   List<String> lastAttackedTargets = [];
 
-  OwnProfileBasic _userDetails;
-  TargetsProvider(this._userDetails) {
+  TargetsProvider() {
     restorePreferences();
   }
 
@@ -508,11 +508,6 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   Future<void> restorePreferences() async {
-    // User key
-    if (_userDetails.userApiKeyValid) {
-      _userKey = _userDetails.userApiKey;
-    }
-
     // Target list
     bool needToSave = false;
     List<String> jsonTargets = await Prefs().getTargetsList();
@@ -582,13 +577,12 @@ class TargetsProvider extends ChangeNotifier {
   // YATA SYNC
   Future<YataTargetsImportModel> getTargetsFromYata() async {
     try {
-      UserController _u = Get.put(UserController());
       var response = await http.get(
         Uri.parse('https://yata.yt/api/v1/targets/export/?key=${_u.alternativeYataKey}'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
-      );
+      ).timeout(Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         return yataTargetsImportModelFromJson(response.body);
@@ -609,7 +603,7 @@ class TargetsProvider extends ChangeNotifier {
     @required List<TargetsBothSides> bothSides,
   }) async {
     var modelOut = YataTargetsExportModel();
-    modelOut.key = _userKey;
+    modelOut.key = _u.alternativeYataKey;
     //modelOut.user = "Torn PDA $appVersion";
 
     var targets = Map<String, YataExportTarget>();
@@ -645,7 +639,6 @@ class TargetsProvider extends ChangeNotifier {
         },
         body: bodyOut,
       );
-
       if (response.statusCode == 200) {
         Map<String, dynamic> result = json.decode(response.body);
         var answer = result.values.first;
@@ -655,10 +648,12 @@ class TargetsProvider extends ChangeNotifier {
 
         return answer;
       } else {
-        return "";
+        //return "";
+        return "Error: $e"; // Returns full error to player (in case YATA is down, etc.)
       }
     } catch (e) {
-      return "";
+      //return "";
+      return "Error: $e"; // Returns full error to player (in case YATA is down, etc.)
     }
   }
 

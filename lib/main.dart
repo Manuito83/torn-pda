@@ -44,9 +44,9 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: CONFIGURE FOR APP RELEASE, include exceptions in Drawer if applicable
-const String appVersion = '2.8.8';
-const String androidCompilation = '244';
-const String iosCompilation = '244';
+const String appVersion = '2.8.9';
+const String androidCompilation = '246';
+const String iosCompilation = '246';
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
@@ -114,11 +114,7 @@ Future<void> main() async {
       providers: [
         // UserDetailsProvider has to go first to initialize the others!
         ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
-        ChangeNotifierProxyProvider<UserDetailsProvider, TargetsProvider>(
-          create: (context) => TargetsProvider(OwnProfileBasic()),
-          update: (BuildContext context, UserDetailsProvider userProvider, TargetsProvider targetsProvider) =>
-              TargetsProvider(userProvider.basic),
-        ),
+        ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
         ChangeNotifierProxyProvider<UserDetailsProvider, AttacksProvider>(
           create: (context) => AttacksProvider(OwnProfileBasic()),
           update: (BuildContext context, UserDetailsProvider userProvider, AttacksProvider attacksProvider) =>
