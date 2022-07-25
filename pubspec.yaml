@@ -51,7 +51,7 @@ dependencies:
   flutter_inappwebview: ##^5.4.3+7
     git:
       url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: manuito
+      ref: manuito-5.4.3+7
   flutter_local_notifications: ^9.2.0
   flutter_slidable: ^1.2.1
   flutter_speed_dial: ^6.0.0
