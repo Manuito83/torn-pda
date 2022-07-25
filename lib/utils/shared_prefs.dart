@@ -176,6 +176,7 @@ class Prefs {
   final String _kWebViewSecondaryTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
+  final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
@@ -2118,6 +2119,16 @@ class Prefs {
   Future<bool> setUseTabsBrowserDialog(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseTabsInBrowserDialog, value);
+  }
+
+  Future<bool> getOnlyLoadTabsWhenUsed() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kOnlyLoadTabsWhenUsed) ?? true;
+  }
+
+  Future<bool> setOnlyLoadTabsWhenUsed(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kOnlyLoadTabsWhenUsed, value);
   }
 
   Future<bool> getUseTabsHideFeature() async {

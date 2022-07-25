@@ -130,7 +130,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   InAppWebViewController webView;
   var _initialWebViewOptions = InAppWebViewGroupOptions();
 
-  int _loadTimeMill = 0;
+  //int _loadTimeMill = 0;
 
   bool _firstLoad = true;
 
@@ -933,9 +933,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   return true;
                 },
                 onLoadStart: (c, uri) async {
-                  log("Start URL: ${uri}}");
-
-                  _loadTimeMill = DateTime.now().millisecondsSinceEpoch;
+                  //log("Start URL: ${uri}}");
+                  //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
                   if (!mounted) return;
 
@@ -1043,7 +1042,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     // the checks performed in this method
                   }
 
-                  log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
+                  //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
                 },
                 onLoadResource: (c, resource) async {
                   if (!mounted) return;

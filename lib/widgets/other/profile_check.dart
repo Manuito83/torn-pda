@@ -398,14 +398,14 @@ class _ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       if (_isPartner) {
         String partnerText = "This is your lovely "
-            "${otherProfile.gender == "Male" ? "husband" : "wife"}!";
+            "${otherProfile.gender == "Male" ? "husband" : otherProfile.gender == "Female" ? "wife" : "partner"}!";
         Color partnerColor = Colors.green;
         if (widget.profileCheckType == ProfileCheckType.attack) {
           partnerColor = Colors.black;
           partnerText = "CAUTION: this is your "
-              "${otherProfile.gender == "Male" ? "husband" : "wife"}! "
-              "Are you really that mad at "
-              "${otherProfile.gender == "Male" ? "him" : "her"}?";
+              "${otherProfile.gender == "Male" ? "husband" : otherProfile.gender == "Female" ? "wife" : "partner"}! "
+              "Are you really that mad"
+              "${otherProfile.gender == "Male" ? " at him" : otherProfile.gender == "Female" ? " at her" : ""}?";
           _backgroundColor = Colors.red;
         }
 

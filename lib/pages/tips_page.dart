@@ -563,7 +563,7 @@ class _TipsPageState extends State<TipsPage> {
     tips.add(
       ExpandableTip(
         headerValue: "Targets cards with blue (right) border",
-        expandedValue: "A blue border on the right han side of your standard/war targets' cards means that they "
+        expandedValue: "A blue border on the right hand side of your standard/war targets' cards means that they "
             "are part of your Panic Mode targets.",
       ),
     );

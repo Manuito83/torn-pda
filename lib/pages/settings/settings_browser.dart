@@ -17,6 +17,7 @@ import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
@@ -37,17 +38,20 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
   UserScriptsProvider _userScriptsProvider;
+  WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+
     _preferencesRestored = _restorePreferences();
   }
 
   @override
   Widget build(BuildContext context) {
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: true);
     return WillPopScope(
       onWillPop: _willPopCallback,
@@ -116,7 +120,7 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                   _linkPreview(),
                                 ],
                               ),
-                              if (Platform.isIOS)
+                            if (Platform.isIOS)
                               Column(
                                 children: [
                                   SizedBox(height: 15),
@@ -959,6 +963,36 @@ class _SettingsBrowserPageState extends State<SettingsBrowserPage> {
         if (_settingsProvider.useTabsFullBrowser || _settingsProvider.useTabsBrowserDialog)
           Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text("Only load tabs when used"),
+                    Switch(
+                      value: _webViewProvider.onlyLoadTabsWhenUsed,
+                      onChanged: (value) {
+                        _webViewProvider.onlyLoadTabsWhenUsed = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Text(
+                  'If active (recommended) not all tabs will load in memory upon browser initialization. Instead, '
+                  'they will retrieve the web content when first used (tapped). This could add a small delay when the '
+                  'tab is pressed visited the first time, but should improve the overall browser performance',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(

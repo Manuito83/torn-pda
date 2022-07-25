@@ -187,7 +187,12 @@ class _ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
                         label: Text("Filter"),
                         elevation: 4,
                         onPressed: () {
-                          _pc.isPanelOpen ? _pc.close() : _pc.open();
+                          if (_pc.isPanelOpen) {
+                            _pc.close();
+                            _filterScroll.animateTo(0, duration: Duration(seconds: 1), curve: Curves.easeInOut);
+                          } else {
+                            _pc.open();
+                          }
                         },
                         backgroundColor: Colors.orange,
                       ),
