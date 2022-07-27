@@ -1,6 +1,8 @@
 // Dart imports:
 
 // Flutter imports:
+import 'dart:developer';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
@@ -458,10 +460,12 @@ class WebViewProvider extends ChangeNotifier {
 
   TabDetails getTabFromKey(Key reporterKey) {
     for (var tab in _tabList) {
-      if (tab.webView.key == reporterKey) {
+      // Null check because not all webview have a key (sleeping tabs!)
+      if (tab.webView?.key == reporterKey) {
         return tab;
       }
     }
+
     return null;
   }
 
@@ -476,7 +480,8 @@ class WebViewProvider extends ChangeNotifier {
   // several tabs are open to the gym
   void showEnergyWarningMessage(String message, Key reporterKey) {
     for (var tab in _tabList) {
-      if (tab.webView.key == reporterKey) {
+      // Null check because not all webview have a key (sleeping tabs!)
+      if (tab.webView?.key == reporterKey) {
         if (!_gymMessageActive) {
           _gymMessageActive = true;
           BotToast.showText(

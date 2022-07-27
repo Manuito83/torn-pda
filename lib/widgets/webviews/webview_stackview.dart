@@ -254,7 +254,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
             ? _themeProvider.navSelected
             : _themeProvider.currentTheme == AppTheme.extraDark
                 ? Colors.black
-                : Colors.transparent,
+                : _themeProvider.canvas,
         child: Row(
           children: [
             Padding(
@@ -321,7 +321,7 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
                 ? _themeProvider.navSelected
                 : _themeProvider.currentTheme == AppTheme.extraDark
                     ? Colors.black
-                    : Colors.transparent,
+                    : _themeProvider.canvas,
             child: Row(
               children: [
                 Padding(
@@ -388,37 +388,42 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             Expanded(
-              child: Row(
-                children: [
-                  mainTab,
-                  VerticalDivider(
-                    width: 2,
-                    thickness: 2,
-                    color: _themeProvider.mainText,
-                  ),
-                  Expanded(
-                    child: ReorderableListView(
-                      scrollDirection: Axis.horizontal,
-                      children: secondaryTabs,
-                      onReorder: (start, end) {
-                        if (start == 0 || end == 0) return;
-                        // Save where the current active tab is
-                        var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
-                        // Removing the item at oldIndex will shorten the list by 1
-                        if (start < end) end -= 1;
-                        // Do the move
-                        _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
-                        // Make sure we continue in our previous active tab
-                        for (var i = 0; i < _webViewProvider.tabList.length; i++) {
-                          if (_webViewProvider.tabList[i].webView.key == activeKey) {
-                            _webViewProvider.activateTab(i);
-                            break;
-                          }
-                        }
-                      },
+              child: Container(
+                // Container with color so that scaling on browser scaling does not interfere with are with no tabs
+                // (happens with full browser)
+                color: _themeProvider.canvas,
+                child: Row(
+                  children: [
+                    mainTab,
+                    VerticalDivider(
+                      width: 2,
+                      thickness: 2,
+                      color: _themeProvider.mainText,
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: ReorderableListView(
+                        scrollDirection: Axis.horizontal,
+                        children: secondaryTabs,
+                        onReorder: (start, end) {
+                          if (start == 0 || end == 0) return;
+                          // Save where the current active tab is
+                          var activeKey = _webViewProvider.tabList[_webViewProvider.currentTab].webView.key;
+                          // Removing the item at oldIndex will shorten the list by 1
+                          if (start < end) end -= 1;
+                          // Do the move
+                          _webViewProvider.reorderTabs(_webViewProvider.tabList[start], start, end);
+                          // Make sure we continue in our previous active tab
+                          for (var i = 0; i < _webViewProvider.tabList.length; i++) {
+                            if (_webViewProvider.tabList[i].webView.key == activeKey) {
+                              _webViewProvider.activateTab(i);
+                              break;
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Row(
