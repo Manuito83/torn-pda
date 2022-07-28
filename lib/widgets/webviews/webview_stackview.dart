@@ -519,6 +519,10 @@ class _WebViewStackViewState extends State<WebViewStackView> with TickerProvider
       return Image.asset('images/icons/awh_logo2.png');
     } else if (url.contains("index.php?page=hunting")) {
       return Icon(MdiIcons.target, size: 20);
+    } else if (url.contains("bazaar.php")) {
+      return Image.asset('images/icons/inventory/bazaar.png', color: _themeProvider.mainText);
+    } else if (url.contains("imarket.php")) {
+      return Image.asset('images/icons/map/item_market.png', color: _themeProvider.mainText);
     } else if (url.contains("index.php")) {
       return ImageIcon(AssetImage('images/icons/home/home.png'));
     }

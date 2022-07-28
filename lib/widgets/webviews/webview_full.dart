@@ -1047,88 +1047,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 },
                 onUpdateVisitedHistory: (c, uri, androidReload) async {
                   if (!mounted) return;
-
                   _reportUrlVisit(uri);
-
-                  /*
-                  // iOS HISTORY NAVIGATION - URL DETECTION
-                  // (onLoadStop does not always trigger for iOS in certain sites)
-                  if (!Platform.isIOS) return;
-
-                  try {
-                    // Forums
-                    if (widget.useTabs && Platform.isIOS) {
-                      if (uri.toString().contains("forums.php")) {
-                        // Trigger once
-                        if (_forumsTriggerTime != null &&
-                            (DateTime.now().difference(_forumsTriggerTime).inSeconds) < 1) {
-                          return;
-                        }
-                        _forumsTriggerTime = DateTime.now();
-                        _reportUrlVisit(uri);
-                      }
-                    }
-
-                    // Hospital
-                    if (widget.useTabs && Platform.isIOS) {
-                      if (uri.toString().contains("hospitalview.php")) {
-                        // Trigger once
-                        if (_hospitalTriggerTime != null &&
-                            (DateTime.now().difference(_hospitalTriggerTime).inSeconds) < 1) {
-                          return;
-                        }
-                        _hospitalTriggerTime = DateTime.now();
-                        _reportUrlVisit(uri);
-                      }
-                    }
-
-                    // Advanced search results
-                    if (widget.useTabs && Platform.isIOS) {
-                      if (uri.toString().contains("page.php")) {
-                        // Trigger once
-                        if (_searchTriggerTime != null &&
-                            (DateTime.now().difference(_searchTriggerTime).inSeconds) < 1) {
-                          return;
-                        }
-                        _searchTriggerTime = DateTime.now();
-                        _reportUrlVisit(uri);
-                      }
-                    }
-
-                    // Bazaar, so that we go back to the same item search
-                    if (widget.useTabs && Platform.isIOS) {
-                      if (uri.toString().contains("imarket.php")) {
-                        // Trigger once
-                        if (_bazaarTriggerTime != null &&
-                            (DateTime.now().difference(_bazaarTriggerTime).inSeconds) < 1) {
-                          return;
-                        }
-                        _bazaarTriggerTime = DateTime.now();
-                        _reportUrlVisit(uri);
-                      }
-                    }
-
-                    // Independent of tabs, iOS needs to get the loader.php (attack view)
-                    // to trigger the profile widget
-                    if (Platform.isIOS && _settingsProvider.extraPlayerInformation) {
-                      if ((uri.toString().contains("profiles.php?step=getProfileData") && !_profileTriggered) ||
-                          (uri.toString().contains("loader.php") && !_attackTriggered)) {
-                        // Trigger once
-                        if (_profileTriggerTime != null &&
-                            (DateTime.now().difference(_profileTriggerTime).inSeconds) < 1) {
-                          return;
-                        }
-                        _profileTriggerTime = DateTime.now();
-                        _reportUrlVisit(uri);
-                        _assessProfileAttack();
-                      }
-                    }
-                  } catch (e) {
-                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
-                    // the checks performed in this method
-                  }
-                  */
-
                   return;
                 },
                 onLoadResource: (c, resource) async {
@@ -1560,7 +1479,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return;
     }
     _urlTriggerTime = DateTime.now();
-    log(uri.toString());
+    //log(uri.toString());
 
     if (!_omitTabHistory) {
       // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
