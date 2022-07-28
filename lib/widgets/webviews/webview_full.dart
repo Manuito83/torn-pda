@@ -195,6 +195,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _bountiesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
   BountiesModel _bountiesModel;
 
+  DateTime _historyTriggerTime;
   DateTime _forumsTriggerTime;
   DateTime _hospitalTriggerTime;
   DateTime _urlTriggerTime;
@@ -1024,7 +1025,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
 
                     if (widget.useTabs) {
-                      _reportUrlVisit(uri, reportTitle: true);
+                      //_reportUrlVisit(uri);
                       // Report title will only be used from onLoadStop, since onResourceLoad might trigger
                       // it too early (before it has changed)
                       _reportPageTitle();
@@ -1044,90 +1045,96 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                   //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
                 },
-                onLoadResource: (c, resource) async {
+                onUpdateVisitedHistory: (c, uri, androidReload) async {
                   if (!mounted) return;
 
+                  _reportUrlVisit(uri);
+
+                  /*
+                  // iOS HISTORY NAVIGATION - URL DETECTION
+                  // (onLoadStop does not always trigger for iOS in certain sites)
+                  if (!Platform.isIOS) return;
+
                   try {
-                    /// iOS HISTORY NAVIGATION - URL DETECTION
-                    /// onLoadStop does not trigger in Forums for iOS
+                    // Forums
                     if (widget.useTabs && Platform.isIOS) {
-                      if (resource.initiatorType == "xmlhttprequest" &&
-                          resource.url.toString().contains("forums.php")) {
+                      if (uri.toString().contains("forums.php")) {
                         // Trigger once
                         if (_forumsTriggerTime != null &&
                             (DateTime.now().difference(_forumsTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _forumsTriggerTime = DateTime.now();
-                        var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                       }
                     }
 
-                    /// Same for hospital
+                    // Hospital
                     if (widget.useTabs && Platform.isIOS) {
-                      if (resource.initiatorType == "xmlhttprequest" &&
-                          resource.url.toString().contains("hospitalview.php")) {
+                      if (uri.toString().contains("hospitalview.php")) {
                         // Trigger once
                         if (_hospitalTriggerTime != null &&
                             (DateTime.now().difference(_hospitalTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _hospitalTriggerTime = DateTime.now();
-                        var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                       }
                     }
 
-                    /// Same for advanced search results
+                    // Advanced search results
                     if (widget.useTabs && Platform.isIOS) {
-                      if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("page.php")) {
+                      if (uri.toString().contains("page.php")) {
                         // Trigger once
                         if (_searchTriggerTime != null &&
                             (DateTime.now().difference(_searchTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _searchTriggerTime = DateTime.now();
-                        var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                       }
                     }
 
-                    /// Same for bazaar, so that we go back to the same item search
+                    // Bazaar, so that we go back to the same item search
                     if (widget.useTabs && Platform.isIOS) {
-                      if (resource.initiatorType == "xmlhttprequest" &&
-                          resource.url.toString().contains("imarket.php")) {
+                      if (uri.toString().contains("imarket.php")) {
                         // Trigger once
                         if (_bazaarTriggerTime != null &&
                             (DateTime.now().difference(_bazaarTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _bazaarTriggerTime = DateTime.now();
-                        var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                       }
                     }
 
-                    /// PROFILES (iOS)
-                    /// Independent of tabs, iOS needs to get the loader.php (attack view)
-                    /// to trigger the profile widget
+                    // Independent of tabs, iOS needs to get the loader.php (attack view)
+                    // to trigger the profile widget
                     if (Platform.isIOS && _settingsProvider.extraPlayerInformation) {
-                      if (resource.initiatorType == "xmlhttprequest" &&
-                              (resource.url.toString().contains("profiles.php?step=getProfileData") &&
-                                  !_profileTriggered) ||
-                          (resource.url.toString().contains("loader.php") && !_attackTriggered)) {
+                      if ((uri.toString().contains("profiles.php?step=getProfileData") && !_profileTriggered) ||
+                          (uri.toString().contains("loader.php") && !_attackTriggered)) {
                         // Trigger once
                         if (_profileTriggerTime != null &&
                             (DateTime.now().difference(_profileTriggerTime).inSeconds) < 1) {
                           return;
                         }
                         _profileTriggerTime = DateTime.now();
-                        var uri = (await webView.getUrl());
                         _reportUrlVisit(uri);
                         _assessProfileAttack();
                       }
                     }
+                  } catch (e) {
+                    // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+                    // the checks performed in this method
+                  }
+                  */
 
+                  return;
+                },
+                onLoadResource: (c, resource) async {
+                  if (!mounted) return;
+
+                  try {
                     /// TRADES
                     /// We are calling trades from here because onLoadStop does not
                     /// work inside of Trades for iOS. Also, both in Android and iOS
@@ -1535,7 +1542,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     };
   }
 
-  void _reportUrlVisit(Uri uri, {bool reportTitle = false}) {
+  void _reportUrlVisit(Uri uri) {
     // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
     // when returning from a bazaar and go straight to the market, not allowing to return to the item search
     if (uri.toString().contains("imarket.php#/")) {
@@ -1553,6 +1560,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return;
     }
     _urlTriggerTime = DateTime.now();
+    log(uri.toString());
 
     if (!_omitTabHistory) {
       // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
