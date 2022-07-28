@@ -1111,6 +1111,14 @@ String bountiesJS({
     // Credit to TornTools for implementation logic
     var doc = window.document;
 
+    // Finds parents (credit: Torn Tools)
+    function hasParent(element, attributes = {}) {
+      if (!element.parentElement) return false;
+      if (attributes.class && element.parentElement.classList.contains(attributes.class)) return true;
+      if (attributes.id && element.parentElement.id === attributes.id) return true;
+      return hasParent(element.parentElement, attributes);
+    }
+
     function modifyBounties() {
       // FILTERS
       for (var player of doc.querySelectorAll(".bounties-list > li:not(.clear)")) {
