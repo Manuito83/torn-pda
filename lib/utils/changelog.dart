@@ -39,16 +39,20 @@ class _ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     var itemList = <ChangeLogItem>[];
 
-    // Build 250 - 28/07/2022
+    // Build 251 - 02/08/2022
 
     // VERSION 2.8.9
     var v2_8_9 = ChangeLogItem();
     v2_8_9.version = 'Torn PDA v2.8.9';
-    v2_8_9.date = '01 AUG 2022';
+    v2_8_9.date = '07 AUG 2022';
     String feat2_8_9_1 = "Browser tabs now only initialise on first use (performance improvement, can be disabled)";
-    String feat2_8_9_2 = "Fixed targets export to YATA when using an alternative API key";
+    String feat2_8_9_2 = "Improved browser stability when using tabs in some devices";
+    String feat2_8_9_3 = "Added Hospital Filters example userscripts (by Kwack_Kwack)";
+    String feat2_8_9_4 = "Fixed targets export to YATA when using an alternative API key";
     v2_8_9.features.add(feat2_8_9_1);
     v2_8_9.features.add(feat2_8_9_2);
+    v2_8_9.features.add(feat2_8_9_3);
+    v2_8_9.features.add(feat2_8_9_4);
 
     // VERSION 2.8.8
     var v2_8_8 = ChangeLogItem();
