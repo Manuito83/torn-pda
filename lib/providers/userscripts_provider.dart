@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
@@ -222,8 +223,9 @@ class UserScriptsProvider extends ChangeNotifier {
     if (onlyRestoreNew) {
       for (var i = 0; i < exampleScripts.length; i++) {
         var newExample = true;
+        var currentExampleCode = exampleScripts[i].exampleCode;
         for (var j = 0; j < _userScriptList.length; j++) {
-          if (exampleScripts[i].exampleCode == _userScriptList[j].exampleCode) {
+          if (currentExampleCode == _userScriptList[j].exampleCode) {
             newExample = false;
             break;
           }
@@ -231,7 +233,7 @@ class UserScriptsProvider extends ChangeNotifier {
         if (newExample) {
           newList.add(exampleScripts[i]);
         } else {
-          newList.add(_userScriptList.singleWhere((element) => element.exampleCode == i + 1));
+          newList.add(_userScriptList.singleWhere((element) => element.exampleCode == currentExampleCode));
         }
       }
     } else {
@@ -292,7 +294,7 @@ class UserScriptsProvider extends ChangeNotifier {
       _handlerApi = await rootBundle.loadString('userscripts/TornPDA_API.js');
       _handlerEvaluateJavascript = await rootBundle.loadString('userscripts/TornPDA_EvaluateJavascript.js');
 
-      // NULL returned if we installed the app, so we add example scripts
+      // NULL returned if we installed the app, so we add all the example scripts
       if (savedScripts == null) {
         for (var example in exampleScripts) {
           addUserScript(
@@ -319,8 +321,21 @@ class UserScriptsProvider extends ChangeNotifier {
           }
         }
 
-        // Update example scripts to latest versions
         bool updates = false;
+
+        // Force specific scripts
+        if (appVersion == "2.8.9") {
+          var pastForced = await Prefs().getUserScriptsForcedVersions();
+          if (!pastForced.contains("2.8.9")) {
+            pastForced.add("2.8.9");
+            Prefs().setUserScriptsForcedVersions(pastForced);
+            // Add hospital filter in this version
+            _userScriptList.add(exampleScripts.firstWhere((element) => element.exampleCode == 7));
+            updates = true;
+          }
+        }
+
+        // Update example scripts to latest versions
         for (var script in _userScriptList) {
           // Look for saved scripts than come from examples
           if (script.exampleCode > 0) {

@@ -154,6 +154,7 @@ class Prefs {
   final String _kHighlightColor = "pda_highlightColor";
   final String _kUserScriptsList = "pda_userScriptsList";
   final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
+  final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
@@ -1938,6 +1939,16 @@ class Prefs {
   Future<bool> setUserScriptsFirstTime(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUserScriptsFirstTime, value);
+  }
+
+  Future<List<String>> getUserScriptsForcedVersions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kUserScriptsForcedVersions) ?? [];
+  }
+
+  Future<bool> setUserScriptsForcedVersions(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kUserScriptsForcedVersions, value);
   }
 
   /// -----------------------------

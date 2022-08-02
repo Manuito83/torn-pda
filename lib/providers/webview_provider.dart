@@ -400,6 +400,17 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  bool reviveUrl() {
+    var tab = _tabList[_currentTab];
+    if (tab.currentUrl != null) {
+      tab.webViewKey.currentState?.loadFromExterior(url: tab.currentUrl, omitHistory: true);
+      _saveTabs();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   void loadMainTabUrl(String url) {
     if (_tabList.isEmpty) return;
     var tab = _tabList[0];
