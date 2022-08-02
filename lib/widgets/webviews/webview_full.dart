@@ -3233,9 +3233,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  void resumeWebview() {
+  void resumeWebview() async {
     if (Platform.isAndroid) {
       webView?.android?.resume();
+    }
+   
+    // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
+    Uri resumedUrl = await webView.getUrl();
+    if (resumedUrl == null) {
+      log("Reviving webView!");
+      _webViewProvider.reviveUrl();
     }
   }
 
