@@ -2,7 +2,7 @@
 import 'dart:io';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -14,7 +14,6 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/api_caller.dart';
-import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -592,6 +591,30 @@ class _AlertsSettingsState extends State<AlertsSettings> {
                               _firebaseUserModel?.factionAssistMessage = value;
                             });
                             firestore.toggleFactionAssistMessage(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel.retaliationNotification ?? false,
+                          title: const Text("Retaliation"),
+                          subtitle: const Text(
+                            "Get notified whenever it is possible to initiate a retaliation attack. On tapping a "
+                            "notification, a single target will open the browser; multiple targets will redirect you "
+                            "to the Retaliation section",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.retaliationNotification = value;
+                            });
+                            firestore.toggleRetaliationNotification(value);
                           },
                         ),
                       ),

@@ -1,19 +1,23 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/chaining/attacks_page.dart';
+import 'package:torn_pda/pages/chaining/retals_page.dart';
 //import 'package:torn_pda/pages/chaining/tac/tac_page.dart';
 import 'package:torn_pda/pages/chaining/targets_page.dart';
 import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
@@ -23,6 +27,10 @@ import '../main.dart';
 //import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ChainingPage extends StatefulWidget {
+  final bool retalsRedirection;
+
+  ChainingPage({@required this.retalsRedirection});
+
   @override
   _ChainingPageState createState() => _ChainingPageState();
 }
@@ -32,6 +40,7 @@ class _ChainingPageState extends State<ChainingPage> {
   ChainStatusProvider _chainStatusProvider;
   Future _preferencesLoaded;
   SettingsProvider _settingsProvider;
+  UserDetailsProvider _userProvider;
 
   int _currentPage = 0;
   bool _isAppBarTop;
@@ -43,6 +52,7 @@ class _ChainingPageState extends State<ChainingPage> {
     super.initState();
     _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _isAppBarTop = context.read<SettingsProvider>().appBarTop;
+    _userProvider = context.read<UserDetailsProvider>();
     _preferencesLoaded = _restorePreferences();
   }
 
@@ -73,6 +83,7 @@ class _ChainingPageState extends State<ChainingPage> {
                           ),
                       AttacksPage(),
                       WarPage(),
+                      if (_userProvider.basic.faction.factionId != 0) RetalsPage(),
                       /*
                       TacPage(
                         userKey: _myCurrentKey,
@@ -105,10 +116,17 @@ class _ChainingPageState extends State<ChainingPage> {
                               Icons.people,
                               color: isThemeLight ? Colors.white : _themeProvider.mainText,
                             ),
-                            Icon(
-                              MdiIcons.wall,
+                            Image.asset(
+                              'images/icons/faction.png',
+                              width: 17,
                               color: isThemeLight ? Colors.white : _themeProvider.mainText,
                             ),
+                            if (_userProvider.basic.faction.factionId != 0)
+                              FaIcon(
+                                FontAwesomeIcons.personWalkingArrowLoopLeft,
+                                color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                                size: 18,
+                              ),
                             // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                           ],
                           locationTop: true,
@@ -154,6 +172,12 @@ class _ChainingPageState extends State<ChainingPage> {
                         width: 17,
                         color: isThemeLight ? Colors.white : _themeProvider.mainText,
                       ),
+                      if (_userProvider.basic.faction.factionId != 0)
+                        FaIcon(
+                          FontAwesomeIcons.personWalkingArrowLoopLeft,
+                          color: isThemeLight ? Colors.white : _themeProvider.mainText,
+                          size: 18,
+                        ),
                       // Text('TAC', style: TextStyle(color: _themeProvider.mainText))
                     ],
                     locationTop: false,
@@ -182,7 +206,12 @@ class _ChainingPageState extends State<ChainingPage> {
       await _chainStatusProvider.loadPreferences();
     }
 
-    _currentPage = await Prefs().getChainingCurrentPage();
+    if (widget.retalsRedirection && _userProvider.basic.faction.factionId != 0) {
+      _currentPage = 3;
+    } else {
+      _currentPage = await Prefs().getChainingCurrentPage();
+    }
+
     switch (_currentPage) {
       case 0:
         analytics.setCurrentScreen(screenName: 'targets');
@@ -195,6 +224,12 @@ class _ChainingPageState extends State<ChainingPage> {
         if (!_settingsProvider.showCases.contains("war")) {
           Get.put(WarController()).launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
+        }
+        break;
+      case 3:
+        if (_userProvider.basic.faction.factionId != 0) {
+          analytics.setCurrentScreen(screenName: 'retals');
+          Get.put(RetalsController()).retrieveRetals(context);
         }
         break;
     }
@@ -219,6 +254,11 @@ class _ChainingPageState extends State<ChainingPage> {
           _settingsProvider.addShowCase = "war";
         }
         Prefs().setChainingCurrentPage(_currentPage);
+        break;
+      case 3:
+        analytics.setCurrentScreen(screenName: 'retals');
+        Prefs().setChainingCurrentPage(_currentPage);
+        Get.put(RetalsController()).retrieveRetals(context);
         break;
     }
   }

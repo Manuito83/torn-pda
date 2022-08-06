@@ -195,13 +195,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _bountiesOnResourceTriggerTime; // Null check afterwards (avoid false positives)
   BountiesModel _bountiesModel;
 
-  DateTime _historyTriggerTime;
-  DateTime _forumsTriggerTime;
-  DateTime _hospitalTriggerTime;
   DateTime _urlTriggerTime;
-  DateTime _profileTriggerTime;
-  DateTime _searchTriggerTime;
-  DateTime _bazaarTriggerTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -3237,7 +3231,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (Platform.isAndroid) {
       webView?.android?.resume();
     }
-   
+
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
     Uri resumedUrl = await webView.getUrl();
     if (resumedUrl == null) {

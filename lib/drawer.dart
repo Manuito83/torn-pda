@@ -100,6 +100,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
   bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
 
+  bool _retalsRedirection = false;
+
   String _userUID = "";
   bool _drawerUserChecked = false;
 
@@ -409,6 +411,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     bool stockMarket = false;
     bool assists = false;
     bool loot = false;
+    bool retals = false;
 
     var channel = '';
     var messageId = '';
@@ -458,6 +461,8 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       assists = true;
     } else if (channel.contains("Alerts loot")) {
       loot = true;
+    } else if (channel.contains("Alerts retals")) {
+      retals = true;
     }
 
     if (travel) {
@@ -501,6 +506,17 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
+    } else if (retals) {
+      if (int.parse(bulkDetails) == 1) {
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      } else {
+        _retalsRedirection = true;
+        _callSectionFromOutside(2);
+        Future.delayed(Duration(seconds: 2)).then((value) {
+          _retalsRedirection = false;
+        });
+      }
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
@@ -664,6 +680,21 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
       } else if (payload.contains('refills') && (!payload.contains("Xanax"))) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/points.php';
+      } else if (payload.contains('retals')) {
+        log(payload);
+        final assistSplit = payload.split('###');
+        final assistId = assistSplit[0].split(':')[1];
+        final bulkDetails = assistSplit[1].split(':')[1];
+        if (int.parse(bulkDetails) == 1) {
+          launchBrowser = true;
+          browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+        } else {
+          _retalsRedirection = true;
+          _callSectionFromOutside(2);
+          Future.delayed(Duration(seconds: 2)).then((value) {
+            _retalsRedirection = false;
+          });
+        }
       } else if (payload.contains('stockMarket')) {
         // Not implemented (there is a box showing in _getBackGroundNotifications)
       } else if (payload.contains('assistId:')) {
@@ -1034,7 +1065,7 @@ class _DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver {
         return TravelPage();
         break;
       case 2:
-        return ChainingPage();
+        return ChainingPage(retalsRedirection: _retalsRedirection);
         break;
       case 3:
         return LootPage();

@@ -4,6 +4,7 @@ import 'dart:io';
 
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
@@ -277,6 +278,12 @@ class _FirestoreHelper {
   Future<void> toggleFactionAssistMessage(bool active) async {
     await _firestore.collection("players").doc(_uid).update({
       "factionAssistMessage": active,
+    });
+  }
+
+  Future<void> toggleRetaliationNotification(bool active) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "retalsNotification": active,
     });
   }
 
